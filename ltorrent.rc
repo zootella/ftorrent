@@ -61,6 +61,7 @@ APPLICATION_ICON        ICON                    "application.ico"
 // RT_MANIFEST
 //
 
+1                       RT_MANIFEST             "ltorrent.exe.manifest"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
