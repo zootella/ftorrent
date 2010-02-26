@@ -33,12 +33,15 @@ void PaintCreate() {
 
 	// Make a font based on what the system uses in message boxes
 	NONCLIENTMETRICS info;
-	info.cbSize = sizeof(info);
-	SystemParametersInfo(
+	ZeroMemory(&info, sizeof(info));
+	DWORD size = sizeof(info) - sizeof(info.iPaddedBorderWidth); // Ignore last int for this to work
+	info.cbSize = size;
+	int result = SystemParametersInfo(
 		SPI_GETNONCLIENTMETRICS, // System parameter to retrieve
-		sizeof(info),            // Size of the structure
+		size,                    // Size of the structure
 		&info,                   // Structure to fill with information
 		0);                      // Not setting a system parameter
+	if (!result) Report(_T("error systemparametersinfo"));
 	Handle.font = CreateFontIndirect(&info.lfMenuFont);
 	if (!Handle.font) Report(_T("error createfontindirect"));
 }

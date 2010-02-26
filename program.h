@@ -9,7 +9,7 @@
 // removed feature, safe to delete flag
 
 // Program build and name
-#define PROGRAMTEST false
+#define PROGRAMTEST true
 #define PROGRAMTITLE _T("Backup 2009 May 1")
 
 // Program settings
