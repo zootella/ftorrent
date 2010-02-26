@@ -258,7 +258,7 @@ public:
 	HWND window; // The main window on the screen
 	HWND tasks, status, errors; // Child window edit controls
 	HWND clear, task, start, stop, reset; // Child window buttons
-	HMENU menu; // The Tasks menu
+	HMENU menu; // The Tools menu
 
 	// Painting tools
 	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;

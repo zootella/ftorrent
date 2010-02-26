@@ -43,14 +43,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
 	Handle.status = WindowCreateEdit(false, false);
 	Handle.errors = WindowCreateEdit(true,  true);
-	WindowEdit(Handle.tasks,   false); // Start out edit controls read-only
-	WindowEdit(Handle.status,  false);
-	WindowEdit(Handle.errors,  false);
-	Handle.clear  = WindowCreateButton(_T("Clear")); // Buttons
-	Handle.task   = WindowCreateButton(_T("Task"));
-	Handle.start  = WindowCreateButton(_T("Start"));
-	Handle.stop   = WindowCreateButton(_T("Stop"));
-	Handle.reset  = WindowCreateButton(_T("Reset"));
+	WindowEdit(Handle.tasks,  false); // Start out edit controls read-only
+	WindowEdit(Handle.status, false);
+	WindowEdit(Handle.errors, false);
+	Handle.clear = WindowCreateButton(_T("Clear")); // Buttons
+	Handle.task  = WindowCreateButton(_T("Task"));
+	Handle.start = WindowCreateButton(_T("Start"));
+	Handle.stop  = WindowCreateButton(_T("Stop"));
+	Handle.reset = WindowCreateButton(_T("Reset"));
 	EnableWindow(Handle.clear, false); // Start out buttons disabled
 	EnableWindow(Handle.task,  false);
 	EnableWindow(Handle.start, false);
