@@ -30,8 +30,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	windowclass.cbClsExtra    = 0;
 	windowclass.cbWndExtra    = 0;
 	windowclass.hInstance     = Handle.instance;
-	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, _T("APPICON"), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, _T("APPICON"), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	windowclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	windowclass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
 	windowclass.lpszMenuName  = PROGRAMTEST ? _T("MENU_TEST") : NULL; // Don't load the test menu for release

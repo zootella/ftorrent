@@ -1,6 +1,6 @@
 /Debug
 /Release
-/*.aps
-/*.ncb
-/*.suo
+/ltorrent.aps
+/ltorrent.ncb
+/ltorrent.suo
 /ltorrent.vcproj.USE.User.user
