@@ -34,10 +34,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	windowclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	windowclass.hbrBackground = Handle.white;
+	windowclass.hbrBackground = CreateSolidBrush(RGB(255, 255, 255));
 	windowclass.lpszMenuName  = NULL;
 	windowclass.lpszClassName = _T("LTorrentClassName");
-	RegisterClassEx(&windowclass);
+	ATOM result = RegisterClassEx(&windowclass);
+	if (!result) Report(_T("error registerclassex"));
 	Handle.window = WindowCreate(_T("LTorrentClassName"), PROGRAMTITLE, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Make child windows and menus
@@ -57,7 +58,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	EnableWindow(Handle.start, false);
 	EnableWindow(Handle.stop,  false);
 	EnableWindow(Handle.reset, false);
-	Handle.menu = MenuLoad(_T("MENU_CONTEXT"), 0); // Context menu
+	Handle.menu = MenuLoad(_T("TOOLS_MENU"), 0); // Context menu
 
 	// Prepare the window to show current information, and make the correct controls available
 	WindowUpdate(); // Tries to paint now, but doesn't because the window isn't on the screen yet
@@ -141,13 +142,11 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				RECT rectangle;
 				if (!GetWindowRect(Handle.task, &rectangle)) Report(_T("error getwindowrect"));
 				UINT choice = MenuShow(Handle.menu, rectangle.left, rectangle.bottom); // Wait here for the user to make a choice
-				/*
 				if      (choice == ID_TASK_DELETE)        ButtonDelete();
 				else if (choice == ID_TASK_COPY)          ButtonCopy();
 				else if (choice == ID_TASK_COMPARE)       ButtonCompare();
 				else if (choice == ID_TASK_UPDATE)        ButtonUpdate();
 				else if (choice == ID_TASK_UPDATECOMPARE) ButtonUpdateCompare();
-				*/
 			}
 		}
 

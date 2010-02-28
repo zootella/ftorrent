@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by ltorrent.rc
 //
-#define TOOLS_MENU                      103
 #define ID_TASK_DELETE                  40001
 #define ID_TASK_COPY                    40002
 #define ID_TASK_COMPARE                 40003

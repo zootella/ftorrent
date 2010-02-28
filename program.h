@@ -10,7 +10,7 @@
 
 // Program build and name
 #define PROGRAMTEST true
-#define PROGRAMTITLE _T("Backup 2009 May 1")
+#define PROGRAMTITLE _T("ltorrent")
 
 // Program settings
 #define PULSE 100
