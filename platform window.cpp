@@ -222,6 +222,7 @@ string DialogBrowse(read display) {
 	// Setup information for the dialog box
 	character name[MAX_PATH];
 	BROWSEINFO info;
+	ZeroMemory(&info, sizeof(info));
 	info.hwndOwner      = Handle.window;        // Handle to parent window for the browse dialog
 	info.pidlRoot       = NULL;                 // Browse from the desktop
 	info.pszDisplayName = name;                 // Write the name of the chosen folder here
