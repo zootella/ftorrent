@@ -24,6 +24,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Register the class for the main window, and create it
 	WNDCLASSEX windowclass;
+	ZeroMemory(&windowclass, sizeof(windowclass));
 	windowclass.cbSize        = sizeof(windowclass);
 	windowclass.style         = 0;
 	windowclass.lpfnWndProc   = MainWinProc;
@@ -33,11 +34,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, _T("APPLICATION_ICON"), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	windowclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	windowclass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-	windowclass.lpszMenuName  = PROGRAMTEST ? _T("MENU_TEST") : NULL; // Don't load the test menu for release
-	windowclass.lpszClassName = _T("BackupClassName");
+	windowclass.hbrBackground = Handle.white;
+	windowclass.lpszMenuName  = NULL;
+	windowclass.lpszClassName = _T("LTorrentClassName");
 	RegisterClassEx(&windowclass);
-	Handle.window = WindowCreate(_T("BackupClassName"), PROGRAMTITLE, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	Handle.window = WindowCreate(_T("LTorrentClassName"), PROGRAMTITLE, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
