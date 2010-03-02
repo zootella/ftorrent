@@ -207,7 +207,7 @@ string parse(read r, read t1, read t2, matching m)
 	string s;
 	s = after(r, t1, Forward, m);
 	if (has(s, t2, m)) s = before(s, t2, Forward, m);
-	else               s = _T("");
+	else               s = L"";
 	return(s);
 }
 
@@ -248,7 +248,7 @@ void split(read r, read t, string *b, string *a, direction d, matching m)
 
 		// NOT FOUND, ALL TEXT IS BEFORE AND NONE IS AFTER, DONE
 		*b = r;
-		*a = _T("");
+		*a = L"";
 		return;
 	}
 
@@ -371,9 +371,9 @@ string saynumber(int number, read name)
 	// composes text like "14 apples"
 	// returns a string
 
-	if      (number == 0) return(make(_T("no "), name, _T("s")));                               // ZERO YIELDS "no [name]s"
-	else if (number == 1) return(make(_T("1 "), name));                                         // ONE YIELDS "1 [name]"
-	else                  return(make(insertcommas(numerals(number)), _T(" "), name, _T("s"))); // GREATER YIELDS "[number] [name]s"
+	if      (number == 0) return(make(L"no ", name, L"s"));                               // ZERO YIELDS "no [name]s"
+	else if (number == 1) return(make(L"1 ", name));                                      // ONE YIELDS "1 [name]"
+	else                  return(make(insertcommas(numerals(number)), L" ", name, L"s")); // GREATER YIELDS "[number] [name]s"
 }
 
 string insertcommas(read r)
@@ -391,7 +391,7 @@ string insertcommas(read r)
 
 		left = clip(s, length(s) - 3, 3);
 		s = clip(s, 0, length(s) - 3);
-		bottom = "," + left + bottom;
+		bottom = L"," + left + bottom;
 	}
 
 	// MOVE DOWN THE LEADING GROUP OF UP TO 3 CHARACTERS AND RETURN THE STRING
@@ -406,7 +406,7 @@ string saytime(DWORD time)
 	// returns a string
 
 	// RETURN EXPLINATION FOR LESS THAN A SECOND
-	if (time < 1000) return("less than a second");
+	if (time < 1000) return(L"less than a second");
 
 	// CALCULATE THE HOUR, MINUTE, AND SECOND NUMBERS
 	int hour, minute, second;
@@ -416,8 +416,8 @@ string saytime(DWORD time)
 
 	// COMPOSE THE TEXT TO DISPLAY AND RETURN IT
 	string s;
-	if (hour) s += saynumber(hour, _T("hour"));
-	if (hour || minute) s += " " + saynumber(minute, _T("minute"));
-	s += _T(" ") + saynumber(second, _T("second"));
-	return(trim(s, _T(" ")));
+	if (hour) s += saynumber(hour, L"hour");
+	if (hour || minute) s += L" " + saynumber(minute, L"minute");
+	s += L" " + saynumber(second, L"second");
+	return(trim(s, L" "));
 }

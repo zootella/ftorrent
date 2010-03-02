@@ -25,11 +25,11 @@ displayitem JobDisplay() { sectionitem section;
 	displayitem display;
 
 	// Banner text
-	if      (Job.stage == JobStageBefore)  display.banner = "start";
-	else if (Job.stage == JobStageRunning) display.banner = "running";
+	if      (Job.stage == JobStageBefore)  display.banner = L"start";
+	else if (Job.stage == JobStageRunning) display.banner = L"running";
 	else if (Job.stage == JobStageDone)
-		if (isblank(Job.errors))           display.banner = "done";
-		else                               display.banner = "errors";
+		if (isblank(Job.errors))           display.banner = L"done";
+		else                               display.banner = L"errors";
 
 	// Before the job starts
 	if (Job.stage == JobStageBefore) {
@@ -78,20 +78,20 @@ displayitem JobDisplay() { sectionitem section;
 
 		// Show how long the job's been running, or took to finish
 		if (Job.stage == JobStageRunning) {
-			s = "Running for " + saytime(GetTickCount() - Job.time) + "\r\n";
+			s = L"Running for " + saytime(GetTickCount() - Job.time) + L"\r\n";
 		} else if (Job.stage == JobStageDone) {
-			if (isblank(Job.errors)) s = "Done in "             + saytime(Job.time) + "\r\n";
-			else                     s = "Done with errors in " + saytime(Job.time) + "\r\n";
+			if (isblank(Job.errors)) s = L"Done in "             + saytime(Job.time) + L"\r\n";
+			else                     s = L"Done with errors in " + saytime(Job.time) + L"\r\n";
 		}
 
 		// Show counts
-		s += "Processed " +
-			saynumber(Job.folder,       _T("folder"))        + _T(", ") +
-			saynumber(Job.foldererror,  _T("folder error"))  + _T(", ") +
-			saynumber(Job.file,         _T("file"))          + _T(", ") +
-			saynumber(Job.fileerror,    _T("file error"))    + _T(", ") +
-			saynumber(Job.compare,      _T("compare"))       + _T(", ") +
-			saynumber(Job.compareerror, _T("compare error")) + _T("\r\n");
+		s += L"Processed " +
+			saynumber(Job.folder,       L"folder")        + L", " +
+			saynumber(Job.foldererror,  L"folder error")  + L", " +
+			saynumber(Job.file,         L"file")          + L", " +
+			saynumber(Job.fileerror,    L"file error")    + L", " +
+			saynumber(Job.compare,      L"compare")       + L", " +
+			saynumber(Job.compareerror, L"compare error") + L"\r\n";
 
 		// Add the given line that says what the program is doing now
 		s += Job.task;
