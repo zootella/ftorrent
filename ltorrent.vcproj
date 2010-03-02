@@ -296,10 +296,6 @@
 				RelativePath=".\ltorrent.rc"
 				>
 			</File>
-			<File
-				RelativePath=".\rt_manif.bin"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
