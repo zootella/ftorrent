@@ -53,11 +53,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.start = WindowCreateButton(L"Start");
 	Handle.stop  = WindowCreateButton(L"Stop");
 	Handle.reset = WindowCreateButton(L"Reset");
+	/*
 	EnableWindow(Handle.clear, false); // Start out buttons disabled
 	EnableWindow(Handle.task,  false);
 	EnableWindow(Handle.start, false);
 	EnableWindow(Handle.stop,  false);
 	EnableWindow(Handle.reset, false);
+	*/
 	Handle.menu = MenuLoad(L"TOOLS_MENU", 0); // Context menu
 
 	// Prepare the window to show current information, and make the correct controls available

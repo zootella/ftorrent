@@ -72,32 +72,6 @@ HMENU MenuLoad(read name, int index);
 UINT MenuShow(HMENU menu, int x, int y);
 string DialogBrowse(read display);
 
-// Functions in task big.cpp
-DWORD WINAPI Tasks();
-void TaskDelete(read path);
-void TaskCopy(read source, read destination);
-void TaskCompare(read source, read destination);
-void TaskUpdate(read source, read destination, bool compare);
-
-// Functions in task small.cpp
-void TaskDeleteFolder(read path);
-void TaskDeleteFile(read path);
-void TaskCopyFolder(read source, read destination, bool compare);
-void TaskMakeFolder(read path);
-void TaskCopyFile(read source, read destination, bool compare);
-void TaskCompareFolder(read source, read destination);
-void TaskCompareFile(read source, read destination);
-void TaskUpdateClear(read source, read destination);
-void TaskUpdateFill(read source, read destination, bool compare);
-
-// Functions in user button.cpp
-void ButtonClear();
-void ButtonDelete();
-void ButtonCopy();
-void ButtonCompare();
-void ButtonUpdate();
-void ButtonUpdateCompare();
-
 // Functions in user paint.cpp
 void PaintCreate();
 void Paint();
