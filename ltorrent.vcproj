@@ -193,18 +193,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\job control.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\job get.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\job set.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libtorrentwrapper.cpp"
 				>
 			</File>
@@ -230,18 +218,6 @@
 			</File>
 			<File
 				RelativePath=".\platform window.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\task big.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\task small.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\user button.cpp"
 				>
 			</File>
 			<File

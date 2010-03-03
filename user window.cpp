@@ -78,9 +78,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	if (!SetTimer(Handle.window, TIMER_PULSE, PULSE, NULL)) Report(L"error settimer");
 
-	// Initialize the job
-	JobReset();
-
 	// Run the message loop until the user closes the program
 	MSG message;
 	while (GetMessage(&message, NULL, 0, 0)) { // Returns false on the final message
@@ -132,30 +129,12 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 
 			// The user clicked the Test menu item
 			/*if (lparam == 0 && LOWORD(wparam) == ID_TEST) { Test(); } // Test menu item
-			else*/ if ((HWND)lparam == Handle.clear) { ButtonClear(); } // Button child window controls
-			else if ((HWND)lparam == Handle.start) { JobStart(); }
-			else if ((HWND)lparam == Handle.stop)  { JobStop(); }
-			else if ((HWND)lparam == Handle.reset) { JobReset(); }
-			else if ((HWND)lparam == Handle.task)  { // The user clicked the Task button
-
-				// Show the context menu beneath the task button
-				RECT rectangle;
-				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
-				UINT choice = MenuShow(Handle.menu, rectangle.left, rectangle.bottom); // Wait here for the user to make a choice
-				if      (choice == ID_TASK_DELETE)        ButtonDelete();
-				else if (choice == ID_TASK_COPY)          ButtonCopy();
-				else if (choice == ID_TASK_COMPARE)       ButtonCompare();
-				else if (choice == ID_TASK_UPDATE)        ButtonUpdate();
-				else if (choice == ID_TASK_UPDATECOMPARE) ButtonUpdateCompare();
-			}
+			else*/
 		}
 
 	// The user clicked the X, and the system has removed the window from the screen
 	break;
 	case WM_DESTROY:
-
-		// Stop the job if it's running
-		JobStop();
 
 		// Close the program
 		PostQuitMessage(0);

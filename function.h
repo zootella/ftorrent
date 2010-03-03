@@ -1,25 +1,4 @@
 
-// Functions in job control.cpp
-void JobReset();
-void JobStart();
-bool JobContinue();
-void JobStop();
-void JobDone();
-
-// Functions in job get.cpp
-string JobTasks();
-displayitem JobDisplay();
-
-// Functions in job set.cpp
-string JobTask(read r);
-void JobFileCount();
-void JobFileError(read r);
-void JobFolderCount();
-void JobFolderError(read r);
-void JobCompareCount();
-void JobCompareError(read r);
-void JobError(read r);
-
 // Functions in platform disk.cpp
 bool DiskFolder(read path, bool create, bool write);
 bool DiskFolderCheck(read path, bool create);

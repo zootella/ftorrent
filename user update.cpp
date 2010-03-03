@@ -15,6 +15,7 @@ extern handleitem Handle;
 // Change the window to hold current information
 void WindowUpdate() {
 
+	/*
 	// Get current information from the job
 	displayitem display = JobDisplay();
 
@@ -34,4 +35,5 @@ void WindowUpdate() {
 
 	// If the banner changed, repaint the window right now
 	if (paint) PaintMessage(Handle.window);
+	*/
 }
