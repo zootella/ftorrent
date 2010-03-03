@@ -34,9 +34,9 @@ typedef unsigned __int64 big;
 
 // Text types
 typedef CString string;    // string is a CString object
-typedef LPCTSTR read;      // read is a pointer to characters and a null terminator that will only be read
-typedef LPTSTR  write;     // write is a pointer to a character buffer
-typedef TCHAR   character; // character is a single character or characters in a buffer
+typedef LPCWSTR read;      // read is a pointer to characters and a null terminator that will only be read
+typedef LPWSTR  write;     // write is a pointer to a character buffer
+typedef WCHAR   character; // character is a single character or characters in a buffer
 
 // Text options
 enum direction {Forward,   Reverse};  // Default forward and the start, or reverse and the end
