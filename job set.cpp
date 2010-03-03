@@ -37,8 +37,8 @@ void JobError(read r) { sectionitem section;
 
 	// If there have been a huge number of errors, stop the job
 	Job.error++;
-	if (Job.error >= STOPERRORS) {
-		Job.errors += L"\r\nStopped at " + numerals(STOPERRORS) + L" errors";
+	if (Job.error >= 1000) {
+		Job.errors += L"\r\nStopped at " + numerals(1000) + L" errors";
 		Job.stop = true;
 	}
 }

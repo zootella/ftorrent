@@ -39,7 +39,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	windowclass.lpszClassName = L"LTorrentClassName";
 	ATOM result = RegisterClassEx(&windowclass);
 	if (!result) Report(L"error registerclassex");
-	Handle.window = WindowCreate(L"LTorrentClassName", PROGRAMTITLE, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	Handle.window = WindowCreate(L"LTorrentClassName", PROGRAMNAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls

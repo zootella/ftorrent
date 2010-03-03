@@ -54,7 +54,7 @@ bool mapitem::set() {
 
 	// Set i and s to clip out the next block
 	i = i + s;
-	s = VIEWSIZE;
+	s = 67108864;
 	if (i + s > size) s = size - i; // The last block may be smaller
 
 	// Change the view
