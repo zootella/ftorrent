@@ -16,7 +16,7 @@ extern handleitem Handle;
 void Report(read r) {
 
 	// Display the given text in a message box
-	if (PROGRAMTEST) MessageBox(Handle.window, r, L"Report", MB_OK);
+	if (PROGRAM_TEST) MessageBox(Handle.window, r, L"Report", MB_OK);
 }
 
 // Start a new thread to execute the given function

@@ -1,15 +1,10 @@
 
 // Program build and name
-#define PROGRAMTEST true
-#define PROGRAMNAME L"ltorrent"
+#define PROGRAM_TEST true
+#define PROGRAM_NAME L"ltorrent"
 
 // Program settings
 #define PULSE 100
-
-// Registry locations
-#define REGISTRYKEY  HKEY_CURRENT_USER
-#define REGISTRYPATH L"Software\\Rocky Mountain Tools\\Backup"
-#define REGISTRYNAME L"tasks"
 
 // Timer
 #define TIMER_PULSE 1

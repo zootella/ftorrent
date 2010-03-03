@@ -92,22 +92,6 @@ public:
 	}
 };
 
-// Wrap a registry key to close it
-class registryitem {
-public:
-
-	// The handle to the registry key
-	HKEY key;
-
-	// Open a registry key and store its handle in this object
-	bool Open(HKEY root, read path);
-	void Close() { if (key) RegCloseKey(key); key = NULL; }
-
-	// Make a new local object, and delete it when it goes out of scope
-	registryitem() { key = NULL; }
-	~registryitem() { Close(); }
-};
-
 // Make a local sectionitem object to stay in the critical section while you're in a function
 class sectionitem {
 public:

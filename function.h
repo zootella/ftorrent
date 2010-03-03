@@ -25,10 +25,6 @@ void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush);
 void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush);
 void PaintText(deviceitem *device, read r, sizeitem size);
 
-// Functions in platform registry.cpp
-string RegistryRead(HKEY root, read path, read name);
-void RegistryWrite(HKEY root, read path, read name, read value);
-
 // Functions in platform string.cpp
 string make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L"");
 string upper(read r);
