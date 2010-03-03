@@ -61,15 +61,17 @@ APPLICATION_ICON        ICON                    "application.ico"
 // Menu
 //
 
-TOOLS_MENU MENU 
+CONTEXT_MENU MENU 
 BEGIN
-    MENUITEM "Delete",                          ID_TASK_DELETE
-    MENUITEM "Copy",                            ID_TASK_COPY
-    MENUITEM "Compare",                         ID_TASK_COMPARE
-    MENUITEM "Update",                          ID_TASK_UPDATE
-    MENUITEM "Update Compare",                  ID_TASK_UPDATECOMPARE
+    POPUP "Tools"
+    BEGIN
+        MENUITEM "Delete",                      ID_TASK_DELETE
+        MENUITEM "Copy",                        ID_TASK_COPY
+        MENUITEM "Compare",                     ID_TASK_COMPARE
+        MENUITEM "Update",                      ID_TASK_UPDATE
+        MENUITEM "Update Compare",              ID_TASK_UPDATECOMPARE
+    END
 END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -68,7 +68,7 @@ HWND WindowCreateButton(read r);
 HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
 void WindowSize(HWND window, sizeitem size);
 void WindowEdit(HWND window, boolean edit);
-HMENU MenuLoad(read name);
+HMENU MenuLoad(read name, int index);
 UINT MenuShow(HMENU menu, int x, int y);
 string DialogBrowse(read display);
 

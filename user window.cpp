@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.start = WindowCreateButton(L"Start");
 	Handle.stop  = WindowCreateButton(L"Stop");
 	Handle.reset = WindowCreateButton(L"Reset");
-	Handle.menu = MenuLoad(L"TOOLS_MENU"); // Menu
+	Handle.menu = MenuLoad(L"CONTEXT_MENU", 0); // Menu
 
 	// Prepare the window to show current information, and make the correct controls available
 	WindowUpdate(); // Tries to paint now, but doesn't because the window isn't on the screen yet
