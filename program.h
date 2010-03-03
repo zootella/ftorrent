@@ -18,8 +18,8 @@
 typedef unsigned __int64 big;
 
 // Text define
-#define SAFETY 8       // Make local buffers 8 bytes longer and make them easy to find
-#define length lstrlen // Rename function
+#define SAFETY 8        // Make local buffers 8 bytes longer and make them easy to find
+#define length lstrlenW // Rename function
 
 // Text types
 typedef CString string;    // string is a CString object

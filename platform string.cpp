@@ -18,7 +18,7 @@ extern handleitem Handle;
 string make(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
 
 	string s1 = r1, s2 = r2, s3 = r3, s4 = r4, s5 = r5, s6 = r6, s7 = r7, s8 = r8, s9 = r9;
-	return(s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9);
+	return s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9;
 }
 
 // Takes text
@@ -28,7 +28,7 @@ string upper(read r) {
 
 	string s = r;
 	s.MakeUpper();
-	return(s);
+	return s;
 }
 
 // Takes text
@@ -38,7 +38,7 @@ string lower(read r) {
 
 	string s = r;
 	s.MakeLower();
-	return(s);
+	return s;
 }
 
 // Takes text
@@ -46,7 +46,7 @@ string lower(read r) {
 // Returns the number, or 0 if given blank or alphabetic text
 int number(read r) {
 
-	return _tstoi(r); // Use function like atoi
+	return _wtoi(r); // Use function like atoi
 }
 
 // Takes a number
@@ -55,7 +55,7 @@ int number(read r) {
 string numerals(int number) {
 
 	character bay[MAX_PATH];
-	_itot(number, bay, 10); // The 10 is for base ten
+	_itow_s(number, bay, MAX_PATH, 10); // The 10 is for base ten
 	return bay;
 }
 
@@ -64,8 +64,8 @@ string numerals(int number) {
 // Returns true if it is, false if not
 bool is(read r) {
 
-	if (r[0] != '\0') return(true);  // The text doesn't begin with a null terminator, and isn't blank
-	else              return(false);
+	if (r[0] != '\0') return true; // The text doesn't begin with a null terminator, and isn't blank
+	else              return false;
 }
 
 // Takes text
@@ -73,8 +73,8 @@ bool is(read r) {
 // Returns true if it is, false if not
 bool isblank(read r) {
 
-	if (r[0] == '\0') return(true);  // The text begins with the null terminator, and is blank
-	else              return(false);
+	if (r[0] == '\0') return true; // The text begins with the null terminator, and is blank
+	else              return false;
 }
 
 // Takes text r1 and r2, and matching
@@ -82,8 +82,8 @@ bool isblank(read r) {
 // Returns true if they are, false if they are not
 bool same(read r1, read r2, matching m) {
 
-	if (compare(r1, r2, m) == 0) return(true);  // They are the same
-	else                         return(false);
+	if (compare(r1, r2, m) == 0) return true;  // They are the same
+	else                         return false;
 }
 
 // Takes text r1 and r2, and matching
@@ -91,8 +91,8 @@ bool same(read r1, read r2, matching m) {
 // Returns the result, which is negative if r1 is before r2, zero if they are the same, and positive if r1 is below r2
 int compare(read r1, read r2, matching m) {
 
-	if (m == Different) return(lstrcmp(r1, r2));  // Case sensitive, the default
-	else                return(lstrcmpi(r1, r2)); // Case insensitive, matching cases
+	if (m == Different) return lstrcmpW(r1, r2);  // Case sensitive, the default
+	else                return lstrcmpiW(r1, r2); // Case insensitive, matching cases
 }
 
 // Takes text r and t, and matching
@@ -101,8 +101,8 @@ int compare(read r1, read r2, matching m) {
 bool starts(read r, read t, matching m) {
 
 	// Use find to determine if the tag is at the start of the text
-	if (find(r, t, Forward, m) == 0) return(true);
-	else                             return(false);
+	if (find(r, t, Forward, m) == 0) return true;
+	else                             return false;
 }
 
 // Takes text r and t, and matching
@@ -113,10 +113,10 @@ bool trails(read r, read t, matching m) {
 	// Find the last instance of the tag
 	int result;
 	result = find(r, t, Reverse, m);
-	if (result == -1) return(false); // Tag not found
+	if (result == -1) return false; // Tag not found
 
-	if (result == length(r) - length(t)) return(true);  // Tag found on end
-	else                                 return(false); // Tag found elsewhere
+	if (result == length(r) - length(t)) return true;  // Tag found on end
+	else                                 return false; // Tag found elsewhere
 }
 
 // Takes text r and t, and matching
@@ -125,8 +125,8 @@ bool trails(read r, read t, matching m) {
 bool has(read r, read t, matching m) {
 
 	// Use find to determine if the tag exists in the text
-	if (find(r, t, Forward, m) != -1) return(true);
-	else                              return(false);
+	if (find(r, t, Forward, m) != -1) return true;
+	else                              return false;
 }
 
 // Takes text r and t, and direction and matching
@@ -140,7 +140,7 @@ int find(read r, read t, direction d, matching m) {
 	tlength = length(t);
 
 	// If either is blank or r is shorter than t, return not found
-	if (!rlength || !tlength || rlength < tlength) return(-1);
+	if (!rlength || !tlength || rlength < tlength) return -1;
 
 	// Variables for loop
 	bool valid;             // Valid tells if the tag is being found
@@ -174,14 +174,14 @@ int find(read r, read t, direction d, matching m) {
 		}
 
 		// The tag was found at rindex, return it, done
-		if (valid) return(rindex);
+		if (valid) return rindex;
 
 		if (d == Forward) rindex++;
 		else              rindex--;
 	}
 
 	// Not found
-	return(-1);
+	return -1;
 }
 
 // Takes text to parse, opening and closing tags, and matching
@@ -194,7 +194,7 @@ string parse(read r, read t1, read t2, matching m) {
 	s = after(r, t1, Forward, m);
 	if (has(s, t2, m)) s = before(s, t2, Forward, m);
 	else               s = L"";
-	return(s);
+	return s;
 }
 
 // Takes text and tag, and direction and matching
@@ -205,7 +205,7 @@ string before(read r, read t, direction d, matching m) {
 	// Use split
 	string b, a;
 	split(r, t, &b, &a, d, m);
-	return(b);
+	return b;
 }
 
 // Takes text and tag, and direction and matching
@@ -216,7 +216,7 @@ string after(read r, read t, direction d, matching m) {
 	// Use split
 	string b, a;
 	split(r, t, &b, &a, d, m);
-	return(a);
+	return a;
 }
 
 // Takes text and tag, strings for before and after, and direction and matching
@@ -254,7 +254,7 @@ string replace(read r, read t1, read t2, matching m) {
 	// If the text or the find text is blank, or if the find text is not found, return the text unchanged
 	string top, left, bottom;
 	top = r;
-	if (isblank(r) || isblank(t1) || !has(r, t1, m)) return(top);
+	if (isblank(r) || isblank(t1) || !has(r, t1, m)) return top;
 
 	// Loop while top has find
 	while (has(top, t1, m)) {
@@ -268,7 +268,7 @@ string replace(read r, read t1, read t2, matching m) {
 	bottom += top;
 
 	// Return bottom text
-	return(bottom);
+	return bottom;
 }
 
 // Takes text, a starting index, and a number of characters to copy or -1 for all
@@ -279,8 +279,8 @@ string clip(read r, int startindex, int characters) {
 	// Get the length and eliminate special cases
 	string s;
 	int n = length(r);
-	if (n == 0 || characters == 0) { return(s); }            // No characters to clip or none requested
-	if (startindex < 0 || startindex > n - 1) { return(s); } // Start index outside of r
+	if (n == 0 || characters == 0) { return s; }            // No characters to clip or none requested
+	if (startindex < 0 || startindex > n - 1) { return s; } // Start index outside of r
 
 	// Adjust local copy of characters
 	if (characters < 0 || characters > n - startindex) characters = n - startindex;
@@ -288,7 +288,7 @@ string clip(read r, int startindex, int characters) {
 	// Copy the text into the string, crop it, and return it
 	s = r;
 	s = s.Mid(startindex, characters);
-	return(s);
+	return s;
 }
 
 // Takes text and tag, and direction and matching
@@ -299,7 +299,7 @@ string on(read r, read t, direction d, matching m) {
 	string s = r;
 	if (d == Forward) { if (!starts(s, t, m)) s = t + s; } // Confirm the text starts with the tag
 	else              { if (!trails(s, t, m)) s = s + t; } // Confirm the text ends with the tag
-	return(s);
+	return s;
 }
 
 // Takes text and tag, and direction and matching
@@ -310,7 +310,7 @@ string off(read r, read t, direction d, matching m) {
 	string s = r;
 	if (d == Forward) { while(starts(s, t, m)) s = clip(s, length(t), -1); }            // Remove the tag from the start of the string
 	else              { while(trails(s, t, m)) s = clip(s, 0, length(s) - length(t)); } // Remove the tag from the end of the string
-	return(s);
+	return s;
 }
 
 // Takes text and tags
@@ -322,7 +322,7 @@ string trim(read r, read t1, read t2, read t3) {
 	string s = r;
 
 	// Remove the tags from the start of the string until gone
-	while (1) {
+	while (true) {
 
 		if      (starts(s, t1)) s = clip(s, length(t1), -1);
 		else if (starts(s, t2)) s = clip(s, length(t2), -1);
@@ -331,7 +331,7 @@ string trim(read r, read t1, read t2, read t3) {
 	}
 
 	// Remove the tags from the end of the string until gone
-	while (1) {
+	while (true) {
 
 		if      (trails(s, t1)) s = clip(s, 0, length(s) - length(t1));
 		else if (trails(s, t2)) s = clip(s, 0, length(s) - length(t2));
@@ -340,7 +340,7 @@ string trim(read r, read t1, read t2, read t3) {
 	}
 
 	// Return the string
-	return(s);
+	return s;
 }
 
 // Takes a number and a name
@@ -348,9 +348,9 @@ string trim(read r, read t1, read t2, read t3) {
 // Returns a string
 string saynumber(int number, read name) {
 
-	if      (number == 0) return(make(L"no ", name, L"s"));                               // Zero yields "no [name]s"
-	else if (number == 1) return(make(L"1 ", name));                                      // One yields "1 [name]"
-	else                  return(make(insertcommas(numerals(number)), L" ", name, L"s")); // Greater yields "[number] [name]s"
+	if      (number == 0) return make(L"no ", name, L"s");                               // Zero yields "no [name]s"
+	else if (number == 1) return make(L"1 ", name);                                      // One yields "1 [name]"
+	else                  return make(insertcommas(numerals(number)), L" ", name, L"s"); // Greater yields "[number] [name]s"
 }
 
 // Takes text
@@ -372,7 +372,7 @@ string insertcommas(read r) {
 
 	// Move down the leading gorup of up to 3 characters and return the string
 	bottom = s + bottom;
-	return(bottom);
+	return bottom;
 }
 
 // Takes a number of milliseconds
@@ -381,7 +381,7 @@ string insertcommas(read r) {
 string saytime(DWORD time) {
 
 	// Return explination for less than a second
-	if (time < 1000) return(L"less than a second");
+	if (time < 1000) return L"less than a second";
 
 	// Calculate the hour, minute, and second numbers
 	int hour, minute, second;
@@ -394,5 +394,5 @@ string saytime(DWORD time) {
 	if (hour) s += saynumber(hour, L"hour");
 	if (hour || minute) s += L" " + saynumber(minute, L"minute");
 	s += L" " + saynumber(second, L"second");
-	return(trim(s, L" "));
+	return trim(s, L" ");
 }
