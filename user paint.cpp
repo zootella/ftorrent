@@ -122,12 +122,12 @@ void Paint() {
 	label3.inside();
 
 	// Pick colors for the background banner message
-	brushitem *field, *text, *label;
-	if      (Handle.display.banner == L"start")   { field = &Handle.blue;   text = &Handle.lightblue;   label = &Handle.white; }
-	else if (Handle.display.banner == L"running") { field = &Handle.yellow; text = &Handle.lightyellow; label = &Handle.black; }
-	else if (Handle.display.banner == L"done")    { field = &Handle.green;  text = &Handle.lightgreen;  label = &Handle.black; }
-	else if (Handle.display.banner == L"errors")  { field = &Handle.red;    text = &Handle.lightred;    label = &Handle.white; }
-	else                                          { field = &Handle.blue;   text = &Handle.lightblue;   label = &Handle.white; }
+	brushitem *field, *ink, *label;
+	if      (Handle.display.banner == L"start")   { field = &Handle.blue;   ink = &Handle.lightblue;   label = &Handle.white; }
+	else if (Handle.display.banner == L"running") { field = &Handle.yellow; ink = &Handle.lightyellow; label = &Handle.black; }
+	else if (Handle.display.banner == L"done")    { field = &Handle.green;  ink = &Handle.lightgreen;  label = &Handle.black; }
+	else if (Handle.display.banner == L"errors")  { field = &Handle.red;    ink = &Handle.lightred;    label = &Handle.white; }
+	else                                          { field = &Handle.blue;   ink = &Handle.lightblue;   label = &Handle.white; }
 
 	// Position and size child window controls
 	WindowSize(Handle.tasks, tasks);
@@ -148,7 +148,7 @@ void Paint() {
 
 	// Paint the banner
 	device.Font(Handle.arial);
-	device.FontColor(text->color);
+	device.FontColor(ink->color);
 	device.BackgroundColor(field->color);
 	PaintText(&device, Handle.display.banner, client);
 

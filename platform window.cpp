@@ -147,12 +147,12 @@ HWND WindowCreateButton(read r) {
 }
 
 // Make a new window
-HWND WindowCreate(read name, read text, DWORD style, int size, HWND parent, HMENU menu) {
+HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu) {
 
 	// Create the window
 	HWND window = CreateWindow(
 		name,                   // System or registered window class name or class
-		text,                   // Window text to show in the title bar, or null for no text
+		title,                  // Text to show in the title bar, or null for no text
 		style,                  // Window style
 		size, size, size, size, // Window position and size
 		parent,                 // Handle to parent window

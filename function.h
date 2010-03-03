@@ -86,7 +86,7 @@ void EditAppend(HWND window, read r);
 void EditScroll(HWND window);
 HWND WindowCreateEdit(bool scrollbars, bool capacity);
 HWND WindowCreateButton(read r);
-HWND WindowCreate(read name, read text, DWORD style, int size, HWND parent, HMENU menu);
+HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
 void WindowSize(HWND window, sizeitem size);
 void WindowEdit(HWND window, boolean edit);
 HMENU MenuLoad(read name, int index);
