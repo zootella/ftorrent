@@ -53,14 +53,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.start = WindowCreateButton(L"Start");
 	Handle.stop  = WindowCreateButton(L"Stop");
 	Handle.reset = WindowCreateButton(L"Reset");
-	/*
-	EnableWindow(Handle.clear, false); // Start out buttons disabled
-	EnableWindow(Handle.task,  false);
-	EnableWindow(Handle.start, false);
-	EnableWindow(Handle.stop,  false);
-	EnableWindow(Handle.reset, false);
-	*/
-	Handle.menu = MenuLoad(L"TOOLS_MENU", 0); // Context menu
+	Handle.menu = MenuLoad(L"TOOLS_MENU"); // Menu
 
 	// Prepare the window to show current information, and make the correct controls available
 	WindowUpdate(); // Tries to paint now, but doesn't because the window isn't on the screen yet
@@ -129,39 +122,23 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 		// The user clicked a menu item or button
 		if (HIWORD(wparam) == BN_CLICKED) {
 
-
-			// LOAD THE OPEN MENU
-			HMENU menus, menu;
-			ContextMenuLoad(1, &menus, &menu);
-
-			if (State.mode == ModeDownload) {
-
-				// REMOVE THE DOWNLOAD ITEM
-				if (!DeleteMenu(menu, MenuOpenDownload, 0)) Report("error deletemenu");
-			}
-
-			// ADD THE TEST ITEM
-			if (PROGRAM_TEST) AppendMenu(menu, MF_STRING, MenuTest, "(test)");
-
-			// POSITION THE MENU BENEATH THE OPEN LINK AREA
-			sizeitem size;
-			size = Draw.area.open.size;
-			size.CloseBottom();
-			size.w = 0;
-
-			// SHOW THE POPUP MENU AND WAIT HERE FOR THE USER TO CLICK ON ONE OF THE MENU CHOICES
-			UINT choice;
-			choice = ContextMenuShow(menus, menu, false, &size);
-			if      (choice == MenuOpenDownload) FileRun(State.path.running);
-			else if (choice == MenuOpenSite)     FileRun(State.path.running, "/site");
-			else if (choice == MenuOpenOptions)  DialogOptions();
-			else if (choice == MenuOpenAbout)    Dialog("DIALOG_ABOUT", DialogAbout);
-			else if (choice == MenuTest)         Test();
-
-
 			// The user clicked the Test menu item
-			/*if (lparam == 0 && LOWORD(wparam) == ID_TEST) { Test(); } // Test menu item
-			else*/
+			if      ((HWND)lparam == Handle.clear) {  } // Button child window controls
+			else if ((HWND)lparam == Handle.start) {  }
+			else if ((HWND)lparam == Handle.stop)  {  }
+			else if ((HWND)lparam == Handle.reset) {  }
+			else if ((HWND)lparam == Handle.task)  { // The user clicked the Task button
+
+				// Show the context menu beneath the task button
+				RECT rectangle;
+				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
+				UINT choice = MenuShow(Handle.menu, rectangle.left, rectangle.bottom); // Wait here for the user to make a choice
+				if      (choice == ID_TASK_DELETE)        {  }
+				else if (choice == ID_TASK_COPY)          {  }
+				else if (choice == ID_TASK_COMPARE)       {  }
+				else if (choice == ID_TASK_UPDATE)        {  }
+				else if (choice == ID_TASK_UPDATECOMPARE) {  }
+			}
 		}
 
 	// The user clicked the X, and the system has removed the window from the screen

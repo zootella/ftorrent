@@ -181,18 +181,14 @@ void WindowEdit(HWND window, boolean edit) {
 		0);             // Not used, must be 0
 }
 
-// Takes a menu resource name and an index, like 0, to clip out the first submenu
-// Loads the menu and clips out the submenu at the given index
+// Takes a menu resource name
+// Loads the menu
 // Returns the menu, or null on error
-HMENU MenuLoad(read name, int index) {
+HMENU MenuLoad(read name) {
 
 	// Load the menu resource
-	HMENU menus = LoadMenu(Handle.instance, name);
-	if (!menus) { Report(L"error loadmenu"); return NULL; }
-
-	// Clip off the submenu at the given index, and return it
-	HMENU menu = GetSubMenu(menus, index);
-	if (!menu) Report(L"error getsubmenu");
+	HMENU menu = LoadMenu(Handle.instance, name);
+	if (!menu) Report(L"error loadmenu");
 	return menu;
 }
 
