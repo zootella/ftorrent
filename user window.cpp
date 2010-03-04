@@ -147,17 +147,52 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				else if (choice == ID_TASK_HELP)    {  }
 				else if (choice == ID_TASK_ABOUT)   {  }
 				else if (choice == ID_TASK_OPTIONS) {  }
-				else if (choice == ID_TASK_EXIT)    {  }
+				else if (choice == ID_TASK_EXIT)    {
+
+					// Close the program
+					PostQuitMessage(0);
+					return 0;
+				}
 			}
 		}
 
-	// The user clicked the X, and the system has removed the window from the screen
+	// The system has removed the window from the screen
 	break;
 	case WM_DESTROY:
 
 		// Close the program
 		PostQuitMessage(0);
 		return 0;
+
+	// The user clicked a window button or menu item
+	break;
+	case WM_SYSCOMMAND:
+
+		// The user clicked the close X or window menu item
+		switch (LOWORD(wparam)) {
+		case SC_CLOSE:
+
+			// Hide the window and add the taskbar notification icon
+			/* TODO
+			ShowWindow(Handle.window, SW_HIDE);
+			TaskbarIconAdd();
+			*/
+
+			// Prevent the program from closing
+			return 0;
+
+		// The user clicked the Exit window menu item that we added
+		break;
+		case ID_TASK_EXIT:
+
+			// Close the program
+			PostQuitMessage(0);
+			return 0;
+
+		break;
+		}
+
+	break;
 	}
 
 	// Have the system process the message

@@ -65,12 +65,12 @@ CONTEXT_MENU MENU
 BEGIN
     POPUP "Tools"
     BEGIN
-        MENUITEM "Test",                        ID_TASK_TEST
+        MENUITEM "(test)",                      ID_TASK_TEST
         MENUITEM "&Open torrent...",            ID_TASK_OPEN
         MENUITEM "Add &magnet...",              ID_TASK_ADD
         MENUITEM "Create &New torrent...",      ID_TASK_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Options",                    ID_TASK_OPTIONS
+        MENUITEM "&Options...",                 ID_TASK_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Help",                       ID_TASK_HELP
         MENUITEM "&About ltorrent",             ID_TASK_ABOUT
