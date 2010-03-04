@@ -41,6 +41,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!result) Report(L"error registerclassex");
 	Handle.window = WindowCreate(L"ltorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
+	// Add Exit to the main window's system menu
+	HMENU m = GetSystemMenu(Handle.window, false); // Get the menu for editing
+	if (!m) Report(L"error getsystemmenu");
+	if (m && !AppendMenu(m, MF_STRING, ID_TASK_EXIT, L"&Exit")) Report(L"error appendmenu");
+
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
 	Handle.status = WindowCreateEdit(false, false);
