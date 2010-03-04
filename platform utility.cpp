@@ -430,3 +430,86 @@ void CursorSet(HCURSOR cursor) {
 	}
 }
 
+
+
+
+void ContextMenuLoad(int i, HMENU *menus, HMENU *menu)
+{
+	// takes the 0 based index of the context menu to use
+	// loads the context menus and clips the requested one
+	// returns nothing, writes the menu handles or null if any error
+
+	// LOAD THE CONTEXT MENUS
+	*menus = LoadMenu(Handle.instance, "MENU_CONTEXT");
+	if (!*menus) { Report("contextmenuload: error loadmenu"); *menus = NULL; *menu  = NULL; return; }
+
+	// CLIP THE REQUESTED CONTEXT MENU
+	*menu = GetSubMenu(*menus, i);
+	if (!*menu) { Report("contextmenuload: error getsubmenu"); DestroyMenuSafely(*menus); *menus = NULL; *menu  = NULL; return; }
+}
+
+void ContextMenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap)
+{
+	// takes a menu, command, and the state to set
+	// sets the menu item
+	// returns nothing
+
+	// SET MENU ITEM INFO
+	MENUITEMINFO info;
+	info.cbSize = sizeof(MENUITEMINFO);
+	info.fMask  = 0;
+	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; }
+	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
+	if (!SetMenuItemInfo(menu, command, false, &info)) Report("contextmenuset: error setmenuiteminfo");
+}
+
+UINT ContextMenuShow(HMENU menus, HMENU menu, bool taskbar, sizeitem *size)
+{
+	// takes menus and whether the context menu is being shown from the taskbar notification icon or not
+	// displays the context menu and waits for the user to make a choice, then destroys the menus
+	// returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
+
+	// IF THE MENU WAS NOT LOADED, REPORT CANCEL
+	if (!menu) return(0);
+
+	// USE THE GIVEN SIZE OR THE MOUSE POSITION
+	sizeitem position;
+	if (size) {
+
+		// CONVERT THE CLIENT SIZE INTO SCREEN COORDINATES
+		position = *size;
+		position.Screen();
+
+	} else {
+
+		// GET THE MOUSE POSITION IN SCREEN COORDINATES
+		position = MouseScreen();
+	}
+
+	// CONTEXT MENU FOR NOTIFICATION ICON
+	if (taskbar) SetForegroundWindow(Handle.window);
+
+	// SHOW THE CONTEXT MENU AND HOLD EXECUTION HERE UNTIL THE USER CHOOSES FROM THE MENU OR CANCELS IT
+	UINT choice;
+	AreaPopUp();
+	choice = TrackPopupMenu(
+		menu,            // HANDLE TO THE MENU TO DISPLAY
+		TPM_NONOTIFY |   // RETURN THE CHOSEN MENU ITEM WITHOUT SENDING MESSAGES TO THE MAIN WINDOW
+		TPM_RETURNCMD |
+		TPM_RIGHTBUTTON, // LET THE USER CLICK ON AN ITEM WITH THE LEFT OR RIGHT BUTTON
+		position.x,      // DESIRED MENU POSITION IN SCREEN COORDINATES
+		position.y,
+		0,
+		Handle.window,
+		NULL);
+	AreaPopDown();
+
+	// CONTEXT MENU FOR NOTIFICATION ICON
+	if (taskbar) PostMessage(Handle.window, WM_NULL, 0, 0);
+
+	// DESTROY THE CONTEXT MENUS, DESTROYING THE CLIPPED MENU AS WELL, AND RETURN THE RESULT
+	DestroyMenuSafely(menus);
+	return(choice);
+}
+
+

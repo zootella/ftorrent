@@ -190,9 +190,66 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 		break;
 		}
 
+	// Message from our icon in the taskbar notification area
+	break;
+	case MESSAGE_TASKBAR:
+
+		// The primary mouse button has clicked up on our icon
+		switch (lparam) {
+		case WM_LBUTTONUP:
+
+			// Restore from the taskbar
+			TaskbarIconRemove();
+			ShowWindow(Handle.window, SW_SHOW);
+			if (IsIconic(Handle.window)) ShowWindow(Handle.window, SW_RESTORE);
+
+		// The secondary mouse button has clicked up on our icon
+		break;
+		case WM_RBUTTONUP:
+
+			// Show the taskbar context menu
+			MenuTaskbar();
+
+		break;
+		}
+
 	break;
 	}
 
 	// Have the system process the message
 	return DefWindowProc(window, message, wparam, lparam);
+}
+
+// Displays the taskbar notification icon context menu and performs the result
+void MenuTaskbar() {
+
+	// LOAD THE TASKBAR CONTEXT MENU
+	HMENU menus, menu;
+	ContextMenuLoad(0, &menus, &menu);
+
+	// MAKE THE RESTORE MENU ITEM BOLD AND HAVE THE SYSTEM BITMAP
+	ContextMenuSet(menu, MenuTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+
+	// SHOW THE MENU AND GET THE USER'S CHOICE
+	UINT choice = ContextMenuShow(menus, menu, true);
+
+	// Restore
+	switch (choice) {
+	case MenuTaskbarRestore:
+
+		// Restore from taskbar
+		TaskbarIconRemove();
+		ShowWindow(Handle.window, SW_SHOW);
+		if (IsIconic(Handle.window)) ShowWindow(Handle.window, SW_RESTORE);
+
+	// Exit
+	break;
+	case MenuTaskbarExit:
+
+		// Remove the icon and exit the mesage loop
+		TaskbarIconRemove();
+		PostQuitMessage(0);
+
+	break;
+	}
 }
