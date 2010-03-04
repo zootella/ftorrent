@@ -136,8 +136,8 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				RECT rectangle;
 				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
 				sizeitem size(rectangle);
-
-
+				size.addy(size.h());
+				size.client();
 				UINT choice = MenuShow(Handle.menutools, false, &size); // Wait here for the user to make a choice
 				if      (choice == ID_TOOLS_TEST)    { Test(); }
 				else if (choice == ID_TOOLS_OPEN)    {  }
