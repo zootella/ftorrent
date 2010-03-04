@@ -1,13 +1,4 @@
 
-// Functions in platform paint.cpp
-COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
-brushitem CreateBrush(COLORREF color);
-HFONT CreateFont(read face, int points);
-void PaintMessage(HWND window);
-void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush);
-void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush);
-void PaintText(deviceitem *device, read r, sizeitem size);
-
 // Functions in platform string.cpp
 string make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L"");
 string upper(read r);
@@ -35,7 +26,7 @@ string saynumber(int number, read name);
 string insertcommas(read r);
 string saytime(DWORD time);
 
-// Functions in platform window.cpp
+// Functions in platform utility.cpp
 void Report(read r);
 void BeginThread(LPVOID function);
 void WindowTextSet(HWND window, read r);
@@ -50,8 +41,18 @@ void WindowEdit(HWND window, boolean edit);
 HMENU MenuLoad(read name, int index);
 UINT MenuShow(HMENU menu, int x, int y);
 string DialogBrowse(read display);
+COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
+brushitem CreateBrush(COLORREF color);
+HFONT CreateFont(read face, int points);
+void PaintMessage(HWND window);
+void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush);
+void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush);
+void PaintText(deviceitem *device, read r, sizeitem size);
 void TaskbarIconAdd();
 void TaskbarIconRemove();
+HCURSOR LoadSharedCursor(read name);
+HICON LoadIconResource(read name, int size);
+void CursorSet(HCURSOR cursor);
 
 // Functions in user paint.cpp
 void PaintCreate();

@@ -23,21 +23,21 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	PaintCreate();
 
 	// Register the class for the main window, and create it
-	WNDCLASSEX windowclass;
-	ZeroMemory(&windowclass, sizeof(windowclass));
-	windowclass.cbSize        = sizeof(windowclass);
-	windowclass.style         = 0;
-	windowclass.lpfnWndProc   = MainWinProc;
-	windowclass.cbClsExtra    = 0;
-	windowclass.cbWndExtra    = 0;
-	windowclass.hInstance     = Handle.instance;
-	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, L"APPLICATION_ICON", IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, L"APPLICATION_ICON", IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	windowclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	windowclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	windowclass.lpszMenuName  = NULL;
-	windowclass.lpszClassName = L"ltorrentClassName";
-	ATOM result = RegisterClassEx(&windowclass);
+	WNDCLASSEX info;
+	ZeroMemory(&info, sizeof(info));
+	info.cbSize        = sizeof(info);
+	info.style         = 0;
+	info.lpfnWndProc   = MainWinProc;
+	info.cbClsExtra    = 0;
+	info.cbWndExtra    = 0;
+	info.hInstance     = Handle.instance;
+	info.hIcon         = Handle.iconbig;
+	info.hIconSm       = Handle.iconsmall;
+	info.hCursor       = LoadCursor(NULL, IDC_ARROW);
+	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	info.lpszMenuName  = NULL;
+	info.lpszClassName = L"ltorrentClassName";
+	ATOM result = RegisterClassEx(&info);
 	if (!result) Report(L"error registerclassex");
 	Handle.window = WindowCreate(L"ltorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
@@ -173,10 +173,8 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 		case SC_CLOSE:
 
 			// Hide the window and add the taskbar notification icon
-			/* TODO
 			ShowWindow(Handle.window, SW_HIDE);
 			TaskbarIconAdd();
-			*/
 
 			// Prevent the program from closing
 			return 0;

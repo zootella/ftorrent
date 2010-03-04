@@ -15,6 +15,10 @@ extern handleitem Handle;
 // Make painting tools once when the program starts
 void PaintCreate() {
 
+	// Load icons
+	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
+	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
+
 	// Make color brushes
 	Handle.white       = CreateBrush(RGB(255, 255, 255));
 	Handle.black       = CreateBrush(RGB(  0,   0,   0));

@@ -189,15 +189,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\platform paint.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\platform string.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\platform window.cpp"
+				RelativePath=".\platform utility.cpp"
 				>
 			</File>
 			<File

@@ -126,6 +126,9 @@ public:
 	HWND clear, task, start, stop, reset; // Child window buttons
 	HMENU menu; // The Tools menu
 
+	// Icons
+	HICON iconbig, iconsmall;
+
 	// Painting tools
 	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
 	HFONT font, arial;
