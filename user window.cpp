@@ -34,12 +34,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	windowclass.hIcon         = (HICON)LoadImage(Handle.instance, L"APPLICATION_ICON", IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 	windowclass.hIconSm       = (HICON)LoadImage(Handle.instance, L"APPLICATION_ICON", IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	windowclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	windowclass.hbrBackground = CreateSolidBrush(RGB(255, 255, 255));
+	windowclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	windowclass.lpszMenuName  = NULL;
-	windowclass.lpszClassName = L"LTorrentClassName";
+	windowclass.lpszClassName = L"ltorrentClassName";
 	ATOM result = RegisterClassEx(&windowclass);
 	if (!result) Report(L"error registerclassex");
-	Handle.window = WindowCreate(L"LTorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	Handle.window = WindowCreate(L"ltorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
@@ -54,6 +54,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.stop  = WindowCreateButton(L"Stop");
 	Handle.reset = WindowCreateButton(L"Reset");
 	Handle.menu = MenuLoad(L"CONTEXT_MENU", 0); // Menu
+	if (!PROGRAM_TEST) { // Remove the Test item
+		if (!DeleteMenu(Handle.menu, ID_TASK_TEST, 0)) Report(L"error deletemenu");
+	}
 
 	// Prepare the window to show current information, and make the correct controls available
 	WindowUpdate(); // Tries to paint now, but doesn't because the window isn't on the screen yet

@@ -1,6 +1,6 @@
 
 // Program build and name
-#define PROGRAM_TEST true
+#define PROGRAM_TEST false
 #define PROGRAM_NAME L"ltorrent"
 
 // Program settings
