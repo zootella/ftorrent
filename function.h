@@ -1,21 +1,4 @@
 
-// Functions in platform disk.cpp
-bool DiskFolder(read path, bool create, bool write);
-bool DiskFolderCheck(read path, bool create);
-bool DiskDeleteFolder(read path);
-bool DiskDeleteFile(read path);
-bool DiskMakeFolder(read path);
-bool DiskCopyFile(read source, read destination);
-bool DiskIsFolder(read path);
-bool DiskIsFile(read path);
-bool DiskSameFile(read path1, finditem *f2);
-bool DiskCompareFile(read path1, read path2);
-
-// Functions in platform number.cpp
-big Combine(DWORD high, DWORD low);
-DWORD High(big b);
-DWORD Low(big b);
-
 // Functions in platform paint.cpp
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
@@ -71,9 +54,6 @@ string DialogBrowse(read display);
 // Functions in user paint.cpp
 void PaintCreate();
 void Paint();
-
-// Functions in user update.cpp
-void WindowUpdate();
 
 // Functions in user window.cpp
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);

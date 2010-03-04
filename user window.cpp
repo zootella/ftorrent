@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	}
 
 	// Prepare the window to show current information, and make the correct controls available
-	WindowUpdate(); // Tries to paint now, but doesn't because the window isn't on the screen yet
+	//TODO // Tries to paint now, but doesn't because the window isn't on the screen yet
 
 	// Show the child windows and then the main window
 	ShowWindow(Handle.tasks,  SW_SHOWNORMAL);
@@ -112,8 +112,7 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 		switch (wparam) {
 		case TIMER_PULSE:
 
-			// Update the window with current information from the job
-			WindowUpdate();
+			//TODO
 
 		break;
 		}

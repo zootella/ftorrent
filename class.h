@@ -1,104 +1,4 @@
 
-// Get information about a single file, or list the contents of a folder
-class finditem {
-public:
-
-	// Members
-	HANDLE handle;        // Search handle
-	WIN32_FIND_DATA info; // Information about what we found this time
-	string search;        // Query path
-
-	// Takes a path to a file or folder, and false to get information about it, or true to list its contents
-	finditem(read path, bool list = true) {
-
-		// Set values to start the search
-		handle = INVALID_HANDLE_VALUE;
-		ZeroMemory(&info, sizeof(info));
-		search = path;
-		if (list) search += L"\\*.*";
-
-		// We're not going to use this in a loop, run the single search now
-		if (!list) result();
-	}
-
-	// Clean up contents when this object goes out of scope
-	~finditem() { close(); }
-
-	// Loop calling this method to get results until it returns false
-	bool result() {
-
-		// Start the search
-		if (handle == INVALID_HANDLE_VALUE) {
-			handle = FindFirstFile(search, &info);
-			if (handle == INVALID_HANDLE_VALUE) return false; // Not found or other error
-
-			// Skip over "." and ".." at the start
-			if (info.cFileName != string(L".") && info.cFileName != string(L"..")) return true;
-		}
-
-		// Get the next file or folder in the list
-		while (FindNextFile(handle, &info)) {
-
-			// Skip over "." and ".." at the start
-			if (info.cFileName != string(L".") && info.cFileName != string(L"..")) return true;
-		}
-
-		// Done listing the files
-		close();
-		return false;
-	}
-
-	// True if this object found
-	bool found() { return handle != INVALID_HANDLE_VALUE; } // A file or folder
-	bool folder() { return (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
-
-	// Close the search we started
-	void close() {
-		if (handle != INVALID_HANDLE_VALUE) {
-			FindClose(handle);
-			handle = INVALID_HANDLE_VALUE;
-		}
-	}
-};
-
-// Map sections of a file into memory
-class mapitem {
-public:
-
-	// Members
-	HANDLE file, map, view;
-	big size, i, s; // File size, and index and size that clip within it
-
-	// Initialize member variables
-	mapitem() {
-		file = map = view = NULL; // Mark handles not used yet
-		size = i = s = 0;
-	}
-
-	// Close handles when this object goes out of scope
-	~mapitem() {
-		if (view && view != INVALID_HANDLE_VALUE) UnmapViewOfFile(view);
-		if (map  && map  != INVALID_HANDLE_VALUE) CloseHandle(map);
-		if (file && file != INVALID_HANDLE_VALUE) CloseHandle(file);
-	}
-
-	// Methods
-	bool open(read path);
-	bool set();
-
-	// True if we're on the last block
-	bool done() {
-		return i + s == size;
-	}
-};
-
-// Make a local sectionitem object to stay in the critical section while you're in a function
-class sectionitem {
-public:
-	sectionitem();
-	~sectionitem();
-};
-
 // A rectangular size in the window
 class sizeitem {
 private:
@@ -212,24 +112,6 @@ public:
 	}
 };
 
-// Information the window displays
-class displayitem {
-public:
-
-	// Information the window shows
-	string banner;  // Banner text, like "start" or "running"
-	bool edittasks; // true if the tasks box is editable
-	bool enableclear, enabletask, enablestart, enablestop, enablereset; // true if the buttons are enabled
-	string status;  // Lines of status text
-	string errors;  // Lines of error text
-
-	// New
-	displayitem() {
-		edittasks = false;
-		enableclear = enabletask = enablestart = enablestop = enablereset = false;
-	}
-};
-
 // The program's global handle object
 class handleitem {
 public:
@@ -247,28 +129,4 @@ public:
 	// Painting tools
 	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
 	HFONT font, arial;
-
-	// Our record of the information the window is displaying now
-	displayitem display;
-};
-
-// The program's current job
-enum jobstage {JobStageBefore, JobStageRunning, JobStageDone};
-class jobitem {
-public:
-
-	// Status
-	jobstage stage;        // Stage of the job
-	bool     stop;         // True to stop early
-	DWORD    time;         // The tick when the job started, or how long it took to finish
-	string   tasks;        // Lines of text from the tasks box the job still has to do
-	string   task;         // What the job is currently doing
-	string   errors;       // Text list of errors
-	int      error;        // Total number of errors
-	int      folder;       // Number of folders done
-	int      foldererror;  // Number of folder errors
-	int      file;         // Number of files done
-	int      fileerror;    // Number of file errors
-	int      compare;      // Number of file comparisons done
-	int      compareerror; // Number of file compare errors
 };

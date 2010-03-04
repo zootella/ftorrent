@@ -185,23 +185,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\class map.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\class section.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libtorrentwrapper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\platform disk.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\platform number.cpp"
 				>
 			</File>
 			<File
@@ -218,10 +202,6 @@
 			</File>
 			<File
 				RelativePath=".\user paint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\user update.cpp"
 				>
 			</File>
 			<File

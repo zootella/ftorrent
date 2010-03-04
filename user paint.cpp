@@ -123,11 +123,9 @@ void Paint() {
 
 	// Pick colors for the background banner message
 	brushitem *field, *ink, *label;
-	if      (Handle.display.banner == L"start")   { field = &Handle.blue;   ink = &Handle.lightblue;   label = &Handle.white; }
-	else if (Handle.display.banner == L"running") { field = &Handle.yellow; ink = &Handle.lightyellow; label = &Handle.black; }
-	else if (Handle.display.banner == L"done")    { field = &Handle.green;  ink = &Handle.lightgreen;  label = &Handle.black; }
-	else if (Handle.display.banner == L"errors")  { field = &Handle.red;    ink = &Handle.lightred;    label = &Handle.white; }
-	else                                          { field = &Handle.blue;   ink = &Handle.lightblue;   label = &Handle.white; }
+	field = &Handle.green;
+	ink   = &Handle.lightgreen;
+	label = &Handle.black;
 
 	// Position and size child window controls
 	WindowSize(Handle.tasks, tasks);
@@ -150,7 +148,6 @@ void Paint() {
 	device.Font(Handle.arial);
 	device.FontColor(ink->color);
 	device.BackgroundColor(field->color);
-	PaintText(&device, Handle.display.banner, client);
 
 	// Paint the text lables on the left
 	device.Font(Handle.font);

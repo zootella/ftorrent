@@ -1,6 +1,6 @@
 
 // Program build and name
-#define PROGRAM_TEST false
+#define PROGRAM_TEST true
 #define PROGRAM_NAME L"ltorrent"
 
 // Program settings
@@ -13,7 +13,6 @@
 typedef unsigned __int64 big;
 
 // Text define
-#define SAFETY 8        // Make local buffers 8 bytes longer and make them easy to find
 #define length lstrlenW // Rename function
 
 // Text types
