@@ -1,5 +1,5 @@
 
-// Functions in platform string.cpp
+// String
 string make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L"");
 string upper(read r);
 string lower(read r);
@@ -26,7 +26,7 @@ string saynumber(int number, read name);
 string insertcommas(read r);
 string saytime(DWORD time);
 
-// Functions in platform utility.cpp
+// Utility
 void Report(read r);
 void BeginThread(LPVOID function);
 void WindowTextSet(HWND window, read r);
@@ -60,14 +60,14 @@ void AreaPopDown();
 sizeitem MouseClient(HWND window);
 sizeitem MouseScreen();
 
-// Functions in user paint.cpp
+// Paint
 void PaintCreate();
 void Paint();
 
-// Functions in user window.cpp
+// Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
 LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
 
-// Functions in (test).cpp
+// Test
 void Test();

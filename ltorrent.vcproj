@@ -181,7 +181,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\class device.cpp"
+				RelativePath=".\area.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\class.cpp"
 				>
 			</File>
 			<File
@@ -189,19 +193,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\platform string.cpp"
+				RelativePath=".\paint.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\platform utility.cpp"
+				RelativePath=".\string.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\user paint.cpp"
+				RelativePath=".\utility.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\user window.cpp"
+				RelativePath=".\window.cpp"
 				>
 			</File>
 		</Filter>
