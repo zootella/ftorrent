@@ -9,6 +9,9 @@
 // Timer
 #define TIMER_PULSE 1
 
+// Messages
+#define MESSAGE_TASKBAR (WM_APP + 1)
+
 // Number types
 typedef unsigned __int64 big;
 

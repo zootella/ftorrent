@@ -243,3 +243,39 @@ string DialogBrowse(read display) {
 	CoTaskMemFree(list); // Free the COM memory the system allocated for us
 	return buffer;
 }
+
+// Adds the program icon to the taskbar notification area
+void TaskbarIconAdd() {
+
+	// Only do something if the icon isn't there
+	if (Handle.taskbar) return;
+	Handle.taskbar = true;
+
+	// Add the taskbar notification icon
+	NOTIFYICONDATA info;
+	ZeroMemory(&info, sizeof(info));
+	info.cbSize           = sizeof(info);                     // Size of this structure
+	info.hWnd             = Handle.window;                    // Handle to the window that will receive messages
+	info.uID              = 0;                                // Program defined identifier
+	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
+	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
+	info.hIcon            = Draw.icon.windowtaskbar;          // Icon
+	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
+	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report("error shell_notifyicon nim_add");
+}
+
+// Removes the program icon from the taskbar notification area
+void TaskbarIconRemove() {
+
+	// Only do something if the icon is there
+	if (!Handle.taskbar) return;
+	Handle.taskbar = false;
+
+	// Remove the taskbar notification icon
+	NOTIFYICONDATA info;
+	ZeroMemory(&info, sizeof(info));
+	info.cbSize = sizeof(info);  // Size of this structure
+	info.hWnd   = Handle.window; // Handle to the window that will receive messages
+	info.uID    = 0;             // Program defined identifier
+	if (!Shell_NotifyIcon(NIM_DELETE, &info)) Report("error shell_notifyicon nim_delete");
+}

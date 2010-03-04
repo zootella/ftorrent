@@ -50,6 +50,8 @@ void WindowEdit(HWND window, boolean edit);
 HMENU MenuLoad(read name, int index);
 UINT MenuShow(HMENU menu, int x, int y);
 string DialogBrowse(read display);
+void TaskbarIconAdd();
+void TaskbarIconRemove();
 
 // Functions in user paint.cpp
 void PaintCreate();

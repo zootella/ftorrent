@@ -129,4 +129,7 @@ public:
 	// Painting tools
 	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
 	HFONT font, arial;
+
+	// State
+	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
 };
