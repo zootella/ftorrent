@@ -6,9 +6,9 @@
 #define ID_TASK_OPEN                    40002
 #define ID_TASK_ADD                     40003
 #define ID_TASK_NEW                     40004
-#define ID_TASK_HELP                    40005
-#define ID_TASK_ABOUT                   40006
-#define ID_TASK_OPTIONS                 40007
+#define ID_TASK_OPTIONS                 40005
+#define ID_TASK_HELP                    40006
+#define ID_TASK_ABOUT                   40007
 #define ID_TASK_EXIT                    40008
 
 // Next default values for new objects

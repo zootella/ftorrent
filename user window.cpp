@@ -133,11 +133,14 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				RECT rectangle;
 				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
 				UINT choice = MenuShow(Handle.menu, rectangle.left, rectangle.bottom); // Wait here for the user to make a choice
-				if      (choice == ID_TASK_DELETE)        {  }
-				else if (choice == ID_TASK_COPY)          {  }
-				else if (choice == ID_TASK_COMPARE)       {  }
-				else if (choice == ID_TASK_UPDATE)        {  }
-				else if (choice == ID_TASK_UPDATECOMPARE) {  }
+				if      (choice == ID_TASK_TEST)    { Test(); }
+				else if (choice == ID_TASK_OPEN)    {  }
+				else if (choice == ID_TASK_ADD)     {  }
+				else if (choice == ID_TASK_NEW)     {  }
+				else if (choice == ID_TASK_HELP)    {  }
+				else if (choice == ID_TASK_ABOUT)   {  }
+				else if (choice == ID_TASK_OPTIONS) {  }
+				else if (choice == ID_TASK_EXIT)    {  }
 			}
 		}
 
