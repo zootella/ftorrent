@@ -44,7 +44,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Add Exit to the main window's system menu
 	HMENU m = GetSystemMenu(Handle.window, false); // Get the menu for editing
 	if (!m) Report(L"error getsystemmenu");
-	if (m && !AppendMenu(m, MF_STRING, ID_TASK_EXIT, L"&Exit")) Report(L"error appendmenu");
+	if (m && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"error appendmenu");
 
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
@@ -58,10 +58,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.start = WindowCreateButton(L"Start");
 	Handle.stop  = WindowCreateButton(L"Stop");
 	Handle.reset = WindowCreateButton(L"Reset");
-	Handle.menu = MenuLoad(L"CONTEXT_MENU", 0); // Menu
-	if (!PROGRAM_TEST) { // Remove the Test item
-		if (!DeleteMenu(Handle.menu, ID_TASK_TEST, 0)) Report(L"error deletemenu");
-	}
 
 	// Prepare the window to show current information, and make the correct controls available
 	//TODO // Tries to paint now, but doesn't because the window isn't on the screen yet
@@ -139,15 +135,18 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				// Show the context menu beneath the task button
 				RECT rectangle;
 				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
-				UINT choice = MenuShow(Handle.menu, rectangle.left, rectangle.bottom); // Wait here for the user to make a choice
-				if      (choice == ID_TASK_TEST)    { Test(); }
-				else if (choice == ID_TASK_OPEN)    {  }
-				else if (choice == ID_TASK_ADD)     {  }
-				else if (choice == ID_TASK_NEW)     {  }
-				else if (choice == ID_TASK_HELP)    {  }
-				else if (choice == ID_TASK_ABOUT)   {  }
-				else if (choice == ID_TASK_OPTIONS) {  }
-				else if (choice == ID_TASK_EXIT)    {
+				sizeitem size(rectangle);
+
+
+				UINT choice = MenuShow(Handle.menutools, false, &size); // Wait here for the user to make a choice
+				if      (choice == ID_TOOLS_TEST)    { Test(); }
+				else if (choice == ID_TOOLS_OPEN)    {  }
+				else if (choice == ID_TOOLS_ADD)     {  }
+				else if (choice == ID_TOOLS_NEW)     {  }
+				else if (choice == ID_TOOLS_HELP)    {  }
+				else if (choice == ID_TOOLS_ABOUT)   {  }
+				else if (choice == ID_TOOLS_OPTIONS) {  }
+				else if (choice == ID_TOOLS_EXIT)    {
 
 					// Close the program
 					PostQuitMessage(0);
@@ -181,7 +180,7 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 
 		// The user clicked the Exit window menu item that we added
 		break;
-		case ID_TASK_EXIT:
+		case ID_TOOLS_EXIT:
 
 			// Close the program
 			PostQuitMessage(0);
@@ -223,19 +222,13 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 // Displays the taskbar notification icon context menu and performs the result
 void MenuTaskbar() {
 
-	// LOAD THE TASKBAR CONTEXT MENU
-	HMENU menus, menu;
-	ContextMenuLoad(0, &menus, &menu);
-
-	// MAKE THE RESTORE MENU ITEM BOLD AND HAVE THE SYSTEM BITMAP
-	ContextMenuSet(menu, MenuTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-
-	// SHOW THE MENU AND GET THE USER'S CHOICE
-	UINT choice = ContextMenuShow(menus, menu, true);
+	// Highlight and show the menu to the user
+	MenuSet(Handle.menutaskbar, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	UINT choice = MenuShow(Handle.menutaskbar, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {
-	case MenuTaskbarRestore:
+	case ID_TASKBAR_RESTORE:
 
 		// Restore from taskbar
 		TaskbarIconRemove();
@@ -244,7 +237,7 @@ void MenuTaskbar() {
 
 	// Exit
 	break;
-	case MenuTaskbarExit:
+	case ID_TASKBAR_EXIT:
 
 		// Remove the icon and exit the mesage loop
 		TaskbarIconRemove();

@@ -51,6 +51,10 @@ public:
 
 	// Determine if this size holds any pixels
 	bool is() { return w() > 0 && h() > 0; }
+
+	// Convert between screen and client window coordinates
+	void screen(HWND window = NULL);
+	void client(HWND window = NULL);
 };
 
 // Hold a device context with information about how to put it away
@@ -120,11 +124,13 @@ public:
 	HINSTANCE instance; // Program instance handle
 	CRITICAL_SECTION section; // Critical section for the job object
 
-	// Windows and menus
+	// Windows
 	HWND window; // The main window on the screen
 	HWND tasks, status, errors; // Child window edit controls
 	HWND clear, task, start, stop, reset; // Child window buttons
-	HMENU menu; // The Tools menu
+
+	// Menus
+	HMENU menutaskbar, menutools;
 
 	// Icons
 	HICON iconbig, iconsmall;
@@ -135,4 +141,5 @@ public:
 
 	// State
 	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
+	int pop; // How many popup boxes and menus the program has put above the window
 };

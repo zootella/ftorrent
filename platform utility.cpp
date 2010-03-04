@@ -181,39 +181,6 @@ void WindowEdit(HWND window, boolean edit) {
 		0);             // Not used, must be 0
 }
 
-// Takes a menu resource name and an index, like 0, to clip out the first submenu
-// Loads the menu and clips out the submenu at the given index
-// Returns the menu, or null on error
-HMENU MenuLoad(read name, int index) {
-
-	// Load the menu resource
-	HMENU menus = LoadMenu(Handle.instance, name);
-	if (!menus) { Report(L"error loadmenu"); return NULL; }
-
-	// Clip off the submenu at the given index, and return it
-	HMENU menu = GetSubMenu(menus, index);
-	if (!menu) Report(L"error getsubmenu");
-	return menu;
-}
-
-// Show the given context menu
-// Holds here while the user makes a choice
-// Returns the choice the user made, or 0 if the user clicked outside or on error
-UINT MenuShow(HMENU menu, int x, int y) {
-
-	// Show the context menu and hold execution here until the user chooses from the menu or cancels it
-	return TrackPopupMenu(
-		menu,            // Handle to the menu to display
-		TPM_NONOTIFY |   // Return the chosen menu item without sending messages to the main window
-		TPM_RETURNCMD |
-		TPM_RIGHTBUTTON, // Let the user click an item with the left or right mouse button
-		x,               // Desired place to show it in screen coordinates
-		y,
-		0,
-		Handle.window,
-		NULL);
-}
-
 // Takes text to display in the dialog box
 // Shows the user the browse for folder dialog box
 // Returns the path the user chose, blank on cancel or error
@@ -433,83 +400,179 @@ void CursorSet(HCURSOR cursor) {
 
 
 
-void ContextMenuLoad(int i, HMENU *menus, HMENU *menu)
-{
-	// takes the 0 based index of the context menu to use
-	// loads the context menus and clips the requested one
-	// returns nothing, writes the menu handles or null if any error
 
-	// LOAD THE CONTEXT MENUS
-	*menus = LoadMenu(Handle.instance, "MENU_CONTEXT");
-	if (!*menus) { Report("contextmenuload: error loadmenu"); *menus = NULL; *menu  = NULL; return; }
 
-	// CLIP THE REQUESTED CONTEXT MENU
-	*menu = GetSubMenu(*menus, i);
-	if (!*menu) { Report("contextmenuload: error getsubmenu"); DestroyMenuSafely(*menus); *menus = NULL; *menu  = NULL; return; }
+// Takes a menu name and loads it from resources
+HMENU MenuLoad(read name) {
+
+	// Load the menu resource
+	HMENU menus = LoadMenu(Handle.instance, name);
+	if (!menus) Report(L"error loadmenu");
+	return menus;
 }
 
-void ContextMenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap)
-{
-	// takes a menu, command, and the state to set
-	// sets the menu item
-	// returns nothing
+// Takes a menu index, like 0 for the first one
+// Clips out the submenu at that index
+HMENU MenuClip(HMENU menus, int index) {
 
-	// SET MENU ITEM INFO
+	// Clip off the submenu at the given index, and return it
+	HMENU menu = GetSubMenu(menus, index);
+	if (!menu) Report(L"error getsubmenu");
+	return menu;
+}
+
+// Takes a menu, command, and the state to set
+// Sets the menu item
+void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
+
+	// Set menu item info
 	MENUITEMINFO info;
+	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(MENUITEMINFO);
 	info.fMask  = 0;
 	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; }
 	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
-	if (!SetMenuItemInfo(menu, command, false, &info)) Report("contextmenuset: error setmenuiteminfo");
+	if (!SetMenuItemInfo(menu, command, false, &info)) Report(L"error setmenuiteminfo");
 }
 
-UINT ContextMenuShow(HMENU menus, HMENU menu, bool taskbar, sizeitem *size)
-{
-	// takes menus and whether the context menu is being shown from the taskbar notification icon or not
-	// displays the context menu and waits for the user to make a choice, then destroys the menus
-	// returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
 
-	// IF THE MENU WAS NOT LOADED, REPORT CANCEL
-	if (!menu) return(0);
 
-	// USE THE GIVEN SIZE OR THE MOUSE POSITION
+
+
+
+
+
+
+// Takes menus and whether the context menu is being shown from the taskbar notification icon or not
+// Takes size null to put the menu at the mouse pointer, or a size item in client coordinates
+// Displays the context menu and waits for the user to make a choice
+// Returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
+UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
+
+	// Use the given size or mouse position
 	sizeitem position;
 	if (size) {
-
-		// CONVERT THE CLIENT SIZE INTO SCREEN COORDINATES
 		position = *size;
-		position.Screen();
-
+		position.screen(); // Convert the given client size into screen coordinates
 	} else {
-
-		// GET THE MOUSE POSITION IN SCREEN COORDINATES
-		position = MouseScreen();
+		position = MouseScreen(); // Get the mouse position in screen coordinates
 	}
 
-	// CONTEXT MENU FOR NOTIFICATION ICON
+	// Context menu for notification icon
 	if (taskbar) SetForegroundWindow(Handle.window);
 
-	// SHOW THE CONTEXT MENU AND HOLD EXECUTION HERE UNTIL THE USER CHOOSES FROM THE MENU OR CANCELS IT
-	UINT choice;
+	// Show the context menu and hold execution here until the user chooses from the menu or cancels it
 	AreaPopUp();
-	choice = TrackPopupMenu(
-		menu,            // HANDLE TO THE MENU TO DISPLAY
-		TPM_NONOTIFY |   // RETURN THE CHOSEN MENU ITEM WITHOUT SENDING MESSAGES TO THE MAIN WINDOW
+	UINT choice = TrackPopupMenu(
+		menu,            // Handle to the menu to display
+		TPM_NONOTIFY |   // Return the chosen menu item without sending messages to the main window
 		TPM_RETURNCMD |
-		TPM_RIGHTBUTTON, // LET THE USER CLICK ON AN ITEM WITH THE LEFT OR RIGHT BUTTON
-		position.x,      // DESIRED MENU POSITION IN SCREEN COORDINATES
-		position.y,
+		TPM_RIGHTBUTTON, // Let the user click on an item with the left or right button
+		position.x(),    // Desired menu position in screen coordinates
+		position.y(),
 		0,
 		Handle.window,
 		NULL);
 	AreaPopDown();
 
-	// CONTEXT MENU FOR NOTIFICATION ICON
+	// Context menu for notification icon
 	if (taskbar) PostMessage(Handle.window, WM_NULL, 0, 0);
 
-	// DESTROY THE CONTEXT MENUS, DESTROYING THE CLIPPED MENU AS WELL, AND RETURN THE RESULT
-	DestroyMenuSafely(menus);
-	return(choice);
+	// Return the user's choice, 0 they clicked outside the menu
+	return choice;
+}
+
+
+void AreaPopUp()
+{
+	/*
+	// call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
+	// takes nothing
+	// makes the program abandon the mouse and think it's always outside the client area
+	// returns nothing
+
+	// CLEAR RECORD OF THE AREA THE MOUSE PRESSED AND RELEASE THE MOUSE IF CAPTURED
+	Draw.area.pressed = NULL;
+	MouseRelease();
+
+	// RECORD THERE IS ONE MORE POP UP WINDOW
+	State.pop++;
+
+	// PULSE THE AREA NOW AS THE PEEKING POPUP WON'T PULSE ON IDLE
+	AreaPulse();
+	*/
+}
+
+void AreaPopDown()
+{
+	/*
+	// call this after the message box, popup menu, or dialog box that blocked and processed messages is gone
+	// takes nothing
+	// lets the program see the mouse position again
+	// returns nothing
+
+	// RECORD THERE IS ONE LESS POP UP WINDOW
+	State.pop--;
+	*/
+}
+
+
+
+
+
+// Takes a window or null to use the main one
+// Gets the mouse position in client coordinates
+// Returns x and y coordinates in a size item
+sizeitem MouseClient(HWND window) {
+
+	if (!window) window = Handle.window; // Choose window
+	sizeitem s = MouseScreen(); // Get the mouse pointer position in screen coordinates
+	s.client(window); // Convert the position to the client coordinates of the given window
+	return s;
+}
+
+// Gets the mouse position in screen coordinates
+// Returns x and y coordinates in a size item
+sizeitem MouseScreen() {
+
+	// If we have a popup window or menu open, report that the mouse is off the screen
+	sizeitem s;
+	s.x(-1);
+	s.y(-1);
+	if (Handle.pop) return s;
+
+	// Get the mouse position in screen coordinates
+	POINT p;
+	if (!GetCursorPos(&p)) return s; // Will return error if Windows is locked
+	s.set(p);
+	return s;
+}
+
+
+
+
+// Takes a window or null to use the main one
+// Uses this size in client coordinates
+// Converts the size to screen coordinates
+void sizeitem::screen(HWND window) {
+
+	if (!window) window = Handle.window; // Choose window
+	POINT p = point(); // Make a point with the x and y coordinates of this size item
+	if (!ClientToScreen(window, &p)) { Report(L"error clienttoscreen"); return; } // Convert it
+	x(p.x); // Store the converted position in this size item
+	y(p.y);
+}
+
+// Takes a window or null to use the main one
+// Uses this size in screen coordinates
+// Converts the size to client coordinates
+void sizeitem::client(HWND window) {
+
+	if (!window) window = Handle.window; // Choose window
+	POINT p = point(); // Make a point with the x and y coordinates of this size item
+	if (!ScreenToClient(window, &p)) { Report(L"error screentoclient"); return; } // Convert it
+	x(p.x); // Store the converted position in this size item
+	y(p.y);
 }
 
 

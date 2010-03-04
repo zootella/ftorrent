@@ -19,6 +19,16 @@ void PaintCreate() {
 	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
 	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
 
+	// Load menus
+	HMENU menus = MenuLoad(L"CONTEXT_MENU");
+	Handle.menutaskbar = MenuClip(menus, 0);
+	Handle.menutools   = MenuClip(menus, 1);
+
+	// Remove the test menu item
+	if (!PROGRAM_TEST) {
+		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"error deletemenu");
+	}
+
 	// Make color brushes
 	Handle.white       = CreateBrush(RGB(255, 255, 255));
 	Handle.black       = CreateBrush(RGB(  0,   0,   0));

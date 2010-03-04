@@ -38,8 +38,6 @@ HWND WindowCreateButton(read r);
 HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
 void WindowSize(HWND window, sizeitem size);
 void WindowEdit(HWND window, boolean edit);
-HMENU MenuLoad(read name, int index);
-UINT MenuShow(HMENU menu, int x, int y);
 string DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
@@ -53,6 +51,14 @@ void TaskbarIconRemove();
 HCURSOR LoadSharedCursor(read name);
 HICON LoadIconResource(read name, int size);
 void CursorSet(HCURSOR cursor);
+HMENU MenuLoad(read name);
+HMENU MenuClip(HMENU menus, int index);
+void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
+UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size);
+void AreaPopUp();
+void AreaPopDown();
+sizeitem MouseClient(HWND window);
+sizeitem MouseScreen();
 
 // Functions in user paint.cpp
 void PaintCreate();
@@ -61,6 +67,7 @@ void Paint();
 // Functions in user window.cpp
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
 LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
+void MenuTaskbar();
 
 // Functions in (test).cpp
 void Test();
