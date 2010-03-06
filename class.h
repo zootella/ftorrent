@@ -116,8 +116,8 @@ public:
 	}
 };
 
-// The program's global handle object
-class handleitem {
+// Handles
+class handletop {
 public:
 
 	// Program handles
@@ -142,4 +142,22 @@ public:
 	// State
 	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
+};
+
+// Drawing tools
+class drawtop {
+public:
+
+};
+
+// Program data
+class datatop {
+public:
+
+};
+
+// Current state
+class statetop {
+public:
+
 };

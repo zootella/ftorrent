@@ -9,8 +9,11 @@
 #include "class.h"
 #include "function.h"
 
-// Global objects
-extern handleitem Handle;
+// Access to global objects
+extern handletop Handle;
+extern drawtop   Draw;
+extern datatop   Data;
+extern statetop  State;
 
 // Make painting tools once when the program starts
 void PaintCreate() {

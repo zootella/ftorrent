@@ -9,8 +9,11 @@
 #include "class.h"
 #include "function.h"
 
-// Global objects
-extern handleitem Handle;
+// Access to global objects
+extern handletop Handle;
+extern drawtop   Draw;
+extern datatop   Data;
+extern statetop  State;
 
 // Load the given handle to a device context into this object
 void deviceitem::OpenUse(HDC newdevice) {

@@ -10,7 +10,10 @@
 #include "function.h"
 
 // Global objects
-handleitem Handle; // No extern, this is where the global objects are made
+handletop Handle; // Window handles
+drawtop   Draw;   // Drawing tools
+datatop   Data;   // Linked data items
+statetop  State;  // State variables
 
 // Start the program
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
