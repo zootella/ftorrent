@@ -134,9 +134,9 @@ void Paint() {
 	errors = border3; errors.inside();
 
 	// Move labels inside to line up with controls
-	label1.inside();
-	label2.inside();
-	label3.inside();
+	label1.Inside();
+	label2.Inside();
+	label3.Inside();
 
 	// Pick colors for the background banner message
 	brushitem *field, *ink, *label;

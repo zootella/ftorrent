@@ -1,4 +1,69 @@
 
+// SIZE ITEM
+class sizeitem {
+public:
+
+	// COORDINATES FROM CLIENT AREA ORIGIN AND WIDTH AND HEIGHT DIMENSIONS
+	int x, y, w, h;
+
+	// NEW
+	sizeitem() { Clear(); }
+	sizeitem(POINT p) { Set(p); }
+	sizeitem(RECT  r) { Set(r); }
+	sizeitem(SIZE  s) { Set(s); }
+
+	// CLEAR
+	void Clear() { x = y = w = h = 0; }
+
+	// SET
+	void Set(POINT p) { x = p.x;    y = p.y;   w = 0;           h = 0;            }
+	void Set(RECT  r) { x = r.left; y = r.top; w = r.right - x; h = r.bottom - y; }
+	void Set(SIZE  s) { x = 0;      y = 0;     w = s.cx;        h = s.cy;         }
+
+	// CONVERT
+	POINT Point() { POINT p; p.x = x; p.y = y; return(p); }
+	RECT Rectangle() { RECT r; r.left = x; r.top = y; r.right = x + w; r.bottom = y + h; return(r); }
+	SIZE Size() { SIZE s; s.cx = w; s.cy = h; return(s); }
+
+	// TAKE NEGATIVE WIDTH OR HEIGHT TO 0
+	void Check() { if (w < 0) w = 0; if (h < 0) h = 0; }
+
+	// DETERMINE IF THE SIZE HOLDS ANY PIXELS, AND IF A POINT IS INSIDE THE SIZE
+	bool Is() { return(w > 0 && h > 0); }
+	bool Inside(sizeitem s) { return(s.x >= x && s.x < x + w && s.y >= y && s.y < y + h); }
+
+	// READ LIKE A RECTANGLE
+	int Right() { return(x + w); }
+	int Bottom() { return(y + h); }
+
+	// SET LIKE A RECTANGLE
+	void SetLeft(int left) { w += x - left; x = left; }
+	void SetTop(int top) { h += y - top; y = top; }
+	void SetRight(int right) { w = right - x; }
+	void SetBottom(int bottom) { h = bottom - y; }
+
+	// POSITION BY THE RIGHT OR BOTTOM EDGES
+	void PositionRight(int right) { x = right - w; }
+	void PositionBottom(int bottom) { y = bottom - h; }
+
+	// SHIFT JUST THE LEFT AND TOP BOUNDARIES BY A PIXEL AMOUNT
+	void ShiftLeft(int shift) { x += shift; w -= shift; }
+	void ShiftTop(int shift) { y += shift; h -= shift; }
+
+	// COLLAPSE THE SIZE TO THE RIGHT OR TO THE BOTTOM
+	void CloseRight() { x += w; w = 0; }
+	void CloseBottom() { y += h; h = 0; }
+
+	// EXPAND ALL THE EDGES BY A PIXEL AMOUNT
+	void Expand(int shift = 1) { x -= shift; y -= shift; w += (2 * shift); h += (2 * shift); }
+
+	// CONVERT BETWEEN SCREEN AND CLIENT WINDOW COORDINATES
+	void Screen(HWND window = NULL);
+	void Client(HWND window = NULL);
+};
+
+
+/*
 // A rectangular size in the window
 class sizeitem {
 private:
@@ -56,6 +121,7 @@ public:
 	void screen(HWND window = NULL);
 	void client(HWND window = NULL);
 };
+*/
 
 // Hold a device context with information about how to put it away
 enum deviceopen {

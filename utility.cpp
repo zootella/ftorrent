@@ -486,38 +486,6 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 }
 
 
-void AreaPopUp()
-{
-	/*
-	// call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
-	// takes nothing
-	// makes the program abandon the mouse and think it's always outside the client area
-	// returns nothing
-
-	// CLEAR RECORD OF THE AREA THE MOUSE PRESSED AND RELEASE THE MOUSE IF CAPTURED
-	Draw.area.pressed = NULL;
-	MouseRelease();
-
-	// RECORD THERE IS ONE MORE POP UP WINDOW
-	State.pop++;
-
-	// PULSE THE AREA NOW AS THE PEEKING POPUP WON'T PULSE ON IDLE
-	AreaPulse();
-	*/
-}
-
-void AreaPopDown()
-{
-	/*
-	// call this after the message box, popup menu, or dialog box that blocked and processed messages is gone
-	// takes nothing
-	// lets the program see the mouse position again
-	// returns nothing
-
-	// RECORD THERE IS ONE LESS POP UP WINDOW
-	State.pop--;
-	*/
-}
 
 
 

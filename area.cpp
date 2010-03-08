@@ -28,7 +28,6 @@ void AreaCreate()
 	Draw.enter.icon  = Draw.icon.linkget;
 
 	// TEXT
-	Draw.title             = "ltorrent 3 download";
 	Draw.open.text    = "Open   ";
 	Draw.help.text    = "Help...";
 	Draw.pause.text   = "Pause";
@@ -78,7 +77,7 @@ void AreaPulse()
 		else if (Draw.pressed->command == CommandSizeHorizontal) CursorSet(Draw.cursor.horizontal);
 		else if (Draw.pressed->command == CommandSizeVertical)   CursorSet(Draw.cursor.vertical);
 		else if (Draw.pressed->command == CommandSizeDiagonal)   CursorSet(Draw.cursor.diagonal);
-		else                                                          CursorSet(Draw.cursor.arrow);
+		else                                                     CursorSet(Draw.cursor.arrow);
 
 	// SET THE POINTER BASED ON THE AREA IT IS OVER
 	} else if (over && !pressing) {
@@ -113,8 +112,8 @@ void AreaPulse()
 		} else if (a->command == CommandReady) {
 
 			if      (a == over && a == Draw.pressed) display = DisplayPressed;
-			else if (a == over && !pressing)              display = DisplayHot;
-			else                                          display = DisplayReady;
+			else if (a == over && !pressing)         display = DisplayHot;
+			else                                     display = DisplayReady;
 
 		} else if (a->command == CommandSet) {
 
@@ -123,8 +122,8 @@ void AreaPulse()
 		} else if (a->command == CommandLink) {
 
 			if      (a == over && a == Draw.pressed) display = DisplayHot;
-			else if (a == over && !pressing)              display = DisplayHot;
-			else                                          display = DisplayReady;
+			else if (a == over && !pressing)         display = DisplayHot;
+			else                                     display = DisplayReady;
 		}
 
 		// THE DISPLAY OF THE AREA ON THE SCREEN IS DIFFERENT FROM THE NEWLY COMPOSED DISPLAY
@@ -155,12 +154,12 @@ void AreaPulse()
 
 		// GET POSITIONS IN CLIENT COORDINATES
 		sizeitem mouse, stick, min, move;
-		mouse = MouseClient();                                   // WHERE THE MOUSE IS
+		mouse = MouseClient();                         // WHERE THE MOUSE IS
 		stick.x = Draw.pressed->size.x + Draw.stick.x; // THE STICK IS THE POINT THE MOUSE IS DRAGGING
 		stick.y = Draw.pressed->size.y + Draw.stick.y;
 		min.x = Draw.sizemin.x + Draw.stick.x;         // THE CLOSEST THE STICK CAN BE TO THE CLIENT ORIGIN
 		min.y = Draw.sizemin.y + Draw.stick.y;
-		move.x = mouse.x - stick.x;                              // FROM THE STICK TO THE MOUSE
+		move.x = mouse.x - stick.x;                    // FROM THE STICK TO THE MOUSE
 		move.y = mouse.y - stick.y;
 
 		// IF THE MOUSE IS AWAY FROM THE STICK, TRY TO MOVE THE STICK TO IT
@@ -418,10 +417,12 @@ void Size(int move)
 	}
 
 	// POSITION AND RESIZE CHILD WINDOW CONTROLS WITHOUT SENDING PAINT MESSAGES
+	/*
 	WindowMove(Handle.edit,   Draw.edit);
 	WindowMove(Handle.button, Draw.button);
 	WindowMove(Handle.tree,   Draw.tree);
 	WindowMove(Handle.list,   Draw.list);
+	*/
 
 	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
 	if (!address.Is()) TipAdd(Draw.address.size, Draw.address.tip);
