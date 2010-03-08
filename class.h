@@ -306,6 +306,8 @@ class statetop {
 public:
 
 	// State
-	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
+	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
+
+	boolean pause; // True when the Pause button is pressed
 };

@@ -487,7 +487,99 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 
 
 
+void MouseCapture(HWND window)
+{
+	// takes a window
+	// captures the mouse if it is not already captured
+	// returns nothing
 
+	// CHOOSE WINDOW
+	if (!window) window = Handle.window;
+
+	// IF THE MOUSE IS NOT ALREADY CAPTURED BY THE WINDOW, CAPTURE IT
+	if (GetCapture() != window) SetCapture(window);
+}
+
+void MouseRelease(HWND window)
+{
+	// takes a window
+	// releases the mouse if it is captured
+	// returns nothing
+
+	// CHOOSE WINDOW
+	if (!window) window = Handle.window;
+
+	// IF THE WINDOW HAS THE MOUSE CAPTURED, RELEASE IT
+	if (GetCapture() == window) ReleaseCapture();
+}
+
+bool MouseInside()
+{
+	// takes nothing
+	// determines if the mouse is in the client area but not over a child window control
+	// returns true or false
+
+	// GET THE MOUSE CURSOR'S POSITION IN CLIENT WINDOW COORDINATES AND THE SIZE OF THE CLIENT WINDOW
+	sizeitem mouse, client;
+	mouse = MouseClient();
+	client = SizeClient();
+
+	// THE MOUSE IS INSIDE THE SIGN
+	if (Draw.sign.size.Inside(mouse)) return(false);
+
+	// THE MOUSE IS INSIDE IF IT IS INSIDE THE CLIENT AREA AND OUTSIDE ALL THE CHILD WINDOW CONTROLS
+	if (client.Inside(mouse)            &&
+		!Draw.area.edit.Inside(mouse)   &&
+		!Draw.area.button.Inside(mouse) &&
+		!Draw.area.tree.Inside(mouse)   &&
+		!Draw.area.list.Inside(mouse)) return(true);
+	else return(false);
+}
+
+
+areaitem *MouseOver()
+{
+	// takes nothing
+	// finds what area, if any, the mouse is currently positioned over
+	// returns the area item or null if none
+
+	// GET THE MOUSE CURSOR'S POSITION IN CLIENT WINDOW COORDINATES AND MAKE SURE THE MOUSE IS INSIDE THE CLIENT AREA
+	sizeitem mouse, client;
+	mouse = MouseClient();
+	client = SizeClient();
+	if (!client.Inside(mouse)) return(NULL);
+
+	// THE MOUSE IS INSIDE THE SIGN
+	if (Draw.sign.size.Inside(mouse)) return(NULL);
+
+	// MOVE DOWN EACH AREA ITEM TO FIND THE ONE THE MOUSE IS OVER
+	areaitem *a;
+	a = Draw.area.all;
+	while (a) {
+
+		if (a->size.Inside(mouse)) break;
+		a = a->next;
+	}
+
+	// RETURN THE AREA ITEM THE MOUSE IS OVER OR NULL IF IT IS AWAY FROM THEM ALL
+	return(a);
+}
+
+sizeitem MouseArea(areaitem *a)
+{
+	// takes an area item
+	// gets the mouse position in area coordinates
+	// returns x and y coordinates in a size item
+
+	// GET THE MOUSE POINTER POSITION IN CLIENT WINDOW COORDINATES
+	sizeitem s;
+	s = MouseClient();
+
+	// CONVERT TO AREA COORDINATES
+	s.x -= a->size.x;
+	s.y -= a->size.y;
+	return(s);
+}
 
 
 

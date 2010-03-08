@@ -55,6 +55,11 @@ HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
 UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size);
+void MouseCapture(HWND window);
+void MouseRelease(HWND window);
+bool MouseInside();
+areaitem *MouseOver();
+sizeitem MouseArea(areaitem *a);
 sizeitem MouseClient(HWND window);
 sizeitem MouseScreen();
 

@@ -22,10 +22,12 @@ void AreaCreate()
 	// returns nothing
 
 	// ICONS
+	/*
 	Draw.pause.icon  = Draw.icon.buttonpause;
 	Draw.remove.icon = Draw.icon.buttonremove;
 	Draw.remove.gray = Draw.icon.grayremove;
 	Draw.enter.icon  = Draw.icon.linkget;
+	*/
 
 	// TEXT
 	Draw.open.text    = "Open   ";
@@ -57,8 +59,8 @@ void AreaPulse()
 	// returns nothing
 
 	// SET BUTTON COMMAND STATES
-	if (State.option.pause) Draw.pause.command  = CommandSet;   else Draw.pause.command  = CommandReady;
-	if (ListSelectedRows()) Draw.remove.command = CommandReady; else Draw.remove.command = CommandUnavailable;
+	if (State.pause) Draw.pause.command  = CommandSet;   else Draw.pause.command  = CommandReady;
+	if (false /*ListSelectedRows()*/) Draw.remove.command = CommandReady; else Draw.remove.command = CommandUnavailable;
 
 	// FIND WHAT AREA THE MOUSE IS OVER, IF IT IS INSIDE THE CLIENT AREA OF THE WINDOW, AND IF THE PRIMARY BUTTON IS UP OR DOWN
 	areaitem *over;
