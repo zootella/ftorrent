@@ -69,5 +69,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
 
+// Area
+void AreaCreate();
+void AreaPulse();
+void AreaPopUp();
+void AreaPopDown();
+void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5, int *width6);
+void Size(int move);
+
 // Test
 void Test();

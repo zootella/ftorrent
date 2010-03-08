@@ -15,83 +15,37 @@ extern drawtop   Draw;
 extern datatop   Data;
 extern statetop  State;
 
-/*
 void AreaCreate()
 {
 	// takes nothing
 	// creates the areas for the window
 	// returns nothing
 
-	if (State.mode == ModeDownload) {
+	// ICONS
+	Draw.pause.icon  = Draw.icon.buttonpause;
+	Draw.remove.icon = Draw.icon.buttonremove;
+	Draw.remove.gray = Draw.icon.grayremove;
+	Draw.enter.icon  = Draw.icon.linkget;
 
-		// ICONS
-		Draw.area.pause.icon  = Draw.icon.buttonpause;
-		Draw.area.remove.icon = Draw.icon.buttonremove;
-		Draw.area.remove.gray = Draw.icon.grayremove;
-		Draw.area.enter.icon  = Draw.icon.linkget;
+	// TEXT
+	Draw.title             = "ltorrent 3 download";
+	Draw.open.text    = "Open   ";
+	Draw.help.text    = "Help...";
+	Draw.pause.text   = "Pause";
+	Draw.remove.text  = "Remove";
+	Draw.address.text = "Addresses";
+	Draw.address.tip  = "Click to Paste and Get";
+	Draw.enter.text   = "Get";
+	Draw.copy.text    = "Get addresses copied in other programs (Right-click links in Internet Explorer and press the T key)";
 
-		// TEXT
-		Draw.title             = "ltorrent 3 download";
-		Draw.area.open.text    = "Open   ";
-		Draw.area.help.text    = "Help...";
-		Draw.area.pause.text   = "Pause";
-		Draw.area.remove.text  = "Remove";
-		Draw.area.address.text = "Addresses";
-		Draw.area.address.tip  = "Click to Paste and Get";
-		Draw.area.enter.text   = "Get";
-		Draw.area.copy.text    = "Get addresses copied in other programs (Right-click links in Internet Explorer and press the T key)";
-
-		// LINK AND SIZE COMMAND STATES
-		Draw.area.open.command    = CommandLink;
-		Draw.area.help.command    = CommandLink;
-		Draw.area.address.command = CommandLink;
-		Draw.area.enter.command   = CommandLink;
-		Draw.area.copy.command    = CommandLink;
-		Draw.area.bar.command     = CommandSizeVertical;
-		Draw.area.corner.command  = CommandSizeDiagonal;
-
-	} else if (State.mode == ModeSite) {
-
-		// ICONS
-		Draw.area.back.icon    = Draw.icon.buttonback;
-		Draw.area.back.gray    = Draw.icon.grayback;
-		Draw.area.forward.icon = Draw.icon.buttonforward;
-		Draw.area.forward.gray = Draw.icon.grayforward;
-		Draw.area.stop.icon    = Draw.icon.buttonstop;
-		Draw.area.stop.gray    = Draw.icon.graystop;
-		Draw.area.refresh.icon = Draw.icon.buttonrefresh;
-		Draw.area.refresh.gray = Draw.icon.grayrefresh;
-		Draw.area.expand.icon  = Draw.icon.buttonexpand;
-		Draw.area.get.icon     = Draw.icon.buttonget;
-		Draw.area.get.gray     = Draw.icon.grayget;
-		Draw.area.enter.icon   = Draw.icon.linkgo;
-
-		// TEXT
-		Draw.title             = "ltorrent 3 site";
-		Draw.area.open.text    = "Open   "; // EXTRA SPACE FOR PAINTED DOWN ARROW
-		Draw.area.help.text    = "Help...";
-		Draw.area.back.text    = "Back";
-		Draw.area.forward.text = "Forward";
-		Draw.area.stop.text    = "Stop";
-		Draw.area.refresh.text = "Refresh";
-		Draw.area.expand.text  = "Expand";
-		Draw.area.get.text     = "Get";
-		Draw.area.address.text = "Address";
-		Draw.area.address.tip  = "Click to Paste and Go";
-		Draw.area.enter.text   = "Go";
-
-		// ADJUST TEXT
-		Draw.area.back.adjust   = 0;
-		Draw.area.expand.adjust = 0;
-
-		// LINK AND SIZE COMMAND STATES
-		Draw.area.open.command    = CommandLink;
-		Draw.area.help.command    = CommandLink;
-		Draw.area.address.command = CommandLink;
-		Draw.area.enter.command   = CommandLink;
-		Draw.area.bar.command     = CommandSizeHorizontal;
-		Draw.area.corner.command  = CommandSizeDiagonal;
-	}
+	// LINK AND SIZE COMMAND STATES
+	Draw.open.command    = CommandLink;
+	Draw.help.command    = CommandLink;
+	Draw.address.command = CommandLink;
+	Draw.enter.command   = CommandLink;
+	Draw.copy.command    = CommandLink;
+	Draw.bar.command     = CommandSizeVertical;
+	Draw.corner.command  = CommandSizeDiagonal;
 
 	// SET THE AREA DISPLAY STATES
 	AreaPulse();
@@ -104,20 +58,8 @@ void AreaPulse()
 	// returns nothing
 
 	// SET BUTTON COMMAND STATES
-	if (State.mode == ModeDownload) {
-
-		if (State.option.pause) Draw.area.pause.command  = CommandSet;   else Draw.area.pause.command  = CommandReady;
-		if (ListSelectedRows()) Draw.area.remove.command = CommandReady; else Draw.area.remove.command = CommandUnavailable;
-
-	} else if (State.mode == ModeSite) {
-
-		if (Data.address && Data.address->back)    Draw.area.back.command    = CommandReady; else Draw.area.back.command    = CommandUnavailable;
-		if (Data.address && Data.address->forward) Draw.area.forward.command = CommandReady; else Draw.area.forward.command = CommandUnavailable;
-		if (!State.stop && SiteHasPending())       Draw.area.stop.command    = CommandReady; else Draw.area.stop.command    = CommandUnavailable;
-		if (Data.tree)                             Draw.area.refresh.command = CommandReady; else Draw.area.refresh.command = CommandUnavailable;
-		if (State.expand)                          Draw.area.expand.command  = CommandSet;   else Draw.area.expand.command  = CommandReady;
-		if (ListSelectedRows())                    Draw.area.get.command     = CommandReady; else Draw.area.get.command     = CommandUnavailable;
-	}
+	if (State.option.pause) Draw.pause.command  = CommandSet;   else Draw.pause.command  = CommandReady;
+	if (ListSelectedRows()) Draw.remove.command = CommandReady; else Draw.remove.command = CommandUnavailable;
 
 	// FIND WHAT AREA THE MOUSE IS OVER, IF IT IS INSIDE THE CLIENT AREA OF THE WINDOW, AND IF THE PRIMARY BUTTON IS UP OR DOWN
 	areaitem *over;
@@ -128,14 +70,14 @@ void AreaPulse()
 	else pressing = false;
 
 	// SET THE POINTER BASED ON THE AREA IT PRESSED
-	if (Draw.area.pressed) {
+	if (Draw.pressed) {
 
-		if      (Draw.area.pressed->command == CommandReady)          CursorSet(Draw.cursor.hand);
-		else if (Draw.area.pressed->command == CommandSet)            CursorSet(Draw.cursor.hand);
-		else if (Draw.area.pressed->command == CommandLink)           CursorSet(Draw.cursor.hand);
-		else if (Draw.area.pressed->command == CommandSizeHorizontal) CursorSet(Draw.cursor.horizontal);
-		else if (Draw.area.pressed->command == CommandSizeVertical)   CursorSet(Draw.cursor.vertical);
-		else if (Draw.area.pressed->command == CommandSizeDiagonal)   CursorSet(Draw.cursor.diagonal);
+		if      (Draw.pressed->command == CommandReady)          CursorSet(Draw.cursor.hand);
+		else if (Draw.pressed->command == CommandSet)            CursorSet(Draw.cursor.hand);
+		else if (Draw.pressed->command == CommandLink)           CursorSet(Draw.cursor.hand);
+		else if (Draw.pressed->command == CommandSizeHorizontal) CursorSet(Draw.cursor.horizontal);
+		else if (Draw.pressed->command == CommandSizeVertical)   CursorSet(Draw.cursor.vertical);
+		else if (Draw.pressed->command == CommandSizeDiagonal)   CursorSet(Draw.cursor.diagonal);
 		else                                                          CursorSet(Draw.cursor.arrow);
 
 	// SET THE POINTER BASED ON THE AREA IT IS OVER
@@ -159,7 +101,7 @@ void AreaPulse()
 	areadisplay display;
 	deviceitem device;
 	areaitem *a;
-	a = Draw.area.all;
+	a = Draw.all;
 	while (a) {
 
 		// COMPOSE THE DISPLAY FOR THE AREA
@@ -170,7 +112,7 @@ void AreaPulse()
 
 		} else if (a->command == CommandReady) {
 
-			if      (a == over && a == Draw.area.pressed) display = DisplayPressed;
+			if      (a == over && a == Draw.pressed) display = DisplayPressed;
 			else if (a == over && !pressing)              display = DisplayHot;
 			else                                          display = DisplayReady;
 
@@ -180,7 +122,7 @@ void AreaPulse()
 
 		} else if (a->command == CommandLink) {
 
-			if      (a == over && a == Draw.area.pressed) display = DisplayHot;
+			if      (a == over && a == Draw.pressed) display = DisplayHot;
 			else if (a == over && !pressing)              display = DisplayHot;
 			else                                          display = DisplayReady;
 		}
@@ -206,33 +148,33 @@ void AreaPulse()
 	}
 
 	// IF THE PROGRAM IS NOT OWNED AND THE GET BUTTON IT HOT, SHOW THE SIGN
-	if (!State.owned && Draw.area.get.display == DisplayHot) Sign();
+	if (!State.owned && Draw.get.display == DisplayHot) Sign();
 
 	// ADJUST SIZE
-	if (Draw.area.pressed) {
+	if (Draw.pressed) {
 
 		// GET POSITIONS IN CLIENT COORDINATES
 		sizeitem mouse, stick, min, move;
 		mouse = MouseClient();                                   // WHERE THE MOUSE IS
-		stick.x = Draw.area.pressed->size.x + Draw.area.stick.x; // THE STICK IS THE POINT THE MOUSE IS DRAGGING
-		stick.y = Draw.area.pressed->size.y + Draw.area.stick.y;
-		min.x = Draw.area.sizemin.x + Draw.area.stick.x;         // THE CLOSEST THE STICK CAN BE TO THE CLIENT ORIGIN
-		min.y = Draw.area.sizemin.y + Draw.area.stick.y;
+		stick.x = Draw.pressed->size.x + Draw.stick.x; // THE STICK IS THE POINT THE MOUSE IS DRAGGING
+		stick.y = Draw.pressed->size.y + Draw.stick.y;
+		min.x = Draw.sizemin.x + Draw.stick.x;         // THE CLOSEST THE STICK CAN BE TO THE CLIENT ORIGIN
+		min.y = Draw.sizemin.y + Draw.stick.y;
 		move.x = mouse.x - stick.x;                              // FROM THE STICK TO THE MOUSE
 		move.y = mouse.y - stick.y;
 
 		// IF THE MOUSE IS AWAY FROM THE STICK, TRY TO MOVE THE STICK TO IT
-		if (Draw.area.pressed->command == CommandSizeHorizontal && move.x != 0) {
+		if (Draw.pressed->command == CommandSizeHorizontal && move.x != 0) {
 
 			// HORIZONTAL BAR
 			Size(move.x);
 
-		} else if (Draw.area.pressed->command == CommandSizeVertical && move.y != 0) {
+		} else if (Draw.pressed->command == CommandSizeVertical && move.y != 0) {
 
 			// VERTICAL BAR
 			Size(move.y);
 
-		} else if (Draw.area.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
+		} else if (Draw.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
 
 			// DON'T TRY TO MOVE THE STICK CLOSER TO THE CLIENT ORIGIN THAN MIN
 			if (mouse.x < min.x) move.x = min.x - stick.x;
@@ -271,7 +213,7 @@ void AreaPulse()
 		State.status = s;
 
 		// THE STATUS BAR HAS SIZE
-		if (Draw.area.status.Is()) {
+		if (Draw.status.Is()) {
 
 			// GET THE WINDOW DEVICE CONTEXT IF IT HASN'T ALREADY BEEN OBTAINED
 			if (device.open == DeviceNone) {
@@ -282,7 +224,7 @@ void AreaPulse()
 			}
 
 			// PAINT THE STATUS TEXT TO THE WINDOW
-			PaintText(&device, State.status, Draw.area.status, false, true, true, true);
+			PaintText(&device, State.status, Draw.status, false, true, true, true);
 		}
 	}
 }
@@ -295,7 +237,7 @@ void AreaPopUp()
 	// returns nothing
 
 	// CLEAR RECORD OF THE AREA THE MOUSE PRESSED AND RELEASE THE MOUSE IF CAPTURED
-	Draw.area.pressed = NULL;
+	Draw.pressed = NULL;
 	MouseRelease();
 
 	// RECORD THERE IS ONE MORE POP UP WINDOW
@@ -328,33 +270,17 @@ void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5
 	int scroll;
 	scroll = GetSystemMetrics(SM_CXVSCROLL); // THE WIDTH OF THE VERTICAL SCROLL BAR, USUALLY 16 PIXELS
 
-	if (State.mode == ModeDownload) {
+	// SET THE WIDTHS OF THE FIRST 4 COLUMNS
+	*width1 = 130;
+	*width2 = 120;
+	*width3 = 110;
+	*width4 = 120;
 
-		// SET THE WIDTHS OF THE FIRST 4 COLUMNS
-		*width1 = 130;
-		*width2 = 120;
-		*width3 = 110;
-		*width4 = 120;
-
-		// CALCULATE THE WIDTH OF THE LAST 2 COLUMNS
-		int last;
-		last = (client.w - 4 - *width1 - *width2 - *width3 - *width4 - (scroll * 2)) / 2;
-		if (last < 120) last = 120;
-		*width5 = *width6 = last;
-
-	} else if (State.mode == ModeSite) {
-
-		// SET THE WIDTHS OF THE FIRST 4 COLUMNS
-		*width1 = 120;
-		*width2 = 120;
-		*width3 = 120;
-		*width4 = 120;
-
-		// CALCULATE THE WIDTH OF THE LAST COLUMN
-		*width5 = client.w - ((client.w - 10) / 4) - 10 - *width1 - *width2 - *width3 - *width4 - (scroll * 2);
-		if (*width5 < 120) *width5 = 120;
-		*width6 = 0;
-	}
+	// CALCULATE THE WIDTH OF THE LAST 2 COLUMNS
+	int last;
+	last = (client.w - 4 - *width1 - *width2 - *width3 - *width4 - (scroll * 2)) / 2;
+	if (last < 120) last = 120;
+	*width5 = *width6 = last;
 }
 
 void Size(int move)
@@ -370,13 +296,13 @@ void Size(int move)
 
 	// RECORD WHERE THE ADDRESS AND BAR ARE BEFORE THE SIZE
 	sizeitem address, bar;
-	address = Draw.area.address.size;
-	bar     = Draw.area.bar.size;
+	address = Draw.address.size;
+	bar     = Draw.bar.size;
 
 	// ALL SIZE CONSTANTS FOR THE PROGRAM ARE DEFINED HERE AS LOCAL VARIABLES READ IN THIS FUNCTION
 	int text, row, space, icon, big, tool, title;
-	text  = Draw.area.open.textsize.h;     // TEXT HEIGHT IS USUALLY 13
-	row   = Draw.area.open.textsize.h + 3; // ROW HEIGHT IS 16, 1 PIXEL ABOVE AND 2 BELOW
+	text  = Draw.open.textsize.h;     // TEXT HEIGHT IS USUALLY 13
+	row   = Draw.open.textsize.h + 3; // ROW HEIGHT IS 16, 1 PIXEL ABOVE AND 2 BELOW
 	space = 4;                             // SPACING
 	icon  = 16;                            // SMALL SQUARE ICONS
 	big   = 24;                            // LARGE SQUARE ICONS
@@ -386,14 +312,14 @@ void Size(int move)
 	// FIND THE WIDEST TEXT THAT HAS TO FIT IN A BUTTON
 	int longest;
 	longest = Greatest(
-		Draw.area.pause.textsize.w,
-		Draw.area.remove.textsize.w,
-		Draw.area.back.textsize.w,
-		Draw.area.forward.textsize.w,
-		Draw.area.stop.textsize.w,
-		Draw.area.refresh.textsize.w,
-		Draw.area.expand.textsize.w,
-		Draw.area.get.textsize.w);
+		Draw.pause.textsize.w,
+		Draw.remove.textsize.w,
+		Draw.back.textsize.w,
+		Draw.forward.textsize.w,
+		Draw.stop.textsize.w,
+		Draw.refresh.textsize.w,
+		Draw.expand.textsize.w,
+		Draw.get.textsize.w);
 
 	// BUTTON HOLDS THE BUTTON WIDTH AND HEIGHT
 	sizeitem button;
@@ -401,169 +327,105 @@ void Size(int move)
 	button.h = big + text + 7;
 
 	// SIZE AND POSITION THE OPEN AND HELP LINKS
-	Draw.area.open.size.x = Draw.titlesize.w + (4 * space);
-	Draw.area.open.size.w = Draw.area.open.textsize.w + (2 * space);
-	Draw.area.help.size.x = Draw.area.open.size.Right();
-	Draw.area.help.size.w = Draw.area.help.textsize.w + (2 * space);
-	if (row < title) Draw.area.open.size.h = Draw.area.help.size.h = row;
-	else             Draw.area.open.size.h = Draw.area.help.size.h = title; // IN CASE THE TEXT IS HIGHER THAN 23
+	Draw.open.size.x = Draw.titlesize.w + (4 * space);
+	Draw.open.size.w = Draw.open.textsize.w + (2 * space);
+	Draw.help.size.x = Draw.open.size.Right();
+	Draw.help.size.w = Draw.help.textsize.w + (2 * space);
+	if (row < title) Draw.open.size.h = Draw.help.size.h = row;
+	else             Draw.open.size.h = Draw.help.size.h = title; // IN CASE THE TEXT IS HIGHER THAN 23
 
 	int wide;
-	if (State.mode == ModeDownload) {
 
-		// SIZE AND POSITION THE PAUSE AND REMOVE BUTTONS
-		Draw.area.pause.size = Draw.area.remove.size = button;
-		Draw.area.pause.size.x = space;
-		Draw.area.remove.size.x = Draw.area.pause.size.Right();
-		Draw.area.pause.size.y = Draw.area.remove.size.y = title + space;
+	// SIZE AND POSITION THE PAUSE AND REMOVE BUTTONS
+	Draw.pause.size = Draw.remove.size = button;
+	Draw.pause.size.x = space;
+	Draw.remove.size.x = Draw.pause.size.Right();
+	Draw.pause.size.y = Draw.remove.size.y = title + space;
 
-		// MAKE THE HEIGHT OF ADDRESS AND GET BE ROW OR ICON, WHICHEVER IS BIGGER
-		int link;
-		if (row > icon) link = row;
-		else            link = icon;
+	// MAKE THE HEIGHT OF ADDRESS AND GET BE ROW OR ICON, WHICHEVER IS BIGGER
+	int link;
+	if (row > icon) link = row;
+	else            link = icon;
 
-		// SIZE ADDRESS AND GET
-		Draw.area.address.size.w = Draw.area.address.textsize.w;
-		Draw.area.enter.size.w = icon + space + Draw.area.enter.textsize.w;
-		Draw.area.address.size.h = Draw.area.enter.size.h = link;
+	// SIZE ADDRESS AND GET
+	Draw.address.size.w = Draw.address.textsize.w;
+	Draw.enter.size.w = icon + space + Draw.enter.textsize.w;
+	Draw.address.size.h = Draw.enter.size.h = link;
 
-		// CALCULATE HOW WIDE TO DRAW THIS PART
-		wide = 1 + (8 * space) + (2 * button.w) + text + Draw.area.address.size.w + Draw.area.enter.size.w;
-		wide = Greatest(wide, client.w);
+	// CALCULATE HOW WIDE TO DRAW THIS PART
+	wide = 1 + (8 * space) + (2 * button.w) + text + Draw.address.size.w + Draw.enter.size.w;
+	wide = Greatest(wide, client.w);
 
-		// POSITION ADDRESS AND GET
-		Draw.area.address.size.x = Draw.area.remove.size.Right() + 1 + (3 * space);
-		Draw.area.enter.size.PositionRight(wide - (2 * space));
-		Draw.area.address.size.y = Draw.area.enter.size.y = title + space;
+	// POSITION ADDRESS AND GET
+	Draw.address.size.x = Draw.remove.size.Right() + 1 + (3 * space);
+	Draw.enter.size.PositionRight(wide - (2 * space));
+	Draw.address.size.y = Draw.enter.size.y = title + space;
 
-		// COMPUTE THE MINIMUM AND MAXIMUM BAR Y DISTANCES
-		int min, max;
-		min = Draw.area.pause.size.Bottom() - text - space - 1;
-		max = client.h - row - 2 - space - text - space - 1;
+	// COMPUTE THE MINIMUM AND MAXIMUM BAR Y DISTANCES
+	int min, max;
+	min = Draw.pause.size.Bottom() - text - space - 1;
+	max = client.h - row - 2 - space - text - space - 1;
 
-		// MOVE THE BAR, NOT LETTING IT GO BEYOND THE BOUNDS
-		if (!Draw.area.bar.size.y) Draw.area.bar.size.y = Draw.area.pause.size.Bottom() - 1; // SET THE BAR
-		Draw.area.bar.size.y += move;
-		if (Draw.area.bar.size.y > max) Draw.area.bar.size.y = max;
-		if (Draw.area.bar.size.y < min) Draw.area.bar.size.y = min; // ENFORCE MIN FROM THE TOP IF BOTH ARE IN VIOLATION
+	// MOVE THE BAR, NOT LETTING IT GO BEYOND THE BOUNDS
+	if (!Draw.bar.size.y) Draw.bar.size.y = Draw.pause.size.Bottom() - 1; // SET THE BAR
+	Draw.bar.size.y += move;
+	if (Draw.bar.size.y > max) Draw.bar.size.y = max;
+	if (Draw.bar.size.y < min) Draw.bar.size.y = min; // ENFORCE MIN FROM THE TOP IF BOTH ARE IN VIOLATION
 
-		// BAR
-		Draw.area.bar.size.x = Draw.area.address.size.Right() + space;
-		Draw.area.bar.size.w = wide - Draw.area.address.size.Right() - Draw.area.enter.size.w - (4 * space);
-		Draw.area.bar.size.h = space + 1;
+	// BAR
+	Draw.bar.size.x = Draw.address.size.Right() + space;
+	Draw.bar.size.w = wide - Draw.address.size.Right() - Draw.enter.size.w - (4 * space);
+	Draw.bar.size.h = space + 1;
 
-		// EDIT
-		Draw.area.edit.x = Draw.area.bar.size.x + 1;
-		Draw.area.edit.w = Draw.area.bar.size.w - 2;
-		Draw.area.edit.y = title + space + 1;
-		Draw.area.edit.SetBottom(Draw.area.bar.size.y);
+	// EDIT
+	Draw.edit.x = Draw.bar.size.x + 1;
+	Draw.edit.w = Draw.bar.size.w - 2;
+	Draw.edit.y = title + space + 1;
+	Draw.edit.SetBottom(Draw.bar.size.y);
 
-		// BUTTON AND COPY
-		Draw.area.button.x = Draw.area.bar.size.x;
-		Draw.area.button.w = text;
-		Draw.area.copy.size.x = Draw.area.button.Right();
-		Draw.area.copy.size.w = space + Draw.area.copy.textsize.w;
-		if (Draw.area.copy.size.Right() > Draw.area.bar.size.Right()) Draw.area.copy.size.SetRight(Draw.area.bar.size.Right());
-		Draw.area.button.y = Draw.area.copy.size.y = Draw.area.bar.size.Bottom();
-		Draw.area.button.h = Draw.area.copy.size.h = text;
+	// BUTTON AND COPY
+	Draw.button.x = Draw.bar.size.x;
+	Draw.button.w = text;
+	Draw.copy.size.x = Draw.button.Right();
+	Draw.copy.size.w = space + Draw.copy.textsize.w;
+	if (Draw.copy.size.Right() > Draw.bar.size.Right()) Draw.copy.size.SetRight(Draw.bar.size.Right());
+	Draw.button.y = Draw.copy.size.y = Draw.bar.size.Bottom();
+	Draw.button.h = Draw.copy.size.h = text;
 
-		// LIST
-		Draw.area.list.x = 2;
-		Draw.area.list.w = client.w - 4;
-		Draw.area.list.y = Draw.area.copy.size.Bottom() + space + 1;
-		Draw.area.list.SetBottom(client.h - row - 1);
-		Draw.area.list.Check(); // IF THE HEIGHT IS NEGATIVE, MAKE IT 0
+	// LIST
+	Draw.list.x = 2;
+	Draw.list.w = client.w - 4;
+	Draw.list.y = Draw.copy.size.Bottom() + space + 1;
+	Draw.list.SetBottom(client.h - row - 1);
+	Draw.list.Check(); // IF THE HEIGHT IS NEGATIVE, MAKE IT 0
 
-		// DETERMINE WHERE THE SIZE CORNER WOULD BE IF THE WINDOW WERE VERY SMALL
-		Draw.area.sizemin.w = Draw.area.sizemin.h = row;
-		Draw.area.sizemin.y = 2 + title + (2 * space) + button.h;
-
-	} else if (State.mode == ModeSite) {
-
-		// BUTTONS
-		button.x = space;
-		button.y = title + space;
-		Draw.area.back.size = Draw.area.forward.size = Draw.area.stop.size = Draw.area.refresh.size = Draw.area.expand.size = Draw.area.get.size = button;
-		Draw.area.forward.size.x = Draw.area.back.size.Right();
-		Draw.area.stop.size.x = Draw.area.forward.size.Right();
-		Draw.area.refresh.size.x = Draw.area.stop.size.Right();
-		Draw.area.expand.size.x = Draw.area.refresh.size.Right() + 1 + (2 * space);
-		Draw.area.get.size.x = Draw.area.expand.size.Right() + 1 + (2 * space);
-
-		// SIZE ADDRESS AND ENTER
-		Draw.area.address.size.h = Draw.area.enter.size.h = row;
-		Draw.area.address.size.w = Draw.area.address.textsize.w;
-		Draw.area.enter.size.w = icon + space + Draw.area.enter.textsize.w;
-
-		// CALCULATE HOW WIDE TO DRAW THIS PART
-		wide = 2 + (6 * space) + Draw.area.address.size.w + Draw.area.enter.size.w;
-		wide = Greatest(wide, client.w);
-
-		// POSITION ADDRESS AND ENTER
-		Draw.area.address.size.x = 2 * space;
-		Draw.area.enter.size.PositionRight(wide - (2 * space));
-		Draw.area.address.size.y = Draw.area.enter.size.y = button.Bottom() + 3 + (2 * space);
-
-		// EDIT
-		Draw.area.edit = Draw.area.address.size;
-		Draw.area.edit.y++;
-		Draw.area.edit.h -= 3;
-		Draw.area.edit.x = Draw.area.address.size.Right() + space + 2;
-		Draw.area.edit.SetRight(Draw.area.enter.size.x - space - 1);
-		if (Draw.area.edit.w < 0) Draw.area.edit.CloseRight(); // SINCE WIDTH IS NEGATIVE, WILL MOVE THE AREA TO THE LEFT
-
-		// SET BAR WIDTH, HEIGHT, AND VERTICAL POSITION
-		Draw.area.bar.size.w = 2 + space;
-		Draw.area.bar.size.y = Draw.area.address.size.Bottom() + 2 + space;
-		Draw.area.bar.size.SetBottom(client.h - row);
-		Draw.area.bar.size.h = Greatest(Draw.area.bar.size.h, 2);
-
-		// POSITION, MOVE, AND CHECK THE BAR
-		if (!Draw.area.bar.size.x) Draw.area.bar.size.x = ((client.w - 10) / 4) + 2;
-		Draw.area.bar.size.x += move;
-		if (Draw.area.bar.size.Right() > client.w - 2) Draw.area.bar.size.PositionRight(client.w - 2);
-		Draw.area.bar.size.x = Greatest(Draw.area.bar.size.x, 2); // ENFORCE LEFT IF BOTH ARE IN VIOLATION
-
-		// TREE AND LIST
-		Draw.area.tree = Draw.area.bar.size;
-		Draw.area.tree.Expand(-1);
-		Draw.area.tree.x = 2;
-		Draw.area.tree.SetRight(Draw.area.bar.size.x);
-		Draw.area.list = Draw.area.tree;
-		Draw.area.list.x = Draw.area.bar.size.Right();
-		Draw.area.list.SetRight(client.w - 2);
-		Draw.area.list.Check();
-
-		// DETERMINE WHERE THE SIZE CORNER WOULD BE IF THE WINDOW WERE VERY SMALL
-		Draw.area.sizemin.w = Draw.area.sizemin.h = row;
-		Draw.area.sizemin.y = 7 + (4 * space) + row + title + button.h;
-	}
+	// DETERMINE WHERE THE SIZE CORNER WOULD BE IF THE WINDOW WERE VERY SMALL
+	Draw.sizemin.w = Draw.sizemin.h = row;
+	Draw.sizemin.y = 2 + title + (2 * space) + button.h;
 
 	// STATUS AND SIZE
-	Draw.area.status.y = Draw.area.corner.size.y = Draw.area.list.Bottom() + 1; // NEVER SIZE UP FROM THE BOTTOM OF THE WINDOW
-	Draw.area.status.h = Draw.area.corner.size.h = row;
-	Draw.area.status.w = client.w - row;
-	Draw.area.corner.size.x = Draw.area.status.Right();
-	Draw.area.corner.size.w = row;
+	Draw.status.y = Draw.corner.size.y = Draw.list.Bottom() + 1; // NEVER SIZE UP FROM THE BOTTOM OF THE WINDOW
+	Draw.status.h = Draw.corner.size.h = row;
+	Draw.status.w = client.w - row;
+	Draw.corner.size.x = Draw.status.Right();
+	Draw.corner.size.w = row;
 
 	// IF THE WINDOW IS MAXIMIZED, MAKE STATUS THE ENTIRE ROW AND HIDE THE SIZE CORNER
 	if (IsZoomed(Handle.window)) {
 
-		Draw.area.status.w = client.w;
-		Draw.area.corner.size.CloseRight();
+		Draw.status.w = client.w;
+		Draw.corner.size.CloseRight();
 	}
 
 	// POSITION AND RESIZE CHILD WINDOW CONTROLS WITHOUT SENDING PAINT MESSAGES
-	WindowMove(Handle.edit,   Draw.area.edit);
-	WindowMove(Handle.button, Draw.area.button);
-	WindowMove(Handle.tree,   Draw.area.tree);
-	WindowMove(Handle.list,   Draw.area.list);
+	WindowMove(Handle.edit,   Draw.edit);
+	WindowMove(Handle.button, Draw.button);
+	WindowMove(Handle.tree,   Draw.tree);
+	WindowMove(Handle.list,   Draw.list);
 
 	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
-	if (!address.Is()) TipAdd(Draw.area.address.size, Draw.area.address.tip);
+	if (!address.Is()) TipAdd(Draw.address.size, Draw.address.tip);
 
 	// IF THE BAR MOVED, PAINT THE WINDOW
-	if      (State.mode == ModeDownload) { if (bar.y && bar.y != Draw.area.bar.size.y) Paint(); }
-	else if (State.mode == ModeSite)     { if (bar.x && bar.x != Draw.area.bar.size.x) Paint(); }
+	if (bar.y && bar.y != Draw.bar.size.y) Paint();
 }
-*/

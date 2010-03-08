@@ -116,6 +116,53 @@ public:
 	}
 };
 
+// Area item
+enum areacommand {
+
+	// The program changes an area item's command condition when teh availability or state of its command changes
+	CommandNone,           // Uninitialized
+	CommandUnavailable,    // The button's command is currently unavailable
+	CommandReady,          // The button's command is ready
+	CommandSet,            // The button's command is set on
+	CommandLink,           // A hyperlink
+	CommandSizeVertical,   // A horizontal bar that sizes vertically
+	CommandSizeHorizontal, // A vertical bar that sizes horizontally
+	CommandSizeDiagonal,   // An area that sizes the width and height of the window
+};
+enum areadisplay {
+
+	// These are all the ways an area item can be displayed on the screen
+	DisplayNone,    // Bar or uninitialized button
+	DisplayGhosted, // The button is gray and unresponsive
+	DisplayReady,   // The button looks ready to be clicked
+	DisplayHot,     // The mouse has activated the button
+	DisplayPressed, // The button is pressed, set, set hot, or set pressed, which all look the same
+};
+class areaitem {
+public:
+
+	// Pointers
+	areaitem *next;
+
+	// Data
+	sizeitem    size;       // Position and size of area in the main client window
+	areacommand command;    // The state of the command this area item represents
+	areadisplay display;    // How this area is currently drawn in the window
+	string      text, tip;  // Text painted in the area item and any for a tooltip
+	int         adjust;     // Pixels to nudge the text horizontally
+	sizeitem    textsize;   // How big the text is when painted
+	HICON       icon, gray; // Icons for available and unavailable appearance
+
+	// New
+	areaitem() {
+
+		command = CommandNone;
+		display = DisplayNone;
+		adjust = 1; // By default, adjust text to the right 1 pixel
+		icon = gray = NULL;
+	}
+};
+
 // Handles
 class handletop {
 public:
@@ -139,6 +186,47 @@ public:
 // Drawing tools
 class drawtop {
 public:
+
+	// The list of area items, the area item the mouse pressed, and pointers to the area items
+	areaitem *all, *pressed;
+	areaitem open, help, pause, remove, back, forward, stop, refresh, expand, get, address, enter, copy, bar, corner;
+
+	// Child window control sizes
+	sizeitem edit, button, tree, list;
+
+	// Sizes in the client area used when painting
+	sizeitem status;
+
+	// Where the size area would be if the window were very small
+	sizeitem sizemin;
+
+	// The point in the pressed area where the mouse started dragging
+	sizeitem stick;
+
+	// New
+	drawtop() {
+
+		// Default values
+		all = pressed = NULL;
+
+		// Link area items into a list
+		all          = &open;
+		open.next    = &help;
+		help.next    = &pause;
+		pause.next   = &remove;
+		remove.next  = &back;
+		back.next    = &forward;
+		forward.next = &stop;
+		stop.next    = &refresh;
+		refresh.next = &expand;
+		expand.next  = &get;
+		get.next     = &address;
+		address.next = &enter;
+		enter.next   = &copy;
+		copy.next    = &bar;
+		bar.next     = &corner;
+		corner.next  = NULL;
+	}
 };
 
 // Program data
