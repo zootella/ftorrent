@@ -325,16 +325,22 @@ string trim(read r, read t1, read t2, read t3) {
 	string s = r;
 
 	// Remove the tags from the start of the string until gone
-	if      (starts(s, t1)) s = clip(s, length(t1), -1);
-	else if (starts(s, t2)) s = clip(s, length(t2), -1);
-	else if (starts(s, t3)) s = clip(s, length(t3), -1);
-	else                    break;
+	while (true) {
+
+		if      (starts(s, t1)) s = clip(s, length(t1), -1);
+		else if (starts(s, t2)) s = clip(s, length(t2), -1);
+		else if (starts(s, t3)) s = clip(s, length(t3), -1);
+		else                    break;
+	}
 
 	// Remove the tags from the end of the string until gone
-	if      (trails(s, t1)) s = clip(s, 0, length(s) - length(t1));
-	else if (trails(s, t2)) s = clip(s, 0, length(s) - length(t2));
-	else if (trails(s, t3)) s = clip(s, 0, length(s) - length(t3));
-	else                    break;
+	while (true) {
+
+		if      (trails(s, t1)) s = clip(s, 0, length(s) - length(t1));
+		else if (trails(s, t2)) s = clip(s, 0, length(s) - length(t2));
+		else if (trails(s, t3)) s = clip(s, 0, length(s) - length(t3));
+		else                    break;
+	}
 
 	// Return the string
 	return s;
