@@ -129,25 +129,16 @@ public:
 	HWND tasks, status, errors; // Child window edit controls
 	HWND clear, task, start, stop, reset; // Child window buttons
 
-	// Menus
+	// Menus, icons, fonts and brushes
 	HMENU menutaskbar, menutools;
-
-	// Icons
 	HICON iconbig, iconsmall;
-
-	// Painting tools
-	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
 	HFONT font, arial;
-
-	// State
-	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
-	int pop; // How many popup boxes and menus the program has put above the window
+	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
 };
 
 // Drawing tools
 class drawtop {
 public:
-
 };
 
 // Program data
@@ -160,4 +151,7 @@ public:
 class statetop {
 public:
 
+	// State
+	boolean taskbar; // true when the window is hidden and icon is in the taskbar notification area
+	int pop; // How many popup boxes and menus the program has put above the window
 };

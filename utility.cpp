@@ -323,8 +323,8 @@ void PaintText(deviceitem *device, read r, sizeitem size) {
 void TaskbarIconAdd() {
 
 	// Only do something if the icon isn't there
-	if (Handle.taskbar) return;
-	Handle.taskbar = true;
+	if (State.taskbar) return;
+	State.taskbar = true;
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -343,8 +343,8 @@ void TaskbarIconAdd() {
 void TaskbarIconRemove() {
 
 	// Only do something if the icon is there
-	if (!Handle.taskbar) return;
-	Handle.taskbar = false;
+	if (!State.taskbar) return;
+	State.taskbar = false;
 
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -542,7 +542,7 @@ sizeitem MouseScreen() {
 	sizeitem s;
 	s.x(-1);
 	s.y(-1);
-	if (Handle.pop) return s;
+	if (State.pop) return s;
 
 	// Get the mouse position in screen coordinates
 	POINT p;
