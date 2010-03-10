@@ -18,6 +18,13 @@ extern statetop  State;
 // Make painting tools once when the program starts
 void PaintCreate() {
 
+	// Load cursors
+	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
+	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
+	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
+	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
+	Handle.hand       = LoadSharedCursor(IDC_HAND);
+
 	// Load icons
 	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
 	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
@@ -29,7 +36,7 @@ void PaintCreate() {
 
 	// Remove the test menu item
 	if (!PROGRAM_TEST) {
-		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"error deletemenu");
+		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"deletemenu");
 	}
 
 	// Make color brushes
@@ -58,9 +65,9 @@ void PaintCreate() {
 		size,                    // Size of the structure
 		&info,                   // Structure to fill with information
 		0);                      // Not setting a system parameter
-	if (!result) Report(L"error systemparametersinfo");
+	if (!result) Report(L"systemparametersinfo");
 	Handle.font = CreateFontIndirect(&info.lfMenuFont);
-	if (!Handle.font) Report(L"error createfontindirect");
+	if (!Handle.font) Report(L"createfontindirect");
 }
 
 // Paint the client area of the window and resize the child window controls

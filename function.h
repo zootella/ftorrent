@@ -62,6 +62,9 @@ areaitem *MouseOver();
 sizeitem MouseArea(areaitem *a);
 sizeitem MouseClient(HWND window);
 sizeitem MouseScreen();
+brushitem BrushSystem(int color);
+brushitem BrushColor(COLORREF color);
+COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2);
 
 // Paint
 void PaintCreate();

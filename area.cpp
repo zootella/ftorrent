@@ -73,29 +73,29 @@ void AreaPulse()
 	// SET THE POINTER BASED ON THE AREA IT PRESSED
 	if (Draw.pressed) {
 
-		if      (Draw.pressed->command == CommandReady)          CursorSet(Draw.cursor.hand);
-		else if (Draw.pressed->command == CommandSet)            CursorSet(Draw.cursor.hand);
-		else if (Draw.pressed->command == CommandLink)           CursorSet(Draw.cursor.hand);
-		else if (Draw.pressed->command == CommandSizeHorizontal) CursorSet(Draw.cursor.horizontal);
-		else if (Draw.pressed->command == CommandSizeVertical)   CursorSet(Draw.cursor.vertical);
-		else if (Draw.pressed->command == CommandSizeDiagonal)   CursorSet(Draw.cursor.diagonal);
-		else                                                     CursorSet(Draw.cursor.arrow);
+		if      (Draw.pressed->command == CommandReady)          CursorSet(Handle.hand);
+		else if (Draw.pressed->command == CommandSet)            CursorSet(Handle.hand);
+		else if (Draw.pressed->command == CommandLink)           CursorSet(Handle.hand);
+		else if (Draw.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
+		else if (Draw.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
+		else if (Draw.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
+		else                                                     CursorSet(Handle.arrow);
 
 	// SET THE POINTER BASED ON THE AREA IT IS OVER
 	} else if (over && !pressing) {
 
-		if      (over->command == CommandReady)          CursorSet(Draw.cursor.hand);
-		else if (over->command == CommandSet)            CursorSet(Draw.cursor.hand);
-		else if (over->command == CommandLink)           CursorSet(Draw.cursor.hand);
-		else if (over->command == CommandSizeHorizontal) CursorSet(Draw.cursor.horizontal);
-		else if (over->command == CommandSizeVertical)   CursorSet(Draw.cursor.vertical);
-		else if (over->command == CommandSizeDiagonal)   CursorSet(Draw.cursor.diagonal);
-		else                                             CursorSet(Draw.cursor.arrow);
+		if      (over->command == CommandReady)          CursorSet(Handle.hand);
+		else if (over->command == CommandSet)            CursorSet(Handle.hand);
+		else if (over->command == CommandLink)           CursorSet(Handle.hand);
+		else if (over->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
+		else if (over->command == CommandSizeVertical)   CursorSet(Handle.vertical);
+		else if (over->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
+		else                                             CursorSet(Handle.arrow);
 
 	// SET THE POINTER TO ARROW
 	} else if (inside) {
 
-		CursorSet(Draw.cursor.arrow);
+		CursorSet(Handle.arrow);
 	}
 
 	// COMPOSE THE DISPLAY OF EACH AREA AND DRAW THOSE THAT HAVE CHANGED
@@ -138,7 +138,7 @@ void AreaPulse()
 			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
-				device.Font(Draw.font.normal);
+				device.Font(Handle.font);
 				device.BackgroundColor(Draw.color.window.color);
 			}
 

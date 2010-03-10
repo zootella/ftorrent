@@ -34,17 +34,17 @@ void BeginThread(LPVOID function) {
 		(void *)                          NULL,     // Pass no parameter to the thread
 		(unsigned)                        0,        // Create and start thread
 		(unsigned *)                      &info);   // Writes thread identifier, cannot be null for Windows 95
-	if (!thread) Report(L"error beginthreadex");
+	if (!thread) Report(L"beginthreadex");
 
 	// Tell the system this thread is done with the new thread handle
-	if (!CloseHandle(thread)) Report(L"error closehandle");
+	if (!CloseHandle(thread)) Report(L"closehandle");
 }
 
 // Have the given window display the given text
 void WindowTextSet(HWND window, read r) {
 
 	// Set the text to the window
-	if (!SetWindowText(window, r)) Report(L"error setwindowtext");
+	if (!SetWindowText(window, r)) Report(L"setwindowtext");
 }
 
 // Get the text a window is displaying
@@ -162,7 +162,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 		menu,                   // Menu handle or child window identification number
 		Handle.instance,        // Program instance handle
 		NULL);                  // No parameter
-	if (!window) Report(L"error createwindow");
+	if (!window) Report(L"createwindow");
 	return window;
 }
 
@@ -170,7 +170,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 void WindowSize(HWND window, sizeitem size) {
 
 	// Move the window, false to not send a paint message
-	if (!MoveWindow(window, size.x(), size.y(), size.w(), size.h(), false)) Report(L"error movewindow");
+	if (!MoveWindow(window, size.x(), size.y(), size.w(), size.h(), false)) Report(L"movewindow");
 }
 
 // Make an edit window editable or read only
@@ -248,7 +248,7 @@ brushitem CreateBrush(COLORREF color) {
 	brushitem brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
-	if (!brush.brush) Report(L"error createsolidbrush");
+	if (!brush.brush) Report(L"createsolidbrush");
 
 	// Return the brush color and handle
 	return brush;
@@ -277,7 +277,7 @@ HFONT CreateFont(read face, int points) {
 	info.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // Only used if the font name is unavailable
 	lstrcpy(info.lfFaceName, face);                       // Font name
 	HFONT font = CreateFontIndirect(&info);
-	if (!font) Report(L"error createfontindirect");
+	if (!font) Report(L"createfontindirect");
 	return font;
 }
 
@@ -316,7 +316,7 @@ void PaintText(deviceitem *device, read r, sizeitem size) {
 
 	// Paint the text, if the background is opaque, this will cause a flicker
 	RECT rectangle = size.rectangle();
-	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) Report(L"error drawtext");
+	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) Report(L"drawtext");
 }
 
 // Adds the program icon to the taskbar notification area
@@ -336,7 +336,7 @@ void TaskbarIconAdd() {
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
 	info.hIcon            = Handle.iconsmall;                 // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
-	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"error shell_notifyicon nim_add");
+	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"shell_notifyicon nim_add");
 }
 
 // Removes the program icon from the taskbar notification area
@@ -352,7 +352,7 @@ void TaskbarIconRemove() {
 	info.cbSize = sizeof(info);  // Size of this structure
 	info.hWnd   = Handle.window; // Handle to the window that will receive messages
 	info.uID    = 0;             // Program defined identifier
-	if (!Shell_NotifyIcon(NIM_DELETE, &info)) Report(L"error shell_notifyicon nim_delete");
+	if (!Shell_NotifyIcon(NIM_DELETE, &info)) Report(L"shell_notifyicon nim_delete");
 }
 
 // Takes a system cursor identifier
@@ -367,8 +367,8 @@ HCURSOR LoadSharedCursor(read name) {
 		IMAGE_CURSOR, // Image type
 		0, 0,         // Use the width and height of the resource
 		LR_SHARED);   // Share the system resource
-	if (!cursor) Report(L"error loadimage cursor");
-	return(cursor);
+	if (!cursor) Report(L"loadimage cursor");
+	return cursor;
 }
 
 // Takes the name of an icon resource and the size to load, or 0 for default
@@ -383,20 +383,16 @@ HICON LoadIconResource(read name, int size) {
 		IMAGE_ICON,       // Image type
 		size, size,       // Size to load, 0 to load actual resource size
 		LR_DEFAULTCOLOR); // Default flag does nothing
-	if (!icon) Report(L"error loadimage icon");
-	return(icon);
+	if (!icon) Report(L"loadimage icon");
+	return icon;
 }
 
-// Takes a cursor to set
-// Sets the cursor if it needs to be changed
+// Sets the cursor to the given cursor if it isn't that already
 void CursorSet(HCURSOR cursor) {
 
-	// Find out what the cursor is now
-	HCURSOR current = GetCursor();
-
-	// If the cursor is different, set it
-	if (cursor && current && cursor != current) {
-		if (!SetCursor(cursor)) Report(L"error setcursor");
+	HCURSOR current = GetCursor(); // Find out what the cursor is now
+	if (cursor && current && cursor != current) { // If we have both and they're different
+		if (!SetCursor(cursor)) Report(L"setcursor"); // Set the new given one
 	}
 }
 
@@ -408,9 +404,8 @@ void CursorSet(HCURSOR cursor) {
 // Takes a menu name and loads it from resources
 HMENU MenuLoad(read name) {
 
-	// Load the menu resource
-	HMENU menus = LoadMenu(Handle.instance, name);
-	if (!menus) Report(L"error loadmenu");
+	HMENU menus = LoadMenu(Handle.instance, name); // Load the menu resource
+	if (!menus) Report(L"loadmenu");
 	return menus;
 }
 
@@ -418,9 +413,8 @@ HMENU MenuLoad(read name) {
 // Clips out the submenu at that index
 HMENU MenuClip(HMENU menus, int index) {
 
-	// Clip off the submenu at the given index, and return it
-	HMENU menu = GetSubMenu(menus, index);
-	if (!menu) Report(L"error getsubmenu");
+	HMENU menu = GetSubMenu(menus, index); // Clip off the submenu at the given index
+	if (!menu) Report(L"getsubmenu");
 	return menu;
 }
 
@@ -428,14 +422,13 @@ HMENU MenuClip(HMENU menus, int index) {
 // Sets the menu item
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 
-	// Set menu item info
 	MENUITEMINFO info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(MENUITEMINFO);
 	info.fMask  = 0;
-	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; }
+	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; } // Set menu item info
 	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
-	if (!SetMenuItemInfo(menu, command, false, &info)) Report(L"error setmenuiteminfo");
+	if (!SetMenuItemInfo(menu, command, false, &info)) Report(L"setmenuiteminfo");
 }
 
 
@@ -487,98 +480,60 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 
 
 
-void MouseCapture(HWND window)
-{
-	// takes a window
-	// captures the mouse if it is not already captured
-	// returns nothing
 
-	// CHOOSE WINDOW
-	if (!window) window = Handle.window;
 
-	// IF THE MOUSE IS NOT ALREADY CAPTURED BY THE WINDOW, CAPTURE IT
-	if (GetCapture() != window) SetCapture(window);
+
+// Have window capture the mouse if it doesn't have it already, null to use the main window
+void MouseCapture(HWND window) {
+	if (!window) window = Handle.window; // Use the main window if the caller didn't specify one
+	if (GetCapture() != window) SetCapture(window); // If that window doesn't already have the mouse, capture it
 }
 
-void MouseRelease(HWND window)
-{
-	// takes a window
-	// releases the mouse if it is captured
-	// returns nothing
-
-	// CHOOSE WINDOW
-	if (!window) window = Handle.window;
-
-	// IF THE WINDOW HAS THE MOUSE CAPTURED, RELEASE IT
-	if (GetCapture() == window) ReleaseCapture();
+// Have window release its capture of the mouse if it has it, null to use the main window
+void MouseRelease(HWND window) {
+	if (!window) window = Handle.window; // Pick the main window if the caller didn't specify one
+	if (GetCapture() == window) ReleaseCapture(); // Only release it if window has it
 }
 
-bool MouseInside()
-{
-	// takes nothing
-	// determines if the mouse is in the client area but not over a child window control
-	// returns true or false
+// True if the mouse is in the client area but not over a child window control
+bool MouseInside() {
 
-	// GET THE MOUSE CURSOR'S POSITION IN CLIENT WINDOW COORDINATES AND THE SIZE OF THE CLIENT WINDOW
-	sizeitem mouse, client;
-	mouse = MouseClient();
-	client = SizeClient();
+	// Get the mouse cursor's position in client window coordinates, and the size of the client window
+	sizeitem mouse = MouseClient();
+	sizeitem client = SizeClient();
 
-	// THE MOUSE IS INSIDE THE SIGN
-	if (Draw.sign.size.Inside(mouse)) return(false);
-
-	// THE MOUSE IS INSIDE IF IT IS INSIDE THE CLIENT AREA AND OUTSIDE ALL THE CHILD WINDOW CONTROLS
-	if (client.Inside(mouse)            &&
+	// The mouse is inside if it is inside the client area and outside all the child window controls
+	return
+		client.Inside(mouse)            &&
 		!Draw.area.edit.Inside(mouse)   &&
 		!Draw.area.button.Inside(mouse) &&
 		!Draw.area.tree.Inside(mouse)   &&
-		!Draw.area.list.Inside(mouse)) return(true);
-	else return(false);
+		!Draw.area.list.Inside(mouse);
 }
 
+// Find the area, if any, the mouse is currently positioned over, null if none
+areaitem *MouseOver() {
 
-areaitem *MouseOver()
-{
-	// takes nothing
-	// finds what area, if any, the mouse is currently positioned over
-	// returns the area item or null if none
+	// Get the mouse cursor's position in client window coordinates
+	sizeitem mouse = MouseClient();
+	sizeitem client = SizeClient();
+	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
-	// GET THE MOUSE CURSOR'S POSITION IN CLIENT WINDOW COORDINATES AND MAKE SURE THE MOUSE IS INSIDE THE CLIENT AREA
-	sizeitem mouse, client;
-	mouse = MouseClient();
-	client = SizeClient();
-	if (!client.Inside(mouse)) return(NULL);
-
-	// THE MOUSE IS INSIDE THE SIGN
-	if (Draw.sign.size.Inside(mouse)) return(NULL);
-
-	// MOVE DOWN EACH AREA ITEM TO FIND THE ONE THE MOUSE IS OVER
-	areaitem *a;
-	a = Draw.area.all;
+	// Move down each area item to find the one the mouse is over
+	areaitem *a = Draw.area.all;
 	while (a) {
-
-		if (a->size.Inside(mouse)) break;
+		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;
 	}
-
-	// RETURN THE AREA ITEM THE MOUSE IS OVER OR NULL IF IT IS AWAY FROM THEM ALL
-	return(a);
+	return NULL; // Not found, the mouse is away from them all
 }
 
-sizeitem MouseArea(areaitem *a)
-{
-	// takes an area item
-	// gets the mouse position in area coordinates
-	// returns x and y coordinates in a size item
-
-	// GET THE MOUSE POINTER POSITION IN CLIENT WINDOW COORDINATES
-	sizeitem s;
-	s = MouseClient();
-
-	// CONVERT TO AREA COORDINATES
-	s.x -= a->size.x;
+// Get the mouse position in x and y coordinates inside the given area item
+sizeitem MouseArea(areaitem *a) {
+	sizeitem s = MouseClient(); // Get the mouse position in client window coordinates
+	s.x -= a->size.x; // Convert to area coordinates
 	s.y -= a->size.y;
-	return(s);
+	return s;
 }
 
 
@@ -611,31 +566,56 @@ sizeitem MouseScreen() {
 	return s;
 }
 
+// Takes a system color index
+// Gets the system brush for that color
+// Returns a brush that should not be deleted, or null if any error
+brushitem BrushSystem(int color) {
 
-
-
-// Takes a window or null to use the main one
-// Uses this size in client coordinates
-// Converts the size to screen coordinates
-void sizeitem::screen(HWND window) {
-
-	if (!window) window = Handle.window; // Choose window
-	POINT p = point(); // Make a point with the x and y coordinates of this size item
-	if (!ClientToScreen(window, &p)) { Report(L"error clienttoscreen"); return; } // Convert it
-	x(p.x); // Store the converted position in this size item
-	y(p.y);
+	// Get the system brush for the specificed color index, as well as the color itself
+	brushitem brush;
+	brush.color = GetSysColor(color);
+	brush.brush = GetSysColorBrush(color);
+	if (!brush.brush) Report(L"getsyscolorbrush");
+	return brush;
 }
 
-// Takes a window or null to use the main one
-// Uses this size in screen coordinates
-// Converts the size to client coordinates
-void sizeitem::client(HWND window) {
+// Takes a color
+// Creates a brush of that color
+// Returns a brush that must be deleted, or null if any error
+brushitem BrushColor(COLORREF color) {
 
-	if (!window) window = Handle.window; // Choose window
-	POINT p = point(); // Make a point with the x and y coordinates of this size item
-	if (!ScreenToClient(window, &p)) { Report(L"error screentoclient"); return; } // Convert it
-	x(p.x); // Store the converted position in this size item
-	y(p.y);
+	// Create a new brush of the given solid color
+	brushitem brush;
+	brush.color = color;
+	brush.brush = CreateSolidBrush(color);
+	if (!brush.brush) Report(L"createsolidbrush");
+	return brush;
 }
 
+// Takes two colors and amounts
+// Mixes the colors in those porportions
+// Returns the mixed color
+COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 
+	// Extract the individual color values
+	int red1, red2, green1, green2, blue1, blue2;
+	red1   = GetRValue(color1);
+	red2   = GetRValue(color2);
+	green1 = GetGValue(color1);
+	green2 = GetGValue(color2);
+	blue1  = GetBValue(color1);
+	blue2  = GetBValue(color2);
+
+	// Mix each color value using a weighted average, rounds fractions down
+	int red, green, blue;
+	red = green = blue = 0;
+	if (amount1 + amount2) {
+		
+		red   = ((red1   * amount1) + (red2   * amount2)) / (amount1 + amount2);
+		green = ((green1 * amount1) + (green2 * amount2)) / (amount1 + amount2);
+		blue  = ((blue1  * amount1) + (blue2  * amount2)) / (amount1 + amount2);
+	}
+
+	// Return the mixed color
+	return RGB(red, green, blue);
+}

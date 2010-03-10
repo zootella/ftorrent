@@ -41,13 +41,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.lpszMenuName  = NULL;
 	info.lpszClassName = L"ltorrentClassName";
 	ATOM result = RegisterClassEx(&info);
-	if (!result) Report(L"error registerclassex");
+	if (!result) Report(L"registerclassex");
 	Handle.window = WindowCreate(L"ltorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Add Exit to the main window's system menu
 	HMENU m = GetSystemMenu(Handle.window, false); // Get the menu for editing
-	if (!m) Report(L"error getsystemmenu");
-	if (m && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"error appendmenu");
+	if (!m) Report(L"getsystemmenu");
+	if (m && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
 
 	// Make child windows and menus
 	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
@@ -78,7 +78,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	PaintMessage(Handle.window); // Necessary to draw child window controls
 
 	// Start the pulse timer
-	if (!SetTimer(Handle.window, TIMER_PULSE, PULSE, NULL)) Report(L"error settimer");
+	if (!SetTimer(Handle.window, TIMER_PULSE, PULSE, NULL)) Report(L"settimer");
 
 	// Run the message loop until the user closes the program
 	MSG message;
@@ -137,7 +137,7 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 
 				// Show the context menu beneath the task button
 				RECT rectangle;
-				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"error getwindowrect");
+				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"getwindowrect");
 				sizeitem size(rectangle);
 				size.addy(size.h());
 				size.client();
