@@ -197,10 +197,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\paint2.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\string.cpp"
 				>
 			</File>

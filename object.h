@@ -187,7 +187,7 @@ public:
 	HMENU menutaskbar, menutools;
 	HICON iconbig, iconsmall;
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-	HFONT font;
+	HFONT font, underline;
 	brushitem face, shadow, background, ink, select, middle;
 };
 
