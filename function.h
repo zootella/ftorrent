@@ -28,6 +28,7 @@ string saytime(DWORD time);
 
 // Utility
 void Report(read r);
+void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void WindowTextSet(HWND window, read r);
 string WindowTextGet(HWND window);
@@ -41,7 +42,6 @@ void WindowEdit(HWND window, boolean edit);
 string DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
-HFONT CreateFont(read face, int points);
 void PaintMessage(HWND window);
 void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush);
 void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush);
@@ -65,6 +65,14 @@ sizeitem MouseScreen();
 brushitem BrushSystem(int color);
 brushitem BrushColor(COLORREF color);
 COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2);
+sizeitem SizeClient(HWND window);
+sizeitem SizeWindow(HWND window);
+void TipAdd(sizeitem size, read r);
+sizeitem SizeText(deviceitem *device, read r);
+void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool vertical, bool left, bool right, int adjust, HFONT font, brushitem *color, brushitem *background);
+void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush);
+void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2);
+void PaintIcon(deviceitem *device, sizeitem position, HICON icon);
 
 // Paint
 void PaintCreate();

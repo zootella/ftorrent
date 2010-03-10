@@ -185,15 +185,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\class.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libtorrentwrapper.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\object.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\paint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\paint2.cpp"
 				>
 			</File>
 			<File
@@ -215,11 +219,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\class.h"
+				RelativePath=".\function.h"
 				>
 			</File>
 			<File
-				RelativePath=".\function.h"
+				RelativePath=".\object.h"
 				>
 			</File>
 			<File

@@ -18,15 +18,24 @@ extern statetop  State;
 // Show a message to the user
 void Report(read r) {
 
-	// Display the given text in a message box
 	if (PROGRAM_TEST) MessageBox(Handle.window, r, L"Report", MB_OK);
+}
+
+// Given access to a handle, close it and make it null
+void CloseHandleSafely(HANDLE *handle) {
+
+	if (*handle && *handle != INVALID_HANDLE_VALUE) { // Only do something if it's not null or -1
+
+		if (!CloseHandle(*handle)) Report(L"closehandle safely");
+		*handle = NULL; // Make it null so we don't try to close it again
+	}
 }
 
 // Start a new thread to execute the given function
 void BeginThread(LPVOID function) {
 
 	// Create a new thread that runs the function
-	DWORD info;
+	DWORD info = 0;
 	HANDLE thread = (HANDLE)_beginthreadex(
 		(void *)                          NULL,     // Use default security attributes
 		(unsigned)                        0,        // Default initial stack size
@@ -37,14 +46,13 @@ void BeginThread(LPVOID function) {
 	if (!thread) Report(L"beginthreadex");
 
 	// Tell the system this thread is done with the new thread handle
-	if (!CloseHandle(thread)) Report(L"closehandle");
+	if (!CloseHandle(thread)) Report(L"closehandle thread");
 }
 
 // Have the given window display the given text
 void WindowTextSet(HWND window, read r) {
 
-	// Set the text to the window
-	if (!SetWindowText(window, r)) Report(L"setwindowtext");
+	if (!SetWindowText(window, r)) Report(L"setwindowtext"); // Set the text to the window
 }
 
 // Get the text a window is displaying
@@ -169,8 +177,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 // Move and resize the given window
 void WindowSize(HWND window, sizeitem size) {
 
-	// Move the window, false to not send a paint message
-	if (!MoveWindow(window, size.x(), size.y(), size.w(), size.h(), false)) Report(L"movewindow");
+	if (!MoveWindow(window, size.x(), size.y(), size.w(), size.h(), false)) Report(L"movewindow"); // False to not send a paint message
 }
 
 // Make an edit window editable or read only
@@ -244,41 +251,11 @@ COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 // Returns a brushitem that must be deleted, or null on error
 brushitem CreateBrush(COLORREF color) {
 
-	// Create a brush of the solid color
 	brushitem brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
 	if (!brush.brush) Report(L"createsolidbrush");
-
-	// Return the brush color and handle
 	return brush;
-}
-
-// Takes a font face name and point size
-// Creates the font
-// Returns a handle to it
-HFONT CreateFont(read face, int points) {
-
-	// Create the font
-	LOGFONT info;
-	ZeroMemory(&info, sizeof(info));
-	info.lfHeight         = -points;                      // Point size, minus sign required
-	info.lfWidth          = 0;                            // Default width
-	info.lfEscapement     = 0;                            // Not rotated
-	info.lfOrientation    = 0;
-	info.lfWeight         = FW_NORMAL;                    // Normal, not bold
-	info.lfItalic         = (byte)false;                  // Not italic
-	info.lfUnderline      = (byte)false;                  // Not underlined
-	info.lfStrikeOut      = (byte)false;                  // No strikeout
-	info.lfCharSet        = ANSI_CHARSET;                 // Use ANSI characters
-	info.lfOutPrecision   = OUT_DEFAULT_PRECIS;           // Default size precision
-	info.lfClipPrecision  = CLIP_DEFAULT_PRECIS;          // Default clipping behavior
-	info.lfQuality        = DEFAULT_QUALITY;              // Don't force antialiasing
-	info.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // Only used if the font name is unavailable
-	lstrcpy(info.lfFaceName, face);                       // Font name
-	HFONT font = CreateFontIndirect(&info);
-	if (!font) Report(L"createfontindirect");
-	return font;
 }
 
 // Repaint the window right now
@@ -396,11 +373,6 @@ void CursorSet(HCURSOR cursor) {
 	}
 }
 
-
-
-
-
-
 // Takes a menu name and loads it from resources
 HMENU MenuLoad(read name) {
 
@@ -430,14 +402,6 @@ void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
 	if (!SetMenuItemInfo(menu, command, false, &info)) Report(L"setmenuiteminfo");
 }
-
-
-
-
-
-
-
-
 
 // Takes menus and whether the context menu is being shown from the taskbar notification icon or not
 // Takes size null to put the menu at the mouse pointer, or a size item in client coordinates
@@ -478,19 +442,16 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 	return choice;
 }
 
-
-
-
-
-
 // Have window capture the mouse if it doesn't have it already, null to use the main window
 void MouseCapture(HWND window) {
+
 	if (!window) window = Handle.window; // Use the main window if the caller didn't specify one
 	if (GetCapture() != window) SetCapture(window); // If that window doesn't already have the mouse, capture it
 }
 
 // Have window release its capture of the mouse if it has it, null to use the main window
 void MouseRelease(HWND window) {
+
 	if (!window) window = Handle.window; // Pick the main window if the caller didn't specify one
 	if (GetCapture() == window) ReleaseCapture(); // Only release it if window has it
 }
@@ -530,13 +491,12 @@ areaitem *MouseOver() {
 
 // Get the mouse position in x and y coordinates inside the given area item
 sizeitem MouseArea(areaitem *a) {
+
 	sizeitem s = MouseClient(); // Get the mouse position in client window coordinates
 	s.x -= a->size.x; // Convert to area coordinates
 	s.y -= a->size.y;
 	return s;
 }
-
-
 
 // Takes a window or null to use the main one
 // Gets the mouse position in client coordinates
@@ -571,7 +531,7 @@ sizeitem MouseScreen() {
 // Returns a brush that should not be deleted, or null if any error
 brushitem BrushSystem(int color) {
 
-	// Get the system brush for the specificed color index, as well as the color itself
+	// Get the system brush for the given color index, as well as the color itself
 	brushitem brush;
 	brush.color = GetSysColor(color);
 	brush.brush = GetSysColorBrush(color);
@@ -618,4 +578,168 @@ COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 
 	// Return the mixed color
 	return RGB(red, green, blue);
+}
+
+// Measure the width and height of the client area of the given window
+sizeitem SizeClient(HWND window) {
+
+	// Pick main window if none given
+	if (!window) window = Handle.window;
+
+	// Find the width and height of the client area
+	sizeitem size;
+	RECT rectangle;
+	if (!GetClientRect(window, &rectangle)) { Report(L"getclientrect"); return size; }
+	size.Set(rectangle);
+	return size;
+}
+
+// Find the size of the given window on the screen
+sizeitem SizeWindow(HWND window) {
+
+	// Pick main window if none given
+	if (!window) window = Handle.window;
+
+	// Find the width and height of the client area
+	sizeitem size;
+	RECT rectangle;
+	if (!GetWindowRect(window, &rectangle)) { Report(L"getwindowrect"); return size; }
+	size.Set(rectangle);
+	return size;
+}
+
+// Attach a tooltip that says r to the given size in the main window
+void TipAdd(sizeitem size, read r) {
+
+	TOOLINFO info;
+	ZeroMemory(&info, sizeof(info);
+	info.cbSize      = sizeof(info);     // Size of this structure
+	info.uFlags      = TTF_SUBCLASS;     // Have the tooltip control get messages from the tool window
+	info.hwnd        = Handle.window;    // Handle to the window that contains the tool region
+	info.uId         = 0;                // Tool identifying number
+	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
+	info.hinst       = NULL;             // Only used when text is loaded from a resource
+	info.lpszText    = (LPSTR)r;         // Text to show in the tooltip
+	info.lParam      = 0;                // No additional value assigned to tool
+	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) Report(L"sendmessage ttm_addtool");
+}
+
+// Takes a device context with a font loaded inside, and text
+// Determines how wide and high in pixels the text painted will be
+// Returns the size width and height, or zeroes if any error
+sizeitem SizeText(deviceitem *device, read r) {
+
+	// Get the pixel dimensions of text written in the loaded font
+	SIZE size;
+	if (!GetTextExtentPoint32(device->device, r, length(r), &size)) {
+
+		Report(L"gettextextentpoint32");
+		size.cx = size.cy = 0;
+	}
+
+	// Return the size, will be all 0 for blank text
+	sizeitem s(size);
+	return s;
+}
+
+// Takes a device context that has a font loaded into it, text, position and bounding size, and formatting options
+// Fills the size and paints the text with an ellipsis
+void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool vertical, bool left, bool right, int adjust, HFONT font, brushitem *color, brushitem *background) {
+
+	// Prepare the device context
+	if (font)       device->Font(font);
+	if (color)      device->FontColor(color->color);
+	if (background) device->BackgroundColor(background->color);
+
+	// Find out how big the text will be when painted
+	sizeitem text;
+	text = SizeText(device, r);
+
+	// If only a position was provided, put in the necessary size
+	if (size.w <= 0) size.w = text.w;
+	if (size.h <= 0) size.h = text.h;
+
+	// Define space once in a local variable
+	int space = 4;
+
+	// Add margins
+	sizeitem bound = size;
+	if (left) bound.ShiftLeft(space);
+	if (right) bound.w -= space;
+	bound.Check();
+
+	// Make text small enough so it will fit within bound
+	if (text.w > bound.w) text.w = bound.w;
+	if (text.h > bound.h) text.h = bound.h;
+
+	// Position the text within bound
+	text.x = bound.x;
+	text.y = bound.y;
+	if (horizontal && text.w < bound.w) text.x += ((bound.w - text.w) / 2);
+	if (vertical   && text.h < bound.h) text.y += ((bound.h - text.h) / 2);
+
+	// Adjust the text if doing so doesn't place it outside the bound
+	if (text.x + adjust >= bound.x && text.Right() + adjust <= bound.Right()) text.x += adjust;
+
+	// Fill the background, this won't make draw text's flicker worse
+	if (background) PaintFill(device, size, background->brush);
+	else            PaintFill(device, size);
+
+	// Paint the text
+	RECT rectangle;
+	if (text.Is()) {
+
+		// Draw text paints background beneath the text and then text over it, creating a flicker
+		rectangle = text.Rectangle();
+		if (!DrawText(device->device, r, -1, &rectangle, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE)) Report(L"drawtext");
+	}
+
+	// Put back the device context
+	if (background) device->BackgroundColor(device->backgroundcolor);
+	if (color)      device->FontColor(device->fontcolor);
+	if (font)       device->Font(Draw.font.normal);
+}
+
+// Use the device to paint size with brush
+void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush) {
+
+	// Make sure there is a size to fill
+	if (!size.Is()) return;
+
+	// Choose brush
+	if (!brush) brush = Draw.color.window.brush;
+
+	// Paint the rectangle
+	RECT rectangle = size.Rectangle();
+	FillRect(device->device, &rectangle, brush); // Will return error if Windows is locked
+}
+
+// Takes a device context, size, and brushes for the upper left and lower right corners
+// Paints a 1 pixel wide border inside the size
+void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2) {
+
+	// Use the same brush for both corners
+	if (!brush2) brush2 = brush1;
+
+	// Paint the 4 edges of the border
+	sizeitem edge;
+	edge = size;                       edge.w--;                         edge.h = 1;  PaintFill(device, edge, brush1);
+	edge = size;                       edge.w = 1; edge.y++;             edge.h -= 2; PaintFill(device, edge, brush1);
+	edge = size; edge.x += edge.w - 1; edge.w = 1;                       edge.h--;    PaintFill(device, edge, brush2);
+	edge = size;                                   edge.y += edge.h - 1; edge.h = 1;  PaintFill(device, edge, brush2);
+}
+
+// Takes a device context, position, and icon
+// Paints the icon
+void PaintIcon(deviceitem *device, sizeitem position, HICON icon) {
+
+	int result = DrawIconEx(
+		device->device,          // Handle to device context
+		position.x, position.y,  // Position to paint the icon
+		icon,                    // Handle to icon to paint
+		0, 0,                    // Use the width and height of the icon resource
+		0,                       // Not an animated icon
+		Draw.color.window.brush, // Paint into an offscreen bitmap over this brush first to not flicker on the screen
+		DI_IMAGE | DI_MASK);     // Use the image and mask to draw alpha icons correctly
+	if (!result) Report(L"drawiconex");
 }

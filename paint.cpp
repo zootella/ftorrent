@@ -39,21 +39,15 @@ void PaintCreate() {
 		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"deletemenu");
 	}
 
-	// Make color brushes
-	Handle.white       = CreateBrush(RGB(255, 255, 255));
-	Handle.black       = CreateBrush(RGB(  0,   0,   0));
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
-	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
-	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
-	Handle.green       = CreateBrush(RGB(102, 204,  51));
-	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
-	Handle.red         = CreateBrush(RGB(255, 102,  51));
-	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
-	Handle.middle      = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1));
+	// Get shared handles to system brushes
+	Handle.face = BrushSystem(COLOR_3DFACE);
+	Handle.shadow = BrushSystem(COLOR_3DSHADOW);
+	Handle.background = BrushSystem(COLOR_WINDOW);
+	Handle.ink = BrushSystem(COLOR_WINDOWTEXT);
+	Handle.select = BrushSystem(COLOR_HIGHLIGHT);
 
-	// Make fonts
-	Handle.arial = CreateFont(L"Arial", 299); // Biggest size that will still have font smoothing
+	// Mix the middle gray color brush
+	Handle.middle = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1));
 
 	// Make a font based on what the system uses in message boxes
 	NONCLIENTMETRICS info;
@@ -167,11 +161,6 @@ void Paint() {
 
 	// Paint the background color
 	PaintFill(&device, client, field->brush);
-
-	// Paint the banner
-	device.Font(Handle.arial);
-	device.FontColor(ink->color);
-	device.BackgroundColor(field->color);
 
 	// Paint the text lables on the left
 	device.Font(Handle.font);

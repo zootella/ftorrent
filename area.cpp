@@ -139,7 +139,7 @@ void AreaPulse()
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);
-				device.BackgroundColor(Draw.color.window.color);
+				device.BackgroundColor(Handle.background);
 			}
 
 			if (device.device) PaintArea(&device, a);

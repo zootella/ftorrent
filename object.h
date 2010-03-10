@@ -1,6 +1,7 @@
 
 // A device context with information about how to put it away
 enum deviceopen {
+
 	DeviceNone,   // We haven't obtained the device context yet
 	DeviceUse,    // The system provided a device context for the program to use
 	DeviceCreate, // The program created a default display device context
@@ -35,6 +36,7 @@ public:
 
 	// New
 	deviceitem() {
+
 		open = DeviceNone;
 		device = NULL;
 		window = NULL;
@@ -185,8 +187,8 @@ public:
 	HMENU menutaskbar, menutools;
 	HICON iconbig, iconsmall;
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-	HFONT font, arial;
-	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred, middle;
+	HFONT font;
+	brushitem face, shadow, background, ink, select, middle;
 };
 
 // Drawing tools

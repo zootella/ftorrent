@@ -142,3 +142,20 @@ void sizeitem::client(HWND window) {
 	y(p.y);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
