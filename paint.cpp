@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Access to global objects
@@ -18,17 +18,6 @@ extern statetop  State;
 // Make painting tools once when the program starts
 void PaintCreate() {
 
-	// Load cursors
-	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
-	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
-	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
-	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
-	Handle.hand       = LoadSharedCursor(IDC_HAND);
-
-	// Load icons
-	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
-	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
-
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
 	Handle.menutaskbar = MenuClip(menus, 0);
@@ -39,34 +28,49 @@ void PaintCreate() {
 		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"deletemenu");
 	}
 
-	// Get shared handles to system brushes
-	Handle.face = BrushSystem(COLOR_3DFACE);
-	Handle.shadow = BrushSystem(COLOR_3DSHADOW);
-	Handle.background = BrushSystem(COLOR_WINDOW);
-	Handle.ink = BrushSystem(COLOR_WINDOWTEXT);
-	Handle.select = BrushSystem(COLOR_HIGHLIGHT);
+	// Load icons
+	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
+	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
 
-	// Mix the middle gray color brush
+	// Load cursors
+	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
+	Handle.hand       = LoadSharedCursor(IDC_HAND);
+	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
+	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
+	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
+
+	// Set colors
+	Handle.white       = CreateBrush(RGB(255, 255, 255));
+	Handle.black       = CreateBrush(RGB(  0,   0,   0));
+	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
+	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
+	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
+	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
+	Handle.green       = CreateBrush(RGB(102, 204,  51));
+	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
+	Handle.red         = CreateBrush(RGB(255, 102,  51));
+	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
+
+	// Get shared handles to system brushes
+	Handle.face       = BrushSystem(COLOR_3DFACE);
+	Handle.shadow     = BrushSystem(COLOR_3DSHADOW);
+	Handle.background = BrushSystem(COLOR_WINDOW);
+	Handle.ink        = BrushSystem(COLOR_WINDOWTEXT);
+	Handle.select     = BrushSystem(COLOR_HIGHLIGHT);
+
+	// Mix colors
 	Handle.middle = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1));
 
-	// Make a font based on what the system uses in message boxes
-	NONCLIENTMETRICS info;
-	ZeroMemory(&info, sizeof(info));
-	DWORD size = sizeof(info) - sizeof(info.iPaddedBorderWidth); // Ignore last int for this to work
-	info.cbSize = size;
-	int result = SystemParametersInfo(
-		SPI_GETNONCLIENTMETRICS, // System parameter to retrieve
-		size,                    // Size of the structure
-		&info,                   // Structure to fill with information
-		0);                      // Not setting a system parameter
-	if (!result) Report(L"systemparametersinfo");
-	Handle.font = CreateFontIndirect(&info.lfMenuFont);
-	if (!Handle.font) Report(L"createfontindirect");
+	// Make fonts
+	Handle.arial     = FontName(L"Arial", 28);
+	Handle.font      = FontMenu(false);
+	Handle.underline = FontMenu(true);
 }
 
 // Paint the client area of the window and resize the child window controls
 void Paint() {
 
+	/*
 	// Sizes used in the layout
 	int margin = 16;
 	int labelwidth = 70;
@@ -174,6 +178,7 @@ void Paint() {
 	PaintBorder(&device, border1, Handle.middle.brush);
 	PaintBorder(&device, border2, Handle.middle.brush);
 	PaintBorder(&device, border3, Handle.middle.brush);
+	*/
 }
 
 
@@ -190,40 +195,7 @@ void Paint() {
 // Loads drawing resources from the system, freeing any already loaded, and sizes text
 void PaintLoad() {
 
-	// Get the point size of the normal font
-	int points = 11; // Default 11 which looks like 8 on screen
-
-	// Create a font handle based on the one the system uses in message boxes
-	NONCLIENTMETRICS info;
-	ZeroMemory(&info, sizeof(info));
-	DWORD size = sizeof(info) - sizeof(info.iPaddedBorderWidth); // Ignore last int for this to work
-	info.cbSize = size; // Size of this structure
-	int result = SystemParametersInfo(
-		SPI_GETNONCLIENTMETRICS,  // System parameter to retrieve
-		size,                     // Size of the structure
-		&info,                    // Structure to fill with information
-		0);                       // Not setting a system parameter
-	if (result) {
-
-		// Get the point size of the normal font, normally 11 which looks like 8 on screen
-		points = -info.lfMenuFont.lfHeight;
-
-		// Create the normal font
-		Handle.font = CreateFontIndirect(&info.lfMenuFont);
-		if (!Handle.font) Report(L"createfontindirect normal");
-
-		// Create the underlined font
-		info.lfMenuFont.lfUnderline = true;
-		Handle.font = CreateFontIndirect(&info.lfMenuFont);
-		if (!Draw.font.underline) Report(L"createfontindirect underline");
-
-	} else {
-
-		// REPORT ERROR AND SET THE FONT HANDLE TO NULL
-		Report(L"systemparametersinfo");
-		Draw.font.normal = Draw.font.underline = NULL;
-	}
-
+/*
 	// CREATE FONTS
 	DeleteObjectSafely(Draw.font.arial28);            Draw.font.arial28            = CreateFont("Arial",   28);
 	DeleteObjectSafely(Draw.font.verdana13);          Draw.font.verdana13          = CreateFont("Verdana", 13);
@@ -277,6 +249,7 @@ void PaintLoad() {
 	// MIX BRUSHES
 	DeleteObjectSafely(Draw.color.middle.brush);
 	Draw.color.middle = BrushColor(MixColors(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1));
+	*/
 }
 
 void PaintWindow(deviceitem *device)
@@ -284,6 +257,8 @@ void PaintWindow(deviceitem *device)
 	// takes a device context to use to paint in the window
 	// paints all areas of the client window outside the child window controls
 	// returns nothing
+
+	/*
 
 	// PAINT ALL THE AREAS
 	areaitem *a;
@@ -399,6 +374,7 @@ void PaintWindow(deviceitem *device)
 
 	// STATUS BAR
 	PaintText(device, State.status, Draw.area.status, false, true, true, true);
+	*/
 }
 
 void PaintArea(deviceitem *device, areaitem *a)
@@ -420,6 +396,7 @@ void PaintArea(deviceitem *device, areaitem *a)
 	// PAINT BUTTON
 	if (a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
 
+		/*
 		// SIZE ICON
 		icon.x = a->size.x + (a->size.w - icon.w) / 2;
 		icon.y = a->size.y + 3;
@@ -482,8 +459,12 @@ void PaintArea(deviceitem *device, areaitem *a)
 		s.SetBottom(button.Bottom());
 		PaintFill(device, s); // ROW BENEATH TEXT
 
+		*/
+
 	// PAINT LINK
 	} else if (a->command == CommandLink) {
+
+		/*
 
 		// UNDERLINE LINKS
 		HFONT underline;
@@ -533,8 +514,12 @@ void PaintArea(deviceitem *device, areaitem *a)
 			PaintText(device, a->text, entertext, false, true, true, false, 0, underline);
 		}
 
+		*/
+
 	// PAINT BAR
 	} else {
+
+		/*
 
 		// PAINT BAR
 		if (a == &Draw.area.bar) {
@@ -584,203 +569,10 @@ void PaintArea(deviceitem *device, areaitem *a)
 			s.x += 4;
 			PaintFill(device, s, Draw.color.shadow.brush);
 		}
+
+		*/
 	}
 }
-
-bool PaintCustom(LPNMLVCUSTOMDRAW draw)
-{
-	// takes a pointer to a list view custom draw structure
-	// does custom painting in the list view control
-	// returns true to have the control skip its default painting, false to pass on the custom draw notification to windows
-
-	// EXTRACT INFORMATION FROM THE DRAW STRUCTURE
-	LPARAM parameter;
-	int row, column;
-	deviceitem device;
-	parameter = draw->nmcd.lItemlParam;
-	row = (int)draw->nmcd.dwItemSpec;
-	column = draw->iSubItem;
-	device.OpenUse(draw->nmcd.hdc);
-
-	// ONLY CUSTOM DRAW THE SIZE COLUMN
-	if (column != 2) return(false);
-
-	// ONLY CUSTOM DRAW A BOT ITEM WITH A WANT ATTACHED
-	botitem *b;
-	b = (botitem *)parameter;
-	if (!b->w) return(false);
-
-	// ONLY CUSTOM DRAW A WANT WITH SIZE AND STRIPES TEXT
-	string s, stripes;
-	s = b->w->Size();
-	stripes = b->w->stripes;
-	if (isblank(s) || isblank(stripes)) return(false);
-
-	// CHOOSE AND MIX COLORS
-	COLORREF foreground, background, text;
-	HBRUSH brush;
-	if (!ListSelected(row)) {
-
-		// NOT SELECTED, ORANGE
-		foreground = RGB(255, 204, 0);
-		background = MixColors(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_WINDOW), 2);
-		text = GetSysColor(COLOR_WINDOWTEXT);
-		brush = Draw.color.window.brush;
-
-	} else if (GetFocus() == Handle.list) {
-
-		// SELECTED WITH THE FOCUS, BLUE
-		foreground = MixColors(GetSysColor(COLOR_HIGHLIGHTTEXT), 1, GetSysColor(COLOR_HIGHLIGHT), 2);
-		background = GetSysColor(COLOR_HIGHLIGHT);
-		text = GetSysColor(COLOR_HIGHLIGHTTEXT);
-		brush = Draw.color.selected.brush;
-
-	} else {
-
-		// SELECTED WITHOUT THE FOCUS, GRAY
-		foreground = MixColors(GetSysColor(COLOR_WINDOWTEXT), 1, GetSysColor(COLOR_3DFACE), 4);
-		background = GetSysColor(COLOR_3DFACE);
-		text = GetSysColor(COLOR_WINDOWTEXT);
-		brush = Draw.color.face.brush;
-	}
-
-	// GET THE RECTANGLE OF THE SUBITEM
-	sizeitem cell, line, progress;
-	line = progress = cell = ListCell(row, column);
-	line.h = 1;   // LINE IS THE TOP LINE OF THE RECTANGLE
-	progress.y++; // PROGRESS IS THE RECTANGLE BENEATH THE TOP LINE
-	progress.h--; // ADJUST THE RECTANGLE FOR THE TEXT WITH THE 6 PIXEL MARGIN
-	cell.x += 6;
-	cell.w -= 12;
-
-	// PAINT THE BACKGROUND
-	PaintFill(&device, line, brush);
-	PaintProgress(&device, progress, foreground, background, stripes);
-
-	// SIZE THE WIDTH OF THE ITEM TEXT
-	sizeitem size;
-	size = SizeText(&device, s);
-
-	// THERE IS SPACE BETWEEN THE MARGINS
-	if (cell.w > 0) {
-
-		// IF THERE IS MORE THAN ENOUGH ROOM FOR THE TEXT, RIGHT ALIGN IT
-		UINT style;
-		if (cell.w > size.w) style = DT_RIGHT;
-		else                 style = DT_LEFT;
-
-		// PAINT THE TEXT WITH A TRANSPARENT BACKGROUND AND AN ELLIPSIS IF NECESSARY
-		device.Background(TRANSPARENT);
-		device.FontColor(text);
-		RECT rectangle;
-		rectangle = cell.Rectangle();
-		if (!DrawText(device.device, s, -1, &rectangle, style | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE)) Report("error drawtext");
-	}
-
-	// TELL THE CONTROL TO SKIP DRAWING THIS SUBITEM
-	return(true);
-}
-
-void PaintProgress(deviceitem *device, sizeitem bound, COLORREF foreground, COLORREF background, read r)
-{
-	// takes a device and size to paint in, background and color, and progress text
-	// paints the antialiased progress bar
-	// returns nothing
-
-	// READ THE PROGRESS INFORMATION FOR THE TOTAL SIZE AND AT MOST 16 PAIRS OF POSITIONS AND SIZES
-	hyper size, pair, pairs, positions[16], sizes[16];
-	string s, n;
-	split(r, ",", &n, &s);
-	size = number(n);
-	pairs = 0;
-	while (is(s) && pairs < 16) {
-
-		split(s, ",", &n, &s);
-		positions[pairs] = number(n);
-		split(s, ",", &n, &s);
-		sizes[pairs] = number(n);
-		pairs++;
-	}
-
-	// START WITH NO BRUSH
-	brushitem brush;
-	COLORREF color, maskcolor;
-
-	// START MASK TO THE LEFT OF THE FIRST VERTICAL COLUMN OF PIXELS IN THE RECTANGLE
-	sizeitem mask;
-	mask = bound;
-	mask.w = 0;
-
-	// LOOP FOR EACH VERTICAL COLUMN OF PIXELS IN THE PROGRESS BAR
-	hyper column, columns, saturation, a1, a2, b1, b2;
-	columns = bound.w;
-	for (column = 0; column < columns; column++) {
-
-		// CALCULATE THE COLUMN BOUNDARY ON THE COMMON MULTIPLIED SIZE SCALE
-		a1 = column * size;
-		a2 = (column + 1) * size;
-
-		// LOOP FOR EACH PAIR TO FIND THE TOTAL SATURATION
-		saturation = 0;
-		for (pair = 0; pair < pairs; pair++) {
-
-			// CALCULATE THE PROGRESS BOUNDARY ON THE SAME SCALE
-			b1 = positions[pair] * columns;
-			b2 = (positions[pair] + sizes[pair]) * columns;
-
-			// CLIP B TO THE BOUNDARIES OF A
-			if (b1 < a1 && b2 > a1) b1 = a1;
-			if (b2 > a2 && b1 < a2) b2 = a2;
-
-			// CALCULATE THE SATURATION ON A SCALE FROM 0 TO 255
-			if (size && b1 >= a1 && b2 <= a2) saturation += (((b2 - b1) * 255) / size);
-		}
-
-		// LIMIT THE TOTAL SATURATION FOR THE COLUMN AND MIX ITS COLOR
-		if (saturation > 255) saturation = 255;
-		color = MixColors(foreground, (int)saturation, background, 255 - (int)saturation);
-
-		// THIS IS THE FIRST COLUMN
-		if (column == 0) {
-
-			// SET THE MASK COLOR TO THE COLOR THIS COLUMN WILL BE PAINTED, AND CONTINUE WITH SAME CASE
-			maskcolor = color;
-		}
-
-		// THIS COLUMN SHOULD BE PAINTED THE SAME AS COLUMN BEFORE IT, OR THERE IS NO COLUMN BEFORE IT TO BE DIFFERENT
-		if (color == maskcolor) {
-
-			// EXTEND THE MASK TO COVER THIS COLUMN
-			mask.w++;
-
-		// THIS COLUMN SHOULD BE PAINTED DIFFERENTLY FROM THE COLUMN BEFORE IT
-		} else {
-
-			// PAINT THE MASK
-			DeleteObjectSafely(brush.brush);
-			brush = BrushColor(maskcolor);
-			PaintFill(device, mask, brush.brush);
-
-			// SET THE MASK COLOR FOR THIS COLUMN AND SET THE MASK ON THIS COLUMN
-			maskcolor = color;
-			mask.x += mask.w;
-			mask.w = 1;
-		}
-
-		// THIS IS THE LAST COLUMN
-		if (column == columns - 1) {
-
-			// PAINT THE MASK
-			DeleteObjectSafely(brush.brush);
-			brush = BrushColor(maskcolor);
-			PaintFill(device, mask, brush.brush);
-		}
-	}
-
-	// DELETE THE BRUSH
-	DeleteObjectSafely(brush.brush);
-}
-
 
 
 

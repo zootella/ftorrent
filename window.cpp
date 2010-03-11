@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Global objects
@@ -139,8 +139,8 @@ LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lp
 				RECT rectangle;
 				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"getwindowrect");
 				sizeitem size(rectangle);
-				size.addy(size.h());
-				size.client();
+				size.y += size.h;
+				size.Client();
 				UINT choice = MenuShow(Handle.menutools, false, &size); // Wait here for the user to make a choice
 				if      (choice == ID_TOOLS_TEST)    { Test(); }
 				else if (choice == ID_TOOLS_OPEN)    {  }

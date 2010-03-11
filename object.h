@@ -183,12 +183,14 @@ public:
 	HWND tasks, status, errors; // Child window edit controls
 	HWND clear, task, start, stop, reset; // Child window buttons
 
-	// Menus, icons, cursors, fonts and brushes
+	// Menus, icons, cursors, fonts and colors
 	HMENU menutaskbar, menutools;
 	HICON iconbig, iconsmall;
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-	HFONT font, underline;
-	brushitem face, shadow, background, ink, select, middle;
+	HFONT font, underline, arial;
+	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
+	brushitem face, shadow, background, ink, select;
+	brushitem middle;
 };
 
 // Drawing tools
@@ -252,4 +254,10 @@ public:
 	int pop; // How many popup boxes and menus the program has put above the window
 
 	boolean pause; // True when the Pause button is pressed
+
+	string status;
+
+	string   title;
+	sizeitem titlesize;
+
 };

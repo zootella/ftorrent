@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Access to global objects
@@ -139,7 +139,7 @@ void AreaPulse()
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);
-				device.BackgroundColor(Handle.background);
+				device.BackgroundColor(Handle.background.color);
 			}
 
 			if (device.device) PaintArea(&device, a);
@@ -147,9 +147,6 @@ void AreaPulse()
 
 		a = a->next;
 	}
-
-	// IF THE PROGRAM IS NOT OWNED AND THE GET BUTTON IT HOT, SHOW THE SIGN
-	if (!State.owned && Draw.get.display == DisplayHot) Sign();
 
 	// ADJUST SIZE
 	if (Draw.pressed) {
@@ -188,6 +185,8 @@ void AreaPulse()
 
 	// FIND OUT HOW MANY ROWS THERE ARE, AND HOW MANY ARE SELECTED
 	int rows, selected, pending;
+	rows = selected = pending = 0;
+	/*
 	rows = ListRows();
 	selected = ListSelectedRows();
 
@@ -200,12 +199,13 @@ void AreaPulse()
 		if (b->status == StatusPending) pending++;
 
 	b = b->next; }
+	*/
 
 	// COMPOSE STATUS TEXT
 	string s;
-	s = writenumber(rows, "file");
-	if (pending)  s += "  " + writecommas(numerals(pending))  + " to get";
-	if (selected) s += "  " + writecommas(numerals(selected)) + " selected";
+	s = saynumber(rows, L"file");
+	if (pending)  s += L"  " + insertcommas(numerals(pending))  + L" to get";
+	if (selected) s += L"  " + insertcommas(numerals(selected)) + L" selected";
 
 	// THE STATUS TEXT IS DIFFERENT
 	if (State.status != s) {
@@ -220,8 +220,8 @@ void AreaPulse()
 			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
-				device.Font(Draw.font.normal);
-				device.BackgroundColor(Draw.color.window.color);
+				device.Font(Handle.font);
+				device.BackgroundColor(Handle.background.color);
 			}
 
 			// PAINT THE STATUS TEXT TO THE WINDOW
@@ -328,7 +328,7 @@ void Size(int move)
 	button.h = big + text + 7;
 
 	// SIZE AND POSITION THE OPEN AND HELP LINKS
-	Draw.open.size.x = Draw.titlesize.w + (4 * space);
+	Draw.open.size.x = State.titlesize.w + (4 * space);
 	Draw.open.size.w = Draw.open.textsize.w + (2 * space);
 	Draw.help.size.x = Draw.open.size.Right();
 	Draw.help.size.w = Draw.help.textsize.w + (2 * space);
@@ -427,7 +427,9 @@ void Size(int move)
 	*/
 
 	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
+	/*
 	if (!address.Is()) TipAdd(Draw.address.size, Draw.address.tip);
+	*/
 
 	// IF THE BAR MOVED, PAINT THE WINDOW
 	if (bar.y && bar.y != Draw.bar.size.y) Paint();

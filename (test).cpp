@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Access to global objects

@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Access to global objects
@@ -118,28 +118,48 @@ void deviceitem::BackgroundColor(COLORREF newcolor) {
 
 
 
-// Takes a window or null to use the main one
-// Uses this size in client coordinates
-// Converts the size to screen coordinates
-void sizeitem::screen(HWND window) {
+void sizeitem::Screen(HWND window)
+{
+	// takes a window
+	// uses this size in client coordinates
+	// converts the size to screen coordinates
 
-	if (!window) window = Handle.window; // Choose window
-	POINT p = point(); // Make a point with the x and y coordinates of this size item
-	if (!ClientToScreen(window, &p)) { Report(L"clienttoscreen"); return; } // Convert it
-	x(p.x); // Store the converted position in this size item
-	y(p.y);
+	// CHOOSE WINDOW
+	if (!window) window = Handle.window;
+
+	// MAKE A POINT WITH THE X AND Y COORDINATES OF THIS SIZE ITEM
+	POINT p;
+	p = Point();
+
+	// CONVERT THE POINT
+	sizeitem size;
+	if (!ClientToScreen(window, &p)) { Report(L"error clienttoscreen"); return; }
+
+	// STORE THE CONVERTED POSITION IN THIS SIZE ITEM
+	x = p.x;
+	y = p.y;
 }
 
-// Takes a window or null to use the main one
-// Uses this size in screen coordinates
-// Converts the size to client coordinates
-void sizeitem::client(HWND window) {
+void sizeitem::Client(HWND window)
+{
+	// takes a window
+	// uses this size in screen coordinates
+	// converts the size to client coordinates
 
-	if (!window) window = Handle.window; // Choose window
-	POINT p = point(); // Make a point with the x and y coordinates of this size item
-	if (!ScreenToClient(window, &p)) { Report(L"screentoclient"); return; } // Convert it
-	x(p.x); // Store the converted position in this size item
-	y(p.y);
+	// CHOOSE WINDOW
+	if (!window) window = Handle.window;
+
+	// MAKE A POINT WITH THE X AND Y COORDINATES OF THIS SIZE ITEM
+	POINT p;
+	p = Point();
+
+	// CONVERT THE POINT
+	sizeitem size;
+	if (!ScreenToClient(window, &p)) { Report(L"error screentoclient"); return; }
+
+	// STORE THE CONVERTED POSITION IN THIS SIZE ITEM
+	x = p.x;
+	y = p.y;
 }
 
 

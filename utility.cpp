@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "resource.h"
 #include "program.h"
-#include "class.h"
+#include "object.h"
 #include "function.h"
 
 // Access to global objects
@@ -174,11 +174,45 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 	return window;
 }
 
-// Move and resize the given window
-void WindowSize(HWND window, sizeitem size) {
 
-	if (!MoveWindow(window, size.x(), size.y(), size.w(), size.h(), false)) Report(L"movewindow"); // False to not send a paint message
+
+
+void WindowSize(HWND window, int x, int y)
+{
+	// takes a window and pixel adjustments
+	// adjusts the width and height of the window by x and y
+	// returns nothing
+
+	// NO SIZING NECESSARY
+	if (!x && !y) return;
+
+	// GET THE WINDOW'S CURRENT SIZE
+	RECT r;
+	if (!GetWindowRect(window, &r)) { Report(L"windowsize: error getwindowrect"); return; }
+
+	// ADJUST THE SIZE
+	sizeitem size;
+	size.x = r.left;
+	size.y = r.top;
+	size.w = r.right - r.left + x;
+	size.h = r.bottom - r.top + y;
+
+	// MOVE THE WINDOW
+	WindowMove(window, size, true);
 }
+
+void WindowMove(HWND window, sizeitem size, bool paint)
+{
+	// takes a window and size item
+	// moves the window
+	// returns nothing
+
+	// POSITION AND RESIZE THE WINDOW WITHOUT SENDING A PAINT MESSAGE
+	if (!MoveWindow(window, size.x, size.y, size.w, size.h, paint)) Report(L"windowmove: error movewindow");
+}
+
+
+
 
 // Make an edit window editable or read only
 void WindowEdit(HWND window, boolean edit) {
@@ -264,36 +298,6 @@ void PaintMessage(HWND window) {
 	// Invalidate the whole client area of the given window, and make it process a paint message right now
 	InvalidateRect(window, NULL, false); // false to not wipe the window with the background color
 	UpdateWindow(window); // Call the window procedure directly with a paint message right now
-}
-
-// Takes a device context, size, and brush
-// Fills the rectangle with the color
-void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush) {
-
-	// Make sure there are pixels to paint
-	if (!size.is()) return;
-
-	// Paint the rectangle
-	RECT rectangle = size.rectangle();
-	FillRect(device->device, &rectangle, brush); // Returns error if the computer is locked
-}
-
-// Paint a 1-pixel wide border inside the given size
-void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush) {
-
-	// Paint the 4 edges of the border
-	sizeitem edge;
-	edge = size; edge.w(1); PaintFill(device, edge, brush); edge.x(size.r() - 1); PaintFill(device, edge, brush);
-	edge = size; edge.h(1); PaintFill(device, edge, brush); edge.y(size.b() - 1); PaintFill(device, edge, brush);
-}
-
-// Takes a deviceitem that has a font, text, and a bounding position and size
-// Paints the text there
-void PaintText(deviceitem *device, read r, sizeitem size) {
-
-	// Paint the text, if the background is opaque, this will cause a flicker
-	RECT rectangle = size.rectangle();
-	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) Report(L"drawtext");
 }
 
 // Adds the program icon to the taskbar notification area
@@ -413,7 +417,7 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 	sizeitem position;
 	if (size) {
 		position = *size;
-		position.screen(); // Convert the given client size into screen coordinates
+		position.Screen(); // Convert the given client size into screen coordinates
 	} else {
 		position = MouseScreen(); // Get the mouse position in screen coordinates
 	}
@@ -428,8 +432,8 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 		TPM_NONOTIFY |   // Return the chosen menu item without sending messages to the main window
 		TPM_RETURNCMD |
 		TPM_RIGHTBUTTON, // Let the user click on an item with the left or right button
-		position.x(),    // Desired menu position in screen coordinates
-		position.y(),
+		position.x,      // Desired menu position in screen coordinates
+		position.y,
 		0,
 		Handle.window,
 		NULL);
@@ -463,6 +467,7 @@ bool MouseInside() {
 	sizeitem mouse = MouseClient();
 	sizeitem client = SizeClient();
 
+	/*
 	// The mouse is inside if it is inside the client area and outside all the child window controls
 	return
 		client.Inside(mouse)            &&
@@ -470,6 +475,8 @@ bool MouseInside() {
 		!Draw.area.button.Inside(mouse) &&
 		!Draw.area.tree.Inside(mouse)   &&
 		!Draw.area.list.Inside(mouse);
+		*/
+	return false;
 }
 
 // Find the area, if any, the mouse is currently positioned over, null if none
@@ -481,7 +488,7 @@ areaitem *MouseOver() {
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area item to find the one the mouse is over
-	areaitem *a = Draw.area.all;
+	areaitem *a = Draw.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;
@@ -505,7 +512,7 @@ sizeitem MouseClient(HWND window) {
 
 	if (!window) window = Handle.window; // Choose window
 	sizeitem s = MouseScreen(); // Get the mouse pointer position in screen coordinates
-	s.client(window); // Convert the position to the client coordinates of the given window
+	s.Client(window); // Convert the position to the client coordinates of the given window
 	return s;
 }
 
@@ -515,14 +522,14 @@ sizeitem MouseScreen() {
 
 	// If we have a popup window or menu open, report that the mouse is off the screen
 	sizeitem s;
-	s.x(-1);
-	s.y(-1);
+	s.x = -1;
+	s.y = -1;
 	if (State.pop) return s;
 
 	// Get the mouse position in screen coordinates
 	POINT p;
 	if (!GetCursorPos(&p)) return s; // Will return error if Windows is locked
-	s.set(p);
+	s.Set(p);
 	return s;
 }
 
@@ -608,22 +615,6 @@ sizeitem SizeWindow(HWND window) {
 	return size;
 }
 
-// Attach a tooltip that says r to the given size in the main window
-void TipAdd(sizeitem size, read r) {
-
-	TOOLINFO info;
-	ZeroMemory(&info, sizeof(info);
-	info.cbSize      = sizeof(info);     // Size of this structure
-	info.uFlags      = TTF_SUBCLASS;     // Have the tooltip control get messages from the tool window
-	info.hwnd        = Handle.window;    // Handle to the window that contains the tool region
-	info.uId         = 0;                // Tool identifying number
-	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
-	info.hinst       = NULL;             // Only used when text is loaded from a resource
-	info.lpszText    = (LPSTR)r;         // Text to show in the tooltip
-	info.lParam      = 0;                // No additional value assigned to tool
-	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) Report(L"sendmessage ttm_addtool");
-}
-
 // Takes a device context with a font loaded inside, and text
 // Determines how wide and high in pixels the text painted will be
 // Returns the size width and height, or zeroes if any error
@@ -697,7 +688,7 @@ void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool 
 	// Put back the device context
 	if (background) device->BackgroundColor(device->backgroundcolor);
 	if (color)      device->FontColor(device->fontcolor);
-	if (font)       device->Font(Draw.font.normal);
+	if (font)       device->Font(Handle.font);
 }
 
 // Use the device to paint size with brush
@@ -707,7 +698,7 @@ void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush) {
 	if (!size.Is()) return;
 
 	// Choose brush
-	if (!brush) brush = Draw.color.window.brush;
+	if (!brush) brush = Handle.background.brush;
 
 	// Paint the rectangle
 	RECT rectangle = size.Rectangle();
@@ -739,7 +730,74 @@ void PaintIcon(deviceitem *device, sizeitem position, HICON icon) {
 		icon,                    // Handle to icon to paint
 		0, 0,                    // Use the width and height of the icon resource
 		0,                       // Not an animated icon
-		Draw.color.window.brush, // Paint into an offscreen bitmap over this brush first to not flicker on the screen
+		Handle.background.brush, // Paint into an offscreen bitmap over this brush first to not flicker on the screen
 		DI_IMAGE | DI_MASK);     // Use the image and mask to draw alpha icons correctly
 	if (!result) Report(L"drawiconex");
 }
+
+// Make a font based on what the system uses in menus, true to underline it
+HFONT FontMenu(boolean underline) {
+
+	NONCLIENTMETRICS info;
+	ZeroMemory(&info, sizeof(info));
+	DWORD size = sizeof(info) - sizeof(info.iPaddedBorderWidth); // Ignore last int for this to work
+	info.cbSize = size;
+	int result = SystemParametersInfo(
+		SPI_GETNONCLIENTMETRICS, // System parameter to retrieve
+		size,                    // Size of the structure
+		&info,                   // Structure to fill with information
+		0);                      // Not setting a system parameter
+	if (!result) { Report(L"systemparametersinfo getnonclientmetrics"); return NULL; }
+	if (underline) info.lfMenuFont.lfUnderline = true; // Underline if requested
+	HFONT font = CreateFontIndirect(&info.lfMenuFont);
+	if (!font) Report(L"createfontindirect systemparametersinfo");
+	return font;
+}
+
+// Make a font of the given face name and point size
+HFONT FontName(read face, int points) {
+
+	LOGFONT info;
+	ZeroMemory(&info, sizeof(info));
+	info.lfHeight         = -points;                      // Point size, minus sign required
+	info.lfWidth          = 0;                            // Default width
+	info.lfEscapement     = 0;                            // Not rotated
+	info.lfOrientation    = 0;
+	info.lfWeight         = FW_NORMAL;                    // Normal, not bold
+	info.lfItalic         = (byte)false;                  // Not italic
+	info.lfUnderline      = (byte)false;                  // Not underlined
+	info.lfStrikeOut      = (byte)false;                  // No strikeout
+	info.lfCharSet        = ANSI_CHARSET;                 // Use ANSI characters
+	info.lfOutPrecision   = OUT_DEFAULT_PRECIS;           // Default size precision
+	info.lfClipPrecision  = CLIP_DEFAULT_PRECIS;          // Default clipping behavior
+	info.lfQuality        = DEFAULT_QUALITY;              // Don't force antialiasing
+	info.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // Only used if the font name is unavailable
+	lstrcpy(info.lfFaceName, face);                       // Font name
+	HFONT font = CreateFontIndirect(&info);
+	if (!font) Report(L"createfontindirect logfont");
+	return font;
+}
+
+
+int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
+{
+	// takes numbers
+	// determines the greatest amongst them
+	// returns it
+
+	// FIND THE BIGGEST POSITIVE NUMBER AND RETURN IT
+	int i;
+	i = 0;
+	if (i < i1) i = i1;
+	if (i < i2) i = i2;
+	if (i < i3) i = i3;
+	if (i < i4) i = i4;
+	if (i < i5) i = i5;
+	if (i < i6) i = i6;
+	if (i < i7) i = i7;
+	if (i < i8) i = i8;
+	return(i);
+}
+
+
+
