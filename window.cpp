@@ -18,62 +18,94 @@ statetop  State;  // State variables
 // Start the program
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
 
-	// Save and initialize handles
+	// Save the given instance handle
 	Handle.instance = instance;
-	InitializeCriticalSection(&Handle.section);
 
-	// Creating painting tools
-	PaintCreate();
+	// Load menus
+	HMENU menus = MenuLoad(L"CONTEXT_MENU");
+	Handle.restore = MenuClip(menus, 0);
+	Handle.tools   = MenuClip(menus, 1);
+	if (!PROGRAM_TEST && !DeleteMenu(Handle.tools, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
+
+	// Load icons
+	Handle.big    = LoadIconResource(L"APPLICATION_ICON", 32);
+	Handle.little = LoadIconResource(L"APPLICATION_ICON", 16);
+
+	// Load cursors
+	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
+	Handle.hand       = LoadSharedCursor(IDC_HAND);
+	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
+	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
+	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
+
+	// Make brushes
+	Handle.face        = BrushSystem(COLOR_3DFACE); // Shared handles to system brushes
+	Handle.shadow      = BrushSystem(COLOR_3DSHADOW);
+	Handle.background  = BrushSystem(COLOR_WINDOW);
+	Handle.ink         = BrushSystem(COLOR_WINDOWTEXT);
+	Handle.select      = BrushSystem(COLOR_HIGHLIGHT);
+	Handle.blue        = CreateBrush(RGB(  0, 102, 204)); // Colors
+	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
+	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
+	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
+	Handle.green       = CreateBrush(RGB(102, 204,  51));
+	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
+	Handle.red         = CreateBrush(RGB(255, 102,  51));
+	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
+	Handle.middle      = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
+
+	// Make fonts
+	Handle.font      = FontMenu(false);
+	Handle.underline = FontMenu(true);
+	Handle.arial     = FontName(L"Arial", 28);
 
 	// Register the class for the main window, and create it
+	string name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
 	WNDCLASSEX info;
 	ZeroMemory(&info, sizeof(info));
-	info.cbSize        = sizeof(info);
-	info.style         = 0;
-	info.lpfnWndProc   = MainWinProc;
-	info.cbClsExtra    = 0;
+	info.cbSize        = sizeof(info);               // Size of this structure
+	info.style         = 0;                          // Default style
+	info.lpfnWndProc   = WindowProcedure;            // Function pointer to the window procedure
+	info.cbClsExtra    = 0;                          // No extra bytes
 	info.cbWndExtra    = 0;
-	info.hInstance     = Handle.instance;
-	info.hIcon         = Handle.iconbig;
-	info.hIconSm       = Handle.iconsmall;
-	info.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	info.lpszMenuName  = NULL;
-	info.lpszClassName = L"ltorrentClassName";
-	ATOM result = RegisterClassEx(&info);
-	if (!result) Report(L"registerclassex");
-	Handle.window = WindowCreate(L"ltorrentClassName", PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	info.hInstance     = Handle.instance;            // Instance handle
+	info.hIcon         = Handle.big;                 // Large and small icons
+	info.hIconSm       = Handle.little;
+	info.hCursor       = NULL;                       // Mouse cursor changes
+	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // Background brush
+	info.lpszMenuName  = NULL;                       // No menu
+	info.lpszClassName = name;                       // Window class name
+	if (!RegisterClassEx(&info)) Report(L"registerclassex");
+	Handle.window = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Add Exit to the main window's system menu
-	HMENU m = GetSystemMenu(Handle.window, false); // Get the menu for editing
-	if (!m) Report(L"getsystemmenu");
-	if (m && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
+	HMENU menu = GetSystemMenu(Handle.window, false); // Get the menu for editing
+	if (!menu) Report(L"getsystemmenu");
+	if (menu && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
 
 	// Make child windows and menus
-	Handle.tasks  = WindowCreateEdit(true,  false); // Edit controls
-	Handle.status = WindowCreateEdit(false, false);
-	Handle.errors = WindowCreateEdit(true,  true);
-	WindowEdit(Handle.tasks,  false); // Start out edit controls read-only
-	WindowEdit(Handle.status, false);
-	WindowEdit(Handle.errors, false);
-	Handle.clear = WindowCreateButton(L"Clear"); // Buttons
-	Handle.task  = WindowCreateButton(L"Task");
-	Handle.start = WindowCreateButton(L"Start");
-	Handle.stop  = WindowCreateButton(L"Stop");
-	Handle.reset = WindowCreateButton(L"Reset");
+	Handle.list = WindowCreateEdit(true,  false); // Edit controls
+	Handle.tabs = WindowCreateEdit(false, false);
+	Handle.edit = WindowCreateEdit(true,  true);
+	WindowEdit(Handle.list, true); // Start out edit controls read-only
+	WindowEdit(Handle.tabs, true);
+	WindowEdit(Handle.edit, true);
 
-	// Prepare the window to show current information, and make the correct controls available
-	//TODO // Tries to paint now, but doesn't because the window isn't on the screen yet
+	// CREATE AREAS AND LOAD PAINTING RESOURCES, SIZING AREA TEXT
+	/*
+	AreaCreate();
+	PaintLoad();
+	*/
+
+	// Lower the window
+	sizeitem size = SizeWindow(Handle.window);
+	size.ShiftTop((size.h * 1) / 4);
+	WindowMove(Handle.window, size, false);
 
 	// Show the child windows and then the main window
-	ShowWindow(Handle.tasks,  SW_SHOWNORMAL);
-	ShowWindow(Handle.status, SW_SHOWNORMAL);
-	ShowWindow(Handle.errors, SW_SHOWNORMAL);
-	ShowWindow(Handle.clear,  SW_SHOWNORMAL);
-	ShowWindow(Handle.task,   SW_SHOWNORMAL);
-	ShowWindow(Handle.start,  SW_SHOWNORMAL);
-	ShowWindow(Handle.stop,   SW_SHOWNORMAL);
-	ShowWindow(Handle.reset,  SW_SHOWNORMAL);
+	ShowWindow(Handle.list,   SW_SHOWNORMAL);
+	ShowWindow(Handle.tabs,   SW_SHOWNORMAL);
+	ShowWindow(Handle.edit,   SW_SHOWNORMAL);
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(Handle.window); // Necessary to draw child window controls
 
@@ -90,7 +122,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 }
 
 // Process a message from the system
-LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
 
 	// The user sized the window, the first size message happens before the first paint
 	switch (message) {

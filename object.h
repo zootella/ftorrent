@@ -64,61 +64,61 @@ public:
 class sizeitem {
 public:
 
-	// COORDINATES FROM CLIENT AREA ORIGIN AND WIDTH AND HEIGHT DIMENSIONS
+	// Coordinates from client area origin and width and height dimensions
 	int x, y, w, h;
 
-	// NEW
+	// New
 	sizeitem() { Clear(); }
 	sizeitem(POINT p) { Set(p); }
 	sizeitem(RECT  r) { Set(r); }
 	sizeitem(SIZE  s) { Set(s); }
 
-	// CLEAR
+	// Clear
 	void Clear() { x = y = w = h = 0; }
 
-	// SET
+	// Set
 	void Set(POINT p) { x = p.x;    y = p.y;   w = 0;           h = 0;            }
 	void Set(RECT  r) { x = r.left; y = r.top; w = r.right - x; h = r.bottom - y; }
 	void Set(SIZE  s) { x = 0;      y = 0;     w = s.cx;        h = s.cy;         }
 
-	// CONVERT
+	// Convert
 	POINT Point() { POINT p; p.x = x; p.y = y; return(p); }
 	RECT Rectangle() { RECT r; r.left = x; r.top = y; r.right = x + w; r.bottom = y + h; return(r); }
 	SIZE Size() { SIZE s; s.cx = w; s.cy = h; return(s); }
 
-	// TAKE NEGATIVE WIDTH OR HEIGHT TO 0
+	// Take negative width or height to 0
 	void Check() { if (w < 0) w = 0; if (h < 0) h = 0; }
 
-	// DETERMINE IF THE SIZE HOLDS ANY PIXELS, AND IF A POINT IS INSIDE THE SIZE
+	// Determine if the size holds any pixels, and if a point is inside the size
 	bool Is() { return(w > 0 && h > 0); }
 	bool Inside(sizeitem s) { return(s.x >= x && s.x < x + w && s.y >= y && s.y < y + h); }
 
-	// READ LIKE A RECTANGLE
+	// Read like a rectangle
 	int Right() { return(x + w); }
 	int Bottom() { return(y + h); }
 
-	// SET LIKE A RECTANGLE
+	// Set like a rectangle
 	void SetLeft(int left) { w += x - left; x = left; }
 	void SetTop(int top) { h += y - top; y = top; }
 	void SetRight(int right) { w = right - x; }
 	void SetBottom(int bottom) { h = bottom - y; }
 
-	// POSITION BY THE RIGHT OR BOTTOM EDGES
+	// Position by the right or bottom edges
 	void PositionRight(int right) { x = right - w; }
 	void PositionBottom(int bottom) { y = bottom - h; }
 
-	// SHIFT JUST THE LEFT AND TOP BOUNDARIES BY A PIXEL AMOUNT
+	// Shift just the left and top boundaries by a pixel amount
 	void ShiftLeft(int shift) { x += shift; w -= shift; }
 	void ShiftTop(int shift) { y += shift; h -= shift; }
 
-	// COLLAPSE THE SIZE TO THE RIGHT OR TO THE BOTTOM
+	// Collapse the size to the right or to the bottom
 	void CloseRight() { x += w; w = 0; }
 	void CloseBottom() { y += h; h = 0; }
 
-	// EXPAND ALL THE EDGES BY A PIXEL AMOUNT
+	// Expand all the edges by a pixel amount
 	void Expand(int shift = 1) { x -= shift; y -= shift; w += (2 * shift); h += (2 * shift); }
 
-	// CONVERT BETWEEN SCREEN AND CLIENT WINDOW COORDINATES
+	// Convert between screen and client window coordinates
 	void Screen(HWND window = NULL);
 	void Client(HWND window = NULL);
 };
@@ -174,23 +174,16 @@ public:
 class handletop {
 public:
 
-	// Program handles
 	HINSTANCE instance; // Program instance handle
-	CRITICAL_SECTION section; // Critical section for the job object
-
-	// Windows
-	HWND window; // The main window on the screen
-	HWND tasks, status, errors; // Child window edit controls
-	HWND clear, task, start, stop, reset; // Child window buttons
-
-	// Menus, icons, cursors, fonts and colors
-	HMENU menutaskbar, menutools;
-	HICON iconbig, iconsmall;
-	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-	HFONT font, underline, arial;
-	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
-	brushitem face, shadow, background, ink, select;
-	brushitem middle;
+	HWND window; // Main window
+	HWND list, tab, edit; // Child window controls
+	HMENU restore, tools; // Menus
+	HICON big, little; // Application icon
+	HCURSOR arrow, hand, horizontal, vertical, diagonal; // Mouse pointers
+	HFONT font, underline, arial; // Fonts
+	brushitem blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred; // Colors
+	brushitem face, shadow, background, ink, select; // Shell brushes
+	brushitem middle; // Mixed color brush
 };
 
 // Drawing tools
@@ -199,10 +192,10 @@ public:
 
 	// The list of area items, the area item the mouse pressed, and pointers to the area items
 	areaitem *all, *pressed;
-	areaitem open, help, pause, remove, back, forward, stop, refresh, expand, get, address, enter, copy, bar, corner;
+	areaitem tools, pause, remove, bar, corner;
 
 	// Child window control sizes
-	sizeitem edit, button, tree, list;
+	sizeitem list, tab, edit;
 
 	// Sizes in the client area used when painting
 	sizeitem status;
@@ -220,22 +213,12 @@ public:
 		all = pressed = NULL;
 
 		// Link area items into a list
-		all          = &open;
-		open.next    = &help;
-		help.next    = &pause;
-		pause.next   = &remove;
-		remove.next  = &back;
-		back.next    = &forward;
-		forward.next = &stop;
-		stop.next    = &refresh;
-		refresh.next = &expand;
-		expand.next  = &get;
-		get.next     = &address;
-		address.next = &enter;
-		enter.next   = &copy;
-		copy.next    = &bar;
-		bar.next     = &corner;
-		corner.next  = NULL;
+		all         = &tools;
+		tools.next  = &pause;
+		pause.next  = &remove;
+		remove.next = &bar;
+		bar.next    = &corner;
+		corner.next = NULL;
 	}
 };
 
@@ -249,15 +232,9 @@ public:
 class statetop {
 public:
 
-	// State
 	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
-
 	boolean pause; // True when the Pause button is pressed
-
-	string status;
-
-	string   title;
-	sizeitem titlesize;
-
+	string state; // State title at top of window
+	string status; // Status bar text
 };

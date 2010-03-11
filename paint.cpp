@@ -17,54 +17,6 @@ extern statetop  State;
 
 // Make painting tools once when the program starts
 void PaintCreate() {
-
-	// Load menus
-	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	Handle.menutaskbar = MenuClip(menus, 0);
-	Handle.menutools   = MenuClip(menus, 1);
-
-	// Remove the test menu item
-	if (!PROGRAM_TEST) {
-		if (!DeleteMenu(Handle.menutools, ID_TOOLS_TEST, 0)) Report(L"deletemenu");
-	}
-
-	// Load icons
-	Handle.iconbig   = LoadIconResource(L"APPLICATION_ICON", 32);
-	Handle.iconsmall = LoadIconResource(L"APPLICATION_ICON", 16);
-
-	// Load cursors
-	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
-	Handle.hand       = LoadSharedCursor(IDC_HAND);
-	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
-	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
-	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
-
-	// Set colors
-	Handle.white       = CreateBrush(RGB(255, 255, 255));
-	Handle.black       = CreateBrush(RGB(  0,   0,   0));
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
-	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
-	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
-	Handle.green       = CreateBrush(RGB(102, 204,  51));
-	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
-	Handle.red         = CreateBrush(RGB(255, 102,  51));
-	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
-
-	// Get shared handles to system brushes
-	Handle.face       = BrushSystem(COLOR_3DFACE);
-	Handle.shadow     = BrushSystem(COLOR_3DSHADOW);
-	Handle.background = BrushSystem(COLOR_WINDOW);
-	Handle.ink        = BrushSystem(COLOR_WINDOWTEXT);
-	Handle.select     = BrushSystem(COLOR_HIGHLIGHT);
-
-	// Mix colors
-	Handle.middle = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1));
-
-	// Make fonts
-	Handle.arial     = FontName(L"Arial", 28);
-	Handle.font      = FontMenu(false);
-	Handle.underline = FontMenu(true);
 }
 
 // Paint the client area of the window and resize the child window controls

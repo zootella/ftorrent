@@ -28,7 +28,7 @@ string saytime(DWORD time);
 
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
-LRESULT CALLBACK MainWinProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
 
 // Utility
