@@ -7,11 +7,12 @@
 #include "resource.h"
 #include "program.h"
 #include "object.h"
+#include "top.h"
 #include "function.h"
 
 // Access to global objects
 extern handletop Handle;
-extern drawtop   Draw;
+extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 

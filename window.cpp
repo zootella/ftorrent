@@ -7,11 +7,12 @@
 #include "resource.h"
 #include "program.h"
 #include "object.h"
+#include "top.h"
 #include "function.h"
 
 // Global objects
 handletop Handle; // Window handles
-drawtop   Draw;   // Drawing tools
+areatop   Area;   // Button and drag areas
 datatop   Data;   // Linked data items
 statetop  State;  // State variables
 
@@ -21,14 +22,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Save the given instance handle
 	Handle.instance = instance;
 
-	/*
-	// Initialize our use of the common controls
-	INITCOMMONCONTROLSEX info1;
-	ZeroMemory(&info1, sizeof(info1));
-	info1.dwSize = sizeof(info1); // Size of this structure
-	info1.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES; // Load list and tree view classes
-	if (!InitCommonControlsEx(&info1)) Report(L"initcommoncontrolsex"); // Oh yeah
-	*/
+	// Tell the system we're going to use the list and tree view controls
+	InitializeCommonControls();
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
@@ -67,6 +62,27 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.font      = FontMenu(false);
 	Handle.underline = FontMenu(true);
 	Handle.arial     = FontName(L"Arial", 28);
+
+	// Make the areas of the window like the buttons and sizing grips
+	AreaCreate();
+	AreaPulse(); // Set the display state of each area
+
+
+
+
+
+
+	// Find out how big the text is in each area item
+	device.Font(Draw.font.normal);
+	areaitem *a;
+	a = Draw.area.all;
+	while (a) {
+
+		a->textsize = SizeText(&device, a->text);
+		a = a->next;
+	}
+
+
 
 	// Register the class for the main window, and create it
 	string name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name

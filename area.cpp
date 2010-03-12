@@ -7,81 +7,67 @@
 #include "resource.h"
 #include "program.h"
 #include "object.h"
+#include "top.h"
 #include "function.h"
 
 // Access to global objects
 extern handletop Handle;
-extern drawtop   Draw;
+extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-void AreaCreate()
-{
-	// takes nothing
-	// creates the areas for the window
-	// returns nothing
+// Make the areas for the window
+void AreaCreate() {
 
-	// ICONS
-	/*
-	Draw.pause.icon  = Draw.icon.buttonpause;
-	Draw.remove.icon = Draw.icon.buttonremove;
-	Draw.remove.gray = Draw.icon.grayremove;
-	Draw.enter.icon  = Draw.icon.linkget;
+	// Text
+	Area.tools.text  = L"Tools";
+	Area.pause.text  = L"Pause";
+	Area.remove.text = L"Remove";
 
-	// TEXT
-	Draw.open.text    = "Open   ";
-	Draw.help.text    = "Help...";
-	Draw.pause.text   = "Pause";
-	Draw.remove.text  = "Remove";
-	Draw.address.text = "Addresses";
-	Draw.address.tip  = "Click to Paste and Get";
-	Draw.enter.text   = "Get";
-	Draw.copy.text    = "Get addresses copied in other programs (Right-click links in Internet Explorer and press the T key)";
+	// Text size
+	deviceitem device;
+	device.Font(Handle.font);
+	Area.tools.textsize  = SizeText(&device, Area.tools.text);
+	Area.pause.textsize  = SizeText(&device, Area.pause.text);
+	Area.remove.textsize = SizeText(&device, Area.remove.text);
 
-	// LINK AND SIZE COMMAND STATES
-	Draw.open.command    = CommandLink;
-	Draw.help.command    = CommandLink;
-	Draw.address.command = CommandLink;
-	Draw.enter.command   = CommandLink;
-	Draw.copy.command    = CommandLink;
-	Draw.bar.command     = CommandSizeVertical;
-	Draw.corner.command  = CommandSizeDiagonal;
-	*/
+	// Icons
+	Area.tools.icon  = Handle.toolsicon;
+	Area.pause.icon  = Handle.pauseicon;
+	Area.remove.icon = Handle.removeicongray;
 
-	// SET THE AREA DISPLAY STATES
-	AreaPulse();
+	// Link and size command states
+	Area.tools.command    = CommandLink;
+	Area.bar.command     = CommandSizeVertical;
+	Area.corner.command  = CommandSizeDiagonal;
 }
 
-void AreaPulse()
-{
-	// takes nothing
-	// updates the appearance of area items and issues commands that occur
-	// returns nothing
+// Update the appearance of area items and issues commands that occur
+void AreaPulse() {
 
-	// SET BUTTON COMMAND STATES
-	if (State.pause) Draw.pause.command  = CommandSet;   else Draw.pause.command  = CommandReady;
-	if (false /*ListSelectedRows()*/) Draw.remove.command = CommandReady; else Draw.remove.command = CommandUnavailable;
+	// Set button command states
+	if (State.pause) Area.pause.command = CommandSet;
+	else             Area.pause.command = CommandReady;
+	if (false) Area.remove.command = CommandReady; //TODO change back to ListSelectedRows()
+	else       Area.remove.command = CommandUnavailable;
 
-	// FIND WHAT AREA THE MOUSE IS OVER, IF IT IS INSIDE THE CLIENT AREA OF THE WINDOW, AND IF THE PRIMARY BUTTON IS UP OR DOWN
-	areaitem *over;
-	bool inside, pressing;
-	over = MouseOver();
-	inside = MouseInside();
-	if (GetKeyState(VK_LBUTTON) & 0x8000) pressing = true;
-	else pressing = false;
+	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
+	areaitem *over = MouseOver();
+	bool inside = MouseInside();
+	int pressing = GetKeyState(VK_LBUTTON) & 0x8000;
 
-	// SET THE POINTER BASED ON THE AREA IT PRESSED
-	if (Draw.pressed) {
+	// Set the pointer based on the area it pressed
+	if (Area.pressed) {
 
-		if      (Draw.pressed->command == CommandReady)          CursorSet(Handle.hand);
-		else if (Draw.pressed->command == CommandSet)            CursorSet(Handle.hand);
-		else if (Draw.pressed->command == CommandLink)           CursorSet(Handle.hand);
-		else if (Draw.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
-		else if (Draw.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
-		else if (Draw.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
+		if      (Area.pressed->command == CommandReady)          CursorSet(Handle.hand);
+		else if (Area.pressed->command == CommandSet)            CursorSet(Handle.hand);
+		else if (Area.pressed->command == CommandLink)           CursorSet(Handle.hand);
+		else if (Area.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
+		else if (Area.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
+		else if (Area.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
 		else                                                     CursorSet(Handle.arrow);
 
-	// SET THE POINTER BASED ON THE AREA IT IS OVER
+	// Set the pointer based on the area it's over
 	} else if (over && !pressing) {
 
 		if      (over->command == CommandReady)          CursorSet(Handle.hand);
@@ -92,20 +78,19 @@ void AreaPulse()
 		else if (over->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
 		else                                             CursorSet(Handle.arrow);
 
-	// SET THE POINTER TO ARROW
+	// Neither of those, just a regular arrow
 	} else if (inside) {
 
 		CursorSet(Handle.arrow);
 	}
 
-	// COMPOSE THE DISPLAY OF EACH AREA AND DRAW THOSE THAT HAVE CHANGED
+	// Compose the display of each area and draw those that have changed
 	areadisplay display;
 	deviceitem device;
-	areaitem *a;
-	a = Draw.all;
+	areaitem *a = Area.all;
 	while (a) {
 
-		// COMPOSE THE DISPLAY FOR THE AREA
+		// Compose the display for the area
 		display = DisplayNone;
 		if (a->command == CommandUnavailable) {
 
@@ -113,7 +98,7 @@ void AreaPulse()
 
 		} else if (a->command == CommandReady) {
 
-			if      (a == over && a == Draw.pressed) display = DisplayPressed;
+			if      (a == over && a == Area.pressed) display = DisplayPressed;
 			else if (a == over && !pressing)         display = DisplayHot;
 			else                                     display = DisplayReady;
 
@@ -123,18 +108,18 @@ void AreaPulse()
 
 		} else if (a->command == CommandLink) {
 
-			if      (a == over && a == Draw.pressed) display = DisplayHot;
+			if      (a == over && a == Area.pressed) display = DisplayHot;
 			else if (a == over && !pressing)         display = DisplayHot;
 			else                                     display = DisplayReady;
 		}
 
-		// THE DISPLAY OF THE AREA ON THE SCREEN IS DIFFERENT FROM THE NEWLY COMPOSED DISPLAY
+		// The display of the area on the screen is different from the newly composed display
 		if (a->display != display) {
 
-			// UPDATE THE AREA'S DISPLAY
+			// Update the area's display
 			a->display = display;
 
-			// GET THE WINDOW DEVICE CONTEXT IF IT HASN'T ALREADY BEEN OBTAINED AND PAINT THE AREA
+			// Get the window device context if we don't already have it and paint the area
 			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
@@ -148,42 +133,42 @@ void AreaPulse()
 		a = a->next;
 	}
 
-	// ADJUST SIZE
-	if (Draw.pressed) {
+	// Adjust size
+	if (Area.pressed) {
 
-		// GET POSITIONS IN CLIENT COORDINATES
+		// Get positions in client coordinates
 		sizeitem mouse, stick, min, move;
-		mouse = MouseClient();                         // WHERE THE MOUSE IS
-		stick.x = Draw.pressed->size.x + Draw.stick.x; // THE STICK IS THE POINT THE MOUSE IS DRAGGING
-		stick.y = Draw.pressed->size.y + Draw.stick.y;
-		min.x = Draw.sizemin.x + Draw.stick.x;         // THE CLOSEST THE STICK CAN BE TO THE CLIENT ORIGIN
-		min.y = Draw.sizemin.y + Draw.stick.y;
-		move.x = mouse.x - stick.x;                    // FROM THE STICK TO THE MOUSE
+		mouse = MouseClient();                         // Where the mouse is
+		stick.x = Area.pressed->size.x + Area.stick.x; // The stick is the point the mouse is dragging
+		stick.y = Area.pressed->size.y + Area.stick.y;
+		min.x = Area.sizemin.x + Area.stick.x;         // The closest the stick can be to the client origin
+		min.y = Area.sizemin.y + Area.stick.y;
+		move.x = mouse.x - stick.x;                    // From the stick to the mouse
 		move.y = mouse.y - stick.y;
 
-		// IF THE MOUSE IS AWAY FROM THE STICK, TRY TO MOVE THE STICK TO IT
-		if (Draw.pressed->command == CommandSizeHorizontal && move.x != 0) {
+		// If the mouse is away from the stick, try to move the stick to it
+		if (Area.pressed->command == CommandSizeHorizontal && move.x != 0) {
 
-			// HORIZONTAL BAR
+			// Horizontal bar
 			Size(move.x);
 
-		} else if (Draw.pressed->command == CommandSizeVertical && move.y != 0) {
+		} else if (Area.pressed->command == CommandSizeVertical && move.y != 0) {
 
-			// VERTICAL BAR
+			// Vertical bar
 			Size(move.y);
 
-		} else if (Draw.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
+		} else if (Area.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
 
-			// DON'T TRY TO MOVE THE STICK CLOSER TO THE CLIENT ORIGIN THAN MIN
+			// Don't try to move the stick closer to the client origin than min
 			if (mouse.x < min.x) move.x = min.x - stick.x;
 			if (mouse.y < min.y) move.y = min.y - stick.y;
 
-			// DIAGONAL SIZE CORNER
+			// Diagonal size corner
 			WindowSize(Handle.window, move.x, move.y);
 		}
 	}
 
-	// FIND OUT HOW MANY ROWS THERE ARE, AND HOW MANY ARE SELECTED
+	// Find out how many rows there are, and how many are selected
 	int rows, selected, pending;
 	rows = selected = pending = 0;
 	/*
@@ -201,22 +186,19 @@ void AreaPulse()
 	b = b->next; }
 	*/
 
-	// COMPOSE STATUS TEXT
-	string s;
-	s = saynumber(rows, L"file");
+	// Compose status text
+	string s = saynumber(rows, L"file");
 	if (pending)  s += L"  " + insertcommas(numerals(pending))  + L" to get";
 	if (selected) s += L"  " + insertcommas(numerals(selected)) + L" selected";
 
-	// THE STATUS TEXT IS DIFFERENT
+	// The status text is different
 	if (State.status != s) {
+		State.status = s; // Update it
 
-		// UPDATE THE STATUS TEXT
-		State.status = s;
+		// The status bar has size
+		if (Area.status.Is()) {
 
-		// THE STATUS BAR HAS SIZE
-		if (Draw.status.Is()) {
-
-			// GET THE WINDOW DEVICE CONTEXT IF IT HASN'T ALREADY BEEN OBTAINED
+			// Get the window device context if we don't have it already
 			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
@@ -224,62 +206,50 @@ void AreaPulse()
 				device.BackgroundColor(Handle.background.color);
 			}
 
-			// PAINT THE STATUS TEXT TO THE WINDOW
-			PaintText(&device, State.status, Draw.status, false, true, true, true);
+			// Paint the status text to the window
+			PaintText(&device, State.status, Area.status, false, true, true, true);
 		}
 	}
 }
 
-void AreaPopUp()
-{
-	// call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
-	// takes nothing
-	// makes the program abandon the mouse and think it's always outside the client area
-	// returns nothing
+// Call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
+// Makes the program abandon the mouse and think it's always outside the client area
+void AreaPopUp() {
 
-	// CLEAR RECORD OF THE AREA THE MOUSE PRESSED AND RELEASE THE MOUSE IF CAPTURED
-	Draw.pressed = NULL;
+	// Clear record of the area the mouse pressed and release the mouse if captured
+	Area.pressed = NULL;
 	MouseRelease();
 
-	// RECORD THERE IS ONE MORE POP UP WINDOW
+	// Record there is one more pop up window
 	State.pop++;
 
-	// PULSE THE AREA NOW AS THE PEEKING POPUP WON'T PULSE ON IDLE
+	// Pulse the area now as the peeking popup won't pulse on idle
 	AreaPulse();
 }
 
-void AreaPopDown()
-{
-	// call this after the message box, popup menu, or dialog box that blocked and processed messages is gone
-	// takes nothing
-	// lets the program see the mouse position again
-	// returns nothing
+// Call this after the message box, popup menu, or dialog box that blocked and processed messages is gone
+// Lets the program see the mouse position again
+void AreaPopDown() {
 
-	// RECORD THERE IS ONE LESS POP UP WINDOW
+	// Record there is one fewer pop up window
 	State.pop--;
 }
 
-void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5, int *width6)
-{
-	// takes nothing
-	// uses the client area width to set the list column widths
-	// returns nothing, writes widths
+// Suggest list column widths based on the width of the client area
+void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5, int *width6) {
 
-	// GET SIZES FROM THE SYSTEM
-	sizeitem client;
-	client = SizeClient(); // THE MAIN WINDOW HAS A SIZE EVEN THOUGH IT IS NOT ON THE SCREEN
-	int scroll;
-	scroll = GetSystemMetrics(SM_CXVSCROLL); // THE WIDTH OF THE VERTICAL SCROLL BAR, USUALLY 16 PIXELS
+	// Get sizes from the system
+	sizeitem client = SizeClient(); // The main window has a size even though it's not on the screen
+	int scroll = GetSystemMetrics(SM_CXVSCROLL); // The width of the vertical scroll bar, usually 16 pixels
 
-	// SET THE WIDTHS OF THE FIRST 4 COLUMNS
+	// Set the widths of the first 4 columns
 	*width1 = 130;
 	*width2 = 120;
 	*width3 = 110;
 	*width4 = 120;
 
-	// CALCULATE THE WIDTH OF THE LAST 2 COLUMNS
-	int last;
-	last = (client.w - 4 - *width1 - *width2 - *width3 - *width4 - (scroll * 2)) / 2;
+	// Calculate the width of the last 2 columns
+	int last = (client.w - 4 - *width1 - *width2 - *width3 - *width4 - (scroll * 2)) / 2;
 	if (last < 120) last = 120;
 	*width5 = *width6 = last;
 }
@@ -288,7 +258,6 @@ void Size(int move)
 {
 	// takes a number of pixels to move the bar
 	// uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
-	// returns nothing
 
 	/*
 
@@ -299,13 +268,13 @@ void Size(int move)
 
 	// RECORD WHERE THE ADDRESS AND BAR ARE BEFORE THE SIZE
 	sizeitem address, bar;
-	address = Draw.address.size;
-	bar     = Draw.bar.size;
+	address = Area.address.size;
+	bar     = Area.bar.size;
 
 	// ALL SIZE CONSTANTS FOR THE PROGRAM ARE DEFINED HERE AS LOCAL VARIABLES READ IN THIS FUNCTION
 	int text, row, space, icon, big, tool, title;
-	text  = Draw.open.textsize.h;     // TEXT HEIGHT IS USUALLY 13
-	row   = Draw.open.textsize.h + 3; // ROW HEIGHT IS 16, 1 PIXEL ABOVE AND 2 BELOW
+	text  = Area.open.textsize.h;     // TEXT HEIGHT IS USUALLY 13
+	row   = Area.open.textsize.h + 3; // ROW HEIGHT IS 16, 1 PIXEL ABOVE AND 2 BELOW
 	space = 4;                             // SPACING
 	icon  = 16;                            // SMALL SQUARE ICONS
 	big   = 24;                            // LARGE SQUARE ICONS
@@ -315,14 +284,14 @@ void Size(int move)
 	// FIND THE WIDEST TEXT THAT HAS TO FIT IN A BUTTON
 	int longest;
 	longest = Greatest(
-		Draw.pause.textsize.w,
-		Draw.remove.textsize.w,
-		Draw.back.textsize.w,
-		Draw.forward.textsize.w,
-		Draw.stop.textsize.w,
-		Draw.refresh.textsize.w,
-		Draw.expand.textsize.w,
-		Draw.get.textsize.w);
+		Area.pause.textsize.w,
+		Area.remove.textsize.w,
+		Area.back.textsize.w,
+		Area.forward.textsize.w,
+		Area.stop.textsize.w,
+		Area.refresh.textsize.w,
+		Area.expand.textsize.w,
+		Area.get.textsize.w);
 
 	// BUTTON HOLDS THE BUTTON WIDTH AND HEIGHT
 	sizeitem button;
@@ -330,20 +299,20 @@ void Size(int move)
 	button.h = big + text + 7;
 
 	// SIZE AND POSITION THE OPEN AND HELP LINKS
-	Draw.open.size.x = State.titlesize.w + (4 * space);
-	Draw.open.size.w = Draw.open.textsize.w + (2 * space);
-	Draw.help.size.x = Draw.open.size.Right();
-	Draw.help.size.w = Draw.help.textsize.w + (2 * space);
-	if (row < title) Draw.open.size.h = Draw.help.size.h = row;
-	else             Draw.open.size.h = Draw.help.size.h = title; // IN CASE THE TEXT IS HIGHER THAN 23
+	Area.open.size.x = State.titlesize.w + (4 * space);
+	Area.open.size.w = Area.open.textsize.w + (2 * space);
+	Area.help.size.x = Area.open.size.Right();
+	Area.help.size.w = Area.help.textsize.w + (2 * space);
+	if (row < title) Area.open.size.h = Area.help.size.h = row;
+	else             Area.open.size.h = Area.help.size.h = title; // IN CASE THE TEXT IS HIGHER THAN 23
 
 	int wide;
 
 	// SIZE AND POSITION THE PAUSE AND REMOVE BUTTONS
-	Draw.pause.size = Draw.remove.size = button;
-	Draw.pause.size.x = space;
-	Draw.remove.size.x = Draw.pause.size.Right();
-	Draw.pause.size.y = Draw.remove.size.y = title + space;
+	Area.pause.size = Area.remove.size = button;
+	Area.pause.size.x = space;
+	Area.remove.size.x = Area.pause.size.Right();
+	Area.pause.size.y = Area.remove.size.y = title + space;
 
 	// MAKE THE HEIGHT OF ADDRESS AND GET BE ROW OR ICON, WHICHEVER IS BIGGER
 	int link;
@@ -351,86 +320,86 @@ void Size(int move)
 	else            link = icon;
 
 	// SIZE ADDRESS AND GET
-	Draw.address.size.w = Draw.address.textsize.w;
-	Draw.enter.size.w = icon + space + Draw.enter.textsize.w;
-	Draw.address.size.h = Draw.enter.size.h = link;
+	Area.address.size.w = Area.address.textsize.w;
+	Area.enter.size.w = icon + space + Area.enter.textsize.w;
+	Area.address.size.h = Area.enter.size.h = link;
 
 	// CALCULATE HOW WIDE TO DRAW THIS PART
-	wide = 1 + (8 * space) + (2 * button.w) + text + Draw.address.size.w + Draw.enter.size.w;
+	wide = 1 + (8 * space) + (2 * button.w) + text + Area.address.size.w + Area.enter.size.w;
 	wide = Greatest(wide, client.w);
 
 	// POSITION ADDRESS AND GET
-	Draw.address.size.x = Draw.remove.size.Right() + 1 + (3 * space);
-	Draw.enter.size.PositionRight(wide - (2 * space));
-	Draw.address.size.y = Draw.enter.size.y = title + space;
+	Area.address.size.x = Area.remove.size.Right() + 1 + (3 * space);
+	Area.enter.size.PositionRight(wide - (2 * space));
+	Area.address.size.y = Area.enter.size.y = title + space;
 
 	// COMPUTE THE MINIMUM AND MAXIMUM BAR Y DISTANCES
 	int min, max;
-	min = Draw.pause.size.Bottom() - text - space - 1;
+	min = Area.pause.size.Bottom() - text - space - 1;
 	max = client.h - row - 2 - space - text - space - 1;
 
 	// MOVE THE BAR, NOT LETTING IT GO BEYOND THE BOUNDS
-	if (!Draw.bar.size.y) Draw.bar.size.y = Draw.pause.size.Bottom() - 1; // SET THE BAR
-	Draw.bar.size.y += move;
-	if (Draw.bar.size.y > max) Draw.bar.size.y = max;
-	if (Draw.bar.size.y < min) Draw.bar.size.y = min; // ENFORCE MIN FROM THE TOP IF BOTH ARE IN VIOLATION
+	if (!Area.bar.size.y) Area.bar.size.y = Area.pause.size.Bottom() - 1; // SET THE BAR
+	Area.bar.size.y += move;
+	if (Area.bar.size.y > max) Area.bar.size.y = max;
+	if (Area.bar.size.y < min) Area.bar.size.y = min; // ENFORCE MIN FROM THE TOP IF BOTH ARE IN VIOLATION
 
 	// BAR
-	Draw.bar.size.x = Draw.address.size.Right() + space;
-	Draw.bar.size.w = wide - Draw.address.size.Right() - Draw.enter.size.w - (4 * space);
-	Draw.bar.size.h = space + 1;
+	Area.bar.size.x = Area.address.size.Right() + space;
+	Area.bar.size.w = wide - Area.address.size.Right() - Area.enter.size.w - (4 * space);
+	Area.bar.size.h = space + 1;
 
 	// EDIT
-	Draw.edit.x = Draw.bar.size.x + 1;
-	Draw.edit.w = Draw.bar.size.w - 2;
-	Draw.edit.y = title + space + 1;
-	Draw.edit.SetBottom(Draw.bar.size.y);
+	Area.edit.x = Area.bar.size.x + 1;
+	Area.edit.w = Area.bar.size.w - 2;
+	Area.edit.y = title + space + 1;
+	Area.edit.SetBottom(Area.bar.size.y);
 
 	// BUTTON AND COPY
-	Draw.button.x = Draw.bar.size.x;
-	Draw.button.w = text;
-	Draw.copy.size.x = Draw.button.Right();
-	Draw.copy.size.w = space + Draw.copy.textsize.w;
-	if (Draw.copy.size.Right() > Draw.bar.size.Right()) Draw.copy.size.SetRight(Draw.bar.size.Right());
-	Draw.button.y = Draw.copy.size.y = Draw.bar.size.Bottom();
-	Draw.button.h = Draw.copy.size.h = text;
+	Area.button.x = Area.bar.size.x;
+	Area.button.w = text;
+	Area.copy.size.x = Area.button.Right();
+	Area.copy.size.w = space + Area.copy.textsize.w;
+	if (Area.copy.size.Right() > Area.bar.size.Right()) Area.copy.size.SetRight(Area.bar.size.Right());
+	Area.button.y = Area.copy.size.y = Area.bar.size.Bottom();
+	Area.button.h = Area.copy.size.h = text;
 
 	// LIST
-	Draw.list.x = 2;
-	Draw.list.w = client.w - 4;
-	Draw.list.y = Draw.copy.size.Bottom() + space + 1;
-	Draw.list.SetBottom(client.h - row - 1);
-	Draw.list.Check(); // IF THE HEIGHT IS NEGATIVE, MAKE IT 0
+	Area.list.x = 2;
+	Area.list.w = client.w - 4;
+	Area.list.y = Area.copy.size.Bottom() + space + 1;
+	Area.list.SetBottom(client.h - row - 1);
+	Area.list.Check(); // IF THE HEIGHT IS NEGATIVE, MAKE IT 0
 
 	// DETERMINE WHERE THE SIZE CORNER WOULD BE IF THE WINDOW WERE VERY SMALL
-	Draw.sizemin.w = Draw.sizemin.h = row;
-	Draw.sizemin.y = 2 + title + (2 * space) + button.h;
+	Area.sizemin.w = Area.sizemin.h = row;
+	Area.sizemin.y = 2 + title + (2 * space) + button.h;
 
 	// STATUS AND SIZE
-	Draw.status.y = Draw.corner.size.y = Draw.list.Bottom() + 1; // NEVER SIZE UP FROM THE BOTTOM OF THE WINDOW
-	Draw.status.h = Draw.corner.size.h = row;
-	Draw.status.w = client.w - row;
-	Draw.corner.size.x = Draw.status.Right();
-	Draw.corner.size.w = row;
+	Area.status.y = Area.corner.size.y = Area.list.Bottom() + 1; // NEVER SIZE UP FROM THE BOTTOM OF THE WINDOW
+	Area.status.h = Area.corner.size.h = row;
+	Area.status.w = client.w - row;
+	Area.corner.size.x = Area.status.Right();
+	Area.corner.size.w = row;
 
 	// IF THE WINDOW IS MAXIMIZED, MAKE STATUS THE ENTIRE ROW AND HIDE THE SIZE CORNER
 	if (IsZoomed(Handle.window)) {
 
-		Draw.status.w = client.w;
-		Draw.corner.size.CloseRight();
+		Area.status.w = client.w;
+		Area.corner.size.CloseRight();
 	}
 
 	// POSITION AND RESIZE CHILD WINDOW CONTROLS WITHOUT SENDING PAINT MESSAGES
-	WindowMove(Handle.edit,   Draw.edit);
-	WindowMove(Handle.button, Draw.button);
-	WindowMove(Handle.tree,   Draw.tree);
-	WindowMove(Handle.list,   Draw.list);
+	WindowMove(Handle.edit,   Area.edit);
+	WindowMove(Handle.button, Area.button);
+	WindowMove(Handle.tree,   Area.tree);
+	WindowMove(Handle.list,   Area.list);
 
 	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
-	if (!address.Is()) TipAdd(Draw.address.size, Draw.address.tip);
+	if (!address.Is()) TipAdd(Area.address.size, Area.address.tip);
 
 	// IF THE BAR MOVED, PAINT THE WINDOW
-	if (bar.y && bar.y != Draw.bar.size.y) Paint();
+	if (bar.y && bar.y != Area.bar.size.y) Paint();
 
 	*/
 }

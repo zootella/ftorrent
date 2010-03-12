@@ -7,11 +7,12 @@
 #include "resource.h"
 #include "program.h"
 #include "object.h"
+#include "top.h"
 #include "function.h"
 
 // Access to global objects
 extern handletop Handle;
-extern drawtop   Draw;
+extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
@@ -798,6 +799,17 @@ int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
 	if (i < i8) i = i8;
 	return(i);
 }
+
+// Initialize our use of the common controls
+void InitializeCommonControls() {
+
+	INITCOMMONCONTROLSEX info;
+	ZeroMemory(&info, sizeof(info));
+	info.dwSize = sizeof(info); // Size of this structure
+	info.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES; // Load list and tree view classes
+	if (!InitCommonControlsEx(&info)) Report(L"initcommoncontrolsex"); // Oh yeah
+}
+
 
 
 
