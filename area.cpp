@@ -32,9 +32,9 @@ void AreaCreate() {
 	Area.remove.textsize = SizeText(&device, Area.remove.text);
 
 	// Icons
-	Area.tools.icon  = Handle.toolsicon;
-	Area.pause.icon  = Handle.pauseicon;
-	Area.remove.icon = Handle.removeicongray;
+	Area.tools.icon  = Handle.tools;
+	Area.pause.icon  = Handle.pause;
+	Area.remove.icon = Handle.removegray;
 
 	// Link and size command states
 	Area.tools.command    = CommandLink;

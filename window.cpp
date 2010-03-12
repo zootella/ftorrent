@@ -27,13 +27,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	Handle.restore = MenuClip(menus, 0);
-	Handle.tools   = MenuClip(menus, 1);
-	if (!PROGRAM_TEST && !DeleteMenu(Handle.tools, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
+	Handle.tray = MenuClip(menus, 0);
+	Handle.menu = MenuClip(menus, 1);
+	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
 
 	// Load icons
-	Handle.big    = LoadIconResource(L"APPLICATION_ICON", 32);
-	Handle.little = LoadIconResource(L"APPLICATION_ICON", 16);
+	Handle.blue16 = LoadIconResource(L"APPLICATION_ICON", 16);
+	Handle.blue32 = LoadIconResource(L"APPLICATION_ICON", 32);
 
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
@@ -56,7 +56,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
 	Handle.red         = CreateBrush(RGB(255, 102,  51));
 	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
-	Handle.middle      = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
+	Handle.line        = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
 
 	// Make fonts
 	Handle.font      = FontMenu(false);
@@ -66,23 +66,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();
 	AreaPulse(); // Set the display state of each area
-
-
-
-
-
-
-	// Find out how big the text is in each area item
-	device.Font(Draw.font.normal);
-	areaitem *a;
-	a = Draw.area.all;
-	while (a) {
-
-		a->textsize = SizeText(&device, a->text);
-		a = a->next;
-	}
-
-
 
 	// Register the class for the main window, and create it
 	string name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
@@ -94,8 +77,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.cbClsExtra    = 0;                          // No extra bytes
 	info.cbWndExtra    = 0;
 	info.hInstance     = Handle.instance;            // Instance handle
-	info.hIcon         = Handle.big;                 // Large and small icons
-	info.hIconSm       = Handle.little;
+	info.hIcon         = Handle.blue32;              // Large and small icons
+	info.hIconSm       = Handle.blue16;
 	info.hCursor       = NULL;                       // Mouse cursor changes
 	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // Background brush
 	info.lpszMenuName  = NULL;                       // No menu
@@ -280,8 +263,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
-	MenuSet(Handle.restore, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-	UINT choice = MenuShow(Handle.restore, true, NULL); // Wait here while the menu is up
+	MenuSet(Handle.tray, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	UINT choice = MenuShow(Handle.tray, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {

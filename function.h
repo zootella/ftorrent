@@ -78,6 +78,7 @@ void PaintIcon(deviceitem *device, sizeitem position, HICON icon);
 HFONT FontMenu(boolean underline);
 HFONT FontName(read face, int points);
 int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 = 0, int i7 = 0, int i8 = 0); // Has defaults
+void InitializeCommonControls();
 
 // Paint
 void PaintCreate();

@@ -11,7 +11,7 @@ public:
 	HWND list, tabs, edit; // Child window controls
 
 	// Menus
-	HMENU restoremenu, toolsmenu; // Menus
+	HMENU tray, menu; // Menus
 
 	// Mouse pointers
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;
@@ -20,14 +20,14 @@ public:
 	HFONT font, underline, arial;
 
 	// Icons
-	HICON reddrop, reddropbig, yellowdrop, yellowdropbig, greendrop, greendropbig, bluedrop, bluedropbig; // Application icons
-	HICON fileicon; // Torrent file icon
-	HICON toolsicon, pauseicon, removeicon, removeicongray; // Button icons
+	HICON red16, red32, yellow16, yellow32, green16, green32, blue16, blue32; // Application state icons
+	HICON file; // Torrent file icon
+	HICON tools, pause, remove, removegray; // Button icons
 
 	// Colors
 	brushitem blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
 	brushitem face, shadow, background, ink, select; // Shell brushes
-	brushitem middle; // Mixed color brush
+	brushitem line; // Mixed color brush
 };
 
 // Areas and sizes in the main window client area

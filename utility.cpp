@@ -316,7 +316,7 @@ void TaskbarIconAdd() {
 	info.uID              = 0;                                // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = Handle.little;                    // Icon handle
+	info.hIcon            = Handle.blue16;                    // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"shell_notifyicon nim_add");
 }
@@ -489,7 +489,7 @@ areaitem *MouseOver() {
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area item to find the one the mouse is over
-	areaitem *a = Draw.all;
+	areaitem *a = Area.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;
