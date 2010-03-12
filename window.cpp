@@ -21,6 +21,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Save the given instance handle
 	Handle.instance = instance;
 
+	/*
+	// Initialize our use of the common controls
+	INITCOMMONCONTROLSEX info1;
+	ZeroMemory(&info1, sizeof(info1));
+	info1.dwSize = sizeof(info1); // Size of this structure
+	info1.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES; // Load list and tree view classes
+	if (!InitCommonControlsEx(&info1)) Report(L"initcommoncontrolsex"); // Oh yeah
+	*/
+
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
 	Handle.restore = MenuClip(menus, 0);
@@ -81,7 +90,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Add Exit to the main window's system menu
 	HMENU menu = GetSystemMenu(Handle.window, false); // Get the menu for editing
 	if (!menu) Report(L"getsystemmenu");
-	if (menu && !AppendMenu(m, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
+	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
 
 	// Make child windows and menus
 	Handle.list = WindowCreateEdit(true,  false); // Edit controls
@@ -91,11 +100,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	WindowEdit(Handle.tabs, true);
 	WindowEdit(Handle.edit, true);
 
-	// CREATE AREAS AND LOAD PAINTING RESOURCES, SIZING AREA TEXT
-	/*
+	// Create areas and load painting resources, sizing area text
 	AreaCreate();
 	PaintLoad();
-	*/
 
 	// Lower the window
 	sizeitem size = SizeWindow(Handle.window);
@@ -108,9 +115,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.edit,   SW_SHOWNORMAL);
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(Handle.window); // Necessary to draw child window controls
-
-	// Start the pulse timer
-	if (!SetTimer(Handle.window, TIMER_PULSE, PULSE, NULL)) Report(L"settimer");
 
 	// Run the message loop until the user closes the program
 	MSG message;
@@ -160,6 +164,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		// The user clicked a menu item or button
 		if (HIWORD(wparam) == BN_CLICKED) {
 
+			/*
 			// The user clicked the Test menu item
 			if      ((HWND)lparam == Handle.clear) {  } // Button child window controls
 			else if ((HWND)lparam == Handle.start) {  }
@@ -188,6 +193,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 					return 0;
 				}
 			}
+			*/
 		}
 
 	// The system has removed the window from the screen
@@ -258,8 +264,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
-	MenuSet(Handle.menutaskbar, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-	UINT choice = MenuShow(Handle.menutaskbar, true, NULL); // Wait here while the menu is up
+	MenuSet(Handle.restore, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	UINT choice = MenuShow(Handle.restore, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {

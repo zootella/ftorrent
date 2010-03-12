@@ -1,7 +1,7 @@
 
 // Program build and name
 #define PROGRAM_TEST true
-#define PROGRAM_NAME L"ltorrent"
+#define PROGRAM_NAME string(L"ltorrent")
 
 // Program settings
 #define PULSE 100

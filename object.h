@@ -176,7 +176,7 @@ public:
 
 	HINSTANCE instance; // Program instance handle
 	HWND window; // Main window
-	HWND list, tab, edit; // Child window controls
+	HWND list, tabs, edit; // Child window controls
 	HMENU restore, tools; // Menus
 	HICON big, little; // Application icon
 	HCURSOR arrow, hand, horizontal, vertical, diagonal; // Mouse pointers

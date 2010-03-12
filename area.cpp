@@ -27,7 +27,6 @@ void AreaCreate()
 	Draw.remove.icon = Draw.icon.buttonremove;
 	Draw.remove.gray = Draw.icon.grayremove;
 	Draw.enter.icon  = Draw.icon.linkget;
-	*/
 
 	// TEXT
 	Draw.open.text    = "Open   ";
@@ -47,6 +46,7 @@ void AreaCreate()
 	Draw.copy.command    = CommandLink;
 	Draw.bar.command     = CommandSizeVertical;
 	Draw.corner.command  = CommandSizeDiagonal;
+	*/
 
 	// SET THE AREA DISPLAY STATES
 	AreaPulse();
@@ -290,6 +290,8 @@ void Size(int move)
 	// uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
 	// returns nothing
 
+	/*
+
 	// GET THE WIDTH AND HEIGHT OF THE CLIENT AREA
 	sizeitem client;
 	client = SizeClient();
@@ -419,18 +421,16 @@ void Size(int move)
 	}
 
 	// POSITION AND RESIZE CHILD WINDOW CONTROLS WITHOUT SENDING PAINT MESSAGES
-	/*
 	WindowMove(Handle.edit,   Draw.edit);
 	WindowMove(Handle.button, Draw.button);
 	WindowMove(Handle.tree,   Draw.tree);
 	WindowMove(Handle.list,   Draw.list);
-	*/
 
 	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
-	/*
 	if (!address.Is()) TipAdd(Draw.address.size, Draw.address.tip);
-	*/
 
 	// IF THE BAR MOVED, PAINT THE WINDOW
 	if (bar.y && bar.y != Draw.bar.size.y) Paint();
+
+	*/
 }

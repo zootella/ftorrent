@@ -315,7 +315,7 @@ void TaskbarIconAdd() {
 	info.uID              = 0;                                // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = Handle.iconsmall;                 // Icon handle
+	info.hIcon            = Handle.little;                    // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"shell_notifyicon nim_add");
 }
