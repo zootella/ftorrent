@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="advapi32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
+				AdditionalDependencies="advapi32.lib comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="advapi32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib"
+				AdditionalDependencies="advapi32.lib comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
