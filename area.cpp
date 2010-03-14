@@ -26,6 +26,7 @@ void AreaCreate() {
 
 	// Text size
 	deviceitem device;
+	device.OpenCreate();
 	device.Font(Handle.font);
 	Area.tools.textsize  = SizeText(&device, Area.tools.text);
 	Area.pause.textsize  = SizeText(&device, Area.pause.text);
@@ -37,12 +38,12 @@ void AreaCreate() {
 	Area.remove.icon = Handle.removegray;
 
 	// Link and size command states
-	Area.tools.command    = CommandLink;
+	Area.tools.command   = CommandLink;
 	Area.bar.command     = CommandSizeVertical;
 	Area.corner.command  = CommandSizeDiagonal;
 }
 
-// Update the appearance of area items and issues commands that occur
+// Update the appearance of area items and issue commands that occur
 void AreaPulse() {
 
 	// Set button command states

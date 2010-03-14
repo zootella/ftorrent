@@ -63,10 +63,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.underline = FontMenu(true);
 	Handle.arial     = FontName(L"Arial", 28);
 
-	// Make the areas of the window like the buttons and sizing grips
-	AreaCreate();
-	AreaPulse(); // Set the display state of each area
-
 	// Register the class for the main window, and create it
 	string name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
 	WNDCLASSEX info;
@@ -99,9 +95,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	WindowEdit(Handle.tabs, true);
 	WindowEdit(Handle.edit, true);
 
-	// Create areas and load painting resources, sizing area text
+	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();
-	PaintLoad();
+	AreaPulse(); // Set the display state of each area
 
 	// Lower the window
 	sizeitem size = SizeWindow(Handle.window);
