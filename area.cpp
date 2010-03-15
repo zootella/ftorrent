@@ -255,46 +255,30 @@ void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5
 	*width5 = *width6 = last;
 }
 
-void Size(int move)
-{
-	// takes a number of pixels to move the bar
-	// uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
+// Takes a number of pixels to move the bar
+// Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
+void Size(int move) {
 
-	/*
+	// Get the width and height of the client area
+	sizeitem client = SizeClient();
+	if (!client.Is()) return; // The client size is 0 when the window is minimized, don't size areas
 
-	// GET THE WIDTH AND HEIGHT OF THE CLIENT AREA
-	sizeitem client;
-	client = SizeClient();
-	if (!client.Is()) return; // THE CLIENT SIZE IS 0 WHEN THE WINDOW IS MINIMIZED, DON'T SIZE AREAS
+	// Record where the bar is before the size
+	sizeitem bar = Area.bar.size;
 
-	// RECORD WHERE THE ADDRESS AND BAR ARE BEFORE THE SIZE
-	sizeitem address, bar;
-	address = Area.address.size;
-	bar     = Area.bar.size;
+	// All size constants for the program are defined here as local variables to be read in this function
+	int text  = Area.tools.textsize.h;     // Text height on Windows XP is usually 13
+	int row   = Area.tools.textsize.h + 3; // Row height is 16, 1 pixel above and 2 below
+	int space = 4;                         // Spacing
+	int icon  = 16;                        // Small square icons
+	int big   = 24;                        // Large square icons
+	int tool  = 56;                        // Minimum button width
+	int title = 23;                        // Height of status band at the top of the client area
 
-	// ALL SIZE CONSTANTS FOR THE PROGRAM ARE DEFINED HERE AS LOCAL VARIABLES READ IN THIS FUNCTION
-	int text, row, space, icon, big, tool, title;
-	text  = Area.open.textsize.h;     // TEXT HEIGHT IS USUALLY 13
-	row   = Area.open.textsize.h + 3; // ROW HEIGHT IS 16, 1 PIXEL ABOVE AND 2 BELOW
-	space = 4;                             // SPACING
-	icon  = 16;                            // SMALL SQUARE ICONS
-	big   = 24;                            // LARGE SQUARE ICONS
-	tool  = 56;                            // MINIMUM BUTTON WIDTH
-	title = 23;                            // HEIGHT OF TITLE BAR ON TOP OF CLIENT AREA
+	// Find the widest text that has to fit in a button
+	int longest = Greatest(Area.pause.textsize.w, Area.remove.textsize.w);
 
-	// FIND THE WIDEST TEXT THAT HAS TO FIT IN A BUTTON
-	int longest;
-	longest = Greatest(
-		Area.pause.textsize.w,
-		Area.remove.textsize.w,
-		Area.back.textsize.w,
-		Area.forward.textsize.w,
-		Area.stop.textsize.w,
-		Area.refresh.textsize.w,
-		Area.expand.textsize.w,
-		Area.get.textsize.w);
-
-	// BUTTON HOLDS THE BUTTON WIDTH AND HEIGHT
+	// The sizeitem button holds the button width and height
 	sizeitem button;
 	button.w = Greatest(longest + 2 + (2 * space), tool);
 	button.h = big + text + 7;
