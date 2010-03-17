@@ -21,21 +21,15 @@ void AreaCreate() {
 
 	// Text
 	Area.tools.text  = L"Tools";
-	Area.pause.text  = L"Pause";
-	Area.remove.text = L"Remove";
 
 	// Text size
 	deviceitem device;
 	device.OpenCreate();
 	device.Font(Handle.font);
 	Area.tools.textsize  = SizeText(&device, Area.tools.text);
-	Area.pause.textsize  = SizeText(&device, Area.pause.text);
-	Area.remove.textsize = SizeText(&device, Area.remove.text);
 
 	// Icons
 	Area.tools.icon  = Handle.tools;
-	Area.pause.icon  = Handle.pause;
-	Area.remove.icon = Handle.removegray;
 
 	// Link and size command states
 	Area.tools.command   = CommandLink;
@@ -45,12 +39,6 @@ void AreaCreate() {
 
 // Update the appearance of area items and issue commands that occur
 void AreaPulse() {
-
-	// Set button command states
-	if (State.pause) Area.pause.command = CommandSet;
-	else             Area.pause.command = CommandReady;
-	if (false) Area.remove.command = CommandReady; //TODO change back to ListSelectedRows()
-	else       Area.remove.command = CommandUnavailable;
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	areaitem *over = MouseOver();
@@ -142,8 +130,8 @@ void AreaPulse() {
 		mouse = MouseClient();                         // Where the mouse is
 		stick.x = Area.pressed->size.x + Area.stick.x; // The stick is the point the mouse is dragging
 		stick.y = Area.pressed->size.y + Area.stick.y;
-		min.x = Area.sizemin.x + Area.stick.x;         // The closest the stick can be to the client origin
-		min.y = Area.sizemin.y + Area.stick.y;
+		min.x = Area.collapse.x + Area.stick.x;        // The closest the stick can be to the client origin
+		min.y = Area.collapse.y + Area.stick.y;
 		move.x = mouse.x - stick.x;                    // From the stick to the mouse
 		move.y = mouse.y - stick.y;
 
@@ -259,132 +247,88 @@ void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5
 // Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
 void Size(int move) {
 
-	// Get the width and height of the client area
-	sizeitem client = SizeClient();
-	if (!client.Is()) return; // The client size is 0 when the window is minimized, don't size areas
-
-	// Record where the bar is before the size
-	sizeitem bar = Area.bar.size;
+	// Remember how things are now
+	sizeitem client = SizeClient();  // Get the width and height of the client area
+	if (!client.Is()) return;        // The client size is 0 when the window is minimized, don't size areas
+	sizeitem before = Area.bar.size; // Record where the bar is before the size
 
 	// All size constants for the program are defined here as local variables to be read in this function
-	int text  = Area.tools.textsize.h;     // Text height on Windows XP is usually 13
-	int row   = Area.tools.textsize.h + 3; // Row height is 16, 1 pixel above and 2 below
-	int space = 4;                         // Spacing
-	int icon  = 16;                        // Small square icons
-	int big   = 24;                        // Large square icons
-	int tool  = 56;                        // Minimum button width
-	int title = 23;                        // Height of status band at the top of the client area
+	int text = Area.tools.textsize.h; // Text height on Windows XP is usually 13
+	int icon = 16;                    // Small square icons
 
-	// Find the widest text that has to fit in a button
-	int longest = Greatest(Area.pause.textsize.w, Area.remove.textsize.w);
+	// Heights
+	int title  = 23; // Height of status title band at the top of the client area
+	int bar    = 4;
+	int tabs   = 30; //TODO somehow, up here figure out how tall the tabs want to be
+	int status = text;
 
-	// The sizeitem button holds the button width and height
-	sizeitem button;
-	button.w = Greatest(longest + 2 + (2 * space), tool);
-	button.h = big + text + 7;
+	// Toolbar spacing constants
+	int a = 4; // Toolbar left margin
+	int b = 4; // Toolbar top margin
+	int c = 4; // Space between toolbar icon and label
+	int d = 1; // Labels drop this far beneath icons
+	int e = 4; // Space between toolbar items
 
-	// SIZE AND POSITION THE OPEN AND HELP LINKS
-	Area.open.size.x = State.titlesize.w + (4 * space);
-	Area.open.size.w = Area.open.textsize.w + (2 * space);
-	Area.help.size.x = Area.open.size.Right();
-	Area.help.size.w = Area.help.textsize.w + (2 * space);
-	if (row < title) Area.open.size.h = Area.help.size.h = row;
-	else             Area.open.size.h = Area.help.size.h = title; // IN CASE THE TEXT IS HIGHER THAN 23
+	// Toolbar items
+	int margin = a;
+	Area.tools.size.x = margin;
+	Area.tools.size.y = b;
+	Area.tools.size.w = icon + c + Area.tools.textsize.w;
+	Area.tools.size.h = Greatest(icon, d + text);
+	margin += Area.tools.size.w;
 
-	int wide;
+	// Bar
+	int min = title; // Compute the minimum and maximum bar y distances
+	int max = client.h - bar - status;
+	if (!Area.bar.size.y) Area.bar.size.y = client.h / 2; // Set the bar
+	Area.bar.size.y += move; // Move the bar
+	if (Area.bar.size.y > max) Area.bar.size.y = max; // Don't let it go beyond the bounds
+	if (Area.bar.size.y < min) Area.bar.size.y = min; // Enforce min from the top if both are in violation
+	Area.bar.size.x = 0;
+	Area.bar.size.w = client.w;
+	Area.bar.size.h = bar;
 
-	// SIZE AND POSITION THE PAUSE AND REMOVE BUTTONS
-	Area.pause.size = Area.remove.size = button;
-	Area.pause.size.x = space;
-	Area.remove.size.x = Area.pause.size.Right();
-	Area.pause.size.y = Area.remove.size.y = title + space;
+	// Title
+	Area.title.w = client.w;
+	Area.title.h = title;
 
-	// MAKE THE HEIGHT OF ADDRESS AND GET BE ROW OR ICON, WHICHEVER IS BIGGER
-	int link;
-	if (row > icon) link = row;
-	else            link = icon;
+	// List
+	Area.list.y = Area.title.Bottom();
+	Area.list.w = client.w;
+	Area.list.SetBottom(Area.bar.size.y);
+	Area.list.Check(); // If the height is negative, make it 0
 
-	// SIZE ADDRESS AND GET
-	Area.address.size.w = Area.address.textsize.w;
-	Area.enter.size.w = icon + space + Area.enter.textsize.w;
-	Area.address.size.h = Area.enter.size.h = link;
+	// Tabs
+	Area.tabs.y = Area.bar.size.Bottom();
+	Area.tabs.w = client.w;
+	Area.tabs.h = tabs;
 
-	// CALCULATE HOW WIDE TO DRAW THIS PART
-	wide = 1 + (8 * space) + (2 * button.w) + text + Area.address.size.w + Area.enter.size.w;
-	wide = Greatest(wide, client.w);
+	// Info
+	Area.info.y = Area.tabs.Bottom();
+	Area.info.w = client.w;
+	Area.info.h = client.h - title - Area.list.h - bar - tabs - status;
 
-	// POSITION ADDRESS AND GET
-	Area.address.size.x = Area.remove.size.Right() + 1 + (3 * space);
-	Area.enter.size.PositionRight(wide - (2 * space));
-	Area.address.size.y = Area.enter.size.y = title + space;
-
-	// COMPUTE THE MINIMUM AND MAXIMUM BAR Y DISTANCES
-	int min, max;
-	min = Area.pause.size.Bottom() - text - space - 1;
-	max = client.h - row - 2 - space - text - space - 1;
-
-	// MOVE THE BAR, NOT LETTING IT GO BEYOND THE BOUNDS
-	if (!Area.bar.size.y) Area.bar.size.y = Area.pause.size.Bottom() - 1; // SET THE BAR
-	Area.bar.size.y += move;
-	if (Area.bar.size.y > max) Area.bar.size.y = max;
-	if (Area.bar.size.y < min) Area.bar.size.y = min; // ENFORCE MIN FROM THE TOP IF BOTH ARE IN VIOLATION
-
-	// BAR
-	Area.bar.size.x = Area.address.size.Right() + space;
-	Area.bar.size.w = wide - Area.address.size.Right() - Area.enter.size.w - (4 * space);
-	Area.bar.size.h = space + 1;
-
-	// EDIT
-	Area.edit.x = Area.bar.size.x + 1;
-	Area.edit.w = Area.bar.size.w - 2;
-	Area.edit.y = title + space + 1;
-	Area.edit.SetBottom(Area.bar.size.y);
-
-	// BUTTON AND COPY
-	Area.button.x = Area.bar.size.x;
-	Area.button.w = text;
-	Area.copy.size.x = Area.button.Right();
-	Area.copy.size.w = space + Area.copy.textsize.w;
-	if (Area.copy.size.Right() > Area.bar.size.Right()) Area.copy.size.SetRight(Area.bar.size.Right());
-	Area.button.y = Area.copy.size.y = Area.bar.size.Bottom();
-	Area.button.h = Area.copy.size.h = text;
-
-	// LIST
-	Area.list.x = 2;
-	Area.list.w = client.w - 4;
-	Area.list.y = Area.copy.size.Bottom() + space + 1;
-	Area.list.SetBottom(client.h - row - 1);
-	Area.list.Check(); // IF THE HEIGHT IS NEGATIVE, MAKE IT 0
-
-	// DETERMINE WHERE THE SIZE CORNER WOULD BE IF THE WINDOW WERE VERY SMALL
-	Area.sizemin.w = Area.sizemin.h = row;
-	Area.sizemin.y = 2 + title + (2 * space) + button.h;
-
-	// STATUS AND SIZE
-	Area.status.y = Area.corner.size.y = Area.list.Bottom() + 1; // NEVER SIZE UP FROM THE BOTTOM OF THE WINDOW
-	Area.status.h = Area.corner.size.h = row;
-	Area.status.w = client.w - row;
-	Area.corner.size.x = Area.status.Right();
-	Area.corner.size.w = row;
-
-	// IF THE WINDOW IS MAXIMIZED, MAKE STATUS THE ENTIRE ROW AND HIDE THE SIZE CORNER
-	if (IsZoomed(Handle.window)) {
-
+	// Status and corner
+	Area.collapse.y = title + bar + tabs; // Determine where corner would be if the window were very small
+	Area.collapse.w = status;
+	Area.collapse.h = status;
+	Area.corner.size.x = Greatest(Area.collapse.x, client.w - status); // Corner
+	Area.corner.size.y = Greatest(Area.collapse.y, Area.info.Bottom());
+	Area.corner.size.w = status;
+	Area.corner.size.h = status;
+	Area.status.y = Area.corner.size.y; // Status
+	Area.status.w = Greatest(0, client.w - status);
+	Area.status.h = status;
+	if (IsZoomed(Handle.window)) { // If the window is maximized, make status the entire row and hide the size corner
 		Area.status.w = client.w;
 		Area.corner.size.CloseRight();
 	}
 
-	// POSITION AND RESIZE CHILD WINDOW CONTROLS WITHOUT SENDING PAINT MESSAGES
-	WindowMove(Handle.edit,   Area.edit);
-	WindowMove(Handle.button, Area.button);
-	WindowMove(Handle.tree,   Area.tree);
-	WindowMove(Handle.list,   Area.list);
+	// Position and resize child window controls without sending paint messages
+	WindowMove(Handle.list, Area.list);
+	WindowMove(Handle.tabs, Area.tabs);
+	WindowMove(Handle.edit, Area.info);
 
-	// IF ADDRESS WAS GIVEN SIZE FOR THE FIRST TIME, ASSIGN THE TOOLTIP TO IT
-	if (!address.Is()) TipAdd(Area.address.size, Area.address.tip);
-
-	// IF THE BAR MOVED, PAINT THE WINDOW
-	if (bar.y && bar.y != Area.bar.size.y) Paint();
-
-	*/
+	// If the bar moved, paint the window
+	if (before.y && before.y != Area.bar.size.y) Paint();
 }

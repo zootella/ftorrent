@@ -43,7 +43,7 @@ HWND WindowCreateEdit(bool scrollbars, bool capacity);
 HWND WindowCreateButton(read r);
 HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
 void WindowSize(HWND window, int x, int y);
-void WindowMove(HWND window, sizeitem size, bool paint);
+void WindowMove(HWND window, sizeitem size, bool paint = false); // Has defaults
 void WindowEdit(HWND window, boolean edit);
 string DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);

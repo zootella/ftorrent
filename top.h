@@ -36,31 +36,22 @@ public:
 
 	// The list of area items, the area item the mouse pressed, and pointers to the area items
 	areaitem *all, *pressed;
-	areaitem tools, pause, remove, bar, corner;
+	areaitem tools, bar, corner;
 
-	// Child window control sizes
-	sizeitem list, tabs, edit;
+	// Sizes in the client area
+	sizeitem list, tabs, info; // Child window control sizes
+	sizeitem title, status; // Sizes in the client area used when painting
 
-	// Sizes in the client area used when painting
-	sizeitem status;
-
-	// Where the size area would be if the window were very small
-	sizeitem sizemin;
-
-	// The point in the pressed area where the mouse started dragging
-	sizeitem stick;
+	// Sizing positions
+	sizeitem collapse; // Where the corner area would be if the window were very small
+	sizeitem stick; // The point in the pressed area where the mouse started dragging
 
 	// New
 	areatop() {
 
-		// Default values
-		all = pressed = NULL;
-
 		// Link area items into a list
 		all         = &tools;
-		tools.next  = &pause;
-		pause.next  = &remove;
-		remove.next = &bar;
+		tools.next  = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;
 	}
