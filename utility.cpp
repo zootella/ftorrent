@@ -301,9 +301,19 @@ brushitem CreateBrush(COLORREF color) {
 // Repaint the window right now
 void PaintMessage(HWND window) {
 
-	// Invalidate the whole client area of the given window, and make it process a paint message right now
-	InvalidateRect(window, NULL, false); // false to not wipe the window with the background color
-	UpdateWindow(window); // Call the window procedure directly with a paint message right now
+	// Choose window
+	if (!window) window = Handle.window;
+
+	// Mark the client area of the main window as necessary to draw
+	int result = InvalidateRect(
+		window, // Handle to window
+		NULL,   // Invalidate the entire client area of the window
+		false); // false to not wipe the window with the background color
+	if (!result) Report(L"invalidaterect");
+
+	// Call the window procedure directly with a paint message right now
+	// Send the window a paint message and have it process it right now
+	if (!UpdateWindow(window)) Report(L"updatewindow");
 }
 
 // Adds the program icon to the taskbar notification area

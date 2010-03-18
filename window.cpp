@@ -109,7 +109,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.tabs,   SW_SHOWNORMAL);
 	ShowWindow(Handle.edit,   SW_SHOWNORMAL);
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
-	PaintMessage(Handle.window); // Necessary to draw child window controls
+	PaintMessage(); // Necessary to draw child window controls
 
 	// Run the message loop until the user closes the program
 	MSG message;
@@ -127,17 +127,24 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	switch (message) {
 	case WM_SIZE:
 
-		// Repaint the window right now
-		PaintMessage(Handle.window);
+		// Size the window and send it a paint message
+		Size();
+		PaintMessage();
 		return 0;
 
 	// The parts of the client area not covered by child window controls need to be painted
 	break;
 	case WM_PAINT:
 
-		// Paint the client area
-		Paint();
-		return 0;
+		// Paint the window
+		{
+			deviceitem device;
+			device.OpenPaint(window);
+			device.Font(Handle.font); // Replace the Windows 3.1 font with something more modern
+			device.BackgroundColor(Handle.background.color);
+			PaintWindow(&device);
+			return 0;
+		}
 
 	// A timer expired
 	break;

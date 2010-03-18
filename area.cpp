@@ -330,5 +330,5 @@ void Size(int move) {
 	WindowMove(Handle.edit, Area.info);
 
 	// If the bar moved, paint the window
-	if (before.y && before.y != Area.bar.size.y) Paint();
+	if (before.y && before.y != Area.bar.size.y) PaintMessage();
 }

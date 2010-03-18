@@ -17,48 +17,34 @@ extern datatop   Data;
 extern statetop  State;
 
 // Takes a device context to use to paint in the window
-// Paints the client area of the window and resize the child window controls
+// Paints the client area of the window outside the child window controls, and resizes the child window controls
+void PaintWindow(deviceitem *device) {
+
+	// Get the size of the client area
+	sizeitem client = SizeClient();
+
+	// Title
+
+	// Toolbar
+
+	// Bar
+
+	// Status
+
+	// Corner
 
 
 
-
-
-
-
-
-
-
-void PaintWindow(deviceitem *device)
-{
-	// paints all areas of the client window outside the child window controls
-	// returns nothing
-
-	/*
-
-	// PAINT ALL THE AREAS
-	areaitem *a;
-	a = Draw.area.all;
-	while (a) {
-
-		PaintArea(device, a);
-		a = a->next;
-	}
-
-	// SIZE CONSTANTS
-	int space, title;
-	space = 4;
-	title = 23;
-
-	// GET THE SIZE OF THE CLIENT AREA
-	sizeitem client, s;
-	client = SizeClient();
 
 	// PAINT THE PARTS OF THE CLIENT AREA NOT COVERED BY AREAS OR CHILD WINDOW CONTROLS
-	s.x = 2 * space;
+	sizeitem s;
+	s.x = 2 * 4;
 	s.y = -7;
 	s.h = 30;
-	PaintText(device, Draw.title, s, false, false, false, false, 0, Draw.font.arial28, &Draw.color.lightblue, &Draw.color.darkblue);
+	PaintText(device, State.title, s, false, false, false, false, 0, Handle.arial, &Handle.lightblue, &Handle.blue);
 	s.Clear();
+
+	/*
 	s.w = 2 * space;
 	s.h = title;
 	PaintFill(device, s, Draw.color.darkblue.brush); // LEFT OF TITLE TEXT
@@ -143,7 +129,6 @@ void PaintWindow(deviceitem *device)
 		s.x = client.w - 1;
 		PaintFill(device, s); // LINE RIGHT OF LIST
 
-	} else if (State.mode == ModeSite) {
 
 	}
 
@@ -152,26 +137,17 @@ void PaintWindow(deviceitem *device)
 	*/
 }
 
-void PaintArea(deviceitem *device, areaitem *a)
-{
-	// takes a device context and an area item which is a button
-	// paints the area item in the window
-	// returns nothing
+// Takes a device context and an area item
+// Paints the area item in the window
+void PaintArea(deviceitem *device, areaitem *a) {
+	/*
 
-	// ONLY PAINT AREAS THAT ARE IN USE AND HAVE SIZE
+	// Only paint areas that are in use and have size
 	if (a->command == CommandNone || !a->size.Is()) return;
 
-	// DEFINE SIZES AS LOCAL VARIABLES
-	sizeitem icon, smallicon, text, s;
-	int space;
-	space = 4;
-	icon.w = icon.h = 24;
-	smallicon.w = smallicon.h = 16;
-
-	// PAINT BUTTON
+	// Paint button
 	if (a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
 
-		/*
 		// SIZE ICON
 		icon.x = a->size.x + (a->size.w - icon.w) / 2;
 		icon.y = a->size.y + 3;
@@ -234,12 +210,8 @@ void PaintArea(deviceitem *device, areaitem *a)
 		s.SetBottom(button.Bottom());
 		PaintFill(device, s); // ROW BENEATH TEXT
 
-		*/
-
 	// PAINT LINK
 	} else if (a->command == CommandLink) {
-
-		/*
 
 		// UNDERLINE LINKS
 		HFONT underline;
@@ -289,12 +261,8 @@ void PaintArea(deviceitem *device, areaitem *a)
 			PaintText(device, a->text, entertext, false, true, true, false, 0, underline);
 		}
 
-		*/
-
 	// PAINT BAR
 	} else {
-
-		/*
 
 		// PAINT BAR
 		if (a == &Draw.area.bar) {
@@ -344,9 +312,8 @@ void PaintArea(deviceitem *device, areaitem *a)
 			s.x += 4;
 			PaintFill(device, s, Draw.color.shadow.brush);
 		}
-
-		*/
 	}
+	*/
 }
 
 

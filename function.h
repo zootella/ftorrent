@@ -48,7 +48,7 @@ void WindowEdit(HWND window, boolean edit);
 string DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
-void PaintMessage(HWND window);
+void PaintMessage(HWND window = NULL); // Has defaults
 void TaskbarIconAdd();
 void TaskbarIconRemove();
 HCURSOR LoadSharedCursor(read name);
@@ -81,8 +81,6 @@ int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 
 void InitializeCommonControls();
 
 // Paint
-void Paint();
-void PaintLoad();
 void PaintWindow(deviceitem *device);
 void PaintArea(deviceitem *device, areaitem *a);
 

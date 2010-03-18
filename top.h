@@ -70,6 +70,6 @@ public:
 	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
 	boolean pause; // True when the Pause button is pressed
-	string state; // State title at top of window
+	string title; // State title at top of window
 	string status; // Status bar text
 };
