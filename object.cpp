@@ -84,8 +84,7 @@ deviceitem::~deviceitem() {
 void deviceitem::Font(HFONT newfont) {
 
 	// Keep the first one that comes out
-	HFONT outfont;
-	outfont = (HFONT)SelectObject(device, newfont);
+	HFONT outfont = (HFONT)SelectObject(device, newfont);
 	if (!font) font = outfont;
 }
 
@@ -93,8 +92,7 @@ void deviceitem::Font(HFONT newfont) {
 void deviceitem::Background(int newbackground) {
 
 	// Keep the first one that comes out
-	int outbackground;
-	outbackground = SetBkMode(device, newbackground);
+	int outbackground = SetBkMode(device, newbackground);
 	if (!replacebackground) { replacebackground = true; background = outbackground; }
 }
 
@@ -102,8 +100,7 @@ void deviceitem::Background(int newbackground) {
 void deviceitem::FontColor(COLORREF newcolor) {
 
 	// Keep the first one that comes out
-	COLORREF outcolor;
-	outcolor = SetTextColor(device, newcolor);
+	COLORREF outcolor = SetTextColor(device, newcolor);
 	if (!replacefontcolor) { replacefontcolor = true; fontcolor = outcolor; }
 }
 

@@ -24,6 +24,9 @@ void PaintWindow(deviceitem *device) {
 	sizeitem client = SizeClient();
 
 	// Title
+	sizeitem s = client;
+	s.h = 23;
+	PaintFill(device, s, Handle.green.brush);
 
 	// Toolbar
 
@@ -34,17 +37,28 @@ void PaintWindow(deviceitem *device) {
 	// Corner
 
 
+	State.title = L"7 this is quite a bit longer 8";
+	device->Font(Handle.arial);
+
+	sizeitem s2 = SizeText(device, State.title);
+
+	int ans = s2.w; // 86
+
+	
 
 
 	// PAINT THE PARTS OF THE CLIENT AREA NOT COVERED BY AREAS OR CHILD WINDOW CONTROLS
-	sizeitem s;
-	s.x = 2 * 4;
 	s.y = -7;
 	s.h = 30;
-	PaintText(device, State.title, s, false, false, false, false, 0, Handle.arial, &Handle.lightblue, &Handle.blue);
+	PaintText(device, State.title, s,
+		true,//horizontal
+		false,//vertical
+		false,//left
+		false,//right
+		0, Handle.arial, &Handle.lightblue, &Handle.blue);
 	s.Clear();
-
 	/*
+
 	s.w = 2 * space;
 	s.h = title;
 	PaintFill(device, s, Draw.color.darkblue.brush); // LEFT OF TITLE TEXT
