@@ -23,10 +23,53 @@ void PaintWindow(deviceitem *device) {
 	// Get the size of the client area
 	sizeitem client = SizeClient();
 
+	string title = L"ltorrent some more";
+
 	// Title
+
+	device->Font(Handle.arial);
+	device->FontColor(Handle.lightblue.color);
+	device->BackgroundColor(Handle.blue.color);
+	sizeitem t = SizeText(device, title);
+
+
+
 	sizeitem s = client;
+	s.w = client.w - t.w - 8;
 	s.h = 23;
 	PaintFill(device, s, Handle.green.brush);
+
+	s.x = client.w - 8;
+	s.w = 8;
+	PaintFill(device, s, Handle.yellow.brush);
+
+	s.x = client.w - t.w - 8;
+	s.y = -7;
+	s.w = t.w;
+	s.h = 30;
+	PaintSign(device, title, s);
+
+
+
+
+
+/*
+
+
+	// Title
+	sizeitem s = client; // Field
+	s.h = 23;
+	PaintFill(device, s, Handle.green.brush);
+	string title = L"ltorrent"; // State
+	device->Font(Handle.arial);
+	device->FontColor(Handle.lightblue.color);
+	device->BackgroundColor(Handle.blue.color);
+	sizeitem t = SizeText(device, title);
+	s.x = client.w - t.w - 8;
+	s.y = -7;
+	s.h = 30;
+	s.w = t.w;
+	PaintSign(device, title, s);
 
 	// Toolbar
 
@@ -37,28 +80,13 @@ void PaintWindow(deviceitem *device) {
 	// Corner
 
 
-	State.title = L"7 ltorrent start 8";
-	device->Font(Handle.arial);
-	device->FontColor(Handle.lightblue.color);
-	device->BackgroundColor(Handle.blue.color);
-
-	sizeitem t = SizeText(device, State.title);
-
-	s.x = client.w - t.w - 8;
-	s.y = -7;
-	s.h = 30;
-	s.w = t.w;
-
-
-
-	PaintSign(device, State.title, s);
 
 
 
 	// PAINT THE PARTS OF THE CLIENT AREA NOT COVERED BY AREAS OR CHILD WINDOW CONTROLS
 	s.Clear();
-	/*
 
+	/*
 	s.w = 2 * space;
 	s.h = title;
 	PaintFill(device, s, Draw.color.darkblue.brush); // LEFT OF TITLE TEXT
