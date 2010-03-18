@@ -649,6 +649,15 @@ sizeitem SizeText(deviceitem *device, read r) {
 	return s;
 }
 
+// Takes a deviceitem that has a font, text, and a bounding position and size
+// Paints the text there
+void PaintSign(deviceitem *device, read r, sizeitem size) {
+
+	// Paint the text, if the background is opaque, this will cause a flicker
+	RECT rectangle = size.Rectangle();
+	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) Report(L"drawtext");
+}
+
 // Takes a device context that has a font loaded into it, text, position and bounding size, and formatting options
 // Fills the size and paints the text with an ellipsis
 void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool vertical, bool left, bool right, int adjust, HFONT font, brushitem *color, brushitem *background) {

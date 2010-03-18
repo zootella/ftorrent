@@ -71,6 +71,7 @@ COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2);
 sizeitem SizeClient(HWND window = NULL); // Has defaults
 sizeitem SizeWindow(HWND window = NULL); // Has defaults
 sizeitem SizeText(deviceitem *device, read r);
+void PaintSign(deviceitem *device, read r, sizeitem size);
 void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal = false, bool vertical = false, bool left = false, bool right = false, int adjust = 0, HFONT font = NULL, brushitem *color = NULL, brushitem *background = NULL); // Has defaults
 void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush = NULL); // Has defaults
 void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2);

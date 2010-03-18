@@ -37,25 +37,25 @@ void PaintWindow(deviceitem *device) {
 	// Corner
 
 
-	State.title = L"7 this is quite a bit longer 8";
+	State.title = L"7 ltorrent start 8";
 	device->Font(Handle.arial);
+	device->FontColor(Handle.lightblue.color);
+	device->BackgroundColor(Handle.blue.color);
 
-	sizeitem s2 = SizeText(device, State.title);
+	sizeitem t = SizeText(device, State.title);
 
-	int ans = s2.w; // 86
+	s.x = client.w - t.w - 8;
+	s.y = -7;
+	s.h = 30;
+	s.w = t.w;
 
-	
+
+
+	PaintSign(device, State.title, s);
+
 
 
 	// PAINT THE PARTS OF THE CLIENT AREA NOT COVERED BY AREAS OR CHILD WINDOW CONTROLS
-	s.y = -7;
-	s.h = 30;
-	PaintText(device, State.title, s,
-		true,//horizontal
-		false,//vertical
-		false,//left
-		false,//right
-		0, Handle.arial, &Handle.lightblue, &Handle.blue);
 	s.Clear();
 	/*
 
