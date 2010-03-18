@@ -48,7 +48,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.background  = BrushSystem(COLOR_WINDOW);
 	Handle.ink         = BrushSystem(COLOR_WINDOWTEXT);
 	Handle.select      = BrushSystem(COLOR_HIGHLIGHT);
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204)); // Colors
+	Handle.white       = CreateBrush(RGB(255, 255, 255)); // Colors
+	Handle.black       = CreateBrush(RGB(  0,   0,   0));
+	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
 	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
 	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
 	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));

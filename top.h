@@ -25,7 +25,7 @@ public:
 	HICON tools, pause, remove, removegray; // Button icons
 
 	// Colors
-	brushitem blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
+	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
 };

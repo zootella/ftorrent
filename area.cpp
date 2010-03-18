@@ -20,7 +20,7 @@ extern statetop  State;
 void AreaCreate() {
 
 	// Text
-	Area.tools.text  = L"Tools";
+	Area.tools.text  = L"Tools   "; // Extra space for painted down arrow
 
 	// Text size
 	deviceitem device;
