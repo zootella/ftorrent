@@ -651,7 +651,7 @@ sizeitem SizeText(deviceitem *device, read r) {
 
 // Takes a deviceitem that has a font, text, and a bounding position and size
 // Paints the text there
-void PaintSign(deviceitem *device, read r, sizeitem size) {
+void PaintLabel(deviceitem *device, read r, sizeitem size) {
 
 	// Paint the text, if the background is opaque, this will cause a flicker
 	RECT rectangle = size.Rectangle();

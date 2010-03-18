@@ -45,7 +45,7 @@ void PaintWindow(deviceitem *device) {
 	s.y = -7;
 	s.w = t.w;
 	s.h = 30;
-	PaintSign(device, title, s);
+	PaintLabel(device, title, s);
 	device->Font(Handle.font);
 
 
@@ -80,7 +80,7 @@ void PaintWindow(deviceitem *device) {
 	s.y = -7;
 	s.h = 30;
 	s.w = t.w;
-	PaintSign(device, title, s);
+	PaintLabel(device, title, s);
 
 	// Toolbar
 
@@ -218,7 +218,9 @@ void PaintArea(deviceitem *device, areaitem *a) {
 		// Paint Tools
 		if (a == &Area.tools) {
 			
-			PaintText(device, a->text, a->size, false, true, true, true, 0, underline, &Handle.white, &Handle.blue);
+			device->Background(TRANSPARENT);
+			PaintLabel(device, a->text, a->size);
+//			PaintText(device, a->text, a->size, false, true, true, true, 0, underline, &Handle.white, &Handle.blue);
 
 			// Paint Tools down arrow
 			s = Area.tools.size;
