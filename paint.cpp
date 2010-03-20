@@ -34,7 +34,7 @@ void PaintWindow(deviceitem *device) {
 
 	sizeitem s = client; // Fill to the left
 	s.w = client.w - t.w - 8;
-	s.h = 23;
+	s.h = Area.title.h;
 	PaintFill(device, s, Handle.green.brush);
 
 	s.x = client.w - 8; // Fill to the right
@@ -69,7 +69,7 @@ void PaintWindow(deviceitem *device) {
 
 	// Title
 	sizeitem s = client; // Field
-	s.h = 23;
+	s.h = Area.title.h;
 	PaintFill(device, s, Handle.green.brush);
 	string title = L"ltorrent"; // State
 	device->Font(Handle.arial);
@@ -217,16 +217,19 @@ void PaintArea(deviceitem *device, areaitem *a) {
 
 		// Paint Tools
 		if (a == &Area.tools) {
-			
+
 			device->Background(TRANSPARENT);
-			PaintLabel(device, a->text, a->size);
-//			PaintText(device, a->text, a->size, false, true, true, true, 0, underline, &Handle.white, &Handle.blue);
+			PaintIcon(device, a->sizeicon, Handle.blue16, NULL);
+			
+			device->FontColor(Handle.white.color);
+			device->Font(Handle.underline);
+			PaintLabel(device, a->text, a->sizetext);
 
 			// Paint Tools down arrow
-			s = Area.tools.size;
+			s = Area.tools.sizetext;
 			s.CloseRight();
-			s.y += (s.h / 2) + 1;
-			s.x -= 11;
+			s.y += (s.h / 2) + 2;
+			s.x -= 7;
 			s.w = 5;
 			s.h = 1;
 			PaintFill(device, s, Handle.white.brush);

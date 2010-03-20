@@ -746,8 +746,9 @@ void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2
 }
 
 // Takes a device context, position, and icon
+// Provide a background brush for flicker free drawing, or NULL for a transparent background
 // Paints the icon
-void PaintIcon(deviceitem *device, sizeitem position, HICON icon) {
+void PaintIcon(deviceitem *device, sizeitem position, HICON icon, HBRUSH background) {
 
 	int result = DrawIconEx(
 		device->device,          // Handle to device context
@@ -755,7 +756,7 @@ void PaintIcon(deviceitem *device, sizeitem position, HICON icon) {
 		icon,                    // Handle to icon to paint
 		0, 0,                    // Use the width and height of the icon resource
 		0,                       // Not an animated icon
-		Handle.background.brush, // Paint into an offscreen bitmap over this brush first to not flicker on the screen
+		background,              // Paint into an offscreen bitmap over this brush first to not flicker on the screen
 		DI_IMAGE | DI_MASK);     // Use the image and mask to draw alpha icons correctly
 	if (!result) Report(L"drawiconex");
 }

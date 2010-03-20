@@ -123,6 +123,16 @@ public:
 	void Client(HWND window = NULL);
 };
 
+// Where the icon and text are in a link on the toolbar
+class toolitem {
+public:
+
+	// Sizes in the client area of the window
+	sizeitem size; // Whole thing
+	sizeitem icon; // Icon on the left
+	sizeitem text; // Text label to the right
+};
+
 // A window area that acts as a button, link, or sizing grip
 enum areacommand {
 
@@ -152,13 +162,14 @@ public:
 	areaitem *next;
 
 	// Data
-	sizeitem    size;       // Position and size of area in the main client window
-	areacommand command;    // The state of the command this area item represents
-	areadisplay display;    // How this area is currently drawn in the window
-	string      text, tip;  // Text painted in the area item and any for a tooltip
-	int         adjust;     // Pixels to nudge the text horizontally
-	sizeitem    textsize;   // How big the text is when painted
-	HICON       icon, gray; // Icons for available and unavailable appearance
+	sizeitem    size;               // Position and size of area in the main client window
+	sizeitem    sizeicon, sizetext; // Position and size of icon and text in client window
+	areacommand command;            // The state of the command this area item represents
+	areadisplay display;            // How this area is currently drawn in the window
+	string      text, tip;          // Text painted in the area item and any for a tooltip
+	int         adjust;             // Pixels to nudge the text horizontally
+	sizeitem    textsize;           // How big the text is when painted
+	HICON       icon, gray;         // Icons for available and unavailable appearance
 
 	// New
 	areaitem() {

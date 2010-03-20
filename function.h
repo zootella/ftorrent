@@ -75,7 +75,7 @@ void PaintLabel(deviceitem *device, read r, sizeitem size);
 void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal = false, bool vertical = false, bool left = false, bool right = false, int adjust = 0, HFONT font = NULL, brushitem *color = NULL, brushitem *background = NULL); // Has defaults
 void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush = NULL); // Has defaults
 void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2);
-void PaintIcon(deviceitem *device, sizeitem position, HICON icon);
+void PaintIcon(deviceitem *device, sizeitem position, HICON icon, HBRUSH background);
 HFONT FontMenu(boolean underline);
 HFONT FontName(read face, int points);
 int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 = 0, int i7 = 0, int i8 = 0); // Has defaults

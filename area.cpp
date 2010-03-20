@@ -264,13 +264,21 @@ void Size(int move) {
 
 	// Toolbar spacing constants
 	int a = 4; // Toolbar left margin
-	int b = 4; // Toolbar top margin
-	int c = 4; // Space between toolbar icon and label
+	int b = 3; // Toolbar top margin
+	int c = 2; // Space between toolbar icon and label
 	int d = 1; // Labels drop this far beneath icons
 	int e = 4; // Space between toolbar items
 
 	// Toolbar items
 	int margin = a;
+	Area.tools.sizeicon.x = margin;
+	Area.tools.sizeicon.y = b;
+	Area.tools.sizeicon.w = icon;
+	Area.tools.sizeicon.h = icon;
+	Area.tools.sizetext.x = margin + icon + c;
+	Area.tools.sizetext.y = b + d;
+	Area.tools.sizetext.w = Area.tools.textsize.w;
+	Area.tools.sizetext.h = Area.tools.textsize.h;
 	Area.tools.size.x = margin;
 	Area.tools.size.y = b;
 	Area.tools.size.w = icon + c + Area.tools.textsize.w;
