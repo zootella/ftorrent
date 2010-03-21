@@ -175,6 +175,9 @@ void AreaPulse() {
 	b = b->next; }
 	*/
 
+	//TODO integrate this into what's next
+	State.title = L"ltorrent";
+
 	// Compose status text
 	string s = saynumber(rows, L"file");
 	if (pending)  s += L"  " + insertcommas(numerals(pending))  + L" to get";
