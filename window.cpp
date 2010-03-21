@@ -113,13 +113,43 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
-	// Run the message loop until the user closes the program
+	// Start the pulse timer
+	TimerSet(TIMER_PULSE, 300);
+
+	// Message loop
 	MSG message;
-	while (GetMessage(&message, NULL, 0, 0)) { // Returns false on the final message
-		TranslateMessage(&message);
-		DispatchMessage(&message);
+	while (true) {
+
+		// Peek for a message without removing it to perform idle tasks if there are no messages
+		if (!PeekMessage(&message, NULL, 0, 0, PM_NOREMOVE)) WindowPulse();
+
+		// Wait for the next message and get it
+		if (GetMessage(&message, NULL, 0, 0)) {
+
+			// Process the message
+			TranslateMessage(&message);
+			DispatchMessage(&message);
+
+		} else {
+
+			// Get message got quit and returned 0, exit the message loop
+			break;
+		}
 	}
-	return (int)message.wParam; // Return the exit code in the final message
+
+	// Remove the tray icon
+	if (State.taskbar) TaskbarIconRemove();
+
+	// Return the value from the quit message
+	return (int)message.wParam;
+}
+
+// Called after each group of messages and every .3 seconds
+// Updates the program's data and display
+void WindowPulse() {
+
+	// Pulse the program from data to display
+	AreaPulse();
 }
 
 // Process a message from the system
@@ -156,7 +186,10 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		switch (wparam) {
 		case TIMER_PULSE:
 
-			//TODO
+			// Kill the expired timer, pulse the window, and set it again
+			KillTimerSafely(TIMER_PULSE);
+			WindowPulse();
+			TimerSet(TIMER_PULSE, 300);
 
 		break;
 		}

@@ -28,6 +28,7 @@ string saytime(DWORD time);
 
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
+void WindowPulse();
 LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
 
@@ -80,6 +81,8 @@ HFONT FontMenu(boolean underline);
 HFONT FontName(read face, int points);
 int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 = 0, int i7 = 0, int i8 = 0); // Has defaults
 void InitializeCommonControls();
+void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
+void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
 
 // Paint
 void PaintWindow(deviceitem *device);

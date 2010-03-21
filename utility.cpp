@@ -835,6 +835,18 @@ void InitializeCommonControls() {
 	if (!InitCommonControlsEx(&info)) Report(L"initcommoncontrolsex");
 }
 
+// Takes a window handle and timer identifier
+// Kills the timer
+void KillTimerSafely(UINT_PTR timer, HWND window) {
 
+	if (!window) window = Handle.window; // Choose window
+	if (!KillTimer(window, timer)) Report(L"killtimer"); // Kill the timer
+}
 
+// Takes a timer identifier and the number of milliseconds after which the timer should expire
+// Sets the timer
+void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 
+	if (!window) window = Handle.window; // Choose window
+	if (!SetTimer(window, timer, time, NULL)) Report(L"settimer"); // Set the timer
+}
