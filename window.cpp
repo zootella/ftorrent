@@ -233,6 +233,38 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 			*/
 		}
 
+	// The primary mouse button has clicked down in the main window
+	break;
+	case WM_LBUTTONDOWN:
+
+		// Record the area where the mosue pressed, and capture the mouse to get all mouse messages
+		Area.pressed = MouseOver();
+		if (Area.pressed) Area.stick = MouseArea(Area.pressed);
+		MouseCapture();
+		return 0;
+
+	// The primary mouse button has clicked up in the main window, or anywhere if the mouse is captured
+	break;
+	case WM_LBUTTONUP:
+
+		// Record the area where the mouse released, and release the captured mouse to stop getting all mouse messages
+		if (Area.pressed && Area.pressed == MouseOver()) {
+			if (AreaCommand(Area.pressed)) { // Perform the command
+				PostQuitMessage(0); // The user clicked Tools, Exit, close the program
+				return 0;
+			}
+		}
+		Area.pressed = NULL;
+		MouseRelease();
+		return 0;
+
+	// A new window has captured the mouse
+	break;
+	case WM_CAPTURECHANGED:
+
+		// The program has lost the mouse capture, mark no area pressed
+		if (Handle.window != (HWND)lparam) Area.pressed = NULL;
+
 	// The system has removed the window from the screen
 	break;
 	case WM_DESTROY:

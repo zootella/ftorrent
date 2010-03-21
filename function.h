@@ -96,5 +96,8 @@ void AreaPopDown();
 void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5, int *width6);
 void Size(int move = 0); // Has defaults
 
+// Command
+bool AreaCommand(areaitem *area);
+
 // Test
 void Test();
