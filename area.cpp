@@ -260,7 +260,7 @@ void Size(int move) {
 	int title  = 23; // Height of status title band at the top of the client area
 	int bar    = 4;
 	int tabs   = 30; //TODO somehow, up here figure out how tall the tabs want to be
-	int status = text;
+	int status = text + 3;
 
 	// Toolbar spacing constants
 	int a = 4; // Toolbar left margin

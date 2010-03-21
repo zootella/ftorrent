@@ -241,21 +241,6 @@ void PaintArea(deviceitem *device, areaitem *a) {
 			s.y++;
 			s.w -= 2;
 			PaintFill(device, s, Handle.white.brush);
-
-			/*
-			// SIZE THE ICON, ANY BACKGROUND SPACE BENEATH IT, AND THE TEXT
-			sizeitem entericon, enterbeneath, entertext;
-			entericon = enterbeneath = entertext = a->size;
-			entericon.w = entericon.h = smallicon.w;
-			enterbeneath.SetTop(entericon.Bottom());
-			enterbeneath.w = entericon.w;
-			entertext.SetLeft(entericon.Right());
-
-			// PAINT THE ICON, BACKGROUND SPACE, AND TEXT
-			PaintIcon(device, entericon, a->icon);
-			PaintFill(device, enterbeneath);
-			PaintText(device, a->text, entertext, false, true, true, false, 0, underline);
-			*/
 		}
 
 	// Other
@@ -265,25 +250,7 @@ void PaintArea(deviceitem *device, areaitem *a) {
 		if (a == &Area.bar) {
 
 			s = Area.bar.size;
-			if (a->command == CommandSizeVertical) {
-
-				s.h = 1;
-				PaintFill(device, s, Handle.line.brush);
-				s = Area.bar.size;
-				s.ShiftTop(1);
-				PaintFill(device, s);
-
-			} else if (a->command == CommandSizeHorizontal) {
-
-				s.w = 1;
-				PaintFill(device, s, Handle.line.brush);
-				s.CloseRight();
-				s.SetRight(Area.bar.size.Right() - 1);
-				PaintFill(device, s);
-				s.CloseRight();
-				s.w = 1;
-				PaintFill(device, s, Handle.line.brush);
-			}
+			PaintFill(device, s);
 
 		// Corner
 		} else if (a == &Area.corner) {
