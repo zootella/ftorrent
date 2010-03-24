@@ -27,7 +27,7 @@ void PaintWindow(deviceitem *device) {
 	device->Font(Handle.arial); // Find out how big the sign text will be
 	device->FontColor(Handle.lightblue.color);
 	device->BackgroundColor(Handle.blue.color);
-	sizeitem t = SizeText(device, State.title);
+	sizeitem t = SizeText(device, L"yeay");
 	sizeitem s = client; // Fill to the left
 	s.w = client.w - t.w - 8;
 	s.h = Area.title.h;
@@ -39,7 +39,7 @@ void PaintWindow(deviceitem *device) {
 	s.y = -7;
 	s.w = t.w;
 	s.h = 30;
-	PaintLabel(device, State.title, s);
+	PaintLabel(device, L"hello", s);
 	device->Font(Handle.font);
 
 	// Paint all the areas

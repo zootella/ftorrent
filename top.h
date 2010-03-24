@@ -64,12 +64,23 @@ public:
 };
 
 // Current state
+enum stagekind {
+
+	// Different possible stages for the whole program to be in
+	StageEmpty,       // Blue "start" empty of torrents at the start
+	StageDownloading, // Blue "downloading" getting data
+	StagePaused,      // Yellow "paused" all paused
+	StageSeeding,     // Green "seeding" uploading to peers
+	StageMissing      // Red "missing" there are pieces in a torrent that no peer has 
+};
 class statetop {
 public:
 
+	// Window
 	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
-	boolean pause; // True when the Pause button is pressed
-	string title; // State title at top of window
+
+	// Program
+	stagekind stage; // Current stage for the whole program
 	string status; // Status bar text
 };

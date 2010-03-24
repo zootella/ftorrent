@@ -123,16 +123,6 @@ public:
 	void Client(HWND window = NULL);
 };
 
-// Where the icon and text are in a link on the toolbar
-class toolitem {
-public:
-
-	// Sizes in the client area of the window
-	sizeitem size; // Whole thing
-	sizeitem icon; // Icon on the left
-	sizeitem text; // Text label to the right
-};
-
 // A window area that acts as a button, link, or sizing grip
 enum areacommand {
 

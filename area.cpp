@@ -176,7 +176,7 @@ void AreaPulse() {
 	*/
 
 	//TODO integrate this into what's next
-	State.title = L"ltorrent";
+//	State.title = L"ltorrent";
 
 	// Compose status text
 	string s = saynumber(rows, L"file");
@@ -202,6 +202,15 @@ void AreaPulse() {
 			PaintText(&device, State.status, Area.status, false, true, true, true);
 		}
 	}
+
+	//TODO here is where you set the program stage, and then update parts of the display that need it
+	// application icon
+	// taskbar icon
+	// state bar
+
+
+
+
 }
 
 // Call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
