@@ -81,6 +81,6 @@ public:
 	int pop; // How many popup boxes and menus the program has put above the window
 
 	// Program
-	stagekind stage; // Current stage for the whole program
+	stagekind stage, screen; // Current program stage, and what stage the window is showing
 	string status; // Status bar text
 };
