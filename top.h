@@ -20,12 +20,12 @@ public:
 	HFONT font, underline, arial;
 
 	// Icons
-	HICON red16, red32, yellow16, yellow32, green16, green32, blue16, blue32; // Application state icons
-	HICON file; // Torrent file icon
-	HICON tools, pause, remove, removegray; // Button icons
+	HICON blue16, blue32, green16, green32, red16, red32, yellow16, yellow32; // Application state icons
+	HICON clear, ascending, descending; // List column icons
+	HICON toolsblack, toolswhite; // Button icons
 
 	// Colors
-	brushitem white, black, blue, lightblue, yellow, lightyellow, green, lightgreen, red, lightred;
+	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow;
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
 };

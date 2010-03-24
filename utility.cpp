@@ -371,14 +371,14 @@ HCURSOR LoadSharedCursor(read name) {
 // Takes the name of an icon resource and the size to load, or 0 for default
 // Loads it
 // Returns it, or null if any error
-HICON LoadIconResource(read name, int size) {
+HICON LoadIconResource(read name, int w, int h) {
 
 	// Create the icon from the resource
 	HICON icon = (HICON)LoadImage(
 		Handle.instance,  // Load from this instance
 		name,             // Resource name
 		IMAGE_ICON,       // Image type
-		size, size,       // Size to load, 0 to load actual resource size
+		w, h,             // Width and height to load
 		LR_DEFAULTCOLOR); // Default flag does nothing
 	if (!icon) Report(L"loadimage icon");
 	return icon;

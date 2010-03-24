@@ -53,7 +53,7 @@ void PaintMessage(HWND window = NULL); // Has defaults
 void TaskbarIconAdd();
 void TaskbarIconRemove();
 HCURSOR LoadSharedCursor(read name);
-HICON LoadIconResource(read name, int size);
+HICON LoadIconResource(read name, int w, int h);
 void CursorSet(HCURSOR cursor);
 HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);

@@ -54,7 +54,16 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-APPLICATION_ICON        ICON                    "application.ico"
+0_STATE_BLUE            ICON                    "0 state blue.ico"
+1_DOCUMENT              ICON                    "1 document.ico"
+COLUMN_CLEAR            ICON                    "column clear.ico"
+COLUMN_ASCENDING        ICON                    "column ascending.ico"
+COLUMN_DESCENDING       ICON                    "column descending.ico"
+STATE_GREEN             ICON                    "state green.ico"
+STATE_RED               ICON                    "state red.ico"
+STATE_YELLOW            ICON                    "state yellow.ico"
+TOOLS_BLACK             ICON                    "tools black.ico"
+TOOLS_WHITE             ICON                    "tools white.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

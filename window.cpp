@@ -32,8 +32,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
 
 	// Load icons
-	Handle.blue16 = LoadIconResource(L"APPLICATION_ICON", 16);
-	Handle.blue32 = LoadIconResource(L"APPLICATION_ICON", 32);
+	Handle.blue16   = LoadIconResource(L"0_STATE_BLUE", 16, 16);
+	Handle.blue32   = LoadIconResource(L"0_STATE_BLUE", 32, 32);
+	Handle.green16  = LoadIconResource(L"STATE_GREEN",  16, 16);
+	Handle.green32  = LoadIconResource(L"STATE_GREEN",  32, 32);
+	Handle.red16    = LoadIconResource(L"STATE_RED",    16, 16);
+	Handle.red32    = LoadIconResource(L"STATE_RED",    32, 32);
+	Handle.yellow16 = LoadIconResource(L"STATE_YELLOW", 16, 16);
+	Handle.yellow32 = LoadIconResource(L"STATE_YELLOW", 32, 32);
+	Handle.clear      = LoadIconResource(L"COLUMN_CLEAR",      16, 16);
+	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16);
+	Handle.descending = LoadIconResource(L"COLUMN_DESCENDING", 16, 16);
+	Handle.toolsblack = LoadIconResource(L"TOOLS_BLACK", 26, 15); // Custom size
+	Handle.toolswhite = LoadIconResource(L"TOOLS_WHITE", 26, 15);
 
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
@@ -48,16 +59,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.background  = BrushSystem(COLOR_WINDOW);
 	Handle.ink         = BrushSystem(COLOR_WINDOWTEXT);
 	Handle.select      = BrushSystem(COLOR_HIGHLIGHT);
-	Handle.white       = CreateBrush(RGB(255, 255, 255)); // Colors
-	Handle.black       = CreateBrush(RGB(  0,   0,   0));
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
+	Handle.blue        = CreateBrush(RGB(  0, 102, 204)); // Colors
 	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
-	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
 	Handle.green       = CreateBrush(RGB(102, 204,  51));
 	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
 	Handle.red         = CreateBrush(RGB(255, 102,  51));
 	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
+	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
+	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
 	Handle.line        = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
 
 	// Make fonts

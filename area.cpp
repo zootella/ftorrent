@@ -29,7 +29,7 @@ void AreaCreate() {
 	Area.tools.textsize  = SizeText(&device, Area.tools.text);
 
 	// Icons
-	Area.tools.icon  = Handle.tools;
+	Area.tools.icon  = Handle.toolswhite;
 
 	// Link and size command states
 	Area.tools.command   = CommandLink;

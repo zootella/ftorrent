@@ -87,7 +87,7 @@ void PaintArea(deviceitem *device, areaitem *a) {
 			device->Background(TRANSPARENT);
 			PaintIcon(device, a->sizeicon, Handle.blue16, NULL);
 			
-			device->FontColor(Handle.white.color);
+			device->FontColor(Handle.red.color);
 			PaintLabel(device, a->text, a->sizetext);
 
 			// Paint Tools down arrow
@@ -97,15 +97,15 @@ void PaintArea(deviceitem *device, areaitem *a) {
 			s.x -= 7;
 			s.w = 5;
 			s.h = 1;
-			PaintFill(device, s, Handle.white.brush);
+			PaintFill(device, s, Handle.red.brush);
 			s.x++;
 			s.y++;
 			s.w -= 2;
-			PaintFill(device, s, Handle.white.brush);
+			PaintFill(device, s, Handle.red.brush);
 			s.x++;
 			s.y++;
 			s.w -= 2;
-			PaintFill(device, s, Handle.white.brush);
+			PaintFill(device, s, Handle.red.brush);
 		}
 
 	// Other
