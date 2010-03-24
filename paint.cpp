@@ -69,13 +69,8 @@ void PaintArea(deviceitem *device, areaitem *a) {
 	icon.w = icon.h = 24;
 	smallicon.w = smallicon.h = 16;
 
-	// Button
-	if (a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
-
-		//TODO no buttons yet
-
 	// Link
-	} else if (a->command == CommandLink) {
+	if (a->command == CommandLink) {
 
 		// Underline link
 		HFONT underline = NULL;
