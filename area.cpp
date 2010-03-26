@@ -19,17 +19,11 @@ extern statetop  State;
 // Make the areas for the window
 void AreaCreate() {
 
-	// Text
-	Area.tools.text  = L"Tools   "; // Extra space for painted down arrow
-
 	// Text size
 	deviceitem device;
 	device.OpenCreate();
 	device.Font(Handle.font);
-	Area.tools.textsize = SizeText(&device, Area.tools.text);
-
-	// Icons
-	Area.tools.icon = Handle.toolswhite;
+	Area.height = SizeText(&device, Area.tools.text).h;
 
 	// Link and size command states
 	Area.tools.command   = CommandLink;
@@ -265,8 +259,11 @@ void Size(int move) {
 	sizeitem before = Area.bar.size; // Record where the bar is before the size
 
 	// All size constants for the program are defined here as local variables to be read in this function
-	int text = Area.tools.textsize.h; // Text height on Windows XP is usually 13
-	int icon = 16;                    // Small square icons
+	int text = Area.height; // Text height on Windows XP is usually 13
+	int icon = 16;          // Small square icons
+	sizeitem tools;         // Tools icon
+	tools.w = 26;
+	tools.h = 15;
 
 	// Heights
 	int title  = 23; // Height of status title band at the top of the client area
@@ -274,28 +271,11 @@ void Size(int move) {
 	int tabs   = 30; //TODO somehow, up here figure out how tall the tabs want to be
 	int status = text + 3;
 
-	// Toolbar spacing constants
-	int a = 4; // Toolbar left margin
-	int b = 3; // Toolbar top margin
-	int c = 2; // Space between toolbar icon and label
-	int d = 1; // Labels drop this far beneath icons
-	int e = 4; // Space between toolbar items
-
 	// Toolbar items
-	int margin = a;
-	Area.tools.sizeicon.x = margin;
-	Area.tools.sizeicon.y = b;
-	Area.tools.sizeicon.w = icon;
-	Area.tools.sizeicon.h = icon;
-	Area.tools.sizetext.x = margin + icon + c;
-	Area.tools.sizetext.y = b + d;
-	Area.tools.sizetext.w = Area.tools.textsize.w;
-	Area.tools.sizetext.h = Area.tools.textsize.h;
+	Area.tools.size = tools;
+	int margin = (title - tools.h) / 2;
 	Area.tools.size.x = margin;
-	Area.tools.size.y = b;
-	Area.tools.size.w = icon + c + Area.tools.textsize.w;
-	Area.tools.size.h = Greatest(icon, d + text);
-	margin += Area.tools.size.w;
+	Area.tools.size.y = margin;
 
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances

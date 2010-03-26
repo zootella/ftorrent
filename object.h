@@ -153,7 +153,6 @@ public:
 
 	// Data
 	sizeitem    size;               // Position and size of area in the main client window
-	sizeitem    sizeicon, sizetext; // Position and size of icon and text in client window
 	areacommand command;            // The state of the command this area item represents
 	areadisplay display;            // How this area is currently drawn in the window
 	string      text, tip;          // Text painted in the area item and any for a tooltip

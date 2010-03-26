@@ -46,6 +46,9 @@ public:
 	sizeitem collapse; // Where the corner area would be if the window were very small
 	sizeitem stick; // The point in the pressed area where the mouse started dragging
 
+	// Sizes
+	int height; // Pixel height of the default font
+
 	// New
 	areatop() {
 

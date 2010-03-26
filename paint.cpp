@@ -42,6 +42,8 @@ void PaintWindow(deviceitem *device) {
 	PaintLabel(device, L"hello", s);
 	device->Font(Handle.font);
 
+	PaintIcon(device, Area.tools.size, Handle.toolswhite); // Transparent background
+
 	// Paint all the areas
 	areaitem *a = Area.all;
 	while (a) {
@@ -71,37 +73,6 @@ void PaintArea(deviceitem *device, areaitem *a) {
 
 	// Link
 	if (a->command == CommandLink) {
-
-		// Underline link
-		HFONT underline = NULL;
-		if (a->display == DisplayHot) underline = Handle.underline;
-
-		// Paint Tools
-		if (a == &Area.tools) {
-
-			device->Background(TRANSPARENT);
-			PaintIcon(device, a->sizeicon, Handle.blue16, NULL);
-			
-			device->FontColor(Handle.red.color);
-			PaintLabel(device, a->text, a->sizetext);
-
-			// Paint Tools down arrow
-			s = Area.tools.sizetext;
-			s.CloseRight();
-			s.y += (s.h / 2) + 2;
-			s.x -= 7;
-			s.w = 5;
-			s.h = 1;
-			PaintFill(device, s, Handle.red.brush);
-			s.x++;
-			s.y++;
-			s.w -= 2;
-			PaintFill(device, s, Handle.red.brush);
-			s.x++;
-			s.y++;
-			s.w -= 2;
-			PaintFill(device, s, Handle.red.brush);
-		}
 
 	// Other
 	} else {
