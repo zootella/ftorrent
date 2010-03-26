@@ -26,9 +26,12 @@ void AreaCreate() {
 	Area.height = SizeText(&device, Area.tools.text).h;
 
 	// Link and size command states
-	Area.tools.command   = CommandLink;
-	Area.bar.command     = CommandSizeVertical;
-	Area.corner.command  = CommandSizeDiagonal;
+	Area.tools.command  = CommandLink;
+	Area.bar.command    = CommandSizeVertical;
+	Area.corner.command = CommandSizeDiagonal;
+
+	//TODO not here
+	State.title = L"ltorrent some more";
 }
 
 // Update the appearance of area items and issue commands that occur

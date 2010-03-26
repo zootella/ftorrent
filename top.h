@@ -86,4 +86,6 @@ public:
 	// Shown
 	stagekind stage; // Current program stage shown on the screen
 	string status; // Status bar text
+
+	string title;
 };
