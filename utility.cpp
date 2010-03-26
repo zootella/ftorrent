@@ -16,15 +16,14 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-// Show a message to the user
+// Show an error message to the user
 void Report(read r) {
 
-	if (PROGRAM_TEST)
-		MessageBox(
-			Handle.window,
-			make(L"error ", numerals(GetLastError()), L" ", r),
-			L"Report",
-			MB_OK);
+	if (PROGRAM_TEST) MessageBox(
+		Handle.window,
+		make(L"error ", numerals(GetLastError()), L" ", r),
+		L"Report",
+		MB_OK);
 }
 
 // Given access to a handle, close it and make it null

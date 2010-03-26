@@ -26,10 +26,10 @@ void AreaCreate() {
 	deviceitem device;
 	device.OpenCreate();
 	device.Font(Handle.font);
-	Area.tools.textsize  = SizeText(&device, Area.tools.text);
+	Area.tools.textsize = SizeText(&device, Area.tools.text);
 
 	// Icons
-	Area.tools.icon  = Handle.toolswhite;
+	Area.tools.icon = Handle.toolswhite;
 
 	// Link and size command states
 	Area.tools.command   = CommandLink;

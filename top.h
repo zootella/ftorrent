@@ -80,7 +80,7 @@ public:
 	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
 	int pop; // How many popup boxes and menus the program has put above the window
 
-	// Program
-	stagekind stage, screen; // Current program stage, and what stage the window is showing
+	// Shown
+	stagekind stage; // Current program stage shown on the screen
 	string status; // Status bar text
 };

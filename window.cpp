@@ -207,41 +207,6 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	break;
 	case WM_COMMAND:
 
-		// The user clicked a menu item or button
-		if (HIWORD(wparam) == BN_CLICKED) {
-
-			/*
-			// The user clicked the Test menu item
-			if      ((HWND)lparam == Handle.clear) {  } // Button child window controls
-			else if ((HWND)lparam == Handle.start) {  }
-			else if ((HWND)lparam == Handle.stop)  {  }
-			else if ((HWND)lparam == Handle.reset) {  }
-			else if ((HWND)lparam == Handle.task)  { // The user clicked the Task button
-
-				// Show the context menu beneath the task button
-				RECT rectangle;
-				if (!GetWindowRect(Handle.task, &rectangle)) Report(L"getwindowrect");
-				sizeitem size(rectangle);
-				size.y += size.h;
-				size.Client();
-				UINT choice = MenuShow(Handle.menutools, false, &size); // Wait here for the user to make a choice
-				if      (choice == ID_TOOLS_TEST)    { Test(); }
-				else if (choice == ID_TOOLS_OPEN)    {  }
-				else if (choice == ID_TOOLS_ADD)     {  }
-				else if (choice == ID_TOOLS_NEW)     {  }
-				else if (choice == ID_TOOLS_HELP)    {  }
-				else if (choice == ID_TOOLS_ABOUT)   {  }
-				else if (choice == ID_TOOLS_OPTIONS) {  }
-				else if (choice == ID_TOOLS_EXIT)    {
-
-					// Close the program
-					PostQuitMessage(0);
-					return 0;
-				}
-			}
-			*/
-		}
-
 	// The primary mouse button has clicked down in the main window
 	break;
 	case WM_LBUTTONDOWN:
