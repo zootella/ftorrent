@@ -482,16 +482,12 @@ bool MouseInside() {
 	sizeitem mouse = MouseClient();
 	sizeitem client = SizeClient();
 
-	/*
 	// The mouse is inside if it is inside the client area and outside all the child window controls
 	return
-		client.Inside(mouse)            &&
-		!Draw.area.edit.Inside(mouse)   &&
-		!Draw.area.button.Inside(mouse) &&
-		!Draw.area.tree.Inside(mouse)   &&
-		!Draw.area.list.Inside(mouse);
-		*/
-	return false;
+		client.Inside(mouse)     &&
+		!Area.list.Inside(mouse) &&
+		!Area.tabs.Inside(mouse) &&
+		!Area.info.Inside(mouse);
 }
 
 // Find the area, if any, the mouse is currently positioned over, null if none
