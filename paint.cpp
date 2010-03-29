@@ -81,7 +81,7 @@ void PaintArea(deviceitem *device, areaitem *a) {
 		if (a == &Area.bar) {
 
 			s = Area.bar.size;
-			PaintFill(device, s);
+			PaintFill(device, s, Handle.red.brush);
 
 		// Corner
 		} else if (a == &Area.corner) {
