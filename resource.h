@@ -9,8 +9,8 @@
 #define ID_TOOLS_ADD                    40005
 #define ID_TOOLS_NEW                    40006
 #define ID_TOOLS_OPTIONS                40007
-#define ID_TOOLS_HELP                   40008
-#define ID_TOOLS_ABOUT                  40009
+#define ID_TOOLS_ABOUT                  40008
+#define ID_TOOLS_HELP                   40009
 #define ID_TOOLS_EXIT                   40010
 
 // Next default values for new objects

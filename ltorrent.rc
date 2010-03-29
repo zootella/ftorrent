@@ -86,9 +86,8 @@ BEGIN
         MENUITEM "Create &New torrent...",      ID_TOOLS_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
-        MENUITEM SEPARATOR
-        MENUITEM "&Help",                       ID_TOOLS_HELP
         MENUITEM "&About ltorrent",             ID_TOOLS_ABOUT
+        MENUITEM "&Help",                       ID_TOOLS_HELP
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_TOOLS_EXIT
     END

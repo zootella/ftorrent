@@ -23,7 +23,7 @@ void AreaCreate() {
 	deviceitem device;
 	device.OpenCreate();
 	device.Font(Handle.font);
-	Area.height = SizeText(&device, Area.tools.text).h;
+	Area.height = SizeText(&device, L"A").h;
 
 	// Link and size command states
 	Area.tools.command  = CommandLink;
