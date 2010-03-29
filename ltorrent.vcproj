@@ -205,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tabs.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utility.cpp"
 				>
 			</File>
