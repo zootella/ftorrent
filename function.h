@@ -101,3 +101,11 @@ bool AreaCommand(areaitem *area);
 
 // Test
 void Test();
+
+void DialogOptions();
+BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
+BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
+BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPARAM lparam);
+
+
+
