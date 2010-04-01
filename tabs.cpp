@@ -62,8 +62,9 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 	switch (message) {
 	case WM_INITDIALOG:
 
+		/*
 		// PREPARE THE FOLDER TEXT BOX
-		TextDialogSet(dialog, IDC_FOLDER, State.option.folder);
+		TextDialogSet(dialog, IDC_FOLDER, State.folder);
 
 		// FILL THE DROP DOWN LIST BOX AND SELECT THE CHOSEN ITEM
 		SendDlgItemMessage(dialog, IDC_SUB, CB_ADDSTRING, 0, (LPARAM)"file");
@@ -77,6 +78,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		// PREPARE GET FILES AT ONCE
 		SendMessage(GetDlgItem(dialog, IDC_GETSPIN), UDM_SETRANGE, 0, MAKELONG(9999, 1));
 		SetDlgItemInt(dialog, IDC_GET, State.option.get, true);
+		*/
 
 		// LET THE SYSTEM SET THE FOCUS
 		return(true);
@@ -89,12 +91,14 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		switch (LOWORD(wparam)) {
 		case IDC_BROWSE: {
 
+			/*
 			// DISPLAY THE BROWSE FOR FOLDER DIALOG
 			string browse;
 			browse = FileBrowse("Choose where ltorrent should save files.");
 
 			// IF THE USER CHOSE A PATH, WRITE IT INTO THE FOLDER EDIT BOX
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse);
+			*/
 
 			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
 			return(true);
@@ -107,6 +111,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 			switch (HIWORD(wparam)) {
 			case EN_UPDATE: {
 
+				/*
 				// COMPOSE AND UPDATE THE GET TEXT IF NECESSARY
 				int get;
 				string gettext;
@@ -114,6 +119,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 				if      (get == 1) gettext = "file at a time";
 				else if (get >  1) gettext = "files at once";
 				if (gettext != TextDialog(dialog, IDC_GETTEXT)) TextDialogSet(dialog, IDC_GETTEXT, gettext);
+				*/
 
 			break; }
 			}
@@ -135,6 +141,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_APPLY:
 
+			/*
 			// SET THE REGISTRY AND OPTION VARIABLES TO THE FOLDER TEXT IF THEY CHANGED
 			OptionSetText("folder", &State.option.folder, TextDialog(dialog, IDC_FOLDER));
 
@@ -151,6 +158,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 
 			// MUST RETURN TRUE FROM APPLY
 			SetWindowLong(dialog, DWL_MSGRESULT, true);
+			*/
 
 		break;
 		}
@@ -165,25 +173,25 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		case IDC_BROWSE:
 
 			// OPEN HELP OPTION PAGE AND SCROLL TO FOLDER
-			FileRun("http://www.example.com/help/option.asp#folder");
+			FileRun(L"http://www.example.com/help/option.asp#folder");
 
 		break;
 		case IDC_SUB:
 
 			// OPEN HELP OPTION PAGE AND SCROLL TO SUBFOLDER
-			FileRun("http://www.example.com/help/option.asp#subfolder");
+			FileRun(L"http://www.example.com/help/option.asp#subfolder");
 
 		break;
 		case IDC_GET:
 
 			// OPEN HELP OPTION PAGE AND SCROLL TO GET
-			FileRun("http://www.example.com/help/option.asp#get");
+			FileRun(L"http://www.example.com/help/option.asp#get");
 
 		break;
 		default:
 
 			// THE USER CLICKED SOME OTHER CONTROL, OPEN HELP OPTION PAGE
-			FileRun("http://www.example.com/help/option.asp");
+			FileRun(L"http://www.example.com/help/option.asp");
 
 		break;
 		}
@@ -201,6 +209,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 	switch (message) {
 	case WM_INITDIALOG:
 
+		/*
 		// PREPARE CONNECTIONS
 		if (State.option.dialup == 0) {
 
@@ -220,6 +229,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 			CheckDlgButton(dialog, IDC_CONNECTUSE, BST_CHECKED);
 			CheckRadioButton(dialog, IDC_CONNECTDIAL, IDC_CONNECTWAIT, IDC_CONNECTDIAL);
 		}
+		*/
 
 		// LET THE SYSTEM SET THE FOCUS
 		return(true);
@@ -232,8 +242,10 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 		switch (LOWORD(wparam)) {
 		case IDC_INTERNET:
 
+			/*
 			// OPEN THE INTERNET OPTIONS CONTROL PANEL ITEM
-			FileRun("control.exe", "inetcpl.cpl");
+			FileRun(L"control.exe", L"inetcpl.cpl");
+			*/
 
 			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
 			return(true);
@@ -277,10 +289,12 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_APPLY:
 
+			/*
 			// SET CONNECTIONS FROM THE CHECK BOX AND RADIO CONTROLS
 			if      (!IsDlgButtonChecked(dialog, IDC_CONNECTUSE)) OptionSetNumber("dialup", &State.option.dialup, 0); // OPTION 0 SKIP
 			else if (IsDlgButtonChecked(dialog, IDC_CONNECTWAIT)) OptionSetNumber("dialup", &State.option.dialup, 1); // OPTION 1 WAIT
 			else                                                  OptionSetNumber("dialup", &State.option.dialup, 2); // OPTION 2 DIAL
+			*/
 
 			// MUST RETURN TRUE FROM APPLY
 			SetWindowLong(dialog, DWL_MSGRESULT, true);
@@ -293,7 +307,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 	case WM_HELP:
 
 		// OPEN HELP CONNECT PAGE
-		FileRun("http://www.example.com/help/connect.asp");
+		FileRun(L"http://www.example.com/help/connect.asp");
 
 	break;
 	}
@@ -309,6 +323,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 	switch (message) {
 	case WM_INITDIALOG:
 
+		/*
 		// SET PASS SHEET AND LIST
 		State.pass.sheet = sheet;
 		State.pass.list = GetDlgItem(sheet, IDC_LIST);
@@ -336,6 +351,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		// DISABLE THE EDIT AND DELETE BUTTONS
 		EnableWindow(GetDlgItem(sheet, IDC_EDIT),   false);
 		EnableWindow(GetDlgItem(sheet, IDC_DELETE), false);
+		*/
 
 		// LET THE SYSTEM SET THE FOCUS
 		return(true);
@@ -348,9 +364,11 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		switch (LOWORD(wparam)) {
 		case IDC_ADD:
 
+			/*
 			// ADD
 			State.pass.edit = "";
 			Dialog("DIALOG_PASS", DialogPassword);
+			*/
 			return(true);
 
 		// THE USER CLICKED EDIT
@@ -358,8 +376,10 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		case IDC_EDIT:
 
 			// EDIT
+			/*
 			State.pass.edit = PassSelected();
 			Dialog("DIALOG_PASS", DialogPassword);
+			*/
 			return(true);
 
 		// THE USER CLICKED DELETE
@@ -367,7 +387,9 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		case IDC_DELETE:
 
 			// DELETE THE SELECTED ROW
+			/*
 			PassDelete();
+			*/
 
 		break;
 		}
@@ -380,6 +402,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case LVN_ITEMCHANGED:
 
+			/*
 			// GET THE POINTER TO THE ITEM THAT THIS MESSAGE PERTAINS TO
 			NMLISTVIEW *iteminfo;
 			iteminfo = (NMLISTVIEW *)(ULONG_PTR)lparam;
@@ -391,6 +414,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 				if (!(iteminfo->uOldState & LVIS_SELECTED) && (iteminfo->uNewState & LVIS_SELECTED)) PassSelection();
 				if ((iteminfo->uOldState & LVIS_SELECTED) && !(iteminfo->uNewState & LVIS_SELECTED)) PassSelection();
 			}
+			*/
 
 			return(true);
 
@@ -398,9 +422,11 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		break;
 		case NM_DBLCLK:
 
+			/*
 			// EDIT
 			State.pass.edit = PassSelected();
 			Dialog("DIALOG_PASS", DialogPassword);
+			*/
 			return(true);
 
 		// THE USER PRESSED A KEY IN THE LIST VIEW CONTROL
@@ -412,7 +438,9 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 			case VK_DELETE:
 
 				// DELETE THE SELECTED ROW
+				/*
 				PassDelete();
+				*/
 
 			break;
 			}
@@ -432,7 +460,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 	case WM_HELP:
 
 		// OPEN HELP PASSWORD PAGE
-		FileRun("http://www.example.com/help/password.asp");
+		FileRun(L"http://www.example.com/help/password.asp");
 
 	break;
 	}

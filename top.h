@@ -88,4 +88,5 @@ public:
 	string status; // Status bar text
 
 	string title;
+	string folder;
 };

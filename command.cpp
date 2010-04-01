@@ -42,8 +42,8 @@ bool AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_ADD)     {  }
 			else if (choice == ID_TOOLS_NEW)     {  }
 			else if (choice == ID_TOOLS_HELP)    {  }
-			else if (choice == ID_TOOLS_ABOUT)   {  }
-			else if (choice == ID_TOOLS_OPTIONS) {  }
+			else if (choice == ID_TOOLS_ABOUT)   { /*Dialog("DIALOG_ABOUT", DialogAbout);*/ }
+			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
 			else if (choice == ID_TOOLS_EXIT)    { return true; } // Close the program
 		}
 	}

@@ -36,8 +36,10 @@ void MenuTaskbar();
 void Report(read r);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
-void WindowTextSet(HWND window, read r);
-string WindowTextGet(HWND window);
+void TextDialogSet(HWND dialog, int control, read r);
+string TextDialog(HWND dialog, int control);
+void TextWindowSet(HWND window, read r);
+string TextWindow(HWND window);
 void EditAppend(HWND window, read r);
 void EditScroll(HWND window);
 HWND WindowCreateEdit(bool scrollbars, bool capacity);
@@ -83,6 +85,8 @@ int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 
 void InitializeCommonControls();
 void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
 void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
+void FileRun(read path, read parameters = L""); // Has defaults
+
 
 // Paint
 void PaintWindow(deviceitem *device);

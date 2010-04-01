@@ -249,7 +249,27 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\0 state blue.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\1 document.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\application.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\column ascending.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\column clear.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\column descending.ico"
 				>
 			</File>
 			<File
@@ -258,6 +278,26 @@
 			</File>
 			<File
 				RelativePath=".\ltorrent.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\state green.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\state red.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\state yellow.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\tools black.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\tools white.ico"
 				>
 			</File>
 		</Filter>

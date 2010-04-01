@@ -54,15 +54,35 @@ void BeginThread(LPVOID function) {
 	if (!CloseHandle(thread)) Report(L"closehandle thread");
 }
 
-// Have the given window display the given text
-void WindowTextSet(HWND window, read r) {
+// Takes a dialog handle, a control identifier, and text
+// Sets the text to the control
+void TextDialogSet(HWND dialog, int control, read r) {
 
-	if (!SetWindowText(window, r)) Report(L"setwindowtext"); // Set the text to the window
+	// Get a handle to the window of the control and set the text of that window
+	if (!SetDlgItemText(dialog, control, r)) Report(L"setdlgitemtext");
 }
 
-// Get the text a window is displaying
+// Takes a dialog handle and a dialog control identifier number
+// Gets the text of the control
+// Returns a string, blank if no text or any error
+string TextDialog(HWND dialog, int control) {
+
+	// Get a handle to the window of the control and return the text of that window
+	return TextWindow(GetDlgItem(dialog, control));
+}
+
+// Takes a window and text
+// Sets the text to the window
+void TextWindowSet(HWND window, read r) {
+
+	// Set the text to the window
+	if (!SetWindowText(window, r)) Report(L"setwindowtext");
+}
+
+// Takes a window handle
+// Get the text of the window, like its title or the text inside it
 // Returns blank if no text or any error
-string WindowTextGet(HWND window) {
+string TextWindow(HWND window) {
 
 	// If the window handle is null, return blank
 	if (!window) return L"";
@@ -91,10 +111,10 @@ string WindowTextGet(HWND window) {
 void EditAppend(HWND window, read r) {
 
 	// Add the given text to a new line at the bottom
-	string s = WindowTextGet(window); // Get the text that's already there, the user may have edited it
-	if (is(s)) s += L"\r\n";          // If not blank, start with a newline to make sure r will be on its own line
-	s += r;                           // Add the given text
-	WindowTextSet(window, s);         // Put the edited text back into the control
+	string s = TextWindow(window); // Get the text that's already there, the user may have edited it
+	if (is(s)) s += L"\r\n";       // If not blank, start with a newline to make sure r will be on its own line
+	s += r;                        // Add the given text
+	TextWindowSet(window, s);      // Put the edited text back into the control
 
 	// Scroll down to the bottom
 	EditScroll(window);
@@ -149,7 +169,7 @@ HWND WindowCreateButton(read r) {
 	HWND window = WindowCreate(L"BUTTON", NULL, style, 0, Handle.window, NULL);
 
 	// Title it
-	WindowTextSet(window, r);
+	TextWindowSet(window, r);
 
 	// Have it use Tahoma, not the default system font
 	SendMessage( 
@@ -844,3 +864,18 @@ void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 	if (!window) window = Handle.window; // Choose window
 	if (!SetTimer(window, timer, time, NULL)) Report(L"settimer"); // Set the timer
 }
+
+// Takes a path to a file and parameters text or blank
+// Shell executes it
+void FileRun(read path, read parameters) {
+
+	// Shell execute the given text
+	ShellExecute(
+		Handle.window,  // Handle to a window to get message boxes from this operation
+		NULL,           // Default run
+		path,           // File to run
+		parameters,     // Parameters ot pass to program
+		L"C:\\",        // Starting directory
+		SW_SHOWNORMAL); // Default show
+}
+

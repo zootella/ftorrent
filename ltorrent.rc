@@ -93,12 +93,110 @@ BEGIN
     END
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // RT_MANIFEST
 //
 
 1                       RT_MANIFEST             "ltorrent.exe.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOGEX 0, 0, 316, 185
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,205,164,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,259,164,50,14
+    CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,7,7,302,150
+END
+
+OPTIONS_CONNECTIONS DIALOGEX 0, 0, 221, 158
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Connections"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Internet Options...",IDC_INTERNET,45,41,70,14
+    CONTROL         "&Use a dial-up connection",IDC_CONNECTUSE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,45,60,94,10
+    CONTROL         "&Dial automatically",IDC_CONNECTDIAL,"Button",
+                    BS_AUTORADIOBUTTON,56,74,71,10
+    CONTROL         "&Wait for Windows to redial if line is dropped",
+                    IDC_CONNECTWAIT,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,56,85,141,20
+    GROUPBOX        "Connections",IDC_STATIC,6,7,208,144
+    ICON            "GRAPHIC_MODEM",IDC_STATIC,16,21,20,20
+    LTEXT           "Control how Internet Explorer, ltorrent, and other Windows programs connect to the Internet.",
+                    IDC_STATIC,45,20,161,16
+END
+
+OPTIONS_DOWNLOAD DIALOGEX 0, 0, 221, 158
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Download"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_FOLDER,45,33,159,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse",IDC_BROWSE,154,52,50,14
+    COMBOBOX        IDC_SUB,45,87,159,75,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    EDITTEXT        IDC_GET,59,127,36,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_GETSPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,16,127,10,14
+    GROUPBOX        "Save To",IDC_STATIC,6,7,208,103
+    ICON            "GRAPHIC_FOLDER",IDC_STATIC,16,21,21,20
+    LTEXT           "Choose the &folder where ltorrent saves files.",
+                    IDC_STATIC,45,20,159,8
+    LTEXT           "Make &subfolders from parts of the address.",IDC_STATIC,
+                    45,74,159,8
+    GROUPBOX        "Getting",IDC_STATIC,6,114,208,37
+    LTEXT           "Get",IDC_STATIC,45,129,12,8
+    LTEXT           "",IDC_GETTEXT,99,129,100,8
+END
+
+OPTIONS_PASSWORDS DIALOGEX 0, 0, 221, 158
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Passwords"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Add",IDC_ADD,164,7,50,14
+    PUSHBUTTON      "&Edit",IDC_EDIT,164,26,50,14
+    PUSHBUTTON      "&Delete",IDC_DELETE,164,45,50,14
+    CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,67,207,84
+    ICON            "GRAPHIC_PASS",IDC_STATIC,7,7,20,20,SS_REALSIZEIMAGE
+    LTEXT           "Enter passwords and referrers for sites that require them.",
+                    IDC_STATIC,36,7,120,16
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
