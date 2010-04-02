@@ -41,7 +41,7 @@ bool AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_OPEN)    {  }
 			else if (choice == ID_TOOLS_ADD)     {  }
 			else if (choice == ID_TOOLS_NEW)     {  }
-			else if (choice == ID_TOOLS_HELP)    {  }
+			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
 			else if (choice == ID_TOOLS_ABOUT)   { Dialog(L"DIALOG_ABOUT", DialogAbout); }
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
 			else if (choice == ID_TOOLS_EXIT)    { return true; } // Close the program

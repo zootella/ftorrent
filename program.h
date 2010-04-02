@@ -2,14 +2,13 @@
 // Program build and name
 #define PROGRAM_TEST true
 #define PROGRAM_NAME string(L"ltorrent")
+#define PROGRAM_HELP string(L"http://wiki.github.com/zootella/ltorrent/")
 
 // Compose display text
-#define PROGRAM_ABOUT1 string(L"ltorrent 0.1")
+#define PROGRAM_ABOUT1 string(L"Version 0.1")
 #define PROGRAM_ABOUT2 string(L"Released under the GNU General Public License")
-#define PROGRAM_ABOUT3 string(L"Rasterbar libtorrent 0.14.8")
-#define PROGRAM_ABOUT4 string(L"Boost 1.42.0")
-#define PROGRAM_ABOUT5 string(L"OpenSSL 0.9.8l")
-#define PROGRAM_ABOUT6 string(L"http://github.com/zootella/ltorrent")
+#define PROGRAM_ABOUT3 string(L"Contains libtorrent 0.14.8; Boost 1.42.0; OpenSSL 0.9.8l")
+#define PROGRAM_ABOUT4 string(L"http://github.com/zootella/ltorrent")
 
 // Pulse
 #define PULSE 100

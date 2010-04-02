@@ -490,29 +490,19 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 			device.BackgroundColor(Handle.background.color);
 			device.Font(Handle.arial);
 
+			// Compose text
 			string about = L"about " + PROGRAM_NAME;
 
 			// Prepare rectangles
 			sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box
-
-			sizeitem blue = client;
+			sizeitem blue = client; // Blue bar at top
 			blue.h = 23;
-
-			sizeitem white = client;
+			sizeitem white = client; // White area beneath
 			white.SetTop(blue.h);
-
-			sizeitem title = SizeText(&device, about);
+			sizeitem title = SizeText(&device, about); // Title above the edge
 			title.x = client.w - 8 - title.w;
 			title.y = -7;
 			title.SetBottom(blue.h);
-			
-
-
-
-
-
-
-
 
 			// Paint the rectangles
 			PaintFill(&device, blue, Handle.blue.brush);
@@ -532,11 +522,9 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 			// Paint the text
 			device.Font(Handle.font);
 			PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-			PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-			PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+			PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+			PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
 			PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
-			PaintText(&device, PROGRAM_ABOUT5, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-			PaintText(&device, PROGRAM_ABOUT6, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background);
 			return false;
 		}
 
