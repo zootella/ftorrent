@@ -879,3 +879,54 @@ void FileRun(read path, read parameters) {
 		SW_SHOWNORMAL); // Default show
 }
 
+
+// Takes a dialog box procedure function and resource name
+// Shows the dialog box
+// Returns the result from the dialog box
+int Dialog(LPCTSTR resource, DLGPROC procedure, LPARAM lparam) {
+
+	// Choose procedure
+	if (!procedure) procedure = DialogProcedure;
+
+	// Show the dialog box, sending messages to its procedure and returning here when it is closed
+	int result;
+	AreaPopUp();
+	if (lparam) result = (int)DialogBoxParam(Handle.instance, resource, Handle.window, procedure, lparam);
+    else result = (int)DialogBox(Handle.instance, resource, Handle.window, procedure);
+	AreaPopDown();
+	return result;
+}
+
+// Dialog box procedure
+BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
+
+	// The dialog is about to be displayed
+	switch (message) {
+	case WM_INITDIALOG: 
+
+		// Let the system place the focus
+		return true;
+
+	break;
+	case WM_COMMAND:
+
+		// The user clicked OK or Cancel
+		switch (LOWORD(wparam)) {
+		case IDOK:
+		case IDCANCEL:
+
+			// Close the dialog
+			EndDialog(dialog, 0);
+			return true;
+
+		break;
+		}
+
+	break;
+	}
+
+	// Have windows process messages
+	return false;
+}
+
+

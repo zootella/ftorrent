@@ -81,7 +81,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		*/
 
 		// LET THE SYSTEM SET THE FOCUS
-		return(true);
+		return true;
 
 	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
 	break;
@@ -101,7 +101,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 			*/
 
 			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
-			return(true);
+			return true;
 
 		// THE GET EDIT CONTROL IS ABOUT TO REDRAW ITSELF
 		break; }
@@ -128,7 +128,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 		break;
 		default:
 
-			return(false);
+			return false;
 
 		break;
 		}
@@ -200,7 +200,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 	}
 
 	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return(false);
+	return false;
 }
 
 BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
@@ -232,7 +232,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 		*/
 
 		// LET THE SYSTEM SET THE FOCUS
-		return(true);
+		return true;
 
 	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
 	break;
@@ -248,7 +248,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 			*/
 
 			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
-			return(true);
+			return true;
 
 		// THE USER CHECKED THE USE CHECK BOX
 		break;
@@ -276,7 +276,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 		break;
 		default:
 
-			return(false);
+			return false;
 
 		break;
 		}
@@ -313,7 +313,7 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 	}
 
 	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return(false);
+	return false;
 }
 
 
@@ -354,7 +354,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 		*/
 
 		// LET THE SYSTEM SET THE FOCUS
-		return(true);
+		return true;
 
 	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
 	break;
@@ -369,7 +369,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 			State.pass.edit = "";
 			Dialog("DIALOG_PASS", DialogPassword);
 			*/
-			return(true);
+			return true;
 
 		// THE USER CLICKED EDIT
 		break;
@@ -380,7 +380,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 			State.pass.edit = PassSelected();
 			Dialog("DIALOG_PASS", DialogPassword);
 			*/
-			return(true);
+			return true;
 
 		// THE USER CLICKED DELETE
 		break;
@@ -416,7 +416,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 			}
 			*/
 
-			return(true);
+			return true;
 
 		// THE USER DOUBLE CLICKED IN THE LIST VIEW CONTROL
 		break;
@@ -427,7 +427,7 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 			State.pass.edit = PassSelected();
 			Dialog("DIALOG_PASS", DialogPassword);
 			*/
-			return(true);
+			return true;
 
 		// THE USER PRESSED A KEY IN THE LIST VIEW CONTROL
 		break;
@@ -466,6 +466,102 @@ BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPAR
 	}
 
 	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return(false);
+	return false;
 }
+
+// Dialog box procedure
+BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
+
+	// The dialog is about to be displayed
+	switch (message) {
+	case WM_INITDIALOG:
+
+		// Let the system place the focus
+		return true;
+
+	// The dialog needs to be painted
+	break;
+	case WM_PAINT:
+		
+		{
+			// Do custom painting in the dialog
+			deviceitem device;
+			device.OpenPaint(dialog);
+			device.BackgroundColor(Handle.background.color);
+			device.Font(Handle.arial);
+
+			string about = L"about " + PROGRAM_NAME;
+
+			// Prepare rectangles
+			sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box
+
+			sizeitem blue = client;
+			blue.h = 23;
+
+			sizeitem white = client;
+			white.SetTop(blue.h);
+
+			sizeitem title = SizeText(&device, about);
+			title.x = client.w - 8 - title.w;
+			title.y = -7;
+			title.SetBottom(blue.h);
+			
+
+
+
+
+
+
+
+
+			// Paint the rectangles
+			PaintFill(&device, blue, Handle.blue.brush);
+			PaintText(&device, about, title, false, false, false, false, 0, Handle.arial, &Handle.lightblue, &Handle.blue);
+			PaintFill(&device, white, Handle.background.brush);
+
+			// Set heights
+			int text = Area.height; // Text height is usually 13
+			int space = 5;
+
+			// Size the text
+			sizeitem s = white;
+			s.SetLeft(89);
+			s.SetTop(46);
+			s.h = text;
+
+			// Paint the text
+			device.Font(Handle.font);
+			PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
+			PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
+			PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+			PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+			PaintText(&device, PROGRAM_ABOUT5, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
+			PaintText(&device, PROGRAM_ABOUT6, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background);
+			return false;
+		}
+
+	// The message is a command
+	break;
+	case WM_COMMAND:
+
+		// The user clicked OK or Cancel
+		switch (LOWORD(wparam)) {
+		case IDOK:
+		case IDCANCEL:
+
+			// Close the dialog
+			EndDialog(dialog, 0);
+			return true;
+
+		break;
+		}
+
+	break;
+	}
+
+	// Have Windows process messages that make it down here
+	return false;
+}
+
+
 
