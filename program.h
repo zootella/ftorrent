@@ -7,7 +7,7 @@
 // Compose display text
 #define PROGRAM_ABOUT1 string(L"Version 0.1")
 #define PROGRAM_ABOUT2 string(L"Released under the GNU General Public License")
-#define PROGRAM_ABOUT3 string(L"Contains libtorrent 0.14.8; Boost 1.42.0; OpenSSL 0.9.8l")
+#define PROGRAM_ABOUT3 string(L"Built on Rasterbar libtorrent 0.14.8, Boost 1.42.0, and OpenSSL 0.9.8l")
 #define PROGRAM_ABOUT4 string(L"http://github.com/zootella/ltorrent")
 
 // Pulse
