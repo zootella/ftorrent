@@ -197,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\options.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\paint.cpp"
 				>
 			</File>
