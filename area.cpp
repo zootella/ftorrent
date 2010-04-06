@@ -31,7 +31,7 @@ void AreaCreate() {
 	Area.corner.command = CommandSizeDiagonal;
 
 	//TODO not here
-	State.title = L"ltorrent some more";
+	State.title = L"ltorrent";
 }
 
 // Update the appearance of area items and issue commands that occur

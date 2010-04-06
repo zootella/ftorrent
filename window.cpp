@@ -98,12 +98,23 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!menu) Report(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
 
+	// Create the list view window
+	DWORD style =
+		WS_CHILD |             // Required for child windows
+		LVS_REPORT |           // Specifies report view, I think this puts it in details
+		LBS_EXTENDEDSEL |      // Allows multiple items to be selected
+		LVS_SHOWSELALWAYS |    // Shows the selection even when the control doesn't have the focus
+		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
+		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
+	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, Handle.window, (HMENU)WINDOW_LIST);
+
+	// Create the tabs window
+	style =
+		WS_CHILD;              // Required for child windows
+	Handle.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, Handle.window, (HMENU)WINDOW_TABS);
+
 	// Make child windows and menus
-	Handle.list = WindowCreateEdit(true,  false); // Edit controls
-	Handle.tabs = WindowCreateEdit(false, false);
 	Handle.edit = WindowCreateEdit(true,  true);
-	WindowEdit(Handle.list, true); // Start out edit controls read-only
-	WindowEdit(Handle.tabs, true);
 	WindowEdit(Handle.edit, true);
 
 	// Make the areas of the window like the buttons and sizing grips
