@@ -20,6 +20,25 @@ void Tabs() {
 
 
 
+	TCITEM item;
+	ZeroMemory(&item, sizeof(item));
+	item.mask        = TCIF_TEXT; // Parts set below
+	item.dwState     = 0;         // Ignored when inserting a new tab
+	item.dwStateMask = 0;         // Ignored when inserting a new tab
+	item.pszText     = L"General";
+	item.cchTextMax  = 0;         // Only used when the structure is receiving information
+	item.iImage      = -1;        // No icon
+	item.lParam      = 0;         // No extra information
+
+
+	SendMessage(
+		Handle.tabs,
+		TCM_INSERTITEM,
+		0, // Index of the new tab
+		(LPARAM)&item);
+
+
+
 
 
 }

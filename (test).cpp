@@ -20,7 +20,7 @@ extern statetop  State;
 void Test() {
 
 
-	DialogOptions();
+	Tabs();
 
 }
 
