@@ -18,6 +18,12 @@ extern statetop  State;
 
 void Tabs() {
 
+	// Have it use Tahoma, not the default system font
+	SendMessage( 
+		(HWND)Handle.tabs,   // Send the message to this window
+		WM_SETFONT,          // Message to send
+		(WPARAM)Handle.font, // Handle to font
+		0);                  // Don't tell the control to immediately redraw itself
 
 
 	TCITEM item;
