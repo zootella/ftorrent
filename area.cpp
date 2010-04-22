@@ -283,7 +283,7 @@ void Size(int move) {
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
 	int max = client.h - bar - status - tabs;
-	if (!Area.bar.size.y) Area.bar.size.y = client.h / 2; // Set the bar
+	if (!Area.bar.size.y) Area.bar.size.y = ((client.h - title - bar - tabs - status) / 2) + title; // Set the bar
 	Area.bar.size.y += move; // Move the bar
 	if (Area.bar.size.y > max) Area.bar.size.y = max; // Don't let it go beyond the bounds
 	if (Area.bar.size.y < min) Area.bar.size.y = min; // Enforce min from the top if both are in violation
@@ -302,8 +302,9 @@ void Size(int move) {
 	Area.list.Check(); // If the height is negative, make it 0
 
 	// Tabs
+//	Area.tabs.x = 2; // Shift to the right to paint left margin and move right border under window edge
 	Area.tabs.y = Area.bar.size.Bottom();
-	Area.tabs.w = client.w + 1;
+	Area.tabs.w = client.w;
 	Area.tabs.h = tabs;
 
 	// Info
