@@ -20,7 +20,8 @@ extern statetop  State;
 void Test() {
 
 
-	Tabs();
+	for (int i = 0; i < 5; i++)
+		Tabs();
 
 }
 
