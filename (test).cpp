@@ -19,10 +19,6 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
-
-	for (int i = 0; i < 5; i++)
-		Tabs();
-
 }
 
 

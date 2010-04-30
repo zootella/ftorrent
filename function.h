@@ -86,7 +86,9 @@ void InitializeCommonControls();
 void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
 void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
 void FileRun(read path, read parameters = L""); // Has defaults
-
+int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Has defaults
+BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
+void AddTab(HWND window, int index, read title);
 
 // Paint
 void PaintWindow(deviceitem *device);
@@ -103,20 +105,18 @@ void Size(int move = 0); // Has defaults
 // Command
 bool AreaCommand(areaitem *area);
 
-// Test
-void Test();
-
+// Options
 void DialogOptions();
 BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
+// Test
+void Test();
 
-int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Has defaults
-BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
 
-void Tabs();
+
 
 

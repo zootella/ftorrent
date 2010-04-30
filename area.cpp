@@ -283,7 +283,7 @@ void Size(int move) {
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
 	int max = client.h - bar - status - tabs;
-	if (!Area.bar.size.y) Area.bar.size.y = ((client.h - title - bar - tabs - status) / 2) + title; // Set the bar
+	if (!Area.bar.size.y) Area.bar.size.y = ((client.h - title - bar - tabs - status) * 3 / 7) + title; // Set the bar 3/7ths down the available area
 	Area.bar.size.y += move; // Move the bar
 	if (Area.bar.size.y > max) Area.bar.size.y = max; // Don't let it go beyond the bounds
 	if (Area.bar.size.y < min) Area.bar.size.y = min; // Enforce min from the top if both are in violation

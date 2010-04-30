@@ -109,9 +109,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, Handle.window, (HMENU)WINDOW_LIST);
 
 	// Create the tabs window
-	style =
-		WS_CHILD;              // Required for child windows
+	style = WS_CHILD;        // Required for child windows
 	Handle.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, Handle.window, (HMENU)WINDOW_TABS);
+	SendMessage(             // Have it use Tahoma, not the default system font
+		(HWND)Handle.tabs,   // Send the message to this window
+		WM_SETFONT,          // Message to send
+		(WPARAM)Handle.font, // Handle to font
+		0);                  // Don't tell the control to immediately redraw itself
+
+	// Add the tabs
+	AddTab(Handle.tabs, 0, L"General");
+	AddTab(Handle.tabs, 1, L"Trackers");
+	AddTab(Handle.tabs, 2, L"Peers");
+	AddTab(Handle.tabs, 3, L"Pieces");
+	AddTab(Handle.tabs, 4, L"Files");
 
 	// Make child windows and menus
 	Handle.edit = WindowCreateEdit(true,  true);

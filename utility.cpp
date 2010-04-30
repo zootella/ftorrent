@@ -929,4 +929,19 @@ BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM l
 	return false;
 }
 
+// Takes a tab control child window that holds tabs, an index number 0+ for a new tab, and text to title it
+// Adds a new tab
+void AddTab(HWND window, int index, read title) {
 
+	// Fill out the structure and send the message
+	TCITEM item;
+	ZeroMemory(&item, sizeof(item));
+	item.mask        = TCIF_TEXT;     // Parts set below
+	item.dwState     = 0;             // Ignored when inserting a new tab
+	item.dwStateMask = 0;             // Ignored when inserting a new tab
+	item.pszText     = (LPWSTR)title; // Text will only be read
+	item.cchTextMax  = 0;             // Only used when the structure is receiving information
+	item.iImage      = -1;            // No icon
+	item.lParam      = 0;             // No extra information
+	SendMessage(window, TCM_INSERTITEM, index, (LPARAM)&item);
+}
