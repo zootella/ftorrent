@@ -24,9 +24,6 @@ bool AreaCommand(areaitem *area) {
 	// Buttons
 	if (area->command == CommandReady || area->command == CommandSet) {
 
-	// Links
-	} else if (area->command == CommandLink) {
-
 		// Tools
 		if (area == &Area.tools) {
 
@@ -46,6 +43,10 @@ bool AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
 			else if (choice == ID_TOOLS_EXIT)    { return true; } // Close the program
 		}
+
+	// Links
+	} else if (area->command == CommandLink) {
+
 	}
 
 	// No request to exit the program

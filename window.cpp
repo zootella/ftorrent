@@ -43,20 +43,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.yellow32   = LoadIconResource(L"STATE_YELLOW",      32, 32);
 	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16); // Buttons
 	Handle.descending = LoadIconResource(L"COLUMN_DESCENDING", 16, 16);
-	Handle.pausedim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
-	Handle.pausehot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
-	Handle.pause      = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
-	Handle.removedim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
-	Handle.removehot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
-	Handle.remove     = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
-	Handle.startdim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19);
-	Handle.starthot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
-	Handle.start      = LoadIconResource(L"BUTTON_START",      19, 19);
-	Handle.stopdim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
-	Handle.stophot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
-	Handle.stop       = LoadIconResource(L"BUTTON_STOP",       19, 19);
-	Handle.toolshot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  19, 30); // Rectangular size
-	Handle.tools      = LoadIconResource(L"BUTTON_TOOLS",      19, 30);
 
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);

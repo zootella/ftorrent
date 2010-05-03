@@ -23,11 +23,6 @@ public:
 	HICON clear;
 	HICON blue16, blue32, green16, green32, red16, red32, yellow16, yellow32; // Application state icons
 	HICON ascending, descending; // List column icons
-	HICON pausedim, pausehot, pause; // Button icons
-	HICON removedim, removehot, remove;
-	HICON startdim, starthot, start;
-	HICON stopdim, stophot, stop;
-	HICON toolshot, tools;
 
 	// Colors
 	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow;

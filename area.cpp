@@ -25,8 +25,34 @@ void AreaCreate() {
 	device.Font(Handle.font);
 	Area.height = SizeText(&device, L"A").h;
 
-	// Link and size command states
-	Area.tools.command  = CommandLink;
+	// Buttons
+	Area.tools.command  = CommandReady;
+	Area.start.command  = CommandUnavailable;
+	Area.pause.command  = CommandUnavailable;
+	Area.stop.command   = CommandUnavailable;
+	Area.remove.command = CommandUnavailable;
+	Area.tools.tip  = L"Tools";
+	Area.start.tip  = L"Start";
+	Area.pause.tip  = L"Pause";
+	Area.stop.tip   = L"Stop";
+	Area.remove.tip = L"Remove";
+	Area.tools.dim   = NULL; // Tools is always available
+	Area.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  30, 19); // Rectangular icon
+	Area.tools.icon  = LoadIconResource(L"BUTTON_TOOLS",      30, 19);
+	Area.start.dim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19); // Custom size icons
+	Area.start.hot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
+	Area.start.icon  = LoadIconResource(L"BUTTON_START",      19, 19);
+	Area.pause.dim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
+	Area.pause.hot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
+	Area.pause.icon  = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
+	Area.stop.dim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
+	Area.stop.hot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
+	Area.stop.icon   = LoadIconResource(L"BUTTON_STOP",       19, 19);
+	Area.remove.dim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
+	Area.remove.hot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
+	Area.remove.icon = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
+
+	// Size controls
 	Area.bar.command    = CommandSizeVertical;
 	Area.corner.command = CommandSizeDiagonal;
 

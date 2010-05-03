@@ -152,13 +152,13 @@ public:
 	areaitem *next;
 
 	// Data
-	sizeitem    size;               // Position and size of area in the main client window
-	areacommand command;            // The state of the command this area item represents
-	areadisplay display;            // How this area is currently drawn in the window
-	string      text, tip;          // Text painted in the area item and any for a tooltip
-	int         adjust;             // Pixels to nudge the text horizontally
-	sizeitem    textsize;           // How big the text is when painted
-	HICON       icon, gray;         // Icons for available and unavailable appearance
+	sizeitem    size;           // Position and size of area in the main client window
+	areacommand command;        // The state of the command this area item represents
+	areadisplay display;        // How this area is currently drawn in the window
+	string      text, tip;      // Text painted in the area item and any for a tooltip
+	int         adjust;         // Pixels to nudge the text horizontally
+	sizeitem    textsize;       // How big the text is when painted
+	HICON       icon, hot, dim; // Icons for normal, hot and dim appearances
 
 	// New
 	areaitem() {
@@ -166,6 +166,6 @@ public:
 		command = CommandNone;
 		display = DisplayNone;
 		adjust = 1; // By default, adjust text to the right 1 pixel
-		icon = gray = NULL;
+		icon = hot = dim = NULL;
 	}
 };

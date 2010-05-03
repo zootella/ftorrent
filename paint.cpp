@@ -64,13 +64,45 @@ void PaintArea(deviceitem *device, areaitem *a) {
 	if (a->command == CommandNone || !a->size.Is()) return;
 
 	// Define sizes as local variables
-	int space = 4;
-	sizeitem icon, smallicon, text, s;
-	icon.w = icon.h = 24;
-	smallicon.w = smallicon.h = 16;
+	int space = 2;
+	sizeitem icon, s;
+
+	// Button
+	if (a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
+
+		// Place icon
+		icon.x = a->size.x + space;
+		icon.y = a->size.y + space;
+		icon.w = a->size.w - (2 * space);
+		icon.h = a->size.h - (2 * space);
+
+		// If pressed, shift the icon one pixel
+		if (a->display == DisplayPressed) { icon.x++; icon.y++; }
+
+		// Paint icon
+		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  Handle.blue.brush);
+		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  Handle.blue.brush);
+		else                                   PaintIcon(device, icon, a->icon, Handle.blue.brush);
+
+		// Fill outside margins
+		s = a->size;
+		s.SetBottom(icon.y);
+		PaintFill(device, s, Handle.blue.brush); // Row above icon
+		s = icon;
+		s.w = 0;
+		s.SetLeft(a->size.x);
+		PaintFill(device, s, Handle.blue.brush); // Left of icon
+		s = icon;
+		s.CloseRight();
+		s.SetRight(a->size.Right());
+		PaintFill(device, s, Handle.blue.brush); // Right of icon
+		s = a->size;
+		s.y = icon.Bottom();
+		s.SetBottom(a->size.Bottom());
+		PaintFill(device, s, Handle.blue.brush); // Row beneath icon
 
 	// Link
-	if (a->command == CommandLink) {
+	} else if (a->command == CommandLink) {
 
 	// Other
 	} else {
