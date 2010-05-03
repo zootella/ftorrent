@@ -32,19 +32,31 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
 
 	// Load icons
-	Handle.blue16   = LoadIconResource(L"0_STATE_BLUE", 16, 16);
-	Handle.blue32   = LoadIconResource(L"0_STATE_BLUE", 32, 32);
-	Handle.green16  = LoadIconResource(L"STATE_GREEN",  16, 16);
-	Handle.green32  = LoadIconResource(L"STATE_GREEN",  32, 32);
-	Handle.red16    = LoadIconResource(L"STATE_RED",    16, 16);
-	Handle.red32    = LoadIconResource(L"STATE_RED",    32, 32);
-	Handle.yellow16 = LoadIconResource(L"STATE_YELLOW", 16, 16);
-	Handle.yellow32 = LoadIconResource(L"STATE_YELLOW", 32, 32);
-	Handle.clear      = LoadIconResource(L"COLUMN_CLEAR",      16, 16);
-	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16);
+	Handle.clear      = LoadIconResource(L"CLEAR_ICON",        16, 16);
+	Handle.blue16     = LoadIconResource(L"0_STATE_BLUE",      16, 16);
+	Handle.blue32     = LoadIconResource(L"0_STATE_BLUE",      32, 32);
+	Handle.green16    = LoadIconResource(L"STATE_GREEN",       16, 16);
+	Handle.green32    = LoadIconResource(L"STATE_GREEN",       32, 32);
+	Handle.red16      = LoadIconResource(L"STATE_RED",         16, 16);
+	Handle.red32      = LoadIconResource(L"STATE_RED",         32, 32);
+	Handle.yellow16   = LoadIconResource(L"STATE_YELLOW",      16, 16);
+	Handle.yellow32   = LoadIconResource(L"STATE_YELLOW",      32, 32);
+	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16); // Buttons
 	Handle.descending = LoadIconResource(L"COLUMN_DESCENDING", 16, 16);
-	Handle.toolsblack = LoadIconResource(L"TOOLS_BLACK", 26, 15); // Custom size
-	Handle.toolswhite = LoadIconResource(L"TOOLS_WHITE", 26, 15);
+	Handle.pausedim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
+	Handle.pausehot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
+	Handle.pause      = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
+	Handle.removedim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
+	Handle.removehot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
+	Handle.remove     = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
+	Handle.startdim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19);
+	Handle.starthot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
+	Handle.start      = LoadIconResource(L"BUTTON_START",      19, 19);
+	Handle.stopdim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
+	Handle.stophot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
+	Handle.stop       = LoadIconResource(L"BUTTON_STOP",       19, 19);
+	Handle.toolshot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  19, 30); // Rectangular size
+	Handle.tools      = LoadIconResource(L"BUTTON_TOOLS",      19, 30);
 
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);

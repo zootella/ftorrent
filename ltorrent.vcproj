@@ -261,15 +261,67 @@
 				>
 			</File>
 			<File
-				RelativePath=".\application.ico"
+				RelativePath=".\button pause dim.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button pause hot.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button pause.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button remove dim.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button remove hot.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button remove.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button start dim.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button start hot.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button start.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button stop dim.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button stop hot.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button stop.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button tools hot.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\button tools.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\clear.ico"
 				>
 			</File>
 			<File
 				RelativePath=".\column ascending.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\column clear.ico"
 				>
 			</File>
 			<File
@@ -294,14 +346,6 @@
 			</File>
 			<File
 				RelativePath=".\state yellow.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\tools black.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\tools white.ico"
 				>
 			</File>
 		</Filter>

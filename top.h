@@ -20,9 +20,14 @@ public:
 	HFONT font, underline, arial;
 
 	// Icons
+	HICON clear;
 	HICON blue16, blue32, green16, green32, red16, red32, yellow16, yellow32; // Application state icons
-	HICON clear, ascending, descending; // List column icons
-	HICON toolsblack, toolswhite; // Button icons
+	HICON ascending, descending; // List column icons
+	HICON pausedim, pausehot, pause; // Button icons
+	HICON removedim, removehot, remove;
+	HICON startdim, starthot, start;
+	HICON stopdim, stophot, stop;
+	HICON toolshot, tools;
 
 	// Colors
 	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow;
@@ -36,7 +41,8 @@ public:
 
 	// The list of area items, the area item the mouse pressed, and pointers to the area items
 	areaitem *all, *pressed;
-	areaitem tools, bar, corner;
+	areaitem tools, start, pause, stop, remove;
+	areaitem bar, corner;
 
 	// Sizes in the client area
 	sizeitem list, tabs, info; // Child window control sizes
@@ -54,7 +60,11 @@ public:
 
 		// Link area items into a list
 		all         = &tools;
-		tools.next  = &bar;
+		tools.next  = &start;
+		start.next  = &pause;
+		pause.next  = &stop;
+		stop.next   = &remove;
+		remove.next = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;
 	}

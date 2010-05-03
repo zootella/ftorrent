@@ -42,8 +42,6 @@ void PaintWindow(deviceitem *device) {
 	PaintLabel(device, State.title, s);
 	device->Font(Handle.font);
 
-	PaintIcon(device, Area.tools.size, Handle.toolswhite); // Transparent background
-
 	// Paint all the areas
 	areaitem *a = Area.all;
 	while (a) {
