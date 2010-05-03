@@ -265,8 +265,8 @@ void Size(int move) {
 	int text = Area.height; // Text height on Windows XP is usually 13
 	int icon = 16;          // Small square icons
 	sizeitem tools;         // Tools icon
-	tools.w = 26;
-	tools.h = 15;
+	tools.w = 30;
+	tools.h = 19;
 
 	// Heights
 	int title  = 23; // Height of status title band at the top of the client area
@@ -274,11 +274,19 @@ void Size(int move) {
 	int tabs   = text + 12;
 	int status = text + 3;
 
-	// Toolbar items
-	Area.tools.size = tools;
-	int margin = (title - tools.h) / 2;
-	Area.tools.size.x = margin;
-	Area.tools.size.y = margin;
+	// Toolbar buttons
+	sizeitem button;
+	button.w = button.h = title;
+	Area.tools.size  = button;
+	Area.start.size  = button;
+	Area.pause.size  = button;
+	Area.stop.size   = button;
+	Area.remove.size = button;
+	Area.tools.size.w  = tools.w + 4;
+	Area.start.size.x  = Area.tools.size.w + (0 * button.w);
+	Area.pause.size.x  = Area.tools.size.w + (1 * button.w);
+	Area.stop.size.x   = Area.tools.size.w + (2 * button.w);
+	Area.remove.size.x = Area.tools.size.w + (3 * button.w);
 
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
