@@ -26,7 +26,7 @@ void AreaCreate() {
 	Area.height = SizeText(&device, L"A").h;
 
 	// Buttons
-	Area.tools.command  = CommandReady;
+	Area.tools.command  = CommandMenu;
 	Area.start.command  = CommandUnavailable;
 	Area.pause.command  = CommandUnavailable;
 	Area.stop.command   = CommandUnavailable;
@@ -63,6 +63,13 @@ void AreaCreate() {
 // Update the appearance of area items and issue commands that occur
 void AreaPulse() {
 
+	// Set button command states
+	Area.tools.command  = CommandMenu;
+	Area.start.command  = CommandReady; //TODO base this on what's selected, if anything
+	Area.pause.command  = CommandReady;
+	Area.stop.command   = CommandReady;
+	Area.remove.command = CommandReady;
+
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	areaitem *over = MouseOver();
 	bool inside = MouseInside();
@@ -71,8 +78,9 @@ void AreaPulse() {
 	// Set the pointer based on the area it pressed
 	if (Area.pressed) {
 
-		if      (Area.pressed->command == CommandReady)          CursorSet(Handle.hand);
-		else if (Area.pressed->command == CommandSet)            CursorSet(Handle.hand);
+		if      (Area.pressed->command == CommandReady)          CursorSet(Handle.arrow);
+		else if (Area.pressed->command == CommandSet)            CursorSet(Handle.arrow);
+		else if (Area.pressed->command == CommandMenu)           CursorSet(Handle.arrow);
 		else if (Area.pressed->command == CommandLink)           CursorSet(Handle.hand);
 		else if (Area.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
 		else if (Area.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
@@ -82,8 +90,9 @@ void AreaPulse() {
 	// Set the pointer based on the area it's over
 	} else if (over && !pressing) {
 
-		if      (over->command == CommandReady)          CursorSet(Handle.hand);
-		else if (over->command == CommandSet)            CursorSet(Handle.hand);
+		if      (over->command == CommandReady)          CursorSet(Handle.arrow);
+		else if (over->command == CommandSet)            CursorSet(Handle.arrow);
+		else if (over->command == CommandMenu)           CursorSet(Handle.arrow);
 		else if (over->command == CommandLink)           CursorSet(Handle.hand);
 		else if (over->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
 		else if (over->command == CommandSizeVertical)   CursorSet(Handle.vertical);
@@ -117,6 +126,12 @@ void AreaPulse() {
 		} else if (a->command == CommandSet) {
 
 			display = DisplayPressed;
+
+		} else if (a->command == CommandMenu) {
+
+			if      (a == over && a == Area.pressed) display = DisplayPressed;
+			else if (a == over && !pressing)         display = DisplayHot;
+			else                                     display = DisplayReady;
 
 		} else if (a->command == CommandLink) {
 

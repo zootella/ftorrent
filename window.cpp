@@ -231,25 +231,27 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	break;
 	case WM_LBUTTONDOWN:
 
-		// Record the area where the mosue pressed, and capture the mouse to get all mouse messages
-		Area.pressed = MouseOver();
-		if (Area.pressed) Area.stick = MouseArea(Area.pressed);
-		MouseCapture();
+		Area.pressed = MouseOver(); // Save the area the mouse pressed
+		if (Area.pressed) Area.stick = MouseArea(Area.pressed); // Save where in the area it started dragging
+		MouseCapture(); // Have our window get all the mouse messages
+		if (Area.pressed->command == CommandMenu) { // Show a menu on the downclick
+			if (AreaCommand(Area.pressed)) { PostQuitMessage(0); return 0; } // Perform the command, exit if that was it
+				
+				
+		}
 		return 0;
 
 	// The primary mouse button has clicked up in the main window, or anywhere if the mouse is captured
 	break;
 	case WM_LBUTTONUP:
 
-		// Record the area where the mouse released, and release the captured mouse to stop getting all mouse messages
 		if (Area.pressed && Area.pressed == MouseOver()) {
-			if (AreaCommand(Area.pressed)) { // Perform the command
-				PostQuitMessage(0); // The user clicked Tools, Exit, close the program
-				return 0;
-			}
+			if (AreaCommand(Area.pressed)) { PostQuitMessage(0); return 0; }// Perform the command, exit if that was it
+				
+				
 		}
-		Area.pressed = NULL;
-		MouseRelease();
+		Area.pressed = NULL; // Clear our record of the area the mouse pressed
+		MouseRelease(); // Stop getting all mouse messages
 		return 0;
 
 	// A new window has captured the mouse

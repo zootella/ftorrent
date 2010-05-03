@@ -68,16 +68,13 @@ void PaintArea(deviceitem *device, areaitem *a) {
 	sizeitem icon, s;
 
 	// Button
-	if (a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
+	if (a->command == CommandMenu || a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
 
 		// Place icon
 		icon.x = a->size.x + space;
 		icon.y = a->size.y + space;
 		icon.w = a->size.w - (2 * space);
 		icon.h = a->size.h - (2 * space);
-
-		// If pressed, shift the icon one pixel
-		if (a->display == DisplayPressed) { icon.x++; icon.y++; }
 
 		// Paint icon
 		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  Handle.blue.brush);

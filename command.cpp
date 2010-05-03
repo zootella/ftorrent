@@ -21,8 +21,8 @@ extern statetop  State;
 // Returns true to exit the program, false to keep it running
 bool AreaCommand(areaitem *area) {
 
-	// Buttons
-	if (area->command == CommandReady || area->command == CommandSet) {
+	// Menus
+	if (area->command == CommandMenu) {
 
 		// Tools
 		if (area == &Area.tools) {
@@ -43,6 +43,9 @@ bool AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
 			else if (choice == ID_TOOLS_EXIT)    { return true; } // Close the program
 		}
+
+	// Buttons
+	} else if (area->command == CommandReady || area->command == CommandSet) {
 
 	// Links
 	} else if (area->command == CommandLink) {

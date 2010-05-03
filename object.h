@@ -131,6 +131,7 @@ enum areacommand {
 	CommandUnavailable,    // The button's command is currently unavailable
 	CommandReady,          // The button's command is ready
 	CommandSet,            // The button's command is set on
+	CommandMenu,           // A button that opens a menu
 	CommandLink,           // A hyperlink
 	CommandSizeVertical,   // A horizontal bar that sizes vertically
 	CommandSizeHorizontal, // A vertical bar that sizes horizontally
