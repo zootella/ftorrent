@@ -105,6 +105,10 @@ void AreaPulse() {
 		CursorSet(Handle.arrow);
 	}
 
+	// The tab control doesn't set the pointer, so we do it for it
+	if (!Area.pressed && Area.tabs.Inside(MouseClient()))
+		CursorSet(Handle.arrow);
+
 	// Compose the display of each area and draw those that have changed
 	areadisplay display;
 	deviceitem device;
