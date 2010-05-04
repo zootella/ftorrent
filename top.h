@@ -21,11 +21,9 @@ public:
 
 	// Icons
 	HICON clear;
-	HICON blue16, blue32, green16, green32, red16, red32, yellow16, yellow32; // Application state icons
 	HICON ascending, descending; // List column icons
 
 	// Colors
-	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow;
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
 };
@@ -71,27 +69,29 @@ public:
 
 };
 
-// Current state
-enum stagekind {
+// Current program stage
+class stageitem {
+public:
 
-	// Different possible stages for the whole program to be in
-	StageEmpty,       // Blue "start" empty of torrents at the start
-	StageDownloading, // Blue "downloading" getting data
-	StagePaused,      // Yellow "paused" all paused
-	StageSeeding,     // Green "seeding" uploading to peers
-	StageMissing      // Red "missing" there are pieces in a torrent that no peer has 
+	// Text and resources to describe this stage
+	string title;
+	sizeitem size; // How big the text will be painted in the title font
+	HICON icon16, icon32;
+	brushitem ink, background;
 };
 class statetop {
 public:
 
 	// Window
-	boolean taskbar; // True when the window is hidden and icon is in the taskbar notification area
+	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
 	int pop; // How many popup boxes and menus the program has put above the window
 
 	// Shown
-	stagekind stage; // Current program stage shown on the screen
 	string status; // Status bar text
 
-	string title;
 	string folder;
+
+
+	stageitem *stage; // Current program stage shown on the screen
+	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
 };

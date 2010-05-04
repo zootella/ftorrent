@@ -53,6 +53,7 @@ COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
 void PaintMessage(HWND window = NULL); // Has defaults
 void TaskbarIconAdd();
+void TaskbarIconUpdate();
 void TaskbarIconRemove();
 HCURSOR LoadSharedCursor(read name);
 HICON LoadIconResource(read name, int w, int h);

@@ -10,9 +10,12 @@
 #define PROGRAM_ABOUT3 string(L"Built on Rasterbar libtorrent 0.14.8, Boost 1.42.0, and OpenSSL 0.9.8l")
 #define PROGRAM_ABOUT4 string(L"http://github.com/zootella/ltorrent")
 
-// WINDOWS
+// Windows
 #define WINDOW_LIST 1
 #define WINDOW_TABS 2
+
+// Our only icon in the taskbar notification area
+#define TASKBAR_ICON 0
 
 // Pulse
 #define PULSE 100

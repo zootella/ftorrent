@@ -54,7 +54,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-0_STATE_BLUE            ICON                    "0 state blue.ico"
+0_STAGE_BLUE            ICON                    "0 stage blue.ico"
 1_DOCUMENT              ICON                    "1 document.ico"
 BUTTON_PAUSE_DIM        ICON                    "button pause dim.ico"
 BUTTON_PAUSE_HOT        ICON                    "button pause hot.ico"
@@ -73,9 +73,9 @@ BUTTON_TOOLS            ICON                    "button tools.ico"
 CLEAR_ICON              ICON                    "clear.ico"
 COLUMN_ASCENDING        ICON                    "column ascending.ico"
 COLUMN_DESCENDING       ICON                    "column descending.ico"
-STATE_GREEN             ICON                    "state green.ico"
-STATE_RED               ICON                    "state red.ico"
-STATE_YELLOW            ICON                    "state yellow.ico"
+STAGE_GREEN             ICON                    "stage green.ico"
+STAGE_RED               ICON                    "stage red.ico"
+STAGE_YELLOW            ICON                    "stage yellow.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

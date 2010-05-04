@@ -19,11 +19,68 @@ extern statetop  State;
 // Make the areas for the window
 void AreaCreate() {
 
+	// Load stage icons from resources
+	HICON blue16   = LoadIconResource(L"0_STAGE_BLUE", 16, 16);
+	HICON blue32   = LoadIconResource(L"0_STAGE_BLUE", 32, 32);
+	HICON green16  = LoadIconResource(L"STAGE_GREEN",  16, 16);
+	HICON green32  = LoadIconResource(L"STAGE_GREEN",  32, 32);
+	HICON red16    = LoadIconResource(L"STAGE_RED",    16, 16);
+	HICON red32    = LoadIconResource(L"STAGE_RED",    32, 32);
+	HICON yellow16 = LoadIconResource(L"STAGE_YELLOW", 16, 16);
+	HICON yellow32 = LoadIconResource(L"STAGE_YELLOW", 32, 32);
+
+	// Make colors
+	brushitem blue        = CreateBrush(RGB(  0, 102, 204));
+	brushitem lightblue   = CreateBrush(RGB( 51, 153, 255));
+	brushitem green       = CreateBrush(RGB(102, 204,  51));
+	brushitem lightgreen  = CreateBrush(RGB(153, 255, 102));
+	brushitem red         = CreateBrush(RGB(255, 102,  51));
+	brushitem lightred    = CreateBrush(RGB(255, 153, 102));
+	brushitem yellow      = CreateBrush(RGB(255, 204,   0));
+	brushitem lightyellow = CreateBrush(RGB(255, 255, 102));
+
+	// Assemble stages
+	State.start.title = L"start";
+	State.start.icon16 = blue16;
+	State.start.icon32 = blue32;
+	State.start.ink = lightblue;
+	State.start.background = blue;
+
+	State.downloading.title = L"downloading";
+	State.downloading.icon16 = blue16;
+	State.downloading.icon32 = blue32;
+	State.downloading.ink = lightblue;
+	State.downloading.background = blue;
+
+	State.paused.title = L"paused";
+	State.paused.icon16 = yellow16;
+	State.paused.icon32 = yellow32;
+	State.paused.ink = lightyellow;
+	State.paused.background = yellow;
+
+	State.seeding.title = L"seeding";
+	State.seeding.icon16 = green16;
+	State.seeding.icon32 = green32;
+	State.seeding.ink = lightgreen;
+	State.seeding.background = green;
+
+	State.missing.title = L"missing";
+	State.missing.icon16 = red16;
+	State.missing.icon32 = red32;
+	State.missing.ink = lightred;
+	State.missing.background = red;
+
 	// Text size
 	deviceitem device;
 	device.OpenCreate();
-	device.Font(Handle.font);
+	device.Font(Handle.font); // Find the height of the default font
 	Area.height = SizeText(&device, L"A").h;
+	device.Font(Handle.arial); // Find the widths of the stage titles
+	State.start.size       = SizeText(&device, State.start.title);
+	State.downloading.size = SizeText(&device, State.downloading.title);
+	State.paused.size      = SizeText(&device, State.paused.title);
+	State.seeding.size     = SizeText(&device, State.seeding.title);
+	State.missing.size     = SizeText(&device, State.missing.title);
 
 	// Buttons
 	Area.tools.command  = CommandMenu;

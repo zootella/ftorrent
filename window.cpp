@@ -33,15 +33,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load icons
 	Handle.clear      = LoadIconResource(L"CLEAR_ICON",        16, 16);
-	Handle.blue16     = LoadIconResource(L"0_STATE_BLUE",      16, 16);
-	Handle.blue32     = LoadIconResource(L"0_STATE_BLUE",      32, 32);
-	Handle.green16    = LoadIconResource(L"STATE_GREEN",       16, 16);
-	Handle.green32    = LoadIconResource(L"STATE_GREEN",       32, 32);
-	Handle.red16      = LoadIconResource(L"STATE_RED",         16, 16);
-	Handle.red32      = LoadIconResource(L"STATE_RED",         32, 32);
-	Handle.yellow16   = LoadIconResource(L"STATE_YELLOW",      16, 16);
-	Handle.yellow32   = LoadIconResource(L"STATE_YELLOW",      32, 32);
-	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16); // Buttons
+	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16);
 	Handle.descending = LoadIconResource(L"COLUMN_DESCENDING", 16, 16);
 
 	// Load cursors
@@ -57,14 +49,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.background  = BrushSystem(COLOR_WINDOW);
 	Handle.ink         = BrushSystem(COLOR_WINDOWTEXT);
 	Handle.select      = BrushSystem(COLOR_HIGHLIGHT);
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204)); // Colors
-	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
-	Handle.green       = CreateBrush(RGB(102, 204,  51));
-	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
-	Handle.red         = CreateBrush(RGB(255, 102,  51));
-	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
-	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
 	Handle.line        = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
 
 	// Make fonts
@@ -82,8 +66,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.cbClsExtra    = 0;                          // No extra bytes
 	info.cbWndExtra    = 0;
 	info.hInstance     = Handle.instance;            // Instance handle
-	info.hIcon         = Handle.blue32;              // Large and small icons
-	info.hIconSm       = Handle.blue16;
+	info.hIcon         = NULL;                       // No icons yet
+	info.hIconSm       = NULL;
 	info.hCursor       = NULL;                       // Mouse cursor changes
 	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // Background brush
 	info.lpszMenuName  = NULL;                       // No menu

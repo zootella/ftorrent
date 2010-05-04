@@ -338,36 +338,52 @@ void PaintMessage(HWND window) {
 // Adds the program icon to the taskbar notification area
 void TaskbarIconAdd() {
 
-	// Only do something if the icon isn't there
-	if (State.taskbar) return;
-	State.taskbar = true;
+	if (State.taskbar) return;           // Icon already there, leave
+	State.taskbar = State.stage->icon16; // Pick the icon for the current stage
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize           = sizeof(info);                     // Size of this structure
 	info.hWnd             = Handle.window;                    // Handle to the window that will receive messages
-	info.uID              = 0;                                // Program defined identifier
+	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = Handle.blue16;                    // Icon handle
+	info.hIcon            = State.taskbar;                    // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"shell_notifyicon nim_add");
+}
+
+// Updates the program icon in the taskbar notification area
+void TaskbarIconUpdate() {
+
+	if (!State.taskbar) return;                       // No icon to update, leave
+	if (State.taskbar == State.stage->icon16) return; // Icon doesn't need to be updated, leave
+	State.taskbar = State.stage->icon16;              // Record that we updated the icon
+
+	// Add the taskbar notification icon
+	NOTIFYICONDATA info;
+	ZeroMemory(&info, sizeof(info));
+	info.cbSize           = sizeof(info);  // Size of this structure
+	info.hWnd             = Handle.window; // Handle to the window that will receive messages
+	info.uID              = TASKBAR_ICON;  // Program defined identifier
+	info.uFlags           = NIF_ICON;      // Mask for icon only
+	info.hIcon            = State.taskbar; // Icon handle
+	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) Report(L"shell_notifyicon nim_modify");
 }
 
 // Removes the program icon from the taskbar notification area
 void TaskbarIconRemove() {
 
-	// Only do something if the icon is there
-	if (!State.taskbar) return;
-	State.taskbar = false;
+	if (!State.taskbar) return; // No icon to remove, leave
+	State.taskbar = false;      // Record tha we removed the icon
 
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(info);  // Size of this structure
 	info.hWnd   = Handle.window; // Handle to the window that will receive messages
-	info.uID    = 0;             // Program defined identifier
+	info.uID    = TASKBAR_ICON;  // Program defined identifier
 	if (!Shell_NotifyIcon(NIM_DELETE, &info)) Report(L"shell_notifyicon nim_delete");
 }
 

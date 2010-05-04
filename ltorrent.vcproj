@@ -253,7 +253,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\0 state blue.ico"
+				RelativePath=".\0 stage blue.ico"
 				>
 			</File>
 			<File
@@ -337,15 +337,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\state green.ico"
+				RelativePath=".\stage green.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\state red.ico"
+				RelativePath=".\stage red.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\state yellow.ico"
+				RelativePath=".\stage yellow.ico"
 				>
 			</File>
 		</Filter>

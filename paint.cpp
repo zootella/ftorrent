@@ -25,16 +25,16 @@ void PaintWindow(deviceitem *device) {
 
 	// Title
 	device->Font(Handle.arial); // Find out how big the sign text will be
-	device->FontColor(Handle.lightblue.color);
-	device->BackgroundColor(Handle.blue.color);
+	device->FontColor(State.stage->ink.color);
+	device->BackgroundColor(State.stage->background.color);
 	sizeitem t = SizeText(device, State.title);
 	sizeitem s = client; // Fill to the left
 	s.w = client.w - t.w - 8;
 	s.h = Area.title.h;
-	PaintFill(device, s, Handle.green.brush);
+	PaintFill(device, s, State.stage->background.brush);
 	s.x = client.w - 8; // Fill to the right
 	s.w = 8;
-	PaintFill(device, s, Handle.yellow.brush);
+	PaintFill(device, s, State.stage->background.brush);
 	s.x = client.w - t.w - 8; // Paint the text
 	s.y = -7;
 	s.w = t.w;
@@ -82,26 +82,26 @@ void PaintArea(deviceitem *device, areaitem *a) {
 		icon.h = a->size.h - (2 * space);
 
 		// Paint icon
-		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  Handle.blue.brush);
-		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  Handle.blue.brush);
-		else                                   PaintIcon(device, icon, a->icon, Handle.blue.brush);
+		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  State.stage->background.brush);
+		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  State.stage->background.brush);
+		else                                   PaintIcon(device, icon, a->icon, State.stage->background.brush);
 
 		// Fill outside margins
 		s = a->size;
 		s.SetBottom(icon.y);
-		PaintFill(device, s, Handle.blue.brush); // Row above icon
+		PaintFill(device, s, State.stage->background.brush); // Row above icon
 		s = icon;
 		s.w = 0;
 		s.SetLeft(a->size.x);
-		PaintFill(device, s, Handle.blue.brush); // Left of icon
+		PaintFill(device, s, State.stage->background.brush); // Left of icon
 		s = icon;
 		s.CloseRight();
 		s.SetRight(a->size.Right());
-		PaintFill(device, s, Handle.blue.brush); // Right of icon
+		PaintFill(device, s, State.stage->background.brush); // Right of icon
 		s = a->size;
 		s.y = icon.Bottom();
 		s.SetBottom(a->size.Bottom());
-		PaintFill(device, s, Handle.blue.brush); // Row beneath icon
+		PaintFill(device, s, State.stage->background.brush); // Row beneath icon
 
 	// Link
 	} else if (a->command == CommandLink) {
