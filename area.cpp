@@ -68,7 +68,7 @@ void AreaPulse() {
 	Area.start.command  = CommandReady; //TODO base this on what's selected, if anything
 	Area.pause.command  = CommandReady;
 	Area.stop.command   = CommandReady;
-	Area.remove.command = CommandReady;
+	Area.remove.command = CommandUnavailable;
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	areaitem *over = MouseOver();
