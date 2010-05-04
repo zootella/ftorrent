@@ -93,15 +93,15 @@ BEGIN
     POPUP "Tools"
     BEGIN
         MENUITEM "(test)",                      ID_TOOLS_TEST
-        MENUITEM "&Open torrent...",            ID_TOOLS_OPEN
+        MENUITEM "Open &torrent...",            ID_TOOLS_OPEN
         MENUITEM "Add &magnet...",              ID_TOOLS_ADD
-        MENUITEM "Create &New torrent...",      ID_TOOLS_NEW
+        MENUITEM "&Create torrent...",          ID_TOOLS_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
         MENUITEM "&About ltorrent",             ID_TOOLS_ABOUT
         MENUITEM "&Help",                       ID_TOOLS_HELP
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_TOOLS_EXIT
+        MENUITEM "&Exit",                       ID_TOOLS_EXIT
     END
 END
 
