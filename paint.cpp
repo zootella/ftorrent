@@ -53,7 +53,12 @@ void PaintWindow(deviceitem *device) {
 	device->Font(Handle.font);
 	device->FontColor(Handle.ink.color);
 	device->BackgroundColor(Handle.background.color);
-	PaintText(device, State.status, Area.status, false, true, true, true);
+	s = Area.status;
+	s.h = 1;
+	PaintFill(device, s, Handle.line.brush);
+	s = Area.status;
+	s.ShiftTop(1);
+	PaintText(device, State.status, s, false, true, true, true);
 }
 
 // Takes a device context and an area item
@@ -118,6 +123,10 @@ void PaintArea(deviceitem *device, areaitem *a) {
 		} else if (a == &Area.corner) {
 
 			s = Area.corner.size;
+			s.h = 1;
+			PaintFill(device, s, Handle.line.brush);
+			s = Area.corner.size;
+			s.ShiftTop(1);
 			PaintFill(device, s);
 			s.CloseRight();
 			s.CloseBottom();

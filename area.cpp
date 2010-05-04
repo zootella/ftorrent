@@ -318,7 +318,7 @@ void Size(int move) {
 	int title  = 23; // Height of status title band at the top of the client area
 	int bar    = 4;
 	int tabs   = text + 12;
-	int status = text + 3;
+	int status = text + 4;
 
 	// Toolbar buttons
 	sizeitem button;
