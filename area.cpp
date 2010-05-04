@@ -123,9 +123,10 @@ void AreaPulse() {
 
 		} else if (a->command == CommandReady) {
 
-			if      (a == over && a == Area.pressed) display = DisplayPressed;
-			else if (a == over && !pressing)         display = DisplayHot;
-			else                                     display = DisplayReady;
+			if      (a == over && a == Area.pressed)              display = DisplayPressed;
+			else if (a == over &&                      !pressing) display = DisplayHot;
+			else if (a != over && a == Area.pressed &&  pressing) display = DisplayHot; // Hot when the mouse drags away
+			else                                                  display = DisplayReady;
 
 		} else if (a->command == CommandSet) {
 
