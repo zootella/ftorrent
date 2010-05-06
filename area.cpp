@@ -449,10 +449,13 @@ void Size(int move) {
 
 	// The first time this runs, assign the tooltip regions
 	if (!before.Is()) {
-		
-		TipAdd(Area.tools.size, Area.tools.tip);
-	}
 
+		TipAdd(Area.tools.size,  Area.tools.tip);
+		TipAdd(Area.start.size,  Area.start.tip);
+		TipAdd(Area.pause.size,  Area.pause.tip);
+		TipAdd(Area.stop.size,   Area.stop.tip);
+		TipAdd(Area.remove.size, Area.remove.tip);
+	}
 
 	// If the bar moved, paint the window
 	if (before.y && before.y != Area.bar.size.y) PaintMessage();
