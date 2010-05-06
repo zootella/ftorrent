@@ -24,10 +24,13 @@ void PaintWindow(deviceitem *device) {
 	sizeitem client = SizeClient();
 
 	// Title
+
+
+	/*
 	device->Font(Handle.arial); // Find out how big the sign text will be
 	device->FontColor(State.stage->ink.color);
 	device->BackgroundColor(State.stage->background.color);
-	sizeitem t = SizeText(device, State.stage->title);
+	sizeitem t = State.stage->size;
 	sizeitem s = client; // Fill to the left
 	s.w = client.w - t.w - 8;
 	s.h = Area.title.h;
@@ -41,6 +44,17 @@ void PaintWindow(deviceitem *device) {
 	s.h = 30;
 	PaintLabel(device, State.stage->title, s);
 	device->Font(Handle.font);
+
+	*/
+
+
+	int margin = 8;
+
+	sizeitem s = Area.title;
+
+
+
+
 
 	// Paint all the areas
 	areaitem *a = Area.all;

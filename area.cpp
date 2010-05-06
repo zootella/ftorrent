@@ -40,7 +40,7 @@ void AreaCreate() {
 	brushitem lightyellow = CreateBrush(RGB(255, 255, 102));
 
 	// Assemble stages
-	State.start.title = L"start";
+	State.start.title = PROGRAM_NAME;
 	State.start.icon16 = blue16;
 	State.start.icon32 = blue32;
 	State.start.ink = lightblue;
@@ -132,7 +132,7 @@ void AreaPulse() {
 
 	// Set button command states
 	Area.tools.command  = CommandMenu;
-	Area.start.command  = CommandReady; //TODO base this on what's selected, if anything
+	Area.start.command  = CommandReady; //TODO base these on what's selected, if anything
 	Area.pause.command  = CommandReady;
 	Area.stop.command   = CommandReady;
 	Area.remove.command = CommandUnavailable;
@@ -312,15 +312,6 @@ void AreaPulse() {
 			PaintText(&device, State.status, Area.status, false, true, true, true);
 		}
 	}
-
-	//TODO here is where you set the program stage, and then update parts of the display that need it
-	// application icon
-	// taskbar icon
-	// state bar
-
-
-
-
 }
 
 // Call this before launching a message box, popup menu, or dialog box that blocks and starts processing messages
@@ -415,6 +406,7 @@ void Size(int move) {
 	// Title
 	Area.title.w = client.w;
 	Area.title.h = title;
+	Area.title.SetLeft(Area.remove.size.Right());
 
 	// List
 	Area.list.y = Area.title.Bottom();

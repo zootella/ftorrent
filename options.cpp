@@ -507,7 +507,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 			// Paint the rectangles
 			PaintFill(&device, blue, State.start.background.brush);
 			PaintText(&device, about, title, false, false, false, false, 0, Handle.arial, &State.start.ink, &State.start.background);
-			PaintFill(&device, white, State.start.background.brush);
+			PaintFill(&device, white, Handle.background.brush);
 
 			// Set heights
 			int text = Area.height; // Text height is usually 13
