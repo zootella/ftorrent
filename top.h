@@ -39,7 +39,7 @@ public:
 
 	// Sizes in the client area
 	sizeitem list, tabs, info; // Child window control sizes
-	sizeitem title, status; // Sizes in the client area used when painting
+	sizeitem stage, status; // Sizes in the client area used when painting
 
 	// Sizing positions
 	sizeitem collapse; // Where the corner area would be if the window were very small

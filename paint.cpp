@@ -23,38 +23,30 @@ void PaintWindow(deviceitem *device) {
 	// Get the size of the client area
 	sizeitem client = SizeClient();
 
-	// Title
+	// Define sizes
+	int margin = 8; // Margin to the left or right of stage text
+	int above = -7; // Draw the stage text this many pixels above the client area
 
+	// Paint the area between the toolbar buttons and the stage text
+	sizeitem s1 = Area.stage;
+	s1.w = Area.stage.w - State.stage->size.w - margin;
+	if (s1.w < margin) s1.w = margin; // Narrow window, pin to left instead of right
+	PaintFill(device, s1, State.stage->background.brush);
 
-	/*
-	device->Font(Handle.arial); // Find out how big the sign text will be
+	// Paint the stage text
+	sizeitem s2 = State.stage->size; // Start with text width and height
+	s2.x = s1.Right();
+	s2.y = above;
+	s2.SetBottom(Area.stage.Bottom()); // Don't paint down into the list view control
+	device->Font(Handle.arial);
 	device->FontColor(State.stage->ink.color);
 	device->BackgroundColor(State.stage->background.color);
-	sizeitem t = State.stage->size;
-	sizeitem s = client; // Fill to the left
-	s.w = client.w - t.w - 8;
-	s.h = Area.title.h;
-	PaintFill(device, s, State.stage->background.brush);
-	s.x = client.w - 8; // Fill to the right
-	s.w = 8;
-	PaintFill(device, s, State.stage->background.brush);
-	s.x = client.w - t.w - 8; // Paint the text
-	s.y = -7;
-	s.w = t.w;
-	s.h = 30;
-	PaintLabel(device, State.stage->title, s);
-	device->Font(Handle.font);
+	PaintLabel(device, State.stage->title, s2);
 
-	*/
-
-
-	int margin = 8;
-
-	sizeitem s = Area.title;
-
-
-
-
+	// Paint the area to the right of the stage text
+	sizeitem s3 = Area.stage;
+	s3.SetLeft(s2.Right());
+	PaintFill(device, s3, State.stage->background.brush);
 
 	// Paint all the areas
 	areaitem *a = Area.all;
@@ -67,7 +59,7 @@ void PaintWindow(deviceitem *device) {
 	device->Font(Handle.font);
 	device->FontColor(Handle.ink.color);
 	device->BackgroundColor(Handle.background.color);
-	s = Area.status;
+	sizeitem s = Area.status;
 	s.h = 1;
 	PaintFill(device, s, Handle.line.brush);
 	s = Area.status;

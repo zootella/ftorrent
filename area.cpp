@@ -403,13 +403,14 @@ void Size(int move) {
 	Area.bar.size.w = client.w;
 	Area.bar.size.h = bar;
 
-	// Title
-	Area.title.w = client.w;
-	Area.title.h = title;
-	Area.title.SetLeft(Area.remove.size.Right());
+	// Stage
+	Area.stage.x = Area.remove.size.Right();
+	Area.stage.w = client.w - Area.remove.size.Right();
+	if (Area.stage.w < 0) Area.stage.w = 0;
+	Area.stage.h = title;
 
 	// List
-	Area.list.y = Area.title.Bottom();
+	Area.list.y = Area.stage.Bottom();
 	Area.list.w = client.w;
 	Area.list.SetBottom(Area.bar.size.y);
 	Area.list.Check(); // If the height is negative, make it 0
