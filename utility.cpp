@@ -497,6 +497,24 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 	return choice;
 }
 
+// Takes the size in the client area where the tool will be shown, and the text to show
+// Assigns the tooltip window to this area and sets its text
+void TipAdd(sizeitem size, read r) {
+
+	// Attach the tooltip to a rectangle in the main window
+	TOOLINFO info;
+	ZeroMemory(&info, sizeof(info));
+	info.cbSize      = sizeof(info);     // Size of this structure
+	info.uFlags      = TTF_SUBCLASS;     // Have the tooltip control get messages from the tool window
+	info.hwnd        = Handle.window;    // Handle to the window that contains the tool region
+	info.uId         = 0;                // Tool identifying number
+	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
+	info.hinst       = NULL;             // Only used when text is loaded from a resource
+	info.lpszText    = (LPWSTR)r;        // Text
+	info.lParam      = 0;                // No additional value assigned to tool
+	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) Report(L"sendmessage ttm_addtool");
+}
+
 // Have window capture the mouse if it doesn't have it already, null to use the main window
 void MouseCapture(HWND window) {
 

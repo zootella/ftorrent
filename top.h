@@ -7,8 +7,7 @@ public:
 	HINSTANCE instance;
 
 	// Windows
-	HWND window; // Main window
-	HWND list, tabs, edit; // Child window controls
+	HWND window, list, tabs, edit, tip;
 
 	// Menus
 	HMENU tray, menu; // Menus

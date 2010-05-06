@@ -447,6 +447,13 @@ void Size(int move) {
 	WindowMove(Handle.tabs, Area.tabs);
 	WindowMove(Handle.edit, Area.info);
 
+	// The first time this runs, assign the tooltip regions
+	if (!before.Is()) {
+		
+		TipAdd(Area.tools.size, Area.tools.tip);
+	}
+
+
 	// If the bar moved, paint the window
 	if (before.y && before.y != Area.bar.size.y) PaintMessage();
 }

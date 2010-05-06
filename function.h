@@ -62,6 +62,7 @@ HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
 UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size);
+void TipAdd(sizeitem size, read r);
 void MouseCapture(HWND window = NULL); // Has defaults
 void MouseRelease(HWND window = NULL); // Has defaults
 bool MouseInside();

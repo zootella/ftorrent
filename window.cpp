@@ -110,6 +110,22 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.edit = WindowCreateEdit(true,  true);
 	WindowEdit(Handle.edit, true);
 
+	// Create the tooltip window
+	style =
+		WS_POPUP |     // Popup window instead of a child window
+		TTS_ALWAYSTIP; // Show the tooltip even if the window is inactive
+	Handle.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, Handle.window, NULL);
+
+	// Make the tooltip topmost
+	int result = SetWindowPos(
+		Handle.tip,      // Handle to window
+		HWND_TOPMOST,    // Place the window above others without this setting
+		0, 0, 0, 0,      // Retain the current position and size
+		SWP_NOMOVE |
+		SWP_NOSIZE |
+		SWP_NOACTIVATE); // Do not activate the window
+	if (!result) Report(L"setwindowpos");
+
 	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();
 	AreaPulse(); // Choose the program stage and set the display state of each area
