@@ -112,7 +112,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();
-	AreaPulse(); // Set the display state of each area
+	AreaPulse(); // Choose the program stage and set the display state of each area
 
 	// Lower the window
 	sizeitem size = SizeWindow(Handle.window);

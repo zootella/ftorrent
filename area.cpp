@@ -112,13 +112,23 @@ void AreaCreate() {
 	// Size controls
 	Area.bar.command    = CommandSizeVertical;
 	Area.corner.command = CommandSizeDiagonal;
-
-	//TODO not here
-	State.title = L"ltorrent";
 }
 
 // Update the appearance of area items and issue commands that occur
 void AreaPulse() {
+
+	// Determine what the program stage should be right now
+	stageitem *stage = &State.start; //TODO replace this with code that actually chooses what it should be
+
+	// Update the display of the stage if necessary
+	if (!State.stage || State.stage != stage) {
+		State.stage = stage; // Save the new stage
+
+		// Update the display
+		SetIcon(Handle.window, State.stage->icon16, State.stage->icon32); // Window icon
+		TaskbarIconUpdate(); // Taskbar notification area icon
+		PaintMessage(); // Repaint the window now to show the new stage title
+	}
 
 	// Set button command states
 	Area.tools.command  = CommandMenu;

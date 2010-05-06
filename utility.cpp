@@ -961,3 +961,14 @@ void AddTab(HWND window, int index, read title) {
 	item.lParam      = 0;             // No extra information
 	SendMessage(window, TCM_INSERTITEM, index, (LPARAM)&item);
 }
+
+// Change window to show the given small and large icons
+void SetIcon(HWND window, HICON icon16, HICON icon32) {
+
+	// Send two messages
+	SendMessage(window, WM_SETICON, ICON_SMALL, (LPARAM)icon16);
+	SendMessage(window, WM_SETICON, ICON_BIG,   (LPARAM)icon32);
+}
+
+
+
