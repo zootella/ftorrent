@@ -10,7 +10,7 @@ public:
 	HWND window, list, tabs, edit, tip;
 
 	// Menus
-	HMENU tray, menu; // Menus
+	HMENU tray, menu;
 
 	// Mouse pointers
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;
@@ -18,13 +18,31 @@ public:
 	// Fonts
 	HFONT font, underline, arial;
 
-	// Icons
-	HICON clear;
-	HICON ascending, descending; // List column icons
-
 	// Colors
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
+};
+
+// Icon
+class icontop {
+public:
+
+	// Image list
+	HIMAGELIST list;                  // Handle the the program image list
+	int        source[ICON_CAPACITY]; // Labels the source system index of each icon in the program list
+	int        count;                 // The number of icons loaded into the program list
+
+	// Resource icons in the program image list
+	int clear, ascending, descending;
+	//TODO add status icons here
+
+	// Shell icons in the program image list
+	int file; // The icon a file with no extension gets in the shell
+
+	// The most recently requested extension and its matching program index and type text
+	string ext;
+	int    index;
+	string type;
 };
 
 // Areas and sizes in the main window client area

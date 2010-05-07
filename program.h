@@ -21,6 +21,9 @@
 #define PULSE 100
 #define TIMER_PULSE 1
 
+// Image list
+#define ICON_CAPACITY 128 // The program image list can hold 128 icons
+
 // Messages
 #define MESSAGE_TASKBAR (WM_APP + 1)
 

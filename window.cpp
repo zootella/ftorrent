@@ -12,6 +12,7 @@
 
 // Global objects
 handletop Handle; // Window handles
+icontop   Icon;   // Image list
 areatop   Area;   // Button and drag areas
 datatop   Data;   // Linked data items
 statetop  State;  // State variables
@@ -24,6 +25,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Tell the system we're going to use the list and tree view controls
 	InitializeCommonControls();
+
+	// Set up the program image list
+	StartIcon();
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
@@ -82,13 +86,40 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Create the list view window
 	DWORD style =
-		WS_CHILD |             // Required for child windows
-		LVS_REPORT |           // Specifies report view, I think this puts it in details
-		LBS_EXTENDEDSEL |      // Allows multiple items to be selected
-		LVS_SHOWSELALWAYS |    // Shows the selection even when the control doesn't have the focus
+		WS_CHILD             | // Required for child windows
+		LVS_REPORT           | // Specifies report view, I think this puts it in details
+		LBS_EXTENDEDSEL      | // Allows multiple items to be selected
+		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
 		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
 		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
 	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, Handle.window, (HMENU)WINDOW_LIST);
+
+	// Use the program image list
+	ListView_SetImageList(Handle.list, Draw.icon.list, LVSIL_SMALL);
+
+	// Load extended list view styles, requires common control 4.70
+	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
+		LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
+		LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
+	ListView_SetExtendedListViewStyle(Handle.list, style);
+
+	// Determine how wide the columns should be
+	int width1, width2, width3, width4, width5, width6;
+	SizeColumns(&width1, &width2, &width3, &width4, &width5, &width6);
+
+	// Add the first column, which won't be able to show its icon on the right
+	ListColumnInsert(0, LVCFMT_LEFT, Draw.icon.clear, "", 0);
+
+	// Add the columns
+	ListColumnInsert(1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Status",   width1);
+	ListColumnInsert(2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Name",     width2);
+	ListColumnInsert(3, LVCFMT_RIGHT,                         Draw.icon.clear, "Size",     width3);
+	ListColumnInsert(4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Type",     width4);
+	ListColumnInsert(5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Address",  width5);
+	ListColumnInsert(6, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Saved To", width6);
+
+	// Remove the first column so all the remaining columns can show their icons on the right
+	ListColumnDelete(0);
 
 	// Create the tabs window
 	style = WS_CHILD;        // Required for child windows

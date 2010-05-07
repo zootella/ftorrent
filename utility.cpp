@@ -12,6 +12,7 @@
 
 // Access to global objects
 extern handletop Handle;
+extern icontop   Icon;
 extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
@@ -990,3 +991,104 @@ void SetIcon(HWND window, HICON icon16, HICON icon32) {
 
 
 
+
+
+
+
+
+
+
+// Takes a file extension like ".zip" which can be blank
+// Gets shell information about the extension and its index in the program image list
+// Returns the program image list icon index and writes the type text, covering an error with the file icon and composed text
+int Icon(read ext, string *type) {
+
+	int icon = IconGet(ext, type);    // If the program list is full, icon will be -1 and type will be system or composed text
+	if (icon == -1) icon = Icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
+	return icon;
+}
+
+// Takes a file extension like ".zip" which can be blank
+// Gets shell information about the extension and its index in the program image list
+// Returns the program image list icon index and writes the type text, or -1 and blanks if any error
+int IconGet(read ext, string *type) {
+
+	// If the requested extension is the last one loaded, fill the request quickly
+	if (same(ext, Icon.ext, Matching)) {
+
+		*type = Icon.type;
+		return Icon.index;
+	}
+
+	// Get the system index and type text for the extension
+	int systemindex;
+	string typetext;
+	if (!ShellInfo(ext, &systemindex, &typetext)) { *type = L""; return -1; }
+
+	// Find the system index in the program image list or make program index -1
+	int programindex;
+	for (programindex = Draw.icon.count - 1; programindex >= 0; programindex--) {
+
+		if (Draw.icon.source[programindex] == systemindex) break;
+	}
+
+	// None of the icons in the program image list have the extension's system index
+    if (programindex == -1) {
+
+		// Get the icon for the extension, add it to the list, and destroy it
+		HICON icon;
+		if (!ShellIcon(ext, &icon)) { *type = L""; return -1; }
+		programindex = IconAdd(icon, systemindex);
+		DestroyIconSafely(icon);
+	}
+
+	// Copy or compose the type text, windows 9x returns blank for unknown extensions
+	if      (is(typetext)) *type = typetext;
+	else if (is(ext))      *type = upper(off(ext, L".")) + L" File";
+	else                   *type = L"File";
+
+	// Keep the information to answer the same question without calling the system
+	Draw.icon.ext   = ext;
+	Draw.icon.type  = *type;
+	Draw.icon.index = programindex;
+
+	// Return the index of the icon in the program image list
+	return programindex;
+}
+
+// Takes the text resource name of an icon, like "ICON_NAME"
+// Loads the icon into the program image list
+// Returns the index of the icon in the program image list, or -1 if any error
+int IconAddResource(read resource) {
+
+	// Load the icon from the resource
+	HICON icon = (HICON)LoadImage(
+		Handle.instance,  // Handle to instance
+		resource,         // Resource name text
+		IMAGE_ICON,       // This resource is an icon
+		16, 16            // Size
+		LR_DEFAULTCOLOR); // No special options
+	if (!icon) { Report(L"loadimage"); return -1; }
+
+	int programindex = IconAdd(icon, -1); // Insert the icon into the program image list
+	DestroyIconSafely(icon);              // Destroy the icon
+	return programindex;                  // Return the index of the icon in the program image list, or -1 if it could not be added
+}
+
+// Takes an icon and its index in the system image list, or -1 to add it with that marker
+// Adds the icon to the program image list if there is room
+// Returns the index of the icon in the program image list, or -1 if any error
+int IconAdd(HICON icon, int systemindex) {
+
+	// Make sure the program image list isn't full
+	if (Draw.icon.count >= ICONCAPACITY) return -1;
+
+	// Add the icon to the end of the program image list
+	int programindex = ImageList_ReplaceIcon(Draw.icon.list, -1, icon);
+	if (programindex == -1) { Report(L"imagelist_replaceicon"); return -1; }
+
+	// Write the index in the array, up the count, and return the program index of the added icon
+	Draw.icon.source[Draw.icon.count] = systemindex;
+	Draw.icon.count++;
+	return programindex;
+}
