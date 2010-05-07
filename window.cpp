@@ -100,11 +100,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		0);                  // Don't tell the control to immediately redraw itself
 
 	// Add the tabs
-	AddTab(Handle.tabs, 0, L"General");
+	AddTab(Handle.tabs, 0, L"Torrent");
 	AddTab(Handle.tabs, 1, L"Trackers");
 	AddTab(Handle.tabs, 2, L"Peers");
 	AddTab(Handle.tabs, 3, L"Pieces");
 	AddTab(Handle.tabs, 4, L"Files");
+	AddTab(Handle.tabs, 5, L"Speed");
+	AddTab(Handle.tabs, 6, L"Log");
 
 	// Make child windows and menus
 	Handle.edit = WindowCreateEdit(true,  true);
