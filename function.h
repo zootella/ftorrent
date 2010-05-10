@@ -92,6 +92,31 @@ int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Ha
 BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void AddTab(HWND window, int index, read title);
 void SetIcon(HWND window, HICON icon16, HICON icon32);
+int IconFile(read ext, string *type);
+int IconGet(read ext, string *type);
+int IconAddResource(read resource);
+int IconAdd(HICON icon, int systemindex);
+void ColumnIcon(HWND window, int column, int icon);
+void ColumnSelect(HWND window, int column);
+void ListColumnInsert(HWND window, int column, int format, int image, read r, int width);
+void ListColumnDelete(HWND window, int column);
+LPARAM ListGet(HWND window, int row);
+LPARAM ListMark(HWND window);
+LPARAM ListMouse(HWND window);
+sizeitem ListCell(HWND window, int row, int column);
+int ListRows(HWND window);
+int ListSelectedRows(HWND window);
+bool ListSelected(HWND window, int row);
+void ListSelectAll(HWND window);
+void ListScroll(HWND window);
+void ListRemove(HWND window, int row);
+void ListRemoveAll(HWND window);
+void ListAddStart(HWND window, int rows);
+void ListAddDone(HWND window, int rows);
+void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+int ListFind(HWND window, LPARAM p);
+string ListText(HWND window, int row, int column);
 
 // Paint
 void PaintWindow(deviceitem *device);
