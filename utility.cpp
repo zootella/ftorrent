@@ -12,7 +12,6 @@
 
 // Access to global objects
 extern handletop Handle;
-extern icontop   Icon;
 extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
@@ -992,10 +991,10 @@ void SetIcon(HWND window, HICON icon16, HICON icon32) {
 // Takes a file extension like ".zip" which can be blank
 // Gets shell information about the extension and its index in the program image list
 // Returns the program image list icon index and writes the type text, covering an error with the file icon and composed text
-int IconFile(read ext, string *type) {
+int Icon(read ext, string *type) {
 
-	int icon = IconGet(ext, type);    // If the program list is full, icon will be -1 and type will be system or composed text
-	if (icon == -1) icon = Icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
+	int icon = IconGet(ext, type);           // If the program list is full, icon will be -1 and type will be system or composed text
+	if (icon == -1) icon = Handle.icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
 	return icon;
 }
 
@@ -1005,10 +1004,10 @@ int IconFile(read ext, string *type) {
 int IconGet(read ext, string *type) {
 
 	// If the requested extension is the last one loaded, fill the request quickly
-	if (same(ext, Icon.ext, Matching)) {
+	if (same(ext, Handle.icon.ext, Matching)) {
 
-		*type = Icon.type;
-		return Icon.index;
+		*type = Handle.icon.type;
+		return Handle.icon.index;
 	}
 
 	// Get the system index and type text for the extension
@@ -1018,9 +1017,9 @@ int IconGet(read ext, string *type) {
 
 	// Find the system index in the program image list or make program index -1
 	int programindex;
-	for (programindex = Icon.count - 1; programindex >= 0; programindex--) {
+	for (programindex = Handle.icon.count - 1; programindex >= 0; programindex--) {
 
-		if (Icon.source[programindex] == systemindex) break;
+		if (Handle.icon.source[programindex] == systemindex) break;
 	}
 
 	// None of the icons in the program image list have the extension's system index
@@ -1039,9 +1038,9 @@ int IconGet(read ext, string *type) {
 	else                   *type = L"File";
 
 	// Keep the information to answer the same question without calling the system
-	Icon.ext   = ext;
-	Icon.type  = *type;
-	Icon.index = programindex;
+	Handle.icon.ext   = ext;
+	Handle.icon.type  = *type;
+	Handle.icon.index = programindex;
 
 	// Return the index of the icon in the program image list
 	return programindex;
@@ -1057,7 +1056,7 @@ int IconAddResource(read resource) {
 		Handle.instance,  // Handle to instance
 		resource,         // Resource name text
 		IMAGE_ICON,       // This resource is an icon
-		16, 16            // Size
+		16, 16,           // Size
 		LR_DEFAULTCOLOR); // No special options
 	if (!icon) { Report(L"loadimage"); return -1; }
 
@@ -1072,15 +1071,15 @@ int IconAddResource(read resource) {
 int IconAdd(HICON icon, int systemindex) {
 
 	// Make sure the program image list isn't full
-	if (Icon.count >= ICONCAPACITY) return -1;
+	if (Handle.icon.count >= ICON_CAPACITY) return -1;
 
 	// Add the icon to the end of the program image list
-	int programindex = ImageList_ReplaceIcon(Icon.list, -1, icon);
+	int programindex = ImageList_ReplaceIcon(Handle.icon.list, -1, icon);
 	if (programindex == -1) { Report(L"imagelist_replaceicon"); return -1; }
 
 	// Write the index in the array, up the count, and return the program index of the added icon
-	Icon.source[Icon.count] = systemindex;
-	Icon.count++;
+	Handle.icon.source[Handle.icon.count] = systemindex;
+	Handle.icon.count++;
 	return programindex;
 }
 
@@ -1390,7 +1389,6 @@ int ListFind(HWND window, LPARAM p) {
 	row = ListView_FindItem(window, -1, &info); // -1 to start from the beginning
 	if (row == -1) Report(L"listview_finditem");
 
-	
 	// Return the row number
 	return row;
 }
@@ -1400,6 +1398,9 @@ int ListFind(HWND window, LPARAM p) {
 // Returns the text
 string ListText(HWND window, int row, int column) {
 
+	return L"";
+	//TODO check this in unicode before you use it
+	/*
 	// Make the buffer hold one more character than the longest text in the list view control to correctly read very long text
 	int characters = State.list.max + 1;
 
@@ -1425,5 +1426,80 @@ string ListText(HWND window, int row, int column) {
 
 	// Return the string
 	return buffer_string;
+	*/
 }
 
+// Takes a file extension like ".zip" which can be blank
+// Gets the index of its icon in the system image list and the shell type text
+// Returns true if successful and writes the system index and type, or false and -1 and blank
+bool ShellInfo(read ext, int *systemindex, string *type) {
+
+	// Use the extension to get the system image list index and type text, Windows 9x returns blank for unknown extensions
+	SHFILEINFO info;
+	ZeroMemory(&info, sizeof(info));
+	info.hIcon = NULL; // Start out with the icon handle null and index invalid
+	info.iIcon = -1;
+	HIMAGELIST systemlist = (HIMAGELIST)SHGetFileInfo(
+		ext,                      // File name
+		FILE_ATTRIBUTE_NORMAL,    // File attributes for fictional file
+		&info,                    // Put information here
+		sizeof(info),
+		SHGFI_USEFILEATTRIBUTES | // Use the file name and attributes as a fictional file
+		SHGFI_SMALLICON |         // Use the list of small icons and return the handle to the small icon system image list
+		SHGFI_SYSICONINDEX |      // Get the icon index in the system image list
+		SHGFI_TYPENAME);          // Get the file type text
+	if (info.hIcon) Report(L"shgetfileinfo returned an icon when it should not have");
+	if (!systemlist || info.iIcon < 0) {
+
+		// Report error
+		Report(L"shgetfileinfo had an error or returned an invalid index");
+		*systemindex = -1;
+		*type = L"";
+		return false;
+	}
+
+	// Write information and report success
+	*systemindex = info.iIcon;
+	*type = info.szTypeName;
+	return true;
+}
+
+// Takes a file extension like ".zip" which can be blank
+// Gets the small icon for the file from the system image list
+// Returns true if successful and writes the icon handle, or false and null
+bool ShellIcon(read ext, HICON *icon) {
+
+	// Use the extension to get the icon
+	SHFILEINFO info;
+	ZeroMemory(&info, sizeof(info));
+	info.hIcon = NULL; // Start out with the icon handle null and index invalid
+	info.iIcon = -1;
+	int result = (int)SHGetFileInfo(
+		ext,                      // File name
+		FILE_ATTRIBUTE_NORMAL,    // File attributes for fictional file
+		&info,                    // Put information here
+		sizeof(info),
+		SHGFI_USEFILEATTRIBUTES | // Use the file name and attirbutes as a fictional file
+		SHGFI_SMALLICON |         // Use the list of small icons and return the handle to the small icon system image list
+		SHGFI_ICON);              // Get the icon itself and its index from the system image list
+	if (!result || !info.hIcon || info.iIcon < 0) {
+
+		// Report error and destroy any created icon
+		Report(L"shgetfileinfo had an error, returned no icon, or returned an invalid index");
+		DestroyIconSafely(info.hIcon);
+		*icon = NULL;
+		return false;
+	}
+
+	// Write information and report success
+	*icon = info.hIcon;
+	return true;
+}
+
+// Takes a handle to an icon, or null
+// Destroys the icon
+void DestroyIconSafely(HICON icon) {
+
+	// If the icon exists, destroy it
+	if (icon && !DestroyIcon(icon)) Report(L"destroyicon");
+}

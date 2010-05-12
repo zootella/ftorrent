@@ -92,7 +92,7 @@ int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Ha
 BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void AddTab(HWND window, int index, read title);
 void SetIcon(HWND window, HICON icon16, HICON icon32);
-int IconFile(read ext, string *type);
+int Icon(read ext, string *type);
 int IconGet(read ext, string *type);
 int IconAddResource(read resource);
 int IconAdd(HICON icon, int systemindex);
@@ -117,6 +117,10 @@ void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, 
 void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
 int ListFind(HWND window, LPARAM p);
 string ListText(HWND window, int row, int column);
+bool ShellInfo(read ext, int *systemindex, string *type);
+bool ShellIcon(read ext, HICON *icon);
+void DestroyIconSafely(HICON icon);
+string TextGuid();
 
 // Paint
 void PaintWindow(deviceitem *device);

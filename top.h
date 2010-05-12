@@ -1,29 +1,5 @@
 
-// Handles
-class handletop {
-public:
-
-	// Program instance handle
-	HINSTANCE instance;
-
-	// Windows
-	HWND window, list, tabs, edit, tip;
-
-	// Menus
-	HMENU tray, menu;
-
-	// Mouse pointers
-	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-
-	// Fonts
-	HFONT font, underline, arial;
-
-	// Colors
-	brushitem face, shadow, background, ink, select; // Shell brushes
-	brushitem line; // Mixed color brush
-};
-
-// Icon
+// Program icon image list
 class icontop {
 public:
 
@@ -43,6 +19,53 @@ public:
 	string ext;
 	int    index;
 	string type;
+
+	// New
+	icontop() {
+
+		list = NULL;
+		count = 0;
+		clear = ascending = descending = -1; // Icon index -1 for not in list
+		file = -1;
+		index = -1;
+	}
+};
+
+// Window and drawing resource handles
+class handletop {
+public:
+
+	// Inside
+	icontop icon;
+
+	// Program instance handle
+	HINSTANCE instance;
+
+	// Windows
+	HWND window, list, tabs, edit, tip;
+
+	// Menus
+	HMENU tray, menu;
+
+	// Mouse pointers
+	HCURSOR arrow, hand, horizontal, vertical, diagonal;
+
+	// Fonts
+	HFONT font, underline, arial;
+
+	// Colors
+	brushitem face, shadow, background, ink, select; // Shell brushes
+	brushitem line; // Mixed color brush
+
+	// New
+	handletop() {
+
+		instance = NULL;
+		window = list = tabs = edit = tip = NULL;
+		tray = menu = NULL;
+		arrow = hand = horizontal = vertical = diagonal = NULL;
+		font = underline = arial = NULL;
+	}
 };
 
 // Areas and sizes in the main window client area
@@ -68,8 +91,7 @@ public:
 	// New
 	areatop() {
 
-		// Link area items into a list
-		all         = &tools;
+		all         = &tools; // Link area items into a list
 		tools.next  = &start;
 		start.next  = &pause;
 		pause.next  = &stop;
@@ -77,6 +99,8 @@ public:
 		remove.next = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;
+
+		height = 0; // Not yet known
 	}
 };
 
@@ -84,23 +108,6 @@ public:
 class datatop {
 public:
 
-};
-
-
-// STATE LIST
-struct statelisttop {
-
-	int max;       // THE LARGEST NUMBER OF CHARACTERS ADDED INTO ANY LIST VIEW ITEM OR SUBITEM
-	int sort;      // -1 NO SORT, OR 0+ COLUMN SORTED
-	int direction; // 1 ASCENDING OR -1 DESCENDING
-
-	// NEW
-	statelisttop() {
-
-		max = 0;
-		sort = -1;
-		direction = 1;
-	}
 };
 
 // Current program stage
@@ -112,12 +119,36 @@ public:
 	sizeitem size; // How big the text will be painted in the title font
 	HICON icon16, icon32;
 	brushitem ink, background;
+
+	// New
+	stageitem() {
+
+		icon16 = icon32 = NULL;
+	}
 };
+
+// List view control state
+struct listtop {
+
+	int max;       // The largest number of characters added into any list view item or subitem
+	int sort;      // -1 no sort, OR 0+ column sorted
+	int direction; // 1 ascending or -1 descending
+
+	// New
+	listtop() {
+
+		max = 0;
+		sort = -1;
+		direction = 1;
+	}
+};
+
+// Current program state
 class statetop {
 public:
 
-	// Subobjects
-	statelisttop list;
+	// Contains
+	listtop list;
 
 	// Window
 	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
@@ -132,5 +163,10 @@ public:
 	stageitem *stage; // Current program stage shown on the screen
 	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
 
-	int longest; // The number of characters not including null terminator of the longst text in any list view cell or other control
+	statetop() {
+
+		taskbar = NULL;
+		pop = 0;
+		stage = &start;
+	}
 };
