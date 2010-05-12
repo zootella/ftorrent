@@ -35,11 +35,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.menu = MenuClip(menus, 1);
 	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
 
-	// Load icons
-	Handle.clear      = LoadIconResource(L"CLEAR_ICON",        16, 16);
-	Handle.ascending  = LoadIconResource(L"COLUMN_ASCENDING",  16, 16);
-	Handle.descending = LoadIconResource(L"COLUMN_DESCENDING", 16, 16);
-
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
 	Handle.hand       = LoadSharedCursor(IDC_HAND);
@@ -95,7 +90,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, Handle.window, (HMENU)WINDOW_LIST);
 
 	// Use the program image list
-	ListView_SetImageList(Handle.list, Draw.icon.list, LVSIL_SMALL);
+	ListView_SetImageList(Handle.list, Icon.list, LVSIL_SMALL);
 
 	// Load extended list view styles, requires common control 4.70
 	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
@@ -108,18 +103,18 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	SizeColumns(&width1, &width2, &width3, &width4, &width5, &width6);
 
 	// Add the first column, which won't be able to show its icon on the right
-	ListColumnInsert(0, LVCFMT_LEFT, Draw.icon.clear, "", 0);
+	ListColumnInsert(Handle.list, 0, LVCFMT_LEFT, Icon.clear, L"", 0);
 
 	// Add the columns
-	ListColumnInsert(1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Status",   width1);
-	ListColumnInsert(2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Name",     width2);
-	ListColumnInsert(3, LVCFMT_RIGHT,                         Draw.icon.clear, "Size",     width3);
-	ListColumnInsert(4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Type",     width4);
-	ListColumnInsert(5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Address",  width5);
-	ListColumnInsert(6, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Draw.icon.clear, "Saved To", width6);
+	ListColumnInsert(Handle.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Icon.clear, L"Status",   width1);
+	ListColumnInsert(Handle.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Icon.clear, L"Name",     width2);
+	ListColumnInsert(Handle.list, 3, LVCFMT_RIGHT,                         Icon.clear, L"Size",     width3);
+	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Icon.clear, L"Type",     width4);
+	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Icon.clear, L"Address",  width5);
+	ListColumnInsert(Handle.list, 6, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Icon.clear, L"Saved To", width6);
 
 	// Remove the first column so all the remaining columns can show their icons on the right
-	ListColumnDelete(0);
+	ListColumnDelete(Handle.list, 0);
 
 	// Create the tabs window
 	style = WS_CHILD;        // Required for child windows

@@ -1018,9 +1018,9 @@ int IconGet(read ext, string *type) {
 
 	// Find the system index in the program image list or make program index -1
 	int programindex;
-	for (programindex = Draw.icon.count - 1; programindex >= 0; programindex--) {
+	for (programindex = Icon.count - 1; programindex >= 0; programindex--) {
 
-		if (Draw.icon.source[programindex] == systemindex) break;
+		if (Icon.source[programindex] == systemindex) break;
 	}
 
 	// None of the icons in the program image list have the extension's system index
@@ -1039,9 +1039,9 @@ int IconGet(read ext, string *type) {
 	else                   *type = L"File";
 
 	// Keep the information to answer the same question without calling the system
-	Draw.icon.ext   = ext;
-	Draw.icon.type  = *type;
-	Draw.icon.index = programindex;
+	Icon.ext   = ext;
+	Icon.type  = *type;
+	Icon.index = programindex;
 
 	// Return the index of the icon in the program image list
 	return programindex;
@@ -1072,15 +1072,15 @@ int IconAddResource(read resource) {
 int IconAdd(HICON icon, int systemindex) {
 
 	// Make sure the program image list isn't full
-	if (Draw.icon.count >= ICONCAPACITY) return -1;
+	if (Icon.count >= ICONCAPACITY) return -1;
 
 	// Add the icon to the end of the program image list
-	int programindex = ImageList_ReplaceIcon(Draw.icon.list, -1, icon);
+	int programindex = ImageList_ReplaceIcon(Icon.list, -1, icon);
 	if (programindex == -1) { Report(L"imagelist_replaceicon"); return -1; }
 
 	// Write the index in the array, up the count, and return the program index of the added icon
-	Draw.icon.source[Draw.icon.count] = systemindex;
-	Draw.icon.count++;
+	Icon.source[Icon.count] = systemindex;
+	Icon.count++;
 	return programindex;
 }
 
@@ -1333,7 +1333,7 @@ void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2,
 	State.list.max = Greatest(State.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
 
 	// Find the row that has the given parameter
-	int row = ListFind(p, window);
+	int row = ListFind(window, p);
 
 	// Row and column position
 	LVITEM column1, column2, column3, column4, column5, column6;
@@ -1368,12 +1368,12 @@ void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2,
 	column2.iImage = icon2;
 
 	// Set the columns that have different text
-	if (columns >= 1 && !same(ListText(row, 0, window), r1) && !ListView_SetItem(window, &column1)) Report(L"listview_setitem");
-	if (columns >= 2 && !same(ListText(row, 1, window), r2) && !ListView_SetItem(window, &column2)) Report(L"listview_setitem");
-	if (columns >= 3 && !same(ListText(row, 2, window), r3) && !ListView_SetItem(window, &column3)) Report(L"listview_setitem");
-	if (columns >= 4 && !same(ListText(row, 3, window), r4) && !ListView_SetItem(window, &column4)) Report(L"listview_setitem");
-	if (columns >= 5 && !same(ListText(row, 4, window), r5) && !ListView_SetItem(window, &column5)) Report(L"listview_setitem");
-	if (columns >= 6 && !same(ListText(row, 5, window), r6) && !ListView_SetItem(window, &column6)) Report(L"listview_setitem");
+	if (columns >= 1 && !same(ListText(window, row, 0), r1) && !ListView_SetItem(window, &column1)) Report(L"listview_setitem");
+	if (columns >= 2 && !same(ListText(window, row, 1), r2) && !ListView_SetItem(window, &column2)) Report(L"listview_setitem");
+	if (columns >= 3 && !same(ListText(window, row, 2), r3) && !ListView_SetItem(window, &column3)) Report(L"listview_setitem");
+	if (columns >= 4 && !same(ListText(window, row, 3), r4) && !ListView_SetItem(window, &column4)) Report(L"listview_setitem");
+	if (columns >= 5 && !same(ListText(window, row, 4), r5) && !ListView_SetItem(window, &column5)) Report(L"listview_setitem");
+	if (columns >= 6 && !same(ListText(window, row, 5), r6) && !ListView_SetItem(window, &column6)) Report(L"listview_setitem");
 }
 
 // Takes a parameter

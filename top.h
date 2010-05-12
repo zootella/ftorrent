@@ -86,6 +86,23 @@ public:
 
 };
 
+
+// STATE LIST
+struct statelisttop {
+
+	int max;       // THE LARGEST NUMBER OF CHARACTERS ADDED INTO ANY LIST VIEW ITEM OR SUBITEM
+	int sort;      // -1 NO SORT, OR 0+ COLUMN SORTED
+	int direction; // 1 ASCENDING OR -1 DESCENDING
+
+	// NEW
+	statelisttop() {
+
+		max = 0;
+		sort = -1;
+		direction = 1;
+	}
+};
+
 // Current program stage
 class stageitem {
 public:
@@ -99,6 +116,9 @@ public:
 class statetop {
 public:
 
+	// Subobjects
+	statelisttop list;
+
 	// Window
 	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
 	int pop; // How many popup boxes and menus the program has put above the window
@@ -111,4 +131,6 @@ public:
 
 	stageitem *stage; // Current program stage shown on the screen
 	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
+
+	int longest; // The number of characters not including null terminator of the longst text in any list view cell or other control
 };

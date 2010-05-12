@@ -140,6 +140,9 @@ BOOL APIENTRY DialogOptionsConnections(HWND dialog, UINT message, UINT wparam, L
 BOOL APIENTRY DialogOptionsPasswords(HWND sheet, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
+// Start
+void StartIcon();
+
 // Test
 void Test();
 
