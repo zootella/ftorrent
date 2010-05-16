@@ -219,69 +219,6 @@ struct wrapper_torrent_peer {
 	const wchar_t* client_name;
 };
 
-/*
-class blacklist_ip_filter_callback : public libtorrent::ip_filter_callback
-{
-        private:
-            int(*callback_javacode)(unsigned int);
-
-        public:
-            blacklist_ip_filter_callback(int(*ipFilterCallback)(unsigned int)) {
-               callback_javacode = ipFilterCallback;
-            }
-
-            int callback(address const& addr) {
-		unsigned long addrInNetworkOrder;
-		if (addr.is_v4()) {
-			addrInNetworkOrder = addr.to_v4().to_ulong();
-		} else {
-			boost::asio::ip::address_v6 ipv6 = addr.to_v6();
-			if (!ipv6.is_v4_mapped() && !ipv6.is_v4_compatible()) {
-				return 0;
-			}
-			addrInNetworkOrder = addr.to_v6().to_v4().to_ulong();
-		}
-		return callback_javacode((unsigned int)addrInNetworkOrder);
-            }
-
-};
-*/
-
-/**
- * Functionality to set an ip_filter on the libtorrent session
- * so that it calls back into LimeWire code to check IP addresses.
- *
- * ipFilterCallback is a pointer to a function which:
- *
- *  	1. Takes an unsigned int, for local representation of IPv4 address
- *	2. Returns 0 for pass, and libtorrent::ip_filter::blocked for blocked
- *
- * If ipFilterCallback is NULL, this means do not call back into LimeWire
- *
- */
-/*
-libtorrent::ip_filter *filter = NULL;
-
-void set_ip_filter_internal(int(*ipFilterCallback)(unsigned int)) {
-	libtorrent::ip_filter *old_filter = filter;
-	libtorrent::ip_filter *new_filter = new libtorrent::ip_filter();
-
-	if (ipFilterCallback != NULL) {
-		blacklist_ip_filter_callback *ip_filter_callback = new blacklist_ip_filter_callback(ipFilterCallback);
-		new_filter->set_filter_callback(ip_filter_callback);
-	}
-
-	// set new ip filter
-	session->set_ip_filter(*new_filter);
-
-	// free old ip_filter if necessary, and set new one
-	filter = new_filter;
-	if (old_filter != NULL) {
-		delete(old_filter);
-	}
-}
-*/
-
 const char* getString(const std::stringstream& oss) {
 	std::string str = oss.str();
 	return mystrdup(str.c_str());
@@ -516,6 +453,7 @@ EXTERN_HEADER EXTERN_RET freeze_and_save_all_fast_resume_data(
 
 EXTERN_HEADER EXTERN_RET update_settings(wrapper_session_settings* settings) {
 	EXTERN_TRY_CONTAINER_BEGIN;
+
 		libtorrent::session_settings* sets = new libtorrent::session_settings;
     	sets->use_dht_as_fallback = false;
     	sets->share_ratio_limit = settings->seed_ratio_limit;

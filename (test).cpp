@@ -19,6 +19,29 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
+
+/*
+	wrapper_session_settings info;
+	ZeroMemory(&info, sizeof(info));
+
+	int max_upload_bandwidth;
+	int max_download_bandwidth;
+	int listen_start_port;
+	int listen_end_port;
+	float seed_ratio_limit;
+    float seed_time_ratio_limit;
+    int seed_time_limit;
+    int active_downloads_limit;
+    int active_seeds_limit;
+    int active_limit;
+    int alert_mask;
+    char *listen_interface;
+
+
+
+
+	init();
+*/
 	//add a row to the list
 
 
