@@ -34,6 +34,9 @@ void MenuTaskbar();
 
 // Utility
 void Report(read r);
+void Error(read r);
+void Log(read r);
+//void Exception(std::exception &e);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void TextDialogSet(HWND dialog, int control, read r);

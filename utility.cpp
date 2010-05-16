@@ -26,6 +26,33 @@ void Report(read r) {
 		MB_OK);
 }
 
+void Error(read r) {
+
+}
+
+void Log(read r) {
+
+}
+
+/*
+void Exception(std::exception &e) {
+	OutputDebugString(L"exception");
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Given access to a handle, close it and make it null
 void CloseHandleSafely(HANDLE *handle) {
 
