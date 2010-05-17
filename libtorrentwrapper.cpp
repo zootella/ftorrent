@@ -497,24 +497,29 @@ extern "C" int init(wrapper_session_settings *setting) {
 int step = 0;
 
 void mytest() {
+	try {
 
-	if (step == 0) {
+		if (step == 0) {
 
-		init(NULL);
-		step = 1;
+			init(NULL);
+			step = 1;
 
-		OutputDebugString(L"init done\r\n");
+			OutputDebugString(L"init done\r\n");
 
-	} else if (step == 1) {
+		} else if (step == 1) {
 
-		/*
-		libtorrent::add_torrent_params torrent_params;
-		torrent_params.save_path = WIDE_PATH("C:\\Documents\\test");
-		torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH("C:\\Documents\\creative commons.torrent"));
-		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
-		*/
+			libtorrent::add_torrent_params torrent_params;
+			torrent_params.save_path = WIDE_PATH(L"C:\\Documents\\test");
+			torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(L"C:\\Documents\\creative commons.torrent"));
+			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
-		OutputDebugString(L"add done\r\n");
+			OutputDebugString(L"add done\r\n");
+		}
+
+	} catch (std::exception &e) {
+		OutputDebugStringA(e.what());
+	} catch (...) {
+		OutputDebugString(L"exception");
 	}
 }
 
