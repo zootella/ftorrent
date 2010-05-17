@@ -391,7 +391,7 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 		session->pause();
 
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
-			libtorrent::torrent_handle& h = *i;
+			libtorrent::torrent_handle &h = *i;
 			if (!h.has_metadata())
 				continue;
 			if (!h.is_valid())
@@ -404,15 +404,12 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 			*/
 		}
 
-		while (num_resume_data > 0)
-
-		{
+		while (num_resume_data > 0) {
 			/*
 			std::cout << "waiting for resume: " << num_resume_data << std::endl;
 			*/
 
-			libtorrent::alert const *alert = session->wait_for_alert(
-					libtorrent::seconds(10));
+			libtorrent::alert const *alert = session->wait_for_alert(libtorrent::seconds(10));
 
 			// if we don't get an alert within 10 seconds, abort
 			if (alert == NULL)
@@ -497,9 +494,28 @@ extern "C" int init(wrapper_session_settings *setting) {
 }
 
 
+int step = 0;
+
 void mytest() {
 
-	init(NULL);
+	if (step == 0) {
+
+		init(NULL);
+		step = 1;
+
+		OutputDebugString(L"init done\r\n");
+
+	} else if (step == 1) {
+
+		/*
+		libtorrent::add_torrent_params torrent_params;
+		torrent_params.save_path = WIDE_PATH("C:\\Documents\\test");
+		torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH("C:\\Documents\\creative commons.torrent"));
+		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
+		*/
+
+		OutputDebugString(L"add done\r\n");
+	}
 }
 
 
@@ -552,6 +568,25 @@ extern "C" int move_torrent(const char *id, wchar_t *path) {
 	return 0;
 }
 
+int my_add_torrent() {
+	try {
+
+		/*
+		libtorrent::add_torrent_params torrent_params;
+		torrent_params.save_path = WIDE_PATH("C:\\Documents\\test");
+		torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH("C:\\Documents\\creative commons.torrent"));
+		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
+		*/
+
+	} catch (std::exception &e) {
+		OutputDebugStringA(e.what());
+	} catch (...) {
+		OutputDebugString(L"exception");
+	}
+	return 0;
+}
+
+
 extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
 	try {
 
@@ -569,7 +604,7 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 		torrent_params.save_path = WIDE_PATH(savePath);
 		torrent_params.info_hash = sha1;
 		torrent_params.tracker_url = trackerURI;
-		torrent_params.auto_managed = false;
+		torrent_params.auto_managed = false; //TODO change this to true
 		torrent_params.duplicate_is_error = true;
 
 		std::vector<char> resume_buf;

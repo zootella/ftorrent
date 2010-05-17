@@ -32,6 +32,12 @@ void Error(read r) {
 
 void Log(read r) {
 
+	string s = make(r, L"\r\n"); //TODO put the time in front like "Tue 1:50p 6.256s"
+	OutputDebugString(s);
+	//TODO add it to the log tab
+
+
+
 }
 
 /*
