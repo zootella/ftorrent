@@ -510,7 +510,7 @@ void mytest() {
 
 			libtorrent::add_torrent_params torrent_params;
 			torrent_params.save_path = WIDE_PATH(L"C:\\Documents\\test");
-			torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(L"C:\\Documents\\creative commons.torrent"));
+			torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(L"C:\\Documents\\my.torrent"));
 			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
 			OutputDebugString(L"add done\r\n");
