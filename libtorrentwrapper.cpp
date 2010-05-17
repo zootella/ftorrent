@@ -446,19 +446,28 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 	return 0;
 }
 
+
+void mytest() {
+
+	OutputDebugString(L"before");
+	libtorrent::session_settings *s = new libtorrent::session_settings;
+	OutputDebugString(L"after");
+}
+
+
 extern "C" int update_settings(wrapper_session_settings *settings) {
 	try {
 
-		libtorrent::session_settings *sets = new libtorrent::session_settings;
-		sets->use_dht_as_fallback = false;
-		sets->share_ratio_limit = settings->seed_ratio_limit;
-		sets->seed_time_ratio_limit = settings->seed_time_ratio_limit;
-		sets->seed_time_limit = settings->seed_time_limit;
-		sets->active_downloads = settings->active_downloads_limit;
-		sets->active_seeds = settings->active_seeds_limit;
-		sets->active_limit = settings->active_limit;
+		libtorrent::session_settings *s = new libtorrent::session_settings;
+		s->use_dht_as_fallback   = false;
+		s->share_ratio_limit     = settings->seed_ratio_limit;
+		s->seed_time_ratio_limit = settings->seed_time_ratio_limit;
+		s->seed_time_limit       = settings->seed_time_limit;
+		s->active_downloads      = settings->active_downloads_limit;
+		s->active_seeds          = settings->active_seeds_limit;
+		s->active_limit          = settings->active_limit;
 
-		session->set_settings(*sets);
+		session->set_settings(*s);
 		session->set_alert_mask(settings->alert_mask);
 		session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), settings->listen_interface);
 

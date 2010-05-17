@@ -153,6 +153,8 @@ void StartIcon();
 // Test
 void Test();
 
+void mytest();
+
 
 
 
