@@ -2,8 +2,8 @@
 #include "libtorrent/config.hpp"
 #include "libtorrent/session.hpp"
 #include "libtorrent/peer_info.hpp"
-#include  "boost/shared_ptr.hpp"
-#include  "boost/asio/ip/address.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/asio/ip/address.hpp"
 #include "libtorrent/alert.hpp"
 #include "libtorrent/alert_types.hpp"
 #include "libtorrent/peer_id.hpp"
@@ -25,7 +25,7 @@
 #include <libtorrent/extensions/ut_pex.hpp>
 #include <libtorrent/extensions/smart_ban.hpp>
 
-libtorrent::session* session = NULL;
+libtorrent::session *session = NULL;
 
 typedef libtorrent::big_number sha1_hash;
 typedef boost::asio::ip::address address;
@@ -37,15 +37,6 @@ typedef boost::asio::ip::address address;
 #define PIECE_UNAVAILABLE 'U'
 #define PIECE_UNAVAILABLE_PARTIAL 'u'
 #define PIECE_QUEUED 'q'
-
-
-//TODO visual studio colors the stuff that isn't defined gray, i think
-#ifdef JUST_MADE_UP_NOW
-#define somethingwhatever1 something whatever one
-#else
-#define somethingwhatever2 something whatever two
-#endif
-
 
 #ifdef NO_ERROR
 #define EXTERN_RET int
@@ -68,19 +59,17 @@ typedef boost::asio::ip::address address;
 
 #define WIDE_PATH(x) boost::filesystem::path(libtorrent::wchar_utf8(x))
 
-wchar_t* mywcsdup(const wchar_t* str) {
+wchar_t *mywcsdup(const wchar_t *str) {
 	int len = wcslen(str);
-	wchar_t* copy = new wchar_t[len + 1];
-//	wcsncpy(copy, str, len + 1); changed to the safer version below
-	wcsncpy_s(copy, len + 1, str, len + 1);
+	wchar_t *copy = new wchar_t[len + 1];
+	wcsncpy_s(copy, len + 1, str, len + 1); // Changed from wcsncpy(copy, str, len + 1)
 	return copy;
 }
 
-char * mystrdup( const char * str ) {
-	int len = std::strlen( str );
-	char * copy = new char[len + 1];
-//	strncpy(copy, str, len + 1); changed to the safer version below
-	strncpy_s(copy, len + 1, str, len + 1);
+char *mystrdup(const char *str) {
+	int len = std::strlen(str);
+	char *copy = new char[len + 1];
+	strncpy_s(copy, len + 1, str, len + 1); // Changed from strncpy(copy, str, len + 1)
 	return copy;
 }
 
@@ -93,7 +82,7 @@ struct wrapper_exception {
 		this->message = e.what();
 	}
 
-	wrapper_exception(char* message) {
+	wrapper_exception(char *message) {
 		this->type = EXCEPTION_MANUALLY_THROWN;
 		this->message = message;
 	}
@@ -103,7 +92,8 @@ struct wrapper_exception {
 		this->message = "unfilled";
 	}
 };
-wrapper_exception* last_error = NULL;
+
+wrapper_exception *last_error = NULL;
 
 struct wrapper_torrent_status {
 	long long total_done;
@@ -131,40 +121,40 @@ struct wrapper_torrent_status {
 	int auto_managed;
 	int seeding_time;
 	int active_time;
-	const char* error;
-	const char* current_tracker;
+	const char *error;
+	const char *current_tracker;
 	int num_complete;
 	int num_incomplete;
 	long long total_failed_bytes;
 };
 
 struct wrapper_announce_entry {
-	const char* url;
+	const char *url;
 	int tier;
 
 	~wrapper_announce_entry() {
-			delete[] url;
+		delete[] url;
 	}
 };
 
 struct wrapper_proxy_settings {
-	char* hostname;
+	char *hostname;
 	int port;
-	char* username;
-	char* password;
+	char *username;
+	char *password;
 	int type;
 };
 
 struct wrapper_torrent_info {
-	const char* sha1;
+	const char *sha1;
 	long long total_size;
 	int piece_length;
-	wrapper_announce_entry* trackers;
+	wrapper_announce_entry *trackers;
 	int num_trackers;
-	wrapper_announce_entry* seeds;
+	wrapper_announce_entry *seeds;
 	int num_seeds;
-	const char* created_by;
-	const char* comment;
+	const char *created_by;
+	const char *comment;
 };
 
 struct wrapper_session_settings {
@@ -173,18 +163,18 @@ struct wrapper_session_settings {
 	int listen_start_port;
 	int listen_end_port;
 	float seed_ratio_limit;
-    float seed_time_ratio_limit;
-    int seed_time_limit;
-    int active_downloads_limit;
-    int active_seeds_limit;
-    int active_limit;
-    int alert_mask;
-    char* listen_interface;
+	float seed_time_ratio_limit;
+	int seed_time_limit;
+	int active_downloads_limit;
+	int active_seeds_limit;
+	int active_limit;
+	int alert_mask;
+	char *listen_interface;
 };
 
 struct wrapper_file_entry {
 	int index;
-	wchar_t* path;
+	wchar_t *path;
 	long long size;
 	long long total_done;
 	int priority;
@@ -192,10 +182,10 @@ struct wrapper_file_entry {
 
 struct wrapper_alert_info {
 	int category;
-	const char* sha1;
-	const char* message;
+	const char *sha1;
+	const char *message;
 	bool has_data;
-	libtorrent::entry* resume_data;
+	libtorrent::entry *resume_data;
 
 	wrapper_alert_info() {
 		category = -1;
@@ -208,8 +198,8 @@ struct wrapper_alert_info {
 
 struct wrapper_torrent_peer {
 	int status_flags;
-	const char* peer_id;
-	const char* ip;
+	const char *peer_id;
+	const char *ip;
 	int source;
 	float up_speed;
 	float down_speed;
@@ -217,27 +207,27 @@ struct wrapper_torrent_peer {
 	float payload_down_speed;
 	float progress;
 	char country[3];
-	const wchar_t* client_name;
+	const wchar_t *client_name;
 };
 
-const char* getString(const std::stringstream& oss) {
+const char *getString(const std::stringstream &oss) {
 	std::string str = oss.str();
 	return mystrdup(str.c_str());
 }
 
-const char* getSha1String(const libtorrent::sha1_hash& sha1) {
+const char *getSha1String(const libtorrent::sha1_hash &sha1) {
 	std::stringstream oss;
 	oss << sha1;
 	return getString(oss);
 }
 
-const char* getPeerIdString(const libtorrent::peer_id& pid) {
+const char *getPeerIdString(const libtorrent::peer_id &pid) {
 	std::stringstream oss;
 	oss << pid;
 	return getString(oss);
 }
 
-sha1_hash getSha1Hash(const char* sha1String) {
+sha1_hash getSha1Hash(const char *sha1String) {
 	sha1_hash sha1;
 	std::stringstream oss;
 	oss << sha1String;
@@ -245,11 +235,11 @@ sha1_hash getSha1Hash(const char* sha1String) {
 	return sha1;
 }
 
-void get_wrapper_torrent_status(libtorrent::torrent_handle handle,
-		wrapper_torrent_status* stats) {
+void get_wrapper_torrent_status(libtorrent::torrent_handle handle, wrapper_torrent_status *stats) {
+
 	libtorrent::torrent_status status = handle.status();
 
-	char* error = mystrdup(status.error.c_str());
+	char *error = mystrdup(status.error.c_str());
 
 	float download_rate = status.download_rate;
 	float upload_rate = status.upload_rate;
@@ -278,9 +268,9 @@ void get_wrapper_torrent_status(libtorrent::torrent_handle handle,
 	long long all_time_payload_upload = status.all_time_upload;
 	int seeding_time = status.seeding_time;
 	int active_time = status.active_time;
-	char* current_tracker = mystrdup(status.current_tracker.c_str());
+	char *current_tracker = mystrdup(status.current_tracker.c_str());
 	int num_complete = status.num_complete;
-	int num_incomplete =  status.num_incomplete;
+	int num_incomplete = status.num_incomplete;
 	long long total_failed_bytes = status.total_failed_bytes;
 
 	stats->total_done = total_done;
@@ -315,27 +305,26 @@ void get_wrapper_torrent_status(libtorrent::torrent_handle handle,
 	stats->total_failed_bytes = total_failed_bytes;
 }
 
-libtorrent::torrent_handle findTorrentHandle(const char* sha1String) {
+libtorrent::torrent_handle findTorrentHandle(const char *sha1String) {
+
 	sha1_hash sha1 = getSha1Hash(sha1String);
 	libtorrent::torrent_handle torrent_handle = session->find_torrent(sha1);
 	return torrent_handle;
 }
 
-void process_save_resume_data_alert(libtorrent::torrent_handle handle,
-		libtorrent::save_resume_data_alert const* alert,
-		wrapper_alert_info* alertInfo) {
+void process_save_resume_data_alert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, wrapper_alert_info *alertInfo) {
+
 	const boost::shared_ptr<libtorrent::entry> resume_ptr = alert->resume_data;
 	alertInfo->has_data = 1;
 	alertInfo->resume_data=resume_ptr.get();
 }
 
-void process_alert(libtorrent::alert const* alert,
-		wrapper_alert_info* alertInfo) {
+void process_alert(libtorrent::alert const *alert, wrapper_alert_info *alertInfo) {
 
 	alertInfo->category = alert->category();
 	alertInfo->message = mystrdup(alert->message().c_str());
 
-	libtorrent::torrent_alert const* torrentAlert;
+	libtorrent::torrent_alert const *torrentAlert;
 
 	if ((torrentAlert = dynamic_cast<libtorrent::torrent_alert const*> (alert))) {
 
@@ -344,33 +333,27 @@ void process_alert(libtorrent::alert const* alert,
 		if (handle.is_valid()) {
 			alertInfo->sha1 = getSha1String(handle.info_hash());
 
-			libtorrent::save_resume_data_alert const
-					* srd_alert =
-							dynamic_cast<libtorrent::save_resume_data_alert const*> (alert);
+			libtorrent::save_resume_data_alert const *srd_alert = dynamic_cast<libtorrent::save_resume_data_alert const*> (alert);
 			if (srd_alert) {
 				process_save_resume_data_alert(handle, srd_alert, alertInfo);
 				return;
 			}
 
-			libtorrent::save_resume_data_failed_alert const
-					* srdf_alert =
-							dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
+			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
 			if (srdf_alert) {
-#ifdef LIME_DEBUG
+				/*
 				std::cout << "save_resume_data_failed_alert (" << srdf_alert->msg << ")" << std::endl;
-#endif
+				*/
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(srdf_alert->msg.c_str());
 				return;
 			}
 
-			libtorrent::fastresume_rejected_alert const
-					* fra_alert =
-							dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
+			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
 			if (fra_alert) {
-#ifdef LIME_DEBUG
+				/*
 				std::cout << "fastresume_rejected_alert (" << fra_alert->msg << ")" << std::endl;
-#endif
+				*/
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(fra_alert->msg.c_str());
 				return;
@@ -379,14 +362,14 @@ void process_alert(libtorrent::alert const* alert,
 	}
 }
 
-EXTERN_HEADER int save_fast_resume_data(wrapper_alert_info* alert, wchar_t* filePath) {
+extern "C" int save_fast_resume_data(wrapper_alert_info *alert, wchar_t *filePath) {
 	try {
 
 		std::wstring file(filePath);
 		boost::filesystem::wpath full_path(file);
 		boost::filesystem::ofstream out(full_path, std::ios_base::binary);
 		out.unsetf(std::ios_base::skipws);
-		libtorrent::entry* resume_data = alert->resume_data;
+		libtorrent::entry *resume_data = alert->resume_data;
 		libtorrent::bencode(std::ostream_iterator<char>(out), *resume_data);
 		out.close();
 
@@ -399,17 +382,15 @@ EXTERN_HEADER int save_fast_resume_data(wrapper_alert_info* alert, wchar_t* file
 }
 
 // Ported from http://www.rasterbar.com/products/libtorrent/manual.html#save-resume-data
-EXTERN_HEADER int freeze_and_save_all_fast_resume_data(
-		void(*alertCallback)(void*)) {
-
+extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*)) {
 	try {
+
 		int num_resume_data = 0;
 
 		std::vector<libtorrent::torrent_handle> handles = session->get_torrents();
 		session->pause();
 
-		for (std::vector<libtorrent::torrent_handle>::iterator i =
-				handles.begin(); i != handles.end(); ++i) {
+		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
 			libtorrent::torrent_handle& h = *i;
 			if (!h.has_metadata())
 				continue;
@@ -418,19 +399,19 @@ EXTERN_HEADER int freeze_and_save_all_fast_resume_data(
 
 			h.save_resume_data();
 			++num_resume_data;
-#ifdef LIME_DEBUG
+			/*
 			std::cout << "num_resume: " << num_resume_data << std::endl;
-#endif
+			*/
 		}
 
 		while (num_resume_data > 0)
 
 		{
-#ifdef LIME_DEBUG
+			/*
 			std::cout << "waiting for resume: " << num_resume_data << std::endl;
-#endif
+			*/
 
-			libtorrent::alert const* alert = session->wait_for_alert(
+			libtorrent::alert const *alert = session->wait_for_alert(
 					libtorrent::seconds(10));
 
 			// if we don't get an alert within 10 seconds, abort
@@ -439,17 +420,17 @@ EXTERN_HEADER int freeze_and_save_all_fast_resume_data(
 
 			std::auto_ptr<libtorrent::alert> holder = session->pop_alert();
 
-			wrapper_alert_info* alertInfo = new wrapper_alert_info();
+			wrapper_alert_info *alertInfo = new wrapper_alert_info();
 			process_alert(alert, alertInfo);
 
-			const char* sha1 = alertInfo->sha1;
-			const char* message = alertInfo->message;
+			const char *sha1 = alertInfo->sha1;
+			const char *message = alertInfo->message;
 			alertCallback(alertInfo);
 
 			if (alertInfo->has_data) {
-#ifdef LIME_DEBUG
+				/*
 				std::cout << "resume_found: " << std::endl;
-#endif
+				*/
 				--num_resume_data;
 			}
 			delete[] sha1;
@@ -465,17 +446,17 @@ EXTERN_HEADER int freeze_and_save_all_fast_resume_data(
 	return 0;
 }
 
-EXTERN_HEADER int update_settings(wrapper_session_settings* settings) {
+extern "C" int update_settings(wrapper_session_settings *settings) {
 	try {
 
-		libtorrent::session_settings* sets = new libtorrent::session_settings;
-    	sets->use_dht_as_fallback = false;
-    	sets->share_ratio_limit = settings->seed_ratio_limit;
-    	sets->seed_time_ratio_limit = settings->seed_time_ratio_limit;
-    	sets->seed_time_limit = settings->seed_time_limit;
-    	sets->active_downloads = settings->active_downloads_limit;
-    	sets->active_seeds = settings->active_seeds_limit;
-    	sets->active_limit = settings->active_limit;
+		libtorrent::session_settings *sets = new libtorrent::session_settings;
+		sets->use_dht_as_fallback = false;
+		sets->share_ratio_limit = settings->seed_ratio_limit;
+		sets->seed_time_ratio_limit = settings->seed_time_ratio_limit;
+		sets->seed_time_limit = settings->seed_time_limit;
+		sets->active_downloads = settings->active_downloads_limit;
+		sets->active_seeds = settings->active_seeds_limit;
+		sets->active_limit = settings->active_limit;
 
 		session->set_settings(*sets);
 		session->set_alert_mask(settings->alert_mask);
@@ -492,14 +473,16 @@ EXTERN_HEADER int update_settings(wrapper_session_settings* settings) {
 	return 0;
 }
 
-EXTERN_HEADER int init(wrapper_session_settings* setting) {
+extern "C" int init(wrapper_session_settings *setting) {
 	try {
+
 		session = new libtorrent::session;
 		update_settings(setting);
 		session->add_extension(&libtorrent::create_metadata_plugin);
 		session->add_extension(&libtorrent::create_ut_metadata_plugin);
 		session->add_extension(&libtorrent::create_ut_pex_plugin);
 		session->add_extension(&libtorrent::create_smart_ban_plugin);
+
 	} catch (std::exception &e) {
 		OutputDebugStringA(e.what());
 	} catch (...) {
@@ -508,27 +491,27 @@ EXTERN_HEADER int init(wrapper_session_settings* setting) {
 	return 0;
 }
 
-EXTERN_HEADER int abort_torrents() {
+extern "C" int abort_torrents() {
 	try {
 
-		#ifdef LIME_DEBUG
-			std::cout << "abort_torrents() called" << std::endl;
-		#endif
+		/*
+		std::cout << "abort_torrents() called" << std::endl;
+		*/
 
 		if(session) {
 
-			#ifdef LIME_DEBUG
-				std::cout << "session->abort" << std::endl;
-			#endif
+			/*
+			std::cout << "session->abort" << std::endl;
+			*/
 
 			session->abort();
 
 			// clean up ip_filter callback method objects, if necessary
-//			set_ip_filter_internal(NULL);
+			// set_ip_filter_internal(NULL);
 
-		   #ifdef LIME_DEBUG
-				std::cout << "abort finished" << std::endl;
-			#endif
+			/*
+			std::cout << "abort finished" << std::endl;
+			*/
 		}
 
 	} catch (std::exception &e) {
@@ -539,12 +522,12 @@ EXTERN_HEADER int abort_torrents() {
 	return 0;
 }
 
-EXTERN_HEADER int move_torrent(const char* id, wchar_t* path) {
+extern "C" int move_torrent(const char *id, wchar_t *path) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		h.pause();
-		libtorrent::storage_interface* storage = h.get_storage_impl();
+		libtorrent::storage_interface *storage = h.get_storage_impl();
 		storage->release_files();
 		storage->move_storage(WIDE_PATH(path));
 		h.resume();
@@ -557,17 +540,16 @@ EXTERN_HEADER int move_torrent(const char* id, wchar_t* path) {
 	return 0;
 }
 
-EXTERN_HEADER int add_torrent(char* sha1String, char* trackerURI,
-		wchar_t* torrentPath, wchar_t* savePath, wchar_t* fastResumePath) {
+extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
 	try {
 
-#ifdef LIME_DEBUG
+		/*
 		std::cout << "adding torrent" << std::endl;
 		std::cout << "sha1String" << sha1String << std::endl;
 		std::cout << "trackerURI" << trackerURI << std::endl;
 		std::cout << "torrentPath: " << torrentPath << std::endl;
 		std::cout << "resumeFilePath: " << fastResumePath << std::endl;
-#endif
+		*/
 
 		sha1_hash sha1 = getSha1Hash(sha1String);
 
@@ -581,25 +563,20 @@ EXTERN_HEADER int add_torrent(char* sha1String, char* trackerURI,
 		std::vector<char> resume_buf;
 
 		if (torrentPath) {
-			boost::filesystem::ifstream torrent_file(
-					torrentPath,
-					std::ios_base::binary);
+			boost::filesystem::ifstream torrent_file(torrentPath, std::ios_base::binary);
 			if (!torrent_file.fail()) {
-				torrent_params.ti = new libtorrent::torrent_info(
-					WIDE_PATH(torrentPath));
+				torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(torrentPath));
 			}
-#ifdef LIME_DEBUG
+			/*
 			else {
 				std::cout << "could not find torrent file" << std::endl;
 			}
-#endif
+			*/
 			torrent_file.close();
 		}
 
 		if (fastResumePath) {
-			boost::filesystem::ifstream resume_file(
-					fastResumePath,
-					std::ios_base::binary);
+			boost::filesystem::ifstream resume_file(fastResumePath, std::ios_base::binary);
 
 			if (!resume_file.fail()) {
 				resume_file.unsetf(std::ios_base::skipws);
@@ -612,11 +589,11 @@ EXTERN_HEADER int add_torrent(char* sha1String, char* trackerURI,
 				torrent_params.resume_data = &resume_buf;
 				resume_file.close();
 			}
-#ifdef LIME_DEBUG
+			/*
 			else {
 				std::cout << "could not find fast resume file" << std::endl;
 			}
-#endif
+			*/
 		}
 
 		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
@@ -629,7 +606,7 @@ EXTERN_HEADER int add_torrent(char* sha1String, char* trackerURI,
 	return 0;
 }
 
-EXTERN_HEADER int pause_torrent(const char* id) {
+extern "C" int pause_torrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -643,7 +620,7 @@ EXTERN_HEADER int pause_torrent(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int set_auto_managed_torrent(const char* id, bool auto_managed) {
+extern "C" int set_auto_managed_torrent(const char *id, bool auto_managed) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -657,7 +634,7 @@ EXTERN_HEADER int set_auto_managed_torrent(const char* id, bool auto_managed) {
 	return 0;
 }
 
-EXTERN_HEADER int remove_torrent(const char* id) {
+extern "C" int remove_torrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -672,7 +649,7 @@ EXTERN_HEADER int remove_torrent(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int resume_torrent(const char* id) {
+extern "C" int resume_torrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -686,7 +663,7 @@ EXTERN_HEADER int resume_torrent(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int force_reannounce(const char* id) {
+extern "C" int force_reannounce(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -700,7 +677,7 @@ EXTERN_HEADER int force_reannounce(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int scrape_tracker(const char* id) {
+extern "C" int scrape_tracker(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -714,7 +691,7 @@ EXTERN_HEADER int scrape_tracker(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int get_torrent_status(const char* id, wrapper_torrent_status* stats) {
+extern "C" int get_torrent_status(const char *id, wrapper_torrent_status *stats) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -728,7 +705,7 @@ EXTERN_HEADER int get_torrent_status(const char* id, wrapper_torrent_status* sta
 	return 0;
 }
 
-EXTERN_HEADER int free_torrent_status(wrapper_torrent_status* info) {
+extern "C" int free_torrent_status(wrapper_torrent_status *info) {
 	try {
 
 		delete[] info->error;
@@ -742,13 +719,13 @@ EXTERN_HEADER int free_torrent_status(wrapper_torrent_status* info) {
 	return 0;
 }
 
-EXTERN_HEADER int get_torrent_info(const char* id, wrapper_torrent_info * info) {
+extern "C" int get_torrent_info(const char *id, wrapper_torrent_info *info) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		libtorrent::torrent_info i = h.get_torrent_info();
-		char* created_by = mystrdup(i.creator().c_str());
-		char* comment = mystrdup(i.comment().c_str());
+		char *created_by = mystrdup(i.creator().c_str());
+		char *comment = mystrdup(i.comment().c_str());
 		info->created_by = created_by;
 		info->comment = comment;
 		info->sha1 = getSha1String(i.info_hash());
@@ -761,7 +738,7 @@ EXTERN_HEADER int get_torrent_info(const char* id, wrapper_torrent_info * info) 
 		//add tracker information to the torrent info
 		std::vector<libtorrent::announce_entry> announce_entries = i.trackers();
 		int num_trackers = announce_entries.size();
-		wrapper_announce_entry* trackers = new wrapper_announce_entry[num_trackers];
+		wrapper_announce_entry *trackers = new wrapper_announce_entry[num_trackers];
 		std::vector<libtorrent::announce_entry>::iterator iter = announce_entries.begin();
 
 		int tracker_index = 0;
@@ -778,12 +755,12 @@ EXTERN_HEADER int get_torrent_info(const char* id, wrapper_torrent_info * info) 
 		//add seeding information to the torrent info
 		std::vector<std::string> seed_entries = i.url_seeds();
 		int num_seeds = seed_entries.size();
-		wrapper_announce_entry* seeds = new wrapper_announce_entry[num_seeds];
+		wrapper_announce_entry *seeds = new wrapper_announce_entry[num_seeds];
 		std::vector<std::string>::iterator iter2 = seed_entries.begin();
 
 		int seed_index = 0;
 		while (iter2 != seed_entries.end()) {
-			seeds[seed_index].url =  mystrdup(iter2->c_str());
+			seeds[seed_index].url = mystrdup(iter2->c_str());
 			seeds[seed_index].tier = -1;
 			seed_index++;
 			iter2++;
@@ -799,7 +776,7 @@ EXTERN_HEADER int get_torrent_info(const char* id, wrapper_torrent_info * info) 
 	return 0;
 }
 
-EXTERN_HEADER int free_torrent_info(wrapper_torrent_info * info) {
+extern "C" int free_torrent_info(wrapper_torrent_info *info) {
 	try {
 
 		delete[] info->sha1;
@@ -816,22 +793,22 @@ EXTERN_HEADER int free_torrent_info(wrapper_torrent_info * info) {
 	return 0;
 }
 
-EXTERN_HEADER int signal_fast_resume_data_request(const char* id) {
+extern "C" int signal_fast_resume_data_request(const char *id) {
 	try {
 
-		#ifdef LIME_DEBUG
+		/*
 		std::cout << "signal_fast_resume_data_request: " << id << std::endl;
-		#endif
+		*/
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		if (h.has_metadata()) {
-			#ifdef LIME_DEBUG
+			/*
 			std::cout << "has_metadata" << std::endl;
-			#endif
+			*/
 			h.save_resume_data();
-			#ifdef LIME_DEBUG
+			/*
 			std::cout << "save_resume_data called on torrent handle: " << id << std::endl;
-			#endif
+			*/
 		}
 
 	} catch (std::exception &e) {
@@ -842,7 +819,7 @@ EXTERN_HEADER int signal_fast_resume_data_request(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int clear_error_and_retry(const char* id) {
+extern "C" int clear_error_and_retry(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -858,7 +835,7 @@ EXTERN_HEADER int clear_error_and_retry(const char* id) {
 	return 0;
 }
 
-EXTERN_HEADER int get_num_peers(const char* id, int &num_peers) {
+extern "C" int get_num_peers(const char *id, int &num_peers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -881,7 +858,7 @@ EXTERN_HEADER int get_num_peers(const char* id, int &num_peers) {
 	return 0;
 }
 
-EXTERN_HEADER int has_metadata(const char* id, int &has_metadata) {
+extern "C" int has_metadata(const char *id, int &has_metadata) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -895,7 +872,7 @@ EXTERN_HEADER int has_metadata(const char* id, int &has_metadata) {
 	return 0;
 }
 
-EXTERN_HEADER int is_valid(const char* id, int &is_valid) {
+extern "C" int is_valid(const char *id, int &is_valid) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -909,7 +886,7 @@ EXTERN_HEADER int is_valid(const char* id, int &is_valid) {
 	return 0;
 }
 
-EXTERN_HEADER int get_peers(const char* id, wrapper_torrent_peer** torrent_peers, int numPeers) {
+extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, int numPeers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -924,11 +901,11 @@ EXTERN_HEADER int get_peers(const char* id, wrapper_torrent_peer** torrent_peers
 
 			libtorrent::peer_info peer = *iter;
 			std::string address = peer.ip.address().to_string();
-#ifdef LIME_DEBUG
+			/*
 			std::cout << "peer:" << address << std::endl;
-#endif
+			*/
 
-			wrapper_torrent_peer* torrent_peer = *torrent_peers;
+			wrapper_torrent_peer *torrent_peer = *torrent_peers;
 			torrent_peers++;
 			torrent_peer->status_flags = peer.flags;
 			torrent_peer->ip = mystrdup(address.c_str());
@@ -967,11 +944,11 @@ EXTERN_HEADER int get_peers(const char* id, wrapper_torrent_peer** torrent_peers
 	return 0;
 }
 
-EXTERN_HEADER int free_peers(wrapper_torrent_peer** torrent_peers, int numPeers) {
+extern "C" int free_peers(wrapper_torrent_peer **torrent_peers, int numPeers) {
 	try {
 
 		for (int i = 0; i < numPeers; i++) {
-			wrapper_torrent_peer* torrent_peer = *torrent_peers;
+			wrapper_torrent_peer *torrent_peer = *torrent_peers;
 			delete[] torrent_peer->ip;
 			delete[] torrent_peer->peer_id;
 			delete[] torrent_peer->client_name;
@@ -986,7 +963,7 @@ EXTERN_HEADER int free_peers(wrapper_torrent_peer** torrent_peers, int numPeers)
 	return 0;
 }
 
-EXTERN_HEADER int get_alerts(void(*alertCallback)(void*)) {
+extern "C" int get_alerts(void(*alertCallback)(void*)) {
 	try {
 
 		std::auto_ptr<libtorrent::alert> alerts;
@@ -995,13 +972,13 @@ EXTERN_HEADER int get_alerts(void(*alertCallback)(void*)) {
 
 		while (alerts.get()) {
 
-			libtorrent::alert* alert = alerts.get();
+			libtorrent::alert *alert = alerts.get();
 
-			wrapper_alert_info* alertInfo = new wrapper_alert_info();
+			wrapper_alert_info *alertInfo = new wrapper_alert_info();
 
 			process_alert(alert, alertInfo);
-			const char* sha1 = alertInfo->sha1;
-			const char* message = alertInfo->message;
+			const char *sha1 = alertInfo->sha1;
+			const char *message = alertInfo->message;
 			alertCallback(alertInfo);
 			delete[] sha1;
 			delete[] message;
@@ -1018,22 +995,7 @@ EXTERN_HEADER int get_alerts(void(*alertCallback)(void*)) {
 	return 0;
 }
 
-/*
-EXTERN_HEADER int set_ip_filter(int(*ipFilterCallback)(unsigned int)) {
-	try {
-
-//	set_ip_filter_internal(ipFilterCallback);
-
-	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
-	} catch (...) {
-		OutputDebugString(L"exception");
-	}
-	return 0;
-}
-*/
-
-EXTERN_HEADER int set_seed_ratio(const char* id, float seed_ratio) {
+extern "C" int set_seed_ratio(const char *id, float seed_ratio) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1047,7 +1009,7 @@ EXTERN_HEADER int set_seed_ratio(const char* id, float seed_ratio) {
 	return 0;
 }
 
-EXTERN_HEADER int get_num_files(const char* id, int &num_files) {
+extern "C" int get_num_files(const char *id, int &num_files) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1063,7 +1025,7 @@ EXTERN_HEADER int get_num_files(const char* id, int &num_files) {
 	return 0;
 }
 
-EXTERN_HEADER int get_files(const char* id, wrapper_file_entry** file_entries) {
+extern "C" int get_files(const char *id, wrapper_file_entry **file_entries) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1078,7 +1040,7 @@ EXTERN_HEADER int get_files(const char* id, wrapper_file_entry** file_entries) {
 		std::vector<libtorrent::file_entry>::const_iterator iter = files.begin();
 		while (iter != files.end()) {
 			boost::filesystem::path path = iter->path;
-			wrapper_file_entry* file_entry = *file_entries;
+			wrapper_file_entry *file_entry = *file_entries;
 			file_entry->index = index;
 			std::wstring wpath = libtorrent::utf8_wchar(path.string());
 			file_entry->path = mywcsdup(wpath.c_str());
@@ -1098,7 +1060,7 @@ EXTERN_HEADER int get_files(const char* id, wrapper_file_entry** file_entries) {
 	return 0;
 }
 
-EXTERN_HEADER int set_file_priorities(const char* id, int* priorities, int num_priorities) {
+extern "C" int set_file_priorities(const char *id, int *priorities, int num_priorities) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1120,7 +1082,7 @@ EXTERN_HEADER int set_file_priorities(const char* id, int* priorities, int num_p
 	return 0;
 }
 
-EXTERN_HEADER int set_file_priority(const char* id, int index, int priority) {
+extern "C" int set_file_priority(const char *id, int index, int priority) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1134,7 +1096,7 @@ EXTERN_HEADER int set_file_priority(const char* id, int index, int priority) {
 	return 0;
 }
 
-EXTERN_HEADER int start_dht(const wchar_t* dht_state_file_path) {
+extern "C" int start_dht(const wchar_t *dht_state_file_path) {
 	try {
 
 		std::wstring file(dht_state_file_path);
@@ -1148,8 +1110,7 @@ EXTERN_HEADER int start_dht(const wchar_t* dht_state_file_path) {
 		bool state_loaded = false;
 		if(!dht_state_file.fail()) {
 			try {
-				dht_state = libtorrent::bdecode(std::istream_iterator<char>(dht_state_file),
-				            std::istream_iterator<char>());
+				dht_state = libtorrent::bdecode(std::istream_iterator<char>(dht_state_file), std::istream_iterator<char>());
 				state_loaded = true;
 			} catch (std::exception& e) {
 				OutputDebugStringA(e.what());
@@ -1171,7 +1132,7 @@ EXTERN_HEADER int start_dht(const wchar_t* dht_state_file_path) {
 	return 0;
 }
 
-EXTERN_HEADER int add_dht_router(const char* address, int port) {
+extern "C" int add_dht_router(const char *address, int port) {
 	try {
 
 		session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
@@ -1184,7 +1145,7 @@ EXTERN_HEADER int add_dht_router(const char* address, int port) {
 	return 0;
 }
 
-EXTERN_HEADER int add_dht_node(const char* address, int port) {
+extern "C" int add_dht_node(const char *address, int port) {
 	try {
 
 		session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
@@ -1197,7 +1158,7 @@ EXTERN_HEADER int add_dht_node(const char* address, int port) {
 	return 0;
 }
 
-EXTERN_HEADER int save_dht_state(const wchar_t* dht_state_file_path) {
+extern "C" int save_dht_state(const wchar_t *dht_state_file_path) {
 	try {
 
 		std::wstring file(dht_state_file_path);
@@ -1216,7 +1177,7 @@ EXTERN_HEADER int save_dht_state(const wchar_t* dht_state_file_path) {
 	return 0;
 }
 
-EXTERN_HEADER int stop_dht() {
+extern "C" int stop_dht() {
 	try {
 
 		session->stop_dht();
@@ -1229,7 +1190,7 @@ EXTERN_HEADER int stop_dht() {
 	return 0;
 }
 
-EXTERN_HEADER int start_upnp() {
+extern "C" int start_upnp() {
 	try {
 
 		session->start_upnp();
@@ -1242,7 +1203,7 @@ EXTERN_HEADER int start_upnp() {
 	return 0;
 }
 
-EXTERN_HEADER int stop_upnp() {
+extern "C" int stop_upnp() {
 	try {
 
 		session->stop_upnp();
@@ -1255,7 +1216,7 @@ EXTERN_HEADER int stop_upnp() {
 	return 0;
 }
 
-EXTERN_HEADER int start_lsd() {
+extern "C" int start_lsd() {
 	try {
 
 		session->start_lsd();
@@ -1268,7 +1229,7 @@ EXTERN_HEADER int start_lsd() {
 	return 0;
 }
 
-EXTERN_HEADER int stop_lsd() {
+extern "C" int stop_lsd() {
 	try {
 
 		session->stop_lsd();
@@ -1281,7 +1242,7 @@ EXTERN_HEADER int stop_lsd() {
 	return 0;
 }
 
-EXTERN_HEADER int start_natpmp() {
+extern "C" int start_natpmp() {
 	try {
 
 		session->start_natpmp();
@@ -1294,7 +1255,7 @@ EXTERN_HEADER int start_natpmp() {
 	return 0;
 }
 
-EXTERN_HEADER int stop_natpmp() {
+extern "C" int stop_natpmp() {
 	try {
 
 		session->stop_natpmp();
@@ -1307,7 +1268,7 @@ EXTERN_HEADER int stop_natpmp() {
 	return 0;
 }
 
-EXTERN_HEADER int set_peer_proxy(wrapper_proxy_settings* proxy) {
+extern "C" int set_peer_proxy(wrapper_proxy_settings *proxy) {
 	try {
 
 		libtorrent::proxy_settings proxy_settings;
@@ -1326,7 +1287,7 @@ EXTERN_HEADER int set_peer_proxy(wrapper_proxy_settings* proxy) {
 	return 0;
 }
 
-EXTERN_HEADER int set_web_seed_proxy(wrapper_proxy_settings* proxy) {
+extern "C" int set_web_seed_proxy(wrapper_proxy_settings *proxy) {
 	try {
 
 		libtorrent::proxy_settings proxy_settings;
@@ -1345,7 +1306,7 @@ EXTERN_HEADER int set_web_seed_proxy(wrapper_proxy_settings* proxy) {
 	return 0;
 }
 
-EXTERN_HEADER int set_tracker_proxy(wrapper_proxy_settings* proxy) {
+extern "C" int set_tracker_proxy(wrapper_proxy_settings *proxy) {
 	try {
 
 		libtorrent::proxy_settings proxy_settings;
@@ -1364,7 +1325,7 @@ EXTERN_HEADER int set_tracker_proxy(wrapper_proxy_settings* proxy) {
 	return 0;
 }
 
-EXTERN_HEADER int set_dht_proxy(wrapper_proxy_settings* proxy) {
+extern "C" int set_dht_proxy(wrapper_proxy_settings *proxy) {
 	try {
 
 		libtorrent::proxy_settings proxy_settings;
@@ -1383,7 +1344,7 @@ EXTERN_HEADER int set_dht_proxy(wrapper_proxy_settings* proxy) {
 	return 0;
 }
 
-EXTERN_HEADER int echo(char* message) {
+extern "C" int echo(char *message) {
 	try {
 
 		std::cout << "message:" << message << std::endl;
@@ -1398,10 +1359,10 @@ EXTERN_HEADER int echo(char* message) {
 
 struct pieces_info {
 	int completed;
-	char* pieces;
+	char *pieces;
 };
 
-EXTERN_HEADER int free_pieces_info(pieces_info* info) {
+extern "C" int free_pieces_info(pieces_info *info) {
 	try {
 
 		delete[] info->pieces;
@@ -1414,7 +1375,7 @@ EXTERN_HEADER int free_pieces_info(pieces_info* info) {
 	return 0;
 }
 
-EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
+extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1423,12 +1384,12 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 
 		int num_pieces = piece_downloaded_info.size();
 
-		char* pieces = new char[num_pieces+1];
+		char *pieces = new char[num_pieces+1];
 		info->pieces = pieces;
 		info->completed = 0;
 
 		// Clear the array
-		for ( int i=0 ; i<num_pieces ; i++ ) {
+		for (int i = 0; i < num_pieces; i++) {
 			pieces[i] = PIECE_PENDING;
 		}
 		pieces[num_pieces] = '\0';
@@ -1436,7 +1397,7 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 		std::vector<libtorrent::peer_info> peers;
 		h.get_peer_info(peers);
 		std::vector<libtorrent::peer_info>::iterator iter = peers.begin();
-		while ( iter != peers.end() ) {
+		while (iter != peers.end()) {
 			if (iter->downloading_piece_index > -1 && iter->downloading_piece_index < num_pieces) {
 				// Mark downloading pieces
 				pieces[iter->downloading_piece_index] = PIECE_ACTIVE;
@@ -1447,11 +1408,11 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 		std::vector<libtorrent::partial_piece_info> download_queue;
 		h.get_download_queue(download_queue);
 		std::vector<libtorrent::partial_piece_info>::iterator queue_iter = download_queue.begin();
-		while ( queue_iter != download_queue.end() ) {
+		while (queue_iter != download_queue.end()) {
 			libtorrent::partial_piece_info piece = *queue_iter;
 			if (piece.piece_index > -1 && piece.piece_index < num_pieces) {
 				if (pieces[piece.piece_index] != PIECE_ACTIVE) {
-					if        (piece.writing > 0) {
+					if (piece.writing > 0) {
 						pieces[piece.piece_index] = PIECE_ACTIVE;
 					} else if (piece.requested > 0 && piece.finished > 0) {
 						pieces[piece.piece_index] = PIECE_PARTIAL;
@@ -1464,7 +1425,7 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 			queue_iter++;
 		}
 
-		for ( int i=0 ; i<num_pieces ; i++ ) {
+		for (int i = 0; i < num_pieces; i++) {
 			if (pieces[i] != PIECE_ACTIVE) {
 				if (piece_downloaded_info[i]) {
 					// Mark downloaded pieces
@@ -1474,7 +1435,7 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 					bool available = false;
 
 					iter = peers.begin();
-					while ( iter != peers.end() ) {
+					while (iter != peers.end()) {
 						if (iter->pieces[i]) {
 							available = true;
 							break;
@@ -1501,7 +1462,7 @@ EXTERN_HEADER int get_pieces_status(const char* id, pieces_info* info) {
 	return 0;
 }
 
-EXTERN_HEADER int add_tracker(const char* id, char *url, int tier) {
+extern "C" int add_tracker(const char *id, char *url, int tier) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1521,7 +1482,7 @@ EXTERN_HEADER int add_tracker(const char* id, char *url, int tier) {
 	return 0;
 }
 
-EXTERN_HEADER int remove_tracker(const char* id, char *url, int tier) {
+extern "C" int remove_tracker(const char *id, char *url, int tier) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1530,7 +1491,7 @@ EXTERN_HEADER int remove_tracker(const char* id, char *url, int tier) {
 		
 		std::vector<libtorrent::announce_entry>::iterator iter = trackers.begin();
 
-		while ( iter != trackers.end() ) {
+		while (iter != trackers.end()) {
 			libtorrent::announce_entry tracker = *iter;
 			if (tracker.tier != tier || strcmp(tracker.url.c_str(), url) != 0) {
 				new_trackers.push_back(tracker);
@@ -1548,14 +1509,14 @@ EXTERN_HEADER int remove_tracker(const char* id, char *url, int tier) {
 	return 0;
 }
 
-EXTERN_HEADER int get_num_trackers(const char* id, int &num_trackers) {
+extern "C" int get_num_trackers(const char *id, int &num_trackers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 
 		std::vector<libtorrent::announce_entry> trackers;
 		try {
-			trackers =  h.trackers();
+			trackers = h.trackers();
 		} catch (libtorrent::invalid_handle e) {
 			return 0;
 		} catch (std::exception e) {
@@ -1572,7 +1533,7 @@ EXTERN_HEADER int get_num_trackers(const char* id, int &num_trackers) {
 }
 
 
-EXTERN_HEADER int get_trackers(const char* id, wrapper_announce_entry** torrent_trackers, int numTrackers) {
+extern "C" int get_trackers(const char *id, wrapper_announce_entry **torrent_trackers, int numTrackers) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1580,13 +1541,13 @@ EXTERN_HEADER int get_trackers(const char* id, wrapper_announce_entry** torrent_
 		
 		std::vector<libtorrent::announce_entry>::iterator iter = trackers.begin();
 
-		wrapper_announce_entry** current_torrent_tracker = torrent_trackers;
+		wrapper_announce_entry **current_torrent_tracker = torrent_trackers;
 
 		int index = 0;
-		while ( iter != trackers.end() ) {
+		while (iter != trackers.end()) {
 			libtorrent::announce_entry tracker = *iter;
 			
-			wrapper_announce_entry* torrent_tracker = *current_torrent_tracker;
+			wrapper_announce_entry *torrent_tracker = *current_torrent_tracker;
 			current_torrent_tracker++;
 			
 			torrent_tracker->tier = tracker.tier;
@@ -1607,13 +1568,13 @@ EXTERN_HEADER int get_trackers(const char* id, wrapper_announce_entry** torrent_
 	return 0;
 }
 
-EXTERN_HEADER int free_trackers(wrapper_announce_entry** torrent_trackers, int numTrackers) {
+extern "C" int free_trackers(wrapper_announce_entry **torrent_trackers, int numTrackers) {
 	try {
 		
-		wrapper_announce_entry** current_torrent_tracker = torrent_trackers;
+		wrapper_announce_entry **current_torrent_tracker = torrent_trackers;
 	
-		for( int i=0 ; i<numTrackers ; i++ ) {
-			wrapper_announce_entry* tracker = *current_torrent_tracker;
+		for (int i = 0; i < numTrackers; i++) {
+			wrapper_announce_entry *tracker = *current_torrent_tracker;
 			delete[] tracker->url;
 			current_torrent_tracker++;
 		}
