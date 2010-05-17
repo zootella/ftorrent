@@ -842,11 +842,10 @@ HFONT FontMenu(boolean underline) {
 
 	NONCLIENTMETRICS info;
 	ZeroMemory(&info, sizeof(info));
-	DWORD size = sizeof(info) - sizeof(info.iPaddedBorderWidth); // Ignore last int for this to work
-	info.cbSize = size;
+	info.cbSize = sizeof(info); // Must define _WIN32_WINNT=0x0501 for sizeof(info) to return the size SPI_GETNONCLIENTMETRICS expects
 	int result = SystemParametersInfo(
 		SPI_GETNONCLIENTMETRICS, // System parameter to retrieve
-		size,                    // Size of the structure
+		sizeof(info),            // Size of the structure
 		&info,                   // Structure to fill with information
 		0);                      // Not setting a system parameter
 	if (!result) { Report(L"systemparametersinfo getnonclientmetrics"); return NULL; }

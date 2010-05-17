@@ -447,13 +447,6 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 }
 
 
-void mytest() {
-
-	OutputDebugString(L"before");
-	libtorrent::session_settings *s = new libtorrent::session_settings;
-	OutputDebugString(L"after");
-}
-
 
 extern "C" int update_settings(wrapper_session_settings *settings) {
 	try {
@@ -486,7 +479,10 @@ extern "C" int init(wrapper_session_settings *setting) {
 	try {
 
 		session = new libtorrent::session;
-		update_settings(setting);
+
+		if (setting) // Added this
+			update_settings(setting);
+
 		session->add_extension(&libtorrent::create_metadata_plugin);
 		session->add_extension(&libtorrent::create_ut_metadata_plugin);
 		session->add_extension(&libtorrent::create_ut_pex_plugin);
@@ -499,6 +495,13 @@ extern "C" int init(wrapper_session_settings *setting) {
 	}
 	return 0;
 }
+
+
+void mytest() {
+
+	init(NULL);
+}
+
 
 extern "C" int abort_torrents() {
 	try {
