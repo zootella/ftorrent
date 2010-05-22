@@ -57,7 +57,7 @@ typedef boost::asio::ip::address address;
 #define EXCEPTION_RETHROWN 1
 #define EXCEPTION_MANUALLY_THROWN 2
 
-#define WIDE_PATH(x) boost::filesystem::path(libtorrent::wchar_utf8(x))
+//#define WIDE_PATH(x) boost::filesystem::path(libtorrent::wchar_utf8(x))
 
 wchar_t *mywcsdup(const wchar_t *str) {
 	int len = wcslen(str);
@@ -341,9 +341,7 @@ void process_alert(libtorrent::alert const *alert, wrapper_alert_info *alertInfo
 
 			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
 			if (srdf_alert) {
-				/*
-				std::cout << "save_resume_data_failed_alert (" << srdf_alert->msg << ")" << std::endl;
-				*/
+				//std::cout << "save_resume_data_failed_alert (" << srdf_alert->msg << ")" << std::endl;
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(srdf_alert->msg.c_str());
 				return;
@@ -351,9 +349,7 @@ void process_alert(libtorrent::alert const *alert, wrapper_alert_info *alertInfo
 
 			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
 			if (fra_alert) {
-				/*
-				std::cout << "fastresume_rejected_alert (" << fra_alert->msg << ")" << std::endl;
-				*/
+				//std::cout << "fastresume_rejected_alert (" << fra_alert->msg << ")" << std::endl;
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(fra_alert->msg.c_str());
 				return;
@@ -399,15 +395,11 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 
 			h.save_resume_data();
 			++num_resume_data;
-			/*
-			std::cout << "num_resume: " << num_resume_data << std::endl;
-			*/
+			//std::cout << "num_resume: " << num_resume_data << std::endl;
 		}
 
 		while (num_resume_data > 0) {
-			/*
-			std::cout << "waiting for resume: " << num_resume_data << std::endl;
-			*/
+			//std::cout << "waiting for resume: " << num_resume_data << std::endl;
 
 			libtorrent::alert const *alert = session->wait_for_alert(libtorrent::seconds(10));
 
@@ -425,9 +417,7 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 			alertCallback(alertInfo);
 
 			if (alertInfo->has_data) {
-				/*
-				std::cout << "resume_found: " << std::endl;
-				*/
+				//std::cout << "resume_found: " << std::endl;
 				--num_resume_data;
 			}
 			delete[] sha1;
@@ -509,8 +499,12 @@ void mytest() {
 		} else if (step == 1) {
 
 			libtorrent::add_torrent_params torrent_params;
-			torrent_params.save_path = WIDE_PATH(L"C:\\Documents\\test");
-			torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(L"C:\\Documents\\my.torrent"));
+
+			std::string s1, s2;
+			libtorrent::wchar_utf8(L"C:\\Documents\\test", s1);
+			libtorrent::wchar_utf8(L"C:\\Documents\\my.torrent", s2);
+			torrent_params.save_path = boost::filesystem::path(s1);
+			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
 			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
 			OutputDebugString(L"add done\r\n");
@@ -527,24 +521,18 @@ void mytest() {
 extern "C" int abort_torrents() {
 	try {
 
-		/*
-		std::cout << "abort_torrents() called" << std::endl;
-		*/
+		//std::cout << "abort_torrents() called" << std::endl;
 
 		if(session) {
 
-			/*
-			std::cout << "session->abort" << std::endl;
-			*/
+			//std::cout << "session->abort" << std::endl;
 
 			session->abort();
 
 			// clean up ip_filter callback method objects, if necessary
 			// set_ip_filter_internal(NULL);
 
-			/*
-			std::cout << "abort finished" << std::endl;
-			*/
+			//std::cout << "abort finished" << std::endl;
 		}
 
 	} catch (std::exception &e) {
@@ -562,7 +550,10 @@ extern "C" int move_torrent(const char *id, wchar_t *path) {
 		h.pause();
 		libtorrent::storage_interface *storage = h.get_storage_impl();
 		storage->release_files();
-		storage->move_storage(WIDE_PATH(path));
+
+		std::string s1;
+		libtorrent::wchar_utf8(path, s1);
+		storage->move_storage(boost::filesystem::path(s1));
 		h.resume();
 
 	} catch (std::exception &e) {
@@ -578,8 +569,8 @@ int my_add_torrent() {
 
 		/*
 		libtorrent::add_torrent_params torrent_params;
-		torrent_params.save_path = WIDE_PATH("C:\\Documents\\test");
-		torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH("C:\\Documents\\creative commons.torrent"));
+		torrent_params.save_path = boost::filesystem::path(libtorrent::wchar_utf8("C:\\Documents\\test");
+		torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(libtorrent::wchar_utf8("C:\\Documents\\creative commons.torrent"));
 		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 		*/
 
@@ -595,18 +586,18 @@ int my_add_torrent() {
 extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
 	try {
 
-		/*
-		std::cout << "adding torrent" << std::endl;
-		std::cout << "sha1String" << sha1String << std::endl;
-		std::cout << "trackerURI" << trackerURI << std::endl;
-		std::cout << "torrentPath: " << torrentPath << std::endl;
-		std::cout << "resumeFilePath: " << fastResumePath << std::endl;
-		*/
+		//std::cout << "adding torrent" << std::endl;
+		//std::cout << "sha1String" << sha1String << std::endl;
+		//std::cout << "trackerURI" << trackerURI << std::endl;
+		//std::cout << "torrentPath: " << torrentPath << std::endl;
+		//std::cout << "resumeFilePath: " << fastResumePath << std::endl;
 
 		sha1_hash sha1 = getSha1Hash(sha1String);
 
 		libtorrent::add_torrent_params torrent_params;
-		torrent_params.save_path = WIDE_PATH(savePath);
+		std::string s1;
+		libtorrent::wchar_utf8(savePath, s1);
+		torrent_params.save_path = boost::filesystem::path(s1);
 		torrent_params.info_hash = sha1;
 		torrent_params.tracker_url = trackerURI;
 		torrent_params.auto_managed = false; //TODO change this to true
@@ -617,13 +608,13 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 		if (torrentPath) {
 			boost::filesystem::ifstream torrent_file(torrentPath, std::ios_base::binary);
 			if (!torrent_file.fail()) {
-				torrent_params.ti = new libtorrent::torrent_info(WIDE_PATH(torrentPath));
+				std::string s2;
+				libtorrent::wchar_utf8(torrentPath, s2);
+				torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
 			}
-			/*
-			else {
-				std::cout << "could not find torrent file" << std::endl;
-			}
-			*/
+			//else {
+			//	std::cout << "could not find torrent file" << std::endl;
+			//}
 			torrent_file.close();
 		}
 
@@ -641,11 +632,9 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 				torrent_params.resume_data = &resume_buf;
 				resume_file.close();
 			}
-			/*
-			else {
-				std::cout << "could not find fast resume file" << std::endl;
-			}
-			*/
+			//else {
+			//	std::cout << "could not find fast resume file" << std::endl;
+			//}
 		}
 
 		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
@@ -848,19 +837,13 @@ extern "C" int free_torrent_info(wrapper_torrent_info *info) {
 extern "C" int signal_fast_resume_data_request(const char *id) {
 	try {
 
-		/*
-		std::cout << "signal_fast_resume_data_request: " << id << std::endl;
-		*/
+		//std::cout << "signal_fast_resume_data_request: " << id << std::endl;
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		if (h.has_metadata()) {
-			/*
-			std::cout << "has_metadata" << std::endl;
-			*/
+			//std::cout << "has_metadata" << std::endl;
 			h.save_resume_data();
-			/*
-			std::cout << "save_resume_data called on torrent handle: " << id << std::endl;
-			*/
+			//std::cout << "save_resume_data called on torrent handle: " << id << std::endl;
 		}
 
 	} catch (std::exception &e) {
@@ -953,9 +936,7 @@ extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, i
 
 			libtorrent::peer_info peer = *iter;
 			std::string address = peer.ip.address().to_string();
-			/*
-			std::cout << "peer:" << address << std::endl;
-			*/
+			//std::cout << "peer:" << address << std::endl;
 
 			wrapper_torrent_peer *torrent_peer = *torrent_peers;
 			torrent_peers++;
@@ -974,7 +955,9 @@ extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, i
 			torrent_peer->country[2] = '\0';
 
 			try {
-				torrent_peer->client_name = mywcsdup(libtorrent::utf8_wchar(peer.client.c_str()).c_str());
+				std::wstring w;
+				libtorrent::utf8_wchar(peer.client.c_str(), w);
+				torrent_peer->client_name = mywcsdup(w.c_str());
 			} catch (std::runtime_error &e) {
 				OutputDebugStringA(e.what());
 				torrent_peer->client_name = 0;			
@@ -1094,7 +1077,8 @@ extern "C" int get_files(const char *id, wrapper_file_entry **file_entries) {
 			boost::filesystem::path path = iter->path;
 			wrapper_file_entry *file_entry = *file_entries;
 			file_entry->index = index;
-			std::wstring wpath = libtorrent::utf8_wchar(path.string());
+			std::wstring wpath;
+			libtorrent::utf8_wchar(path.string(), wpath);
 			file_entry->path = mywcsdup(wpath.c_str());
 			file_entry->size = iter->size;
 			file_entry->total_done = progress[index];

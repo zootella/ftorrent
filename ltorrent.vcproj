@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;WITH_SHIPPED_GEOIP_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="advapi32.lib comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
+				AdditionalDependencies="comctl32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;WITH_SHIPPED_GEOIP_H"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="advapi32.lib comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib"
+				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
