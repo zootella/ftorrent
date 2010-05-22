@@ -143,7 +143,7 @@ Project, Properties, Configuration Properties, Linker, Input, Additional Depende
 *libboost_filesystem-vc90-mt-sgd.lib
 *libboost_system-vc90-mt-sgd.lib
 *libboost_thread-vc90-mt-sgd.lib
-*libtorrent-debug.lib ''<---- Try changing this to release?''
+*libtorrent-debug.lib
 
 Release
 *comctl32.lib
