@@ -29,7 +29,7 @@ void StartIcon() {
 		ILC_MASK,       // Show icon transparency
 		0,              // Start with no icons
 		ICON_CAPACITY); // Be able to grow to hold this many more icons
-	if (!Handle.icon.list) Report(L"imagelist_create");
+	if (!Handle.icon.list) error(L"imagelist_create");
 
 	// Load the resource icons into the program image list and get their indices there, or -1 if not loaded
 	Handle.icon.clear      = IconAddResource(L"CLEAR_ICON");

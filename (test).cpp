@@ -21,12 +21,9 @@ void Test() {
 
 
 
-	log(L"before");
-	Sleep(100);
-	log(L"after");
 
 
-//	mytest();
+	mytest();
 
 
 /*
@@ -142,7 +139,7 @@ void ListSort(int column) {
 	if (column != -1) {
 
 		State.list.sort = column;
-		if (!ListView_SortItems(Handle.list, ListCompare, 0)) Report("error listview_sortitems");
+		if (!ListView_SortItems(Handle.list, ListCompare, 0)) error("listview_sortitems");
 	}
 }
 

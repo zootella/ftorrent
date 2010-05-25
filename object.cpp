@@ -16,6 +16,48 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+// Takes a window
+// Uses this size in client coordinates
+// Converts the size to screen coordinates
+void sizeitem::Screen(HWND window) {
+
+	// Choose window
+	if (!window) window = Handle.window;
+
+	// Make a point with the x and y coordinates of this size item
+	POINT p;
+	p = Point();
+
+	// Convert the point
+	sizeitem size;
+	if (!ClientToScreen(window, &p)) { error(L"clienttoscreen"); return; }
+
+	// Store the converted position in this size item
+	x = p.x;
+	y = p.y;
+}
+
+// Takes a window
+// Uses this size in screen coordinates
+// Converts the size to client coordinates
+void sizeitem::Client(HWND window) {
+
+	// Choose window
+	if (!window) window = Handle.window;
+
+	// Make a point with the x and y coordinates of this size item
+	POINT p;
+	p = Point();
+
+	// Convert the point
+	sizeitem size;
+	if (!ScreenToClient(window, &p)) { error(L"screentoclient"); return; }
+
+	// Store the converted position in this size item
+	x = p.x;
+	y = p.y;
+}
+
 // Load the given handle to a device context into this object
 void deviceitem::OpenUse(HDC newdevice) {
 
@@ -36,7 +78,7 @@ void deviceitem::OpenCreate() {
 
 	// Create the device context
 	device = CreateDC(L"DISPLAY", NULL, NULL, NULL);
-	if (!device) Report(L"createdc");
+	if (!device) error(L"createdc");
 }
 
 // Get the device context from the given window
@@ -49,7 +91,7 @@ void deviceitem::OpenGet(HWND newwindow) {
 	// Get the device context
 	window = newwindow;
 	device = GetDC(newwindow);
-	if (!device) Report(L"getdc");
+	if (!device) error(L"getdc");
 }
 
 // Tell the system the program will start painting
@@ -62,7 +104,7 @@ void deviceitem::OpenPaint(HWND newwindow) {
 	// Paint the device context
 	window = newwindow;
 	device = BeginPaint(window, &paint);
-	if (!device) Report(L"beginpaint");
+	if (!device) error(L"beginpaint");
 }
 
 // Restore the contents of the device context and end or delete it
@@ -75,8 +117,8 @@ deviceitem::~deviceitem() {
 	if (replacebackgroundcolor) SetBkColor(device, backgroundcolor);
 
 	// Close the device context
-	if      (open == DeviceCreate) { if (!DeleteDC(device))          Report(L"deletedc"); }
-	else if (open == DeviceGet)    { if (!ReleaseDC(window, device)) Report(L"releasedc"); }
+	if      (open == DeviceCreate) { if (!DeleteDC(device))          error(L"deletedc"); }
+	else if (open == DeviceGet)    { if (!ReleaseDC(window, device)) error(L"releasedc"); }
 	else if (open == DevicePaint)  { EndPaint(window, &paint); }
 }
 
@@ -111,69 +153,3 @@ void deviceitem::BackgroundColor(COLORREF newcolor) {
 	COLORREF outcolor = SetBkColor(device, newcolor);
 	if (!replacebackgroundcolor) { replacebackgroundcolor = true; backgroundcolor = outcolor; }
 }
-
-
-
-
-
-void sizeitem::Screen(HWND window)
-{
-	// takes a window
-	// uses this size in client coordinates
-	// converts the size to screen coordinates
-
-	// CHOOSE WINDOW
-	if (!window) window = Handle.window;
-
-	// MAKE A POINT WITH THE X AND Y COORDINATES OF THIS SIZE ITEM
-	POINT p;
-	p = Point();
-
-	// CONVERT THE POINT
-	sizeitem size;
-	if (!ClientToScreen(window, &p)) { Report(L"error clienttoscreen"); return; }
-
-	// STORE THE CONVERTED POSITION IN THIS SIZE ITEM
-	x = p.x;
-	y = p.y;
-}
-
-void sizeitem::Client(HWND window)
-{
-	// takes a window
-	// uses this size in screen coordinates
-	// converts the size to client coordinates
-
-	// CHOOSE WINDOW
-	if (!window) window = Handle.window;
-
-	// MAKE A POINT WITH THE X AND Y COORDINATES OF THIS SIZE ITEM
-	POINT p;
-	p = Point();
-
-	// CONVERT THE POINT
-	sizeitem size;
-	if (!ScreenToClient(window, &p)) { Report(L"error screentoclient"); return; }
-
-	// STORE THE CONVERTED POSITION IN THIS SIZE ITEM
-	x = p.x;
-	y = p.y;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

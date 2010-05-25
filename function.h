@@ -34,10 +34,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar();
 
 // Utility
-void Report(read r);
 void error(read r);
 void log(read r);
-//void Exception(std::exception &e);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void TextDialogSet(HWND dialog, int control, read r);

@@ -32,7 +32,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
 	Handle.tray = MenuClip(menus, 0);
 	Handle.menu = MenuClip(menus, 1);
-	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) Report(L"deletemenu"); // Remove the test menu item
+	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) error(L"deletemenu"); // Remove the test menu item
 
 	// Load cursors
 	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
@@ -70,13 +70,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // Background brush
 	info.lpszMenuName  = NULL;                       // No menu
 	info.lpszClassName = name;                       // Window class name
-	if (!RegisterClassEx(&info)) Report(L"registerclassex");
+	if (!RegisterClassEx(&info)) error(L"registerclassex");
 	Handle.window = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Add Exit to the main window's system menu
 	HMENU menu = GetSystemMenu(Handle.window, false); // Get the menu for editing
-	if (!menu) Report(L"getsystemmenu");
-	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) Report(L"appendmenu");
+	if (!menu) error(L"getsystemmenu");
+	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
 	// Create the list view window
 	DWORD style =
@@ -151,7 +151,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		SWP_NOMOVE |
 		SWP_NOSIZE |
 		SWP_NOACTIVATE); // Do not activate the window
-	if (!result) Report(L"setwindowpos");
+	if (!result) error(L"setwindowpos");
 
 	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();

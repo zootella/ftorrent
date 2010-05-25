@@ -16,15 +16,6 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-// Show an error message to the user
-void Report(read r) {
-
-	if (PROGRAM_TEST) MessageBox(
-		Handle.window,
-		make(L"error ", numerals(GetLastError()), L" ", r),
-		L"Report",
-		MB_OK);
-}
 
 void error(read r) {
 
@@ -48,7 +39,7 @@ void CloseHandleSafely(HANDLE *handle) {
 
 	if (*handle && *handle != INVALID_HANDLE_VALUE) { // Only do something if it's not null or -1
 
-		if (!CloseHandle(*handle)) Report(L"closehandle safely");
+		if (!CloseHandle(*handle)) error(L"closehandle safely");
 		*handle = NULL; // Make it null so we don't try to close it again
 	}
 }
@@ -65,10 +56,10 @@ void BeginThread(LPVOID function) {
 		(void *)                          NULL,     // Pass no parameter to the thread
 		(unsigned)                        0,        // Create and start thread
 		(unsigned *)                      &info);   // Writes thread identifier, cannot be null for Windows 95
-	if (!thread) Report(L"beginthreadex");
+	if (!thread) error(L"beginthreadex");
 
 	// Tell the system this thread is done with the new thread handle
-	if (!CloseHandle(thread)) Report(L"closehandle thread");
+	if (!CloseHandle(thread)) error(L"closehandle thread");
 }
 
 // Takes a dialog handle, a control identifier, and text
@@ -76,7 +67,7 @@ void BeginThread(LPVOID function) {
 void TextDialogSet(HWND dialog, int control, read r) {
 
 	// Get a handle to the window of the control and set the text of that window
-	if (!SetDlgItemText(dialog, control, r)) Report(L"setdlgitemtext");
+	if (!SetDlgItemText(dialog, control, r)) error(L"setdlgitemtext");
 }
 
 // Takes a dialog handle and a dialog control identifier number
@@ -93,7 +84,7 @@ string TextDialog(HWND dialog, int control) {
 void TextWindowSet(HWND window, read r) {
 
 	// Set the text to the window
-	if (!SetWindowText(window, r)) Report(L"setwindowtext");
+	if (!SetWindowText(window, r)) error(L"setwindowtext");
 }
 
 // Takes a window handle
@@ -212,7 +203,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 		menu,                   // Menu handle or child window identification number
 		Handle.instance,        // Program instance handle
 		NULL);                  // No parameter
-	if (!window) Report(L"createwindow");
+	if (!window) error(L"createwindow");
 	return window;
 }
 
@@ -230,7 +221,7 @@ void WindowSize(HWND window, int x, int y)
 
 	// GET THE WINDOW'S CURRENT SIZE
 	RECT r;
-	if (!GetWindowRect(window, &r)) { Report(L"windowsize: error getwindowrect"); return; }
+	if (!GetWindowRect(window, &r)) { error(L"windowsize: error getwindowrect"); return; }
 
 	// ADJUST THE SIZE
 	sizeitem size;
@@ -250,7 +241,7 @@ void WindowMove(HWND window, sizeitem size, bool paint)
 	// returns nothing
 
 	// POSITION AND RESIZE THE WINDOW WITHOUT SENDING A PAINT MESSAGE
-	if (!MoveWindow(window, size.x, size.y, size.w, size.h, paint)) Report(L"windowmove: error movewindow");
+	if (!MoveWindow(window, size.x, size.y, size.w, size.h, paint)) error(L"windowmove: error movewindow");
 }
 
 
@@ -330,7 +321,7 @@ brushitem CreateBrush(COLORREF color) {
 	brushitem brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
-	if (!brush.brush) Report(L"createsolidbrush");
+	if (!brush.brush) error(L"createsolidbrush");
 	return brush;
 }
 
@@ -345,11 +336,11 @@ void PaintMessage(HWND window) {
 		window, // Handle to window
 		NULL,   // Invalidate the entire client area of the window
 		false); // false to not wipe the window with the background color
-	if (!result) Report(L"invalidaterect");
+	if (!result) error(L"invalidaterect");
 
 	// Call the window procedure directly with a paint message right now
 	// Send the window a paint message and have it process it right now
-	if (!UpdateWindow(window)) Report(L"updatewindow");
+	if (!UpdateWindow(window)) error(L"updatewindow");
 }
 
 // Adds the program icon to the taskbar notification area
@@ -368,7 +359,7 @@ void TaskbarIconAdd() {
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
 	info.hIcon            = State.taskbar;                    // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
-	if (!Shell_NotifyIcon(NIM_ADD, &info)) Report(L"shell_notifyicon nim_add");
+	if (!Shell_NotifyIcon(NIM_ADD, &info)) error(L"shell_notifyicon nim_add");
 }
 
 // Updates the program icon in the taskbar notification area
@@ -386,7 +377,7 @@ void TaskbarIconUpdate() {
 	info.uID              = TASKBAR_ICON;  // Program defined identifier
 	info.uFlags           = NIF_ICON;      // Mask for icon only
 	info.hIcon            = State.taskbar; // Icon handle
-	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) Report(L"shell_notifyicon nim_modify");
+	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) error(L"shell_notifyicon nim_modify");
 }
 
 // Removes the program icon from the taskbar notification area
@@ -401,7 +392,7 @@ void TaskbarIconRemove() {
 	info.cbSize = sizeof(info);  // Size of this structure
 	info.hWnd   = Handle.window; // Handle to the window that will receive messages
 	info.uID    = TASKBAR_ICON;  // Program defined identifier
-	if (!Shell_NotifyIcon(NIM_DELETE, &info)) Report(L"shell_notifyicon nim_delete");
+	if (!Shell_NotifyIcon(NIM_DELETE, &info)) error(L"shell_notifyicon nim_delete");
 }
 
 // Takes a system cursor identifier
@@ -416,7 +407,7 @@ HCURSOR LoadSharedCursor(read name) {
 		IMAGE_CURSOR, // Image type
 		0, 0,         // Use the width and height of the resource
 		LR_SHARED);   // Share the system resource
-	if (!cursor) Report(L"loadimage cursor");
+	if (!cursor) error(L"loadimage cursor");
 	return cursor;
 }
 
@@ -432,7 +423,7 @@ HICON LoadIconResource(read name, int w, int h) {
 		IMAGE_ICON,       // Image type
 		w, h,             // Width and height to load
 		LR_DEFAULTCOLOR); // Default flag does nothing
-	if (!icon) Report(L"loadimage icon");
+	if (!icon) error(L"loadimage icon");
 	return icon;
 }
 
@@ -441,7 +432,7 @@ void CursorSet(HCURSOR cursor) {
 
 	HCURSOR current = GetCursor(); // Find out what the cursor is now
 	if (cursor && current && cursor != current) { // If we have both and they're different
-		if (!SetCursor(cursor)) Report(L"setcursor"); // Set the new given one
+		if (!SetCursor(cursor)) error(L"setcursor"); // Set the new given one
 	}
 }
 
@@ -449,7 +440,7 @@ void CursorSet(HCURSOR cursor) {
 HMENU MenuLoad(read name) {
 
 	HMENU menus = LoadMenu(Handle.instance, name); // Load the menu resource
-	if (!menus) Report(L"loadmenu");
+	if (!menus) error(L"loadmenu");
 	return menus;
 }
 
@@ -458,7 +449,7 @@ HMENU MenuLoad(read name) {
 HMENU MenuClip(HMENU menus, int index) {
 
 	HMENU menu = GetSubMenu(menus, index); // Clip off the submenu at the given index
-	if (!menu) Report(L"getsubmenu");
+	if (!menu) error(L"getsubmenu");
 	return menu;
 }
 
@@ -472,7 +463,7 @@ void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 	info.fMask  = 0;
 	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; } // Set menu item info
 	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
-	if (!SetMenuItemInfo(menu, command, false, &info)) Report(L"setmenuiteminfo");
+	if (!SetMenuItemInfo(menu, command, false, &info)) error(L"setmenuiteminfo");
 }
 
 // Takes menus and whether the context menu is being shown from the taskbar notification icon or not
@@ -529,7 +520,7 @@ void TipAdd(sizeitem size, read r) {
 	info.hinst       = NULL;             // Only used when text is loaded from a resource
 	info.lpszText    = (LPWSTR)r;        // Text
 	info.lParam      = 0;                // No additional value assigned to tool
-	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) Report(L"sendmessage ttm_addtool");
+	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) error(L"sendmessage ttm_addtool");
 }
 
 // Have window capture the mouse if it doesn't have it already, null to use the main window
@@ -624,7 +615,7 @@ brushitem BrushSystem(int color) {
 	brushitem brush;
 	brush.color = GetSysColor(color);
 	brush.brush = GetSysColorBrush(color);
-	if (!brush.brush) Report(L"getsyscolorbrush");
+	if (!brush.brush) error(L"getsyscolorbrush");
 	return brush;
 }
 
@@ -637,7 +628,7 @@ brushitem BrushColor(COLORREF color) {
 	brushitem brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
-	if (!brush.brush) Report(L"createsolidbrush");
+	if (!brush.brush) error(L"createsolidbrush");
 	return brush;
 }
 
@@ -678,7 +669,7 @@ sizeitem SizeClient(HWND window) {
 	// Find the width and height of the client area
 	sizeitem size;
 	RECT rectangle;
-	if (!GetClientRect(window, &rectangle)) { Report(L"getclientrect"); return size; }
+	if (!GetClientRect(window, &rectangle)) { error(L"getclientrect"); return size; }
 	size.Set(rectangle);
 	return size;
 }
@@ -692,7 +683,7 @@ sizeitem SizeWindow(HWND window) {
 	// Find the width and height of the client area
 	sizeitem size;
 	RECT rectangle;
-	if (!GetWindowRect(window, &rectangle)) { Report(L"getwindowrect"); return size; }
+	if (!GetWindowRect(window, &rectangle)) { error(L"getwindowrect"); return size; }
 	size.Set(rectangle);
 	return size;
 }
@@ -706,7 +697,7 @@ sizeitem SizeText(deviceitem *device, read r) {
 	SIZE size;
 	if (!GetTextExtentPoint32(device->device, r, length(r), &size)) {
 
-		Report(L"gettextextentpoint32");
+		error(L"gettextextentpoint32");
 		size.cx = size.cy = 0;
 	}
 
@@ -721,7 +712,7 @@ void PaintLabel(deviceitem *device, read r, sizeitem size) {
 
 	// Paint the text, if the background is opaque, this will cause a flicker
 	RECT rectangle = size.Rectangle();
-	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) Report(L"drawtext");
+	if (!DrawText(device->device, r, -1, &rectangle, DT_NOPREFIX)) error(L"drawtext");
 }
 
 // Takes a device context that has a font loaded into it, text, position and bounding size, and formatting options
@@ -773,7 +764,7 @@ void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool 
 
 		// Draw text paints background beneath the text and then text over it, creating a flicker
 		rectangle = text.Rectangle();
-		if (!DrawText(device->device, r, -1, &rectangle, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE)) Report(L"drawtext");
+		if (!DrawText(device->device, r, -1, &rectangle, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE)) error(L"drawtext");
 	}
 
 	// Put back the device context
@@ -824,7 +815,7 @@ void PaintIcon(deviceitem *device, sizeitem position, HICON icon, HBRUSH backgro
 		0,                       // Not an animated icon
 		background,              // Paint into an offscreen bitmap over this brush first to not flicker on the screen
 		DI_IMAGE | DI_MASK);     // Use the image and mask to draw alpha icons correctly
-	if (!result) Report(L"drawiconex");
+	if (!result) error(L"drawiconex");
 }
 
 // Make a font based on what the system uses in menus, true to underline it
@@ -838,10 +829,10 @@ HFONT FontMenu(boolean underline) {
 		sizeof(info),            // Size of the structure
 		&info,                   // Structure to fill with information
 		0);                      // Not setting a system parameter
-	if (!result) { Report(L"systemparametersinfo getnonclientmetrics"); return NULL; }
+	if (!result) { error(L"systemparametersinfo getnonclientmetrics"); return NULL; }
 	if (underline) info.lfMenuFont.lfUnderline = true; // Underline if requested
 	HFONT font = CreateFontIndirect(&info.lfMenuFont);
-	if (!font) Report(L"createfontindirect systemparametersinfo");
+	if (!font) error(L"createfontindirect systemparametersinfo");
 	return font;
 }
 
@@ -865,7 +856,7 @@ HFONT FontName(read face, int points) {
 	info.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // Only used if the font name is unavailable
 	lstrcpy(info.lfFaceName, face);                       // Font name
 	HFONT font = CreateFontIndirect(&info);
-	if (!font) Report(L"createfontindirect logfont");
+	if (!font) error(L"createfontindirect logfont");
 	return font;
 }
 
@@ -896,7 +887,7 @@ void InitializeCommonControls() {
 	ZeroMemory(&info, sizeof(info));
 	info.dwSize = sizeof(info); // Size of this structure
 	info.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES; // Load list and tree view classes
-	if (!InitCommonControlsEx(&info)) Report(L"initcommoncontrolsex");
+	if (!InitCommonControlsEx(&info)) error(L"initcommoncontrolsex");
 }
 
 // Takes a window handle and timer identifier
@@ -904,7 +895,7 @@ void InitializeCommonControls() {
 void KillTimerSafely(UINT_PTR timer, HWND window) {
 
 	if (!window) window = Handle.window; // Choose window
-	if (!KillTimer(window, timer)) Report(L"killtimer"); // Kill the timer
+	if (!KillTimer(window, timer)) error(L"killtimer"); // Kill the timer
 }
 
 // Takes a timer identifier and the number of milliseconds after which the timer should expire
@@ -912,7 +903,7 @@ void KillTimerSafely(UINT_PTR timer, HWND window) {
 void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 
 	if (!window) window = Handle.window; // Choose window
-	if (!SetTimer(window, timer, time, NULL)) Report(L"settimer"); // Set the timer
+	if (!SetTimer(window, timer, time, NULL)) error(L"settimer"); // Set the timer
 }
 
 // Takes a path to a file and parameters text or blank
@@ -1074,7 +1065,7 @@ int IconAddResource(read resource) {
 		IMAGE_ICON,       // This resource is an icon
 		16, 16,           // Size
 		LR_DEFAULTCOLOR); // No special options
-	if (!icon) { Report(L"loadimage"); return -1; }
+	if (!icon) { error(L"loadimage"); return -1; }
 
 	int programindex = IconAdd(icon, -1); // Insert the icon into the program image list
 	DestroyIconSafely(icon);              // Destroy the icon
@@ -1091,7 +1082,7 @@ int IconAdd(HICON icon, int systemindex) {
 
 	// Add the icon to the end of the program image list
 	int programindex = ImageList_ReplaceIcon(Handle.icon.list, -1, icon);
-	if (programindex == -1) { Report(L"imagelist_replaceicon"); return -1; }
+	if (programindex == -1) { error(L"imagelist_replaceicon"); return -1; }
 
 	// Write the index in the array, up the count, and return the program index of the added icon
 	Handle.icon.source[Handle.icon.count] = systemindex;
@@ -1108,7 +1099,7 @@ void ColumnIcon(HWND window, int column, int icon) {
 	ZeroMemory(&info, sizeof(info));
 	info.mask   = LVCF_IMAGE;
 	info.iImage = icon;
-	if (!ListView_SetColumn(window, column, &info)) Report(L"listview_setcolumn");
+	if (!ListView_SetColumn(window, column, &info)) error(L"listview_setcolumn");
 }
 
 // Takes a column index number or -1 to remove the selection from the column that has it
@@ -1131,7 +1122,7 @@ void ListColumnInsert(HWND window, int column, int format, int image, read r, in
 	info.iImage  = image;
 	info.pszText = (write)r;
 	info.cx      = width;
-	if (ListView_InsertColumn(window, column, &info) == -1) Report(L"listview_insertcolumn");
+	if (ListView_InsertColumn(window, column, &info) == -1) error(L"listview_insertcolumn");
 }
 
 // Takes the column to delete
@@ -1139,7 +1130,7 @@ void ListColumnInsert(HWND window, int column, int format, int image, read r, in
 void ListColumnDelete(HWND window, int column) {
 
 	// Delete the column
-	if (!ListView_DeleteColumn(window, 0)) Report(L"listview_deletecolumn");
+	if (!ListView_DeleteColumn(window, 0)) error(L"listview_deletecolumn");
 }
 
 // Takes a row number
@@ -1154,7 +1145,7 @@ LPARAM ListGet(HWND window, int row) {
 	info.mask  = LVIF_PARAM; // Get the parameter
 	int result;
 	result = ListView_GetItem(window, &info);
-	if (!result) { Report(L"listview_getitem"); return 0; }
+	if (!result) { error(L"listview_getitem"); return 0; }
 
 	// Return the extracted parameter
 	return info.lParam;
@@ -1196,7 +1187,7 @@ sizeitem ListCell(HWND window, int row, int column) {
 	// Get the rectangle of the list view sub item and return the size
 	sizeitem size;
 	RECT rectangle;
-	if (!ListView_GetSubItemRect(window, row, column, LVIR_BOUNDS, &rectangle)) { Report(L"listview_getsubitemrect"); return size; }
+	if (!ListView_GetSubItemRect(window, row, column, LVIR_BOUNDS, &rectangle)) { error(L"listview_getsubitemrect"); return size; }
 	size.Set(rectangle);
 	return size;
 }
@@ -1206,7 +1197,7 @@ int ListRows(HWND window) {
 
 	// Count the rows
 	int rows = ListView_GetItemCount(window);
-	if (rows < 0) { Report(L"listview_getitemcount"); return 0; }
+	if (rows < 0) { error(L"listview_getitemcount"); return 0; }
 	return rows;
 }
 
@@ -1215,7 +1206,7 @@ int ListSelectedRows(HWND window) {
 
 	// Count the selected rows
 	int rows = ListView_GetSelectedCount(window);
-	if (rows < 0) { Report(L"listview_getselectedcount"); return 0; }
+	if (rows < 0) { error(L"listview_getselectedcount"); return 0; }
 	return rows;
 }
 
@@ -1246,7 +1237,7 @@ void ListScroll(HWND window) {
 	if (rows) {
 
 		// Scroll to make the row completely visible
-		if (!ListView_EnsureVisible(window, rows - 1, false)) Report(L"listview_ensurevisible");
+		if (!ListView_EnsureVisible(window, rows - 1, false)) error(L"listview_ensurevisible");
 	}
 }
 
@@ -1255,14 +1246,14 @@ void ListScroll(HWND window) {
 void ListRemove(HWND window, int row) {
 
 	// Remove the row from the list view control
-	if (!ListView_DeleteItem(window, row)) Report(L"listview_deleteitem");
+	if (!ListView_DeleteItem(window, row)) error(L"listview_deleteitem");
 }
 
 // Remove all the rows in the list view control
 void ListRemoveAll(HWND window) {
 
 	// Remove all the rows in the list view control
-	if (!ListView_DeleteAllItems(window)) Report(L"listview_deleteallitems");
+	if (!ListView_DeleteAllItems(window)) error(L"listview_deleteallitems");
 }
 
 // Takes the number of rows that are going to be added
@@ -1329,15 +1320,15 @@ void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, 
 
 	// Insert the item and set the row
 	int row = ListView_InsertItem(window, &column1);
-	if (row == -1) { Report(L"listview_insertitem"); return; }
+	if (row == -1) { error(L"listview_insertitem"); return; }
 	column2.iItem = column3.iItem = column4.iItem = column5.iItem = column6.iItem = row;
 
 	// Set the subitems
-	if (columns >= 2 && !ListView_SetItem(window, &column2)) { Report(L"listview_setitem"); return; }
-	if (columns >= 3 && !ListView_SetItem(window, &column3)) { Report(L"listview_setitem"); return; }
-	if (columns >= 4 && !ListView_SetItem(window, &column4)) { Report(L"listview_setitem"); return; }
-	if (columns >= 5 && !ListView_SetItem(window, &column5)) { Report(L"listview_setitem"); return; }
-	if (columns >= 6 && !ListView_SetItem(window, &column6)) { Report(L"listview_setitem"); return; }
+	if (columns >= 2 && !ListView_SetItem(window, &column2)) { error(L"listview_setitem"); return; }
+	if (columns >= 3 && !ListView_SetItem(window, &column3)) { error(L"listview_setitem"); return; }
+	if (columns >= 4 && !ListView_SetItem(window, &column4)) { error(L"listview_setitem"); return; }
+	if (columns >= 5 && !ListView_SetItem(window, &column5)) { error(L"listview_setitem"); return; }
+	if (columns >= 6 && !ListView_SetItem(window, &column6)) { error(L"listview_setitem"); return; }
 }
 
 // Takes a parameter, icons and text
@@ -1383,12 +1374,12 @@ void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2,
 	column2.iImage = icon2;
 
 	// Set the columns that have different text
-	if (columns >= 1 && !same(ListText(window, row, 0), r1) && !ListView_SetItem(window, &column1)) Report(L"listview_setitem");
-	if (columns >= 2 && !same(ListText(window, row, 1), r2) && !ListView_SetItem(window, &column2)) Report(L"listview_setitem");
-	if (columns >= 3 && !same(ListText(window, row, 2), r3) && !ListView_SetItem(window, &column3)) Report(L"listview_setitem");
-	if (columns >= 4 && !same(ListText(window, row, 3), r4) && !ListView_SetItem(window, &column4)) Report(L"listview_setitem");
-	if (columns >= 5 && !same(ListText(window, row, 4), r5) && !ListView_SetItem(window, &column5)) Report(L"listview_setitem");
-	if (columns >= 6 && !same(ListText(window, row, 5), r6) && !ListView_SetItem(window, &column6)) Report(L"listview_setitem");
+	if (columns >= 1 && !same(ListText(window, row, 0), r1) && !ListView_SetItem(window, &column1)) error(L"listview_setitem");
+	if (columns >= 2 && !same(ListText(window, row, 1), r2) && !ListView_SetItem(window, &column2)) error(L"listview_setitem");
+	if (columns >= 3 && !same(ListText(window, row, 2), r3) && !ListView_SetItem(window, &column3)) error(L"listview_setitem");
+	if (columns >= 4 && !same(ListText(window, row, 3), r4) && !ListView_SetItem(window, &column4)) error(L"listview_setitem");
+	if (columns >= 5 && !same(ListText(window, row, 4), r5) && !ListView_SetItem(window, &column5)) error(L"listview_setitem");
+	if (columns >= 6 && !same(ListText(window, row, 5), r6) && !ListView_SetItem(window, &column6)) error(L"listview_setitem");
 }
 
 // Takes a parameter
@@ -1403,7 +1394,7 @@ int ListFind(HWND window, LPARAM p) {
 	info.lParam = p;          // Here is the parameter to find
 	int row;
 	row = ListView_FindItem(window, -1, &info); // -1 to start from the beginning
-	if (row == -1) Report(L"listview_finditem");
+	if (row == -1) error(L"listview_finditem");
 
 	// Return the row number
 	return row;
@@ -1464,11 +1455,10 @@ bool ShellInfo(read ext, int *systemindex, string *type) {
 		SHGFI_SMALLICON |         // Use the list of small icons and return the handle to the small icon system image list
 		SHGFI_SYSICONINDEX |      // Get the icon index in the system image list
 		SHGFI_TYPENAME);          // Get the file type text
-	if (info.hIcon) Report(L"shgetfileinfo returned an icon when it should not have");
+	if (info.hIcon) error(L"shgetfileinfo returned an icon when it should not have");
 	if (!systemlist || info.iIcon < 0) {
 
-		// Report error
-		Report(L"shgetfileinfo had an error or returned an invalid index");
+		error(L"shgetfileinfo had an error or returned an invalid index");
 		*systemindex = -1;
 		*type = L"";
 		return false;
@@ -1500,9 +1490,8 @@ bool ShellIcon(read ext, HICON *icon) {
 		SHGFI_ICON);              // Get the icon itself and its index from the system image list
 	if (!result || !info.hIcon || info.iIcon < 0) {
 
-		// Report error and destroy any created icon
-		Report(L"shgetfileinfo had an error, returned no icon, or returned an invalid index");
-		DestroyIconSafely(info.hIcon);
+		error(L"shgetfileinfo had an error, returned no icon, or returned an invalid index");
+		DestroyIconSafely(info.hIcon); // Destroy an icon if one was created
 		*icon = NULL;
 		return false;
 	}
@@ -1517,7 +1506,7 @@ bool ShellIcon(read ext, HICON *icon) {
 void DestroyIconSafely(HICON icon) {
 
 	// If the icon exists, destroy it
-	if (icon && !DestroyIcon(icon)) Report(L"destroyicon");
+	if (icon && !DestroyIcon(icon)) error(L"destroyicon");
 }
 
 // Generates a guid
@@ -1527,7 +1516,7 @@ string TextGuid() {
 	// Get a new unique GUID from the system
 	GUID guid;
 	HRESULT result = CoCreateGuid(&guid);
-	if (result != S_OK) { Report(L"cocreateguid"); return L""; }
+	if (result != S_OK) { error(L"cocreateguid"); return L""; }
 
 	// Convert the GUID into an OLE wide character string
 	WCHAR bay[MAX_PATH];
@@ -1535,7 +1524,7 @@ string TextGuid() {
 		guid,          // GUID to convert
 		(LPOLESTR)bay, // Write text here
 		MAX_PATH);     // Size of bay
-	if (!characters) { Report(L"stringfromguid2"); return L""; }
+	if (!characters) { error(L"stringfromguid2"); return L""; }
 
 	// Convert the OLE wide character string into a text string
 	COLE2T text(bay);
@@ -1543,6 +1532,6 @@ string TextGuid() {
 	s = text;
 
 	s = lower(clip(s, 1, 8) + clip(s, 10, 4) + clip(s, 15, 4) + clip(s, 20, 4) + clip(s, 25, 12)); // Clip out the number parts of the GUID string and lowercase it
-	if (length(s) != 32) { Report(L"guid length not 32 characters"); return L""; }                 // Make sure the GUID string is 32 characters
+	if (length(s) != 32) { error(L"guid length not 32 characters"); return L""; }                 // Make sure the GUID string is 32 characters
 	return s;                                                                                      // Return the string
 }
