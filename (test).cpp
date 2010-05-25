@@ -19,7 +19,14 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
-	mytest();
+
+
+	log(L"before");
+	Sleep(100);
+	log(L"after");
+
+
+//	mytest();
 
 
 /*

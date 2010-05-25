@@ -4,7 +4,7 @@ string make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 
 string upper(read r);
 string lower(read r);
 int number(read r);
-string numerals(int number);
+string numerals(int number, int width = 0); // Has defaults
 bool is(read r);
 bool isblank(read r);
 bool same(read r1, read r2, matching m = Different); // Has defaults
@@ -25,6 +25,7 @@ string trim(read r, read t1 = L"", read t2 = L"", read t3 = L""); // Has default
 string saynumber(int number, read name);
 string insertcommas(read r);
 string saytime(DWORD time);
+string saynow();
 
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
@@ -34,8 +35,8 @@ void MenuTaskbar();
 
 // Utility
 void Report(read r);
-void Error(read r);
-void Log(read r);
+void error(read r);
+void log(read r);
 //void Exception(std::exception &e);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);

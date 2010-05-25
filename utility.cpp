@@ -26,33 +26,17 @@ void Report(read r) {
 		MB_OK);
 }
 
-void Error(read r) {
+void error(read r) {
 
+	log(make(L"error ", numerals(GetLastError()), L" ", r));
 }
 
-void Log(read r) {
+void log(read r) {
 
-	string s = make(r, L"\r\n"); //TODO put the time in front like "Tue 1:50p 6.256s"
+	string s = make(saynow(), L" ", r, L"\r\n");
 	OutputDebugString(s);
 	//TODO add it to the log tab
-
-
-
 }
-
-/*
-void Exception(std::exception &e) {
-	OutputDebugString(L"exception");
-}
-*/
-
-
-
-
-
-
-
-
 
 
 

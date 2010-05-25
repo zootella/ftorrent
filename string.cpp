@@ -53,14 +53,21 @@ int number(read r) {
 	return _wtoi(r); // Use function like atoi
 }
 
-// Takes a number
-// Writes the minus sign adn number into text
+// Takes a number and width like 3 for 001
+// Writes the minus sign and number into text
 // Returns a string
-string numerals(int number) {
+string numerals(int number, int width) {
 
 	character bay[MAX_PATH];
 	_itow_s(number, bay, MAX_PATH, 10); // The 10 is for base ten
-	return bay;
+	string s = bay;
+
+	if (width) {
+		while (length(s) < width)
+			s = L"0" + s; // Loop until we've put enough 0s at the start
+	}
+
+	return s;
 }
 
 // Takes text
@@ -399,4 +406,40 @@ string saytime(DWORD time) {
 	if (hour || minute) s += L" " + saynumber(minute, L"minute");
 	s += L" " + saynumber(second, L"second");
 	return trim(s, L" ");
+}
+
+// Composes text like "Tue 2:07p 03.789s" with the current day and time to milliseconds
+string saynow() {
+
+	// Get the local time right now
+	SYSTEMTIME info;
+	ZeroMemory(&info, sizeof(info));
+	GetLocalTime(&info);
+
+	// Compose day text
+	string day;
+	switch (info.wDayOfWeek) {
+		case 0: day = "Sun"; break;
+		case 1: day = "Mon"; break;
+		case 2: day = "Tue"; break;
+		case 3: day = "Wed"; break;
+		case 4: day = "Thu"; break;
+		case 5: day = "Fri"; break;
+		case 6: day = "Sat"; break;
+	}
+
+	// Prepare hour and AM/PM text
+	string m = info.wHour < 12 ? L"a" : L"p";
+	int h = info.wHour;
+	if (!h) h = 12;
+	if (h > 12) h -= 12;
+
+	// Turn numbers into text
+	string hour        = numerals(h);
+	string minute      = numerals(info.wMinute, 2);
+	string second      = numerals(info.wSecond, 2); // Say "09" seconds instead of just "9" so things line up vertically
+	string millisecond = numerals(info.wMilliseconds, 3);
+
+	// Put it all together
+	return day + L" " + hour + L":" + minute + m + L" " + second + L"." + millisecond + L"s";
 }
