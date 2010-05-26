@@ -7,7 +7,7 @@
 #include "libtorrent/alert.hpp"
 #include "libtorrent/alert_types.hpp"
 #include "libtorrent/peer_id.hpp"
-#include <boost/filesystem/path.hpp>
+#include "boost/filesystem/path.hpp"
 #include "libtorrent/size_type.hpp"
 
 #include "libtorrent/entry.hpp"
@@ -20,10 +20,31 @@
 #include "libtorrent/file.hpp"
 
 #include "libtorrent/socket.hpp"
-#include <libtorrent/extensions/metadata_transfer.hpp>
-#include <libtorrent/extensions/ut_metadata.hpp>
-#include <libtorrent/extensions/ut_pex.hpp>
-#include <libtorrent/extensions/smart_ban.hpp>
+#include "libtorrent/extensions/metadata_transfer.hpp"
+#include "libtorrent/extensions/ut_metadata.hpp"
+#include "libtorrent/extensions/ut_pex.hpp"
+#include "libtorrent/extensions/smart_ban.hpp"
+
+
+
+// Include statements
+#include <windows.h>
+#include <windef.h>
+#include <atlstr.h>
+#include <shlobj.h>
+#include "resource.h"
+#include "program.h"
+#include "object.h"
+#include "top.h"
+#include "function.h"
+
+// Access to global objects
+extern handletop Handle;
+extern areatop   Area;
+extern datatop   Data;
+extern statetop  State;
+
+
 
 libtorrent::session *session = NULL;
 
@@ -486,6 +507,8 @@ extern "C" int init(wrapper_session_settings *setting) {
 
 int step = 0;
 
+
+
 void mytest() {
 	try {
 
@@ -494,7 +517,7 @@ void mytest() {
 			init(NULL);
 			step = 1;
 
-			OutputDebugString(L"init done\r\n");
+			log(L"init done");
 
 		} else if (step == 1) {
 
@@ -507,7 +530,7 @@ void mytest() {
 			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
 			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
-			OutputDebugString(L"add done\r\n");
+			log(L"add done");
 		}
 
 	} catch (std::exception &e) {
