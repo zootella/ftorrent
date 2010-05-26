@@ -388,7 +388,7 @@ extern "C" int save_fast_resume_data(wrapper_alert_info *alert, wchar_t *filePat
 		out.close();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -444,9 +444,9 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -473,9 +473,9 @@ extern "C" int update_settings(wrapper_session_settings *settings) {
 		session->set_download_rate_limit(settings->max_download_bandwidth);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -494,9 +494,9 @@ extern "C" int init(wrapper_session_settings *setting) {
 		session->add_extension(&libtorrent::create_smart_ban_plugin);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -553,9 +553,9 @@ extern "C" int abort_torrents() {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -574,9 +574,9 @@ extern "C" int move_torrent(const char *id, wchar_t *path) {
 		h.resume();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -592,9 +592,9 @@ int my_add_torrent() {
 		*/
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -657,9 +657,9 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -671,9 +671,9 @@ extern "C" int pause_torrent(const char *id) {
 		h.pause();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -685,9 +685,9 @@ extern "C" int set_auto_managed_torrent(const char *id, bool auto_managed) {
 		h.auto_managed(auto_managed);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -700,9 +700,9 @@ extern "C" int remove_torrent(const char *id) {
 		session->remove_torrent(h);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -714,9 +714,9 @@ extern "C" int resume_torrent(const char *id) {
 		h.resume();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -728,9 +728,9 @@ extern "C" int force_reannounce(const char *id) {
 		h.force_reannounce();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -742,9 +742,9 @@ extern "C" int scrape_tracker(const char *id) {
 		h.scrape_tracker();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -756,9 +756,9 @@ extern "C" int get_torrent_status(const char *id, wrapper_torrent_status *stats)
 		get_wrapper_torrent_status(h, stats);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -770,9 +770,9 @@ extern "C" int free_torrent_status(wrapper_torrent_status *info) {
 		delete[] info->current_tracker;
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -827,9 +827,9 @@ extern "C" int get_torrent_info(const char *id, wrapper_torrent_info *info) {
 		info->num_seeds=num_seeds;
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -844,9 +844,9 @@ extern "C" int free_torrent_info(wrapper_torrent_info *info) {
 		delete[] info->seeds;
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -864,9 +864,9 @@ extern "C" int signal_fast_resume_data_request(const char *id) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -880,9 +880,9 @@ extern "C" int clear_error_and_retry(const char *id) {
 		h.resume();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -903,9 +903,9 @@ extern "C" int get_num_peers(const char *id, int &num_peers) {
 		num_peers = peers.size();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -917,9 +917,9 @@ extern "C" int has_metadata(const char *id, int &has_metadata) {
 		has_metadata = h.has_metadata();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -931,9 +931,9 @@ extern "C" int is_valid(const char *id, int &is_valid) {
 		is_valid = h.is_valid();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -976,7 +976,7 @@ extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, i
 				libtorrent::utf8_wchar(peer.client.c_str(), w);
 				torrent_peer->client_name = mywcsdup(w.c_str());
 			} catch (std::runtime_error &e) {
-				OutputDebugStringA(e.what());
+				log(s2c(e.what()));
 				torrent_peer->client_name = 0;			
 			}
 			
@@ -989,9 +989,9 @@ extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, i
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1008,9 +1008,9 @@ extern "C" int free_peers(wrapper_torrent_peer **torrent_peers, int numPeers) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1040,9 +1040,9 @@ extern "C" int get_alerts(void(*alertCallback)(void*)) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1054,9 +1054,9 @@ extern "C" int set_seed_ratio(const char *id, float seed_ratio) {
 		h.set_ratio(seed_ratio);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1070,9 +1070,9 @@ extern "C" int get_num_files(const char *id, int &num_files) {
 		num_files = files.num_files();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1106,9 +1106,9 @@ extern "C" int get_files(const char *id, wrapper_file_entry **file_entries) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1128,9 +1128,9 @@ extern "C" int set_file_priorities(const char *id, int *priorities, int num_prio
 		h.prioritize_files(priorities_vector);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1142,9 +1142,9 @@ extern "C" int set_file_priority(const char *id, int index, int priority) {
 		h.file_priority(index, priority);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1166,7 +1166,7 @@ extern "C" int start_dht(const wchar_t *dht_state_file_path) {
 				dht_state = libtorrent::bdecode(std::istream_iterator<char>(dht_state_file), std::istream_iterator<char>());
 				state_loaded = true;
 			} catch (std::exception& e) {
-				OutputDebugStringA(e.what());
+				log(s2c(e.what()));
 				//no dht to resume will start dht without a prebuilt state
 			}
 		}
@@ -1178,9 +1178,9 @@ extern "C" int start_dht(const wchar_t *dht_state_file_path) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1191,9 +1191,9 @@ extern "C" int add_dht_router(const char *address, int port) {
 		session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1204,9 +1204,9 @@ extern "C" int add_dht_node(const char *address, int port) {
 		session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1223,9 +1223,9 @@ extern "C" int save_dht_state(const wchar_t *dht_state_file_path) {
 		out.close();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1236,9 +1236,9 @@ extern "C" int stop_dht() {
 		session->stop_dht();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1249,9 +1249,9 @@ extern "C" int start_upnp() {
 		session->start_upnp();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1262,9 +1262,9 @@ extern "C" int stop_upnp() {
 		session->stop_upnp();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1275,9 +1275,9 @@ extern "C" int start_lsd() {
 		session->start_lsd();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1288,9 +1288,9 @@ extern "C" int stop_lsd() {
 		session->stop_lsd();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1301,9 +1301,9 @@ extern "C" int start_natpmp() {
 		session->start_natpmp();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1314,9 +1314,9 @@ extern "C" int stop_natpmp() {
 		session->stop_natpmp();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1333,9 +1333,9 @@ extern "C" int set_peer_proxy(wrapper_proxy_settings *proxy) {
 		session->set_peer_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1352,9 +1352,9 @@ extern "C" int set_web_seed_proxy(wrapper_proxy_settings *proxy) {
 		session->set_web_seed_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1371,9 +1371,9 @@ extern "C" int set_tracker_proxy(wrapper_proxy_settings *proxy) {
 		session->set_tracker_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1390,9 +1390,9 @@ extern "C" int set_dht_proxy(wrapper_proxy_settings *proxy) {
 		session->set_tracker_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1403,9 +1403,9 @@ extern "C" int echo(char *message) {
 		std::cout << "message:" << message << std::endl;
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1421,9 +1421,9 @@ extern "C" int free_pieces_info(pieces_info *info) {
 		delete[] info->pieces;
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1508,9 +1508,9 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1528,9 +1528,9 @@ extern "C" int add_tracker(const char *id, char *url, int tier) {
 		h.replace_trackers(trackers);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1555,9 +1555,9 @@ extern "C" int remove_tracker(const char *id, char *url, int tier) {
 		h.replace_trackers(new_trackers);
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1578,9 +1578,9 @@ extern "C" int get_num_trackers(const char *id, int &num_trackers) {
 		num_trackers = trackers.size();
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1614,9 +1614,9 @@ extern "C" int get_trackers(const char *id, wrapper_announce_entry **torrent_tra
 		}
 		
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -1633,9 +1633,9 @@ extern "C" int free_trackers(wrapper_announce_entry **torrent_trackers, int numT
 		}
 		
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
