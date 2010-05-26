@@ -1,14 +1,14 @@
 
 // Program build and name
 #define PROGRAM_TEST true
-#define PROGRAM_NAME string(L"ltorrent")
-#define PROGRAM_HELP string(L"http://wiki.github.com/zootella/ltorrent/")
+#define PROGRAM_NAME CString(L"ltorrent")
+#define PROGRAM_HELP CString(L"http://wiki.github.com/zootella/ltorrent/")
 
 // Compose display text
-#define PROGRAM_ABOUT1 string(L"Version 0.1")
-#define PROGRAM_ABOUT2 string(L"Released under the GNU General Public License")
-#define PROGRAM_ABOUT3 string(L"Built on Rasterbar libtorrent 0.15.0, Boost 1.43.0, and OpenSSL 0.9.8n")
-#define PROGRAM_ABOUT4 string(L"http://github.com/zootella/ltorrent")
+#define PROGRAM_ABOUT1 CString(L"Version 0.1")
+#define PROGRAM_ABOUT2 CString(L"Released under the GNU General Public License")
+#define PROGRAM_ABOUT3 CString(L"Built on Rasterbar libtorrent 0.15.0, Boost 1.43.0, and OpenSSL 0.9.8n")
+#define PROGRAM_ABOUT4 CString(L"http://github.com/zootella/ltorrent")
 
 // Windows
 #define WINDOW_LIST 1
@@ -34,7 +34,6 @@ typedef unsigned __int64 big;
 #define length lstrlenW // Rename function
 
 // Text types
-typedef CString string;    // string is a CString object
 typedef LPCWSTR read;      // read is a pointer to characters and a null terminator that will only be read
 typedef LPWSTR  write;     // write is a pointer to a character buffer
 typedef WCHAR   character; // character is a single character or characters in a buffer

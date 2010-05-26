@@ -85,7 +85,7 @@ void ListPulse() {
 
 	// List them
 	int icon;
-	string status, size, type, kind, onpage;
+	CString status, size, type, kind, onpage;
 	if (tolist) {
 
 		// TELL THE LIST VIEW CONTROL HOW MANY YOU ARE GOING TO ADD
@@ -174,7 +174,7 @@ int CALLBACK ListCompare(LPARAM left, LPARAM right, LPARAM lparam) {
 	break;
 	case 1: {
 
-		string name1, name2;
+		CString name1, name2;
 		if (is(b1->u.filename)) name1 = b1->u.filename; else name1 = b1->u.p7file + b1->u.p8ext;
 		if (is(b2->u.filename)) name2 = b2->u.filename; else name2 = b2->u.p7file + b2->u.p8ext;
 		order = compare(name1, name2);

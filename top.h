@@ -16,9 +16,9 @@ public:
 	int file; // The icon a file with no extension gets in the shell
 
 	// The most recently requested extension and its matching program index and type text
-	string ext;
-	int    index;
-	string type;
+	CString ext;
+	int     index;
+	CString type;
 
 	// New
 	icontop() {
@@ -115,7 +115,7 @@ class stageitem {
 public:
 
 	// Text and resources to describe this stage
-	string title;
+	CString title;
 	sizeitem size; // How big the text will be painted in the title font
 	HICON icon16, icon32;
 	brushitem ink, background;
@@ -155,9 +155,9 @@ public:
 	int pop; // How many popup boxes and menus the program has put above the window
 
 	// Shown
-	string status; // Status bar text
+	CString status; // Status bar text
 
-	string folder;
+	CString folder;
 
 
 	stageitem *stage; // Current program stage shown on the screen

@@ -98,8 +98,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 
 			/*
 			// DISPLAY THE BROWSE FOR FOLDER DIALOG
-			string browse;
-			browse = FileBrowse("Choose where ltorrent should save files.");
+			CString browse = FileBrowse("Choose where ltorrent should save files.");
 
 			// IF THE USER CHOSE A PATH, WRITE IT INTO THE FOLDER EDIT BOX
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse);
@@ -118,9 +117,8 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 
 				/*
 				// COMPOSE AND UPDATE THE GET TEXT IF NECESSARY
-				int get;
-				string gettext;
-				get = GetDlgItemInt(dialog, IDC_GET, NULL, false);
+				CString gettext;
+				int get = GetDlgItemInt(dialog, IDC_GET, NULL, false);
 				if      (get == 1) gettext = "file at a time";
 				else if (get >  1) gettext = "files at once";
 				if (gettext != TextDialog(dialog, IDC_GETTEXT)) TextDialogSet(dialog, IDC_GETTEXT, gettext);
@@ -496,7 +494,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 			device.Font(Handle.arial);
 
 			// Compose text
-			string about = L"about " + PROGRAM_NAME;
+			CString about = L"about " + PROGRAM_NAME;
 
 			// Prepare rectangles
 			sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box

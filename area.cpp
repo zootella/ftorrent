@@ -294,7 +294,7 @@ void AreaPulse() {
 //	State.title = L"ltorrent";
 
 	// Compose status text
-	string s = saynumber(rows, L"file");
+	CString s = saynumber(rows, L"file");
 	if (pending)  s += L"  " + insertcommas(numerals(pending))  + L" to get";
 	if (selected) s += L"  " + insertcommas(numerals(selected)) + L" selected";
 

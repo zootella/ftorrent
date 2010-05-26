@@ -24,18 +24,18 @@ extern statetop  State;
 // Takes text
 // Copies and catcatenates the text into a string
 // Returns a string
-string make(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
+CString make(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
 
-	string s1 = r1, s2 = r2, s3 = r3, s4 = r4, s5 = r5, s6 = r6, s7 = r7, s8 = r8, s9 = r9;
+	CString s1 = r1, s2 = r2, s3 = r3, s4 = r4, s5 = r5, s6 = r6, s7 = r7, s8 = r8, s9 = r9;
 	return s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9;
 }
 
 // Takes text
 // Uppercases the characters in it
 // Returns a string
-string upper(read r) {
+CString upper(read r) {
 
-	string s = r;
+	CString s = r;
 	s.MakeUpper();
 	return s;
 }
@@ -43,9 +43,9 @@ string upper(read r) {
 // Takes text
 // Lowercases the characters in it
 // Returns a string
-string lower(read r) {
+CString lower(read r) {
 
-	string s = r;
+	CString s = r;
 	s.MakeLower();
 	return s;
 }
@@ -61,11 +61,11 @@ int number(read r) {
 // Takes a number and width like 3 for 001
 // Writes the minus sign and number into text
 // Returns a string
-string numerals(int number, int width) {
+CString numerals(int number, int width) {
 
 	character bay[MAX_PATH];
 	_itow_s(number, bay, MAX_PATH, 10); // The 10 is for base ten
-	string s = bay;
+	CString s = bay;
 
 	if (width) {
 		while (length(s) < width)
@@ -203,11 +203,10 @@ int find(read r, read t, direction d, matching m) {
 // Takes text to parse, opening and closing tags, and matching
 // Gets the text between the tags
 // Returns a string
-string parse(read r, read t1, read t2, matching m) {
+CString parse(read r, read t1, read t2, matching m) {
 
 	// Clip from after the first tag and then before the second or blank if not found
-	string s;
-	s = after(r, t1, Forward, m);
+	CString s = after(r, t1, Forward, m);
 	if (has(s, t2, m)) s = before(s, t2, Forward, m);
 	else               s = L"";
 	return s;
@@ -216,10 +215,10 @@ string parse(read r, read t1, read t2, matching m) {
 // Takes text and tag, and direction and matching
 // Splits the text before the tag
 // Returns a string, the text from r if not found in either direction
-string before(read r, read t, direction d, matching m) {
+CString before(read r, read t, direction d, matching m) {
 
 	// Use split
-	string b, a;
+	CString b, a;
 	split(r, t, &b, &a, d, m);
 	return b;
 }
@@ -227,10 +226,10 @@ string before(read r, read t, direction d, matching m) {
 // Takes text and tag, and direction and matching
 // Splits the text after the tag
 // Returns a string, blank if not found in either direction
-string after(read r, read t, direction d, matching m) {
+CString after(read r, read t, direction d, matching m) {
 
 	// Use split
-	string b, a;
+	CString b, a;
 	split(r, t, &b, &a, d, m);
 	return a;
 }
@@ -238,7 +237,7 @@ string after(read r, read t, direction d, matching m) {
 // Takes text and tag, strings for before and after, and direction and matching
 // Splits the text around the tag, writing text in before and after
 // Returns nothing, puts all text in before and none in after if not found in either direction
-void split(read r, read t, string *b, string *a, direction d, matching m) {
+void split(read r, read t, CString *b, CString *a, direction d, matching m) {
 
 	// Find the tag in the text using the direction and matching passed to this function
 	int i;
@@ -257,7 +256,7 @@ void split(read r, read t, string *b, string *a, direction d, matching m) {
 	tlength = length(t);
 
 	// Clip out before and after form a copy of r so that r and *b being the same won't mangle *a
-	string source = r;
+	CString source = r;
 	*b = clip(source, 0, i);
 	*a = clip(source, i + tlength, rlength - tlength - i);
 }
@@ -265,10 +264,10 @@ void split(read r, read t, string *b, string *a, direction d, matching m) {
 // Takes text, find and replace tags, and matching
 // Makes a single pass down the text, replacing whole instances of the find text with the replacement text
 // Returns a string
-string replace(read r, read t1, read t2, matching m) {
+CString replace(read r, read t1, read t2, matching m) {
 
 	// If the text or the find text is blank, or if the find text is not found, return the text unchanged
-	string top, left, bottom;
+	CString top, left, bottom;
 	top = r;
 	if (isblank(r) || isblank(t1) || !has(r, t1, m)) return top;
 
@@ -290,10 +289,10 @@ string replace(read r, read t1, read t2, matching m) {
 // Takes text, a starting index, and a number of characters to copy or -1 for all
 // Clips out that text, not reading outside of r
 // Returns a string
-string clip(read r, int startindex, int characters) {
+CString clip(read r, int startindex, int characters) {
 
 	// Get the length and eliminate special cases
-	string s;
+	CString s;
 	int n = length(r);
 	if (n == 0 || characters == 0) { return s; }            // No characters to clip or none requested
 	if (startindex < 0 || startindex > n - 1) { return s; } // Start index outside of r
@@ -310,9 +309,9 @@ string clip(read r, int startindex, int characters) {
 // Takes text and tag, and direction and matching
 // Confirms the text starts or ends with the tag, inserting it if necessary
 // Returns a string
-string on(read r, read t, direction d, matching m) {
+CString on(read r, read t, direction d, matching m) {
 
-	string s = r;
+	CString s = r;
 	if (d == Forward) { if (!starts(s, t, m)) s = t + s; } // Confirm the text starts with the tag
 	else              { if (!trails(s, t, m)) s = s + t; } // Confirm the text ends with the tag
 	return s;
@@ -321,9 +320,9 @@ string on(read r, read t, direction d, matching m) {
 // Takes text and tag, and direction and matching
 // Confirms the text does not start or end with the tag, removing multiple instances of it if necessary
 // Returns a string
-string off(read r, read t, direction d, matching m) {
+CString off(read r, read t, direction d, matching m) {
 
-	string s = r;
+	CString s = r;
 	if (d == Forward) { while(starts(s, t, m)) s = clip(s, length(t), -1); }            // Remove the tag from the start of the string
 	else              { while(trails(s, t, m)) s = clip(s, 0, length(s) - length(t)); } // Remove the tag from the end of the string
 	return s;
@@ -332,10 +331,10 @@ string off(read r, read t, direction d, matching m) {
 // Takes text and tags
 // Removes the tags from the start and end of the text
 // Returns a string
-string trim(read r, read t1, read t2, read t3) {
+CString trim(read r, read t1, read t2, read t3) {
 
 	// Copy the text into a string
-	string s = r;
+	CString s = r;
 
 	// Remove the tags from the start of the string until gone
 	while (true) {
@@ -362,7 +361,7 @@ string trim(read r, read t1, read t2, read t3) {
 // Takes a number and a name
 // Composes text like "14 apples"
 // Returns a string
-string saynumber(int number, read name) {
+CString saynumber(int number, read name) {
 
 	if      (number == 0) return make(L"no ", name, L"s");                               // Zero yields "no [name]s"
 	else if (number == 1) return make(L"1 ", name);                                      // One yields "1 [name]"
@@ -372,10 +371,10 @@ string saynumber(int number, read name) {
 // Takes text
 // Inserts commas between groups of three characters
 // Returns a string
-string insertcommas(read r) {
+CString insertcommas(read r) {
 
 	// Make strings
-	string s, left, bottom;
+	CString s, left, bottom;
 	s = r;
 
 	// Move down commas and groups of 3 characters
@@ -394,7 +393,7 @@ string insertcommas(read r) {
 // Takes a number of milliseconds
 // Composes text to describe how long that is
 // Returns a string
-string saytime(DWORD time) {
+CString saytime(DWORD time) {
 
 	// Return explination for less than a second
 	if (time < 1000) return L"less than a second";
@@ -406,7 +405,7 @@ string saytime(DWORD time) {
 	second = (time / 1000) - (hour * 3600) - (minute * 60);
 
 	// Compose the text to display and return it
-	string s;
+	CString s;
 	if (hour) s += saynumber(hour, L"hour");
 	if (hour || minute) s += L" " + saynumber(minute, L"minute");
 	s += L" " + saynumber(second, L"second");
@@ -414,7 +413,7 @@ string saytime(DWORD time) {
 }
 
 // Composes text like "Tue 2:07p 03.789s" with the current day and time to milliseconds
-string saynow() {
+CString saynow() {
 
 	// Get the local time right now
 	SYSTEMTIME info;
@@ -422,7 +421,7 @@ string saynow() {
 	GetLocalTime(&info);
 
 	// Compose day text
-	string day;
+	CString day;
 	switch (info.wDayOfWeek) {
 		case 0: day = "Sun"; break;
 		case 1: day = "Mon"; break;
@@ -434,16 +433,16 @@ string saynow() {
 	}
 
 	// Prepare hour and AM/PM text
-	string m = info.wHour < 12 ? L"a" : L"p";
+	CString m = info.wHour < 12 ? L"a" : L"p";
 	int h = info.wHour;
 	if (!h) h = 12;
 	if (h > 12) h -= 12;
 
 	// Turn numbers into text
-	string hour        = numerals(h);
-	string minute      = numerals(info.wMinute, 2);
-	string second      = numerals(info.wSecond, 2); // Say "09" seconds instead of just "9" so things line up vertically
-	string millisecond = numerals(info.wMilliseconds, 3);
+	CString hour        = numerals(h);
+	CString minute      = numerals(info.wMinute, 2);
+	CString second      = numerals(info.wSecond, 2); // Say "09" seconds instead of just "9" so things line up vertically
+	CString millisecond = numerals(info.wMilliseconds, 3);
 
 	// Put it all together
 	return day + L" " + hour + L":" + minute + m + L" " + second + L"." + millisecond + L"s";

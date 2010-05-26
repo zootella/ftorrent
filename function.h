@@ -1,10 +1,10 @@
 
 // String
-string make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
-string upper(read r);
-string lower(read r);
+CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
+CString upper(read r);
+CString lower(read r);
 int number(read r);
-string numerals(int number, int width = 0); // Has defaults
+CString numerals(int number, int width = 0); // Has defaults
 bool is(read r);
 bool isblank(read r);
 bool same(read r1, read r2, matching m = Different); // Has defaults
@@ -13,19 +13,19 @@ bool starts(read r, read t, matching m = Different); // Has defaults
 bool trails(read r, read t, matching m = Different); // Has defaults
 bool has(read r, read t, matching m = Different); // Has defaults
 int find(read r, read t, direction d = Forward, matching m = Different); // Has defaults
-string parse(read r, read t1, read t2, matching m = Different); // Has defaults
-string before(read r, read t, direction d = Forward, matching m = Different); // Has defaults
-string after(read r, read t, direction d = Forward, matching m = Different); // Has defaults
-void split(read r, read t, string *b, string *a, direction d = Forward, matching m = Different); // Has defaults
-string replace(read r, read t1, read t2, matching m = Different); // Has defaults
-string clip(read r, int startindex, int characters = -1); // Has defaults
-string on(read r, read t, direction d = Forward, matching m = Different); // Has defaults
-string off(read r, read t, direction d = Forward, matching m = Different); // Has defaults
-string trim(read r, read t1 = L"", read t2 = L"", read t3 = L""); // Has defaults
-string saynumber(int number, read name);
-string insertcommas(read r);
-string saytime(DWORD time);
-string saynow();
+CString parse(read r, read t1, read t2, matching m = Different); // Has defaults
+CString before(read r, read t, direction d = Forward, matching m = Different); // Has defaults
+CString after(read r, read t, direction d = Forward, matching m = Different); // Has defaults
+void split(read r, read t, CString *b, CString *a, direction d = Forward, matching m = Different); // Has defaults
+CString replace(read r, read t1, read t2, matching m = Different); // Has defaults
+CString clip(read r, int startindex, int characters = -1); // Has defaults
+CString on(read r, read t, direction d = Forward, matching m = Different); // Has defaults
+CString off(read r, read t, direction d = Forward, matching m = Different); // Has defaults
+CString trim(read r, read t1 = L"", read t2 = L"", read t3 = L""); // Has defaults
+CString saynumber(int number, read name);
+CString insertcommas(read r);
+CString saytime(DWORD time);
+CString saynow();
 
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
@@ -39,9 +39,9 @@ void log(read r);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void TextDialogSet(HWND dialog, int control, read r);
-string TextDialog(HWND dialog, int control);
+CString TextDialog(HWND dialog, int control);
 void TextWindowSet(HWND window, read r);
-string TextWindow(HWND window);
+CString TextWindow(HWND window);
 void EditAppend(HWND window, read r);
 void EditScroll(HWND window);
 HWND WindowCreateEdit(bool scrollbars, bool capacity);
@@ -50,7 +50,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 void WindowSize(HWND window, int x, int y);
 void WindowMove(HWND window, sizeitem size, bool paint = false); // Has defaults
 void WindowEdit(HWND window, boolean edit);
-string DialogBrowse(read display);
+CString DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
 void PaintMessage(HWND window = NULL); // Has defaults
@@ -94,8 +94,8 @@ int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Ha
 BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void AddTab(HWND window, int index, read title);
 void SetIcon(HWND window, HICON icon16, HICON icon32);
-int Icon(read ext, string *type);
-int IconGet(read ext, string *type);
+int Icon(read ext, CString *type);
+int IconGet(read ext, CString *type);
 int IconAddResource(read resource);
 int IconAdd(HICON icon, int systemindex);
 void ColumnIcon(HWND window, int column, int icon);
@@ -118,11 +118,11 @@ void ListAddDone(HWND window, int rows);
 void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
 void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
 int ListFind(HWND window, LPARAM p);
-string ListText(HWND window, int row, int column);
-bool ShellInfo(read ext, int *systemindex, string *type);
+CString ListText(HWND window, int row, int column);
+bool ShellInfo(read ext, int *systemindex, CString *type);
 bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
-string TextGuid();
+CString TextGuid();
 
 // Paint
 void PaintWindow(deviceitem *device);

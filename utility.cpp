@@ -30,7 +30,7 @@ void error(read r) {
 // Print a message out on the output log
 void log(read r) {
 
-	string s = make(saynow(), L" ", r, L"\r\n");
+	CString s = make(saynow(), L" ", r, L"\r\n");
 	OutputDebugString(s);
 	//TODO add it to the log tab
 }
@@ -74,7 +74,7 @@ void TextDialogSet(HWND dialog, int control, read r) {
 // Takes a dialog handle and a dialog control identifier number
 // Gets the text of the control
 // Returns a string, blank if no text or any error
-string TextDialog(HWND dialog, int control) {
+CString TextDialog(HWND dialog, int control) {
 
 	// Get a handle to the window of the control and return the text of that window
 	return TextWindow(GetDlgItem(dialog, control));
@@ -91,7 +91,7 @@ void TextWindowSet(HWND window, read r) {
 // Takes a window handle
 // Get the text of the window, like its title or the text inside it
 // Returns blank if no text or any error
-string TextWindow(HWND window) {
+CString TextWindow(HWND window) {
 
 	// If the window handle is null, return blank
 	if (!window) return L"";
@@ -102,7 +102,7 @@ string TextWindow(HWND window) {
 		+ 1; // Add 1 to have space in the buffer for the null terminator
 
 	// Open a string
-	string s;
+	CString s;
 	write buffer = s.GetBuffer(size);
 
 	// Write the window text into the buffer
@@ -120,10 +120,10 @@ string TextWindow(HWND window) {
 void EditAppend(HWND window, read r) {
 
 	// Add the given text to a new line at the bottom
-	string s = TextWindow(window); // Get the text that's already there, the user may have edited it
-	if (is(s)) s += L"\r\n";       // If not blank, start with a newline to make sure r will be on its own line
-	s += r;                        // Add the given text
-	TextWindowSet(window, s);      // Put the edited text back into the control
+	CString s = TextWindow(window); // Get the text that's already there, the user may have edited it
+	if (is(s)) s += L"\r\n";        // If not blank, start with a newline to make sure r will be on its own line
+	s += r;                         // Add the given text
+	TextWindowSet(window, s);       // Put the edited text back into the control
 
 	// Scroll down to the bottom
 	EditScroll(window);
@@ -262,7 +262,7 @@ void WindowEdit(HWND window, boolean edit) {
 // Takes text to display in the dialog box
 // Shows the user the browse for folder dialog box
 // Returns the path the user chose, blank on cancel or error
-string DialogBrowse(read display) {
+CString DialogBrowse(read display) {
 
 	// Setup information for the dialog box
 	character name[MAX_PATH];
@@ -999,7 +999,7 @@ void SetIcon(HWND window, HICON icon16, HICON icon32) {
 // Takes a file extension like ".zip" which can be blank
 // Gets shell information about the extension and its index in the program image list
 // Returns the program image list icon index and writes the type text, covering an error with the file icon and composed text
-int Icon(read ext, string *type) {
+int Icon(read ext, CString *type) {
 
 	int icon = IconGet(ext, type);           // If the program list is full, icon will be -1 and type will be system or composed text
 	if (icon == -1) icon = Handle.icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
@@ -1009,7 +1009,7 @@ int Icon(read ext, string *type) {
 // Takes a file extension like ".zip" which can be blank
 // Gets shell information about the extension and its index in the program image list
 // Returns the program image list icon index and writes the type text, or -1 and blanks if any error
-int IconGet(read ext, string *type) {
+int IconGet(read ext, CString *type) {
 
 	// If the requested extension is the last one loaded, fill the request quickly
 	if (same(ext, Handle.icon.ext, Matching)) {
@@ -1020,7 +1020,7 @@ int IconGet(read ext, string *type) {
 
 	// Get the system index and type text for the extension
 	int systemindex;
-	string typetext;
+	CString typetext;
 	if (!ShellInfo(ext, &systemindex, &typetext)) { *type = L""; return -1; }
 
 	// Find the system index in the program image list or make program index -1
@@ -1404,7 +1404,7 @@ int ListFind(HWND window, LPARAM p) {
 // Takes row and column numbers
 // Gets the text from the list view subitem at that location
 // Returns the text
-string ListText(HWND window, int row, int column) {
+CString ListText(HWND window, int row, int column) {
 
 	return L"";
 	//TODO check this in unicode before you use it
@@ -1413,9 +1413,9 @@ string ListText(HWND window, int row, int column) {
 	int characters = State.list.max + 1;
 
 	// Open a string
-	string buffer_string;
-	int    buffer_characters = characters;
-	write  buffer_write      = buffer_string.GetBuffer(buffer_characters + 1 +8); //TODO make it so you don't need SAFETY 8 anymore
+	CString buffer_string;
+	int     buffer_characters = characters;
+	write   buffer_write      = buffer_string.GetBuffer(buffer_characters + 1 +8); //TODO make it so you don't need SAFETY 8 anymore
 
 	// Copy in the characters
 	LVITEM info;
@@ -1440,7 +1440,7 @@ string ListText(HWND window, int row, int column) {
 // Takes a file extension like ".zip" which can be blank
 // Gets the index of its icon in the system image list and the shell type text
 // Returns true if successful and writes the system index and type, or false and -1 and blank
-bool ShellInfo(read ext, int *systemindex, string *type) {
+bool ShellInfo(read ext, int *systemindex, CString *type) {
 
 	// Use the extension to get the system image list index and type text, Windows 9x returns blank for unknown extensions
 	SHFILEINFO info;
@@ -1512,7 +1512,7 @@ void DestroyIconSafely(HICON icon) {
 
 // Generates a guid
 // Returns a string with the 32 lowercase hexidecimal characters of the guid, or blank if any error
-string TextGuid() {
+CString TextGuid() {
 
 	// Get a new unique GUID from the system
 	GUID guid;
@@ -1529,10 +1529,9 @@ string TextGuid() {
 
 	// Convert the OLE wide character string into a text string
 	COLE2T text(bay);
-	string s;
-	s = text;
+	CString s = text;
 
 	s = lower(clip(s, 1, 8) + clip(s, 10, 4) + clip(s, 15, 4) + clip(s, 20, 4) + clip(s, 25, 12)); // Clip out the number parts of the GUID string and lowercase it
-	if (length(s) != 32) { error(L"guid length not 32 characters"); return L""; }                 // Make sure the GUID string is 32 characters
+	if (length(s) != 32) { error(L"guid length not 32 characters"); return L""; }                  // Make sure the GUID string is 32 characters
 	return s;                                                                                      // Return the string
 }

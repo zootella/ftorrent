@@ -42,6 +42,6 @@ void StartIcon() {
 	Handle.icon.descending = IconAddResource(L"COLUMN_DESCENDING");
 
 	// Load the shell icon for a file
-	string type;
+	CString type;
 	Handle.icon.file = IconGet(L"", &type);
 }

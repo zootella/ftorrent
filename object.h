@@ -156,7 +156,7 @@ public:
 	sizeitem    size;           // Position and size of area in the main client window
 	areacommand command;        // The state of the command this area item represents
 	areadisplay display;        // How this area is currently drawn in the window
-	string      text, tip;      // Text painted in the area item and any for a tooltip
+	CString     text, tip;      // Text painted in the area item and any for a tooltip
 	int         adjust;         // Pixels to nudge the text horizontally
 	sizeitem    textsize;       // How big the text is when painted
 	HICON       icon, hot, dim; // Icons for normal, hot and dim appearances
@@ -185,7 +185,7 @@ public:
 	void Edit();
 
 	// Compose
-	void Compose(int *i, string *s, string *z);
+	void Compose(int *i, CString *s, CString *z);
 	int Size();
 
 	// Pointers
@@ -197,8 +197,8 @@ public:
 	torrentstatus status;   // Current status of this item on the torrent list
 	int           priority; // 0 none or normal, 1 first, OR -1 last
 	int           size;     // Size of the saved file in bytes, or -1 if unknown
-	string        path;     // Path of the saved file or error text
-	string        not;      // Bad status code text for status column
+	CString       path;     // Path of the saved file or error text
+	CString       not;      // Bad status code text for status column
 
 	// Display
 	bool listed; // True when the torrent item has a row in the list view control

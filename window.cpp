@@ -60,7 +60,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.arial     = FontName(L"Arial", 28);
 
 	// Register the class for the main window, and create it
-	string name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
+	CString name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
 	WNDCLASSEX info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize        = sizeof(info);               // Size of this structure
