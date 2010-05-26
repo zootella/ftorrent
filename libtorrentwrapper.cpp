@@ -528,9 +528,9 @@ void mytest() {
 		}
 
 	} catch (std::exception &e) {
-		OutputDebugStringA(e.what());
+		log(s2c(e.what()));
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 }
 
