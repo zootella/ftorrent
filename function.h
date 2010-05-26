@@ -149,13 +149,28 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 // Start
 void StartIcon();
 
+// Library
+std::string w2s(std::wstring w);
+std::wstring s2w(std::string s);
+CString s2c(std::string s);
+CString w2c(std::wstring w);
+
+
+
+
+
+
+
+
 // Test
 void Test();
 
 void mytest();
 
 
-//std::string makenarrow(std::wstring w);
+
+
+
 
 
 

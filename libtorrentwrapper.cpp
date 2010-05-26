@@ -76,7 +76,6 @@ typedef boost::asio::ip::address address;
 #define EXCEPTION_RETHROWN 1
 #define EXCEPTION_MANUALLY_THROWN 2
 
-//#define WIDE_PATH(x) boost::filesystem::path(libtorrent::wchar_utf8(x))
 
 wchar_t *mywcsdup(const wchar_t *str) {
 	int len = wcslen(str);
@@ -391,7 +390,7 @@ extern "C" int save_fast_resume_data(wrapper_alert_info *alert, wchar_t *filePat
 	} catch (std::exception &e) {
 		OutputDebugStringA(e.what());
 	} catch (...) {
-		OutputDebugString(L"exception");
+		log(L"exception");
 	}
 	return 0;
 }
@@ -521,11 +520,8 @@ void mytest() {
 
 			libtorrent::add_torrent_params torrent_params;
 
-			std::string s1, s2;
-			libtorrent::wchar_utf8(L"C:\\Documents\\test", s1);
-			libtorrent::wchar_utf8(L"C:\\Documents\\my.torrent", s2);
-			torrent_params.save_path = boost::filesystem::path(s1);
-			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
+			torrent_params.save_path = boost::filesystem::path(w2s(L"C:\\Documents\\test"));
+			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(w2s(L"C:\\Documents\\my.torrent")));
 			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
 
 			log(L"add done");

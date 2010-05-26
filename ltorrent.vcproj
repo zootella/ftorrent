@@ -189,7 +189,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\libtorrentadd.cpp"
+				RelativePath=".\library.cpp"
 				>
 			</File>
 			<File

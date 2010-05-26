@@ -1,38 +1,14 @@
 
-/*
-#include "boost/shared_ptr.hpp"
-#include "boost/asio/ip/address.hpp"
-#include "boost/filesystem/path.hpp"
+// Include libtorrent
+#include "libtorrent/create_torrent.hpp"
 
-#include "libtorrent/utf8.hpp"
-#include "libtorrent/config.hpp"
-#include "libtorrent/session.hpp"
-#include "libtorrent/peer_info.hpp"
-#include "libtorrent/alert.hpp"
-#include "libtorrent/alert_types.hpp"
-#include "libtorrent/peer_id.hpp"
-#include "libtorrent/size_type.hpp"
-#include "libtorrent/entry.hpp"
-#include "libtorrent/bencode.hpp"
-#include "libtorrent/identify_client.hpp"
-#include "libtorrent/alert_types.hpp"
-#include "libtorrent/ip_filter.hpp"
-#include "libtorrent/magnet_uri.hpp"
-#include "libtorrent/bitfield.hpp"
-#include "libtorrent/file.hpp"
-#include "libtorrent/socket.hpp"
-
-#include "libtorrent/extensions/metadata_transfer.hpp"
-#include "libtorrent/extensions/ut_metadata.hpp"
-#include "libtorrent/extensions/ut_pex.hpp"
-#include "libtorrent/extensions/smart_ban.hpp"
-*/
-
-// Include statements
+// Include platform
 #include <windows.h>
 #include <windef.h>
 #include <atlstr.h>
 #include <shlobj.h>
+
+// Include program
 #include "resource.h"
 #include "program.h"
 #include "object.h"
@@ -45,23 +21,19 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-
+// Print an error message out on the output log
 void error(read r) {
 
 	log(make(L"error ", numerals(GetLastError()), L" ", r));
 }
 
+// Print a message out on the output log
 void log(read r) {
 
 	string s = make(saynow(), L" ", r, L"\r\n");
 	OutputDebugString(s);
 	//TODO add it to the log tab
 }
-
-
-
-
-
 
 // Given access to a handle, close it and make it null
 void CloseHandleSafely(HANDLE *handle) {
