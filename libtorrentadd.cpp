@@ -1,4 +1,5 @@
 
+/*
 #include "boost/shared_ptr.hpp"
 #include "boost/asio/ip/address.hpp"
 #include "boost/filesystem/path.hpp"
@@ -25,45 +26,34 @@
 #include "libtorrent/extensions/ut_metadata.hpp"
 #include "libtorrent/extensions/ut_pex.hpp"
 #include "libtorrent/extensions/smart_ban.hpp"
+*/
 
-// Include statements
+#include "libtorrent/create_torrent.hpp"
+
 #include <windows.h>
 #include <windef.h>
 #include <atlstr.h>
 #include <shlobj.h>
+
 #include "resource.h"
 #include "program.h"
 #include "object.h"
 #include "top.h"
 #include "function.h"
 
-// Access to global objects
+//#include <string>
+
 extern handletop Handle;
 extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-// Set up the program image list
-void StartIcon() {
 
-	// Initialize ext with a guid so the first requested extension will never match
-	Handle.icon.ext = TextGuid();
+std::string makenarrow(std::wstring w) {
 
-	// Create the program image list
-	Handle.icon.list = ImageList_Create(
-		16, 16,         // Image size
-		ILC_COLOR32 |   // Windows XP style 32 bit antialiased icons
-		ILC_MASK,       // Show icon transparency
-		0,              // Start with no icons
-		ICON_CAPACITY); // Be able to grow to hold this many more icons
-	if (!Handle.icon.list) error(L"imagelist_create");
-
-	// Load the resource icons into the program image list and get their indices there, or -1 if not loaded
-	Handle.icon.clear      = IconAddResource(L"CLEAR_ICON");
-	Handle.icon.ascending  = IconAddResource(L"COLUMN_ASCENDING");
-	Handle.icon.descending = IconAddResource(L"COLUMN_DESCENDING");
-
-	// Load the shell icon for a file
-	string type;
-	Handle.icon.file = IconGet(L"", &type);
+	std::string s;
+	libtorrent::wchar_utf8(w, s);
+	return s;
 }
+
+

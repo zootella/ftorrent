@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\libtorrentadd.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\libtorrentwrapper.cpp"
 				>
 			</File>
@@ -202,6 +206,10 @@
 			</File>
 			<File
 				RelativePath=".\paint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\simpleclient.cpp"
 				>
 			</File>
 			<File

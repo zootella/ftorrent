@@ -155,6 +155,10 @@ void Test();
 void mytest();
 
 
+//std::string makenarrow(std::wstring w);
+
+
+
 
 
 
