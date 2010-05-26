@@ -41,8 +41,6 @@
 #include "top.h"
 #include "function.h"
 
-//#include <string>
-
 extern handletop Handle;
 extern areatop   Area;
 extern datatop   Data;
@@ -56,4 +54,10 @@ std::string makenarrow(std::wstring w) {
 	return s;
 }
 
+std::wstring makewide(std::string s) {
+
+	std::wstring w;
+	libtorrent::utf8_wchar(s, w);
+	return w;
+}
 
