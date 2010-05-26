@@ -57,20 +57,7 @@ typedef boost::asio::ip::address address;
 #define PIECE_UNAVAILABLE_PARTIAL 'u'
 #define PIECE_QUEUED 'q'
 
-#ifdef NO_ERROR
-#define EXTERN_RET int
-#define wTHROW(x) return 0;
-#else
-#define EXTERN_RET wrapper_exception*
-#define wTHROW(x) if (last_error != NULL) { delete last_error; last_error=NULL;} last_error = x; return last_error;
-#endif
 
-#ifdef _DLL
-#define EXTERN_HEADER extern "C" __declspec(dllexport)
-#define WINAPI __stdcall
-#else
-#define EXTERN_HEADER extern "C"
-#endif
 
 #define EXCEPTION_UNKNOWN_RETHROWN 0
 #define EXCEPTION_RETHROWN 1
@@ -359,7 +346,7 @@ void process_alert(libtorrent::alert const *alert, wrapper_alert_info *alertInfo
 
 			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
 			if (srdf_alert) {
-				//std::cout << "save_resume_data_failed_alert (" << srdf_alert->msg << ")" << std::endl;
+				log(make(L"save_resume_data_failed_alert (", s2c(srdf_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(srdf_alert->msg.c_str());
 				return;
@@ -367,7 +354,7 @@ void process_alert(libtorrent::alert const *alert, wrapper_alert_info *alertInfo
 
 			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
 			if (fra_alert) {
-				//std::cout << "fastresume_rejected_alert (" << fra_alert->msg << ")" << std::endl;
+				log(make(L"fastresume_rejected_alert (", s2c(fra_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = mystrdup(fra_alert->msg.c_str());
 				return;
@@ -413,11 +400,11 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 
 			h.save_resume_data();
 			++num_resume_data;
-			//std::cout << "num_resume: " << num_resume_data << std::endl;
+			log(make(L"num_resume: ", numerals(num_resume_data)));
 		}
 
 		while (num_resume_data > 0) {
-			//std::cout << "waiting for resume: " << num_resume_data << std::endl;
+			log(make(L"waiting for resume: ", numerals(num_resume_data)));
 
 			libtorrent::alert const *alert = session->wait_for_alert(libtorrent::seconds(10));
 
@@ -435,7 +422,7 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 			alertCallback(alertInfo);
 
 			if (alertInfo->has_data) {
-				//std::cout << "resume_found: " << std::endl;
+				log(L"resume_found: ");
 				--num_resume_data;
 			}
 			delete[] sha1;
@@ -538,18 +525,18 @@ void mytest() {
 extern "C" int abort_torrents() {
 	try {
 
-		//std::cout << "abort_torrents() called" << std::endl;
+		log(L"abort_torrents() called");
 
 		if(session) {
 
-			//std::cout << "session->abort" << std::endl;
+			log(L"session->abort");
 
 			session->abort();
 
 			// clean up ip_filter callback method objects, if necessary
 			// set_ip_filter_internal(NULL);
 
-			//std::cout << "abort finished" << std::endl;
+			log(L"abort finished");
 		}
 
 	} catch (std::exception &e) {
@@ -603,11 +590,11 @@ int my_add_torrent() {
 extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
 	try {
 
-		//std::cout << "adding torrent" << std::endl;
-		//std::cout << "sha1String" << sha1String << std::endl;
-		//std::cout << "trackerURI" << trackerURI << std::endl;
-		//std::cout << "torrentPath: " << torrentPath << std::endl;
-		//std::cout << "resumeFilePath: " << fastResumePath << std::endl;
+		log(L"adding torrent");
+		log(make(L"sha1String", s2c(sha1String)));
+		log(make(L"trackerURI", s2c(trackerURI)));
+		log(make(L"torrentPath: ", torrentPath));
+		log(make(L"resumeFilePath: ", fastResumePath));
 
 		sha1_hash sha1 = getSha1Hash(sha1String);
 
@@ -628,10 +615,9 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 				std::string s2;
 				libtorrent::wchar_utf8(torrentPath, s2);
 				torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
+			} else {
+				log(L"could not find torrent file");
 			}
-			//else {
-			//	std::cout << "could not find torrent file" << std::endl;
-			//}
 			torrent_file.close();
 		}
 
@@ -648,10 +634,9 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 
 				torrent_params.resume_data = &resume_buf;
 				resume_file.close();
+			} else {
+				log(L"could not find fast resume file");
 			}
-			//else {
-			//	std::cout << "could not find fast resume file" << std::endl;
-			//}
 		}
 
 		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
@@ -854,13 +839,13 @@ extern "C" int free_torrent_info(wrapper_torrent_info *info) {
 extern "C" int signal_fast_resume_data_request(const char *id) {
 	try {
 
-		//std::cout << "signal_fast_resume_data_request: " << id << std::endl;
+		log(make(L"signal_fast_resume_data_request: ", s2c(id)));
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		if (h.has_metadata()) {
-			//std::cout << "has_metadata" << std::endl;
+			log(L"has_metadata");
 			h.save_resume_data();
-			//std::cout << "save_resume_data called on torrent handle: " << id << std::endl;
+			log(make(L"save_resume_data called on torrent handle: ", s2c(id)));
 		}
 
 	} catch (std::exception &e) {
@@ -953,7 +938,7 @@ extern "C" int get_peers(const char *id, wrapper_torrent_peer **torrent_peers, i
 
 			libtorrent::peer_info peer = *iter;
 			std::string address = peer.ip.address().to_string();
-			//std::cout << "peer:" << address << std::endl;
+			log(make(L"peer:", s2c(address)));
 
 			wrapper_torrent_peer *torrent_peer = *torrent_peers;
 			torrent_peers++;
@@ -1400,7 +1385,7 @@ extern "C" int set_dht_proxy(wrapper_proxy_settings *proxy) {
 extern "C" int echo(char *message) {
 	try {
 
-		std::cout << "message:" << message << std::endl;
+		log(make(L"message:", s2c(message)));
 
 	} catch (std::exception &e) {
 		log(s2c(e.what()));
