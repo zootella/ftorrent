@@ -103,7 +103,7 @@ CString TextWindow(HWND window) {
 
 	// Open a string
 	CString s;
-	write buffer = s.GetBuffer(size);
+	LPWSTR buffer = s.GetBuffer(size);
 
 	// Write the window text into the buffer
 	GetWindowText( // Writes all the text and a null terminator
@@ -265,7 +265,7 @@ void WindowEdit(HWND window, boolean edit) {
 CString DialogBrowse(read display) {
 
 	// Setup information for the dialog box
-	character name[MAX_PATH];
+	WCHAR name[MAX_PATH];
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
 	info.hwndOwner      = Handle.window;        // Handle to parent window for the browse dialog
@@ -283,7 +283,7 @@ CString DialogBrowse(read display) {
 	if (!list) return L""; // The user clicked Cancel or the close X
 
 	// Get the path the user chose
-	character buffer[MAX_PATH];
+	WCHAR buffer[MAX_PATH];
 	SHGetPathFromIDList(list, buffer);
 	CoTaskMemFree(list); // Free the COM memory the system allocated for us
 	return buffer;
@@ -1121,7 +1121,7 @@ void ListColumnInsert(HWND window, int column, int format, int image, read r, in
 	info.mask    = LVCF_FMT | LVCF_IMAGE | LVCF_TEXT | LVCF_WIDTH;
 	info.fmt     = format;
 	info.iImage  = image;
-	info.pszText = (write)r;
+	info.pszText = (LPWSTR)r;
 	info.cx      = width;
 	if (ListView_InsertColumn(window, column, &info) == -1) error(L"listview_insertcolumn");
 }
@@ -1305,12 +1305,12 @@ void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, 
 	column2.mask = column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
 
 	// Text
-	column1.pszText = (write)r1;
-	column2.pszText = (write)r2;
-	column3.pszText = (write)r3;
-	column4.pszText = (write)r4;
-	column5.pszText = (write)r5;
-	column6.pszText = (write)r6;
+	column1.pszText = (LPWSTR)r1;
+	column2.pszText = (LPWSTR)r2;
+	column3.pszText = (LPWSTR)r3;
+	column4.pszText = (LPWSTR)r4;
+	column5.pszText = (LPWSTR)r5;
+	column6.pszText = (LPWSTR)r6;
 
 	// Icons
 	if (icon1 != -1) { column1.mask = column1.mask | LVIF_IMAGE; column1.iImage = icon1; }
@@ -1363,12 +1363,12 @@ void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2,
 	column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
 
 	// Text
-	column1.pszText = (write)r1;
-	column2.pszText = (write)r2;
-	column3.pszText = (write)r3;
-	column4.pszText = (write)r4;
-	column5.pszText = (write)r5;
-	column6.pszText = (write)r6;
+	column1.pszText = (LPWSTR)r1;
+	column2.pszText = (LPWSTR)r2;
+	column3.pszText = (LPWSTR)r3;
+	column4.pszText = (LPWSTR)r4;
+	column5.pszText = (LPWSTR)r5;
+	column6.pszText = (LPWSTR)r6;
 
 	// Icons
 	column1.iImage = icon1;
@@ -1415,7 +1415,7 @@ CString ListText(HWND window, int row, int column) {
 	// Open a string
 	CString buffer_string;
 	int     buffer_characters = characters;
-	write   buffer_write      = buffer_string.GetBuffer(buffer_characters + 1 +8); //TODO make it so you don't need SAFETY 8 anymore
+	LPWSTR  buffer_write      = buffer_string.GetBuffer(buffer_characters + 1 +8); //TODO make it so you don't need SAFETY 8 anymore
 
 	// Copy in the characters
 	LVITEM info;

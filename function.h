@@ -150,17 +150,16 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 void StartIcon();
 
 // Library
-std::string w2s(std::wstring w);
-std::wstring s2w(std::string s);
-CString s2c(std::string s);
-CString w2c(std::wstring w);
-
-
-
-
-
-
-
+std::string WideToString(std::wstring w);
+std::wstring StringToWide(std::string s);
+CString StringToCString(std::string s);
+CString WideToCString(std::wstring w);
+const char *HashToString(const libtorrent::sha1_hash &hash);
+const char *PeerIdToString(const libtorrent::peer_id &id);
+const char *CopyStringFromStream(const std::stringstream &stream);
+char *CopyString(const char *s);
+wchar_t *CopyWideString(const wchar_t *s);
+libtorrent::big_number getSha1Hash(const char *s);
 
 // Test
 void Test();
