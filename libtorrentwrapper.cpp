@@ -49,7 +49,7 @@ extern datatop   Data;
 extern statetop  State;
 
 // Global libtorrent session object
-libtorrent::session *session = NULL;
+//libtorrent::session *session = NULL;
 
 // Rename types
 //typedef libtorrent::big_number sha1_hash;
@@ -291,8 +291,8 @@ void get_wrapper_torrent_status(libtorrent::torrent_handle handle, wrapper_torre
 
 libtorrent::torrent_handle findTorrentHandle(const char *sha1String) {
 
-	libtorrent::big_number sha1 = getSha1Hash(sha1String);
-	libtorrent::torrent_handle torrent_handle = session->find_torrent(sha1);
+	libtorrent::big_number sha1 = StringToHash(sha1String);
+	libtorrent::torrent_handle torrent_handle = Handle.session->find_torrent(sha1);
 	return torrent_handle;
 }
 
@@ -367,8 +367,8 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 
 		int num_resume_data = 0;
 
-		std::vector<libtorrent::torrent_handle> handles = session->get_torrents();
-		session->pause();
+		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
+		Handle.session->pause();
 
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
 			libtorrent::torrent_handle &h = *i;
@@ -385,13 +385,13 @@ extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*))
 		while (num_resume_data > 0) {
 			log(make(L"waiting for resume: ", numerals(num_resume_data)));
 
-			libtorrent::alert const *alert = session->wait_for_alert(libtorrent::seconds(10));
+			libtorrent::alert const *alert = Handle.session->wait_for_alert(libtorrent::seconds(10));
 
 			// if we don't get an alert within 10 seconds, abort
 			if (alert == NULL)
 				break;
 
-			std::auto_ptr<libtorrent::alert> holder = session->pop_alert();
+			std::auto_ptr<libtorrent::alert> holder = Handle.session->pop_alert();
 
 			wrapper_alert_info *alertInfo = new wrapper_alert_info();
 			process_alert(alert, alertInfo);
@@ -431,12 +431,12 @@ extern "C" int update_settings(wrapper_session_settings *settings) {
 		s->active_seeds          = settings->active_seeds_limit;
 		s->active_limit          = settings->active_limit;
 
-		session->set_settings(*s);
-		session->set_alert_mask(settings->alert_mask);
-		session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), settings->listen_interface);
+		Handle.session->set_settings(*s);
+		Handle.session->set_alert_mask(settings->alert_mask);
+		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), settings->listen_interface);
 
-		session->set_upload_rate_limit(settings->max_upload_bandwidth);
-		session->set_download_rate_limit(settings->max_download_bandwidth);
+		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
+		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -449,15 +449,15 @@ extern "C" int update_settings(wrapper_session_settings *settings) {
 extern "C" int init(wrapper_session_settings *setting) {
 	try {
 
-		session = new libtorrent::session;
+		Handle.session = new libtorrent::session;
 
 		if (setting) // Added this
 			update_settings(setting);
 
-		session->add_extension(&libtorrent::create_metadata_plugin);
-		session->add_extension(&libtorrent::create_ut_metadata_plugin);
-		session->add_extension(&libtorrent::create_ut_pex_plugin);
-		session->add_extension(&libtorrent::create_smart_ban_plugin);
+		Handle.session->add_extension(&libtorrent::create_metadata_plugin);
+		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin);
+		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);
+		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -488,7 +488,7 @@ void mytest() {
 
 			torrent_params.save_path = boost::filesystem::path(WideToString(L"C:\\Documents\\test"));
 			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(WideToString(L"C:\\Documents\\my.torrent")));
-			libtorrent::torrent_handle h = session->add_torrent(torrent_params);
+			libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
 
 			log(L"add done");
 		}
@@ -506,11 +506,11 @@ extern "C" int abort_torrents() {
 
 		log(L"abort_torrents() called");
 
-		if(session) {
+		if (Handle.session) {
 
 			log(L"session->abort");
 
-			session->abort();
+			Handle.session->abort();
 
 			// clean up ip_filter callback method objects, if necessary
 			// set_ip_filter_internal(NULL);
@@ -554,7 +554,7 @@ int my_add_torrent() {
 		libtorrent::add_torrent_params torrent_params;
 		torrent_params.save_path = boost::filesystem::path(libtorrent::wchar_utf8("C:\\Documents\\test");
 		torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(libtorrent::wchar_utf8("C:\\Documents\\creative commons.torrent"));
-		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
+		libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
 		*/
 
 	} catch (std::exception &e) {
@@ -575,7 +575,7 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 		log(make(L"torrentPath: ", torrentPath));
 		log(make(L"resumeFilePath: ", fastResumePath));
 
-		libtorrent::big_number sha1 = getSha1Hash(sha1String);
+		libtorrent::big_number sha1 = StringToHash(sha1String);
 
 		libtorrent::add_torrent_params torrent_params;
 		std::string s1;
@@ -618,7 +618,7 @@ extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentP
 			}
 		}
 
-		libtorrent::torrent_handle h = session->add_torrent(torrent_params);
+		libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -661,7 +661,7 @@ extern "C" int remove_torrent(const char *id) {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
 		h.pause();
-		session->remove_torrent(h);
+		Handle.session->remove_torrent(h);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -984,7 +984,7 @@ extern "C" int get_alerts(void(*alertCallback)(void*)) {
 
 		std::auto_ptr<libtorrent::alert> alerts;
 
-		alerts = session->pop_alert();
+		alerts = Handle.session->pop_alert();
 
 		while (alerts.get()) {
 
@@ -1000,7 +1000,7 @@ extern "C" int get_alerts(void(*alertCallback)(void*)) {
 			delete[] message;
 			delete alertInfo;
 
-			alerts = session->pop_alert();
+			alerts = Handle.session->pop_alert();
 		}
 
 	} catch (std::exception &e) {
@@ -1136,9 +1136,9 @@ extern "C" int start_dht(const wchar_t *dht_state_file_path) {
 		}
 
 		if(state_loaded) {
-			session->start_dht(dht_state);
+			Handle.session->start_dht(dht_state);
 		} else {
-			session->start_dht();
+			Handle.session->start_dht();
 		}
 
 	} catch (std::exception &e) {
@@ -1152,7 +1152,7 @@ extern "C" int start_dht(const wchar_t *dht_state_file_path) {
 extern "C" int add_dht_router(const char *address, int port) {
 	try {
 
-		session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
+		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1165,7 +1165,7 @@ extern "C" int add_dht_router(const char *address, int port) {
 extern "C" int add_dht_node(const char *address, int port) {
 	try {
 
-		session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
+		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1182,7 +1182,7 @@ extern "C" int save_dht_state(const wchar_t *dht_state_file_path) {
 		boost::filesystem::wpath full_path(file);
 		boost::filesystem::ofstream out(full_path, std::ios_base::binary);
 		out.unsetf(std::ios_base::skipws);
-		libtorrent::entry dht_state = session->dht_state();
+		libtorrent::entry dht_state = Handle.session->dht_state();
 		libtorrent::bencode(std::ostream_iterator<char>(out), dht_state);
 		out.close();
 
@@ -1197,7 +1197,7 @@ extern "C" int save_dht_state(const wchar_t *dht_state_file_path) {
 extern "C" int stop_dht() {
 	try {
 
-		session->stop_dht();
+		Handle.session->stop_dht();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1210,7 +1210,7 @@ extern "C" int stop_dht() {
 extern "C" int start_upnp() {
 	try {
 
-		session->start_upnp();
+		Handle.session->start_upnp();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1223,7 +1223,7 @@ extern "C" int start_upnp() {
 extern "C" int stop_upnp() {
 	try {
 
-		session->stop_upnp();
+		Handle.session->stop_upnp();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1236,7 +1236,7 @@ extern "C" int stop_upnp() {
 extern "C" int start_lsd() {
 	try {
 
-		session->start_lsd();
+		Handle.session->start_lsd();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1249,7 +1249,7 @@ extern "C" int start_lsd() {
 extern "C" int stop_lsd() {
 	try {
 
-		session->stop_lsd();
+		Handle.session->stop_lsd();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1262,7 +1262,7 @@ extern "C" int stop_lsd() {
 extern "C" int start_natpmp() {
 	try {
 
-		session->start_natpmp();
+		Handle.session->start_natpmp();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1275,7 +1275,7 @@ extern "C" int start_natpmp() {
 extern "C" int stop_natpmp() {
 	try {
 
-		session->stop_natpmp();
+		Handle.session->stop_natpmp();
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1294,7 +1294,7 @@ extern "C" int set_peer_proxy(wrapper_proxy_settings *proxy) {
 		proxy_settings.port = proxy->port;
 		proxy_settings.username = proxy->username;
 		proxy_settings.password = proxy->password;
-		session->set_peer_proxy(proxy_settings);
+		Handle.session->set_peer_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1313,7 +1313,7 @@ extern "C" int set_web_seed_proxy(wrapper_proxy_settings *proxy) {
 		proxy_settings.port = proxy->port;
 		proxy_settings.username = proxy->username;
 		proxy_settings.password = proxy->password;
-		session->set_web_seed_proxy(proxy_settings);
+		Handle.session->set_web_seed_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1332,7 +1332,7 @@ extern "C" int set_tracker_proxy(wrapper_proxy_settings *proxy) {
 		proxy_settings.port = proxy->port;
 		proxy_settings.username = proxy->username;
 		proxy_settings.password = proxy->password;
-		session->set_tracker_proxy(proxy_settings);
+		Handle.session->set_tracker_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));
@@ -1351,7 +1351,7 @@ extern "C" int set_dht_proxy(wrapper_proxy_settings *proxy) {
 		proxy_settings.port = proxy->port;
 		proxy_settings.username = proxy->username;
 		proxy_settings.password = proxy->password;
-		session->set_tracker_proxy(proxy_settings);
+		Handle.session->set_tracker_proxy(proxy_settings);
 
 	} catch (std::exception &e) {
 		log(StringToCString(e.what()));

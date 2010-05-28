@@ -97,7 +97,7 @@ wchar_t *CopyWideString(const wchar_t *s) {
 
 
 // Convert the hash value in the given text into a libtorrent big number hash value object
-libtorrent::big_number getSha1Hash(const char *s) {
+libtorrent::big_number StringToHash(const char *s) {
 
 	libtorrent::big_number hash;
 	std::stringstream stream;

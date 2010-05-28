@@ -159,7 +159,7 @@ const char *PeerIdToString(const libtorrent::peer_id &id);
 const char *CopyStringFromStream(const std::stringstream &stream);
 char *CopyString(const char *s);
 wchar_t *CopyWideString(const wchar_t *s);
-libtorrent::big_number getSha1Hash(const char *s);
+libtorrent::big_number StringToHash(const char *s);
 
 // Test
 void Test();

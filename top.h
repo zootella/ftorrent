@@ -57,6 +57,9 @@ public:
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
 
+	// Session in libtorrent
+	libtorrent::session *session;
+
 	// New
 	handletop() {
 
@@ -65,6 +68,7 @@ public:
 		tray = menu = NULL;
 		arrow = hand = horizontal = vertical = diagonal = NULL;
 		font = underline = arial = NULL;
+		session = NULL;
 	}
 };
 
