@@ -48,21 +48,9 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-// Global libtorrent session object
-//libtorrent::session *session = NULL;
 
-// Rename types
-//typedef libtorrent::big_number sha1_hash;
-typedef boost::asio::ip::address address;
+// ---- Enumerations
 
-// Enumeration characters
-#define PIECE_DOWNLOADED 'x'
-#define PIECE_PARTIAL 'p'
-#define PIECE_PENDING '0'
-#define PIECE_ACTIVE 'a'
-#define PIECE_UNAVAILABLE 'U'
-#define PIECE_UNAVAILABLE_PARTIAL 'u'
-#define PIECE_QUEUED 'q'
 
 // Information about an exception
 #define EXCEPTION_UNKNOWN_RETHROWN 0
@@ -92,8 +80,6 @@ struct wrapper_exception {
 	}
 };
 
-// The last exception we've caught
-wrapper_exception *last_error = NULL;
 
 struct wrapper_torrent_status {
 	long long total_done;
@@ -1407,7 +1393,7 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 
 		// Clear the array
 		for (int i = 0; i < num_pieces; i++) {
-			pieces[i] = PIECE_PENDING;
+			pieces[i] = '0'; // Piece pending
 		}
 		pieces[num_pieces] = '\0';
 
@@ -1417,7 +1403,7 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 		while (iter != peers.end()) {
 			if (iter->downloading_piece_index > -1 && iter->downloading_piece_index < num_pieces) {
 				// Mark downloading pieces
-				pieces[iter->downloading_piece_index] = PIECE_ACTIVE;
+				pieces[iter->downloading_piece_index] = 'a'; // Piece active
 			}
 			iter++;
 		}
@@ -1428,13 +1414,13 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 		while (queue_iter != download_queue.end()) {
 			libtorrent::partial_piece_info piece = *queue_iter;
 			if (piece.piece_index > -1 && piece.piece_index < num_pieces) {
-				if (pieces[piece.piece_index] != PIECE_ACTIVE) {
+				if (pieces[piece.piece_index] != 'a') { // Piece active
 					if (piece.writing > 0) {
-						pieces[piece.piece_index] = PIECE_ACTIVE;
+						pieces[piece.piece_index] = 'a'; // Piece active
 					} else if (piece.requested > 0 && piece.finished > 0) {
-						pieces[piece.piece_index] = PIECE_PARTIAL;
+						pieces[piece.piece_index] = 'p'; // Piece partial
 					} else if (piece.finished == 0) {
-						pieces[piece.piece_index] = PIECE_QUEUED;
+						pieces[piece.piece_index] = 'q'; // Piece queued
 					}
 				}
 			}
@@ -1443,10 +1429,10 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 		}
 
 		for (int i = 0; i < num_pieces; i++) {
-			if (pieces[i] != PIECE_ACTIVE) {
+			if (pieces[i] != 'a') { // Piece active
 				if (piece_downloaded_info[i]) {
 					// Mark downloaded pieces
-					pieces[i] = PIECE_DOWNLOADED;
+					pieces[i] = 'x'; // Piece downloaded
 					info->completed++;
 				} else {
 					bool available = false;
@@ -1461,10 +1447,10 @@ extern "C" int get_pieces_status(const char *id, pieces_info *info) {
 					}
 
 					if (!available) {
-						if (pieces[i] == PIECE_PARTIAL) {
-							pieces[i] = PIECE_UNAVAILABLE_PARTIAL;
+						if (pieces[i] == 'p') { // Piece partial
+							pieces[i] = 'u'; // Piece unavailable partial
 						} else {
-							pieces[i] = PIECE_UNAVAILABLE;
+							pieces[i] = 'U'; // Piece unavailable
 						}
 					}
 				}
