@@ -35,11 +35,11 @@
 #include <atlstr.h>
 #include <shlobj.h>
 
-#include "library.h"
 // Include program
 #include "resource.h"
 #include "program.h"
 #include "object.h"
+#include "library.h"
 #include "top.h"
 #include "function.h"
 
