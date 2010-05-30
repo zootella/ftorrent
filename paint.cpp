@@ -3,7 +3,7 @@
 #include "libtorrent/session.hpp"
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/create_torrent.hpp"
-#include "wrapper.h"
+#include "library.h"
 
 // Include platform
 #include <windows.h>

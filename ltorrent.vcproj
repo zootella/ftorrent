@@ -241,6 +241,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\library.h"
+				>
+			</File>
+			<File
 				RelativePath=".\object.h"
 				>
 			</File>
@@ -254,10 +258,6 @@
 			</File>
 			<File
 				RelativePath=".\top.h"
-				>
-			</File>
-			<File
-				RelativePath=".\wrapper.h"
 				>
 			</File>
 		</Filter>

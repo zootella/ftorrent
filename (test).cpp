@@ -3,7 +3,7 @@
 #include "libtorrent/session.hpp"
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/create_torrent.hpp"
-#include "wrapper.h"
+#include "library.h"
 
 // Include platform
 #include <windows.h>
@@ -33,7 +33,7 @@ void Test() {
 
 		if (step == 0) {
 
-			init(NULL);
+			InitializeLibtorrent(NULL);
 			step = 1;
 
 			log(L"init done");
