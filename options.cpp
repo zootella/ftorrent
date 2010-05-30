@@ -1,6 +1,9 @@
 
 // Include libtorrent
+#include "libtorrent/session.hpp"
+#include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/create_torrent.hpp"
+#include "wrapper.h"
 
 // Include platform
 #include <windows.h>

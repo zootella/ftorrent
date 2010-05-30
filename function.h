@@ -161,10 +161,78 @@ char *CopyString(const char *s);
 wchar_t *CopyWideString(const wchar_t *s);
 libtorrent::big_number StringToHash(const char *s);
 
+
+
+
+// libtorrentwrapper.cpp
+
+/*
+void get_wrapper_torrent_status(libtorrent::torrent_handle handle, status_structure *stats);
+libtorrent::torrent_handle findTorrentHandle(const char *sha1String);
+void process_save_resume_data_alert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
+void process_alert(libtorrent::alert const *alert, alert_structure *alertInfo);
+*/
+
+extern "C" int save_fast_resume_data(alert_structure *alert, wchar_t *filePath);
+extern "C" int freeze_and_save_all_fast_resume_data(void(*alertCallback)(void*));
+extern "C" int update_settings(settings_structure *settings);
+extern "C" int init(settings_structure *setting);
+extern "C" int abort_torrents();
+extern "C" int move_torrent(const char *id, wchar_t *path);
+extern "C" int add_torrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath);
+extern "C" int pause_torrent(const char *id);
+extern "C" int set_auto_managed_torrent(const char *id, bool auto_managed);
+extern "C" int remove_torrent(const char *id);
+extern "C" int resume_torrent(const char *id);
+extern "C" int force_reannounce(const char *id);
+extern "C" int scrape_tracker(const char *id);
+extern "C" int get_torrent_status(const char *id, status_structure *stats);
+extern "C" int free_torrent_status(status_structure *info);
+extern "C" int get_torrent_info(const char *id, torrent_structure *info);
+extern "C" int free_torrent_info(torrent_structure *info);
+extern "C" int signal_fast_resume_data_request(const char *id);
+extern "C" int clear_error_and_retry(const char *id);
+extern "C" int get_num_peers(const char *id, int &num_peers);
+extern "C" int has_metadata(const char *id, int &has_metadata);
+extern "C" int is_valid(const char *id, int &is_valid);
+extern "C" int get_peers(const char *id, peer_structure **torrent_peers, int numPeers);
+extern "C" int free_peers(peer_structure **torrent_peers, int numPeers);
+extern "C" int get_alerts(void(*alertCallback)(void*));
+extern "C" int set_seed_ratio(const char *id, float seed_ratio);
+extern "C" int get_num_files(const char *id, int &num_files);
+extern "C" int get_files(const char *id, file_structure **file_entries);
+extern "C" int set_file_priorities(const char *id, int *priorities, int num_priorities);
+extern "C" int set_file_priority(const char *id, int index, int priority);
+extern "C" int start_dht(const wchar_t *dht_state_file_path);
+extern "C" int add_dht_router(const char *address, int port);
+extern "C" int add_dht_node(const char *address, int port);
+extern "C" int save_dht_state(const wchar_t *dht_state_file_path);
+extern "C" int stop_dht();
+extern "C" int start_upnp();
+extern "C" int stop_upnp();
+extern "C" int start_lsd();
+extern "C" int stop_lsd();
+extern "C" int start_natpmp();
+extern "C" int stop_natpmp();
+extern "C" int echo(char *message);
+extern "C" int free_pieces_info(pieces_structure *info);
+extern "C" int get_pieces_status(const char *id, pieces_structure *info);
+extern "C" int add_tracker(const char *id, char *url, int tier);
+extern "C" int remove_tracker(const char *id, char *url, int tier);
+extern "C" int get_num_trackers(const char *id, int &num_trackers);
+extern "C" int get_trackers(const char *id, announce_structure **torrent_trackers, int numTrackers);
+extern "C" int free_trackers(announce_structure **torrent_trackers, int numTrackers);
+
+
+
+
 // Test
 void Test();
 
-void mytest();
+
+
+
+
 
 
 
