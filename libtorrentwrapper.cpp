@@ -57,10 +57,10 @@ void get_wrapper_torrent_status(libtorrent::torrent_handle handle, status_struct
 
 	char *error = CopyString(status.error.c_str());
 
-	float download_rate = status.download_rate;
-	float upload_rate = status.upload_rate;
-	float download_payload_rate = status.download_payload_rate;
-	float upload_payload_rate = status.upload_payload_rate;
+	float download_rate = (float)status.download_rate;
+	float upload_rate = (float)status.upload_rate;
+	float download_payload_rate = (float)status.download_payload_rate;
+	float upload_payload_rate = (float)status.upload_payload_rate;
 
 	int num_peers = status.num_peers;
 	int num_uploads = status.num_uploads;
@@ -180,17 +180,7 @@ void process_alert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-int SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
+void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 	try {
 
 		std::wstring file(filePath);
@@ -206,11 +196,10 @@ int SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
 // Ported from http://www.rasterbar.com/products/libtorrent/manual.html#save-resume-data
-int FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
+void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
 	try {
 
 		int num_resume_data = 0;
@@ -262,10 +251,9 @@ int FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int UpdateSettings(settings_structure *settings) {
+void UpdateSettings(settings_structure *settings) {
 	try {
 
 		libtorrent::session_settings *s = new libtorrent::session_settings;
@@ -289,10 +277,9 @@ int UpdateSettings(settings_structure *settings) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int InitializeLibtorrent(settings_structure *setting) {
+void InitializeLibtorrent(settings_structure *setting) {
 	try {
 
 		Handle.session = new libtorrent::session;
@@ -310,10 +297,9 @@ int InitializeLibtorrent(settings_structure *setting) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int AbortTorrents() {
+void AbortTorrents() {
 	try {
 
 		log(L"abort torrents called");
@@ -333,10 +319,9 @@ int AbortTorrents() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int MoveTorrent(const char *id, wchar_t *path) {
+void MoveTorrent(const char *id, wchar_t *path) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -354,10 +339,9 @@ int MoveTorrent(const char *id, wchar_t *path) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
+void AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
 	try {
 
 		log(L"adding torrent");
@@ -416,10 +400,9 @@ int AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int PauseTorrent(const char *id) {
+void PauseTorrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -430,10 +413,9 @@ int PauseTorrent(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SetAutoManagedTorrent(const char *id, bool auto_managed) {
+void SetAutoManagedTorrent(const char *id, bool auto_managed) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -444,10 +426,9 @@ int SetAutoManagedTorrent(const char *id, bool auto_managed) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int RemoveTorrent(const char *id) {
+void RemoveTorrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -459,10 +440,9 @@ int RemoveTorrent(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int ResumeTorrent(const char *id) {
+void ResumeTorrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -473,10 +453,9 @@ int ResumeTorrent(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int ForceReannounce(const char *id) {
+void ForceReannounce(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -487,10 +466,9 @@ int ForceReannounce(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int ScrapeTracker(const char *id) {
+void ScrapeTracker(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -501,10 +479,9 @@ int ScrapeTracker(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetTorrentStatus(const char *id, status_structure *stats) {
+void GetTorrentStatus(const char *id, status_structure *stats) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -515,10 +492,9 @@ int GetTorrentStatus(const char *id, status_structure *stats) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int FreeTorrentStatus(status_structure *info) {
+void FreeTorrentStatus(status_structure *info) {
 	try {
 
 		delete[] info->error;
@@ -529,10 +505,9 @@ int FreeTorrentStatus(status_structure *info) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetTorrentInfo(const char *id, torrent_structure *info) {
+void GetTorrentInfo(const char *id, torrent_structure *info) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -586,10 +561,9 @@ int GetTorrentInfo(const char *id, torrent_structure *info) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int FreeTorrentInfo(torrent_structure *info) {
+void FreeTorrentInfo(torrent_structure *info) {
 	try {
 
 		delete[] info->sha1;
@@ -603,10 +577,9 @@ int FreeTorrentInfo(torrent_structure *info) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SignalFastResumeDataRequest(const char *id) {
+void SignalFastResumeDataRequest(const char *id) {
 	try {
 
 		log(make(L"signal fast resume data request: ", StringToCString(id)));
@@ -623,10 +596,9 @@ int SignalFastResumeDataRequest(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int ClearErrorAndRetry(const char *id) {
+void ClearErrorAndRetry(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -639,10 +611,9 @@ int ClearErrorAndRetry(const char *id) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetNumPeers(const char *id, int &num_peers) {
+void GetNumPeers(const char *id, int &num_peers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -651,9 +622,9 @@ int GetNumPeers(const char *id, int &num_peers) {
 		try {
 			h.get_peer_info(peers);
 		} catch (libtorrent::invalid_handle e) {
-			return 0;
+			return;
 		} catch (std::exception e) {
-			return 0;
+			return;
 		}
 		num_peers = peers.size();
 
@@ -662,10 +633,9 @@ int GetNumPeers(const char *id, int &num_peers) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int HasMetadata(const char *id, int &has_metadata) {
+void HasMetadata(const char *id, int &has_metadata) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -676,10 +646,9 @@ int HasMetadata(const char *id, int &has_metadata) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int IsValid(const char *id, int &is_valid) {
+void IsValid(const char *id, int &is_valid) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -690,10 +659,9 @@ int IsValid(const char *id, int &is_valid) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
+void GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -715,10 +683,10 @@ int GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
 			torrent_peer->status_flags = peer.flags;
 			torrent_peer->ip = CopyString(address.c_str());
 			torrent_peer->source = peer.source;
-			torrent_peer->up_speed=peer.up_speed;
-			torrent_peer->down_speed=peer.down_speed;
-			torrent_peer->payload_up_speed=peer.payload_up_speed;
-			torrent_peer->payload_down_speed=peer.payload_down_speed;
+			torrent_peer->up_speed = (float)peer.up_speed;
+			torrent_peer->down_speed = (float)peer.down_speed;
+			torrent_peer->payload_up_speed = (float)peer.payload_up_speed;
+			torrent_peer->payload_down_speed = (float)peer.payload_down_speed;
 			torrent_peer->peer_id = PeerIdToString(peer.pid);
 			torrent_peer->progress = peer.progress;
 
@@ -748,10 +716,9 @@ int GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int FreePeers(peer_structure **torrent_peers, int numPeers) {
+void FreePeers(peer_structure **torrent_peers, int numPeers) {
 	try {
 
 		for (int i = 0; i < numPeers; i++) {
@@ -767,10 +734,9 @@ int FreePeers(peer_structure **torrent_peers, int numPeers) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetAlerts(void(*alertCallback)(void*)) {
+void GetAlerts(void(*alertCallback)(void*)) {
 	try {
 
 		std::auto_ptr<libtorrent::alert> alerts;
@@ -799,10 +765,9 @@ int GetAlerts(void(*alertCallback)(void*)) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SetSeedRatio(const char *id, float seed_ratio) {
+void SetSeedRatio(const char *id, float seed_ratio) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -813,10 +778,9 @@ int SetSeedRatio(const char *id, float seed_ratio) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetNumFiles(const char *id, int &num_files) {
+void GetNumFiles(const char *id, int &num_files) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -829,10 +793,9 @@ int GetNumFiles(const char *id, int &num_files) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetFiles(const char *id, file_structure **file_entries) {
+void GetFiles(const char *id, file_structure **file_entries) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -865,10 +828,9 @@ int GetFiles(const char *id, file_structure **file_entries) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SetFilePriorities(const char *id, int *priorities, int num_priorities) {
+void SetFilePriorities(const char *id, int *priorities, int num_priorities) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -887,10 +849,9 @@ int SetFilePriorities(const char *id, int *priorities, int num_priorities) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SetFilePriority(const char *id, int index, int priority) {
+void SetFilePriority(const char *id, int index, int priority) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -901,10 +862,9 @@ int SetFilePriority(const char *id, int index, int priority) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StartDht(const wchar_t *dht_state_file_path) {
+void StartDht(const wchar_t *dht_state_file_path) {
 	try {
 
 		std::wstring file(dht_state_file_path);
@@ -937,10 +897,9 @@ int StartDht(const wchar_t *dht_state_file_path) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int AddDhtRouter(const char *address, int port) {
+void AddDhtRouter(const char *address, int port) {
 	try {
 
 		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
@@ -950,10 +909,9 @@ int AddDhtRouter(const char *address, int port) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int AddDhtNode(const char *address, int port) {
+void AddDhtNode(const char *address, int port) {
 	try {
 
 		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
@@ -963,10 +921,9 @@ int AddDhtNode(const char *address, int port) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int SaveDhtState(const wchar_t *dht_state_file_path) {
+void SaveDhtState(const wchar_t *dht_state_file_path) {
 	try {
 
 		std::wstring file(dht_state_file_path);
@@ -982,10 +939,9 @@ int SaveDhtState(const wchar_t *dht_state_file_path) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StopDht() {
+void StopDht() {
 	try {
 
 		Handle.session->stop_dht();
@@ -995,10 +951,9 @@ int StopDht() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StartUpnp() {
+void StartUpnp() {
 	try {
 
 		Handle.session->start_upnp();
@@ -1008,10 +963,9 @@ int StartUpnp() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StopUpnp() {
+void StopUpnp() {
 	try {
 
 		Handle.session->stop_upnp();
@@ -1021,10 +975,9 @@ int StopUpnp() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StartLsd() {
+void StartLsd() {
 	try {
 
 		Handle.session->start_lsd();
@@ -1034,10 +987,9 @@ int StartLsd() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StopLsd() {
+void StopLsd() {
 	try {
 
 		Handle.session->stop_lsd();
@@ -1047,10 +999,9 @@ int StopLsd() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StartNatpmp() {
+void StartNatpmp() {
 	try {
 
 		Handle.session->start_natpmp();
@@ -1060,10 +1011,9 @@ int StartNatpmp() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int StopNatpmp() {
+void StopNatpmp() {
 	try {
 
 		Handle.session->stop_natpmp();
@@ -1073,10 +1023,9 @@ int StopNatpmp() {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int FreePiecesInfo(pieces_structure *info) {
+void FreePiecesInfo(pieces_structure *info) {
 	try {
 
 		delete[] info->pieces;
@@ -1086,10 +1035,9 @@ int FreePiecesInfo(pieces_structure *info) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetPiecesStatus(const char *id, pieces_structure *info) {
+void GetPiecesStatus(const char *id, pieces_structure *info) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1173,10 +1121,9 @@ int GetPiecesStatus(const char *id, pieces_structure *info) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int AddTracker(const char *id, char *url, int tier) {
+void AddTracker(const char *id, char *url, int tier) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1193,10 +1140,9 @@ int AddTracker(const char *id, char *url, int tier) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int RemoveTracker(const char *id, char *url, int tier) {
+void RemoveTracker(const char *id, char *url, int tier) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1220,10 +1166,9 @@ int RemoveTracker(const char *id, char *url, int tier) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int GetNumTrackers(const char *id, int &num_trackers) {
+void GetNumTrackers(const char *id, int &num_trackers) {
 	try {
 
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1232,9 +1177,9 @@ int GetNumTrackers(const char *id, int &num_trackers) {
 		try {
 			trackers = h.trackers();
 		} catch (libtorrent::invalid_handle e) {
-			return 0;
+			return;
 		} catch (std::exception e) {
-			return 0;
+			return;
 		}
 		num_trackers = trackers.size();
 
@@ -1243,11 +1188,9 @@ int GetNumTrackers(const char *id, int &num_trackers) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-
-int GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers) {
+void GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers) {
 	try {
 		
 		libtorrent::torrent_handle h = findTorrentHandle(id);
@@ -1279,10 +1222,9 @@ int GetTrackers(const char *id, announce_structure **torrent_trackers, int numTr
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
 
-int FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
+void FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
 	try {
 		
 		announce_structure **current_torrent_tracker = torrent_trackers;
@@ -1298,5 +1240,4 @@ int FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
 	} catch (...) {
 		log(L"exception");
 	}
-	return 0;
 }
