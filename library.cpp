@@ -80,6 +80,34 @@ CString WideToCString(std::wstring w) {
 
 
 
+
+CString HashToCString(const libtorrent::sha1_hash &hash) {
+
+	std::stringstream stream;
+	stream << hash;
+	return StreamToCString(stream);
+}
+
+CString PeerIdToCString(const libtorrent::peer_id &id) {
+
+	std::stringstream stream;
+	stream << id;
+	return StreamToCString(stream);
+}
+
+CString StreamToCString(const std::stringstream &stream) {
+
+	std::string s = stream.str();
+	return StringToCString(s.c_str());
+}
+
+
+
+
+
+
+
+
 // Make a new string of allocated memory you have to free from the given hash value
 const char *HashToString(const libtorrent::sha1_hash &hash) {
 

@@ -387,15 +387,9 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 		libtorrent::torrent_info i = h.get_torrent_info();
-
-//		char *created_by = CopyString(i.creator().c_str());
-		char *comment = CopyString(i.comment().c_str());
-
 		info->created_by = StringToCString(i.creator().c_str());
-		info->comment = comment;
-
-		info->sha1 = HashToString(i.info_hash());
-
+		info->comment = StringToCString(i.comment().c_str());
+		info->sha1 = HashToCString(i.info_hash());
 		long long total_size = i.total_size();
 		info->total_size = total_size;
 
@@ -445,9 +439,6 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 void FreeTorrentInfo(torrent_structure *info) {
 	try {
 
-		delete[] info->sha1;
-//		delete[] info->created_by;
-		delete[] info->comment;
 		delete[] info->trackers;
 		delete[] info->seeds;
 

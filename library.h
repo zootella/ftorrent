@@ -48,15 +48,15 @@ struct announce_structure {
 
 struct torrent_structure {
 
-	const char *sha1; // String
+	CString sha1;
 	long long total_size;
 	int piece_length;
 	announce_structure *trackers;
 	int num_trackers;
 	announce_structure *seeds;
 	int num_seeds;
-	CString created_by; // String
-	const char *comment; // String
+	CString created_by;
+	CString comment;
 };
 
 struct settings_structure {
