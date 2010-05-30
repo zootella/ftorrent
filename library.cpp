@@ -50,7 +50,7 @@ extern datatop   Data;
 extern statetop  State;
 
 // Convert a STL wide character string into a STL UTF8 byte string
-std::string WideToString(std::wstring w) {
+std::string MakeNarrow(std::wstring w) {
 
 	std::string s;
 	libtorrent::wchar_utf8(w, s); // Use libtorrent
@@ -58,7 +58,7 @@ std::string WideToString(std::wstring w) {
 }
 
 // Convert a STL UTF8 byte string into a STL wide character string
-std::wstring StringToWide(std::string s) {
+std::wstring MakeWideString(std::string s) {
 
 	std::wstring w;
 	libtorrent::utf8_wchar(s, w);
@@ -66,16 +66,11 @@ std::wstring StringToWide(std::string s) {
 }
 
 // Convert a STL UTF8 byte string into an ATL wide CString
-CString StringToCString(std::string s) {
+CString StringToWideCString(std::string s) {
 
-	return StringToWide(s).c_str();
+	return MakeWideString(s).c_str();
 }
 
-// Convert a STL wide character string into an ATL wide CString
-CString WideToCString(std::wstring w) {
-
-	return w.c_str();
-}
 
 
 
@@ -85,21 +80,16 @@ CString HashToCString(const libtorrent::sha1_hash &hash) {
 
 	std::stringstream stream;
 	stream << hash;
-	return StreamToCString(stream);
+	return StringToWideCString(stream.str().c_str());
 }
 
 CString PeerIdToCString(const libtorrent::peer_id &id) {
 
 	std::stringstream stream;
 	stream << id;
-	return StreamToCString(stream);
+	return StringToWideCString(stream.str().c_str());
 }
 
-CString StreamToCString(const std::stringstream &stream) {
-
-	std::string s = stream.str();
-	return StringToCString(s.c_str());
-}
 
 
 
@@ -178,7 +168,7 @@ void GetWrapperTorrentStatus(libtorrent::torrent_handle handle, status_structure
 
 	libtorrent::torrent_status status = handle.status();
 
-	char *error = CopyString(status.error.c_str());
+	CString error = StringToWideCString(status.error);
 
 	float download_rate = (float)status.download_rate;
 	float upload_rate = (float)status.upload_rate;
@@ -207,7 +197,7 @@ void GetWrapperTorrentStatus(libtorrent::torrent_handle handle, status_structure
 	long long all_time_payload_upload = status.all_time_upload;
 	int seeding_time = status.seeding_time;
 	int active_time = status.active_time;
-	char *current_tracker = CopyString(status.current_tracker.c_str());
+	CString current_tracker = StringToWideCString(status.current_tracker);
 	int num_complete = status.num_complete;
 	int num_incomplete = status.num_incomplete;
 	long long total_failed_bytes = status.total_failed_bytes;
@@ -275,7 +265,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
 			if (srdf_alert) {
 
-				log(make(L"save_resume_data_failed_alert (", StringToCString(srdf_alert->msg), L")"));
+				log(make(L"save_resume_data_failed_alert (", StringToWideCString(srdf_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = CopyString(srdf_alert->msg.c_str());
 				return;
@@ -284,7 +274,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
 			if (fra_alert) {
 
-				log(make(L"fastresume_rejected_alert (", StringToCString(fra_alert->msg), L")"));
+				log(make(L"fastresume_rejected_alert (", StringToWideCString(fra_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = CopyString(fra_alert->msg.c_str());
 				return;

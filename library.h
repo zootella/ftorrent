@@ -29,8 +29,8 @@ struct status_structure {
 	int auto_managed;
 	int seeding_time;
 	int active_time;
-	const char *error; // String
-	const char *current_tracker; // String
+	CString error;
+	CString current_tracker;
 	int num_complete;
 	int num_incomplete;
 	long long total_failed_bytes;
