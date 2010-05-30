@@ -29,8 +29,8 @@ struct status_structure {
 	int auto_managed;
 	int seeding_time;
 	int active_time;
-	const char *error;
-	const char *current_tracker;
+	const char *error; // String
+	const char *current_tracker; // String
 	int num_complete;
 	int num_incomplete;
 	long long total_failed_bytes;
@@ -38,7 +38,7 @@ struct status_structure {
 
 struct announce_structure {
 
-	const char *url;
+	const char *url; // String
 	int tier;
 
 	~announce_structure() {
@@ -48,15 +48,15 @@ struct announce_structure {
 
 struct torrent_structure {
 
-	const char *sha1;
+	const char *sha1; // String
 	long long total_size;
 	int piece_length;
 	announce_structure *trackers;
 	int num_trackers;
 	announce_structure *seeds;
 	int num_seeds;
-	const char *created_by;
-	const char *comment;
+	CString created_by; // String
+	const char *comment; // String
 };
 
 struct settings_structure {
@@ -72,13 +72,13 @@ struct settings_structure {
 	int active_seeds_limit;
 	int active_limit;
 	int alert_mask;
-	char *listen_interface;
+	char *listen_interface; // String
 };
 
 struct file_structure {
 
 	int index;
-	wchar_t *path;
+	wchar_t *path; // String
 	long long size;
 	long long total_done;
 	int priority;
@@ -87,8 +87,8 @@ struct file_structure {
 struct alert_structure {
 
 	int category;
-	const char *sha1;
-	const char *message;
+	const char *sha1; // String
+	const char *message; // String
 	bool has_data;
 	libtorrent::entry *resume_data;
 
@@ -104,8 +104,8 @@ struct alert_structure {
 struct peer_structure {
 
 	int status_flags;
-	const char *peer_id;
-	const char *ip;
+	const char *peer_id; // String
+	const char *ip; // String
 	int source;
 	float up_speed;
 	float down_speed;
@@ -113,13 +113,13 @@ struct peer_structure {
 	float payload_down_speed;
 	float progress;
 	char country[3];
-	const wchar_t *client_name;
+	const wchar_t *client_name; // String
 };
 
 struct pieces_structure {
 
 	int completed;
-	char *pieces;
+	char *pieces; // String
 };
 
 

@@ -159,18 +159,17 @@ const char *PeerIdToString(const libtorrent::peer_id &id);
 const char *CopyStringFromStream(const std::stringstream &stream);
 char *CopyString(const char *s);
 wchar_t *CopyWideString(const wchar_t *s);
+libtorrent::torrent_handle FindTorrentHandle(const char *sha1String);
 libtorrent::big_number StringToHash(const char *s);
-
+void GetWrapperTorrentStatus(libtorrent::torrent_handle handle, status_structure *stats);
+void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
+void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo);
 
 
 
 // libtorrentwrapper.cpp
 
 /*
-void get_wrapper_torrent_status(libtorrent::torrent_handle handle, status_structure *stats);
-libtorrent::torrent_handle findTorrentHandle(const char *sha1String);
-void process_save_resume_data_alert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
-void process_alert(libtorrent::alert const *alert, alert_structure *alertInfo);
 */
 
 void SaveFastResumeData(alert_structure *alert, wchar_t *filePath);

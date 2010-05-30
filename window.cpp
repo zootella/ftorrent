@@ -3,7 +3,7 @@
 #include "libtorrent/session.hpp"
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/create_torrent.hpp"
-#include "library.h"
+#include "libtorrent/alert_types.hpp"
 
 // Include platform
 #include <windows.h>
@@ -11,6 +11,7 @@
 #include <atlstr.h>
 #include <shlobj.h>
 
+#include "library.h"
 // Include program
 #include "resource.h"
 #include "program.h"
