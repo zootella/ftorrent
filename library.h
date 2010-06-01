@@ -38,12 +38,8 @@ struct status_structure {
 
 struct announce_structure {
 
-	const char *url; // String
+	CString url;
 	int tier;
-
-	~announce_structure() {
-		delete[] url;
-	}
 };
 
 struct torrent_structure {
@@ -51,10 +47,8 @@ struct torrent_structure {
 	CString sha1;
 	long long total_size;
 	int piece_length;
-	announce_structure *trackers;
-	int num_trackers;
-	announce_structure *seeds;
-	int num_seeds;
+	std::vector<announce_structure> trackers;
+	std::vector<announce_structure> seeds;
 	CString created_by;
 	CString comment;
 };
@@ -104,16 +98,16 @@ struct alert_structure {
 struct peer_structure {
 
 	int status_flags;
-	const char *peer_id; // String
-	const char *ip; // String
+	CString peer_id;
+	CString ip;
 	int source;
 	float up_speed;
 	float down_speed;
 	float payload_up_speed;
 	float payload_down_speed;
 	float progress;
-	char country[3];
-	const wchar_t *client_name; // String
+	CString country;
+	CString client_name;
 };
 
 struct pieces_structure {

@@ -154,6 +154,55 @@ void UpdateSettings(settings_structure *settings) {
 	}
 }
 
+
+void GetAlerts(void(*alertCallback)(void*)) {
+	try {
+
+		std::auto_ptr<libtorrent::alert> alerts;
+
+		alerts = Handle.session->pop_alert();
+
+		while (alerts.get()) {
+
+			libtorrent::alert *alert = alerts.get();
+
+			alert_structure *alertInfo = new alert_structure();
+
+			ProcessAlert(alert, alertInfo);
+			const char *sha1 = alertInfo->sha1;
+			const char *message = alertInfo->message;
+			alertCallback(alertInfo);
+			delete[] sha1;
+			delete[] message;
+			delete alertInfo;
+
+			alerts = Handle.session->pop_alert();
+		}
+
+	} catch (std::exception &e) {
+		log(StringToWideCString(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Takes a settings structure to look at, or null to not update settings
 // Starts libtorrent and adds extensions
 void InitializeLibtorrent(settings_structure *info) {
@@ -412,22 +461,44 @@ void GetTorrentStatus(const char *id, status_structure *info) {
 	}
 }
 
-
-
-
-
-
-
-void SignalFastResumeDataRequest(const char *id) {
+// Fill out the given torrent structure with information from the torrent with the given infohash
+void GetTorrentInfo(const char *id, torrent_structure *info) {
 	try {
 
-		log(make(L"signal fast resume data request: ", StringToWideCString(id)));
-
+		// Find the torrent handle and get its info object
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		if (h.has_metadata()) {
-			log(L"has metadata");
-			h.save_resume_data();
-			log(make(L"save resume data called on torrent handle: ", StringToWideCString(id)));
+		libtorrent::torrent_info i = h.get_torrent_info();
+
+		// Fill out some information
+		info->created_by   = StringToWideCString(i.creator().c_str());
+		info->comment      = StringToWideCString(i.comment().c_str());
+		info->sha1         = HashToCString(i.info_hash());
+		info->total_size   = (long long)i.total_size();
+		info->piece_length = (int)i.piece_length();
+
+		// List trackers
+		announce_structure a;
+		std::vector<libtorrent::announce_entry> v1 = i.trackers();
+		std::vector<libtorrent::announce_entry>::iterator iterator1 = v1.begin();
+		while (iterator1 != v1.end()) {
+
+			a.url = StringToWideCString(iterator1->url.c_str());
+			a.tier = iterator1->tier;
+			info->trackers.push_back(a);
+
+			iterator1++;
+		}
+
+		// List web seeds
+		std::vector<std::string> v2 = i.url_seeds();
+		std::vector<std::string>::iterator iterator2 = v2.begin();
+		while (iterator2 != v2.end()) {
+
+			a.url = StringToWideCString(iterator2->c_str());
+			a.tier = -1;
+			info->seeds.push_back(a);
+
+			iterator2++;
 		}
 
 	} catch (std::exception &e) {
@@ -437,13 +508,14 @@ void SignalFastResumeDataRequest(const char *id) {
 	}
 }
 
-void ClearErrorAndRetry(const char *id) {
+// Have libtorrent generate resume data for the torrent with the given infohash
+// This returns immediately, when the data is ready, you'll get a save resume data alert
+void SignalFastResumeDataRequest(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.force_recheck();
-		h.clear_error();
-		h.resume();
+		if (h.has_metadata()) // True if we started with a .torrent file or got equivalent information from the swarm
+			h.save_resume_data();
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -452,19 +524,41 @@ void ClearErrorAndRetry(const char *id) {
 	}
 }
 
+// Force restart the torrent with the given infohash that may have stopped because it had an error
+void ClearErrorAndRetry(const char *id) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.force_recheck(); // Disconnect peers and tracker, hash what we have on the disk, and then go back online
+		h.clear_error();   // Clear this torrent's error state and start again
+		h.resume();        // Unpause, start and go back online
+
+	} catch (std::exception &e) {
+		log(StringToWideCString(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Find out how many peers the torrent with the given infohash has right now
 void GetNumPeers(const char *id, int &num_peers) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 
-		std::vector<libtorrent::peer_info> peers;
+		std::vector<libtorrent::peer_info> peers; // Make a new empty vector
 		try {
-			h.get_peer_info(peers);
+
+			h.get_peer_info(peers); // Have libtorrent fill it with with information about each peer
+
 		} catch (libtorrent::invalid_handle e) {
+			log(L"invalid handle exception");
 			return;
 		} catch (std::exception e) {
+			log(L"std exception");
 			return;
 		}
+
 		num_peers = peers.size();
 
 	} catch (std::exception &e) {
@@ -474,6 +568,7 @@ void GetNumPeers(const char *id, int &num_peers) {
 	}
 }
 
+// Find out if the torrent with the given infohash has metadata, either from a .torrent file or downloaded from the swarm
 void HasMetadata(const char *id, int &has_metadata) {
 	try {
 
@@ -487,11 +582,12 @@ void HasMetadata(const char *id, int &has_metadata) {
 	}
 }
 
+// Find out if we've got a valid handle for a torrent with the given infohash
 void IsValid(const char *id, int &is_valid) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		is_valid = h.is_valid();
+		is_valid = h.is_valid(); // Reasons for invalid include not found, or filesystem character error
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -500,54 +596,50 @@ void IsValid(const char *id, int &is_valid) {
 	}
 }
 
-void GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
+// Fill the given vector with information about the peers of the torrent with the given infohash
+void GetPeers(const char *id, std::vector<peer_structure> *v) {
 	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		// Get information about the torrent's current peers
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Look up the torrent handle
+		std::vector<libtorrent::peer_info> peers;             // Make a new empty vector that can hold peer_info objects
+		h.get_peer_info(peers);                               // Have libtorrent fill it with information about each of this torrent's peers
 
-		std::vector<libtorrent::peer_info> peers;
-		h.get_peer_info(peers);
+		// Loop through the peers
+		peer_structure p;
+		std::vector<libtorrent::peer_info>::iterator i = peers.begin();
+		while (i != peers.end()) {
 
-		std::vector<libtorrent::peer_info>::iterator iter = peers.begin();
+			// Copy information from the peer_info object i points to to our local peer_structure, p
+			p.status_flags       = i->flags;
+			p.ip                 = StringToWideCString(i->ip.address().to_string());
+			p.source             = i->source;
+			p.up_speed           = (float)i->up_speed;
+			p.down_speed         = (float)i->down_speed;
+			p.payload_up_speed   = (float)i->payload_up_speed;
+			p.payload_down_speed = (float)i->payload_down_speed;
+			p.peer_id            = PeerIdToString(i->pid);
+			p.progress           = i->progress;
 
-		int index = 0;
-		while (iter != peers.end()) {
+			// Get the country code
+			WCHAR c[3];
+			c[0] = (WCHAR)i->country[0];
+			c[1] = (WCHAR)i->country[1];
+			c[2] = L'\0';
+			p.country = c;
 
-			libtorrent::peer_info peer = *iter;
-			std::string address = peer.ip.address().to_string();
-			log(make(L"peer:", StringToWideCString(address)));
-
-			peer_structure *torrent_peer = *torrent_peers;
-			torrent_peers++;
-			torrent_peer->status_flags = peer.flags;
-			torrent_peer->ip = CopyString(address.c_str());
-			torrent_peer->source = peer.source;
-			torrent_peer->up_speed = (float)peer.up_speed;
-			torrent_peer->down_speed = (float)peer.down_speed;
-			torrent_peer->payload_up_speed = (float)peer.payload_up_speed;
-			torrent_peer->payload_down_speed = (float)peer.payload_down_speed;
-			torrent_peer->peer_id = PeerIdToString(peer.pid);
-			torrent_peer->progress = peer.progress;
-
-			torrent_peer->country[0] = peer.country[0];
-			torrent_peer->country[1] = peer.country[1];
-			torrent_peer->country[2] = '\0';
-
+			// Get the client name
 			try {
-				std::wstring w;
-				libtorrent::utf8_wchar(peer.client.c_str(), w);
-				torrent_peer->client_name = CopyWideString(w.c_str());
+				p.client_name = StringToWideCString(i->client.c_str());
 			} catch (std::runtime_error &e) {
 				log(StringToWideCString(e.what()));
-				torrent_peer->client_name = 0;			
+				p.client_name = L"";			
 			}
+
+			// Add the peer_structure we filled out to the vector we're supposed to fill
+			v->push_back(p);
 			
-
-			index++;
-			if(index >= numPeers) {
-				break;
-			}
-			iter++;
+			i++;
 		}
 
 	} catch (std::exception &e) {
@@ -557,55 +649,7 @@ void GetPeers(const char *id, peer_structure **torrent_peers, int numPeers) {
 	}
 }
 
-void FreePeers(peer_structure **torrent_peers, int numPeers) {
-	try {
-
-		for (int i = 0; i < numPeers; i++) {
-			peer_structure *torrent_peer = *torrent_peers;
-			delete[] torrent_peer->ip;
-			delete[] torrent_peer->peer_id;
-			delete[] torrent_peer->client_name;
-			torrent_peers++;
-		}
-
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-void GetAlerts(void(*alertCallback)(void*)) {
-	try {
-
-		std::auto_ptr<libtorrent::alert> alerts;
-
-		alerts = Handle.session->pop_alert();
-
-		while (alerts.get()) {
-
-			libtorrent::alert *alert = alerts.get();
-
-			alert_structure *alertInfo = new alert_structure();
-
-			ProcessAlert(alert, alertInfo);
-			const char *sha1 = alertInfo->sha1;
-			const char *message = alertInfo->message;
-			alertCallback(alertInfo);
-			delete[] sha1;
-			delete[] message;
-			delete alertInfo;
-
-			alerts = Handle.session->pop_alert();
-		}
-
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
+// Set the given download to upload seed ratio on the torrent with the given infohash
 void SetSeedRatio(const char *id, float seed_ratio) {
 	try {
 
@@ -619,6 +663,7 @@ void SetSeedRatio(const char *id, float seed_ratio) {
 	}
 }
 
+// Find out how many files the torrent with the given infohash contains
 void GetNumFiles(const char *id, int &num_files) {
 	try {
 
@@ -707,9 +752,7 @@ void StartDht(const wchar_t *dht_state_file_path) {
 		std::wstring file(dht_state_file_path);
 		boost::filesystem::wpath full_path(file);
 
-		boost::filesystem::ifstream dht_state_file(
-							full_path,
-							std::ios_base::binary);
+		boost::filesystem::ifstream dht_state_file(full_path, std::ios_base::binary);
 
 		libtorrent::entry dht_state = 0;
 		bool state_loaded = false;
