@@ -154,15 +154,17 @@ void UpdateSettings(settings_structure *settings) {
 	}
 }
 
-void InitializeLibtorrent(settings_structure *setting) {
+// Takes a settings structure to look at, or null to not update settings
+// Starts libtorrent and adds extensions
+void InitializeLibtorrent(settings_structure *info) {
 	try {
 
-		Handle.session = new libtorrent::session;
+		Handle.session = new libtorrent::session; // Make the libtorrent session object
 
-		if (setting) // Added this
-			UpdateSettings(setting);
+		if (info) // Added this
+			UpdateSettings(info); // Update settings if a structure was given
 
-		Handle.session->add_extension(&libtorrent::create_metadata_plugin);
+		Handle.session->add_extension(&libtorrent::create_metadata_plugin); // Tell libtorrent which plugins to use
 		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin);
 		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);
 		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
@@ -174,20 +176,12 @@ void InitializeLibtorrent(settings_structure *setting) {
 	}
 }
 
+// Tell libtorent to shut down
 void AbortTorrents() {
 	try {
 
-		log(L"abort torrents called");
-
-		if (Handle.session) {
-
-			log(L"session->abort");
-
-			Handle.session->abort();
-
-
-			log(L"abort finished");
-		}
+		if (Handle.session)
+			Handle.session->abort(); //TODO Get the session_proxy this returns
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -196,18 +190,18 @@ void AbortTorrents() {
 	}
 }
 
+// Takes infohash text and a new save to path
+// Moves the torrent from where it is now to the given path
 void MoveTorrent(const char *id, wchar_t *path) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.pause();
-		libtorrent::storage_interface *storage = h.get_storage_impl();
-		storage->release_files();
 
-		std::string s1;
-		libtorrent::wchar_utf8(path, s1);
-		storage->move_storage(boost::filesystem::path(s1));
-		h.resume();
+		h.pause();  // Pause the torrent
+		libtorrent::storage_interface *storage = h.get_storage_impl(); // Access the torrent's storage implementation
+		storage->release_files();                                      // Release all the file handles the torrent has open
+		storage->move_storage(WideToPath(path));                       // Move all the saved files to path
+		h.resume(); // Resume the torrent
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -216,59 +210,68 @@ void MoveTorrent(const char *id, wchar_t *path) {
 	}
 }
 
-void AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath) {
+// Takes infohash,    the SHA1 infohash of the torrent file in base 16 ASCII characters
+// Takes trackerurl,  the URL of the torrent's tracker
+// Takes torrentpath, the path to the .torrent file on the disk
+// Takes savepath,    the path to where the program should save the torrent on the disk
+// Takes resumepath,  the path to a file of resume information we saved earlier and can use now
+// Adds the torrent to libtorrent
+void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath) {
 	try {
 
+		// Output the information this function received
 		log(L"adding torrent");
-		log(make(L"sha1String", StringToWideCString(sha1String)));
-		log(make(L"trackerURI", StringToWideCString(trackerURI)));
-		log(make(L"torrentPath: ", torrentPath));
-		log(make(L"resumeFilePath: ", fastResumePath));
+		log(make(L"infohash:         ", StringToWideCString(infohash)));
+		log(make(L"tracker url:      ", StringToWideCString(trackerurl)));
+		log(make(L"torrent path:     ", torrentpath));
+		log(make(L"resume file path: ", resumepath));
 
-		libtorrent::big_number sha1 = StringToHash(sha1String);
+		// Fill out a torrent parameters object
+		libtorrent::add_torrent_params p;
+		p.save_path          = WideToPath(savepath);
+		p.info_hash          = StringToHash(infohash);
+		p.tracker_url        = trackerurl;
+		p.auto_managed       = false; //TODO change this to true
+		p.duplicate_is_error = true;
 
-		libtorrent::add_torrent_params torrent_params;
-		std::string s1;
-		libtorrent::wchar_utf8(savePath, s1);
-		torrent_params.save_path = boost::filesystem::path(s1);
-		torrent_params.info_hash = sha1;
-		torrent_params.tracker_url = trackerURI;
-		torrent_params.auto_managed = false; //TODO change this to true
-		torrent_params.duplicate_is_error = true;
+		// If we were given the path to a torrent file on the disk
+		if (torrentpath) {
 
-		std::vector<char> resume_buf;
+			boost::filesystem::ifstream f1(torrentpath, std::ios_base::binary); // Try to open it
+			if (!f1.fail()) { // Opening it worked
 
-		if (torrentPath) {
-			boost::filesystem::ifstream torrent_file(torrentPath, std::ios_base::binary);
-			if (!torrent_file.fail()) {
-				std::string s2;
-				libtorrent::wchar_utf8(torrentPath, s2);
-				torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(s2));
-			} else {
+				p.ti = new libtorrent::torrent_info(WideToPath(torrentpath)); // Add the path to the torrent parameters we're filling out
+
+			} else { // Couldn't open it
 				log(L"could not find torrent file");
 			}
-			torrent_file.close();
+			f1.close(); // Close the file we tried to open
 		}
 
-		if (fastResumePath) {
-			boost::filesystem::ifstream resume_file(fastResumePath, std::ios_base::binary);
+		std::vector<char> resumebuffer;
 
-			if (!resume_file.fail()) {
-				resume_file.unsetf(std::ios_base::skipws);
+		// If we were given the path to a file of resume data on the disk that we saved before and can use now
+		if (resumepath) {
 
+			boost::filesystem::ifstream f2(resumepath, std::ios_base::binary); // Try to open it
+			if (!f2.fail()) { // Opening it worked
+
+				// Copy the file contents into resumebuffer
+				f2.unsetf(std::ios_base::skipws); // Change whitespace option
 				std::istream_iterator<char> ios_iter;
-				std::istream_iterator<char> iter(resume_file);
+				std::istream_iterator<char> iter(f2);
+				std::copy(iter, ios_iter, std::back_inserter(resumebuffer));
 
-				std::copy(iter, ios_iter, std::back_inserter(resume_buf));
+				p.resume_data = &resumebuffer; // Add the resumebuffer to the torrent parameters we're filling out
+				f2.close();                    // Close the disk file we opened
 
-				torrent_params.resume_data = &resume_buf;
-				resume_file.close();
 			} else {
 				log(L"could not find fast resume file");
 			}
 		}
 
-		libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
+		// Add the new torrent we made to our libtorrent session
+		libtorrent::torrent_handle h = Handle.session->add_torrent(p);
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -277,6 +280,7 @@ void AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_
 	}
 }
 
+// Pause the torrent with the given infohash
 void PauseTorrent(const char *id) {
 	try {
 
@@ -290,6 +294,7 @@ void PauseTorrent(const char *id) {
 	}
 }
 
+// Turn auto management on or off for the torrent with the given infohash
 void SetAutoManagedTorrent(const char *id, bool auto_managed) {
 	try {
 
@@ -303,12 +308,13 @@ void SetAutoManagedTorrent(const char *id, bool auto_managed) {
 	}
 }
 
+// Remove the torrent with the given infohash from the program
 void RemoveTorrent(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 		h.pause();
-		Handle.session->remove_torrent(h);
+		Handle.session->remove_torrent(h); //TODO another option here would delete the files on the disk, too
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -317,6 +323,7 @@ void RemoveTorrent(const char *id) {
 	}
 }
 
+// Resume the torrent with the given infohash after you paused it
 void ResumeTorrent(const char *id) {
 	try {
 
@@ -330,6 +337,7 @@ void ResumeTorrent(const char *id) {
 	}
 }
 
+// Reannounce the torrent with the given infohash to its trackers now to find out about more peers
 void ForceReannounce(const char *id) {
 	try {
 
@@ -343,6 +351,7 @@ void ForceReannounce(const char *id) {
 	}
 }
 
+// Ask the tracker for information about the torrent with the given infohash, like how many peers are complete
 void ScrapeTracker(const char *id) {
 	try {
 
@@ -356,11 +365,45 @@ void ScrapeTracker(const char *id) {
 	}
 }
 
-void GetTorrentStatus(const char *id, status_structure *stats) {
+// Fill out the given status structure with current information about the torrent with the given infohash
+void GetTorrentStatus(const char *id, status_structure *info) {
 	try {
 
+		// Find the torrent handle and get the status object
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		GetWrapperTorrentStatus(h, stats);
+		libtorrent::torrent_status s = h.status();
+
+		// Fill out the given status structure
+		info->total_done                = s.total_done;
+		info->total_wanted_done         = s.total_wanted_done;
+		info->total_wanted              = s.total_wanted;
+		info->total_download            = s.total_download;
+		info->total_upload              = s.total_upload;
+		info->total_payload_download    = s.total_payload_download;
+		info->total_payload_upload      = s.total_payload_upload;
+		info->all_time_payload_download = s.all_time_download;
+		info->all_time_payload_upload   = s.all_time_upload;
+		info->download_rate             = (float)s.download_rate;
+		info->upload_rate               = (float)s.upload_rate;
+		info->download_payload_rate     = (float)s.download_payload_rate;
+		info->upload_payload_rate       = (float)s.upload_payload_rate;
+		info->num_peers                 = s.num_peers;
+		info->num_uploads               = s.num_uploads;
+		info->num_seeds                 = s.num_seeds;
+		info->num_connections           = s.num_connections;
+		info->state                     = s.state;
+		info->progress                  = s.progress;
+		info->paused                    = s.paused;
+		info->finished                  = h.is_finished();
+		info->valid                     = h.is_valid();
+		info->auto_managed              = h.is_auto_managed();
+		info->seeding_time              = s.seeding_time;
+		info->active_time               = s.active_time;
+		info->error                     = StringToWideCString(s.error);
+		info->current_tracker           = StringToWideCString(s.current_tracker);
+		info->num_complete              = s.num_complete;
+		info->num_incomplete            = s.num_incomplete;
+		info->total_failed_bytes        = s.total_failed_bytes;
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));
@@ -369,85 +412,11 @@ void GetTorrentStatus(const char *id, status_structure *stats) {
 	}
 }
 
-void FreeTorrentStatus(status_structure *info) {
-	try {
 
-		delete[] info->error;
-		delete[] info->current_tracker;
 
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
-void GetTorrentInfo(const char *id, torrent_structure *info) {
-	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		libtorrent::torrent_info i = h.get_torrent_info();
-		info->created_by = StringToWideCString(i.creator().c_str());
-		info->comment = StringToWideCString(i.comment().c_str());
-		info->sha1 = HashToCString(i.info_hash());
-		long long total_size = i.total_size();
-		info->total_size = total_size;
 
-		int piece_length = i.piece_length();
-		info->piece_length = piece_length;
-
-		//add tracker information to the torrent info
-		std::vector<libtorrent::announce_entry> announce_entries = i.trackers();
-		int num_trackers = announce_entries.size();
-		announce_structure *trackers = new announce_structure[num_trackers];
-		std::vector<libtorrent::announce_entry>::iterator iter = announce_entries.begin();
-
-		int tracker_index = 0;
-		while (iter != announce_entries.end()) {
-			libtorrent::announce_entry entry = *iter;
-			trackers[tracker_index].url = CopyString(entry.url.c_str());
-			trackers[tracker_index].tier = entry.tier;
-			tracker_index++;
-			iter++;
-		}
-		info->trackers = trackers;
-		info->num_trackers= num_trackers;
-
-		//add seeding information to the torrent info
-		std::vector<std::string> seed_entries = i.url_seeds();
-		int num_seeds = seed_entries.size();
-		announce_structure *seeds = new announce_structure[num_seeds];
-		std::vector<std::string>::iterator iter2 = seed_entries.begin();
-
-		int seed_index = 0;
-		while (iter2 != seed_entries.end()) {
-			seeds[seed_index].url = CopyString(iter2->c_str());
-			seeds[seed_index].tier = -1;
-			seed_index++;
-			iter2++;
-		}
-		info->seeds = seeds;
-		info->num_seeds=num_seeds;
-
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-void FreeTorrentInfo(torrent_structure *info) {
-	try {
-
-		delete[] info->trackers;
-		delete[] info->seeds;
-
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
 void SignalFastResumeDataRequest(const char *id) {
 	try {
@@ -682,9 +651,7 @@ void GetFiles(const char *id, file_structure **file_entries) {
 			boost::filesystem::path path = iter->path;
 			file_structure *file_entry = *file_entries;
 			file_entry->index = index;
-			std::wstring wpath;
-			libtorrent::utf8_wchar(path.string(), wpath);
-			file_entry->path = CopyWideString(wpath.c_str());
+			file_entry->path = StringToWideCString(path.string());
 			file_entry->size = iter->size;
 			file_entry->total_done = progress[index];
 			file_entry->priority = priorities[index];
@@ -895,18 +862,6 @@ void StopNatpmp() {
 	}
 }
 
-void FreePiecesInfo(pieces_structure *info) {
-	try {
-
-		delete[] info->pieces;
-
-	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
 void GetPiecesStatus(const char *id, pieces_structure *info) {
 	try {
 
@@ -916,15 +871,13 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 
 		int num_pieces = piece_downloaded_info.size();
 
-		char *pieces = new char[num_pieces+1];
-		info->pieces = pieces;
+		CString p;
 		info->completed = 0;
 
 		// Clear the array
 		for (int i = 0; i < num_pieces; i++) {
-			pieces[i] = '0'; // Piece pending
+			p += L'0'; // Piece pending
 		}
-		pieces[num_pieces] = '\0';
 
 		std::vector<libtorrent::peer_info> peers;
 		h.get_peer_info(peers);
@@ -932,7 +885,7 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 		while (iter != peers.end()) {
 			if (iter->downloading_piece_index > -1 && iter->downloading_piece_index < num_pieces) {
 				// Mark downloading pieces
-				pieces[iter->downloading_piece_index] = 'a'; // Piece active
+				p.SetAt(iter->downloading_piece_index, L'a'); // Piece active
 			}
 			iter++;
 		}
@@ -943,13 +896,13 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 		while (queue_iter != download_queue.end()) {
 			libtorrent::partial_piece_info piece = *queue_iter;
 			if (piece.piece_index > -1 && piece.piece_index < num_pieces) {
-				if (pieces[piece.piece_index] != 'a') { // Piece active
+				if (p[piece.piece_index] != L'a') { // Piece active
 					if (piece.writing > 0) {
-						pieces[piece.piece_index] = 'a'; // Piece active
+						p.SetAt(piece.piece_index, L'a'); // Piece active
 					} else if (piece.requested > 0 && piece.finished > 0) {
-						pieces[piece.piece_index] = 'p'; // Piece partial
+						p.SetAt(piece.piece_index, L'p'); // Piece partial
 					} else if (piece.finished == 0) {
-						pieces[piece.piece_index] = 'q'; // Piece queued
+						p.SetAt(piece.piece_index, L'q'); // Piece queued
 					}
 				}
 			}
@@ -958,10 +911,10 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 		}
 
 		for (int i = 0; i < num_pieces; i++) {
-			if (pieces[i] != 'a') { // Piece active
+			if (p[i] != L'a') { // Piece active
 				if (piece_downloaded_info[i]) {
 					// Mark downloaded pieces
-					pieces[i] = 'x'; // Piece downloaded
+					p.SetAt(i, L'x'); // Piece downloaded
 					info->completed++;
 				} else {
 					bool available = false;
@@ -976,15 +929,17 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 					}
 
 					if (!available) {
-						if (pieces[i] == 'p') { // Piece partial
-							pieces[i] = 'u'; // Piece unavailable partial
+						if (p[i] == L'p') { // Piece partial
+							p.SetAt(i, L'u'); // Piece unavailable partial
 						} else {
-							pieces[i] = 'U'; // Piece unavailable
+							p.SetAt(i, L'U'); // Piece unavailable
 						}
 					}
 				}
 			}
 		}
+
+		info->pieces = p;
 
 	} catch (std::exception &e) {
 		log(StringToWideCString(e.what()));

@@ -139,6 +139,15 @@ wchar_t *CopyWideString(const wchar_t *s) {
 	return copy;
 }
 
+// Make a boost path object from the given wide string
+boost::filesystem::path WideToPath(wchar_t *w) {
+
+	return boost::filesystem::path(MakeNarrow(w)); // Convert to UTF-8 first
+}
+
+
+
+
 
 
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
@@ -163,76 +172,6 @@ libtorrent::big_number StringToHash(const char *s) {
 
 
 
-
-void GetWrapperTorrentStatus(libtorrent::torrent_handle handle, status_structure *stats) {
-
-	libtorrent::torrent_status status = handle.status();
-
-	CString error = StringToWideCString(status.error);
-
-	float download_rate = (float)status.download_rate;
-	float upload_rate = (float)status.upload_rate;
-	float download_payload_rate = (float)status.download_payload_rate;
-	float upload_payload_rate = (float)status.upload_payload_rate;
-
-	int num_peers = status.num_peers;
-	int num_uploads = status.num_uploads;
-	int num_seeds = status.num_seeds;
-	int num_connections = status.num_connections;
-	int state = status.state;
-	float progress = status.progress;
-	bool paused = status.paused;
-	bool finished = handle.is_finished();
-	bool valid = handle.is_valid();
-	bool auto_manged = handle.is_auto_managed();
-
-	long long total_done = status.total_done;
-	long long total_wanted_done = status.total_wanted_done;
-	long long total_wanted = status.total_wanted;
-	long long total_download = status.total_download;
-	long long total_upload = status.total_upload;
-	long long total_payload_download = status.total_payload_download;
-	long long total_payload_upload = status.total_payload_upload;
-	long long all_time_payload_download = status.all_time_download;
-	long long all_time_payload_upload = status.all_time_upload;
-	int seeding_time = status.seeding_time;
-	int active_time = status.active_time;
-	CString current_tracker = StringToWideCString(status.current_tracker);
-	int num_complete = status.num_complete;
-	int num_incomplete = status.num_incomplete;
-	long long total_failed_bytes = status.total_failed_bytes;
-
-	stats->total_done = total_done;
-	stats->total_wanted_done = total_wanted_done;
-	stats->total_wanted = total_wanted;
-	stats->total_download = total_download;
-	stats->total_upload = total_upload;
-	stats->total_payload_download = total_payload_download;
-	stats->total_payload_upload = total_payload_upload;
-	stats->all_time_payload_download = all_time_payload_download;
-	stats->all_time_payload_upload = all_time_payload_upload;
-	stats->download_rate = download_rate;
-	stats->upload_rate = upload_rate;
-	stats->download_payload_rate = download_payload_rate;
-	stats->upload_payload_rate = upload_payload_rate;
-	stats->num_peers = num_peers;
-	stats->num_uploads = num_uploads;
-	stats->num_seeds = num_seeds;
-	stats->num_connections = num_connections;
-	stats->state = state;
-	stats->progress = progress;
-	stats->paused = paused;
-	stats->finished = finished;
-	stats->valid = valid;
-	stats->auto_managed = auto_manged;
-	stats->seeding_time = seeding_time;
-	stats->active_time = active_time;
-	stats->error = error;
-	stats->current_tracker = current_tracker;
-	stats->num_complete = num_complete;
-	stats->num_incomplete = num_incomplete;
-	stats->total_failed_bytes = total_failed_bytes;
-}
 
 void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo) {
 

@@ -149,6 +149,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 // Start
 void StartIcon();
 
+
 // Library
 std::string MakeNarrow(std::wstring w);
 std::wstring MakeWideString(std::string s);
@@ -160,9 +161,9 @@ const char *PeerIdToString(const libtorrent::peer_id &id);
 const char *CopyStringFromStream(const std::stringstream &stream);
 char *CopyString(const char *s);
 wchar_t *CopyWideString(const wchar_t *s);
+boost::filesystem::path WideToPath(wchar_t *w);
 libtorrent::torrent_handle FindTorrentHandle(const char *sha1String);
 libtorrent::big_number StringToHash(const char *s);
-void GetWrapperTorrentStatus(libtorrent::torrent_handle handle, status_structure *stats);
 void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
 void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo);
 
@@ -187,7 +188,6 @@ void ResumeTorrent(const char *id);
 void ForceReannounce(const char *id);
 void ScrapeTracker(const char *id);
 void GetTorrentStatus(const char *id, status_structure *stats);
-void FreeTorrentStatus(status_structure *info);
 void GetTorrentInfo(const char *id, torrent_structure *info);
 void FreeTorrentInfo(torrent_structure *info);
 void SignalFastResumeDataRequest(const char *id);
@@ -203,24 +203,28 @@ void GetNumFiles(const char *id, int &num_files);
 void GetFiles(const char *id, file_structure **file_entries);
 void SetFilePriorities(const char *id, int *priorities, int num_priorities);
 void SetFilePriority(const char *id, int index, int priority);
+
 void StartDht(const wchar_t *dht_state_file_path);
 void AddDhtRouter(const char *address, int port);
 void AddDhtNode(const char *address, int port);
 void SaveDhtState(const wchar_t *dht_state_file_path);
 void StopDht();
+
 void StartUpnp();
 void StopUpnp();
 void StartLsd();
 void StopLsd();
 void StartNatpmp();
 void StopNatpmp();
-void FreePiecesInfo(pieces_structure *info);
+
 void GetPiecesStatus(const char *id, pieces_structure *info);
 void AddTracker(const char *id, char *url, int tier);
 void RemoveTracker(const char *id, char *url, int tier);
 void GetNumTrackers(const char *id, int &num_trackers);
 void GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers);
 void FreeTrackers(announce_structure **torrent_trackers, int numTrackers);
+
+
 
 
 

@@ -78,7 +78,7 @@ struct settings_structure {
 struct file_structure {
 
 	int index;
-	wchar_t *path; // String
+	CString path;
 	long long size;
 	long long total_done;
 	int priority;
@@ -119,7 +119,7 @@ struct peer_structure {
 struct pieces_structure {
 
 	int completed;
-	char *pieces; // String
+	CString pieces;
 };
 
 
