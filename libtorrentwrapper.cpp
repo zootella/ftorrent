@@ -105,20 +105,15 @@ void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
 
 			std::auto_ptr<libtorrent::alert> holder = Handle.session->pop_alert();
 
-			alert_structure *alertInfo = new alert_structure();
-			ProcessAlert(alert, alertInfo);
+			alert_structure alertInfo;
+			ProcessAlert(alert, &alertInfo);
 
-			const char *sha1 = alertInfo->sha1;
-			const char *message = alertInfo->message;
-			alertCallback(alertInfo);
+			//alertCallback(alertInfo); here is where you can look at the alert and do it
 
-			if (alertInfo->has_data) {
+			if (alertInfo.has_data) {
 				log(L"resume_found: ");
 				--num_resume_data;
 			}
-			delete[] sha1;
-			delete[] message;
-			delete alertInfo;
 		}
 
 	} catch (std::exception &e) {
@@ -131,18 +126,18 @@ void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
 void UpdateSettings(settings_structure *settings) {
 	try {
 
-		libtorrent::session_settings *s = new libtorrent::session_settings;
-		s->use_dht_as_fallback   = false;
-		s->share_ratio_limit     = settings->seed_ratio_limit;
-		s->seed_time_ratio_limit = settings->seed_time_ratio_limit;
-		s->seed_time_limit       = settings->seed_time_limit;
-		s->active_downloads      = settings->active_downloads_limit;
-		s->active_seeds          = settings->active_seeds_limit;
-		s->active_limit          = settings->active_limit;
+		libtorrent::session_settings s;
+		s.use_dht_as_fallback   = false;
+		s.share_ratio_limit     = settings->seed_ratio_limit;
+		s.seed_time_ratio_limit = settings->seed_time_ratio_limit;
+		s.seed_time_limit       = settings->seed_time_limit;
+		s.active_downloads      = settings->active_downloads_limit;
+		s.active_seeds          = settings->active_seeds_limit;
+		s.active_limit          = settings->active_limit;
 
-		Handle.session->set_settings(*s);
+		Handle.session->set_settings(s);
 		Handle.session->set_alert_mask(settings->alert_mask);
-		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), settings->listen_interface);
+		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowCtoS((read)settings->listen_interface).c_str());
 
 		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
 		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
@@ -155,7 +150,7 @@ void UpdateSettings(settings_structure *settings) {
 }
 
 
-void GetAlerts(void(*alertCallback)(void*)) {
+void GetAlerts() {
 	try {
 
 		std::auto_ptr<libtorrent::alert> alerts;
@@ -163,18 +158,12 @@ void GetAlerts(void(*alertCallback)(void*)) {
 		alerts = Handle.session->pop_alert();
 
 		while (alerts.get()) {
-
 			libtorrent::alert *alert = alerts.get();
 
-			alert_structure *alertInfo = new alert_structure();
+			alert_structure alertInfo;
 
-			ProcessAlert(alert, alertInfo);
-			const char *sha1 = alertInfo->sha1;
-			const char *message = alertInfo->message;
-			alertCallback(alertInfo);
-			delete[] sha1;
-			delete[] message;
-			delete alertInfo;
+			ProcessAlert(alert, &alertInfo);
+			//alertCallback(alertInfo); here is where you can look at the alert
 
 			alerts = Handle.session->pop_alert();
 		}
@@ -618,7 +607,7 @@ void GetPeers(const char *id, std::vector<peer_structure> *v) {
 			p.down_speed         = (float)i->down_speed;
 			p.payload_up_speed   = (float)i->payload_up_speed;
 			p.payload_down_speed = (float)i->payload_down_speed;
-			p.peer_id            = PeerIdToString(i->pid);
+			p.peer_id            = PeerIdToCString(i->pid);
 			p.progress           = i->progress;
 
 			// Get the country code
@@ -1076,7 +1065,7 @@ void GetTrackers(const char *id, announce_structure **torrent_trackers, int numT
 			current_torrent_tracker++;
 			
 			torrent_tracker->tier = tracker.tier;
-			torrent_tracker->url = CopyString(tracker.url.c_str());
+			torrent_tracker->url = widenStoC(tracker.url);
 		
 			index++;
 			if(index >= numTrackers) {
@@ -1099,7 +1088,6 @@ void FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
 	
 		for (int i = 0; i < numTrackers; i++) {
 			announce_structure *tracker = *current_torrent_tracker;
-			delete[] tracker->url;
 			current_torrent_tracker++;
 		}
 		

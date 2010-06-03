@@ -66,7 +66,7 @@ struct settings_structure {
 	int active_seeds_limit;
 	int active_limit;
 	int alert_mask;
-	char *listen_interface; // String
+	CString listen_interface; // String
 };
 
 struct file_structure {
@@ -81,15 +81,13 @@ struct file_structure {
 struct alert_structure {
 
 	int category;
-	const char *sha1; // String
-	const char *message; // String
+	CString sha1;
+	CString message;
 	bool has_data;
 	libtorrent::entry *resume_data;
 
 	alert_structure() {
 		category = -1;
-		sha1 = NULL;
-		message = NULL;
 		has_data = 0;
 		resume_data = NULL;
 	}

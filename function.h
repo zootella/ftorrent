@@ -163,13 +163,18 @@ std::string narrowWtoS(std::wstring w);
 std::wstring widenStoW(std::string s);
 CString widenStoC(std::string s);
 
+std::string narrowCtoS(CString c);
+
+
 CString HashToCString(const libtorrent::sha1_hash &hash);
 CString PeerIdToCString(const libtorrent::peer_id &id);
+
+/*
 const char *HashToString(const libtorrent::sha1_hash &hash);
 const char *PeerIdToString(const libtorrent::peer_id &id);
 const char *CopyStringFromStream(const std::stringstream &stream);
-char *CopyString(const char *s);
-wchar_t *CopyWideString(const wchar_t *s);
+*/
+
 boost::filesystem::path WideToPath(wchar_t *w);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 libtorrent::big_number StringToHash(const char *s);
@@ -204,7 +209,7 @@ void GetNumPeers(const char *id, int &num_peers);
 void HasMetadata(const char *id, int &has_metadata);
 void IsValid(const char *id, int &is_valid);
 void GetPeers(const char *id, std::vector<peer_structure> *v);
-void GetAlerts(void(*alertCallback)(void*));
+void GetAlerts();
 void SetSeedRatio(const char *id, float seed_ratio);
 void GetNumFiles(const char *id, int &num_files);
 void GetFiles(const char *id, file_structure **file_entries);

@@ -67,6 +67,14 @@ std::wstring convertTtoW(wchar_t *t)     { return std::wstring(t); }
 CString      convertTtoC(wchar_t *t)     { return t; }
 CString      convertWtoC(std::wstring w) { return w.c_str(); }
 
+std::string narrowCtoS(CString c) {
+
+	const wchar_t *t = c;
+	return narrowWtoS(t);
+
+
+}
+
 std::string narrowTtoS(wchar_t *t) { return narrowWtoS(t); }
 std::string narrowWtoS(std::wstring w) {
 
@@ -134,7 +142,7 @@ CString PeerIdToCString(const libtorrent::peer_id &id) {
 
 
 
-
+/*
 // Make a new string of allocated memory you have to free from the given hash value
 const char *HashToString(const libtorrent::sha1_hash &hash) {
 
@@ -166,15 +174,8 @@ char *CopyString(const char *s) {
 	strncpy_s(copy, n + 1, s, n + 1); // Copy the characters and the null terminator
 	return copy;
 }
+*/
 
-// Copy the given wide string into a new memory block you have to free later
-wchar_t *CopyWideString(const wchar_t *s) {
-
-	int n = wcslen(s);                  // Number of characters not including the null terminator
-	wchar_t *copy = new wchar_t[n + 1]; // Allocate space for the characters and the null terminator
-	wcsncpy_s(copy, n + 1, s, n + 1);   // Copy the characters and the null terminator
-	return copy;
-}
 
 
 
@@ -225,30 +226,29 @@ void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::s
 void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 
 	alertInfo->category = alert->category();
-	alertInfo->message = CopyString(alert->message().c_str());
+	alertInfo->message = widenStoC(alert->message());
 
 	libtorrent::torrent_alert const *torrentAlert;
 
-	if ((torrentAlert = dynamic_cast<libtorrent::torrent_alert const*> (alert))) {
+	if ((torrentAlert = dynamic_cast<libtorrent::torrent_alert const*>(alert))) {
 
 		libtorrent::torrent_handle handle = torrentAlert->handle;
 
 		if (handle.is_valid()) {
-			alertInfo->sha1 = HashToString(handle.info_hash());
+			alertInfo->sha1 = HashToCString(handle.info_hash());
 
-			libtorrent::save_resume_data_alert const *srd_alert = dynamic_cast<libtorrent::save_resume_data_alert const*> (alert);
+			libtorrent::save_resume_data_alert const *srd_alert = dynamic_cast<libtorrent::save_resume_data_alert const*>(alert);
 			if (srd_alert) {
 
 				ProcessSaveResumeDataAlert(handle, srd_alert, alertInfo);
 				return;
 			}
 
-			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
+			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*>(alert);
 			if (srdf_alert) {
 
 				log(make(L"save_resume_data_failed_alert (", widenStoC(srdf_alert->msg), L")"));
-				delete[] alertInfo->message;
-				alertInfo->message = CopyString(srdf_alert->msg.c_str());
+				alertInfo->message = widenStoC(srdf_alert->msg);
 				return;
 			}
 
@@ -256,8 +256,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 			if (fra_alert) {
 
 				log(make(L"fastresume_rejected_alert (", widenStoC(fra_alert->msg), L")"));
-				delete[] alertInfo->message;
-				alertInfo->message = CopyString(fra_alert->msg.c_str());
+				alertInfo->message = widenStoC(fra_alert->msg);
 				return;
 			}
 		}
