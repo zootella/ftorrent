@@ -56,26 +56,35 @@ extern statetop  State;
 
 
 
-// Convert a STL wide character string into a STL UTF8 byte string
-std::string StringNarrow(std::wstring w) {
+// P char*        nar no
+// S std::string  nar return
+// T wchar_t*     wid no
+// W std::wstring wid return
+// C CString      wid return
+
+std::string  convertPtoS(char *p)        { return std::string(p); }
+std::wstring convertTtoW(wchar_t *t)     { return std::wstring(t); }
+CString      convertTtoC(wchar_t *t)     { return t; }
+CString      convertWtoC(std::wstring w) { return w.c_str(); }
+
+std::string narrowTtoS(wchar_t *t) { return narrowWtoS(t); }
+std::string narrowWtoS(std::wstring w) {
 
 	std::string s;
-	libtorrent::wchar_utf8(w, s); // Use libtorrent
+	libtorrent::wchar_utf8(w, s);
 	return s;
 }
 
+CString widenPtoC(char *p) { return widenPtoW(p).c_str(); }
+std::wstring widenPtoW(char *p) {
 
-
-// Convert unicode characters to a byte string
-std::string narrow(wchar_t *w) {
-
-	std::string s;
-	libtorrent::wchar_utf8(w, s); // Use libtorrent
-	return s;
+	std::wstring w;
+	libtorrent::utf8_wchar(p, w);
+	return w;
 }
 
-// Convert byte characters to a unicode string
-std::wstring widen(char *c) {
+CString widenStoC(std::string s) { return widenStoW(s).c_str(); }
+std::wstring widenStoW(std::string s) {
 
 	std::wstring w;
 	libtorrent::utf8_wchar(s, w);
@@ -89,35 +98,15 @@ std::wstring widen(char *c) {
 
 
 
-// Convert a STL UTF8 byte string into a STL wide character string
-std::wstring StringWide(std::string s) {//widentos
-
-	std::wstring w;
-	libtorrent::utf8_wchar(s, w);
-	return w;
-}
-
-// Convert UTF8 bytes int a wide CString
-CString Widen(char *s) {//widentoc
-
-	return StringWide(s).c_str();
-}
 
 
 
 
 
 
-std::string ReadToString(read r) {
 
-	std::wstring w(r);
-	return StringNarrow(w);
-}
 
-std::wstring ReadToWideString(read r) {
 
-	return std::wstring(r);
-}
 
 
 
@@ -128,14 +117,14 @@ CString HashToCString(const libtorrent::sha1_hash &hash) {
 
 	std::stringstream stream;
 	stream << hash;
-	return Widen(stream.str().c_str());
+	return widenStoC(stream.str());
 }
 
 CString PeerIdToCString(const libtorrent::peer_id &id) {
 
 	std::stringstream stream;
 	stream << id;
-	return Widen(stream.str().c_str());
+	return widenStoC(stream.str());
 }
 
 
@@ -187,10 +176,15 @@ wchar_t *CopyWideString(const wchar_t *s) {
 	return copy;
 }
 
-// Make a boost path object from the given wide string
-boost::filesystem::path WideToPath(wchar_t *w) {
 
-	return boost::filesystem::path(StringNarrow(w)); // Convert to UTF-8 first
+
+
+
+
+// Make a boost path object from the given wide string
+boost::filesystem::path WideToPath(wchar_t *t) {
+
+	return boost::filesystem::path(narrowTtoS(t));
 }
 
 
@@ -252,7 +246,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*> (alert);
 			if (srdf_alert) {
 
-				log(make(L"save_resume_data_failed_alert (", Widen(srdf_alert->msg), L")"));
+				log(make(L"save_resume_data_failed_alert (", widenStoC(srdf_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = CopyString(srdf_alert->msg.c_str());
 				return;
@@ -261,7 +255,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
 			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
 			if (fra_alert) {
 
-				log(make(L"fastresume_rejected_alert (", Widen(fra_alert->msg), L")"));
+				log(make(L"fastresume_rejected_alert (", widenStoC(fra_alert->msg), L")"));
 				delete[] alertInfo->message;
 				alertInfo->message = CopyString(fra_alert->msg.c_str());
 				return;

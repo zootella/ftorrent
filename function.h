@@ -151,9 +151,18 @@ void StartIcon();
 
 
 // Library
-std::string StringNarrow(std::wstring w);
-std::wstring StringWide(std::string s);
-CString StringToWideCString(std::string s);
+
+std::wstring convertTtoW(wchar_t *t);
+CString convertTtoC(wchar_t *t);
+std::string narrowTtoS(wchar_t *t);
+std::wstring widenPtoW(char *p);
+CString widenPtoC(char *p);
+std::string convertPtoS(char *p);
+CString convertWtoC(std::wstring w);
+std::string narrowWtoS(std::wstring w);
+std::wstring widenStoW(std::string s);
+CString widenStoC(std::string s);
+
 CString HashToCString(const libtorrent::sha1_hash &hash);
 CString PeerIdToCString(const libtorrent::peer_id &id);
 const char *HashToString(const libtorrent::sha1_hash &hash);
@@ -162,7 +171,7 @@ const char *CopyStringFromStream(const std::stringstream &stream);
 char *CopyString(const char *s);
 wchar_t *CopyWideString(const wchar_t *s);
 boost::filesystem::path WideToPath(wchar_t *w);
-libtorrent::torrent_handle FindTorrentHandle(const char *sha1String);
+libtorrent::torrent_handle FindTorrentHandle(const char *id);
 libtorrent::big_number StringToHash(const char *s);
 void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
 void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo);
