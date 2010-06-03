@@ -66,15 +66,15 @@ void Test() {
 
 			libtorrent::add_torrent_params torrent_params;
 
-			torrent_params.save_path = boost::filesystem::path(MakeNarrow(L"C:\\Documents\\test"));
-			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(MakeNarrow(L"C:\\Documents\\my.torrent")));
+			torrent_params.save_path = boost::filesystem::path(StringNarrow(L"C:\\Documents\\test"));
+			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(StringNarrow(L"C:\\Documents\\my.torrent")));
 			libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
 
 			log(L"add done");
 		}
 
 	} catch (std::exception &e) {
-		log(StringToWideCString(e.what()));
+		log(CStringWide(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}

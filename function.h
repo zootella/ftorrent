@@ -151,8 +151,8 @@ void StartIcon();
 
 
 // Library
-std::string MakeNarrow(std::wstring w);
-std::wstring MakeWideString(std::string s);
+std::string StringNarrow(std::wstring w);
+std::wstring StringWide(std::string s);
 CString StringToWideCString(std::string s);
 CString HashToCString(const libtorrent::sha1_hash &hash);
 CString PeerIdToCString(const libtorrent::peer_id &id);
