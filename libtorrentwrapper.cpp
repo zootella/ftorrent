@@ -137,7 +137,7 @@ void UpdateSettings(settings_structure *settings) {
 
 		Handle.session->set_settings(s);
 		Handle.session->set_alert_mask(settings->alert_mask);
-		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowCtoS((read)settings->listen_interface).c_str());
+		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowTtoS(settings->listen_interface).c_str());
 
 		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
 		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);

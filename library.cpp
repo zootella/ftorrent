@@ -56,17 +56,18 @@ extern statetop  State;
 
 
 
-// P char*        nar no
+// P const char*        nar no
 // S std::string  nar return
-// T wchar_t*     wid no
+// T const wchar_t*     wid no TODO change this to R, its the same as read
 // W std::wstring wid return
 // C CString      wid return
 
-std::string  convertPtoS(char *p)        { return std::string(p); }
-std::wstring convertTtoW(wchar_t *t)     { return std::wstring(t); }
-CString      convertTtoC(wchar_t *t)     { return t; }
+std::string  convertPtoS(const char *p)        { return std::string(p); }
+std::wstring convertTtoW(const wchar_t *t)     { return std::wstring(t); }
+CString      convertTtoC(const wchar_t *t)     { return t; }
 CString      convertWtoC(std::wstring w) { return w.c_str(); }
 
+/*
 std::string narrowCtoS(CString c) {
 
 	const wchar_t *t = c;
@@ -74,8 +75,11 @@ std::string narrowCtoS(CString c) {
 
 
 }
+*/
 
-std::string narrowTtoS(wchar_t *t) { return narrowWtoS(t); }
+//std::string narrowCtoS(CString c) { return narrowTtoS(c); }
+
+std::string narrowTtoS(const wchar_t *t) { return narrowWtoS(t); }
 std::string narrowWtoS(std::wstring w) {
 
 	std::string s;
@@ -83,8 +87,8 @@ std::string narrowWtoS(std::wstring w) {
 	return s;
 }
 
-CString widenPtoC(char *p) { return widenPtoW(p).c_str(); }
-std::wstring widenPtoW(char *p) {
+CString widenPtoC(const char *p) { return widenPtoW(p).c_str(); }
+std::wstring widenPtoW(const char *p) {
 
 	std::wstring w;
 	libtorrent::utf8_wchar(p, w);

@@ -152,18 +152,18 @@ void StartIcon();
 
 // Library
 
-std::wstring convertTtoW(wchar_t *t);
-CString convertTtoC(wchar_t *t);
-std::string narrowTtoS(wchar_t *t);
-std::wstring widenPtoW(char *p);
-CString widenPtoC(char *p);
-std::string convertPtoS(char *p);
+std::wstring convertTtoW(const wchar_t *t);
+CString convertTtoC(const wchar_t *t);
+std::string narrowTtoS(const wchar_t *t);
+std::wstring widenPtoW(const char *p);
+CString widenPtoC(const char *p);
+std::string convertPtoS(const char *p);
 CString convertWtoC(std::wstring w);
 std::string narrowWtoS(std::wstring w);
 std::wstring widenStoW(std::string s);
 CString widenStoC(std::string s);
 
-std::string narrowCtoS(CString c);
+//std::string narrowCtoS(CString c);
 
 
 CString HashToCString(const libtorrent::sha1_hash &hash);
