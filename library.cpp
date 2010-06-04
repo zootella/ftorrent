@@ -52,47 +52,21 @@ extern statetop  State;
 
 
 
-/*
-// Pn to Pn
-   Pn to Sn std::string convertPtoS(const char *p)
-// Pn to Rw
-   Pn to Ww std::wstring widenPtoW(const char *p)
-   Pn to Cw CString widenPtoC(const char *p)
 
-// Sn to Pn
-// Sn to Sn
-// Sn to Rw
-   Sn to Ww std::wstring widenStoW(std::string s)
-   Sn to Cw CString widenStoC(std::string s)
-
-// Rw to Pn
-   Rw to Sn std::string narrowRtoS(const wchar_t *r)
-// Rw to Rw
-   Rw to Ww std::wstring convertRtoW(const wchar_t *r)
-   Rw to Cw CString convertRtoC(const wchar_t *r)
-
-// Ww to Pn
-   Ww to Sn std::string narrowWtoS(std::wstring w)
-// Ww to Rw
-// Ww to Ww
-   Ww to Cw CString convertWtoC(std::wstring w)
-
-// Cw to Pn
-// Cw to Sn
-// Cw to Rw
-// Cw to Ww
-// Cw to Cw
-*/
-
+// P  const char*     narrow  in
+// S  std::string     narrow  in  out
+// R  const wchar_t*  wide    in
+// W  std::wstring    wide    in  out
+// C  CString         wide        out
 
 std::string convertPtoS(const char *p) { return p; }
 std::wstring convertRtoW(const wchar_t *r) { return r; }
 CString convertRtoC(const wchar_t *r) { return r; }
 CString convertWtoC(std::wstring w) { return w.c_str(); }
 
-CString widenPtoC(const char *p) { return widenStoW(s).c_str(); }
+CString widenPtoC(const char *p) { return widenStoW(p).c_str(); }
 CString widenStoC(std::string s) { return widenStoW(s).c_str(); }
-std::wstring widenPtoW(const char *p) { returnwidenStoW(p); }
+std::wstring widenPtoW(const char *p) { return widenStoW(p); }
 std::wstring widenStoW(std::string s) {
 
 	std::wstring w;
@@ -107,79 +81,6 @@ std::string narrowWtoS(std::wstring w) {
 	libtorrent::wchar_utf8(w, s);
 	return s;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// P const char*        nar
-// S std::string        nar           return
-// R const wchar_t*     wid 
-// W std::wstring       wid           return
-// C CString            wid           return
-
-std::string  convertPtoS(const char *p)        { return std::string(p); }
-std::wstring convertRtoW(const wchar_t *r)     { return std::wstring(r); }
-CString      convertRtoC(const wchar_t *r)     { return r; }
-CString      convertWtoC(std::wstring w) { return w.c_str(); }
-
-std::string narrowRtoS(const wchar_t *r) { return narrowWtoS(r); }
-std::string narrowWtoS(std::wstring w) {
-
-	std::string s;
-	libtorrent::wchar_utf8(w, s);
-	return s;
-}
-
-CString widenPtoC(const char *p) { return widenPtoW(p).c_str(); }
-std::wstring widenPtoW(const char *p) {
-
-	std::wstring w;
-	libtorrent::utf8_wchar(p, w);
-	return w;
-}
-
-CString widenStoC(std::string s) { return widenStoW(s).c_str(); }
-std::wstring widenStoW(std::string s) {
-
-	std::wstring w;
-	libtorrent::utf8_wchar(s, w);
-	return w;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -199,60 +100,6 @@ CString PeerIdToCString(const libtorrent::peer_id &id) {
 	stream << id;
 	return widenStoC(stream.str());
 }
-
-
-
-
-
-
-
-
-/*
-// Make a new string of allocated memory you have to free from the given hash value
-const char *HashToString(const libtorrent::sha1_hash &hash) {
-
-	std::stringstream stream;
-	stream << hash;
-	return CopyStringFromStream(stream);
-}
-
-// Make a new string of allocated memory you have to free from the given peer ID
-const char *PeerIdToString(const libtorrent::peer_id &id) {
-
-	std::stringstream stream;
-	stream << id;
-	return CopyStringFromStream(stream);
-}
-
-// Make a new string of allocated memory you have to free from the text in the given stream
-const char *CopyStringFromStream(const std::stringstream &stream) {
-
-	std::string s = stream.str();
-	return CopyString(s.c_str());
-}
-
-// Copy the given byte string into a new memory block you have to free later
-char *CopyString(const char *s) {
-
-	int n = std::strlen(s);           // Number of characters not including the null terminator
-	char *copy = new char[n + 1];     // Allocate space for the characters and the null terminator
-	strncpy_s(copy, n + 1, s, n + 1); // Copy the characters and the null terminator
-	return copy;
-}
-*/
-
-
-
-
-
-
-
-// Make a boost path object from the given wide string
-boost::filesystem::path WideToPath(wchar_t *t) {
-
-	return boost::filesystem::path(narrowTtoS(t));
-}
-
 
 
 

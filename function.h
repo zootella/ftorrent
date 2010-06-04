@@ -152,41 +152,27 @@ void StartIcon();
 
 // Library
 
-std::wstring convertTtoW(const wchar_t *t);
-CString convertTtoC(const wchar_t *t);
-std::string narrowTtoS(const wchar_t *t);
-std::wstring widenPtoW(const char *p);
-CString widenPtoC(const char *p);
 std::string convertPtoS(const char *p);
+std::wstring convertRtoW(const wchar_t *r);
+CString convertRtoC(const wchar_t *r);
 CString convertWtoC(std::wstring w);
-std::string narrowWtoS(std::wstring w);
-std::wstring widenStoW(std::string s);
+
+CString widenPtoC(const char *p);
 CString widenStoC(std::string s);
-
-//std::string narrowCtoS(CString c);
-
-
+std::wstring widenPtoW(const char *p);
+std::wstring widenStoW(std::string s);
+std::string narrowRtoS(const wchar_t *r);
+std::string narrowWtoS(std::wstring w);
 CString HashToCString(const libtorrent::sha1_hash &hash);
 CString PeerIdToCString(const libtorrent::peer_id &id);
-
-/*
-const char *HashToString(const libtorrent::sha1_hash &hash);
-const char *PeerIdToString(const libtorrent::peer_id &id);
-const char *CopyStringFromStream(const std::stringstream &stream);
-*/
-
-boost::filesystem::path WideToPath(wchar_t *w);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 libtorrent::big_number StringToHash(const char *s);
+
 void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
 void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo);
 
 
-
 // libtorrentwrapper.cpp
-
-/*
-*/
 
 void SaveFastResumeData(alert_structure *alert, wchar_t *filePath);
 void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*));

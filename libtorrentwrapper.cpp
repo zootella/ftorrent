@@ -137,7 +137,7 @@ void UpdateSettings(settings_structure *settings) {
 
 		Handle.session->set_settings(s);
 		Handle.session->set_alert_mask(settings->alert_mask);
-		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowTtoS(settings->listen_interface).c_str());
+		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowRtoS(settings->listen_interface).c_str());
 
 		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
 		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
@@ -236,9 +236,9 @@ void MoveTorrent(const char *id, wchar_t *path) {
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 
 		h.pause();  // Pause the torrent
-		libtorrent::storage_interface *storage = h.get_storage_impl(); // Access the torrent's storage implementation
-		storage->release_files();                                      // Release all the file handles the torrent has open
-		storage->move_storage(WideToPath(path));                       // Move all the saved files to path
+		libtorrent::storage_interface *storage = h.get_storage_impl();    // Access the torrent's storage implementation
+		storage->release_files();                                         // Release all the file handles the torrent has open
+		storage->move_storage(boost::filesystem::path(narrowRtoS(path))); // Move all the saved files to path
 		h.resume(); // Resume the torrent
 
 	} catch (std::exception &e) {
@@ -266,7 +266,7 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 
 		// Fill out a torrent parameters object
 		libtorrent::add_torrent_params p;
-		p.save_path          = WideToPath(savepath);
+		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
 		p.info_hash          = StringToHash(infohash);
 		p.tracker_url        = trackerurl;
 		p.auto_managed       = false; //TODO change this to true
@@ -278,7 +278,7 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 			boost::filesystem::ifstream f1(torrentpath, std::ios_base::binary); // Try to open it
 			if (!f1.fail()) { // Opening it worked
 
-				p.ti = new libtorrent::torrent_info(WideToPath(torrentpath)); // Add the path to the torrent parameters we're filling out
+				p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrentpath))); // Add the path to the torrent parameters we're filling out
 
 			} else { // Couldn't open it
 				log(L"could not find torrent file");
