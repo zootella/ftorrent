@@ -34,12 +34,7 @@ typedef unsigned __int64 big;
 #define length lstrlenW // Rename function
 
 // Text types
-typedef LPCWSTR read; // read is a pointer to wide characters and a null terminator that will only be read
-
-typedef const WCHAR *read2;
-typedef const wchar_t *read3;
-
-
+typedef const wchar_t *read; // read is a pointer to wide characters and a null terminator that will only be read
 
 // Text options
 enum direction {Forward,   Reverse};  // Default forward and the start, or reverse and the end

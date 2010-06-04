@@ -52,34 +52,95 @@ extern statetop  State;
 
 
 
-
-
-
-
-// P const char*        nar no
-// S std::string  nar return
-// T const wchar_t*     wid no TODO change this to R, its the same as read
-// W std::wstring wid return
-// C CString      wid return
-
-std::string  convertPtoS(const char *p)        { return std::string(p); }
-std::wstring convertTtoW(const wchar_t *t)     { return std::wstring(t); }
-CString      convertTtoC(const wchar_t *t)     { return t; }
-CString      convertWtoC(std::wstring w) { return w.c_str(); }
-
 /*
-std::string narrowCtoS(CString c) {
+// Pn to Pn
+   Pn to Sn std::string convertPtoS(const char *p)
+// Pn to Rw
+   Pn to Ww std::wstring widenPtoW(const char *p)
+   Pn to Cw CString widenPtoC(const char *p)
 
-	const wchar_t *t = c;
-	return narrowWtoS(t);
+// Sn to Pn
+// Sn to Sn
+// Sn to Rw
+   Sn to Ww std::wstring widenStoW(std::string s)
+   Sn to Cw CString widenStoC(std::string s)
 
+// Rw to Pn
+   Rw to Sn std::string narrowRtoS(const wchar_t *r)
+// Rw to Rw
+   Rw to Ww std::wstring convertRtoW(const wchar_t *r)
+   Rw to Cw CString convertRtoC(const wchar_t *r)
 
-}
+// Ww to Pn
+   Ww to Sn std::string narrowWtoS(std::wstring w)
+// Ww to Rw
+// Ww to Ww
+   Ww to Cw CString convertWtoC(std::wstring w)
+
+// Cw to Pn
+// Cw to Sn
+// Cw to Rw
+// Cw to Ww
+// Cw to Cw
 */
 
-//std::string narrowCtoS(CString c) { return narrowTtoS(c); }
 
-std::string narrowTtoS(const wchar_t *t) { return narrowWtoS(t); }
+std::string convertPtoS(const char *p) { return p; }
+std::wstring convertRtoW(const wchar_t *r) { return r; }
+CString convertRtoC(const wchar_t *r) { return r; }
+CString convertWtoC(std::wstring w) { return w.c_str(); }
+
+CString widenPtoC(const char *p) { return widenStoW(s).c_str(); }
+CString widenStoC(std::string s) { return widenStoW(s).c_str(); }
+std::wstring widenPtoW(const char *p) { returnwidenStoW(p); }
+std::wstring widenStoW(std::string s) {
+
+	std::wstring w;
+	libtorrent::utf8_wchar(s, w);
+	return w;
+}
+
+std::string narrowRtoS(const wchar_t *r) { return narrowWtoS(r); }
+std::string narrowWtoS(std::wstring w) {
+
+	std::string s;
+	libtorrent::wchar_utf8(w, s);
+	return s;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// P const char*        nar
+// S std::string        nar           return
+// R const wchar_t*     wid 
+// W std::wstring       wid           return
+// C CString            wid           return
+
+std::string  convertPtoS(const char *p)        { return std::string(p); }
+std::wstring convertRtoW(const wchar_t *r)     { return std::wstring(r); }
+CString      convertRtoC(const wchar_t *r)     { return r; }
+CString      convertWtoC(std::wstring w) { return w.c_str(); }
+
+std::string narrowRtoS(const wchar_t *r) { return narrowWtoS(r); }
 std::string narrowWtoS(std::wstring w) {
 
 	std::string s;
