@@ -28,18 +28,31 @@ extern statetop  State;
 
 
 
-
-
-void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
+void GetFiles(const char *id, file_structure **file_entries) {
 	try {
 
-		std::wstring file(filePath);
-		boost::filesystem::wpath full_path(file);
-		boost::filesystem::ofstream out(full_path, std::ios_base::binary);
-		out.unsetf(std::ios_base::skipws);
-		libtorrent::entry *resume_data = alert->resume_data;
-		libtorrent::bencode(std::ostream_iterator<char>(out), *resume_data);
-		out.close();
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		libtorrent::torrent_info info = h.get_torrent_info();
+		libtorrent::file_storage files = info.files();
+
+		int index = 0;
+		std::vector<libtorrent::size_type> progress;
+		h.file_progress(progress);
+		std::vector<int> priorities = h.file_priorities();
+
+		std::vector<libtorrent::file_entry>::const_iterator iter = files.begin();
+		while (iter != files.end()) {
+			boost::filesystem::path path = iter->path;
+			file_structure *file_entry = *file_entries;
+			file_entry->index = index;
+			file_entry->path = widenStoC(path.string());
+			file_entry->size = iter->size;
+			file_entry->total_done = progress[index];
+			file_entry->priority = priorities[index];
+			file_entries++;
+			index++;
+			iter++;
+		}
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -48,24 +61,32 @@ void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 	}
 }
 
-void UpdateSettings(settings_structure *settings) {
+void SetFilePriorities(const char *id, int *priorities, int num_priorities) {
 	try {
 
-		libtorrent::session_settings s;
-		s.use_dht_as_fallback   = false;
-		s.share_ratio_limit     = settings->seed_ratio_limit;
-		s.seed_time_ratio_limit = settings->seed_time_ratio_limit;
-		s.seed_time_limit       = settings->seed_time_limit;
-		s.active_downloads      = settings->active_downloads_limit;
-		s.active_seeds          = settings->active_seeds_limit;
-		s.active_limit          = settings->active_limit;
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		std::vector<int> priorities_vector;
 
-		Handle.session->set_settings(s);
-		Handle.session->set_alert_mask(settings->alert_mask); // Tell libtorrent what kinds of alerts we want to find out about
-		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowRtoS(settings->listen_interface).c_str());
+		for (int i = 0; i < num_priorities; i++) {
+			int priority = *priorities;
+			priorities_vector.push_back(priority);
+			priorities++;
+		}
 
-		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
-		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
+		h.prioritize_files(priorities_vector);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+void SetFilePriority(const char *id, int index, int priority) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.file_priority(index, priority);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));

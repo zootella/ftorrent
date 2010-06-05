@@ -55,6 +55,62 @@ extern statetop  State;
 
 
 
+// Save the resume data info knows about to a new file at path
+void SaveFastResumeData(alert_structure *info, wchar_t *path) {
+	try {
+
+		// Open a new file at path
+		std::wstring w(path);                                    // Convert path into a wide string
+		boost::filesystem::wpath p(w);                           // Make that into a path object
+		boost::filesystem::ofstream f(p, std::ios_base::binary); // Make an output file stream
+		f.unsetf(std::ios_base::skipws);                         // Don't have the file skip whitespace
+
+		// Write data in the file
+		libtorrent::entry *e = info->resume_data;                // Point e at the resume data
+		libtorrent::bencode(std::ostream_iterator<char>(f), *e); // Bencode the data at e into the file
+
+		// Close the file
+		f.close();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Given settings in info, apply them to our libtorrent session
+void UpdateSettings(settings_structure *info) {
+	try {
+
+		// Apply settings in info to libtorrent
+		libtorrent::session_settings s; // Make a new libtorrent session settings object
+		s.use_dht_as_fallback   = false; //TODO don't turn this off
+		s.share_ratio_limit     = info->seed_ratio_limit; // Copy info into a libtorrent session settings object
+		s.seed_time_ratio_limit = info->seed_time_ratio_limit;
+		s.seed_time_limit       = info->seed_time_limit;
+		s.active_downloads      = info->active_downloads_limit;
+		s.active_seeds          = info->active_seeds_limit;
+		s.active_limit          = info->active_limit;
+		Handle.session->set_settings(s); // Apply the settings to libtorrent
+
+		// Tell libtorrent what kinds of alerts we want to find out about
+		Handle.session->set_alert_mask(info->alert_mask);
+
+		// Give libtorrent connection settings
+		Handle.session->listen_on(
+			std::make_pair(info->listen_start_port, info->listen_end_port), // Port range to listen on
+			narrowRtoS(info->listen_interface).c_str());                    // Network interface to use
+		Handle.session->set_upload_rate_limit(info->max_upload_bandwidth);  // Upload and download speed limits
+		Handle.session->set_download_rate_limit(info->max_download_bandwidth);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
 
 
 
@@ -669,72 +725,15 @@ void GetNumFiles(const char *id, int &num_files) {
 	}
 }
 
-void GetFiles(const char *id, file_structure **file_entries) {
-	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		libtorrent::torrent_info info = h.get_torrent_info();
-		libtorrent::file_storage files = info.files();
 
-		int index = 0;
-		std::vector<libtorrent::size_type> progress;
-		h.file_progress(progress);
-		std::vector<int> priorities = h.file_priorities();
 
-		std::vector<libtorrent::file_entry>::const_iterator iter = files.begin();
-		while (iter != files.end()) {
-			boost::filesystem::path path = iter->path;
-			file_structure *file_entry = *file_entries;
-			file_entry->index = index;
-			file_entry->path = widenStoC(path.string());
-			file_entry->size = iter->size;
-			file_entry->total_done = progress[index];
-			file_entry->priority = priorities[index];
-			file_entries++;
-			index++;
-			iter++;
-		}
 
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
-void SetFilePriorities(const char *id, int *priorities, int num_priorities) {
-	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		std::vector<int> priorities_vector;
 
-		for (int i = 0; i < num_priorities; i++) {
-			int priority = *priorities;
-			priorities_vector.push_back(priority);
-			priorities++;
-		}
 
-		h.prioritize_files(priorities_vector);
 
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-void SetFilePriority(const char *id, int index, int priority) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.file_priority(index, priority);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
 void StartDht(const wchar_t *dht_state_file_path) {
 	try {
