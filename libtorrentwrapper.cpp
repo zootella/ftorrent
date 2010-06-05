@@ -67,7 +67,7 @@ void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 		out.close();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -93,7 +93,7 @@ void UpdateSettings(settings_structure *settings) {
 		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -133,7 +133,7 @@ void InitializeLibtorrent(settings_structure *info) {
 		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -147,7 +147,7 @@ void AbortTorrents() {
 			Handle.session->abort(); //TODO Get the session_proxy this returns
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -167,7 +167,7 @@ void MoveTorrent(const char *id, wchar_t *path) {
 		h.resume(); // Resume the torrent
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -184,8 +184,8 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 
 		// Output the information this function received
 		log(L"adding torrent");
-		log(make(L"infohash:         ", widenStoC(infohash)));
-		log(make(L"tracker url:      ", widenStoC(trackerurl)));
+		log(make(L"infohash:         ", widenPtoC(infohash)));
+		log(make(L"tracker url:      ", widenPtoC(trackerurl)));
 		log(make(L"torrent path:     ", torrentpath));
 		log(make(L"resume file path: ", resumepath));
 
@@ -237,7 +237,7 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 		libtorrent::torrent_handle h = Handle.session->add_torrent(p);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -251,7 +251,7 @@ void PauseTorrent(const char *id) {
 		h.pause();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -265,7 +265,7 @@ void SetAutoManagedTorrent(const char *id, bool auto_managed) {
 		h.auto_managed(auto_managed);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -280,7 +280,7 @@ void RemoveTorrent(const char *id) {
 		Handle.session->remove_torrent(h); //TODO another option here would delete the files on the disk, too
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -294,7 +294,7 @@ void ResumeTorrent(const char *id) {
 		h.resume();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -308,7 +308,7 @@ void ForceReannounce(const char *id) {
 		h.force_reannounce();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -322,7 +322,7 @@ void ScrapeTracker(const char *id) {
 		h.scrape_tracker();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -369,7 +369,7 @@ void GetTorrentStatus(const char *id, status_structure *info) {
 		info->total_failed_bytes        = s.total_failed_bytes;
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -408,7 +408,7 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 		std::vector<std::string>::iterator iterator2 = v2.begin();
 		while (iterator2 != v2.end()) {
 
-			a.url = widenStoC(iterator2->c_str());
+			a.url = widenPtoC(iterator2->c_str());
 			a.tier = -1;
 			info->seeds.push_back(a);
 
@@ -416,7 +416,7 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -432,7 +432,7 @@ void SignalFastResumeDataRequest(const char *id) {
 			h.save_resume_data();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -448,7 +448,7 @@ void ClearErrorAndRetry(const char *id) {
 		h.resume();        // Unpause, start and go back online
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -476,7 +476,7 @@ void GetNumPeers(const char *id, int &num_peers) {
 		num_peers = peers.size();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -490,7 +490,7 @@ void HasMetadata(const char *id, int &has_metadata) {
 		has_metadata = h.has_metadata();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -504,7 +504,7 @@ void IsValid(const char *id, int &is_valid) {
 		is_valid = h.is_valid(); // Reasons for invalid include not found, or filesystem character error
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -546,7 +546,7 @@ void GetPeers(const char *id, std::vector<peer_structure> *v) {
 			try {
 				p.client_name = widenStoC(i->client);
 			} catch (std::runtime_error &e) {
-				log(widenStoC(e.what()));
+				log(widenPtoC(e.what()));
 				p.client_name = L"";			
 			}
 
@@ -557,7 +557,7 @@ void GetPeers(const char *id, std::vector<peer_structure> *v) {
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -571,7 +571,7 @@ void SetSeedRatio(const char *id, float seed_ratio) {
 		h.set_ratio(seed_ratio);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -587,7 +587,7 @@ void GetNumFiles(const char *id, int &num_files) {
 		num_files = files.num_files();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -620,7 +620,7 @@ void GetFiles(const char *id, file_structure **file_entries) {
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -641,7 +641,7 @@ void SetFilePriorities(const char *id, int *priorities, int num_priorities) {
 		h.prioritize_files(priorities_vector);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -654,7 +654,7 @@ void SetFilePriority(const char *id, int index, int priority) {
 		h.file_priority(index, priority);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -675,7 +675,7 @@ void StartDht(const wchar_t *dht_state_file_path) {
 				dht_state = libtorrent::bdecode(std::istream_iterator<char>(dht_state_file), std::istream_iterator<char>());
 				state_loaded = true;
 			} catch (std::exception& e) {
-				log(widenStoC(e.what()));
+				log(widenPtoC(e.what()));
 				//no dht to resume will start dht without a prebuilt state
 			}
 		}
@@ -687,7 +687,7 @@ void StartDht(const wchar_t *dht_state_file_path) {
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -699,7 +699,7 @@ void AddDhtRouter(const char *address, int port) {
 		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -711,7 +711,7 @@ void AddDhtNode(const char *address, int port) {
 		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -729,7 +729,7 @@ void SaveDhtState(const wchar_t *dht_state_file_path) {
 		out.close();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -741,7 +741,7 @@ void StopDht() {
 		Handle.session->stop_dht();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -753,7 +753,7 @@ void StartUpnp() {
 		Handle.session->start_upnp();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -765,7 +765,7 @@ void StopUpnp() {
 		Handle.session->stop_upnp();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -777,7 +777,7 @@ void StartLsd() {
 		Handle.session->start_lsd();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -789,7 +789,7 @@ void StopLsd() {
 		Handle.session->stop_lsd();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -801,7 +801,7 @@ void StartNatpmp() {
 		Handle.session->start_natpmp();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -813,7 +813,7 @@ void StopNatpmp() {
 		Handle.session->stop_natpmp();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -899,7 +899,7 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 		info->pieces = p;
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -918,7 +918,7 @@ void AddTracker(const char *id, char *url, int tier) {
 		h.replace_trackers(trackers);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -944,7 +944,7 @@ void RemoveTracker(const char *id, char *url, int tier) {
 		h.replace_trackers(new_trackers);
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -966,7 +966,7 @@ void GetNumTrackers(const char *id, int &num_trackers) {
 		num_trackers = trackers.size();
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -1000,7 +1000,7 @@ void GetTrackers(const char *id, announce_structure **torrent_trackers, int numT
 		}
 		
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -1017,7 +1017,7 @@ void FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
 		}
 		
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}

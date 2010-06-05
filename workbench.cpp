@@ -64,7 +64,6 @@ void FreezeAndSaveAllFastResumeData() {
 			alert_structure info;
 			ProcessAlert(alert, &info);
 
-			//TODO This is where you look at info
 
 			if (info.has_data) {
 				log(L"resume_found: ");
@@ -73,7 +72,7 @@ void FreezeAndSaveAllFastResumeData() {
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
@@ -94,57 +93,63 @@ void GetAlerts() {
 
 			ProcessAlert(alert, &info);
 
-			//TODO This is where you look at info
 
 			alerts = Handle.session->pop_alert();
 		}
 
 	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
+		log(widenPtoC(e.what()));//TODO should be widenPtoC, i think
 	} catch (...) {
 		log(L"exception");
 	}
 }
 
 
-
-
+// Given a libtorrent alert, fill a structure of info about it
+// After calling this function, you can look at the information in info to see the alert libtorrent sent you
 void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 
+	// Get the category and the message
 	info->category = alert->category();
 	info->message = widenStoC(alert->message());
 
-	const libtorrent::torrent_alert *torrentAlert;
+	// If it's a torrent alert
+	const libtorrent::torrent_alert *a = dynamic_cast<const libtorrent::torrent_alert *>(alert);
+	if (a) {
 
-	if ((torrentAlert = dynamic_cast<const libtorrent::torrent_alert *>(alert))) {
+		// Get the torrent handle and make sure that torrent is initialized and not yet aborted
+		libtorrent::torrent_handle h = a->handle;
+		if (h.is_valid()) {
 
-		libtorrent::torrent_handle handle = torrentAlert->handle;
+			// Get the infohash
+			info->sha1 = HashToString(h.info_hash());
 
-		if (handle.is_valid()) {
-			info->sha1 = HashToString(handle.info_hash());
+			// If the alert is for save resume data
+			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
+			if (a1) {
 
-			const libtorrent::save_resume_data_alert *srd_alert = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
-			if (srd_alert) {
-
-				const boost::shared_ptr<libtorrent::entry> resume_ptr = srd_alert->resume_data;
-				info->has_data = 1;
-				info->resume_data = resume_ptr.get();
+				// Get the pointer to the resume data
+				const boost::shared_ptr<libtorrent::entry> resume_ptr = a1->resume_data;
+				info->has_data = 1; // Mark that this info structure has resume data
+				info->resume_data = resume_ptr.get(); // Copy across the pointer to the resume data
 				return;
 			}
 
-			const libtorrent::save_resume_data_failed_alert *srdf_alert = dynamic_cast<const libtorrent::save_resume_data_failed_alert *>(alert);
-			if (srdf_alert) {
+			// If the alert is for save resume data failed
+			const libtorrent::save_resume_data_failed_alert *a2 = dynamic_cast<const libtorrent::save_resume_data_failed_alert *>(alert);
+			if (a2) {
 
-				log(make(L"save_resume_data_failed_alert (", widenStoC(srdf_alert->msg), L")"));
-				info->message = widenStoC(srdf_alert->msg);
+				// Get the error message
+				info->message = widenStoC(a2->msg);
 				return;
 			}
 
-			const libtorrent::fastresume_rejected_alert *fra_alert = dynamic_cast<const libtorrent::fastresume_rejected_alert *> (alert);
-			if (fra_alert) {
+			// If the alert is for fast resume rejected
+			const libtorrent::fastresume_rejected_alert *a3 = dynamic_cast<const libtorrent::fastresume_rejected_alert *>(alert);
+			if (a3) {
 
-				log(make(L"fastresume_rejected_alert (", widenStoC(fra_alert->msg), L")"));
-				info->message = widenStoC(fra_alert->msg);
+				// Get the error message
+				info->message = widenStoC(a3->msg);
 				return;
 			}
 		}
