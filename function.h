@@ -163,19 +163,18 @@ std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
-CString HashToCString(const libtorrent::sha1_hash &hash);
-CString PeerIdToCString(const libtorrent::peer_id &id);
+CString HashToString(const libtorrent::sha1_hash &hash);
+CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 libtorrent::big_number StringToHash(const char *s);
 
-void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo);
-void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo);
+void ProcessAlert(libtorrent::alert const *alert, alert_structure *info);
 
 
 // libtorrentwrapper.cpp
 
 void SaveFastResumeData(alert_structure *alert, wchar_t *filePath);
-void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*));
+void FreezeAndSaveAllFastResumeData();
 void UpdateSettings(settings_structure *settings);
 void InitializeLibtorrent(settings_structure *setting);
 void AbortTorrents();

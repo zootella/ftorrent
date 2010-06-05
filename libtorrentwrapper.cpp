@@ -73,56 +73,6 @@ void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 	}
 }
 
-// Ported from http://www.rasterbar.com/products/libtorrent/manual.html#save-resume-data
-void FreezeAndSaveAllFastResumeData(void(*alertCallback)(void*)) {
-	try {
-
-		int num_resume_data = 0;
-
-		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
-		Handle.session->pause();
-
-		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
-			libtorrent::torrent_handle &h = *i;
-			if (!h.has_metadata())
-				continue;
-			if (!h.is_valid())
-				continue;
-
-			h.save_resume_data();
-			++num_resume_data;
-			log(make(L"num_resume: ", numerals(num_resume_data)));
-		}
-
-		while (num_resume_data > 0) {
-			log(make(L"waiting for resume: ", numerals(num_resume_data)));
-
-			libtorrent::alert const *alert = Handle.session->wait_for_alert(libtorrent::seconds(10));
-
-			// if we don't get an alert within 10 seconds, abort
-			if (alert == NULL)
-				break;
-
-			std::auto_ptr<libtorrent::alert> holder = Handle.session->pop_alert();
-
-			alert_structure alertInfo;
-			ProcessAlert(alert, &alertInfo);
-
-			//alertCallback(alertInfo); here is where you can look at the alert and do it
-
-			if (alertInfo.has_data) {
-				log(L"resume_found: ");
-				--num_resume_data;
-			}
-		}
-
-	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
 void UpdateSettings(settings_structure *settings) {
 	try {
 
@@ -149,31 +99,6 @@ void UpdateSettings(settings_structure *settings) {
 	}
 }
 
-
-void GetAlerts() {
-	try {
-
-		std::auto_ptr<libtorrent::alert> alerts;
-
-		alerts = Handle.session->pop_alert();
-
-		while (alerts.get()) {
-			libtorrent::alert *alert = alerts.get();
-
-			alert_structure alertInfo;
-
-			ProcessAlert(alert, &alertInfo);
-			//alertCallback(alertInfo); here is where you can look at the alert
-
-			alerts = Handle.session->pop_alert();
-		}
-
-	} catch (std::exception &e) {
-		log(widenStoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
 
 
@@ -461,7 +386,7 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 		// Fill out some information
 		info->created_by   = widenStoC(i.creator());
 		info->comment      = widenStoC(i.comment());
-		info->sha1         = HashToCString(i.info_hash());
+		info->sha1         = HashToString(i.info_hash());
 		info->total_size   = (long long)i.total_size();
 		info->piece_length = (int)i.piece_length();
 
@@ -607,7 +532,7 @@ void GetPeers(const char *id, std::vector<peer_structure> *v) {
 			p.down_speed         = (float)i->down_speed;
 			p.payload_up_speed   = (float)i->payload_up_speed;
 			p.payload_down_speed = (float)i->payload_down_speed;
-			p.peer_id            = PeerIdToCString(i->pid);
+			p.peer_id            = PeerToString(i->pid);
 			p.progress           = i->progress;
 
 			// Get the country code

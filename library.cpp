@@ -85,16 +85,16 @@ std::string narrowWtoS(std::wstring w) {
 
 
 
-
-
-CString HashToCString(const libtorrent::sha1_hash &hash) {
+// Convert the given hash value object into text
+CString HashToString(const libtorrent::sha1_hash &hash) {
 
 	std::stringstream stream;
 	stream << hash;
 	return widenStoC(stream.str());
 }
 
-CString PeerIdToCString(const libtorrent::peer_id &id) {
+// Convert the given peer ID object into text
+CString PeerToString(const libtorrent::peer_id &id) {
 
 	std::stringstream stream;
 	stream << id;
@@ -116,62 +116,12 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 // Convert the hash value in the given text into a libtorrent big number hash value object
 libtorrent::big_number StringToHash(const char *s) {
 
-	libtorrent::big_number hash;
 	std::stringstream stream;
+	libtorrent::big_number hash;
 	stream << s;
 	stream >> hash;
 	return hash;
 }
 
 
-
-
-
-
-void ProcessSaveResumeDataAlert(libtorrent::torrent_handle handle, libtorrent::save_resume_data_alert const *alert, alert_structure *alertInfo) {
-
-	const boost::shared_ptr<libtorrent::entry> resume_ptr = alert->resume_data;
-	alertInfo->has_data = 1;
-	alertInfo->resume_data = resume_ptr.get();
-}
-
-void ProcessAlert(libtorrent::alert const *alert, alert_structure *alertInfo) {
-
-	alertInfo->category = alert->category();
-	alertInfo->message = widenStoC(alert->message());
-
-	libtorrent::torrent_alert const *torrentAlert;
-
-	if ((torrentAlert = dynamic_cast<libtorrent::torrent_alert const*>(alert))) {
-
-		libtorrent::torrent_handle handle = torrentAlert->handle;
-
-		if (handle.is_valid()) {
-			alertInfo->sha1 = HashToCString(handle.info_hash());
-
-			libtorrent::save_resume_data_alert const *srd_alert = dynamic_cast<libtorrent::save_resume_data_alert const*>(alert);
-			if (srd_alert) {
-
-				ProcessSaveResumeDataAlert(handle, srd_alert, alertInfo);
-				return;
-			}
-
-			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*>(alert);
-			if (srdf_alert) {
-
-				log(make(L"save_resume_data_failed_alert (", widenStoC(srdf_alert->msg), L")"));
-				alertInfo->message = widenStoC(srdf_alert->msg);
-				return;
-			}
-
-			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
-			if (fra_alert) {
-
-				log(make(L"fastresume_rejected_alert (", widenStoC(fra_alert->msg), L")"));
-				alertInfo->message = widenStoC(fra_alert->msg);
-				return;
-			}
-		}
-	}
-}
 
