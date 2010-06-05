@@ -168,7 +168,7 @@ CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 libtorrent::big_number StringToHash(const char *s);
 
-void ProcessAlert(libtorrent::alert const *alert, alert_structure *info);
+void ProcessAlert(const libtorrent::alert *alert, alert_structure *info);
 
 
 // libtorrentwrapper.cpp

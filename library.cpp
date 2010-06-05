@@ -53,11 +53,11 @@ extern statetop  State;
 
 
 
-// P  const char*     narrow  in
-// S  std::string     narrow  in  out
-// R  const wchar_t*  wide    in
-// W  std::wstring    wide    in  out
-// C  CString         wide        out
+// P  const char *     narrow  in
+// S  std::string      narrow  in  out
+// R  const wchar_t *  wide    in
+// W  std::wstring     wide    in  out
+// C  CString          wide        out
 
 std::string convertPtoS(const char *p) { return p; }
 std::wstring convertRtoW(const wchar_t *r) { return r; }

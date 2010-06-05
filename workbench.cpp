@@ -53,7 +53,7 @@ void FreezeAndSaveAllFastResumeData() {
 		while (num_resume_data > 0) {
 			log(make(L"waiting for resume: ", numerals(num_resume_data)));
 
-			libtorrent::alert const *alert = Handle.session->wait_for_alert(libtorrent::seconds(10));
+			const libtorrent::alert *alert = Handle.session->wait_for_alert(libtorrent::seconds(10));
 
 			// if we don't get an alert within 10 seconds, abort
 			if (alert == NULL)
@@ -109,21 +109,21 @@ void GetAlerts() {
 
 
 
-void ProcessAlert(libtorrent::alert const *alert, alert_structure *info) {
+void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 
 	info->category = alert->category();
 	info->message = widenStoC(alert->message());
 
-	libtorrent::torrent_alert const *torrentAlert;
+	const libtorrent::torrent_alert *torrentAlert;
 
-	if ((torrentAlert = dynamic_cast<libtorrent::torrent_alert const*>(alert))) {
+	if ((torrentAlert = dynamic_cast<const libtorrent::torrent_alert *>(alert))) {
 
 		libtorrent::torrent_handle handle = torrentAlert->handle;
 
 		if (handle.is_valid()) {
 			info->sha1 = HashToString(handle.info_hash());
 
-			libtorrent::save_resume_data_alert const *srd_alert = dynamic_cast<libtorrent::save_resume_data_alert const*>(alert);
+			const libtorrent::save_resume_data_alert *srd_alert = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
 			if (srd_alert) {
 
 				const boost::shared_ptr<libtorrent::entry> resume_ptr = srd_alert->resume_data;
@@ -132,7 +132,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *info) {
 				return;
 			}
 
-			libtorrent::save_resume_data_failed_alert const *srdf_alert = dynamic_cast<libtorrent::save_resume_data_failed_alert const*>(alert);
+			const libtorrent::save_resume_data_failed_alert *srdf_alert = dynamic_cast<const libtorrent::save_resume_data_failed_alert *>(alert);
 			if (srdf_alert) {
 
 				log(make(L"save_resume_data_failed_alert (", widenStoC(srdf_alert->msg), L")"));
@@ -140,7 +140,7 @@ void ProcessAlert(libtorrent::alert const *alert, alert_structure *info) {
 				return;
 			}
 
-			libtorrent::fastresume_rejected_alert const *fra_alert = dynamic_cast<libtorrent::fastresume_rejected_alert const*> (alert);
+			const libtorrent::fastresume_rejected_alert *fra_alert = dynamic_cast<const libtorrent::fastresume_rejected_alert *> (alert);
 			if (fra_alert) {
 
 				log(make(L"fastresume_rejected_alert (", widenStoC(fra_alert->msg), L")"));
