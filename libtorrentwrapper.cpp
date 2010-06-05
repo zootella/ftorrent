@@ -55,16 +55,51 @@ extern statetop  State;
 
 
 
-void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
+
+
+
+
+
+
+
+// Pause the libtorrent session and get resume data from each torrent
+// Ported from http://www.rasterbar.com/products/libtorrent/manual.html#save-resume-data
+void FreezeAndSaveAllFastResumeData() {
 	try {
 
-		std::wstring file(filePath);
-		boost::filesystem::wpath full_path(file);
-		boost::filesystem::ofstream out(full_path, std::ios_base::binary);
-		out.unsetf(std::ios_base::skipws);
-		libtorrent::entry *resume_data = alert->resume_data;
-		libtorrent::bencode(std::ostream_iterator<char>(out), *resume_data);
-		out.close();
+		// Count how many torrents will give us resume data
+		int n = 0;
+
+		// Pausing the whole session is better than pausing torrents individually
+		Handle.session->pause();
+
+		// Loop through all the torrent handles
+		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
+		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
+			libtorrent::torrent_handle &h = *i;
+			if (!h.has_metadata()) continue; // Skip this one unless it has filename and piece hash metadata
+			if (!h.is_valid()) continue; // And isn't uninitialized or aborted
+
+			// Tell the torrent to generate resume data
+			h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
+			n++; // Count one more torrent that will give us resume data
+		}
+
+		// Loop until we've gotten as many resume data alerts as we expect
+		while (n > 0) {
+
+			// Wait here for an alert
+			const libtorrent::alert *alert = Handle.session->wait_for_alert(libtorrent::seconds(10)); // Wait up to 10 seconds
+			if (alert == NULL) break; // Didn't get one, leave
+
+			// Got an alert
+			std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Tell libtorrent we've got it
+			alert_structure info;
+			ProcessAlert(alert, &info); // Copy information from alert into info
+
+			// Only count this alert if it has resume data
+			if (info.has_data) n--;
+		}
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -73,24 +108,22 @@ void SaveFastResumeData(alert_structure *alert, wchar_t *filePath) {
 	}
 }
 
-void UpdateSettings(settings_structure *settings) {
+// Take all the alerts libtorrent is waiting to give us and look at each one
+void GetAlerts() {
 	try {
 
-		libtorrent::session_settings s;
-		s.use_dht_as_fallback   = false;
-		s.share_ratio_limit     = settings->seed_ratio_limit;
-		s.seed_time_ratio_limit = settings->seed_time_ratio_limit;
-		s.seed_time_limit       = settings->seed_time_limit;
-		s.active_downloads      = settings->active_downloads_limit;
-		s.active_seeds          = settings->active_seeds_limit;
-		s.active_limit          = settings->active_limit;
+		// Get an alert
+		std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Move an alert from libtorrent to p
+		while (p.get()) { // If p contans an alert
+			libtorrent::alert *alert = p.get(); // Get it
 
-		Handle.session->set_settings(s);
-		Handle.session->set_alert_mask(settings->alert_mask);
-		Handle.session->listen_on(std::make_pair(settings->listen_start_port, settings->listen_end_port), narrowRtoS(settings->listen_interface).c_str());
+			// Look at alert, filling info with information about it and copied from it
+			alert_structure info;
+			ProcessAlert(alert, &info);
 
-		Handle.session->set_upload_rate_limit(settings->max_upload_bandwidth);
-		Handle.session->set_download_rate_limit(settings->max_download_bandwidth);
+			// Get the next alert
+			p = Handle.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
+		}
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -99,13 +132,56 @@ void UpdateSettings(settings_structure *settings) {
 	}
 }
 
+// Given a libtorrent alert, fill a structure of info about it
+// After calling this function, you can look at the information in info to see the alert libtorrent sent you
+void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 
+	// Get the category and the message
+	info->category = alert->category();
+	info->message = widenStoC(alert->message());
 
+	// If it's a torrent alert
+	const libtorrent::torrent_alert *a = dynamic_cast<const libtorrent::torrent_alert *>(alert);
+	if (a) {
 
+		// Get the torrent handle and make sure that torrent is initialized and not yet aborted
+		libtorrent::torrent_handle h = a->handle;
+		if (h.is_valid()) {
 
+			// Get the infohash
+			info->sha1 = HashToString(h.info_hash());
 
+			// If the alert is for save resume data
+			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
+			if (a1) {
 
+				// Get the pointer to the resume data
+				const boost::shared_ptr<libtorrent::entry> resume_ptr = a1->resume_data;
+				info->has_data = 1; // Mark that this info structure has resume data
+				info->resume_data = resume_ptr.get(); // Copy across the pointer to the resume data
+				return;
+			}
 
+			// If the alert is for save resume data failed
+			const libtorrent::save_resume_data_failed_alert *a2 = dynamic_cast<const libtorrent::save_resume_data_failed_alert *>(alert);
+			if (a2) {
+
+				// Get the error message
+				info->message = widenStoC(a2->msg);
+				return;
+			}
+
+			// If the alert is for fast resume rejected
+			const libtorrent::fastresume_rejected_alert *a3 = dynamic_cast<const libtorrent::fastresume_rejected_alert *>(alert);
+			if (a3) {
+
+				// Get the error message
+				info->message = widenStoC(a3->msg);
+				return;
+			}
+		}
+	}
+}
 
 
 
