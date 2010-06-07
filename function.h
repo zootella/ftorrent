@@ -219,7 +219,6 @@ void AddTracker(const char *id, char *url, int tier);
 void RemoveTracker(const char *id, char *url, int tier);
 void GetNumTrackers(const char *id, int &num_trackers);
 void GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers);
-void FreeTrackers(announce_structure **torrent_trackers, int numTrackers);
 
 
 

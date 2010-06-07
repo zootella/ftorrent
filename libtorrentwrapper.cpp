@@ -353,9 +353,9 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 
 				// Copy the file contents into resumebuffer
 				f2.unsetf(std::ios_base::skipws); // Change whitespace option
-				std::istream_iterator<char> ios_iter;
-				std::istream_iterator<char> iter(f2);
-				std::copy(iter, ios_iter, std::back_inserter(resumebuffer));
+				std::istream_iterator<char> streamiterator;
+				std::istream_iterator<char> fileiterator(f2);
+				std::copy(fileiterator, streamiterator, std::back_inserter(resumebuffer));
 
 				p.resume_data = &resumebuffer; // Add the resumebuffer to the torrent parameters we're filling out
 				f2.close();                    // Close the disk file we opened
@@ -804,38 +804,35 @@ void SetFilePriority(const char *id, int index, int priority) {
 	}
 }
 
-
-
-
-
-
-
-
-void StartDht(const wchar_t *dht_state_file_path) {
+// Takes the path to DHT information saved from a previous session
+// Starts the DHT, using the file if it's there
+void StartDht(const wchar_t *path) {
 	try {
 
-		std::wstring file(dht_state_file_path);
-		boost::filesystem::wpath full_path(file);
+		// Open the file
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ifstream f(p, std::ios_base::binary);
 
-		boost::filesystem::ifstream dht_state_file(full_path, std::ios_base::binary);
+		// Initialize variables
+		libtorrent::entry e = 0; // The bencoded DHT state information from the file
+		bool b = false; // True once we've gotten information from the file
 
-		libtorrent::entry dht_state = 0;
-		bool state_loaded = false;
-		if(!dht_state_file.fail()) {
+		if (!f.fail()) {
 			try {
-				dht_state = libtorrent::bdecode(std::istream_iterator<char>(dht_state_file), std::istream_iterator<char>());
-				state_loaded = true;
-			} catch (std::exception& e) {
-				log(widenPtoC(e.what()));
-				//no dht to resume will start dht without a prebuilt state
+
+				// Read the file, parsing its contents into a libtorrent entry object
+				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
+				b = true; // Record that worked without an exception
+
+			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
+				log(widenPtoC(e.what())); // Log a note but keep going
 			}
 		}
 
-		if(state_loaded) {
-			Handle.session->start_dht(dht_state);
-		} else {
-			Handle.session->start_dht();
-		}
+		// Start the DHT
+		if (b) Handle.session->start_dht(e); // With the file information we got
+		else   Handle.session->start_dht();  // Without any information from a previous session
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -844,6 +841,7 @@ void StartDht(const wchar_t *dht_state_file_path) {
 	}
 }
 
+// Tell libtorrent the domain name and port number of a DHT bootstrapping router
 void AddDhtRouter(const char *address, int port) {
 	try {
 
@@ -856,6 +854,7 @@ void AddDhtRouter(const char *address, int port) {
 	}
 }
 
+// Tell libtorrent the host name and port number of a peer on the DHT
 void AddDhtNode(const char *address, int port) {
 	try {
 
@@ -868,16 +867,21 @@ void AddDhtNode(const char *address, int port) {
 	}
 }
 
-void SaveDhtState(const wchar_t *dht_state_file_path) {
+// Save DHT information in a file at path to look at next time so it starts up faster
+void SaveDhtState(const wchar_t *path) {
 	try {
 
-		std::wstring file(dht_state_file_path);
-		boost::filesystem::wpath full_path(file);
-		boost::filesystem::ofstream out(full_path, std::ios_base::binary);
-		out.unsetf(std::ios_base::skipws);
-		libtorrent::entry dht_state = Handle.session->dht_state();
-		libtorrent::bencode(std::ostream_iterator<char>(out), dht_state);
-		out.close();
+		// Open the file at path for writing
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ofstream f(p, std::ios_base::binary);
+		f.unsetf(std::ios_base::skipws);
+
+		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
+		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
+
+		// Close the file
+		f.close();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -886,6 +890,7 @@ void SaveDhtState(const wchar_t *dht_state_file_path) {
 	}
 }
 
+// Have libtorrent disconnect from the DHT
 void StopDht() {
 	try {
 
@@ -898,10 +903,11 @@ void StopDht() {
 	}
 }
 
+// Create port mappings on a UPnP device on the LAN
 void StartUpnp() {
 	try {
 
-		Handle.session->start_upnp();
+		Handle.session->start_upnp(); // Returns an object you could use
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -910,6 +916,7 @@ void StartUpnp() {
 	}
 }
 
+// Stop the UPnP service
 void StopUpnp() {
 	try {
 
@@ -922,6 +929,7 @@ void StopUpnp() {
 	}
 }
 
+// Start the local service directory, which uses multicast to find peers on the LAN
 void StartLsd() {
 	try {
 
@@ -934,6 +942,7 @@ void StartLsd() {
 	}
 }
 
+// Stop the local service directory
 void StopLsd() {
 	try {
 
@@ -946,10 +955,11 @@ void StopLsd() {
 	}
 }
 
+// Use NAT-PMP to map ports on the router
 void StartNatpmp() {
 	try {
 
-		Handle.session->start_natpmp();
+		Handle.session->start_natpmp(); // Returns an object you could use
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -958,6 +968,7 @@ void StartNatpmp() {
 	}
 }
 
+// Stop the NAT-PMP service
 void StopNatpmp() {
 	try {
 
@@ -970,84 +981,92 @@ void StopNatpmp() {
 	}
 }
 
+// Get the stripe pattern of pieces for the torrent with the given infohash
 void GetPiecesStatus(const char *id, pieces_structure *info) {
 	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		libtorrent::bitfield b = h.status().pieces; // Get the bitfield of all the pieces
+		int n = b.size(); // Find out how many pieces there are
 
-		libtorrent::bitfield piece_downloaded_info = h.status().pieces;
-
-		int num_pieces = piece_downloaded_info.size();
-
-		CString p;
 		info->completed = 0;
 
-		// Clear the array
-		for (int i = 0; i < num_pieces; i++) {
-			p += L'0'; // Piece pending
-		}
+		// Make a string with a "0" for each piece
+		CString s;
+		for (int i = 0; i < n; i++)
+			s += L'0'; // Piece pending
 
+		// Loop through all the torrent's peers
 		std::vector<libtorrent::peer_info> peers;
-		h.get_peer_info(peers);
-		std::vector<libtorrent::peer_info>::iterator iter = peers.begin();
-		while (iter != peers.end()) {
-			if (iter->downloading_piece_index > -1 && iter->downloading_piece_index < num_pieces) {
-				// Mark downloading pieces
-				p.SetAt(iter->downloading_piece_index, L'a'); // Piece active
-			}
-			iter++;
+		h.get_peer_info(peers); // Get information about all the torrent's peers
+		std::vector<libtorrent::peer_info>::iterator iterator1 = peers.begin();
+		while (iterator1 != peers.end()) {
+
+			if (iterator1->downloading_piece_index > -1 && iterator1->downloading_piece_index < n) // This peer is download a piece
+				s.SetAt(iterator1->downloading_piece_index, L'a'); // Mark the piece active
+
+			iterator1++;
 		}
 
-		std::vector<libtorrent::partial_piece_info> download_queue;
-		h.get_download_queue(download_queue);
-		std::vector<libtorrent::partial_piece_info>::iterator queue_iter = download_queue.begin();
-		while (queue_iter != download_queue.end()) {
-			libtorrent::partial_piece_info piece = *queue_iter;
-			if (piece.piece_index > -1 && piece.piece_index < num_pieces) {
-				if (p[piece.piece_index] != L'a') { // Piece active
-					if (piece.writing > 0) {
-						p.SetAt(piece.piece_index, L'a'); // Piece active
-					} else if (piece.requested > 0 && piece.finished > 0) {
-						p.SetAt(piece.piece_index, L'p'); // Piece partial
-					} else if (piece.finished == 0) {
-						p.SetAt(piece.piece_index, L'q'); // Piece queued
-					}
+		// Loop through all the torrent's partial pieces
+		std::vector<libtorrent::partial_piece_info> pieces;
+		h.get_download_queue(pieces); // Get information about all the torrent's download requests and downloads in progress
+		std::vector<libtorrent::partial_piece_info>::iterator iterator2 = pieces.begin();
+		while (iterator2 != pieces.end()) {
+			libtorrent::partial_piece_info p = *iterator2;
+
+			if (p.piece_index > -1 && p.piece_index < n) { // If the partial piece info structure has a valid piece index
+
+				if (s[p.piece_index] != L'a') { // Mark the piece active in our record of them
+
+					if      (p.writing > 0)                     s.SetAt(p.piece_index, L'a'); // Piece active
+					else if (p.requested > 0 && p.finished > 0) s.SetAt(p.piece_index, L'p'); // Piece partial
+					else if (p.finished == 0)                   s.SetAt(p.piece_index, L'q'); // Piece queued
 				}
 			}
 
-			queue_iter++;
+			iterator2++;
 		}
 
-		for (int i = 0; i < num_pieces; i++) {
-			if (p[i] != L'a') { // Piece active
-				if (piece_downloaded_info[i]) {
-					// Mark downloaded pieces
-					p.SetAt(i, L'x'); // Piece downloaded
-					info->completed++;
+		// Loop through all the pieces that aren't active in our record of them
+		for (int i = 0; i < n; i++) {
+			if (s[i] != L'a') { // Piece not active
+
+				// The bitfield indicates we have this piece
+				if (b[i]) {
+
+					s.SetAt(i, L'x'); // Piece downloaded
+					info->completed++; // Count one more piece downloaded
+
+				// The bitfield indicates we don't have this piece
 				} else {
-					bool available = false;
 
-					iter = peers.begin();
-					while (iter != peers.end()) {
-						if (iter->pieces[i]) {
-							available = true;
-							break;
+					// Loop through all the peers
+					bool available = false; // True when we've found one that has this piece
+					iterator1 = peers.begin();
+					while (iterator1 != peers.end()) {
+
+						if (iterator1->pieces[i]) { // The peer under iterator has piece i
+							available = true; // Found it
+							break; // Don't need to look anymore
 						}
-						iter++;
+						iterator1++;
 					}
 
+					// No peer has the piece
 					if (!available) {
-						if (p[i] == L'p') { // Piece partial
-							p.SetAt(i, L'u'); // Piece unavailable partial
-						} else {
-							p.SetAt(i, L'U'); // Piece unavailable
-						}
+
+						if (s[i] == L'p') // Piece partial, we've saved some of it so far
+							s.SetAt(i, L'u'); // Piece unavailable partial, the rest of it is nowhere in the swarm
+						else
+							s.SetAt(i, L'U'); // Piece unavailable, it's entirely missing
 					}
 				}
 			}
 		}
 
-		info->pieces = p;
+		// Copy the string we made into the given structure
+		info->pieces = s;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1056,16 +1075,20 @@ void GetPiecesStatus(const char *id, pieces_structure *info) {
 	}
 }
 
+// Add a tracker to the torrent with the given infohash
 void AddTracker(const char *id, char *url, int tier) {
 	try {
 		
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		std::vector<libtorrent::announce_entry> trackers = h.trackers();
-		
+		// Get the torent's list of trackers
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		std::vector<libtorrent::announce_entry> trackers = h.trackers(); // Get its list of trackers
+
+		// Make a new announce entry object and fill it out
 		libtorrent::announce_entry e(url);
 		e.tier = tier;
-		trackers.push_back(e);
 
+		// Add it to the list and give the edited list back to the torrent
+		trackers.push_back(e);
 		h.replace_trackers(trackers);
 
 	} catch (std::exception &e) {
@@ -1075,24 +1098,28 @@ void AddTracker(const char *id, char *url, int tier) {
 	}
 }
 
+// Remove the given tracker from the torrent with the given infohash
 void RemoveTracker(const char *id, char *url, int tier) {
 	try {
 		
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		std::vector<libtorrent::announce_entry> trackers = h.trackers();
-		std::vector<libtorrent::announce_entry> new_trackers;
-		
-		std::vector<libtorrent::announce_entry>::iterator iter = trackers.begin();
+		// Get the torrent's list of trackers and make a new empty list
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		std::vector<libtorrent::announce_entry> trackers = h.trackers(); // Get the current list of trackers
+		std::vector<libtorrent::announce_entry> trackers2; // Make a new empty list that will hold trackers
 
-		while (iter != trackers.end()) {
-			libtorrent::announce_entry tracker = *iter;
-			if (tracker.tier != tier || strcmp(tracker.url.c_str(), url) != 0) {
-				new_trackers.push_back(tracker);
-			}
-			iter++;
+		// Loop down the torrent's list of trackers
+		std::vector<libtorrent::announce_entry>::iterator i = trackers.begin();
+		while (i != trackers.end()) {
+			libtorrent::announce_entry tracker = *i;
+
+			if (tracker.tier != tier || strcmp(tracker.url.c_str(), url) != 0) // This tracker from the list doesn't match the one we're trying to remove
+				trackers2.push_back(tracker); // Add it to the new list to save it
+
+			i++;
 		}
 
-		h.replace_trackers(new_trackers);
+		// Give the torrent the new list with the one we wanted to remove not there
+		h.replace_trackers(trackers2);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1101,20 +1128,20 @@ void RemoveTracker(const char *id, char *url, int tier) {
 	}
 }
 
-void GetNumTrackers(const char *id, int &num_trackers) {
+// Find out how many trackers the torrent with the given infohash has
+void GetNumTrackers(const char *id, int &n) {
 	try {
 
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
 
 		std::vector<libtorrent::announce_entry> trackers;
 		try {
-			trackers = h.trackers();
-		} catch (libtorrent::invalid_handle e) {
-			return;
-		} catch (std::exception e) {
-			return;
+			trackers = h.trackers(); // Get the torrent's list of trackers
 		}
-		num_trackers = trackers.size();
+		catch (libtorrent::invalid_handle e) { return; } // Leave without changing the value of n
+		catch (std::exception e) { return; }
+
+		n = trackers.size(); // Save how many trackers are in the list to the variable we were given access to
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1123,48 +1150,34 @@ void GetNumTrackers(const char *id, int &num_trackers) {
 	}
 }
 
-void GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers) {
+// Takes the infohash of a torrent, a pointer to memory for an array of announce structures, and the number of structures that fit in it
+// Write information about the torrent's trackers in the given array of structures
+void GetTrackers(const char *id, announce_structure **torrent_trackers, int n) {
 	try {
 		
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		std::vector<libtorrent::announce_entry> trackers = h.trackers();
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		std::vector<libtorrent::announce_entry> trackers = h.trackers(); // Get the list of trackers
 		
-		std::vector<libtorrent::announce_entry>::iterator iter = trackers.begin();
+		std::vector<libtorrent::announce_entry>::iterator i = trackers.begin(); // Make an iterator to loop down the trackers
 
-		announce_structure **current_torrent_tracker = torrent_trackers;
+		announce_structure **a = torrent_trackers; // Point a at the start of the given array of memory
 
+		// Loop for each tracker
 		int index = 0;
-		while (iter != trackers.end()) {
-			libtorrent::announce_entry tracker = *iter;
+		while (i != trackers.end()) {
+			libtorrent::announce_entry tracker = *i;
 			
-			announce_structure *torrent_tracker = *current_torrent_tracker;
-			current_torrent_tracker++;
+			announce_structure *info = *a; // Point info at the announce structure under a
+			a++; // Move a forward for the next loop
 			
-			torrent_tracker->tier = tracker.tier;
-			torrent_tracker->url = widenStoC(tracker.url);
+			info->tier = tracker.tier; // Copy across the tier number
+			info->url = widenStoC(tracker.url); // Copy the tracker address URL
 		
+			// Make sure we don't loop more than we've got memory to do so
 			index++;
-			if(index >= numTrackers) {
-				break;
-			}
-			iter++;
-		}
-		
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
+			if (index >= n) break;
 
-void FreeTrackers(announce_structure **torrent_trackers, int numTrackers) {
-	try {
-		
-		announce_structure **current_torrent_tracker = torrent_trackers;
-	
-		for (int i = 0; i < numTrackers; i++) {
-			announce_structure *tracker = *current_torrent_tracker;
-			current_torrent_tracker++;
+			i++; // Move to the next tracker in the list
 		}
 		
 	} catch (std::exception &e) {
