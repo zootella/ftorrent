@@ -725,8 +725,84 @@ void GetNumFiles(const char *id, int &num_files) {
 	}
 }
 
+// Takes the infohash of a torrent, and a pointer an array of file structures
+// Writes information about the files that make up the torrent with the given infohash
+void GetFiles(const char *id, file_structure **file_entries) {
+	try {
 
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		libtorrent::torrent_info i = h.get_torrent_info();    // From it get the torrent info object
+		libtorrent::file_storage f = i.files();               // And from that the file storage object
 
+		// Find out how much of each file is saved
+		std::vector<libtorrent::size_type> progress;
+		h.file_progress(progress); // Slow, faster to tell it to just summarize pieces
+
+		// Get the priority of each file
+		std::vector<int> priorities = h.file_priorities();
+
+		// Loop for each file entry in the torrent's file storage vector
+		int index = 0;
+		std::vector<libtorrent::file_entry>::const_iterator iterator = f.begin();
+		while (iterator != f.end()) {
+			file_structure *info = *file_entries; // Point info at the file structure at file entries
+
+			// Copy across information
+			info->index = index;                             // Save the index
+			info->path = widenStoC(iterator->path.string()); // Get the file path
+			info->size = iterator->size;                     // Size of the file in bytes
+			info->total_done = progress[index];              // How many bytes of the file are saved
+			info->priority = priorities[index];              // The file's download priority
+
+			file_entries++; // Point file entries forward the size of one file structure
+			index++;        // Move to the next index
+			iterator++;     // Move iterator to the next file entry in the file storage vector
+		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the infohash of a torrent, a pointer to a block of ints, and the number of ints in that block
+// Sets those priorities on the files in the torrent
+void SetFilePriorities(const char *id, int *priorities, int n) {
+	try {
+
+		// Convert the given array of ints into a vector of ints
+		std::vector<int> v;
+		for (int i = 0; i < n; i++) {
+			int priority = *priorities;
+			v.push_back(priority); // Add it to the end of the list
+			priorities++; // Move the pointer forward to the next int
+		}
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.prioritize_files(v);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the infohash of a torrent, the index of a file in it, and the desired priority for that file
+// Sets the priority to the file in the torrent
+void SetFilePriority(const char *id, int index, int priority) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.file_priority(index, priority);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
 
 
 
