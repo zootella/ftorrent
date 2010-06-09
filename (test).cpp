@@ -29,30 +29,6 @@ int step = 0;
 
 // Run a snippet of test code
 void Test() {
-
-
-	announce_structure a;
-	a.url = "hello";
-	a.tier = 5;
-
-	std::vector<announce_structure> v;
-	v.push_back(a);
-
-
-	/*
-	long l1;
-	long long l2;
-
-	int size;
-	size = sizeof(l1); // 4
-	size = sizeof(l2); // 8
-	log(make(L"long size is ", numerals(sizeof(l1)), L" while long long size is ", numerals(sizeof(l2))));
-
-
-	/*
-
-
-
 	try {
 
 		if (step == 0) {
@@ -78,14 +54,4 @@ void Test() {
 	} catch (...) {
 		log(L"exception");
 	}
-	*/
 }
-
-
-
-
-
-
-
-
-

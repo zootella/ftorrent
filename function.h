@@ -149,77 +149,87 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 // Start
 void StartIcon();
 
-
 // Library
-
 std::string convertPtoS(const char *p);
 std::wstring convertRtoW(const wchar_t *r);
 CString convertRtoC(const wchar_t *r);
 CString convertWtoC(std::wstring w);
-
 CString widenPtoC(const char *p);
 CString widenStoC(std::string s);
 std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
+libtorrent::big_number StringToHash(const char *s);
 CString HashToString(const libtorrent::sha1_hash &hash);
 CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
-libtorrent::big_number StringToHash(const char *s);
 
+// Wrapper
+
+// Start
+void InitializeLibtorrent(settings_structure *info);
+void UpdateSettings(settings_structure *info);
+
+// Close
+void FreezeAndSaveAllFastResumeData();
+void AbortTorrents();
+void SignalFastResumeDataRequest(const char *id);
+void SaveFastResumeData(alert_structure *info, wchar_t *path);
+void SaveDhtState(const wchar_t *path);
+
+// Update
+void GetAlerts();
 void ProcessAlert(const libtorrent::alert *alert, alert_structure *info);
 
-
-// libtorrentwrapper.cpp
-
-void SaveFastResumeData(alert_structure *alert, wchar_t *filePath);
-void FreezeAndSaveAllFastResumeData();
-void UpdateSettings(settings_structure *settings);
-void InitializeLibtorrent(settings_structure *setting);
-void AbortTorrents();
-void MoveTorrent(const char *id, wchar_t *path);
-void AddTorrent(char *sha1String, char *trackerURI, wchar_t *torrentPath, wchar_t *savePath, wchar_t *fastResumePath);
-void PauseTorrent(const char *id);
-void SetAutoManagedTorrent(const char *id, bool auto_managed);
+// Torrent
+void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath);
 void RemoveTorrent(const char *id);
+
+// Change
+void PauseTorrent(const char *id);
 void ResumeTorrent(const char *id);
+void MoveTorrent(const char *id, wchar_t *path);
 void ForceReannounce(const char *id);
-void ScrapeTracker(const char *id);
-void GetTorrentStatus(const char *id, status_structure *stats);
-void GetTorrentInfo(const char *id, torrent_structure *info);
-void SignalFastResumeDataRequest(const char *id);
 void ClearErrorAndRetry(const char *id);
-void GetNumPeers(const char *id, int &num_peers);
-void HasMetadata(const char *id, int &has_metadata);
-void IsValid(const char *id, int &is_valid);
-void GetPeers(const char *id, std::vector<peer_structure> *v);
-void GetAlerts();
+void SetAutoManagedTorrent(const char *id, bool auto_managed);
 void SetSeedRatio(const char *id, float seed_ratio);
-void GetNumFiles(const char *id, int &num_files);
-void GetFiles(const char *id, file_structure **file_entries);
-void SetFilePriorities(const char *id, int *priorities, int num_priorities);
-void SetFilePriority(const char *id, int index, int priority);
 
-void StartDht(const wchar_t *dht_state_file_path);
-void AddDhtRouter(const char *address, int port);
-void AddDhtNode(const char *address, int port);
-void SaveDhtState(const wchar_t *dht_state_file_path);
-void StopDht();
+// Look
+void IsValid(const char *id, int &is_valid);
+void HasMetadata(const char *id, int &has_metadata);
+void GetTorrentInfo(const char *id, torrent_structure *info);
+void GetTorrentStatus(const char *id, status_structure *info);
 
-void StartUpnp();
-void StopUpnp();
-void StartLsd();
-void StopLsd();
-void StartNatpmp();
-void StopNatpmp();
-
-void GetPiecesStatus(const char *id, pieces_structure *info);
+// Tracker
 void AddTracker(const char *id, char *url, int tier);
 void RemoveTracker(const char *id, char *url, int tier);
-void GetNumTrackers(const char *id, int &num_trackers);
-void GetTrackers(const char *id, announce_structure **torrent_trackers, int numTrackers);
+void GetNumTrackers(const char *id, int &n);
+void GetTrackers(const char *id, announce_structure **torrent_trackers, int n);
+void ScrapeTracker(const char *id);
 
+// Tabs
+void GetNumFiles(const char *id, int &num_files);
+void GetFiles(const char *id, file_structure **file_entries);
+void GetNumPeers(const char *id, int &num_peers);
+void GetPeers(const char *id, std::vector<peer_structure> *v);
+void GetPiecesStatus(const char *id, pieces_structure *info);
+void SetFilePriority(const char *id, int index, int priority);
+void SetFilePriorities(const char *id, int *priorities, int n);
+
+// DHT
+void AddDhtNode(const char *address, int port);
+void AddDhtRouter(const char *address, int port);
+void StartDht(const wchar_t *path);
+void StopDht();
+
+// Service
+void StartLsd();
+void StopLsd();
+void StartUpnp();
+void StopUpnp();
+void StartNatpmp();
+void StopNatpmp();
 
 
 
@@ -227,15 +237,6 @@ void GetTrackers(const char *id, announce_structure **torrent_trackers, int numT
 
 // Test
 void Test();
-
-
-
-
-
-
-
-
-
 
 
 

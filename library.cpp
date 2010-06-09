@@ -49,10 +49,6 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-
-
-
-
 // P  const char *     narrow  in
 // S  std::string      narrow  in  out
 // R  const wchar_t *  wide    in
@@ -82,8 +78,15 @@ std::string narrowWtoS(std::wstring w) {
 	return s;
 }
 
+// Convert the hash value in the given text into a libtorrent big number hash value object
+libtorrent::big_number StringToHash(const char *s) {
 
-
+	std::stringstream stream;
+	libtorrent::big_number hash;
+	stream << s;
+	stream >> hash;
+	return hash;
+}
 
 // Convert the given hash value object into text
 CString HashToString(const libtorrent::sha1_hash &hash) {
@@ -101,10 +104,6 @@ CString PeerToString(const libtorrent::peer_id &id) {
 	return widenStoC(stream.str());
 }
 
-
-
-
-
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
@@ -112,16 +111,3 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
-
-// Convert the hash value in the given text into a libtorrent big number hash value object
-libtorrent::big_number StringToHash(const char *s) {
-
-	std::stringstream stream;
-	libtorrent::big_number hash;
-	stream << s;
-	stream >> hash;
-	return hash;
-}
-
-
-

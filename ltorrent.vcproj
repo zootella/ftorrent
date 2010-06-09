@@ -195,10 +195,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\libtorrentwrapper.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\object.cpp"
 				>
 			</File>
@@ -211,7 +207,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\simpleclient.cpp"
+				RelativePath=".\simple.cpp"
 				>
 			</File>
 			<File
@@ -231,7 +227,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\workbench.cpp"
+				RelativePath=".\wrap.cpp"
 				>
 			</File>
 		</Filter>

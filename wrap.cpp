@@ -49,28 +49,20 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-
-
-
-
-
-
-// Save the resume data info knows about to a new file at path
-void SaveFastResumeData(alert_structure *info, wchar_t *path) {
+// Takes a settings structure to look at, or null to not update settings
+// Starts libtorrent and adds extensions
+void InitializeLibtorrent(settings_structure *info) {
 	try {
 
-		// Open a new file at path
-		std::wstring w(path);                                    // Convert path into a wide string
-		boost::filesystem::wpath p(w);                           // Make that into a path object
-		boost::filesystem::ofstream f(p, std::ios_base::binary); // Make an output file stream
-		f.unsetf(std::ios_base::skipws);                         // Don't have the file skip whitespace
+		Handle.session = new libtorrent::session; // Make the libtorrent session object
 
-		// Write data in the file
-		libtorrent::entry *e = info->resume_data;                // Point e at the resume data
-		libtorrent::bencode(std::ostream_iterator<char>(f), *e); // Bencode the data at e into the file
+		if (info) // Added this
+			UpdateSettings(info); // Update settings if a structure was given
 
-		// Close the file
-		f.close();
+		Handle.session->add_extension(&libtorrent::create_metadata_plugin); // Tell libtorrent which plugins to use
+		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin);
+		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);
+		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -111,13 +103,6 @@ void UpdateSettings(settings_structure *info) {
 	}
 }
 
-
-
-
-
-
-
-
 // Pause the libtorrent session and get resume data from each torrent
 // Ported from http://www.rasterbar.com/products/libtorrent/manual.html#save-resume-data
 void FreezeAndSaveAllFastResumeData() {
@@ -156,6 +141,83 @@ void FreezeAndSaveAllFastResumeData() {
 			// Only count this alert if it has resume data
 			if (info.has_data) n--;
 		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Tell libtorent to shut down
+void AbortTorrents() {
+	try {
+
+		if (Handle.session)
+			Handle.session->abort(); //TODO Get the session_proxy this returns
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Have libtorrent generate resume data for the torrent with the given infohash
+// This returns immediately, when the data is ready, you'll get a save resume data alert
+void SignalFastResumeDataRequest(const char *id) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		if (h.has_metadata()) // True if we started with a .torrent file or got equivalent information from the swarm
+			h.save_resume_data();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Save the resume data info knows about to a new file at path
+void SaveFastResumeData(alert_structure *info, wchar_t *path) {
+	try {
+
+		// Open a new file at path
+		std::wstring w(path);                                    // Convert path into a wide string
+		boost::filesystem::wpath p(w);                           // Make that into a path object
+		boost::filesystem::ofstream f(p, std::ios_base::binary); // Make an output file stream
+		f.unsetf(std::ios_base::skipws);                         // Don't have the file skip whitespace
+
+		// Write data in the file
+		libtorrent::entry *e = info->resume_data;                // Point e at the resume data
+		libtorrent::bencode(std::ostream_iterator<char>(f), *e); // Bencode the data at e into the file
+
+		// Close the file
+		f.close();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Save DHT information in a file at path to look at next time so it starts up faster
+void SaveDhtState(const wchar_t *path) {
+	try {
+
+		// Open the file at path for writing
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ofstream f(p, std::ios_base::binary);
+		f.unsetf(std::ios_base::skipws);
+
+		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
+		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
+
+		// Close the file
+		f.close();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -239,72 +301,6 @@ void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-// Takes a settings structure to look at, or null to not update settings
-// Starts libtorrent and adds extensions
-void InitializeLibtorrent(settings_structure *info) {
-	try {
-
-		Handle.session = new libtorrent::session; // Make the libtorrent session object
-
-		if (info) // Added this
-			UpdateSettings(info); // Update settings if a structure was given
-
-		Handle.session->add_extension(&libtorrent::create_metadata_plugin); // Tell libtorrent which plugins to use
-		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin);
-		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);
-		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Tell libtorent to shut down
-void AbortTorrents() {
-	try {
-
-		if (Handle.session)
-			Handle.session->abort(); //TODO Get the session_proxy this returns
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Takes infohash text and a new save to path
-// Moves the torrent from where it is now to the given path
-void MoveTorrent(const char *id, wchar_t *path) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-
-		h.pause();  // Pause the torrent
-		libtorrent::storage_interface *storage = h.get_storage_impl();    // Access the torrent's storage implementation
-		storage->release_files();                                         // Release all the file handles the torrent has open
-		storage->move_storage(boost::filesystem::path(narrowRtoS(path))); // Move all the saved files to path
-		h.resume(); // Resume the torrent
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
 // Takes infohash,    the SHA1 infohash of the torrent file in base 16 ASCII characters
 // Takes trackerurl,  the URL of the torrent's tracker
 // Takes torrentpath, the path to the .torrent file on the disk
@@ -375,34 +371,6 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 	}
 }
 
-// Pause the torrent with the given infohash
-void PauseTorrent(const char *id) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.pause();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Turn auto management on or off for the torrent with the given infohash
-void SetAutoManagedTorrent(const char *id, bool auto_managed) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.auto_managed(auto_managed);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
 // Remove the torrent with the given infohash from the program
 void RemoveTorrent(const char *id) {
 	try {
@@ -410,6 +378,20 @@ void RemoveTorrent(const char *id) {
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 		h.pause();
 		Handle.session->remove_torrent(h); //TODO another option here would delete the files on the disk, too
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Pause the torrent with the given infohash
+void PauseTorrent(const char *id) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.pause();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -432,6 +414,26 @@ void ResumeTorrent(const char *id) {
 	}
 }
 
+// Takes infohash text and a new save to path
+// Moves the torrent from where it is now to the given path
+void MoveTorrent(const char *id, wchar_t *path) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+
+		h.pause();  // Pause the torrent
+		libtorrent::storage_interface *storage = h.get_storage_impl();    // Access the torrent's storage implementation
+		storage->release_files();                                         // Release all the file handles the torrent has open
+		storage->move_storage(boost::filesystem::path(narrowRtoS(path))); // Move all the saved files to path
+		h.resume(); // Resume the torrent
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
 // Reannounce the torrent with the given infohash to its trackers now to find out about more peers
 void ForceReannounce(const char *id) {
 	try {
@@ -446,12 +448,14 @@ void ForceReannounce(const char *id) {
 	}
 }
 
-// Ask the tracker for information about the torrent with the given infohash, like how many peers are complete
-void ScrapeTracker(const char *id) {
+// Force restart the torrent with the given infohash that may have stopped because it had an error
+void ClearErrorAndRetry(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.scrape_tracker();
+		h.force_recheck(); // Disconnect peers and tracker, hash what we have on the disk, and then go back online
+		h.clear_error();   // Clear this torrent's error state and start again
+		h.resume();        // Unpause, start and go back online
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -460,45 +464,54 @@ void ScrapeTracker(const char *id) {
 	}
 }
 
-// Fill out the given status structure with current information about the torrent with the given infohash
-void GetTorrentStatus(const char *id, status_structure *info) {
+// Turn auto management on or off for the torrent with the given infohash
+void SetAutoManagedTorrent(const char *id, bool auto_managed) {
 	try {
 
-		// Find the torrent handle and get the status object
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		libtorrent::torrent_status s = h.status();
+		h.auto_managed(auto_managed);
 
-		// Fill out the given status structure
-		info->total_done                = s.total_done;
-		info->total_wanted_done         = s.total_wanted_done;
-		info->total_wanted              = s.total_wanted;
-		info->total_download            = s.total_download;
-		info->total_upload              = s.total_upload;
-		info->total_payload_download    = s.total_payload_download;
-		info->total_payload_upload      = s.total_payload_upload;
-		info->all_time_payload_download = s.all_time_download;
-		info->all_time_payload_upload   = s.all_time_upload;
-		info->download_rate             = (float)s.download_rate;
-		info->upload_rate               = (float)s.upload_rate;
-		info->download_payload_rate     = (float)s.download_payload_rate;
-		info->upload_payload_rate       = (float)s.upload_payload_rate;
-		info->num_peers                 = s.num_peers;
-		info->num_uploads               = s.num_uploads;
-		info->num_seeds                 = s.num_seeds;
-		info->num_connections           = s.num_connections;
-		info->state                     = s.state;
-		info->progress                  = s.progress;
-		info->paused                    = s.paused;
-		info->finished                  = h.is_finished();
-		info->valid                     = h.is_valid();
-		info->auto_managed              = h.is_auto_managed();
-		info->seeding_time              = s.seeding_time;
-		info->active_time               = s.active_time;
-		info->error                     = widenStoC(s.error);
-		info->current_tracker           = widenStoC(s.current_tracker);
-		info->num_complete              = s.num_complete;
-		info->num_incomplete            = s.num_incomplete;
-		info->total_failed_bytes        = s.total_failed_bytes;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Set the given download to upload seed ratio on the torrent with the given infohash
+void SetSeedRatio(const char *id, float seed_ratio) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.set_ratio(seed_ratio);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Find out if we've got a valid handle for a torrent with the given infohash
+void IsValid(const char *id, int &is_valid) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		is_valid = h.is_valid(); // Reasons for invalid include not found, or filesystem character error
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Find out if the torrent with the given infohash has metadata, either from a .torrent file or downloaded from the swarm
+void HasMetadata(const char *id, int &has_metadata) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		has_metadata = h.has_metadata();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -554,519 +567,45 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 	}
 }
 
-// Have libtorrent generate resume data for the torrent with the given infohash
-// This returns immediately, when the data is ready, you'll get a save resume data alert
-void SignalFastResumeDataRequest(const char *id) {
+// Fill out the given status structure with current information about the torrent with the given infohash
+void GetTorrentStatus(const char *id, status_structure *info) {
 	try {
 
+		// Find the torrent handle and get the status object
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		if (h.has_metadata()) // True if we started with a .torrent file or got equivalent information from the swarm
-			h.save_resume_data();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Force restart the torrent with the given infohash that may have stopped because it had an error
-void ClearErrorAndRetry(const char *id) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.force_recheck(); // Disconnect peers and tracker, hash what we have on the disk, and then go back online
-		h.clear_error();   // Clear this torrent's error state and start again
-		h.resume();        // Unpause, start and go back online
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Find out how many peers the torrent with the given infohash has right now
-void GetNumPeers(const char *id, int &num_peers) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-
-		std::vector<libtorrent::peer_info> peers; // Make a new empty vector
-		try {
-
-			h.get_peer_info(peers); // Have libtorrent fill it with with information about each peer
-
-		} catch (libtorrent::invalid_handle e) {
-			log(L"invalid handle exception");
-			return;
-		} catch (std::exception e) {
-			log(L"std exception");
-			return;
-		}
-
-		num_peers = peers.size();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Find out if the torrent with the given infohash has metadata, either from a .torrent file or downloaded from the swarm
-void HasMetadata(const char *id, int &has_metadata) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		has_metadata = h.has_metadata();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Find out if we've got a valid handle for a torrent with the given infohash
-void IsValid(const char *id, int &is_valid) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		is_valid = h.is_valid(); // Reasons for invalid include not found, or filesystem character error
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Fill the given vector with information about the peers of the torrent with the given infohash
-void GetPeers(const char *id, std::vector<peer_structure> *v) {
-	try {
-
-		// Get information about the torrent's current peers
-		libtorrent::torrent_handle h = FindTorrentHandle(id); // Look up the torrent handle
-		std::vector<libtorrent::peer_info> peers;             // Make a new empty vector that can hold peer_info objects
-		h.get_peer_info(peers);                               // Have libtorrent fill it with information about each of this torrent's peers
-
-		// Loop through the peers
-		peer_structure p;
-		std::vector<libtorrent::peer_info>::iterator i = peers.begin();
-		while (i != peers.end()) {
-
-			// Copy information from the peer_info object i points to to our local peer_structure, p
-			p.status_flags       = i->flags;
-			p.ip                 = widenStoC(i->ip.address().to_string());
-			p.source             = i->source;
-			p.up_speed           = (float)i->up_speed;
-			p.down_speed         = (float)i->down_speed;
-			p.payload_up_speed   = (float)i->payload_up_speed;
-			p.payload_down_speed = (float)i->payload_down_speed;
-			p.peer_id            = PeerToString(i->pid);
-			p.progress           = i->progress;
-
-			// Get the country code
-			WCHAR c[3];
-			c[0] = (WCHAR)i->country[0];
-			c[1] = (WCHAR)i->country[1];
-			c[2] = L'\0';
-			p.country = c;
-
-			// Get the client name
-			try {
-				p.client_name = widenStoC(i->client);
-			} catch (std::runtime_error &e) {
-				log(widenPtoC(e.what()));
-				p.client_name = L"";			
-			}
-
-			// Add the peer_structure we filled out to the vector we're supposed to fill
-			v->push_back(p);
-			
-			i++;
-		}
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Set the given download to upload seed ratio on the torrent with the given infohash
-void SetSeedRatio(const char *id, float seed_ratio) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.set_ratio(seed_ratio);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Find out how many files the torrent with the given infohash contains
-void GetNumFiles(const char *id, int &num_files) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		libtorrent::torrent_info info = h.get_torrent_info();
-		libtorrent::file_storage files = info.files();
-		num_files = files.num_files();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Takes the infohash of a torrent, and a pointer an array of file structures
-// Writes information about the files that make up the torrent with the given infohash
-void GetFiles(const char *id, file_structure **file_entries) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
-		libtorrent::torrent_info i = h.get_torrent_info();    // From it get the torrent info object
-		libtorrent::file_storage f = i.files();               // And from that the file storage object
-
-		// Find out how much of each file is saved
-		std::vector<libtorrent::size_type> progress;
-		h.file_progress(progress); // Slow, faster to tell it to just summarize pieces
-
-		// Get the priority of each file
-		std::vector<int> priorities = h.file_priorities();
-
-		// Loop for each file entry in the torrent's file storage vector
-		int index = 0;
-		std::vector<libtorrent::file_entry>::const_iterator iterator = f.begin();
-		while (iterator != f.end()) {
-			file_structure *info = *file_entries; // Point info at the file structure at file entries
-
-			// Copy across information
-			info->index = index;                             // Save the index
-			info->path = widenStoC(iterator->path.string()); // Get the file path
-			info->size = iterator->size;                     // Size of the file in bytes
-			info->total_done = progress[index];              // How many bytes of the file are saved
-			info->priority = priorities[index];              // The file's download priority
-
-			file_entries++; // Point file entries forward the size of one file structure
-			index++;        // Move to the next index
-			iterator++;     // Move iterator to the next file entry in the file storage vector
-		}
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Takes the infohash of a torrent, a pointer to a block of ints, and the number of ints in that block
-// Sets those priorities on the files in the torrent
-void SetFilePriorities(const char *id, int *priorities, int n) {
-	try {
-
-		// Convert the given array of ints into a vector of ints
-		std::vector<int> v;
-		for (int i = 0; i < n; i++) {
-			int priority = *priorities;
-			v.push_back(priority); // Add it to the end of the list
-			priorities++; // Move the pointer forward to the next int
-		}
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.prioritize_files(v);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Takes the infohash of a torrent, the index of a file in it, and the desired priority for that file
-// Sets the priority to the file in the torrent
-void SetFilePriority(const char *id, int index, int priority) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id);
-		h.file_priority(index, priority);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Takes the path to DHT information saved from a previous session
-// Starts the DHT, using the file if it's there
-void StartDht(const wchar_t *path) {
-	try {
-
-		// Open the file
-		std::wstring w(path);
-		boost::filesystem::wpath p(w);
-		boost::filesystem::ifstream f(p, std::ios_base::binary);
-
-		// Initialize variables
-		libtorrent::entry e = 0; // The bencoded DHT state information from the file
-		bool b = false; // True once we've gotten information from the file
-
-		if (!f.fail()) {
-			try {
-
-				// Read the file, parsing its contents into a libtorrent entry object
-				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
-				b = true; // Record that worked without an exception
-
-			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
-				log(widenPtoC(e.what())); // Log a note but keep going
-			}
-		}
-
-		// Start the DHT
-		if (b) Handle.session->start_dht(e); // With the file information we got
-		else   Handle.session->start_dht();  // Without any information from a previous session
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Tell libtorrent the domain name and port number of a DHT bootstrapping router
-void AddDhtRouter(const char *address, int port) {
-	try {
-
-		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Tell libtorrent the host name and port number of a peer on the DHT
-void AddDhtNode(const char *address, int port) {
-	try {
-
-		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Save DHT information in a file at path to look at next time so it starts up faster
-void SaveDhtState(const wchar_t *path) {
-	try {
-
-		// Open the file at path for writing
-		std::wstring w(path);
-		boost::filesystem::wpath p(w);
-		boost::filesystem::ofstream f(p, std::ios_base::binary);
-		f.unsetf(std::ios_base::skipws);
-
-		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
-		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
-
-		// Close the file
-		f.close();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Have libtorrent disconnect from the DHT
-void StopDht() {
-	try {
-
-		Handle.session->stop_dht();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Create port mappings on a UPnP device on the LAN
-void StartUpnp() {
-	try {
-
-		Handle.session->start_upnp(); // Returns an object you could use
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Stop the UPnP service
-void StopUpnp() {
-	try {
-
-		Handle.session->stop_upnp();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Start the local service directory, which uses multicast to find peers on the LAN
-void StartLsd() {
-	try {
-
-		Handle.session->start_lsd();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Stop the local service directory
-void StopLsd() {
-	try {
-
-		Handle.session->stop_lsd();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Use NAT-PMP to map ports on the router
-void StartNatpmp() {
-	try {
-
-		Handle.session->start_natpmp(); // Returns an object you could use
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Stop the NAT-PMP service
-void StopNatpmp() {
-	try {
-
-		Handle.session->stop_natpmp();
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-// Get the stripe pattern of pieces for the torrent with the given infohash
-void GetPiecesStatus(const char *id, pieces_structure *info) {
-	try {
-
-		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
-		libtorrent::bitfield b = h.status().pieces; // Get the bitfield of all the pieces
-		int n = b.size(); // Find out how many pieces there are
-
-		info->completed = 0;
-
-		// Make a string with a "0" for each piece
-		CString s;
-		for (int i = 0; i < n; i++)
-			s += L'0'; // Piece pending
-
-		// Loop through all the torrent's peers
-		std::vector<libtorrent::peer_info> peers;
-		h.get_peer_info(peers); // Get information about all the torrent's peers
-		std::vector<libtorrent::peer_info>::iterator iterator1 = peers.begin();
-		while (iterator1 != peers.end()) {
-
-			if (iterator1->downloading_piece_index > -1 && iterator1->downloading_piece_index < n) // This peer is download a piece
-				s.SetAt(iterator1->downloading_piece_index, L'a'); // Mark the piece active
-
-			iterator1++;
-		}
-
-		// Loop through all the torrent's partial pieces
-		std::vector<libtorrent::partial_piece_info> pieces;
-		h.get_download_queue(pieces); // Get information about all the torrent's download requests and downloads in progress
-		std::vector<libtorrent::partial_piece_info>::iterator iterator2 = pieces.begin();
-		while (iterator2 != pieces.end()) {
-			libtorrent::partial_piece_info p = *iterator2;
-
-			if (p.piece_index > -1 && p.piece_index < n) { // If the partial piece info structure has a valid piece index
-
-				if (s[p.piece_index] != L'a') { // Mark the piece active in our record of them
-
-					if      (p.writing > 0)                     s.SetAt(p.piece_index, L'a'); // Piece active
-					else if (p.requested > 0 && p.finished > 0) s.SetAt(p.piece_index, L'p'); // Piece partial
-					else if (p.finished == 0)                   s.SetAt(p.piece_index, L'q'); // Piece queued
-				}
-			}
-
-			iterator2++;
-		}
-
-		// Loop through all the pieces that aren't active in our record of them
-		for (int i = 0; i < n; i++) {
-			if (s[i] != L'a') { // Piece not active
-
-				// The bitfield indicates we have this piece
-				if (b[i]) {
-
-					s.SetAt(i, L'x'); // Piece downloaded
-					info->completed++; // Count one more piece downloaded
-
-				// The bitfield indicates we don't have this piece
-				} else {
-
-					// Loop through all the peers
-					bool available = false; // True when we've found one that has this piece
-					iterator1 = peers.begin();
-					while (iterator1 != peers.end()) {
-
-						if (iterator1->pieces[i]) { // The peer under iterator has piece i
-							available = true; // Found it
-							break; // Don't need to look anymore
-						}
-						iterator1++;
-					}
-
-					// No peer has the piece
-					if (!available) {
-
-						if (s[i] == L'p') // Piece partial, we've saved some of it so far
-							s.SetAt(i, L'u'); // Piece unavailable partial, the rest of it is nowhere in the swarm
-						else
-							s.SetAt(i, L'U'); // Piece unavailable, it's entirely missing
-					}
-				}
-			}
-		}
-
-		// Copy the string we made into the given structure
-		info->pieces = s;
+		libtorrent::torrent_status s = h.status();
+
+		// Fill out the given status structure
+		info->total_done                = s.total_done;
+		info->total_wanted_done         = s.total_wanted_done;
+		info->total_wanted              = s.total_wanted;
+		info->total_download            = s.total_download;
+		info->total_upload              = s.total_upload;
+		info->total_payload_download    = s.total_payload_download;
+		info->total_payload_upload      = s.total_payload_upload;
+		info->all_time_payload_download = s.all_time_download;
+		info->all_time_payload_upload   = s.all_time_upload;
+		info->download_rate             = (float)s.download_rate;
+		info->upload_rate               = (float)s.upload_rate;
+		info->download_payload_rate     = (float)s.download_payload_rate;
+		info->upload_payload_rate       = (float)s.upload_payload_rate;
+		info->num_peers                 = s.num_peers;
+		info->num_uploads               = s.num_uploads;
+		info->num_seeds                 = s.num_seeds;
+		info->num_connections           = s.num_connections;
+		info->state                     = s.state;
+		info->progress                  = s.progress;
+		info->paused                    = s.paused;
+		info->finished                  = h.is_finished();
+		info->valid                     = h.is_valid();
+		info->auto_managed              = h.is_auto_managed();
+		info->seeding_time              = s.seeding_time;
+		info->active_time               = s.active_time;
+		info->error                     = widenStoC(s.error);
+		info->current_tracker           = widenStoC(s.current_tracker);
+		info->num_complete              = s.num_complete;
+		info->num_incomplete            = s.num_incomplete;
+		info->total_failed_bytes        = s.total_failed_bytes;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1180,6 +719,444 @@ void GetTrackers(const char *id, announce_structure **torrent_trackers, int n) {
 			i++; // Move to the next tracker in the list
 		}
 		
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Ask the tracker for information about the torrent with the given infohash, like how many peers are complete
+void ScrapeTracker(const char *id) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.scrape_tracker();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Find out how many files the torrent with the given infohash contains
+void GetNumFiles(const char *id, int &num_files) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		libtorrent::torrent_info info = h.get_torrent_info();
+		libtorrent::file_storage files = info.files();
+		num_files = files.num_files();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the infohash of a torrent, and a pointer an array of file structures
+// Writes information about the files that make up the torrent with the given infohash
+void GetFiles(const char *id, file_structure **file_entries) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		libtorrent::torrent_info i = h.get_torrent_info();    // From it get the torrent info object
+		libtorrent::file_storage f = i.files();               // And from that the file storage object
+
+		// Find out how much of each file is saved
+		std::vector<libtorrent::size_type> progress;
+		h.file_progress(progress); // Slow, faster to tell it to just summarize pieces
+
+		// Get the priority of each file
+		std::vector<int> priorities = h.file_priorities();
+
+		// Loop for each file entry in the torrent's file storage vector
+		int index = 0;
+		std::vector<libtorrent::file_entry>::const_iterator iterator = f.begin();
+		while (iterator != f.end()) {
+			file_structure *info = *file_entries; // Point info at the file structure at file entries
+
+			// Copy across information
+			info->index = index;                             // Save the index
+			info->path = widenStoC(iterator->path.string()); // Get the file path
+			info->size = iterator->size;                     // Size of the file in bytes
+			info->total_done = progress[index];              // How many bytes of the file are saved
+			info->priority = priorities[index];              // The file's download priority
+
+			file_entries++; // Point file entries forward the size of one file structure
+			index++;        // Move to the next index
+			iterator++;     // Move iterator to the next file entry in the file storage vector
+		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Find out how many peers the torrent with the given infohash has right now
+void GetNumPeers(const char *id, int &num_peers) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+
+		std::vector<libtorrent::peer_info> peers; // Make a new empty vector
+		try {
+
+			h.get_peer_info(peers); // Have libtorrent fill it with with information about each peer
+
+		} catch (libtorrent::invalid_handle e) {
+			log(L"invalid handle exception");
+			return;
+		} catch (std::exception e) {
+			log(L"std exception");
+			return;
+		}
+
+		num_peers = peers.size();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Fill the given vector with information about the peers of the torrent with the given infohash
+void GetPeers(const char *id, std::vector<peer_structure> *v) {
+	try {
+
+		// Get information about the torrent's current peers
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Look up the torrent handle
+		std::vector<libtorrent::peer_info> peers;             // Make a new empty vector that can hold peer_info objects
+		h.get_peer_info(peers);                               // Have libtorrent fill it with information about each of this torrent's peers
+
+		// Loop through the peers
+		peer_structure p;
+		std::vector<libtorrent::peer_info>::iterator i = peers.begin();
+		while (i != peers.end()) {
+
+			// Copy information from the peer_info object i points to to our local peer_structure, p
+			p.status_flags       = i->flags;
+			p.ip                 = widenStoC(i->ip.address().to_string());
+			p.source             = i->source;
+			p.up_speed           = (float)i->up_speed;
+			p.down_speed         = (float)i->down_speed;
+			p.payload_up_speed   = (float)i->payload_up_speed;
+			p.payload_down_speed = (float)i->payload_down_speed;
+			p.peer_id            = PeerToString(i->pid);
+			p.progress           = i->progress;
+
+			// Get the country code
+			WCHAR c[3];
+			c[0] = (WCHAR)i->country[0];
+			c[1] = (WCHAR)i->country[1];
+			c[2] = L'\0';
+			p.country = c;
+
+			// Get the client name
+			try {
+				p.client_name = widenStoC(i->client);
+			} catch (std::runtime_error &e) {
+				log(widenPtoC(e.what()));
+				p.client_name = L"";			
+			}
+
+			// Add the peer_structure we filled out to the vector we're supposed to fill
+			v->push_back(p);
+			
+			i++;
+		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Get the stripe pattern of pieces for the torrent with the given infohash
+void GetPiecesStatus(const char *id, pieces_structure *info) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id); // Get the torrent handle
+		libtorrent::bitfield b = h.status().pieces; // Get the bitfield of all the pieces
+		int n = b.size(); // Find out how many pieces there are
+
+		info->completed = 0;
+
+		// Make a string with a "0" for each piece
+		CString s;
+		for (int i = 0; i < n; i++)
+			s += L'0'; // Piece pending
+
+		// Loop through all the torrent's peers
+		std::vector<libtorrent::peer_info> peers;
+		h.get_peer_info(peers); // Get information about all the torrent's peers
+		std::vector<libtorrent::peer_info>::iterator iterator1 = peers.begin();
+		while (iterator1 != peers.end()) {
+
+			if (iterator1->downloading_piece_index > -1 && iterator1->downloading_piece_index < n) // This peer is download a piece
+				s.SetAt(iterator1->downloading_piece_index, L'a'); // Mark the piece active
+
+			iterator1++;
+		}
+
+		// Loop through all the torrent's partial pieces
+		std::vector<libtorrent::partial_piece_info> pieces;
+		h.get_download_queue(pieces); // Get information about all the torrent's download requests and downloads in progress
+		std::vector<libtorrent::partial_piece_info>::iterator iterator2 = pieces.begin();
+		while (iterator2 != pieces.end()) {
+			libtorrent::partial_piece_info p = *iterator2;
+
+			if (p.piece_index > -1 && p.piece_index < n) { // If the partial piece info structure has a valid piece index
+
+				if (s[p.piece_index] != L'a') { // Mark the piece active in our record of them
+
+					if      (p.writing > 0)                     s.SetAt(p.piece_index, L'a'); // Piece active
+					else if (p.requested > 0 && p.finished > 0) s.SetAt(p.piece_index, L'p'); // Piece partial
+					else if (p.finished == 0)                   s.SetAt(p.piece_index, L'q'); // Piece queued
+				}
+			}
+
+			iterator2++;
+		}
+
+		// Loop through all the pieces that aren't active in our record of them
+		for (int i = 0; i < n; i++) {
+			if (s[i] != L'a') { // Piece not active
+
+				// The bitfield indicates we have this piece
+				if (b[i]) {
+
+					s.SetAt(i, L'x'); // Piece downloaded
+					info->completed++; // Count one more piece downloaded
+
+				// The bitfield indicates we don't have this piece
+				} else {
+
+					// Loop through all the peers
+					bool available = false; // True when we've found one that has this piece
+					iterator1 = peers.begin();
+					while (iterator1 != peers.end()) {
+
+						if (iterator1->pieces[i]) { // The peer under iterator has piece i
+							available = true; // Found it
+							break; // Don't need to look anymore
+						}
+						iterator1++;
+					}
+
+					// No peer has the piece
+					if (!available) {
+
+						if (s[i] == L'p') // Piece partial, we've saved some of it so far
+							s.SetAt(i, L'u'); // Piece unavailable partial, the rest of it is nowhere in the swarm
+						else
+							s.SetAt(i, L'U'); // Piece unavailable, it's entirely missing
+					}
+				}
+			}
+		}
+
+		// Copy the string we made into the given structure
+		info->pieces = s;
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the infohash of a torrent, the index of a file in it, and the desired priority for that file
+// Sets the priority to the file in the torrent
+void SetFilePriority(const char *id, int index, int priority) {
+	try {
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.file_priority(index, priority);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the infohash of a torrent, a pointer to a block of ints, and the number of ints in that block
+// Sets those priorities on the files in the torrent
+void SetFilePriorities(const char *id, int *priorities, int n) {
+	try {
+
+		// Convert the given array of ints into a vector of ints
+		std::vector<int> v;
+		for (int i = 0; i < n; i++) {
+			int priority = *priorities;
+			v.push_back(priority); // Add it to the end of the list
+			priorities++; // Move the pointer forward to the next int
+		}
+
+		libtorrent::torrent_handle h = FindTorrentHandle(id);
+		h.prioritize_files(v);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Tell libtorrent the host name and port number of a peer on the DHT
+void AddDhtNode(const char *address, int port) {
+	try {
+
+		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Tell libtorrent the domain name and port number of a DHT bootstrapping router
+void AddDhtRouter(const char *address, int port) {
+	try {
+
+		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Takes the path to DHT information saved from a previous session
+// Starts the DHT, using the file if it's there
+void StartDht(const wchar_t *path) {
+	try {
+
+		// Open the file
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ifstream f(p, std::ios_base::binary);
+
+		// Initialize variables
+		libtorrent::entry e = 0; // The bencoded DHT state information from the file
+		bool b = false; // True once we've gotten information from the file
+
+		if (!f.fail()) {
+			try {
+
+				// Read the file, parsing its contents into a libtorrent entry object
+				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
+				b = true; // Record that worked without an exception
+
+			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
+				log(widenPtoC(e.what())); // Log a note but keep going
+			}
+		}
+
+		// Start the DHT
+		if (b) Handle.session->start_dht(e); // With the file information we got
+		else   Handle.session->start_dht();  // Without any information from a previous session
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Have libtorrent disconnect from the DHT
+void StopDht() {
+	try {
+
+		Handle.session->stop_dht();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Start the local service directory, which uses multicast to find peers on the LAN
+void StartLsd() {
+	try {
+
+		Handle.session->start_lsd();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Stop the local service directory
+void StopLsd() {
+	try {
+
+		Handle.session->stop_lsd();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Create port mappings on a UPnP device on the LAN
+void StartUpnp() {
+	try {
+
+		Handle.session->start_upnp(); // Returns an object you could use
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Stop the UPnP service
+void StopUpnp() {
+	try {
+
+		Handle.session->stop_upnp();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Use NAT-PMP to map ports on the router
+void StartNatpmp() {
+	try {
+
+		Handle.session->start_natpmp(); // Returns an object you could use
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Stop the NAT-PMP service
+void StopNatpmp() {
+	try {
+
+		Handle.session->stop_natpmp();
+
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {

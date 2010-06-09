@@ -1,7 +1,5 @@
 
-
-
-
+// Information about the status of a torrent
 struct status_structure {
 
 	long long total_done;
@@ -36,12 +34,14 @@ struct status_structure {
 	long long total_failed_bytes;
 };
 
+// Information about a tracker or web seed, like the URL
 struct announce_structure {
 
 	CString url;
 	int tier;
 };
 
+// Information about a torrent
 struct torrent_structure {
 
 	CString sha1;
@@ -53,6 +53,7 @@ struct torrent_structure {
 	CString comment;
 };
 
+// Holds libtorrent settings
 struct settings_structure {
 
 	int max_upload_bandwidth;
@@ -66,9 +67,10 @@ struct settings_structure {
 	int active_seeds_limit;
 	int active_limit;
 	int alert_mask;
-	CString listen_interface; // String
+	CString listen_interface;
 };
 
+// Information about a file in a torrent
 struct file_structure {
 
 	int index;
@@ -78,6 +80,7 @@ struct file_structure {
 	int priority;
 };
 
+// Information about a libtorrent alert message it has given us
 struct alert_structure {
 
 	int category;
@@ -93,6 +96,7 @@ struct alert_structure {
 	}
 };
 
+// Information about a peer in a torrent's swarm
 struct peer_structure {
 
 	int status_flags;
@@ -108,10 +112,9 @@ struct peer_structure {
 	CString client_name;
 };
 
+// A torrent's striped pattern of pieces and their status
 struct pieces_structure {
 
 	int completed;
 	CString pieces;
 };
-
-
