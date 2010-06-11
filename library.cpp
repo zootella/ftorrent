@@ -114,14 +114,37 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
 
 
+// Save e to the file at path, overwriting what's there
+// Returns false on error
+bool SaveEntry(read path, const libtorrent::entry &e) {
+	try {
 
-bool SaveEntry(read path, ) {
+		// Open the file at path for writing
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ofstream f(p, std::ios_base::binary);
+		f.unsetf(std::ios_base::skipws);
+
+		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
+		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
+
+		// Close the file
+		f.close();
 
 
 
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
 }
 
- LoadEntry(read path, ) {
+// Load the file at path into the given bencoded entry e
+// Returns false on error
+bool libtorrent::entry LoadEntry(read path, libtorrent::entry &e) {
+	try {
 
 
 		// Open the file
@@ -149,4 +172,12 @@ bool SaveEntry(read path, ) {
 		if (b) Handle.session->start_dht(e); // With the file information we got
 		else   Handle.session->start_dht();  // Without any information from a previous session
 
+
+
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
 }
