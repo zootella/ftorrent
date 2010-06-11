@@ -111,3 +111,42 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
+
+
+
+
+bool SaveEntry(read path, ) {
+
+
+
+}
+
+ LoadEntry(read path, ) {
+
+
+		// Open the file
+		std::wstring w(path);
+		boost::filesystem::wpath p(w);
+		boost::filesystem::ifstream f(p, std::ios_base::binary);
+
+		// Initialize variables
+		libtorrent::entry e = 0; // The bencoded DHT state information from the file
+		bool b = false; // True once we've gotten information from the file
+
+		if (!f.fail()) {
+			try {
+
+				// Read the file, parsing its contents into a libtorrent entry object
+				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
+				b = true; // Record that worked without an exception
+
+			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
+				log(widenPtoC(e.what())); // Log a note but keep going
+			}
+		}
+
+		// Start the DHT
+		if (b) Handle.session->start_dht(e); // With the file information we got
+		else   Handle.session->start_dht();  // Without any information from a previous session
+
+}

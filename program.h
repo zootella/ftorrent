@@ -1,8 +1,9 @@
 
 // Program build and name
-#define PROGRAM_TEST true
-#define PROGRAM_NAME CString(L"ltorrent")
-#define PROGRAM_HELP CString(L"http://wiki.github.com/zootella/ltorrent/")
+#define PROGRAM_TEST    true
+#define PROGRAM_NAME    CString(L"ltorrent")
+#define PROGRAM_HELP    CString(L"http://wiki.github.com/zootella/ltorrent/")
+#define PROGRAM_VERSION 0, 1, 0, 0
 
 // Compose display text
 #define PROGRAM_ABOUT1 CString(L"Version 0.1")
