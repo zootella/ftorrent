@@ -45,6 +45,9 @@ void Test() {
 		libtorrent::entry e2;
 		result = LoadEntry(path, e2);
 
+		CString s = widenStoC(e2.string().c_str());
+		log(s);
+
 	}
 
 	log(result ? L"true" : L"false");
