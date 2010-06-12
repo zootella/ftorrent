@@ -37,17 +37,11 @@ void StartLibrary() {
 
 		// Make our libtorrent session object
 		Handle.session = new libtorrent::session(
-			libtorrent::fingerprint(
-				narrowRtoS(PROGRAM_NAME).c_str(),
-				0,
-				1,
-				0,
-				0), // Program name and version
-			std::pair<int, int>(6881, 6999),                                              // Pick a port to listen on in this range
-			0,                                                                  // Use the default network interface
-			libtorrent::session::start_default_features |
-			libtorrent::session::add_default_plugins,                       // Default features and plugins
-			libtorrent::alert::all_categories);                                                    // Subscribe to every category of alerts
+			libtorrent::fingerprint(narrowRtoS(PROGRAM_NAME).c_str(), PROGRAM_VERSION),             // Program name and version numbers separated by commas
+			std::pair<int, int>(6881, 6999),                                                        // Pick a port to listen on in this range
+			0,                                                                                      // Use the default network interface
+			libtorrent::session::start_default_features | libtorrent::session::add_default_plugins, // Default features and plugins
+			libtorrent::alert::all_categories);                                                     // Subscribe to every category of alerts
 
 		// Tell libtorrent to use all the plugins beyond the defaults
 		Handle.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash
