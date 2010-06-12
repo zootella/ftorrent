@@ -112,17 +112,14 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 	return h;
 }
 
-
-
-
-
-// Save e to the file at path, overwriting what's there
+// Save bencoded entry e to the file at path, overwriting a file already there
 // Returns false on error
 bool SaveEntry(read path, const libtorrent::entry &e) {
 	try {
 
 		boost::filesystem::wpath p(convertRtoW(path));           // Make a boost path object
 		boost::filesystem::ofstream f(p, std::ios_base::binary); // Open a file for writing
+		if (f.fail()) return false;
 		f.unsetf(std::ios_base::skipws);                         // Include whitespace
 		libtorrent::bencode(std::ostream_iterator<char>(f), e);  // Serialize the bencoded information to a file
 		f.close();                                               // Close the file
@@ -143,6 +140,7 @@ bool LoadEntry(read path, libtorrent::entry &e) {
 
 		boost::filesystem::wpath p(convertRtoW(path));           // Make a boost path object
 		boost::filesystem::ifstream f(p, std::ios_base::binary); // Open a file for reading
+		if (f.fail()) return false;
 		f.unsetf(std::ios_base::skipws);                         // Include whitespace
 		e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>()); // Read the contents and bencode them
 		f.close();                                               // Close the file
