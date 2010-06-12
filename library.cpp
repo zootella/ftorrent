@@ -114,70 +114,44 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
 
 
+
+
 // Save e to the file at path, overwriting what's there
 // Returns false on error
 bool SaveEntry(read path, const libtorrent::entry &e) {
 	try {
 
-		// Open the file at path for writing
-		std::wstring w(path);
-		boost::filesystem::wpath p(w);
-		boost::filesystem::ofstream f(p, std::ios_base::binary);
-		f.unsetf(std::ios_base::skipws);
-
-		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
-		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
-
-		// Close the file
-		f.close();
-
-
-
+		boost::filesystem::wpath p(convertRtoW(path));           // Make a boost path object
+		boost::filesystem::ofstream f(p, std::ios_base::binary); // Open a file for writing
+		f.unsetf(std::ios_base::skipws);                         // Include whitespace
+		libtorrent::bencode(std::ostream_iterator<char>(f), e);  // Serialize the bencoded information to a file
+		f.close();                                               // Close the file
+		return true;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
+	return false;
 }
 
 // Load the file at path into the given bencoded entry e
 // Returns false on error
-bool libtorrent::entry LoadEntry(read path, libtorrent::entry &e) {
+bool LoadEntry(read path, libtorrent::entry &e) {
 	try {
 
-
-		// Open the file
-		std::wstring w(path);
-		boost::filesystem::wpath p(w);
-		boost::filesystem::ifstream f(p, std::ios_base::binary);
-
-		// Initialize variables
-		libtorrent::entry e = 0; // The bencoded DHT state information from the file
-		bool b = false; // True once we've gotten information from the file
-
-		if (!f.fail()) {
-			try {
-
-				// Read the file, parsing its contents into a libtorrent entry object
-				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
-				b = true; // Record that worked without an exception
-
-			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
-				log(widenPtoC(e.what())); // Log a note but keep going
-			}
-		}
-
-		// Start the DHT
-		if (b) Handle.session->start_dht(e); // With the file information we got
-		else   Handle.session->start_dht();  // Without any information from a previous session
-
-
-
+		boost::filesystem::wpath p(convertRtoW(path));           // Make a boost path object
+		boost::filesystem::ifstream f(p, std::ios_base::binary); // Open a file for reading
+		f.unsetf(std::ios_base::skipws);                         // Include whitespace
+		e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>()); // Read the contents and bencode them
+		f.close();                                               // Close the file
+		return true;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
+	return false;
 }

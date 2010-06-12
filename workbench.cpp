@@ -4,6 +4,13 @@
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/create_torrent.hpp"
 #include "libtorrent/alert_types.hpp"
+#include "libtorrent/alert.hpp"
+
+// Include libtorrent extensions
+#include "libtorrent/extensions/metadata_transfer.hpp"
+#include "libtorrent/extensions/ut_metadata.hpp"
+#include "libtorrent/extensions/ut_pex.hpp"
+#include "libtorrent/extensions/smart_ban.hpp"
 
 // Include platform
 #include <windows.h>
@@ -29,12 +36,18 @@ void StartLibrary() {
 	try {
 
 		// Make our libtorrent session object
-		Handle.session = libtorrent::session(
-			libtorrent::fingerprint(narrowRtoS(PROGRAM_NAME), PROGRAM_VERSION), // Program name and version
-			std::pair(6881, 6999),                                              // Pick a port to listen on in this range
+		Handle.session = new libtorrent::session(
+			libtorrent::fingerprint(
+				narrowRtoS(PROGRAM_NAME).c_str(),
+				0,
+				1,
+				0,
+				0), // Program name and version
+			std::pair<int, int>(6881, 6999),                                              // Pick a port to listen on in this range
 			0,                                                                  // Use the default network interface
-			start_default_features | add_default_plugins,                       // Default features and plugins
-			all_categories);                                                    // Subscribe to every category of alerts
+			libtorrent::session::start_default_features |
+			libtorrent::session::add_default_plugins,                       // Default features and plugins
+			libtorrent::alert::all_categories);                                                    // Subscribe to every category of alerts
 
 		// Tell libtorrent to use all the plugins beyond the defaults
 		Handle.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash

@@ -164,6 +164,8 @@ libtorrent::big_number StringToHash(const char *s);
 CString HashToString(const libtorrent::sha1_hash &hash);
 CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
+bool SaveEntry(read path, const libtorrent::entry &e);
+bool LoadEntry(read path, libtorrent::entry &e);
 
 // Wrapper
 
