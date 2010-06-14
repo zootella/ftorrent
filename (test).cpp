@@ -30,31 +30,6 @@ int step = 0;
 // Run a snippet of test code
 void Test() {
 
-	bool result = false;
-	CString path = L"C:\\Documents\\options.db";
-
-	if (!step) {
-		step = 1;
-
-		libtorrent::entry e1;
-		e1 = narrowRtoS(L"hello");
-		result = SaveEntry(path, e1);
-
-	} else {
-
-		libtorrent::entry e2;
-		result = LoadEntry(path, e2);
-
-		CString s = widenStoC(e2.string().c_str());
-		log(s);
-
-	}
-
-	log(result ? L"true" : L"false");
-
-
-
-	/*
 	try {
 
 		if (step == 0) {
@@ -80,5 +55,27 @@ void Test() {
 	} catch (...) {
 		log(L"exception");
 	}
+
+	/*
+	bool result = false;
+	CString path = L"C:\\Documents\\options.db";
+
+	if (!step) {
+		step = 1;
+
+		libtorrent::entry e1;
+		e1 = narrowRtoS(L"hello");
+		result = SaveEntry(path, e1);
+
+	} else {
+
+		libtorrent::entry e2;
+		result = LoadEntry(path, e2);
+
+		CString s = widenStoC(e2.string().c_str());
+		log(s);
+	}
+
+	log(result ? L"true" : L"false");
 	*/
 }
