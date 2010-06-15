@@ -34,8 +34,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar();
 
 // Utility
-void error(read r);
-void log(read r);
+void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
+void log(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void TextDialogSet(HWND dialog, int control, read r);

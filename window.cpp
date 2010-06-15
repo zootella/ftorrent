@@ -178,6 +178,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
+
+	/*
+	log(L"start before");
+	StartLibrary();
+	log(L"start after");
+	*/
+
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
@@ -204,6 +211,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Remove the tray icon
 	if (State.taskbar) TaskbarIconRemove();
+
+
+	/*
+	//confirm taking a long time right here is ok
+	log(L"sleep before");
+	Sleep(4000);
+	log(L"sleep after");
+	*/
+
 
 	// Return the value from the quit message
 	return (int)message.wParam;

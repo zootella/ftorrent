@@ -90,8 +90,6 @@ Rename to:<br>
 
 ==Visual Studio==
 
-
-
 ===Include and Lib===
 
 Tools, Options, Projects and Solutions, VC++ Directories
@@ -123,8 +121,11 @@ Project, Properties, Configuration Properties
 *C/C++, Precompiled Headers, Create/Use Precompiled Header: Not Using Precompiled Headers
 *Linker, Manifest File, Generate Manifest: No
 *Manifest Tool, Input and Output, Embed Manifest: No
-
 Check all with Configuration Debug and Release<br>
+
+Project, Properties, Configuration Properties, Release
+*General, Whole Program Optimization: Use Link Time Code Generation
+*C/C++, Optimization, Optimization: Minimize Size (/O1)
 
 Project, Properties, Configuration Properties, C/C++, Preprocessor, Preprocessor Definitions, Debug/Release
 *WIN32
@@ -187,8 +188,3 @@ Drop libtorrentwrapper.cpp next to Hello.cpp<br>
 Project, Add Existing Item, libtorrentwrapper.cpp, Add<br>
 
 Comment out ''class blacklist_ip_filter_callback'' and fix errors<br>
-
-===Try Later===
-
-*Configuration Release, General, Whole Program Optimization: Yes
-*Configuration Release, C/C++, Optimization, Optimization: Minimize Size 01

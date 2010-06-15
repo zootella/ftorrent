@@ -32,6 +32,9 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+
+CString store = L"C:\\Documents\\store.db";
+
 void StartLibrary() {
 	try {
 
@@ -43,74 +46,20 @@ void StartLibrary() {
 			libtorrent::session::start_default_features | libtorrent::session::add_default_plugins, // Default features and plugins
 			libtorrent::alert::all_categories);                                                     // Subscribe to every category of alerts
 
+		// Load session state from settings file
+		libtorrent::entry e;
+		if (LoadEntry(store, e)) Handle.session->load_state(e);
+
 		// Tell libtorrent to use all the plugins beyond the defaults
 		Handle.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash
 		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin); // Tracker and infohash swarm joining the uTorrent way
 		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);      // Peer exchange
 		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
 
-
-
-/*
-		// Open the file
-		std::wstring w(path);
-		boost::filesystem::wpath p(w);
-		boost::filesystem::ifstream f(p, std::ios_base::binary);
-
-		// Initialize variables
-		libtorrent::entry e = 0; // The bencoded DHT state information from the file
-		bool b = false; // True once we've gotten information from the file
-
-		if (!f.fail()) {
-			try {
-
-				// Read the file, parsing its contents into a libtorrent entry object
-				e = libtorrent::bdecode(std::istream_iterator<char>(f), std::istream_iterator<char>());
-				b = true; // Record that worked without an exception
-
-			} catch (std::exception &e) { // No file or bad information inside, we'll just start the DHT without resume data
-				log(widenPtoC(e.what())); // Log a note but keep going
-			}
-		}
-
-		// Start the DHT
-		if (b) Handle.session->start_dht(e); // With the file information we got
-		else   Handle.session->start_dht();  // Without any information from a previous session
-		*/
-
-
-
-
-
-
-
-
-		//tell the session to listen, then start the dht
-
-
-		//construct a session
-
-		/*
-		//load session state from settings file
-		load_state();
-		*/
-
-
-		/*
-		//start extensions
-		add_extension();
-		*/
-
-		/*
-		//start stuff
-		start_dht()
-		set_dht_settings()
-		start_lsd()
-		start_upnp()
-		start_natpmp()
-		*/
-
-
+		Handle.session->start_dht();
+		Handle.session->start_lsd();
+		Handle.session->start_upnp();
+		Handle.session->start_natpmp();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -120,23 +69,30 @@ void StartLibrary() {
 }
 
 void CloseLibrary() {
+	try {
 
-	/*
-	stop_dht()
-	stop_lsd()
-	stop_upnp()
-	stop_natpmp()
+		// call this after removing the window from the screen
 
-	//save resume data for all torrent_handles
-	save_resume_data()
+		Handle.session->stop_dht();
+		Handle.session->stop_lsd();
+		Handle.session->stop_upnp();
+		Handle.session->stop_natpmp();
 
-	//save session state
-	save_state();
+		Handle.session->pause(); // Pause all the torrents and have automanage not unpause them
 
-	//destruct session object
-	*/
+		// call save_resume_data() on each torrent and get it as an alert
 
+		libtorrent::entry e;
+		Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
+		SaveEntry(store, e);
 
+		delete Handle.session;
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
 
 }
 

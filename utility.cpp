@@ -26,15 +26,15 @@ extern datatop   Data;
 extern statetop  State;
 
 // Print an error message out on the output log
-void error(read r) {
+void error(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
 
-	log(make(L"error ", numerals(GetLastError()), L" ", r));
+	log(make(L"error ", numerals(GetLastError()), L" ", make(r1, r2, r3, r4, r5, r6, r7, r8, r9)));
 }
 
 // Print a message out on the output log
-void log(read r) {
+void log(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
 
-	CString s = make(saynow(), L" ", r, L"\r\n");
+	CString s = make(saynow(), L" ", make(r1, r2, r3, r4, r5, r6, r7, r8, r9), L"\r\n");
 	OutputDebugString(s);
 	//TODO add it to the log tab
 }

@@ -116,7 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;BOOST_ALL_NO_LIB;BOOST_THREAD_USE_LIB;_FILE_OFFSET_BITS=64;WITH_SHIPPED_GEOIP_H"
 				ExceptionHandling="2"
