@@ -40,11 +40,11 @@ void StartLibrary() {
 
 		// Make our libtorrent session object
 		Handle.session = new libtorrent::session(
-			libtorrent::fingerprint(narrowRtoS(PROGRAM_NAME).c_str(), PROGRAM_VERSION),             // Program name and version numbers separated by commas
-			std::pair<int, int>(6881, 6999),                                                        // Pick a port to listen on in this range
-			0,                                                                                      // Use the default network interface
+			libtorrent::fingerprint("ltorrent", 0, 1, 0, 0), // Program name and version numbers separated by commas
+			std::pair<int, int>(6881, 6999),                 // Pick a port to listen on in this range
+			"0.0.0.0",                                       // Use the default network interface
 			libtorrent::session::start_default_features | libtorrent::session::add_default_plugins, // Default features and plugins
-			libtorrent::alert::all_categories);                                                     // Subscribe to every category of alerts
+			libtorrent::alert::all_categories);              // Subscribe to every category of alerts
 
 		// Load session state from settings file
 		libtorrent::entry e;
@@ -56,9 +56,10 @@ void StartLibrary() {
 		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);      // Peer exchange
 		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
 
-		Handle.session->start_dht();
-		Handle.session->start_lsd();
-		Handle.session->start_upnp();
+		// Start libtorrent services
+		Handle.session->start_dht();  // Distributed hash table for trackerless torrents
+		Handle.session->start_lsd();  // Local service discovery to find peers on the LAN
+		Handle.session->start_upnp(); // Universal plug-n-play and NAT-PMP to make a mapping at the router
 		Handle.session->start_natpmp();
 
 	} catch (std::exception &e) {

@@ -25,30 +25,22 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-int step = 0;
 
 // Run a snippet of test code
 void Test() {
 
+
+
+
 	try {
 
-		if (step == 0) {
 
-			InitializeLibtorrent(NULL);
-			step = 1;
+		libtorrent::add_torrent_params p;
+		p.save_path = boost::filesystem::path(narrowRtoS(L"C:\\Documents\\test"));
+		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(L"C:\\Documents\\my.torrent")));
+		libtorrent::torrent_handle h = Handle.session->add_torrent(p);
 
-			log(L"init done");
-
-		} else if (step == 1) {
-
-			libtorrent::add_torrent_params torrent_params;
-
-			torrent_params.save_path = boost::filesystem::path(narrowRtoS(L"C:\\Documents\\test"));
-			torrent_params.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(L"C:\\Documents\\my.torrent")));
-			libtorrent::torrent_handle h = Handle.session->add_torrent(torrent_params);
-
-			log(L"add done");
-		}
+		log(L"add done");
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
