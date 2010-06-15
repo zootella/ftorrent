@@ -39,6 +39,12 @@ void log(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8,
 	//TODO add it to the log tab
 }
 
+// Show a message to the user
+void report(read r) {
+
+	if (PROGRAM_TEST) MessageBox(Handle.window, r, PROGRAM_NAME, MB_OK);
+}
+
 // Given access to a handle, close it and make it null
 void CloseHandleSafely(HANDLE *handle) {
 
@@ -1539,3 +1545,30 @@ CString TextGuid() {
 	if (length(s) != 32) { error(L"guid length not 32 characters"); return L""; }                  // Make sure the GUID string is 32 characters
 	return s;                                                                                      // Return the string
 }
+
+
+
+
+//do all the paths you need
+//user app data
+//user documents
+//three shortcut locations
+//running folder
+//running file
+
+// The path to the folder this running exe is in, like "C:", "C:\folder", or "\\computer\share\folder", no trailing backslash, blank on error
+CString PathRunningFolder() {
+
+	return before(PathRunning(), L"\\", Reverse);
+}
+
+// The path to this running exe like "C:\file.exe", "C:\folder\file.exe", or "\\computer\share\folder\file.exe", no trailing backslash, blank on error
+CString PathRunning() {
+
+	WCHAR bay[MAX_PATH];
+	DWORD result = GetModuleFileName(NULL, bay, MAX_PATH);
+	if (!result) { error(L"getmodulefilename"); return L""; }
+	return bay;
+}
+
+

@@ -30,7 +30,9 @@ extern statetop  State;
 void Test() {
 
 
+	report(PathRunningFolder() + L"\r\n" + PathRunning());
 
+	/*
 
 	try {
 

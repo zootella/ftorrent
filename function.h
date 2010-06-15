@@ -36,6 +36,7 @@ void MenuTaskbar();
 // Utility
 void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 void log(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
+void report(read r);
 void CloseHandleSafely(HANDLE *handle);
 void BeginThread(LPVOID function);
 void TextDialogSet(HWND dialog, int control, read r);
@@ -123,6 +124,9 @@ bool ShellInfo(read ext, int *systemindex, CString *type);
 bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
 CString TextGuid();
+
+CString PathRunningFolder();
+CString PathRunning();
 
 // Paint
 void PaintWindow(deviceitem *device);
