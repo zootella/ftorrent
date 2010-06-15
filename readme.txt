@@ -116,6 +116,9 @@ Library files
 Project, Properties, Configuration Properties
 *General, Use of ATL: Not Using ATL
 *General, Character Set: Use Unicode Character Set
+*C/C++, Code Generation, Enable Minimal Rebuild: No
+*C/C++, Code Generation, Enable C++ Exceptions: Yes With SEH Exceptions (/EHa)
+*C/C++, Code Generation, Basic Runtime Checks: Default
 *C/C++, Code Generation, Runtime Library: change /MDd to /MTd and /MD to /MT to get rid of dll
 *C/C++, Precompiled Headers, Create/Use Precompiled Header: Not Using Precompiled Headers
 *Linker, Manifest File, Generate Manifest: No
@@ -123,18 +126,14 @@ Project, Properties, Configuration Properties
 
 Check all with Configuration Debug and Release<br>
 
-Project, Properties, Configuration Properties, C/C++, Preprocessor, Preprocessor Definitions, Debug
+Project, Properties, Configuration Properties, C/C++, Preprocessor, Preprocessor Definitions, Debug/Release
 *WIN32
-*_DEBUG
+*_DEBUG/NDEBUG
 *_WINDOWS
 *_WIN32_WINNT=0x0501
-*WITH_SHIPPED_GEOIP_H
-
-Release
-*WIN32
-*NDEBUG
-*_WINDOWS
-*_WIN32_WINNT=0x0501
+*BOOST_ALL_NO_LIB
+*BOOST_THREAD_USE_LIB
+*_FILE_OFFSET_BITS=64
 *WITH_SHIPPED_GEOIP_H
 
 Project, Properties, Configuration Properties, Linker, Input, Additional Dependencies, Debug

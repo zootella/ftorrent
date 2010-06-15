@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;WITH_SHIPPED_GEOIP_H"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;BOOST_ALL_NO_LIB;BOOST_THREAD_USE_LIB;_FILE_OFFSET_BITS=64;WITH_SHIPPED_GEOIP_H"
 				MinimalRebuild="false"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="0"
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;WITH_SHIPPED_GEOIP_H"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;BOOST_ALL_NO_LIB;BOOST_THREAD_USE_LIB;_FILE_OFFSET_BITS=64;WITH_SHIPPED_GEOIP_H"
 				ExceptionHandling="2"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
