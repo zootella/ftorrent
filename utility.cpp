@@ -1546,25 +1546,22 @@ CString TextGuid() {
 	return s;                                                                                      // Return the string
 }
 
-
-
-
-// The path to the user's start menu programs folder, like "" on XP or "" on 7
+// The path to the user's start menu programs folder
+// Like "C:\Documents and Settings\Name\Start Menu\Programs" on XP or "C:\Users\Name\AppData\Roaming\Microsoft\Windows\Start Menu\Programs" on 7
 CString PathStartPrograms() { return PathId(CSIDL_PROGRAMS); }
 
-// The path to the user's quick launch folder, like "" on XP or "" on 7
+// The path to the user's quick launch folder
+// Like "C:\Documents and Settings\Name\Application Data\Microsoft\Internet Explorer\Quick Launch" on XP or "C:\Users\Name\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch" on 7
 CString PathQuickLaunch() { return PathId(CSIDL_APPDATA) + L"\\Microsoft\\Internet Explorer\\Quick Launch"; } //TODO check this matches what you did in november
 
-// The path to the user's desktop folder, like "" on XP or "" on 7
+// The path to the user's desktop folder, like "C:\Documents and Settings\Name\Desktop" on XP or "C:\Users\Name\Desktop" on 7
 CString PathDesktop() { return PathId(CSIDL_DESKTOPDIRECTORY); }
 
-// The path to the user's documents folder, like "" on XP or "" on 7
+// The path to the user's documents folder, like "C:\Documents and Settings\Name\My Documents" on XP or "C:\Users\Name\Documents" on 7
 CString PathDocuments() { return PathId(CSIDL_MYDOCUMENTS); }
 
-// The path to the user's application data folder, like "" on XP or "" on 7
+// The path to the user's application data folder, like "C:\Documents and Settings\Name\Application Data" on XP or "C:\Users\Name\AppData\Roaming" on 7
 CString PathApplicationData() { return PathId(CSIDL_APPDATA); }
-
-
 
 // Get the path to the special folder with the given id, or blank on error
 CString PathId(int id) {
@@ -1589,15 +1586,6 @@ CString PathId(int id) {
 	return path; // Return the path we found, or blank on error
 }
 
-
-
-
-
-
-
-
-
-
 // The path to the folder this running exe is in, like "C:", "C:\folder", or "\\computer\share\folder", no trailing backslash, blank on error
 CString PathRunningFolder() {
 
@@ -1608,9 +1596,6 @@ CString PathRunningFolder() {
 CString PathRunning() {
 
 	WCHAR bay[MAX_PATH];
-	DWORD result = GetModuleFileName(NULL, bay, MAX_PATH);
-	if (!result) { error(L"getmodulefilename"); return L""; }
+	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
 	return bay;
 }
-
-
