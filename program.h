@@ -11,26 +11,6 @@
 #define PROGRAM_ABOUT3 CString(L"Built on Rasterbar libtorrent 0.15.0, Boost 1.43.0, and OpenSSL 0.9.8n")
 #define PROGRAM_ABOUT4 CString(L"http://github.com/zootella/ltorrent")
 
-
-
-// infohash.store.db
-// infohash.option.db
-
-/*
-optn.db, user settings for the program
-stor.db, libtorrent session restore information
-
-(infohash).meta.db, the torrent file
-(infohash).stor.db, the libtorrent quickrestore information
-(infohash).optn.db, user settings related to the torrent, like where its saved
-*/
-
-
-// Store filename parts
-#define META_NAME   L"meta"
-#define STORE_NAME  L"stor"
-#define OPTION_NAME L"optn"
-
 // Windows
 #define WINDOW_LIST 1
 #define WINDOW_TABS 2

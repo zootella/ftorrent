@@ -1599,3 +1599,48 @@ CString PathRunning() {
 	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
 	return bay;
 }
+
+// Path to portable.db alongside this running exe as the portable marker
+CString PathPortable() { return PathRunningFolder() + L"\\portable.db"; }
+
+// Path to stor.db alongside this running exe for libtorrent saved session state
+CString PathStore() { return PathRunningFolder() + L"\\stor.db"; }
+// Path to optn.db alongside this running exe for program options the user edits
+CString PathOption() { return PathRunningFolder() + L"\\optn.db"; }
+
+// Given a torrent infohash, the path to infohash.meta.db alongside this running exe, for the torrent file
+CString PathTorrentMeta(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".meta.db"; }
+// Given a torrent infohash, the path to infohash.stor.db alongside this running exe, for libtorrent's resume data for the torrent
+CString PathTorrentStore(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".stor.db"; }
+// Given a torrent infohash, the path to infohash.optn.db alongside this running exe, for torrent options the user edits
+CString PathTorrentOption(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".optn.db"; }
+
+
+//write a function that looks at *.db in the running folder, and returns a list of hash objects of everything it finds there
+
+
+
+
+// infohash.store.db
+// infohash.option.db
+
+/*
+optn.db, user settings for the program
+stor.db, libtorrent session restore information
+
+(infohash).meta.db, the torrent file
+(infohash).stor.db, the libtorrent quickrestore information
+(infohash).optn.db, user settings related to the torrent, like where its saved
+*/
+
+
+// Store filename parts
+#define META_NAME   L"meta"
+#define STORE_NAME  L"stor"
+#define OPTION_NAME L"optn"
+
+
+
+
+
+

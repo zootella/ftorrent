@@ -29,20 +29,6 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
-
-	report(
-		      L"startpr: " + PathStartPrograms()
-		+ L"\r\nquickla: " + PathQuickLaunch()
-		+ L"\r\ndesktop: " + PathDesktop()
-		+ L"\r\ndocumen: " + PathDocuments()
-		+ L"\r\nappdata: " + PathApplicationData()
-		);
-
-
-
-
-	/*
-
 	try {
 
 
