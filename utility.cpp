@@ -1549,12 +1549,54 @@ CString TextGuid() {
 
 
 
-//do all the paths you need
-//user app data
-//user documents
-//three shortcut locations
-//running folder
-//running file
+// The path to the user's start menu programs folder, like "" on XP or "" on 7
+CString PathStartPrograms() { return PathId(CSIDL_PROGRAMS); }
+
+// The path to the user's quick launch folder, like "" on XP or "" on 7
+CString PathQuickLaunch() { return PathId(CSIDL_APPDATA) + L"\\Microsoft\\Internet Explorer\\Quick Launch"; } //TODO check this matches what you did in november
+
+// The path to the user's desktop folder, like "" on XP or "" on 7
+CString PathDesktop() { return PathId(CSIDL_DESKTOPDIRECTORY); }
+
+// The path to the user's documents folder, like "" on XP or "" on 7
+CString PathDocuments() { return PathId(CSIDL_MYDOCUMENTS); }
+
+// The path to the user's application data folder, like "" on XP or "" on 7
+CString PathApplicationData() { return PathId(CSIDL_APPDATA); }
+
+
+
+// Get the path to the special folder with the given id, or blank on error
+CString PathId(int id) {
+
+	LPMALLOC memory;
+	LPITEMIDLIST list;
+	WCHAR bay[MAX_PATH]; // Text buffer to write in
+	CString path;        // String to return with path or blank on error
+
+	if (!SHGetMalloc(&memory)) {
+		if (!SHGetSpecialFolderLocation(Handle.window, id, &list)) {
+			if (SHGetPathFromIDList(list, bay)) {
+
+				path = bay; // Everything worked, copy the bay into a string
+
+			} else { error(L"shgetpathfromidlist"); }
+			memory->Free(list);
+		} else { error(L"shgetspecialfolderlocation"); }
+		memory->Release();
+	} else { error(L"shgetmalloc"); }
+
+	return path; // Return the path we found, or blank on error
+}
+
+
+
+
+
+
+
+
+
 
 // The path to the folder this running exe is in, like "C:", "C:\folder", or "\\computer\share\folder", no trailing backslash, blank on error
 CString PathRunningFolder() {

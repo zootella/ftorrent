@@ -125,8 +125,22 @@ bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
 CString TextGuid();
 
+CString PathStartPrograms();
+CString PathQuickLaunch();
+CString PathDesktop();
+CString PathDocuments();
+CString PathApplicationData();
+CString PathId(int id);
 CString PathRunningFolder();
 CString PathRunning();
+
+
+
+
+
+
+
+
 
 // Paint
 void PaintWindow(deviceitem *device);

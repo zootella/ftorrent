@@ -30,7 +30,16 @@ extern statetop  State;
 void Test() {
 
 
-	report(PathRunningFolder() + L"\r\n" + PathRunning());
+	report(
+		      L"startpr: " + PathStartPrograms()
+		+ L"\r\nquickla: " + PathQuickLaunch()
+		+ L"\r\ndesktop: " + PathDesktop()
+		+ L"\r\ndocumen: " + PathDocuments()
+		+ L"\r\nappdata: " + PathApplicationData()
+		);
+
+
+
 
 	/*
 
