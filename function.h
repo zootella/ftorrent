@@ -124,7 +124,6 @@ bool ShellInfo(read ext, int *systemindex, CString *type);
 bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
 CString TextGuid();
-
 CString PathStartPrograms();
 CString PathQuickLaunch();
 CString PathDesktop();
@@ -133,14 +132,12 @@ CString PathApplicationData();
 CString PathId(int id);
 CString PathRunningFolder();
 CString PathRunning();
-
-
-
-
-
-
-
-
+CString PathPortable();
+CString PathStore();
+CString PathOption();
+CString PathTorrentMeta(libtorrent::sha1_hash hash);
+CString PathTorrentStore(libtorrent::sha1_hash hash);
+CString PathTorrentOption(libtorrent::sha1_hash hash);
 
 // Paint
 void PaintWindow(deviceitem *device);

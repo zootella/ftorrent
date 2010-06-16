@@ -1600,44 +1600,28 @@ CString PathRunning() {
 	return bay;
 }
 
-// Path to portable.db alongside this running exe as the portable marker
-CString PathPortable() { return PathRunningFolder() + L"\\portable.db"; }
+// Path to port.db alongside this running exe, the portable marker
+CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
 
-// Path to stor.db alongside this running exe for libtorrent saved session state
+// Path to stor.db alongside this running exe, holds libtorrent saved session state
 CString PathStore() { return PathRunningFolder() + L"\\stor.db"; }
-// Path to optn.db alongside this running exe for program options the user edits
+// Path to optn.db alongside this running exe, holds program options the user edits
 CString PathOption() { return PathRunningFolder() + L"\\optn.db"; }
 
-// Given a torrent infohash, the path to infohash.meta.db alongside this running exe, for the torrent file
-CString PathTorrentMeta(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".meta.db"; }
-// Given a torrent infohash, the path to infohash.stor.db alongside this running exe, for libtorrent's resume data for the torrent
-CString PathTorrentStore(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".stor.db"; }
-// Given a torrent infohash, the path to infohash.optn.db alongside this running exe, for torrent options the user edits
-CString PathTorrentOption(libtorrent::sha1_hash id) { return PathRunningFolder() + L"\\" + HashToString(hash) + L".optn.db"; }
+// Path to meta.infohash.db alongside this running exe, the program's copy of the torrent file
+CString PathTorrentMeta(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\meta." + HashToString(hash) + L".db"; }
+// Path to stor.infohash.db alongside this running exe, holds resume data for the torrent
+CString PathTorrentStore(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\stor." + HashToString(hash) + L".db"; }
+// Path to optn.infohash.db alongside this running exe, holds torrent options the user edits
+CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\optn." + HashToString(hash) + L".db"; }
 
 
-//write a function that looks at *.db in the running folder, and returns a list of hash objects of everything it finds there
+//write a function that looks at meta.*.db in the running folder, and returns a list of hash objects of everything it finds there
+//then, you can use the others to get the individual files
 
 
 
 
-// infohash.store.db
-// infohash.option.db
-
-/*
-optn.db, user settings for the program
-stor.db, libtorrent session restore information
-
-(infohash).meta.db, the torrent file
-(infohash).stor.db, the libtorrent quickrestore information
-(infohash).optn.db, user settings related to the torrent, like where its saved
-*/
-
-
-// Store filename parts
-#define META_NAME   L"meta"
-#define STORE_NAME  L"stor"
-#define OPTION_NAME L"optn"
 
 
 
