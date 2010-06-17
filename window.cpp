@@ -179,7 +179,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	PaintMessage(); // Necessary to draw child window controls
 
 	// Start libtorrent
-	StartLibrary(); //TODO maybe move this into an early pulse
+	LibraryStart(); //TODO maybe move this into an early pulse
 
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
@@ -209,7 +209,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (State.taskbar) TaskbarIconRemove();
 
 	// Shut down libtorrent
-	CloseLibrary(); //TODO move this into a closing pulse after the window is hidden
+	LibraryClose(); //TODO move this into a closing pulse after the window is hidden
 
 	// Return the value from the quit message
 	return (int)message.wParam;
@@ -220,6 +220,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 void WindowPulse() {
 
 	// Pulse the program from data to display
+	LibraryPulse();
 	AreaPulse();
 }
 

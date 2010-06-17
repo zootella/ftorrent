@@ -256,11 +256,15 @@ void StopNatpmp();
 void Test();
 
 
-
-void StartLibrary();
-void CloseLibrary();
+void LibraryStart();
+void LibraryClose();
 void AddTorrent();
-void PulseLibrary();
+void LibraryPulse();
+void AlertLoop();
+void AlertLook(const libtorrent::alert *a);
+
+
+
 
 
 

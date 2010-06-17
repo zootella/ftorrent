@@ -34,7 +34,7 @@ extern statetop  State;
 
 
 
-void StartLibrary() {
+void LibraryStart() {
 	try {
 
 		// Make our libtorrent session object
@@ -68,7 +68,7 @@ void StartLibrary() {
 	}
 }
 
-void CloseLibrary() {
+void LibraryClose() {
 	try {
 
 		// call this after removing the window from the screen
@@ -87,9 +87,9 @@ void CloseLibrary() {
 		SaveEntry(PathStore(), e);
 
 
-		log(L"a");
+		log(L"delete session before");
 		delete Handle.session;
-		log(L"b"); //TODO do this in a thread or figure out how to use abort
+		log(L"delete session after"); //TODO do this in a thread or figure out how to use abort
 		/*
 		log(L"a");
 		libtorrent::session_proxy p = Handle.session->abort(); // Tell libtorrent to shut down
@@ -121,7 +121,7 @@ void AddTorrent() {
 
 }
 
-void PulseLibrary() {
+void LibraryPulse() {
 
 	/*
 
@@ -130,9 +130,12 @@ void PulseLibrary() {
 
 	//query the session for information
 
+	//see if there are any new alerts
+
 
 	*/
 
+	AlertLoop();
 
 }
 
@@ -140,137 +143,92 @@ void PulseLibrary() {
 
 
 
-/*
-
-class session: public boost::noncopyable {
-
-	session(fingerprint const &print = libtorrent::fingerprint("LT", 0, 1, 0, 0),
-		int flags = start_default_features | add_default_plugins,
-		int alert_mask = alert::error_notification);
-
-	session(fingerprint const &print, std::pair<int, int>listen_port_range,
-		char const* listen_interface = 0,
-		int flags = start_default_features | add_default_plugins,
-		int alert_mask = alert::error_notification);
-
-	enum save_state_flags_t {
-
-		save_settings = 0x001,
-		save_dht_settings = 0x002,
-		save_dht_proxy = 0x004,
-		save_dht_state = 0x008,
-		save_i2p_proxy = 0x010,
-		save_encryption_settings = 0x020,
-		save_peer_proxy = 0x040,
-		save_web_proxy = 0x080,
-		save_tracker_proxy = 0x100,
-		save_as_map = 0x20
-	};
-
-	void load_state(lazy_entry const& e);
-	void save_state(entry& e, boost::uint32_t flags) const;
-
-	torrent_handle add_torrent(add_torrent_params const& params);
-	torrent_handle add_torrent(add_torrent_params const& params, error_code& ec);
-
-	void pause();
-	void resume();
-	bool is_paused() const;
-
-	session_proxy abort();
-
-	enum options_t {
-		none = 0,
-		delete_files = 1
-	};
-
-	enum session_flags_t {
-		add_default_plugins = 1,
-		start_default_features = 2
-	};
-
-	void remove_torrent(torrent_handle const &h, int options = none);
-	torrent_handle find_torrent(sha_hash const &ih);
-	std::vector<torrent_handle> get_torrents() const;
-
-	void set_settings(session_settings const& settings);
-	void set_pe_settings(pe_settings const& settings);
-
-	void set_upload_rate_limit(int bytes_per_second);
-	int upload_rate_limit() const;
-	void set_download_rate_limit(int bytes_per_second);
-	int download_rate_limit() const;
-
-	void set_local_upload_rate_limit(int bytes_per_second);
-	int local_upload_rate_limit() const;
-	void set_local_download_rate_limit(int bytes_per_second);
-	int local_download_rate_limit() const;
-
-	void set_max_uploads(int limit);
-	void set_max_connections(int limit);
-	int max_connections() const;
-	void set_max_half_open_connections(int limit);
-	int max_half_open_connections() const;
-
-	void set_peer_proxy(proxy_settings const& s);
-	void set_web_seed_proxy(proxy_settings const& s);
-	void set_tracker_proxy(proxy_settings const& s);
-
-	proxy_settings const& peer_proxy() const;
-	proxy_settings const& web_seed_proxy() const;
-	proxy_settings const& tracker_proxy() const;
-
-	int num_uploads() const;
-	int num_connections() const;
-
-	bool load_asnum_db(char const* file);
-	bool load_asnum_db(wchar_t const* file);
-	bool load_country_db(char const* file);
-	bool load_country_db(wchar_t const* file);
-	int as_for_ip(address const& adr);
-
-	void set_ip_filter(ip_filter const& f);
-	ip_filter const& get_ip_filter() const;
-
-	session_status status() const;
-	cache_status get_cache_status() const;
-
-        bool is_listening() const;
-        unsigned short listen_port() const;
-        bool listen_on(
-                std::pair<int, int> const& port_range
-                , char const* interface = 0);
-
-        std::auto_ptr<alert> pop_alert();
-        alert const* wait_for_alert(time_duration max_wait);
-        void set_alert_mask(int m);
-        size_t set_alert_queue_size_limit(
-                size_t queue_size_limit_);
-
-        void add_extension(boost::function<
-                boost::shared_ptr<torrent_plugin>(torrent*)> ext);
-
-        void start_dht();
-        void stop_dht();
-        void set_dht_settings(
-                dht_settings const& settings);
-        entry dht_state() const;
-        void add_dht_node(std::pair<std::string
-                , int> const& node);
-        void add_dht_router(std::pair<std::string
-                , int> const& node);
-        bool is_dht_running() const;
-
-        void start_lsd();
-        void stop_lsd();
-
-        upnp* start_upnp();
-        void stop_upnp();
-
-        natpmp* start_natpmp();
-        void stop_natpmp();
-};
 
 
 
-*/
+
+// Take all the alerts libtorrent is waiting to give us and look at each one
+void AlertLoop() {
+	try {
+
+		// Get an alert
+		std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Move an alert from libtorrent to p
+		while (p.get()) { // If p contans an alert
+			libtorrent::alert *alert = p.get(); // Get it
+
+			// Look at alert, filling info with information about it and copied from it
+			AlertLook(alert);
+
+			// Get the next alert
+			p = Handle.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
+		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+// Given a libtorrent alert, fill a structure of info about it
+// After calling this function, you can look at the information in info to see the alert libtorrent sent you
+void AlertLook(const libtorrent::alert *alert) {
+
+	// Get the category and the message
+//	log(L"alert category ", numerals(alert->category()), L" ", widenStoC(alert->message()));
+
+	// If it's a torrent alert
+	const libtorrent::torrent_alert *a = dynamic_cast<const libtorrent::torrent_alert *>(alert);
+	if (a) {
+
+		// Get the torrent handle and make sure that torrent is initialized and not yet aborted
+		libtorrent::torrent_handle h = a->handle;
+		if (h.is_valid()) {
+
+			// Get the infohash
+			CString id = HashToString(h.info_hash());
+
+			// If the alert is for save resume data
+			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
+			if (a1) {
+
+				// Get the pointer to the resume data
+				const boost::shared_ptr<libtorrent::entry> resume_ptr = a1->resume_data;
+
+				libtorrent::entry *e = resume_ptr.get(); // Copy across the pointer to the resume data
+
+
+				SaveEntry(PathTorrentStore(h.info_hash()), *e);
+				log(L"saved entry for ", id);
+
+
+
+				return;
+			}
+
+			// If the alert is for save resume data failed
+			const libtorrent::save_resume_data_failed_alert *a2 = dynamic_cast<const libtorrent::save_resume_data_failed_alert *>(alert);
+			if (a2) {
+
+				// Get the error message
+				log(id, L" save resume failed ", widenStoC(a2->msg));
+				return;
+			}
+
+			// If the alert is for fast resume rejected
+			const libtorrent::fastresume_rejected_alert *a3 = dynamic_cast<const libtorrent::fastresume_rejected_alert *>(alert);
+			if (a3) {
+
+				// Get the error message
+				log(id, L" fast resume rejected ", widenStoC(a3->msg));
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+
+
