@@ -33,7 +33,6 @@ extern datatop   Data;
 extern statetop  State;
 
 
-CString store = L"C:\\Documents\\store.db";
 
 void StartLibrary() {
 	try {
@@ -48,7 +47,7 @@ void StartLibrary() {
 
 		// Load session state from settings file
 		libtorrent::entry e;
-		if (LoadEntry(store, e)) Handle.session->load_state(e);
+		if (LoadEntry(PathStore(), e)) Handle.session->load_state(e);
 
 		// Tell libtorrent to use all the plugins beyond the defaults
 		Handle.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash
@@ -85,9 +84,21 @@ void CloseLibrary() {
 
 		libtorrent::entry e;
 		Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
-		SaveEntry(store, e);
+		SaveEntry(PathStore(), e);
 
+
+		log(L"a");
 		delete Handle.session;
+		log(L"b"); //TODO do this in a thread or figure out how to use abort
+		/*
+		log(L"a");
+		libtorrent::session_proxy p = Handle.session->abort(); // Tell libtorrent to shut down
+		log(L"b");
+		p.session_proxy::~session_proxy(); // Blocks here until libtorrent is shut down
+		log(L"c"); //TODO confirm a and b is quick, b to c is slow, then move delete to after alert
+		*/
+
+
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -110,7 +121,7 @@ void AddTorrent() {
 
 }
 
-void LibraryLoop() {
+void PulseLibrary() {
 
 	/*
 
@@ -119,7 +130,6 @@ void LibraryLoop() {
 
 	//query the session for information
 
-	//add and remove torrents from the session while its running
 
 	*/
 

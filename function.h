@@ -260,7 +260,7 @@ void Test();
 void StartLibrary();
 void CloseLibrary();
 void AddTorrent();
-void LibraryLoop();
+void PulseLibrary();
 
 
 
