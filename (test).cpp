@@ -26,18 +26,35 @@ extern datatop   Data;
 extern statetop  State;
 
 
+int step = 0;
+
 // Run a snippet of test code
 void Test() {
-
 	try {
 
+		//add
+		if (step == 0) {
+			step++;
 
-		libtorrent::add_torrent_params p;
-		p.save_path = boost::filesystem::path(narrowRtoS(L"C:\\Documents\\test"));
-		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(L"C:\\Documents\\my.torrent")));
-		libtorrent::torrent_handle h = Handle.session->add_torrent(p);
+			libtorrent::add_torrent_params p;
+			p.save_path = boost::filesystem::path(narrowRtoS(L"C:\\Documents\\test"));
+			p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(L"C:\\Documents\\my.torrent")));
+			libtorrent::torrent_handle h = Handle.session->add_torrent(p);
+			log(L"add done");
 
-		log(L"add done");
+		//Ask for fast resume data
+		} else if (step == 1) {
+			step++;
+
+			LibraryClose1();
+
+
+
+		} else if (step == 2) {
+			step++;
+
+
+		}
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));

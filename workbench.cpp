@@ -68,24 +68,50 @@ void LibraryStart() {
 	}
 }
 
-void LibraryClose() {
+void LibraryClose1() {
 	try {
 
-		// call this after removing the window from the screen
 
 		Handle.session->stop_dht();
 		Handle.session->stop_lsd();
 		Handle.session->stop_upnp();
 		Handle.session->stop_natpmp();
 
-		Handle.session->pause(); // Pause all the torrents and have automanage not unpause them
+		// Pause all the torrents and have automanage not unpause them
+		Handle.session->pause();
 
-		// call save_resume_data() on each torrent and get it as an alert
+		// Loop through all the torrent handles
+		int n = 0; // Count how many torrents will give us resume data
+		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
+		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); i++) {
+			libtorrent::torrent_handle &h = *i;
+
+			// This torrent is initialized and not aborted and has filename and piece hash metadata
+			if (h.is_valid() && h.has_metadata()) {
+				
+				// Tell the torrent to generate resume data
+				h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
+				n++; // Count one more torrent that will give us resume data
+			}
+		}
+
+		log(L"requested save resume data on ", saynumber(n, L"torrent"));
+
+
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+
+}
+
+void LibraryClose2() {
 
 		libtorrent::entry e;
 		Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
 		SaveEntry(PathStore(), e);
-
 
 		log(L"delete session before");
 		delete Handle.session;
@@ -97,14 +123,6 @@ void LibraryClose() {
 		p.session_proxy::~session_proxy(); // Blocks here until libtorrent is shut down
 		log(L"c"); //TODO confirm a and b is quick, b to c is slow, then move delete to after alert
 		*/
-
-
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
 
 }
 

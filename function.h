@@ -257,7 +257,8 @@ void Test();
 
 
 void LibraryStart();
-void LibraryClose();
+void LibraryClose1();
+void LibraryClose2();
 void AddTorrent();
 void LibraryPulse();
 void AlertLoop();

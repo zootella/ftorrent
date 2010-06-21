@@ -209,7 +209,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (State.taskbar) TaskbarIconRemove();
 
 	// Shut down libtorrent
-	LibraryClose(); //TODO move this into a closing pulse after the window is hidden
+	LibraryClose2(); //TODO move this into a closing pulse after the window is hidden
 
 	// Return the value from the quit message
 	return (int)message.wParam;
