@@ -1,7 +1,7 @@
 /Debug
 /Release
 /diff.txt
-/ltorrent.aps
-/ltorrent.ncb
-/ltorrent.suo
+/*.aps
+/*.ncb
+/*.suo
 /*.user
