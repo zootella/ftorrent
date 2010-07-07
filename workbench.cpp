@@ -35,6 +35,7 @@ extern statetop  State;
 
 
 void LibraryStart() {
+	log(L"library start");
 	try {
 
 		// Make our libtorrent session object
@@ -69,6 +70,7 @@ void LibraryStart() {
 }
 
 void LibraryClose1() {
+	log(L"library close1");
 	try {
 
 
@@ -108,21 +110,23 @@ void LibraryClose1() {
 }
 
 void LibraryClose2() {
+	log(L"library close2, a no-op");
+	/*
 
-		libtorrent::entry e;
-		Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
-		SaveEntry(PathStore(), e);
+	libtorrent::entry e;
+	Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
+	SaveEntry(PathStore(), e);
 
-		log(L"delete session before");
-		delete Handle.session;
-		log(L"delete session after"); //TODO do this in a thread or figure out how to use abort
-		/*
-		log(L"a");
-		libtorrent::session_proxy p = Handle.session->abort(); // Tell libtorrent to shut down
-		log(L"b");
-		p.session_proxy::~session_proxy(); // Blocks here until libtorrent is shut down
-		log(L"c"); //TODO confirm a and b is quick, b to c is slow, then move delete to after alert
-		*/
+	log(L"delete session before");
+	delete Handle.session;
+	log(L"delete session after"); //TODO do this in a thread or figure out how to use abort
+	/*
+	log(L"a");
+	libtorrent::session_proxy p = Handle.session->abort(); // Tell libtorrent to shut down
+	log(L"b");
+	p.session_proxy::~session_proxy(); // Blocks here until libtorrent is shut down
+	log(L"c"); //TODO confirm a and b is quick, b to c is slow, then move delete to after alert
+	*/
 
 }
 
