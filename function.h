@@ -175,12 +175,14 @@ std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
-libtorrent::big_number StringToHash(const char *s);
-CString HashToString(const libtorrent::sha1_hash &hash);
 CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);
+libtorrent::big_number convertPtoBigNumber(const char *p);
+libtorrent::sha1_hash convertPtoSha1Hash(const char *p);
+CString convertSha1HashToC(const libtorrent::sha1_hash &h);
+CString convertBigNumberToC(const libtorrent::big_number &n);
 
 // Wrapper
 

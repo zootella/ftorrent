@@ -78,24 +78,6 @@ std::string narrowWtoS(std::wstring w) {
 	return s;
 }
 
-// Convert the hash value in the given text into a libtorrent big number hash value object
-libtorrent::big_number StringToHash(const char *s) {
-
-	std::stringstream stream;
-	libtorrent::big_number hash;
-	stream << s;
-	stream >> hash;
-	return hash;
-}
-
-// Convert the given hash value object into text
-CString HashToString(const libtorrent::sha1_hash &hash) {
-
-	std::stringstream stream;
-	stream << hash;
-	return widenStoC(stream.str());
-}
-
 // Convert the given peer ID object into text
 CString PeerToString(const libtorrent::peer_id &id) {
 
@@ -107,7 +89,7 @@ CString PeerToString(const libtorrent::peer_id &id) {
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
-	libtorrent::big_number hash = StringToHash(id);
+	libtorrent::big_number hash = convertPtoBigNumber(id);
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
@@ -153,3 +135,42 @@ bool LoadEntry(read path, libtorrent::entry &e) {
 	}
 	return false;
 }
+
+
+//TODO test these four conversions out, confirm they go both ways and don't break anything
+
+libtorrent::big_number convertPtoBigNumber(const char *p) {
+
+	std::stringstream stream;
+	libtorrent::big_number n;
+	stream << p;
+	stream >> n;
+	return n;
+}
+
+libtorrent::sha1_hash convertPtoSha1Hash(const char *p) {
+
+	std::stringstream stream;
+	libtorrent::sha1_hash h;
+	stream << p;
+	stream >> h;
+	return h;
+}
+
+CString convertSha1HashToC(const libtorrent::sha1_hash &h) {
+
+	std::stringstream stream;
+	stream << h;
+	return widenStoC(stream.str());
+}
+
+CString convertBigNumberToC(const libtorrent::big_number &n) {
+
+	std::stringstream stream;
+	stream << n;
+	return widenStoC(stream.str());
+}
+
+
+
+

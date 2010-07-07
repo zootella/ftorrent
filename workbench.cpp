@@ -70,10 +70,9 @@ void LibraryStart() {
 }
 
 void LibraryClose1() {
-	log(L"library close1");
 	try {
 
-
+		// Stop ltorrent services
 		Handle.session->stop_dht();
 		Handle.session->stop_lsd();
 		Handle.session->stop_upnp();
@@ -82,7 +81,12 @@ void LibraryClose1() {
 		// Pause all the torrents and have automanage not unpause them
 		Handle.session->pause();
 
-		// Loop through all the torrent handles
+		// Save all libtorrent state except for the individual torrents
+		libtorrent::entry e;
+		Handle.session->save_state(e);
+		SaveEntry(PathStore(), e);
+
+		// Loop through each torrent handle
 		int n = 0; // Count how many torrents will give us resume data
 		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); i++) {
@@ -99,8 +103,6 @@ void LibraryClose1() {
 
 		log(L"requested save resume data on ", saynumber(n, L"torrent"));
 
-
-
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {
@@ -110,38 +112,81 @@ void LibraryClose1() {
 }
 
 void LibraryClose2() {
-	log(L"library close2, a no-op");
-	/*
 
-	libtorrent::entry e;
-	Handle.session->save_state(e); // Save all libtorrent state except for the individual torrents
-	SaveEntry(PathStore(), e);
-
-	log(L"delete session before");
-	delete Handle.session;
-	log(L"delete session after"); //TODO do this in a thread or figure out how to use abort
-	/*
-	log(L"a");
-	libtorrent::session_proxy p = Handle.session->abort(); // Tell libtorrent to shut down
-	log(L"b");
-	p.session_proxy::~session_proxy(); // Blocks here until libtorrent is shut down
-	log(L"c"); //TODO confirm a and b is quick, b to c is slow, then move delete to after alert
-	*/
-
+	delete Handle.session; //TODO confirm this is slow
 }
 
-void AddTorrent() {
-
-	/*
-	bdencode();
-	bencode();
-	add_torrent();
-
-	*/
 
 
 
+// Add a torrent to our libtorrent session
+// folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
+// torrent is the path to the torrent file on the disk
+// or set torrent null and specify hash, name, and tracker from the magnet link
+// store is the path to libtorrent resume data from a previous session, or null if this is the first time
+// Returns the torrent handle, or null on error
+// If you add the same infohash twice, returns the existing handle instead of producing an error
+libtorrent::torrent_handle AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
+	try {
+
+		// Make a torrent params object to fill out
+		libtorrent::add_torrent_params p;
+		p.duplicate_is_error = false; // Return the existing torrent handle instead of producing an error
+
+		// Set folder, the path to the folder where the torrent is or will be saved, required
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		// Set torrent, the path to the torrent file on the disk
+		if (torrent) {
+
+			p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
+
+		// Or, set hash, name, and tracker from a magnet link
+		} else {
+
+			/*
+			p.info_hash;
+			p.name;
+			p.tracker_url;
+			*/
+
+		}
+
+		// Specify store data saved from a previous session, optional
+		std::vector<char> charvector; // Define charvector outside outside of block so the add line can access it
+		if (store) {
+
+			boost::filesystem::ifstream f(store, std::ios_base::binary); // Try to open the file on the disk
+			if (!f.fail()) { // Opening it worked
+
+				// Copy the file contents into charvector
+				f.unsetf(std::ios_base::skipws); // Set whitespace option
+				std::istream_iterator<char> fileiterator(f);
+				std::istream_iterator<char> streamiterator;
+				std::copy(fileiterator, streamiterator, std::back_inserter(charvector));
+
+				// Add the charvector to the torrent parameters we're filling out
+				p.resume_data = &charvector;
+
+				// Close the disk file we opened
+				f.close();
+			}
+		}
+
+		// Add the torrent to the session and return the torrent handle we get
+		return Handle.session->add_torrent(p);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return NULL; // Something went wrong
 }
+
+
+
+
 
 void LibraryPulse() {
 
@@ -208,7 +253,7 @@ void AlertLook(const libtorrent::alert *alert) {
 		if (h.is_valid()) {
 
 			// Get the infohash
-			CString id = HashToString(h.info_hash());
+			CString id = convertSha1HashToC(h.info_hash());
 
 			// If the alert is for save resume data
 			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);

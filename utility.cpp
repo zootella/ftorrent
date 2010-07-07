@@ -1610,11 +1610,11 @@ CString PathStore() { return PathRunningFolder() + L"\\stor.db"; }
 CString PathOption() { return PathRunningFolder() + L"\\optn.db"; }
 
 // Path to meta.infohash.db alongside this running exe, the program's copy of the torrent file
-CString PathTorrentMeta(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\meta." + HashToString(hash) + L".db"; }
+CString PathTorrentMeta(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\meta." + convertSha1HashToC(hash) + L".db"; }
 // Path to stor.infohash.db alongside this running exe, holds resume data for the torrent
-CString PathTorrentStore(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\stor." + HashToString(hash) + L".db"; }
+CString PathTorrentStore(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\stor." + convertSha1HashToC(hash) + L".db"; }
 // Path to optn.infohash.db alongside this running exe, holds torrent options the user edits
-CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\optn." + HashToString(hash) + L".db"; }
+CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\optn." + convertSha1HashToC(hash) + L".db"; }
 
 
 //write a function that looks at meta.*.db in the running folder, and returns a list of hash objects of everything it finds there

@@ -178,9 +178,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
-	// Start libtorrent
-	LibraryStart(); //TODO maybe move this into an early pulse
-
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
@@ -207,9 +204,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Remove the tray icon
 	if (State.taskbar) TaskbarIconRemove();
-
-	// Shut down libtorrent
-	LibraryClose2(); //TODO move this into a closing pulse after the window is hidden
 
 	// Return the value from the quit message
 	return (int)message.wParam;
