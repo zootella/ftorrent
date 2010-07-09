@@ -138,6 +138,7 @@ CString PathOption();
 CString PathTorrentMeta(libtorrent::sha1_hash hash);
 CString PathTorrentStore(libtorrent::sha1_hash hash);
 CString PathTorrentOption(libtorrent::sha1_hash hash);
+void ProgramExit();
 
 // Paint
 void PaintWindow(deviceitem *device);
@@ -152,7 +153,7 @@ void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5
 void Size(int move = 0); // Has defaults
 
 // Command
-bool AreaCommand(areaitem *area);
+void AreaCommand(areaitem *area);
 
 // Options
 void DialogOptions();

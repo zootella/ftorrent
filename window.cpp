@@ -273,11 +273,11 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	break;
 	case WM_LBUTTONDOWN:
 
-		Area.pressed = MouseOver();                             // Save the area the mouse pressed
-		if (Area.pressed) Area.stick = MouseArea(Area.pressed); // Save where in that area it started dragging
-		MouseCapture();                                         // Have our window get all the mouse messages
-		if (Area.pressed && Area.pressed->command == CommandMenu && AreaCommand(Area.pressed)) // Show a menu on the downclick
-			PostQuitMessage(0); // Exit if the user chose that menu item
+		Area.pressed = MouseOver();                               // Save the area the mouse pressed
+		if (Area.pressed) Area.stick = MouseArea(Area.pressed);   // Save where in that area it started dragging
+		MouseCapture();                                           // Have our window get all the mouse messages
+		if (Area.pressed && Area.pressed->command == CommandMenu) // Show a menu on the downclick
+			AreaCommand(Area.pressed);
 		return 0;
 
 	// The primary mouse button has clicked up in the main window, or anywhere if the mouse is captured
@@ -325,7 +325,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		case ID_TOOLS_EXIT:
 
 			// Close the program
-			PostQuitMessage(0);
+			ProgramExit();
 			return 0;
 
 		break;
@@ -382,8 +382,7 @@ void MenuTaskbar() {
 	case ID_TASKBAR_EXIT:
 
 		// Remove the icon and exit the mesage loop
-		TaskbarIconRemove();
-		PostQuitMessage(0);
+		ProgramExit();
 
 	break;
 	}

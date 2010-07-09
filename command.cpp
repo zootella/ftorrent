@@ -27,8 +27,7 @@ extern statetop  State;
 
 // Takes an area item that has been pressed and released
 // Performs its command
-// Returns true to exit the program, false to keep it running
-bool AreaCommand(areaitem *area) {
+void AreaCommand(areaitem *area) {
 
 	// Menus
 	if (area->command == CommandMenu) {
@@ -50,7 +49,7 @@ bool AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
 			else if (choice == ID_TOOLS_ABOUT)   { Dialog(L"DIALOG_ABOUT", DialogAbout); }
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
-			else if (choice == ID_TOOLS_EXIT)    { return true; } // Close the program
+			else if (choice == ID_TOOLS_EXIT)    { ProgramExit(); } // Close the program
 		}
 
 	// Buttons
@@ -60,7 +59,4 @@ bool AreaCommand(areaitem *area) {
 	} else if (area->command == CommandLink) {
 
 	}
-
-	// No request to exit the program
-	return false;
 }
