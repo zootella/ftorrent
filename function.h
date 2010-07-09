@@ -138,7 +138,8 @@ CString PathOption();
 CString PathTorrentMeta(libtorrent::sha1_hash hash);
 CString PathTorrentStore(libtorrent::sha1_hash hash);
 CString PathTorrentOption(libtorrent::sha1_hash hash);
-void ProgramExit();
+void ProgramExit1();
+void ProgramExit2();
 
 // Paint
 void PaintWindow(deviceitem *device);

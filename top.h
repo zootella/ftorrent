@@ -164,6 +164,9 @@ public:
 	CString folder;
 
 
+	ubig exit; // The tick count when the user exited the window and the program hid it
+
+
 	stageitem *stage; // Current program stage shown on the screen
 	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
 

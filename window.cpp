@@ -207,8 +207,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		}
 	}
 
-	// Remove the tray icon
-	if (State.taskbar) TaskbarIconRemove();
+	// Remove the tray icon if we have one
+	TaskbarIconRemove();
 
 	// Return the value from the quit message
 	return (int)message.wParam;
@@ -325,7 +325,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		case ID_TOOLS_EXIT:
 
 			// Close the program
-			ProgramExit();
+			ProgramExit1();
 			return 0;
 
 		break;
@@ -382,7 +382,7 @@ void MenuTaskbar() {
 	case ID_TASKBAR_EXIT:
 
 		// Remove the icon and exit the mesage loop
-		ProgramExit();
+		ProgramExit1();
 
 	break;
 	}

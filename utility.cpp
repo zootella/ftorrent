@@ -396,7 +396,7 @@ void TaskbarIconUpdate() {
 void TaskbarIconRemove() {
 
 	if (!State.taskbar) return; // No icon to remove, leave
-	State.taskbar = false;      // Record tha we removed the icon
+	State.taskbar = NULL;       // Record tha we removed the icon
 
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -1622,16 +1622,22 @@ CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder
 
 
 
-
-
-
-// Hide the window and taskbar icon, and post the quit message so the program will leave the message loop
-void ProgramExit() {
+// Hide the window and taskbar icon
+void ProgramExit1() {
 
 	ShowWindow(Handle.window, SW_HIDE); // Hide the window on the screen
-	TaskbarIconRemove();                // Remove our icon from the taskbar notification area, if we've got on there
-	PostQuitMessage(0);                 // Post the quit message to cause the program to leave the message loop when it gets to it
+	TaskbarIconRemove();                // Remove our icon from the taskbar notification area, if we've got one there
+
+	ProgramExit2();
 }
+
+// Post the quit message so the program will leave the message loop
+void ProgramExit2() {
+
+	PostQuitMessage(0); // Post the quit message to cause the program to leave the message loop when it gets to it
+}
+
+
 
 
 

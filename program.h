@@ -29,7 +29,8 @@
 #define MESSAGE_TASKBAR (WM_APP + 1)
 
 // Number types
-typedef unsigned __int64 big;
+typedef          __int64 sbig; // Signed 8 byte integer, same as "long long"
+typedef unsigned __int64 ubig; // Unsigned 8 byte integer, same as "ULONGLONG"
 
 // Text define
 #define length lstrlenW // Rename function
