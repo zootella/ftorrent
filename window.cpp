@@ -181,6 +181,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
+	//start
+	log(L"start before");
+	LibraryStart();
+	log(L"start after");
+
 	// Message loop
 	MSG message;
 	while (true) {

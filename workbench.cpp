@@ -32,10 +32,9 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-
-
+// Start libtorrent and get the session handle
+// This takes about 50ms, do it after the window is on the screen but before it is responsive
 void LibraryStart() {
-	log(L"library start");
 	try {
 
 		// Make our libtorrent session object
@@ -69,7 +68,9 @@ void LibraryStart() {
 	}
 }
 
-void LibraryClose1() {
+// Stop libtorrent services, pause torrents, and ask for resume alerts for each one
+// This call takes about 20ms, and then 250ms later the alerts arrive with the resume data, do it after the window has left the screen
+void LibraryStop() {
 	try {
 
 		// Stop ltorrent services
@@ -101,6 +102,7 @@ void LibraryClose1() {
 			}
 		}
 
+		//TODO note
 		log(L"requested save resume data on ", saynumber(n, L"torrent"));
 
 	} catch (std::exception &e) {
@@ -108,12 +110,22 @@ void LibraryClose1() {
 	} catch (...) {
 		log(L"exception");
 	}
-
 }
 
-void LibraryClose2() {
+// Shut down libtorrent and remove our access to it
+// This is slow, 1s or more as libtorrent waits for trackers to respond to our goodbye, do it after the window has left the screen
+void LibraryClose() {
+	try {
 
-	delete Handle.session; //TODO confirm this is slow
+		// Delete the libtorrent session object and null our pointer to it
+		delete Handle.session; // This is slow, 1-4 seconds as libtorrent waits for trackers to confirm our goodbye
+		Handle.session = NULL; // Discard our pointer so we know to stop using it
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
 }
 
 
@@ -124,10 +136,18 @@ void LibraryClose2() {
 // torrent is the path to the torrent file on the disk
 // or set torrent null and specify hash, name, and tracker from the magnet link
 // store is the path to libtorrent resume data from a previous session, or null if this is the first time
-// Returns the torrent handle, or null on error
-// If you add the same infohash twice, returns the existing handle instead of producing an error
-libtorrent::torrent_handle AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
+// Sets the torrent handle, or returns false on error
+// If you add the same infohash twice, sets the existing handle instead of producing an error
+bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle) {
 	try {
+
+		//TODO have this return a torrentitem that contains the torrent handle, or null if we didn't get one
+
+		// Local objects in memory for the add call below
+		std::string namestring, trackerstring;
+		if (name)    namestring    = narrowRtoS(name);
+		if (tracker) trackerstring = narrowRtoS(tracker);
+		std::vector<char> charvector;
 
 		// Make a torrent params object to fill out
 		libtorrent::add_torrent_params p;
@@ -144,16 +164,12 @@ libtorrent::torrent_handle AddTorrent(read folder, read torrent, read hash, read
 		// Or, set hash, name, and tracker from a magnet link
 		} else {
 
-			/*
-			p.info_hash;
-			p.name;
-			p.tracker_url;
-			*/
-
+			p.info_hash = convertPtoSha1Hash(narrowRtoS(hash).c_str());
+			if (name)    p.name        = namestring.c_str();
+			if (tracker) p.tracker_url = trackerstring.c_str();
 		}
 
 		// Specify store data saved from a previous session, optional
-		std::vector<char> charvector; // Define charvector outside outside of block so the add line can access it
 		if (store) {
 
 			boost::filesystem::ifstream f(store, std::ios_base::binary); // Try to open the file on the disk
@@ -174,14 +190,15 @@ libtorrent::torrent_handle AddTorrent(read folder, read torrent, read hash, read
 		}
 
 		// Add the torrent to the session and return the torrent handle we get
-		return Handle.session->add_torrent(p);
+		handle = Handle.session->add_torrent(p);
+		return true;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
-	return NULL; // Something went wrong
+	return false; // Something went wrong
 }
 
 
@@ -189,6 +206,7 @@ libtorrent::torrent_handle AddTorrent(read folder, read torrent, read hash, read
 
 
 void LibraryPulse() {
+	if (!Handle.session) return;
 
 	/*
 

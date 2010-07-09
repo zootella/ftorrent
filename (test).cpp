@@ -30,49 +30,42 @@ int step = 0;
 
 // Run a snippet of test code
 void Test() {
-	try {
 
-		if (step == 0) {
-			step++;
 
-			//start
-			log(L"start before");
-			LibraryStart();
-			log(L"start after");
 
-		} else if (step == 1) {
-			step++;
+	if (step == 0) {
+		step++;
 
-			//add
-			log(L"add before");
-			libtorrent::add_torrent_params p;
-			p.save_path = boost::filesystem::path(narrowRtoS(L"C:\\Documents\\test"));
-			p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(L"C:\\Documents\\my.torrent")));
-			libtorrent::torrent_handle h = Handle.session->add_torrent(p);
-			log(L"add after");
+		//add
+		log(L"add before");
+		libtorrent::torrent_handle h;
+		bool result = AddTorrent(
+			L"C:\\Documents\\test",       // folder
+			L"C:\\Documents\\my.torrent", // torrent
+			NULL, // magnet hash
+			NULL, //        name
+			NULL, //        tracker
+			NULL, // store
+			h);  // handle
+		log(L"add after");
 
-		} else if (step == 2) {
-			step++;
+	} else if (step == 1) {
+		step++;
 
-			//save
-			log(L"close1 before");
-			LibraryClose1();
-			log(L"close1 after");
+		//save
+		log(L"stop before");
+		LibraryStop();
+		log(L"stop after");
 
-		} else if (step == 3) {
-			step++;
+	} else if (step == 2) {
+		step++;
 
-			//close
-			log(L"close2 before");
-			LibraryClose2();
-			log(L"close2 after");
-		}
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
+		//close
+		log(L"close before");
+		LibraryClose();
+		log(L"close after");
 	}
+
 
 	/*
 	bool result = false;

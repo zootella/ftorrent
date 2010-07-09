@@ -202,8 +202,8 @@ void GetAlerts();
 void ProcessAlert(const libtorrent::alert *alert, alert_structure *info);
 
 // Torrent
-void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath);
-void RemoveTorrent(const char *id);
+void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath);
+void RemoveTorrentWrap(const char *id);
 
 // Change
 void PauseTorrent(const char *id);
@@ -259,9 +259,9 @@ void Test();
 
 
 void LibraryStart();
-void LibraryClose1();
-void LibraryClose2();
-void AddTorrent();
+void LibraryStop();
+void LibraryClose();
+bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle);
 void LibraryPulse();
 void AlertLoop();
 void AlertLook(const libtorrent::alert *a);

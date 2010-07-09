@@ -307,7 +307,7 @@ void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 // Takes savepath,    the path to where the program should save the torrent on the disk
 // Takes resumepath,  the path to a file of resume information we saved earlier and can use now
 // Adds the torrent to libtorrent
-void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath) {
+void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath) {
 	try {
 
 		// Output the information this function received
@@ -320,7 +320,7 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 		// Fill out a torrent parameters object
 		libtorrent::add_torrent_params p;
 		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
-		p.info_hash          = StringToHash(infohash);
+		p.info_hash          = convertPtoSha1Hash(infohash);
 		p.tracker_url        = trackerurl;
 		p.auto_managed       = false; //TODO change this to true
 		p.duplicate_is_error = true;
@@ -372,7 +372,7 @@ void AddTorrent(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t 
 }
 
 // Remove the torrent with the given infohash from the program
-void RemoveTorrent(const char *id) {
+void RemoveTorrentWrap(const char *id) {
 	try {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
