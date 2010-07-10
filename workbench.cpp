@@ -111,14 +111,12 @@ void LibraryStop() {
 	}
 }
 
-// Shut down libtorrent and remove our access to it
-// This is slow, 1s or more as libtorrent waits for trackers to respond to our goodbye, do it after the window has left the screen
+// Shut down libtorrent
+// This can be slow, 1 to 4 seconds as libtorrent waits for trackers to confirm our goodbye
 void LibraryClose() {
 	try {
 
-		// Delete the libtorrent session object and null our pointer to it
-		delete Handle.session; // This is slow, 1-4 seconds as libtorrent waits for trackers to confirm our goodbye
-		Handle.session = NULL; // Discard our pointer so we know to stop using it
+		delete Handle.session; // Call the libtorrent session object destructor
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
