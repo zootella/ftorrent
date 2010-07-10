@@ -26,45 +26,26 @@ extern datatop   Data;
 extern statetop  State;
 
 
-int step = 0;
 
 // Run a snippet of test code
 void Test() {
 
 
 
-	if (step == 0) {
-		step++;
 
-		//add
-		log(L"add before");
-		libtorrent::torrent_handle h;
-		bool result = AddTorrent(
-			L"C:\\Documents\\test",       // folder
-			L"C:\\Documents\\my.torrent", // torrent
-			NULL, // magnet hash
-			NULL, //        name
-			NULL, //        tracker
-			NULL, // store
-			h);  // handle
-		log(L"add after");
+	//add
+	log(L"add before");
+	libtorrent::torrent_handle h;
+	bool result = AddTorrent(
+		L"C:\\Documents\\test",       // folder
+		L"C:\\Documents\\my.torrent", // torrent
+		NULL, // magnet hash
+		NULL, //        name
+		NULL, //        tracker
+		NULL, // store
+		h);  // handle
+	log(L"add after");
 
-	} else if (step == 1) {
-		step++;
-
-		//save
-		log(L"stop before");
-		LibraryStop();
-		log(L"stop after");
-
-	} else if (step == 2) {
-		step++;
-
-		//close
-		log(L"close before");
-		LibraryClose();
-		log(L"close after");
-	}
 
 
 	/*

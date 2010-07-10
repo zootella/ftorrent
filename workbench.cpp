@@ -88,7 +88,7 @@ void LibraryStop() {
 		SaveEntry(PathStore(), e);
 
 		// Loop through each torrent handle
-		int n = 0; // Count how many torrents will give us resume data
+		State.expect = 0; // Count how many torrents will give us resume data
 		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); i++) {
 			libtorrent::torrent_handle &h = *i;
@@ -98,12 +98,12 @@ void LibraryStop() {
 				
 				// Tell the torrent to generate resume data
 				h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
-				n++; // Count one more torrent that will give us resume data
+				State.expect++;       // Count one more torrent that will give us resume data
 			}
 		}
 
 		//TODO note
-		log(L"requested save resume data on ", saynumber(n, L"torrent"));
+		log(L"requested save resume data on ", saynumber(State.expect, L"torrent"));
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -206,7 +206,15 @@ bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 
 
 void LibraryPulse() {
-	if (!Handle.session) return;
+
+	// If we're done leaving libtorrent, quit the program message loop
+	if (State.exit &&                            // The user began the program exit process, and
+		(!State.expect ||                        // Either we've gotten all the resume data we expect, or
+		false/*(State.exit + 4000 < GetTickCount())))*/)) { // We've waited for it more than 4 seconds
+
+		PostQuitMessage(0); // Post the quit message to leave the message loop
+		return;             // Don't do anything else here
+	}
 
 	/*
 
@@ -284,6 +292,7 @@ void AlertLook(const libtorrent::alert *alert) {
 
 
 				SaveEntry(PathTorrentStore(h.info_hash()), *e);
+				State.expect--;
 				log(L"saved entry for ", id);
 
 
@@ -297,6 +306,7 @@ void AlertLook(const libtorrent::alert *alert) {
 
 				// Get the error message
 				log(id, L" save resume failed ", widenStoC(a2->msg));
+				State.expect--;
 				return;
 			}
 

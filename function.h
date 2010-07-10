@@ -30,6 +30,7 @@ CString saynow();
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
 void WindowPulse();
+void WindowExit();
 LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
 
@@ -138,8 +139,6 @@ CString PathOption();
 CString PathTorrentMeta(libtorrent::sha1_hash hash);
 CString PathTorrentStore(libtorrent::sha1_hash hash);
 CString PathTorrentOption(libtorrent::sha1_hash hash);
-void ProgramExit1();
-void ProgramExit2();
 
 // Paint
 void PaintWindow(deviceitem *device);

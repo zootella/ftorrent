@@ -49,7 +49,7 @@ void AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
 			else if (choice == ID_TOOLS_ABOUT)   { Dialog(L"DIALOG_ABOUT", DialogAbout); }
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
-			else if (choice == ID_TOOLS_EXIT)    { ProgramExit1(); } // Close the program
+			else if (choice == ID_TOOLS_EXIT)    { WindowExit(); } // Hide the window and stop libtorrent
 		}
 
 	// Buttons

@@ -181,10 +181,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	//start
-	log(L"start before");
+	// Start libtorrent
+	log(L"library start before");
 	LibraryStart();
-	log(L"start after");
+	log(L"library start after");
 
 	// Message loop
 	MSG message;
@@ -207,8 +207,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		}
 	}
 
-	// Remove the tray icon if we have one
-	TaskbarIconRemove();
+	// Close libtorrent
+	log(L"library close before");
+	LibraryClose(); // This can be quick or take several seconds
+	log(L"library close after");
 
 	// Return the value from the quit message
 	return (int)message.wParam;
@@ -221,6 +223,16 @@ void WindowPulse() {
 	// Pulse the program from data to display
 	LibraryPulse();
 	AreaPulse();
+}
+
+// Hide the window stop libtorrent
+void WindowExit() {
+
+	ShowWindow(Handle.window, SW_HIDE); // Hide the window
+	TaskbarIconRemove();                // Remove the taskbar icon if we have one
+
+	State.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
+	LibraryStop();               // Ask libtorrent to prepare save data for each torrent
 }
 
 // Process a message from the system
@@ -301,9 +313,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	break;
 	case WM_DESTROY:
 
-		// Close the program
-		PostQuitMessage(0);
-		return 0;
+		PostQuitMessage(0); // Post the quit message to leave the message loop
+		return 0;           // We processed this message
 
 	// The user clicked a window button or menu item
 	break;
@@ -324,8 +335,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		break;
 		case ID_TOOLS_EXIT:
 
-			// Close the program
-			ProgramExit1();
+			// Hide the window and stop libtorrent
+			WindowExit();
 			return 0;
 
 		break;
@@ -381,8 +392,8 @@ void MenuTaskbar() {
 	break;
 	case ID_TASKBAR_EXIT:
 
-		// Remove the icon and exit the mesage loop
-		ProgramExit1();
+		// Hide the window and stop libtorrent
+		WindowExit();
 
 	break;
 	}
