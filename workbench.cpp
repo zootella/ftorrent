@@ -88,7 +88,6 @@ void LibraryStop() {
 		SaveEntry(PathStore(), e);
 
 		// Loop through each torrent handle
-		State.expect = 0; // Count how many torrents will give us resume data
 		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); i++) {
 			libtorrent::torrent_handle &h = *i;
@@ -210,7 +209,7 @@ void LibraryPulse() {
 	// If we're done leaving libtorrent, quit the program message loop
 	if (State.exit &&                            // The user began the program exit process, and
 		(!State.expect ||                        // Either we've gotten all the resume data we expect, or
-		false/*(State.exit + 4000 < GetTickCount())))*/)) { // We've waited for it more than 4 seconds
+		(State.exit + 4000 < GetTickCount()))) { // We've waited more than 4 seconds
 
 		PostQuitMessage(0); // Post the quit message to leave the message loop
 		return;             // Don't do anything else here

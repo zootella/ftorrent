@@ -177,6 +177,6 @@ public:
 		pop = 0;
 		stage = &start;
 		exit = 0;
-		expect = -1;
+		expect = 0;
 	}
 };
