@@ -39,7 +39,7 @@ void LibraryStart() {
 
 		// Make our libtorrent session object
 		Handle.session = new libtorrent::session(
-			libtorrent::fingerprint("ltorrent", 0, 1, 0, 0), // Program name and version numbers separated by commas
+			libtorrent::fingerprint("ftorrent", 0, 1, 0, 0), // Program name and version numbers separated by commas
 			std::pair<int, int>(6881, 6999),                 // Pick a port to listen on in this range
 			"0.0.0.0",                                       // Use the default network interface
 			libtorrent::session::start_default_features | libtorrent::session::add_default_plugins, // Default features and plugins
@@ -73,7 +73,7 @@ void LibraryStart() {
 void LibraryStop() {
 	try {
 
-		// Stop ltorrent services
+		// Stop libtorrent services
 		Handle.session->stop_dht();
 		Handle.session->stop_lsd();
 		Handle.session->stop_upnp();

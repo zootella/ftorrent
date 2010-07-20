@@ -102,7 +102,7 @@ BOOL APIENTRY DialogOptionsDownload(HWND dialog, UINT message, UINT wparam, LPAR
 
 			/*
 			// DISPLAY THE BROWSE FOR FOLDER DIALOG
-			CString browse = FileBrowse("Choose where ltorrent should save files.");
+			CString browse = FileBrowse("Choose where ftorrent should save files.");
 
 			// IF THE USER CHOSE A PATH, WRITE IT INTO THE FOLDER EDIT BOX
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse);

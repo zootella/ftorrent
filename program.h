@@ -1,15 +1,15 @@
 
 // Program build and name
 #define PROGRAM_TEST    true
-#define PROGRAM_NAME    CString(L"ltorrent")
-#define PROGRAM_HELP    CString(L"http://wiki.github.com/zootella/ltorrent/")
+#define PROGRAM_NAME    CString(L"ftorrent")
+#define PROGRAM_HELP    CString(L"http://wiki.github.com/zootella/ftorrent/")
 #define PROGRAM_VERSION 0, 1, 0, 0
 
 // Compose display text
 #define PROGRAM_ABOUT1 CString(L"Version 0.1")
 #define PROGRAM_ABOUT2 CString(L"Released under the GNU General Public License")
 #define PROGRAM_ABOUT3 CString(L"Built on Rasterbar libtorrent 0.15.0, Boost 1.43.0, and OpenSSL 0.9.8n")
-#define PROGRAM_ABOUT4 CString(L"http://github.com/zootella/ltorrent")
+#define PROGRAM_ABOUT4 CString(L"http://github.com/zootella/ftorrent")
 
 // Windows
 #define WINDOW_LIST 1

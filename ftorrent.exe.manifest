@@ -3,7 +3,7 @@
 <assemblyIdentity
 	version="1.0.0.0"
 	processorArchitecture="X86"
-	name="ltorrent.ltorrent.ltorrent"
+	name="ftorrent.ftorrent.ftorrent"
 	type="win32"
 />
 <description>Small powerful and open source BitTorrent client for Windows.</description>

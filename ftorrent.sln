@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ltorrent", "ltorrent.vcproj", "{EBFCC154-D7B0-4E8B-B395-31DD8E95C19B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ftorrent", "ftorrent.vcproj", "{EBFCC154-D7B0-4E8B-B395-31DD8E95C19B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

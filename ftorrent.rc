@@ -98,7 +98,7 @@ BEGIN
         MENUITEM "&Create torrent...",          ID_TOOLS_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
-        MENUITEM "&About ltorrent",             ID_TOOLS_ABOUT
+        MENUITEM "&About ftorrent",             ID_TOOLS_ABOUT
         MENUITEM "&Help",                       ID_TOOLS_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Exit",                       ID_TOOLS_EXIT
@@ -111,7 +111,7 @@ END
 // RT_MANIFEST
 //
 
-1                       RT_MANIFEST             "ltorrent.exe.manifest"
+1                       RT_MANIFEST             "ftorrent.exe.manifest"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -144,7 +144,7 @@ BEGIN
                     BS_MULTILINE,56,85,141,20
     GROUPBOX        "Connections",IDC_STATIC,6,7,208,144
     ICON            "GRAPHIC_MODEM",IDC_STATIC,16,21,20,20
-    LTEXT           "Control how Internet Explorer, ltorrent, and other Windows programs connect to the Internet.",
+    LTEXT           "Control how Internet Explorer, ftorrent, and other Windows programs connect to the Internet.",
                     IDC_STATIC,45,20,161,16
 END
 
@@ -164,7 +164,7 @@ BEGIN
                     UDS_NOTHOUSANDS,16,127,10,14
     GROUPBOX        "Save To",IDC_STATIC,6,7,208,103
     ICON            "GRAPHIC_FOLDER",IDC_STATIC,16,21,21,20
-    LTEXT           "Choose the &folder where ltorrent saves files.",
+    LTEXT           "Choose the &folder where ftorrent saves files.",
                     IDC_STATIC,45,20,159,8
     LTEXT           "Make &subfolders from parts of the address.",IDC_STATIC,
                     45,74,159,8
@@ -193,7 +193,7 @@ END
 DIALOG_ABOUT DIALOGEX 0, 0, 310, 129
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
     WS_CAPTION | WS_SYSMENU
-CAPTION "About ltorrent"
+CAPTION "About ftorrent"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "OK",IDCANCEL,59,100,50,14

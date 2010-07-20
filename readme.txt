@@ -5,7 +5,7 @@
 http://www.rasterbar.com/products/libtorrent/building.html do section building with BBv2<br>
 http://www.rasterbar.com/products/libtorrent/vs2005_build_notes.html out of date<br>
 http://code.rasterbar.com/libtorrent/wiki/Building down<br>
-http://github.com/zootella/ltorrent code and project<br>
+http://github.com/zootella/ftorrent code and project<br>
 
 ==Windows==
 
@@ -107,7 +107,7 @@ Library files
 
 ===Code===
 
- git clone git@github.com:zootella/ltorrent.git
+ git clone git@github.com:zootella/ftorrent.git
 
 ===Properties===
 
@@ -164,7 +164,7 @@ See the whole command line at ''C/C++, Command Line'' and ''Linker, Command Line
 Visual Studio 2008<br>
 File, New, Project<br>
 Project types: Visual C++, Win32, Win32 Project<br>
-Name: ltorrent<br>
+Name: ftorrent<br>
 Location: C:\Documents<br>
 Uncheck Create directory for solution<br>
 OK<br>

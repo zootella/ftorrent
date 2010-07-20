@@ -295,7 +295,7 @@ void AreaPulse() {
 	*/
 
 	//TODO integrate this into what's next
-//	State.title = L"ltorrent";
+//	State.title = L"ftorrent";
 
 	// Compose status text
 	CString s = saynumber(rows, L"file");

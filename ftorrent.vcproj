@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ltorrent"
+	Name="ftorrent"
 	ProjectGUID="{EBFCC154-D7B0-4E8B-B395-31DD8E95C19B}"
-	RootNamespace="ltorrent"
+	RootNamespace="ftorrent"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -347,11 +347,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ltorrent.exe.manifest"
+				RelativePath=".\ftorrent.exe.manifest"
 				>
 			</File>
 			<File
-				RelativePath=".\ltorrent.rc"
+				RelativePath=".\ftorrent.rc"
 				>
 			</File>
 			<File

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by ltorrent.rc
+// Used by ftorrent.rc
 //
 #define IDD_DIALOG1                     104
 #define IDC_TAB1                        1001
