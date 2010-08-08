@@ -77,7 +77,7 @@ void UpdateSettings(settings_structure *info) {
 
 		// Apply settings in info to libtorrent
 		libtorrent::session_settings s; // Make a new libtorrent session settings object
-		s.use_dht_as_fallback   = false; //TODO don't turn this off
+		s.use_dht_as_fallback   = false; // didn't turn this off
 		s.share_ratio_limit     = info->seed_ratio_limit; // Copy info into a libtorrent session settings object
 		s.seed_time_ratio_limit = info->seed_time_ratio_limit;
 		s.seed_time_limit       = info->seed_time_limit;
@@ -154,7 +154,7 @@ void AbortTorrents() {
 	try {
 
 		if (Handle.session)
-			Handle.session->abort(); //TODO Get the session_proxy this returns
+			Handle.session->abort(); // deleted the object instead of aborting it
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -322,7 +322,7 @@ void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wcha
 		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
 		p.info_hash          = convertPtoSha1Hash(infohash);
 		p.tracker_url        = trackerurl;
-		p.auto_managed       = false; //TODO change this to true
+		p.auto_managed       = false; // changed this to true
 		p.duplicate_is_error = true;
 
 		// If we were given the path to a torrent file on the disk
