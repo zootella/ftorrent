@@ -97,12 +97,9 @@ void LibraryStop() {
 				
 				// Tell the torrent to generate resume data
 				h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
-				State.expect++;       // Count one more torrent that will give us resume data
+				State.expect++;       // Count that we expect one more torrent will give us resume data
 			}
 		}
-
-		//TODO note
-		log(L"requested save resume data on ", saynumber(State.expect, L"torrent"));
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -215,27 +212,20 @@ void LibraryPulse() {
 
 	/*
 
-	//query the torrent handles for progress
-	torrent_handle
-
 	//query the session for information
 
-	//see if there are any new alerts
+	//query the torrent handles for progress
+	torrent_handle.status() returns torrent_status struct
+
+
 
 
 	*/
 
+	// See if there are any new alerts
 	AlertLoop();
 
 }
-
-
-
-
-
-
-
-
 
 // Take all the alerts libtorrent is waiting to give us and look at each one
 void AlertLoop() {
@@ -264,9 +254,6 @@ void AlertLoop() {
 // After calling this function, you can look at the information in info to see the alert libtorrent sent you
 void AlertLook(const libtorrent::alert *alert) {
 
-	// Get the category and the message
-//	log(L"alert category ", numerals(alert->category()), L" ", widenStoC(alert->message()));
-
 	// If it's a torrent alert
 	const libtorrent::torrent_alert *a = dynamic_cast<const libtorrent::torrent_alert *>(alert);
 	if (a) {
@@ -283,17 +270,10 @@ void AlertLook(const libtorrent::alert *alert) {
 			if (a1) {
 
 				// Get the pointer to the resume data
-				const boost::shared_ptr<libtorrent::entry> resume_ptr = a1->resume_data;
-
-				libtorrent::entry *e = resume_ptr.get(); // Copy across the pointer to the resume data
-
-
+				const boost::shared_ptr<libtorrent::entry> p = a1->resume_data;
+				libtorrent::entry *e = p.get(); // Copy across the pointer to the resume data
 				SaveEntry(PathTorrentStore(h.info_hash()), *e);
 				State.expect--;
-				log(L"saved entry for ", id);
-
-
-
 				return;
 			}
 

@@ -164,8 +164,8 @@ public:
 	CString folder;
 
 
-	DWORD exit; // The tick count when the user exited the window and the program hid it
-	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all, -1 not in use yet
+	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
+	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
 
 
 	stageitem *stage; // Current program stage shown on the screen
