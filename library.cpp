@@ -139,6 +139,17 @@ bool LoadEntry(read path, libtorrent::entry &e) {
 
 //TODO test these four conversions out, confirm they go both ways and don't break anything
 
+
+libtorrent::big_number convertRtoBigNumber(read r) {
+	
+	return convertPtoBigNumber(narrowRtoS(r).c_str());
+}
+
+libtorrent::sha1_hash convertRtoSha1Hash(read r) {
+
+	return convertPtoSha1Hash(narrowRtoS(r).c_str());
+}
+
 libtorrent::big_number convertPtoBigNumber(const char *p) {
 
 	std::stringstream stream;

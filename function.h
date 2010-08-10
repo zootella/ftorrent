@@ -180,10 +180,14 @@ CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);
+libtorrent::big_number convertRtoBigNumber(read r);
+libtorrent::sha1_hash convertRtoSha1Hash(read r);
 libtorrent::big_number convertPtoBigNumber(const char *p);
 libtorrent::sha1_hash convertPtoSha1Hash(const char *p);
 CString convertSha1HashToC(const libtorrent::sha1_hash &h);
 CString convertBigNumberToC(const libtorrent::big_number &n);
+
+
 
 // Wrapper
 

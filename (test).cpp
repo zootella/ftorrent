@@ -32,7 +32,40 @@ void Test() {
 
 
 
+	//test handle to text and back
 
+
+	CString s = L"e6a56670baae316ebf5d3ce91be729e8688f7256";
+	CString s2;
+
+	libtorrent::big_number b = convertRtoBigNumber(s);
+	s2 = convertBigNumberToC(b);
+	log(s);
+	log(s2);
+
+	libtorrent::sha1_hash h = convertRtoSha1Hash(s);
+	s2 = convertSha1HashToC(h);
+	log(s);
+	log(s2);
+
+
+	/*
+
+
+	libtorrent::big_number convertRtoBigNumber(read r);
+	libtorrent::sha1_hash convertRtoSha1Hash(read r);
+	libtorrent::big_number convertPtoBigNumber(const char *p);
+	libtorrent::sha1_hash convertPtoSha1Hash(const char *p);
+	CString convertSha1HashToC(const libtorrent::sha1_hash &h);
+	CString convertBigNumberToC(const libtorrent::big_number &n);
+
+	*/
+
+
+
+
+
+	/*
 	//add
 	log(L"add before");
 	libtorrent::torrent_handle h;
@@ -45,29 +78,8 @@ void Test() {
 		NULL, // store
 		h);  // handle
 	log(L"add after");
-
-
-
-	/*
-	bool result = false;
-	CString path = L"C:\\Documents\\options.db";
-
-	if (!step) {
-		step = 1;
-
-		libtorrent::entry e1;
-		e1 = narrowRtoS(L"hello");
-		result = SaveEntry(path, e1);
-
-	} else {
-
-		libtorrent::entry e2;
-		result = LoadEntry(path, e2);
-
-		CString s = widenStoC(e2.string().c_str());
-		log(s);
-	}
-
-	log(result ? L"true" : L"false");
 	*/
+
+
+
 }
