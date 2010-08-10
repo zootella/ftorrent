@@ -49,6 +49,8 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+// Text
+
 // P  const char *     narrow  in
 // S  std::string      narrow  in  out
 // R  const wchar_t *  wide    in
@@ -77,6 +79,53 @@ std::string narrowWtoS(std::wstring w) {
 	libtorrent::wchar_utf8(w, s);
 	return s;
 }
+
+
+// Hashes
+
+// Convert a 20 byte hash value between
+// base 16 text like "e6a56670baae316ebf5d3ce91be729e8688f7256" and
+// libtorrent big_number and sha1_hash objects
+
+libtorrent::big_number convertRtoBigNumber(read r) { return convertPtoBigNumber(narrowRtoS(r).c_str()); }
+libtorrent::sha1_hash convertRtoSha1Hash(read r) { return convertPtoSha1Hash(narrowRtoS(r).c_str()); }
+
+libtorrent::big_number convertPtoBigNumber(const char *p) {
+
+	std::stringstream stream;
+	libtorrent::big_number n;
+	stream << p;
+	stream >> n;
+	return n;
+}
+
+libtorrent::sha1_hash convertPtoSha1Hash(const char *p) {
+
+	std::stringstream stream;
+	libtorrent::sha1_hash h;
+	stream << p;
+	stream >> h;
+	return h;
+}
+
+CString convertSha1HashToC(const libtorrent::sha1_hash &h) {
+
+	std::stringstream stream;
+	stream << h;
+	return widenStoC(stream.str());
+}
+
+CString convertBigNumberToC(const libtorrent::big_number &n) {
+
+	std::stringstream stream;
+	stream << n;
+	return widenStoC(stream.str());
+}
+
+
+
+
+
 
 // Convert the given peer ID object into text
 CString PeerToString(const libtorrent::peer_id &id) {
@@ -137,50 +186,7 @@ bool LoadEntry(read path, libtorrent::entry &e) {
 }
 
 
-//TODO test these four conversions out, confirm they go both ways and don't break anything
 
-
-libtorrent::big_number convertRtoBigNumber(read r) {
-	
-	return convertPtoBigNumber(narrowRtoS(r).c_str());
-}
-
-libtorrent::sha1_hash convertRtoSha1Hash(read r) {
-
-	return convertPtoSha1Hash(narrowRtoS(r).c_str());
-}
-
-libtorrent::big_number convertPtoBigNumber(const char *p) {
-
-	std::stringstream stream;
-	libtorrent::big_number n;
-	stream << p;
-	stream >> n;
-	return n;
-}
-
-libtorrent::sha1_hash convertPtoSha1Hash(const char *p) {
-
-	std::stringstream stream;
-	libtorrent::sha1_hash h;
-	stream << p;
-	stream >> h;
-	return h;
-}
-
-CString convertSha1HashToC(const libtorrent::sha1_hash &h) {
-
-	std::stringstream stream;
-	stream << h;
-	return widenStoC(stream.str());
-}
-
-CString convertBigNumberToC(const libtorrent::big_number &n) {
-
-	std::stringstream stream;
-	stream << n;
-	return widenStoC(stream.str());
-}
 
 
 
