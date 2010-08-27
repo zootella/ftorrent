@@ -107,8 +107,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ListView_SetExtendedListViewStyle(Handle.list, style);
 
 	// Determine how wide the columns should be
-	int width1, width2, width3, width4, width5, width6;
-	SizeColumns(&width1, &width2, &width3, &width4, &width5, &width6);
+	int width1, width2, width3, width4, width5;
+	SizeColumns(&width1, &width2, &width3, &width4, &width5);
 
 	// Add the first column, which won't be able to show its icon on the right
 	ListColumnInsert(Handle.list, 0, LVCFMT_LEFT, Handle.icon.clear, L"", 0);
@@ -117,9 +117,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ListColumnInsert(Handle.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Status",   width1);
 	ListColumnInsert(Handle.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Name",     width2);
 	ListColumnInsert(Handle.list, 3, LVCFMT_RIGHT,                         Handle.icon.clear, L"Size",     width3);
-	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Type",     width4);
-	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Address",  width5);
-	ListColumnInsert(Handle.list, 6, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Saved To", width6);
+	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Infohash", width4);
+	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Location", width5);
 
 	// Remove the first column so all the remaining columns can show their icons on the right
 	ListColumnDelete(Handle.list, 0);

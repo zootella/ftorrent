@@ -30,6 +30,19 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
+	std::vector<int> weights;
+	weights.push_back(21);
+	weights.push_back(22);
+	weights.push_back(23);
+	weights.push_back(24);
+	weights.push_back(25);
+
+	std::vector<int> widths = SizeColumnsAdvanced(weights);
+
+
+
+	/*
+	// add it to libtorrent
 
 	//add
 	log(L"add before");
@@ -43,8 +56,14 @@ void Test() {
 		NULL); // store
 	log(L"add after");
 
-
+	// add it to the program's list
 	Data.torrentlist.push_back(t);
+
+	// add it to the list view
+
+	ListAdd(Handle.list
+	*/
+
 
 
 

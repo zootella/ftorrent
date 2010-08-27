@@ -346,24 +346,104 @@ void AreaPopDown() {
 	State.pop--;
 }
 
-// Suggest list column widths based on the width of the client area
-void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5, int *width6) {
 
+
+
+
+std::vector<int> SizeColumnsAdvanced(std::vector<int> weights) {
+
+	int n = weights.size();
+	log(make(L"n is: ", numerals(n)));
+
+	for (int i = 0; i < (int)weights.size(); i++) {
+		int weight = weights[i];
+		log(make(L"weight is: " + numerals(weight)));
+	}
+
+
+	/*
 	// Get sizes from the system
-	sizeitem client = SizeClient(); // The main window has a size even though it's not on the screen
+	sizeitem client = SizeClient(); // The main window has a size even before it's on the screen
 	int scroll = GetSystemMetrics(SM_CXVSCROLL); // The width of the vertical scroll bar, usually 16 pixels
 
-	// Set the widths of the first 4 columns
-	*width1 = 130;
-	*width2 = 120;
-	*width3 = 110;
-	*width4 = 120;
+	// Make the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
+	int width = client.w - (2 * scroll);
 
-	// Calculate the width of the last 2 columns
-	int last = (client.w - 4 - *width1 - *width2 - *width3 - *width4 - (scroll * 2)) / 2;
-	if (last < 120) last = 120;
-	*width5 = *width6 = last;
+	if (width < 640) width = 640;
+
+
+
+
+
+
+
+
+	*/
+
+	std::vector<int> widths;
+	return widths;
+
+
 }
+
+
+
+
+// Suggest list column widths based on the width of the client area
+void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5) {
+
+	// Set the widths of the columns
+	*width1 =   0; // Status
+	*width2 = 200; // Name
+	*width3 =   0; // Size
+	*width4 = 120; // Infohash
+	*width5 =   0; // Location
+
+	int weight1 = 5;
+	int weight2 = 0;
+	int weight3 = 4;
+	int weight4 = 0;
+	int weight5 = 6;
+
+	int minimum1 = 100;
+	int minimum2 = 100;
+	int minimum3 = 100;
+	int minimum4 = 100;
+	int minimum5 = 100;
+
+	int totalweight = weight1 + weight2 + weight3 + weight4;
+
+
+
+/*
+	if (*width1 < 100) *width1 = 100;
+	if (*width2 < 100) *width2 = 100;
+	if (*width3 < 100) *width3 = 100;
+
+	int x = SizeColumnsMeasure() - *width1 - *width2 - *width3 - *width4 - *width5;
+
+	*width1 = 
+
+	// Calculate the width of the other columns
+	int last = (client.w - *width1 - *width2 - *width3 - *width4 - *width5 - (scroll * 2));
+	if (last < 120) last = 120;
+	*width5 = last;
+	*/
+}
+
+// How many pixels wide all the list view columns should total
+int SizeColumnsMeasure() {
+
+	// Get sizes from the system
+	sizeitem client = SizeClient(); // The main window has a size even before it's on the screen
+	int scroll = GetSystemMetrics(SM_CXVSCROLL); // The width of the vertical scroll bar, usually 16 pixels
+
+	// Make the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
+	return client.w - scroll - scroll;
+}
+
+
+
 
 // Takes a number of pixels to move the bar
 // Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
