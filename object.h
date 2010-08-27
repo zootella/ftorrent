@@ -175,17 +175,11 @@ public:
 class torrentitem {
 public:
 
-
-
-
-
-
-
+	libtorrent::torrent_handle handle;
 
 	// New
 	torrentitem() {
 
 	}
-
 };
 

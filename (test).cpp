@@ -31,23 +31,20 @@ extern statetop  State;
 void Test() {
 
 
-
-
-
-	/*
 	//add
 	log(L"add before");
-	libtorrent::torrent_handle h;
-	bool result = AddTorrent(
+	torrentitem t;
+	t = AddTorrent(
 		L"C:\\Documents\\test",       // folder
 		L"C:\\Documents\\my.torrent", // torrent
-		NULL, // magnet hash
-		NULL, //        name
-		NULL, //        tracker
-		NULL, // store
-		h);  // handle
+		NULL,  // magnet hash
+		NULL,  //        name
+		NULL,  //        tracker
+		NULL); // store
 	log(L"add after");
-	*/
+
+
+	Data.torrentlist.push_back(t);
 
 
 

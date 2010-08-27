@@ -112,6 +112,8 @@ public:
 class datatop {
 public:
 
+	std::vector<torrentitem> torrentlist;
+
 };
 
 // Current program stage

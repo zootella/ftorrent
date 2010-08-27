@@ -290,12 +290,14 @@ void LibraryClose() {
 // torrent is the path to the torrent file on the disk
 // or set torrent null and specify hash, name, and tracker from the magnet link
 // store is the path to libtorrent resume data from a previous session, or null if this is the first time
-// Sets the torrent handle, or returns false on error
+// Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
 // If you add the same infohash twice, sets the existing handle instead of producing an error
-bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle) {
-	try {
+torrentitem AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
 
-		//TODO have this return a torrentitem that contains the torrent handle, or null if we didn't get one
+	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
+	torrentitem t;
+
+	try {
 
 		// Local objects in memory for the add call below
 		std::string namestring, trackerstring;
@@ -343,16 +345,16 @@ bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 			}
 		}
 
-		// Add the torrent to the session and return the torrent handle we get
-		handle = Handle.session->add_torrent(p);
-		return true;
+		// Add the torrent to the session and save the torrent handle we get
+		t.handle = Handle.session->add_torrent(p);
+		return t;
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
 	} catch (...) {
 		log(L"exception");
 	}
-	return false; // Something went wrong
+	return t; // Something went wrong, return an empty torrent item with an invalid handle
 }
 
 

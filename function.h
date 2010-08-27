@@ -189,7 +189,7 @@ bool LoadEntry(read path, libtorrent::entry &e);
 void LibraryStart();
 void LibraryStop();
 void LibraryClose();
-bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle);
+torrentitem AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store);
 void LibraryPulse();
 void AlertLoop();
 void AlertLook(const libtorrent::alert *a);
