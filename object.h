@@ -172,49 +172,20 @@ public:
 };
 
 // Torrent
-enum torrentstatus {StatusCannot, StatusDone, StatusPending, StatusInactive};
 class torrentitem {
 public:
-~torrentitem();
 
-	// Methods
-	void Get();
-	void Pause();
-	void Done();
-	void Reset();
-	void Edit();
 
-	// Compose
-	void Compose(int *i, CString *s, CString *z);
-	int Size();
 
-	// Pointers
-	torrentitem *back, *next;
-//	wantitem *w;
 
-	// Data
-//	url           u;        // URL
-	torrentstatus status;   // Current status of this item on the torrent list
-	int           priority; // 0 none or normal, 1 first, OR -1 last
-	int           size;     // Size of the saved file in bytes, or -1 if unknown
-	CString       path;     // Path of the saved file or error text
-	CString       not;      // Bad status code text for status column
 
-	// Display
-	bool listed; // True when the torrent item has a row in the list view control
+
+
 
 	// New
 	torrentitem() {
 
-		back = next = NULL;
-//		w = NULL;
-		status = StatusPending;
-		priority = 0;
-		size = -1;
-		listed = false;
 	}
 
-	// Methods
-	bool IsGetting() { return(status == StatusPending /*&& w && w->IsGetting()*/); }
 };
 

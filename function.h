@@ -186,7 +186,13 @@ CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);
-
+void LibraryStart();
+void LibraryStop();
+void LibraryClose();
+bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle);
+void LibraryPulse();
+void AlertLoop();
+void AlertLook(const libtorrent::alert *a);
 
 
 // Wrapper
@@ -263,13 +269,6 @@ void StopNatpmp();
 void Test();
 
 
-void LibraryStart();
-void LibraryStop();
-void LibraryClose();
-bool AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store, libtorrent::torrent_handle &handle);
-void LibraryPulse();
-void AlertLoop();
-void AlertLook(const libtorrent::alert *a);
 
 
 
