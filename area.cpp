@@ -350,40 +350,31 @@ void AreaPopDown() {
 
 
 
-std::vector<int> SizeColumnsAdvanced(std::vector<int> weights) {
+std::vector<int> SizeColumns(std::vector<int> weights) {
 
-	int n = weights.size();
-	log(make(L"n is: ", numerals(n)));
+	// Measure total pixel width, making the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
+	int totalwidth =
+		SizeClient().w -                      // The main window has a size even before it's on the screen
+		(2 * GetSystemMetrics(SM_CXVSCROLL)); // The width of the vertical scroll bar, like 16 pixels
 
-	for (int i = 0; i < (int)weights.size(); i++) {
-		int weight = weights[i];
-		log(make(L"weight is: " + numerals(weight)));
-	}
+	// Total given weight
+	int totalweight = 0;
+	for (int i = 0; i < (int)weights.size(); i++)
+		totalweight += weights[i];
+	if (totalweight < 1) totalweight = 1;
 
+	// Calculate pixel width for each weight unit
+	int w = totalwidth / totalweight;
 
-	/*
-	// Get sizes from the system
-	sizeitem client = SizeClient(); // The main window has a size even before it's on the screen
-	int scroll = GetSystemMetrics(SM_CXVSCROLL); // The width of the vertical scroll bar, usually 16 pixels
-
-	// Make the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
-	int width = client.w - (2 * scroll);
-
-	if (width < 640) width = 640;
-
-
-
-
-
-
-
-
-	*/
-
+	// Calculate each column width
 	std::vector<int> widths;
+	for (int i = 0; i < (int)weights.size(); i++) {
+
+		int width = weights[i] * w;
+		if (width < 100) width = 100; // Enforce a minimum width
+		widths.push_back(width);
+	}
 	return widths;
-
-
 }
 
 
@@ -434,12 +425,6 @@ void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5
 // How many pixels wide all the list view columns should total
 int SizeColumnsMeasure() {
 
-	// Get sizes from the system
-	sizeitem client = SizeClient(); // The main window has a size even before it's on the screen
-	int scroll = GetSystemMetrics(SM_CXVSCROLL); // The width of the vertical scroll bar, usually 16 pixels
-
-	// Make the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
-	return client.w - scroll - scroll;
 }
 
 
