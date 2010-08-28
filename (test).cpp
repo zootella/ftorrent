@@ -31,8 +31,7 @@ void Test() {
 
 
 
-	// add it to libtorrent
-	torrentitem t = AddTorrent(
+	AddTorrent(
 		L"C:\\Documents\\test",       // folder
 		L"C:\\Documents\\my.torrent", // torrent
 		NULL,  // magnet hash
@@ -40,22 +39,6 @@ void Test() {
 		NULL,  //        tracker
 		NULL); // store file from before
 
-	// add it to the program's list
-	Data.torrentlist.push_back(t);
-
-	// add it to the list view
-	ListAdd(
-		Handle.list,
-		5,
-		(LPARAM)&t,
-		t.ComposeStatusIcon(),
-		t.ComposeStatus(),
-		t.ComposeNameIcon(),
-		t.ComposeName(),
-		t.ComposeSize(),
-		t.ComposeHash(),
-		t.ComposePath(),
-		L"");
 
 
 

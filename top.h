@@ -112,7 +112,7 @@ public:
 class datatop {
 public:
 
-	std::vector<torrentitem> torrentlist;
+	std::vector<torrentitem> torrents;
 
 };
 
