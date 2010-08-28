@@ -181,5 +181,16 @@ public:
 	torrentitem() {
 
 	}
+
+	int ComposeStatusIcon();
+	CString ComposeStatus();
+	int ComposeNameIcon();
+	CString ComposeName();
+	CString ComposeSize();
+	CString ComposeHash();
+	CString ComposePath();
+
+
+
 };
 

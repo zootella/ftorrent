@@ -31,3 +31,44 @@ extern handletop Handle;
 extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
+
+
+
+
+
+
+
+
+
+
+
+int torrentitem::ComposeStatusIcon() {
+	return Handle.icon.clear;
+}
+
+CString torrentitem::ComposeStatus() {
+	return L"status text";
+}
+
+int torrentitem::ComposeNameIcon() {
+	return Handle.icon.clear;
+}
+
+CString torrentitem::ComposeName() {
+	return L"name text";
+}
+
+CString torrentitem::ComposeSize() {
+	return L"size text";
+}
+
+CString torrentitem::ComposeHash() {
+	return L"hash text";
+}
+
+CString torrentitem::ComposePath() {
+	return L"path text";
+}
+
+
+
