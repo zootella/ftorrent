@@ -182,6 +182,8 @@ public:
 
 	}
 
+	void Edit();
+
 	int ComposeStatusIcon();
 	CString ComposeStatus();
 	int ComposeNameIcon();

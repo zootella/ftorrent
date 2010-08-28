@@ -270,6 +270,9 @@ void StopNatpmp();
 void Test();
 
 
+void ListPulse();
+
+
 
 
 

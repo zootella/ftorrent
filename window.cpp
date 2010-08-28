@@ -226,6 +226,7 @@ void WindowPulse() {
 
 	// Pulse the program from data to display
 	LibraryPulse();
+	ListPulse();
 	AreaPulse();
 }
 

@@ -34,7 +34,41 @@ extern statetop  State;
 
 
 
+void ListPulse() {
 
+
+	for (int i = 0; i < (int)Data.torrents.size(); i++)
+		Data.torrents[i].Edit();
+
+
+
+
+}
+
+
+
+
+// Edit the list view row to match the information in this torrent item
+void torrentitem::Edit() {
+
+
+	log(make(L"edit ", numerals((LPARAM)this)));
+
+
+	// Update the cells that have different text
+	ListEdit(
+		Handle.list,
+		5,
+		(LPARAM)this,
+		ComposeStatusIcon(),
+		ComposeStatus() + L" edit",
+		ComposeNameIcon(),
+		ComposeName(),
+		ComposeSize(),
+		ComposeHash(),
+		ComposePath(),
+		L"");
+}
 
 
 

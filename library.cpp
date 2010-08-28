@@ -289,14 +289,14 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 	torrentitem t = AddTorrentLibrary(folder, torrent, hash, name, tracker, store);
 	if (!t.handle.is_valid()) return;
 
-	// add it to the program's list
+	// copy it into the program's list
 	Data.torrents.push_back(t);
 
 	// add it to the list view
 	ListAdd(
 		Handle.list,
 		5,
-		(LPARAM)&t,
+		(LPARAM)&(Data.torrents.back()),
 		t.ComposeStatusIcon(),
 		t.ComposeStatus(),
 		t.ComposeNameIcon(),
@@ -305,6 +305,8 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 		t.ComposeHash(),
 		t.ComposePath(),
 		L"");
+
+	log(make(L"added ", numerals((LPARAM)&(Data.torrents.back()))));
 }
 
 

@@ -1385,6 +1385,14 @@ void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2,
 	column1.iImage = icon1;
 	column2.iImage = icon2;
 
+
+
+	if (!same(ListText(window, row, 0), r1))
+		log(make(L"different ", ListText(window, row, 0), L" from ", r1));
+
+
+
+
 	// Set the columns that have different text
 	if (columns >= 1 && !same(ListText(window, row, 0), r1) && !ListView_SetItem(window, &column1)) error(L"listview_setitem");
 	if (columns >= 2 && !same(ListText(window, row, 1), r2) && !ListView_SetItem(window, &column2)) error(L"listview_setitem");
