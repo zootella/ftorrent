@@ -346,89 +346,43 @@ void AreaPopDown() {
 	State.pop--;
 }
 
+// Given a list of ints like -5, -4, 120, 200
+// Turns negative weights into positive pixel widths based on how wide the window is on the screen
+// Returns a list with all positive pixel widths
+std::vector<int> SizeColumns(std::vector<int> w) {
 
-
-
-
-std::vector<int> SizeColumns(std::vector<int> weights) {
+	// Total given weight and pixel widths
+	int totalweight = 0;
+	int assignedwidth = 0;
+	for (int i = 0; i < (int)w.size(); i++) {
+		if (w[i] < 0) {
+			totalweight += -w[i];  // Negative, a weight
+		} else {
+			assignedwidth += w[i]; // Positive, a width already assigned
+		}
+	}
 
 	// Measure total pixel width, making the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
-	int totalwidth =
-		SizeClient().w -                      // The main window has a size even before it's on the screen
-		(2 * GetSystemMetrics(SM_CXVSCROLL)); // The width of the vertical scroll bar, like 16 pixels
-
-	// Total given weight
-	int totalweight = 0;
-	for (int i = 0; i < (int)weights.size(); i++)
-		totalweight += weights[i];
-	if (totalweight < 1) totalweight = 1;
+	int totalwidth = SizeClient().w            // The main window has a size even before it's on the screen
+		- (2 * GetSystemMetrics(SM_CXVSCROLL)) // 2 widths of the vertical scroll bar like 16 pixels
+		- assignedwidth;                       // Already assigned column widths
 
 	// Calculate pixel width for each weight unit
-	int w = totalwidth / totalweight;
+	int e = 0;
+	if (totalweight > 0)
+		e = totalwidth / totalweight;
 
-	// Calculate each column width
-	std::vector<int> widths;
-	for (int i = 0; i < (int)weights.size(); i++) {
-
-		int width = weights[i] * w;
-		if (width < 100) width = 100; // Enforce a minimum width
-		widths.push_back(width);
+	// Turn weights into pixel widths
+	for (int i = 0; i < (int)w.size(); i++) {
+		if (w[i] < 0) { // Negative, a weight
+			w[i] = -(w[i] * e); // Turn it into a pixel width
+			if (w[i] < 32) { // Enforce a minimum width
+				w[i] = 32;
+			}
+		}
 	}
-	return widths;
+	return w;
 }
-
-
-
-
-// Suggest list column widths based on the width of the client area
-void SizeColumns(int *width1, int *width2, int *width3, int *width4, int *width5) {
-
-	// Set the widths of the columns
-	*width1 =   0; // Status
-	*width2 = 200; // Name
-	*width3 =   0; // Size
-	*width4 = 120; // Infohash
-	*width5 =   0; // Location
-
-	int weight1 = 5;
-	int weight2 = 0;
-	int weight3 = 4;
-	int weight4 = 0;
-	int weight5 = 6;
-
-	int minimum1 = 100;
-	int minimum2 = 100;
-	int minimum3 = 100;
-	int minimum4 = 100;
-	int minimum5 = 100;
-
-	int totalweight = weight1 + weight2 + weight3 + weight4;
-
-
-
-/*
-	if (*width1 < 100) *width1 = 100;
-	if (*width2 < 100) *width2 = 100;
-	if (*width3 < 100) *width3 = 100;
-
-	int x = SizeColumnsMeasure() - *width1 - *width2 - *width3 - *width4 - *width5;
-
-	*width1 = 
-
-	// Calculate the width of the other columns
-	int last = (client.w - *width1 - *width2 - *width3 - *width4 - *width5 - (scroll * 2));
-	if (last < 120) last = 120;
-	*width5 = last;
-	*/
-}
-
-// How many pixels wide all the list view columns should total
-int SizeColumnsMeasure() {
-
-}
-
-
-
 
 // Takes a number of pixels to move the bar
 // Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas

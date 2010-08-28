@@ -25,19 +25,18 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
-
-
 // Run a snippet of test code
 void Test() {
 
-	std::vector<int> weights;
-	weights.push_back(21);
-	weights.push_back(22);
-	weights.push_back(23);
-	weights.push_back(24);
-	weights.push_back(25);
+	std::vector<int> w;
+	w.push_back(21);
+	w.push_back(-1);
+	w.push_back(23);
+	w.push_back(-2);
+	w.push_back(25);
 
-	std::vector<int> widths = SizeColumnsAdvanced(weights);
+	std::vector<int> x = SizeColumns(w);
+
 
 
 
