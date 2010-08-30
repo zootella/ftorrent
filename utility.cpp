@@ -1425,35 +1425,15 @@ int ListFind(HWND window, LPARAM p) {
 // Returns the text
 CString ListText(HWND window, int row, int column) {
 
-	return L"";
-	//TODO check this in unicode before you use it
-	/*
-	// Make the buffer hold one more character than the longest text in the list view control to correctly read very long text
-	int characters = State.list.max + 1;
-
 	// Open a string
-	CString buffer_string;
-	int     buffer_characters = characters;
-	LPWSTR  buffer_write      = buffer_string.GetBuffer(buffer_characters + 1 +8); //TODO make it so you don't need SAFETY 8 anymore
+	CString s;
+	int     n = State.list.max + 1; // Add 1 character to have space to write the wide null terminator
+	LPWSTR  w = s.GetBuffer(n);
 
 	// Copy in the characters
-	LVITEM info;
-	ZeroMemory(&info, sizeof(info));
-	info.iImage     = row;
-	info.iSubItem   = column;
-	info.pszText    = buffer_write;
-	info.cchTextMax = characters;
-	int written;
-	written = (int)SendMessage(window, LVM_GETITEMTEXT, row, (LPARAM)&info);
-	buffer_write[written] = '\0';
-
-	// Close the string
-	buffer_write[buffer_characters] = '\0'; //TODO check memory with wide, can you do this without literal chars?
-	buffer_string.ReleaseBuffer();
-
-	// Return the string
-	return buffer_string;
-	*/
+	ListView_GetItemText(window, row, column, w, n); // Writes null terminator
+	s.ReleaseBuffer();
+	return s;
 }
 
 // Takes a file extension like ".zip" which can be blank
