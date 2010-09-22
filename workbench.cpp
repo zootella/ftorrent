@@ -55,7 +55,7 @@ void torrentitem::Edit() {
 	ListEdit(
 		Handle.list,
 		5,
-		(LPARAM)this,
+		(LPARAM)Hash(),
 		ComposeStatusIcon(),
 		ComposeStatus(),
 		ComposeNameIcon(),
@@ -84,14 +84,20 @@ int torrentitem::ComposeNameIcon() {
 	return Handle.icon.clear;
 }
 
+// This torrent's name
 CString torrentitem::ComposeName() {
-	return L"name text";
+	return widenStoC(handle.name());
 }
 
 CString torrentitem::ComposeSize() {
-	return L"size text";
+
+	sbig size = handle.get_torrent_info().total_size(); // libtorrent::size_type and sbig are both __int64
+	CString s = sbigtoC(size);
+	s = make(insertcommas(s), L" bytes");
+	return s;
 }
 
+// This torrent's infohash in base 16
 CString torrentitem::ComposeHash() {
 
 	return convertSha1HashToC(handle.info_hash());
@@ -101,7 +107,7 @@ CString torrentitem::ComposePath() {
 	return L"path text";
 }
 
-// Get the first 4 bytes of the infohash, 0 if not set
+// The first 4 bytes of the infohash in a DWORD
 DWORD torrentitem::Hash() {
 
 	return

@@ -298,7 +298,7 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 	ListAdd(
 		Handle.list,
 		5,
-		(LPARAM)&(Data.torrents.back()),
+		(LPARAM)t.Hash(),
 		t.ComposeStatusIcon(),
 		t.ComposeStatus(),
 		t.ComposeNameIcon(),
@@ -307,8 +307,6 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 		t.ComposeHash(),
 		t.ComposePath(),
 		L"");
-
-	log(make(L"added ", numerals((LPARAM)&(Data.torrents.back()))));
 }
 
 

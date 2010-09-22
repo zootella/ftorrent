@@ -42,6 +42,24 @@ void print(std::vector<torrentitem> v) {
 // Run a snippet of test code
 void Test() {
 
+	AddTorrent(
+		L"C:\\Documents\\test",       // folder
+		L"C:\\Documents\\my.torrent", // torrent
+		NULL,  // magnet hash
+		NULL,  //        name
+		NULL,  //        tracker
+		NULL); // store file from before
+
+	/*
+	// convert some big numbers to text
+	sbig n = 0xffffffffffffffff;
+	log(L"the signed number in base 10 is ", sbigtoC(n, 10));
+	log(L"the signed number in base 16 is ", sbigtoC(n, 16));
+
+	ubig n2 = 0xffffffffffffffff;
+	log(L"the unsigned number in base 10 is ", ubigtoC(n2, 10));
+	log(L"the unsigned number in base 16 is ", ubigtoC(n2, 16));
+
 	/*
 	//let's move 4 unsigned char into a dword
 
@@ -79,14 +97,6 @@ void Test() {
 	log(ListText(Handle.list, 0, 3));
 	log(ListText(Handle.list, 0, 4));
 	*/
-
-	AddTorrent(
-		L"C:\\Documents\\test",       // folder
-		L"C:\\Documents\\my.torrent", // torrent
-		NULL,  // magnet hash
-		NULL,  //        name
-		NULL,  //        tracker
-		NULL); // store file from before
 
 
 

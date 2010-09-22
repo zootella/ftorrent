@@ -4,6 +4,8 @@ CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5
 CString upper(read r);
 CString lower(read r);
 int number(read r);
+CString ubigtoC(ubig number, int base = 10); // Has defaults
+CString sbigtoC(sbig number, int base = 10); // Has defaults
 CString numerals(int number, int width = 0, int base = 10); // Has defaults
 CString base16(DWORD number);
 bool is(read r);

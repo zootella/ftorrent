@@ -62,6 +62,22 @@ int number(read r) {
 	return _wtoi(r); // Use function like atoi
 }
 
+// Convert the unsigned 64 bit number into text numerals using base 10 or 16
+CString ubigtoC(ubig number, int base) {
+
+	WCHAR bay[MAX_PATH];
+	_ui64tow_s(number, bay, MAX_PATH, base);
+	return bay;
+}
+
+// Convert the signed 64 bit number into text numerals using base 10 or 16
+CString sbigtoC(sbig number, int base) {
+
+	WCHAR bay[MAX_PATH];
+	_i64tow_s(number, bay, MAX_PATH, base);
+	return bay;
+}
+
 // Takes a number and width like 3 for 001, base 10 or 16
 // Writes the minus sign and number into text
 // Returns a string
@@ -75,7 +91,6 @@ CString numerals(int number, int width, int base) {
 		while (length(s) < width)
 			s = L"0" + s; // Loop until we've put enough 0s at the start
 	}
-
 	return s;
 }
 
