@@ -91,10 +91,10 @@ CString torrentitem::ComposeName() {
 
 CString torrentitem::ComposeSize() {
 
-	sbig size = handle.get_torrent_info().total_size(); // libtorrent::size_type and sbig are both __int64
-	CString s = sbigtoC(size);
-	s = make(insertcommas(s), L" bytes");
-	return s;
+	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
+	sbig size = handle.get_torrent_info().total_size();
+
+	return make(insertcommas(sbigtoC(done)), L"/", insertcommas(sbigtoC(size)), L" bytes");
 }
 
 // This torrent's infohash in base 16
