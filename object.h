@@ -175,10 +175,13 @@ public:
 class torrentitem {
 public:
 
+	DWORD id;
+
 	libtorrent::torrent_handle handle;
 
 	// New
 	torrentitem() {
+		id = 0;
 
 	}
 
@@ -191,6 +194,8 @@ public:
 	CString ComposeSize();
 	CString ComposeHash();
 	CString ComposePath();
+
+	DWORD Hash();
 
 
 

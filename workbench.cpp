@@ -51,17 +51,13 @@ void ListPulse() {
 // Edit the list view row to match the information in this torrent item
 void torrentitem::Edit() {
 
-
-	log(make(L"edit ", numerals((LPARAM)this)));
-
-
 	// Update the cells that have different text
 	ListEdit(
 		Handle.list,
 		5,
 		(LPARAM)this,
 		ComposeStatusIcon(),
-		ComposeStatus() + L" edit",
+		ComposeStatus(),
 		ComposeNameIcon(),
 		ComposeName(),
 		ComposeSize(),
@@ -97,11 +93,22 @@ CString torrentitem::ComposeSize() {
 }
 
 CString torrentitem::ComposeHash() {
-	return L"hash text";
+
+	return convertSha1HashToC(handle.info_hash());
 }
 
 CString torrentitem::ComposePath() {
 	return L"path text";
+}
+
+// Get the first 4 bytes of the infohash, 0 if not set
+DWORD torrentitem::Hash() {
+
+	return
+		(((DWORD)handle.info_hash()[0]) << 24) |
+		(((DWORD)handle.info_hash()[1]) << 16) |
+		(((DWORD)handle.info_hash()[2]) <<  8) |
+		 ((DWORD)handle.info_hash()[3]);
 }
 
 

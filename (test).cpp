@@ -25,25 +25,60 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+
+
+void print(std::vector<torrentitem> v) {
+	log(L"print:");
+
+	for (int i = 0; i < (int)v.size(); i++) {
+		torrentitem *t = &(v[i]);
+
+		log(numerals(t->id), L" is at ", base16((LPARAM)t));
+	}
+}
+
+
+
 // Run a snippet of test code
 void Test() {
 
+	/*
+	//let's move 4 unsigned char into a dword
 
+	BYTE c1 = 0x01;
+	BYTE c2 = 0x02;
+	BYTE c3 = 0x03;
+	BYTE c4 = 0x04;
+
+	DWORD d = (((DWORD)c1) << 24) | (((DWORD)c2) << 16) | (((DWORD)c3) << 8) | ((DWORD)c4);
+
+	log(base16(d));
+
+	/*
+	std::vector<torrentitem> v;
+
+	torrentitem t1, t2, t3;
+	t1.id = 1;
+	t2.id = 2;
+	t3.id = 3;
+	v.push_back(t1);
+	v.push_back(t2);
+	v.push_back(t3);
+	print(v);
+
+	v.erase(v.begin() + 1);
+	print(v);
+	*/
+
+	/*
 	ListAdd(Handle.list, 5, (LPARAM)0xaabbccdd, Handle.icon.clear, L"a", Handle.icon.clear, L"bb", L"ccc", L"dddd", L"eeeee", NULL);
-
 
 	log(ListText(Handle.list, 0, 0));
 	log(ListText(Handle.list, 0, 1));
 	log(ListText(Handle.list, 0, 2));
 	log(ListText(Handle.list, 0, 3));
 	log(ListText(Handle.list, 0, 4));
-
-
-
-
-
-
-	/*
+	*/
 
 	AddTorrent(
 		L"C:\\Documents\\test",       // folder
@@ -52,11 +87,6 @@ void Test() {
 		NULL,  //        name
 		NULL,  //        tracker
 		NULL); // store file from before
-
-		*/
-
-
-
 
 
 

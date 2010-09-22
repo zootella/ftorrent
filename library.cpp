@@ -285,6 +285,8 @@ void LibraryClose() {
 
 void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
 
+	//TODO somewhre in here, look for duplicates
+
 	// add it to libtorrent
 	torrentitem t = AddTorrentLibrary(folder, torrent, hash, name, tracker, store);
 	if (!t.handle.is_valid()) return;

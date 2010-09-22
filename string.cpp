@@ -62,13 +62,13 @@ int number(read r) {
 	return _wtoi(r); // Use function like atoi
 }
 
-// Takes a number and width like 3 for 001
+// Takes a number and width like 3 for 001, base 10 or 16
 // Writes the minus sign and number into text
 // Returns a string
-CString numerals(int number, int width) {
+CString numerals(int number, int width, int base) {
 
 	WCHAR bay[MAX_PATH];
-	_itow_s(number, bay, MAX_PATH, 10); // The 10 is for base ten
+	_itow_s(number, bay, MAX_PATH, base);
 	CString s = bay;
 
 	if (width) {
@@ -77,6 +77,12 @@ CString numerals(int number, int width) {
 	}
 
 	return s;
+}
+
+// Turn a number into base 16 numerals like "0x11223344"
+CString base16(DWORD number) {
+
+	return "0x" + numerals(number, 8, 16);
 }
 
 // Takes text
