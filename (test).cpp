@@ -13,7 +13,7 @@
 
 // Include program
 #include "resource.h"
-#include "program.h"
+#include "define.h"
 #include "object.h"
 #include "library.h"
 #include "top.h"

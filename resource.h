@@ -2,9 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by ftorrent.rc
 //
-#define IDD_DIALOG1                     104
-#define IDC_TAB1                        1001
-
 #define IDC_BROWSE                      1013
 #define IDC_FOLDER                      1015
 #define IDC_EDIT                        1021
@@ -19,7 +16,8 @@
 #define IDC_GET                         1073
 #define IDC_GETTEXT                     1074
 #define IDC_GETSPIN                     1075
-
+#define IDC_CHECK2                      1077
+#define IDC_CHECK1                      1078
 #define ID_TASKBAR_RESTORE              40001
 #define ID_TASKBAR_EXIT                 40002
 #define ID_TOOLS_TEST                   40003
@@ -31,14 +29,13 @@
 #define ID_TOOLS_HELP                   40009
 #define ID_TOOLS_EXIT                   40010
 
-
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1076
+#define _APS_NEXT_CONTROL_VALUE         1079
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -191,15 +191,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dialog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\library.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\object.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\options.cpp"
 				>
 			</File>
 			<File
@@ -237,6 +237,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\define.h"
+				>
+			</File>
+			<File
 				RelativePath=".\function.h"
 				>
 			</File>
@@ -246,10 +250,6 @@
 			</File>
 			<File
 				RelativePath=".\object.h"
-				>
-			</File>
-			<File
-				RelativePath=".\program.h"
 				>
 			</File>
 			<File
