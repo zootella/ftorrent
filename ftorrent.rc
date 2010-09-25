@@ -130,11 +130,13 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Download"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_FOLDER,7,20,288,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse...",IDC_BROWSE,300,20,50,14
-    LTEXT           "Choose the folder where ftorrent saves files:",IDC_STATIC,7,7,146,9
-    CONTROL         "Ask where to save each torrent before downloading",IDC_CHECK1,
+    EDITTEXT        IDC_FOLDER,7,20,291,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,303,20,50,14
+    CONTROL         "&Ask where to save each torrent before downloading",IDC_CHECK1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,39,183,10
+    PUSHBUTTON      "&Choose ftorrent to open torrent files and magnet links",IDC_BUTTON1,7,76,195,14
+    LTEXT           "Download files to this folder:",IDC_STATIC,7,7,92,8
+    LTEXT           "ftorrent is not set as your default.",IDC_STATIC,7,63,111,8
 END
 
 OPTIONS_PAGE_2 DIALOGEX 0, 0, 360, 180
@@ -152,6 +154,17 @@ BEGIN
     PUSHBUTTON      "OK",IDCANCEL,59,100,50,14
 END
 
+DIALOG_REGISTER DIALOGEX 0, 0, 235, 47
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ftorrent"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,40,26,50,14
+    PUSHBUTTON      "&No",IDNO,94,26,50,14
+    PUSHBUTTON      "&Ask me next time",IDCANCEL,148,26,80,14
+    LTEXT           "Choose ftorrent to open torrent files and magnet links?",IDC_STATIC,7,7,177,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -161,9 +174,36 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO 
 BEGIN
+    "OPTIONS_PAGE_3", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 353
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
     "OPTIONS_PAGE_1", DIALOG
     BEGIN
-        BOTTOMMARGIN, 179
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 353
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    "OPTIONS_PAGE_2", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 353
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    "DIALOG_REGISTER", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
     END
 END
 #endif    // APSTUDIO_INVOKED

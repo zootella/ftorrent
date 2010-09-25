@@ -42,6 +42,13 @@ void print(std::vector<torrentitem> v) {
 // Run a snippet of test code
 void Test() {
 
+	int choice = Dialog(L"DIALOG_REGISTER"); // Enter IDYES, IDNO, or Ask X Escape are IDCANCEL
+	log(L"choice is ", numerals(choice));
+
+
+
+	/*
+
 	AddTorrent(
 		L"C:\\Documents\\test",       // folder
 		L"C:\\Documents\\my.torrent", // torrent

@@ -16,8 +16,9 @@
 #define IDC_GET                         1073
 #define IDC_GETTEXT                     1074
 #define IDC_GETSPIN                     1075
-#define IDC_CHECK2                      1077
 #define IDC_CHECK1                      1078
+#define IDC_BUTTON1                     1079
+#define ID_ASK                          1082
 #define ID_TASKBAR_RESTORE              40001
 #define ID_TASKBAR_EXIT                 40002
 #define ID_TOOLS_TEST                   40003
@@ -33,9 +34,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1079
+#define _APS_NEXT_CONTROL_VALUE         1083
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

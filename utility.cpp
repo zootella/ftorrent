@@ -933,7 +933,7 @@ void FileRun(read path, read parameters) {
 }
 
 
-// Takes a dialog box procedure function and resource name
+// Takes a dialog box resource name and procedure function
 // Shows the dialog box
 // Returns the result from the dialog box
 int Dialog(LPCTSTR resource, DLGPROC procedure, LPARAM lparam) {
@@ -963,14 +963,16 @@ BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM l
 	break;
 	case WM_COMMAND:
 
-		// The user clicked OK or Cancel
+		// The user clicked OK, Cancel, Yes, or No
 		switch (LOWORD(wparam)) {
 		case IDOK:
-		case IDCANCEL:
+		case IDCANCEL: // Cancel or the corner X
+		case IDYES:
+		case IDNO:
 
 			// Close the dialog
-			EndDialog(dialog, 0);
-			return true;
+			EndDialog(dialog, LOWORD(wparam)); // Have DialogBox() return what button the user clicked
+			return true; // We processed the message
 
 		break;
 		}
@@ -978,8 +980,7 @@ BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM l
 	break;
 	}
 
-	// Have windows process messages
-	return false;
+	return false; // We didn't process the message
 }
 
 // Takes a tab control child window that holds tabs, an index number 0+ for a new tab, and text to title it

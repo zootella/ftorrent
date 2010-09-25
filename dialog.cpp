@@ -65,198 +65,121 @@ void DialogOptions() {
 	AreaPopDown();
 }
 
-
-
-
+// A message from options page 1
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
 
-	// THE PAGE IS ABOUT TO BE DISPLAYED FOR THE FIRST TIME
+	// The page is about to be displayed
 	switch (message) {
 	case WM_INITDIALOG:
 
-		// LET THE SYSTEM SET THE FOCUS
-		return true;
+		return true; // Let the system set the focus
 
-	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
+	// The user clicked a button on the page
 	break;
 	case WM_COMMAND:
 
-		// THE USER CLICKED BROWSE
+		// Browse
 		switch (LOWORD(wparam)) {
 		case IDC_BROWSE:
 
-			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
-			return true;
+			return true; // We handled the message
 
-		// OTHERWISE TELL WINDOWS I DIDN'T HANDLE THE MESSAGE WITH FALSE
+		// Unknown command
 		break;
 		default:
 
-			return false;
+			return false; // We didn't handle the message
 
 		break;
 		}
 
-	// ONE OF THE BOTTOM PROPERTY SHEET BUTTONS WAS CLICKED
+	// The user clicked one of the bottom property sheet buttons
 	break;
 	case WM_NOTIFY:
 
-		// THE USER CLICKED OK
-		switch (((LPNMHDR)(ULONG_PTR)lparam)->code)
-		case PSN_APPLY:
-
-		break;
-
-	// THE USER PRESSED F1 OR USED CONTEXT SENSITIVE HELP
-	break;
-	case WM_HELP:
-
-	break;
-	}
-
-	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return false;
-}
-
-BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
-
-	// THE PAGE IS ABOUT TO BE DISPLAYED FOR THE FIRST TIME
-	switch (message) {
-	case WM_INITDIALOG:
-
-		// LET THE SYSTEM SET THE FOCUS
-		return true;
-
-	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
-	break;
-	case WM_COMMAND:
-
-		// THE USER CLICKED INTERNET OPTIONS
-		switch (LOWORD(wparam)) {
-		case IDC_INTERNET:
-
-			// INDICATE THAT THIS MESSAGE WAS PROCESSED WITH TRUE
-			return true;
-
-		// THE USER CHECKED THE USE CHECK BOX
-		break;
-		case IDC_CONNECTUSE:
-
-		// OTHERWISE TELL WINDOWS I DIDN'T HANDLE THE MESSAGE WITH FALSE
-		break;
-		default:
-
-			return false;
-
-		break;
-		}
-
-	// ONE OF THE BOTTOM PROPERTY SHEET BUTTONS WAS CLICKED
-	break;
-	case WM_NOTIFY:
-
-		// THE USER CLICKED OK
+		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_APPLY:
 
-			// MUST RETURN TRUE FROM APPLY
+			// Must return true from apply
 			SetWindowLong(dialog, DWL_MSGRESULT, true);
 
 		break;
 		}
 
-	// THE USER PRESSED F1 OR USED CONTEXT SENSITIVE HELP
-	break;
-	case WM_HELP:
-
 	break;
 	}
 
-	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return false;
+	return false; // We didn't handle the message
 }
 
-BOOL APIENTRY DialogOptionsPage3(HWND sheet, UINT message, UINT wparam, LPARAM lparam) {
+// A message from options page 2
+BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
 
-	// THE PAGE IS ABOUT TO BE DISPLAYED FOR THE FIRST TIME
+	// The page is about to be displayed
 	switch (message) {
 	case WM_INITDIALOG:
 
-		// LET THE SYSTEM SET THE FOCUS
-		return true;
+		return true; // Let the system set the focus
 
-	// A BUTTON WITHIN THE DIALOG BOX WAS CLICKED
+	// The user clicked a button on the page
 	break;
 	case WM_COMMAND:
 
-		// THE USER CLICKED ADD
-		switch (LOWORD(wparam)) {
-		case IDC_ADD:
-
-			return true;
-
-		// THE USER CLICKED EDIT
-		break;
-		case IDC_EDIT:
-
-			return true;
-
-		// THE USER CLICKED DELETE
-		break;
-		case IDC_DELETE:
-
-		break;
-		}
-
-	// ONE OF THE BOTTOM PROPERTY SHEET BUTTONS WAS CLICKED
+	// The user clicked one of the bottom property sheet buttons
 	break;
 	case WM_NOTIFY:
 
-		// THE STATE OF A ROW CHANGED
+		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
-		case LVN_ITEMCHANGED:
-
-			return true;
-
-		// THE USER DOUBLE CLICKED IN THE LIST VIEW CONTROL
-		break;
-		case NM_DBLCLK:
-
-			return true;
-
-		// THE USER PRESSED A KEY IN THE LIST VIEW CONTROL
-		break;
-		case LVN_KEYDOWN:
-
-			// DELETE
-			switch (((LPNMLVKEYDOWN)lparam)->wVKey) {
-			case VK_DELETE:
-
-			break;
-			}
-
-		// THE USER CLICKED OK
-		break;
 		case PSN_APPLY:
 
-			// MUST RETURN TRUE
-			SetWindowLong(sheet, DWL_MSGRESULT, true);
+			// Must return true from apply
+			SetWindowLong(dialog, DWL_MSGRESULT, true);
 
 		break;
 		}
-
-	// THE USER PRESSED F1 OR USED CONTEXT SENSITIVE HELP
-	break;
-	case WM_HELP:
 
 	break;
 	}
 
-	// IF A MESSAGE MAKES IT HERE, YOU DID NOT HANDLE IT
-	return false;
+	return false; // We didn't handle the message
 }
 
-// Dialog box procedure
+// A message from options page 3
+BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
+
+	// The page is about to be displayed
+	switch (message) {
+	case WM_INITDIALOG:
+
+		return true; // Let the system set the focus
+
+	// The user clicked a button on the page
+	break;
+	case WM_COMMAND:
+
+	// The user clicked one of the bottom property sheet buttons
+	break;
+	case WM_NOTIFY:
+
+		// The user clicked OK
+		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
+		case PSN_APPLY:
+
+			// Must return true from apply
+			SetWindowLong(dialog, DWL_MSGRESULT, true);
+
+		break;
+		}
+
+	break;
+	}
+
+	return false; // We didn't handle the message
+}
+
+// A message from the about box
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
 
 	// The dialog is about to be displayed
@@ -334,9 +257,5 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 	break;
 	}
 
-	// Have Windows process messages that make it down here
-	return false;
+	return false; // We didn't process the message
 }
-
-
-

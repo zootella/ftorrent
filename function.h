@@ -162,7 +162,7 @@ void AreaCommand(areaitem *area);
 void DialogOptions();
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
-BOOL APIENTRY DialogOptionsPage3(HWND sheet, UINT message, UINT wparam, LPARAM lparam);
+BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
 // Start

@@ -117,5 +117,3 @@ DWORD torrentitem::Hash() {
 		 ((DWORD)handle.info_hash()[3]);
 }
 
-
-
