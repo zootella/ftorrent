@@ -87,6 +87,8 @@ std::string narrowWtoS(std::wstring w) {
 // base 16 text like "e6a56670baae316ebf5d3ce91be729e8688f7256" and
 // libtorrent big_number and sha1_hash objects
 
+//TODO those two are typedefed the same, just use big_number
+
 libtorrent::big_number convertRtoBigNumber(read r) { return convertPtoBigNumber(narrowRtoS(r).c_str()); }
 libtorrent::sha1_hash convertRtoSha1Hash(read r) { return convertPtoSha1Hash(narrowRtoS(r).c_str()); }
 

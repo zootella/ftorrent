@@ -936,7 +936,7 @@ void FileRun(read path, read parameters) {
 // Takes a dialog box resource name and procedure function
 // Shows the dialog box
 // Returns the result from the dialog box
-int Dialog(LPCTSTR resource, DLGPROC procedure, LPARAM lparam) {
+int Dialog(read resource, DLGPROC procedure, LPARAM lparam) {
 
 	// Choose procedure
 	if (!procedure) procedure = DialogProcedure;
@@ -1499,6 +1499,31 @@ void DestroyIconSafely(HICON icon) {
 	if (icon && !DestroyIcon(icon)) error(L"destroyicon");
 }
 
+// Make a shortcut at path that runs target
+bool FileLink(read path, read target, read description) {
+
+	OleInitialize(NULL); // Use OLE
+	IShellLink *i1;
+	HRESULT result = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID *)&i1);
+	if (SUCCEEDED(result)) {
+
+		i1->SetPath(target);
+		i1->SetDescription(description);
+		IPersistFile *i2;
+		result = i1->QueryInterface(IID_IPersistFile, (LPVOID *)&i2);
+
+		if (SUCCEEDED(result)) {
+
+			WCHAR bay[MAX_PATH];
+			MultiByteToWideChar(CP_ACP, 0, path, -1, bay, MAX_PATH);
+			result = i2->Save(bay, true);
+			i2->Release();
+		}
+		i1->Release();
+	}
+	return SUCCEEDED(result);
+}
+
 // Generates a guid
 // Returns a string with the 32 lowercase hexidecimal characters of the guid, or blank if any error
 CString TextGuid() {
@@ -1525,25 +1550,66 @@ CString TextGuid() {
 	return s;                                                                                      // Return the string
 }
 
-// The path to the user's start menu programs folder
-// Like "C:\Documents and Settings\Name\Start Menu\Programs" on XP or "C:\Users\Name\AppData\Roaming\Microsoft\Windows\Start Menu\Programs" on 7
-CString PathStartPrograms() { return PathId(CSIDL_PROGRAMS); }
+//TODO write a function that looks at meta.*.db in the running folder, and returns a list of hash objects of everything it finds there
 
-// The path to the user's quick launch folder
-// Like "C:\Documents and Settings\Name\Application Data\Microsoft\Internet Explorer\Quick Launch" on XP or "C:\Users\Name\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch" on 7
-CString PathQuickLaunch() { return PathId(CSIDL_APPDATA) + L"\\Microsoft\\Internet Explorer\\Quick Launch"; } //TODO check this matches what you did in november
+// Paths next to this running exe
+/*
+PathPortable      "port.db"          The portable marker
+PathStore         "stor.db"          libtorrent session state
+PathOption        "optn.db"          Program options the user edits
 
-// The path to the user's desktop folder, like "C:\Documents and Settings\Name\Desktop" on XP or "C:\Users\Name\Desktop" on 7
-CString PathDesktop() { return PathId(CSIDL_DESKTOPDIRECTORY); }
+PathTorrentMeta   "meta.infohash.db" Copy of the torrent file
+PathTorrentStore  "stor.infohash.db" libtorrent resume data for the torrent
+PathTorrentOption "optn.infohash.db" Torrent options the user edits
+*/
+CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
+CString PathStore()    { return PathRunningFolder() + L"\\stor.db"; }
+CString PathOption()   { return PathRunningFolder() + L"\\optn.db"; }
 
-// The path to the user's documents folder, like "C:\Documents and Settings\Name\My Documents" on XP or "C:\Users\Name\Documents" on 7
-CString PathDocuments() { return PathId(CSIDL_MYDOCUMENTS); }
+CString PathTorrentMeta(libtorrent::sha1_hash hash)   { return PathRunningFolder() + L"\\meta." + convertSha1HashToC(hash) + L".db"; }
+CString PathTorrentStore(libtorrent::sha1_hash hash)  { return PathRunningFolder() + L"\\stor." + convertSha1HashToC(hash) + L".db"; }
+CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\optn." + convertSha1HashToC(hash) + L".db"; }
 
-// The path to the user's application data folder, like "C:\Documents and Settings\Name\Application Data" on XP or "C:\Users\Name\AppData\Roaming" on 7
-CString PathApplicationData() { return PathId(CSIDL_APPDATA); }
+// Shell paths
+/*
+PathDocuments       "C:\Documents and Settings\user\My Documents"                                                       "C:\Users\user\Documents"
+PathTorrents        "C:\Documents and Settings\user\My Documents\Torrents"                                              "C:\Users\user\Documents\Torrents"
+
+PathApplicationData "C:\Documents and Settings\user\Application Data"                                                   "C:\Users\user\AppData\Roaming"
+PathFolder          "C:\Documents and Settings\user\Application Data\name"                                              "C:\Users\user\AppData\Roaming\name"
+PathLaunch          "C:\Documents and Settings\user\Application Data\name\name.exe"                                     "C:\Users\user\AppData\Roaming\name.exe"
+
+PathLinkDesktop     "C:\Documents and Settings\user\Desktop\name.lnk"                                                   "C:\Users\user\Desktop\name.lnk"
+PathLinkStart       "C:\Documents and Settings\user\Start Menu\Programs\name.lnk"                                       "C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\name.lnk"
+PathLinkQuick       "C:\Documents and Settings\user\Application Data\Microsoft\Internet Explorer\Quick Launch\name.lnk" "C:\Users\user\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\name.lnk"
+*/
+CString PathDocuments()       { return PathShell(CSIDL_MYDOCUMENTS); }
+CString PathTorrents()        { return PathShell(CSIDL_MYDOCUMENTS) + L"\\Torrents"; }
+
+CString PathApplicationData() { return PathShell(CSIDL_APPDATA); }
+CString PathFolder()          { return PathShell(CSIDL_APPDATA)          + L"\\" + PROGRAM_NAME; }
+CString PathLaunch()          { return PathShell(CSIDL_APPDATA)          + L"\\" + PROGRAM_NAME + L"\\" + PROGRAM_NAME + L".exe"; }
+
+CString PathLinkDesktop()     { return PathShell(CSIDL_DESKTOPDIRECTORY) + L"\\" + PROGRAM_NAME + L".lnk"; }
+CString PathLinkStart()       { return PathShell(CSIDL_PROGRAMS)         + L"\\" + PROGRAM_NAME + L".lnk"; }
+CString PathLinkQuick()       { return PathShell(CSIDL_APPDATA) + L"\\Microsoft\\Internet Explorer\\Quick Launch\\" + PROGRAM_NAME + L".lnk"; }
+
+// The path to the folder this running exe is in, like "C:", "C:\folder", or "\\computer\share\folder", no trailing backslash, blank on error
+CString PathRunningFolder() {
+
+	return before(PathRunningFile(), L"\\", Reverse);
+}
+
+// The path to this running exe file like "C:\file.exe", "C:\folder\file.exe", or "\\computer\share\folder\file.exe", no trailing backslash, blank on error
+CString PathRunningFile() {
+
+	WCHAR bay[MAX_PATH];
+	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
+	return bay;
+}
 
 // Get the path to the special folder with the given id, or blank on error
-CString PathId(int id) {
+CString PathShell(int id) {
 
 	LPMALLOC memory;
 	LPITEMIDLIST list;
@@ -1564,45 +1630,3 @@ CString PathId(int id) {
 
 	return path; // Return the path we found, or blank on error
 }
-
-// The path to the folder this running exe is in, like "C:", "C:\folder", or "\\computer\share\folder", no trailing backslash, blank on error
-CString PathRunningFolder() {
-
-	return before(PathRunning(), L"\\", Reverse);
-}
-
-// The path to this running exe like "C:\file.exe", "C:\folder\file.exe", or "\\computer\share\folder\file.exe", no trailing backslash, blank on error
-CString PathRunning() {
-
-	WCHAR bay[MAX_PATH];
-	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
-	return bay;
-}
-
-// Path to port.db alongside this running exe, the portable marker
-CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
-
-// Path to stor.db alongside this running exe, holds libtorrent saved session state
-CString PathStore() { return PathRunningFolder() + L"\\stor.db"; }
-// Path to optn.db alongside this running exe, holds program options the user edits
-CString PathOption() { return PathRunningFolder() + L"\\optn.db"; }
-
-// Path to meta.infohash.db alongside this running exe, the program's copy of the torrent file
-CString PathTorrentMeta(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\meta." + convertSha1HashToC(hash) + L".db"; }
-// Path to stor.infohash.db alongside this running exe, holds resume data for the torrent
-CString PathTorrentStore(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\stor." + convertSha1HashToC(hash) + L".db"; }
-// Path to optn.infohash.db alongside this running exe, holds torrent options the user edits
-CString PathTorrentOption(libtorrent::sha1_hash hash) { return PathRunningFolder() + L"\\optn." + convertSha1HashToC(hash) + L".db"; }
-
-
-//write a function that looks at meta.*.db in the running folder, and returns a list of hash objects of everything it finds there
-//then, you can use the others to get the individual files
-
-
-
-
-
-
-
-
-

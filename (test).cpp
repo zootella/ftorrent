@@ -42,17 +42,19 @@ void print(std::vector<torrentitem> v) {
 }
 
 
-//make a function that takes a hash value and finds the torrentitem in Data.torrents, false if not found
+//TODO make a function that takes a hash value and finds the torrentitem in Data.torrents, false if not found
+
+//if its the default path, consider blanking it in case it changes again
 
 
 // Call when the program starts up
 // Reads the optn.db file next to this running exe, and loads values in Data
-void LoadOption() {
+void OptionLoad() {
 
 	libtorrent::entry d;
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
-		Data.path = d[narrowRtoS(L"path")];
+		Data.path = widenStoC(d[narrowRtoS(L"path")].string());
 		log(L"loaded: ", Data.path);
 
 	} else { // Not loaded, use factory defaults
@@ -64,7 +66,7 @@ void LoadOption() {
 
 // Call when the program is shutting down
 // Saves values from Data to optn.db next to this running exe
-void SaveOption() {
+void OptionSave() {
 
 	libtorrent::entry::dictionary_type d;
 	d[narrowRtoS(L"path")] = narrowRtoS(Data.path);
@@ -77,9 +79,9 @@ void SaveOption() {
 void Test() {
 
 
-	SaveOption();
+	OptionSave();
 
-	LoadOption();
+	OptionLoad();
 
 	/*
 
@@ -189,42 +191,13 @@ void Test() {
 
 
 
-/*
-void LoadOption() {
-
-	/*
-
-	CString option = PathOption();
-
-	libtorrent::entry e;
-	e.construct(dictionary_type);
-
-	LoadEntry(PathOption(), e));
-
-	e.dict(
-
-
-	Data.path = L"C:";
-	*/
-
-/*
-}
-*/
-
-/*
-
-void SaveOption() {
-
-	libtorrent::entry::string_type name, value;
-	name = narrowRtoS(L"path");
-	value = narrowRtoS(L"documents");
-
-	libtorrent::entry::dictionary_type d;
-	d.insert(name, value);
 
 
 
 
-}
 
-*/
+
+
+
+
+

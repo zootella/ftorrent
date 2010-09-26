@@ -95,7 +95,7 @@ void InitializeCommonControls();
 void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
 void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
 void FileRun(read path, read parameters = L""); // Has defaults
-int Dialog(LPCTSTR resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Has defaults
+int Dialog(read resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Has defaults
 BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void AddTab(HWND window, int index, read title);
 void SetIcon(HWND window, HICON icon16, HICON icon32);
@@ -127,21 +127,25 @@ CString ListText(HWND window, int row, int column);
 bool ShellInfo(read ext, int *systemindex, CString *type);
 bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
+bool FileLink(read path, read target, read description);
 CString TextGuid();
-CString PathStartPrograms();
-CString PathQuickLaunch();
-CString PathDesktop();
-CString PathDocuments();
-CString PathApplicationData();
-CString PathId(int id);
-CString PathRunningFolder();
-CString PathRunning();
 CString PathPortable();
 CString PathStore();
 CString PathOption();
 CString PathTorrentMeta(libtorrent::sha1_hash hash);
 CString PathTorrentStore(libtorrent::sha1_hash hash);
 CString PathTorrentOption(libtorrent::sha1_hash hash);
+CString PathDocuments();
+CString PathTorrents();
+CString PathApplicationData();
+CString PathFolder();
+CString PathLaunch();
+CString PathLinkDesktop();
+CString PathLinkStart();
+CString PathLinkQuick();
+CString PathRunningFolder();
+CString PathRunningFile();
+CString PathShell(int id);
 
 // Paint
 void PaintWindow(deviceitem *device);

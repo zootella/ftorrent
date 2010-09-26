@@ -223,7 +223,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\workbench.cpp"
+				RelativePath=".\workbench1.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\workbench2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\workbench3.cpp"
 				>
 			</File>
 			<File
