@@ -146,6 +146,7 @@ CString PathLinkQuick();
 CString PathRunningFolder();
 CString PathRunningFile();
 CString PathShell(int id);
+CString FileBrowse(read display);
 
 // Paint
 void PaintWindow(deviceitem *device);
@@ -161,6 +162,8 @@ void Size(int move = 0); // Has defaults
 
 // Command
 void AreaCommand(areaitem *area);
+void OptionLoad();
+void OptionSave();
 
 // Dialog
 void DialogOptions();

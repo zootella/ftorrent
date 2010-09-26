@@ -1628,3 +1628,30 @@ CString PathShell(int id) {
 
 	return path; // Return the path we found, or blank on error
 }
+
+// Takes text to show the user in the dialog box
+// Displays the browse for folder dialog box
+// Returns the path the user chose, or blank if cancel or error
+CString FileBrowse(read display) {
+
+	// Show the box
+	OleInitialize(NULL); // If not already
+	WCHAR name[MAX_PATH];
+	BROWSEINFO info;
+	ZeroMemory(&info, sizeof(info));
+	info.hwndOwner      = Handle.window;        // Parent window for the dialog
+	info.pidlRoot       = NULL;                 // Browse from the desktop
+	info.pszDisplayName = name;                 // Destination buffer
+	info.lpszTitle      = display;              // Text to show the user
+	info.ulFlags        = BIF_RETURNONLYFSDIRS; // Only allow file system folders
+	info.lpfn           = NULL;                 // No callback function
+	info.lParam         = 0;                    // No lparam
+	info.iImage         = 0;                    // Filled with the icon index of the selected item
+	LPITEMIDLIST result = SHBrowseForFolder(&info);
+	if (!result) return L""; // The user cancelled the box
+
+	// Get the path of the folder the user chose
+	WCHAR bay[MAX_PATH];
+	SHGetPathFromIDList(result, bay);
+	return bay;
+}

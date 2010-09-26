@@ -115,7 +115,7 @@ public:
 	std::vector<torrentitem> torrents;
 
 
-	CString path; // Path to folder to save files
+	CString folder; // Path to folder to save files
 
 };
 

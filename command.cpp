@@ -60,3 +60,27 @@ void AreaCommand(areaitem *area) {
 
 	}
 }
+
+// Call when the program starts up
+// Reads the optn.db file next to this running exe, and loads values in Data
+void OptionLoad() {
+
+	libtorrent::entry d;
+	if (LoadEntry(PathOption(), d)) { // Loaded
+
+		// Read values
+		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string());
+	}
+
+	// Replace blank or invalid with factory defaults
+	if (isblank(Data.folder)) Data.folder = PathTorrents();
+}
+
+// Call when the program is shutting down
+// Saves values from Data to optn.db next to this running exe
+void OptionSave() {
+
+	libtorrent::entry::dictionary_type d;
+	d[narrowRtoS(L"folder")] = narrowRtoS(Data.folder);
+	SaveEntry(PathOption(), d);
+}

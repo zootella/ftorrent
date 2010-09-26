@@ -185,10 +185,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	// Start libtorrent
 	log(L"library start before");
-	LibraryStart();
+	LibraryStart(); // Start libtorrent
 	log(L"library start after");
+	OptionLoad(); // Load optn.db from last time into Data variables
 
 	// Message loop
 	MSG message;
@@ -211,9 +211,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		}
 	}
 
-	// Close libtorrent
+	OptionSave(); // Save Data varibles to optn.db for next time
 	log(L"library close before");
-	LibraryClose(); // This can be quick or take several seconds
+	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
 	log(L"library close after");
 
 	// Return the value from the quit message
@@ -255,17 +255,15 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	// The parts of the client area not covered by child window controls need to be painted
 	break;
 	case WM_PAINT:
-
+	{
 		// Paint the window
-		{
-			deviceitem device;
-			device.OpenPaint(window);
-			device.Font(Handle.font); // Replace the Windows 3.1 font with something more modern
-			device.BackgroundColor(Handle.background.color);
-			PaintWindow(&device);
-			return 0;
-		}
-
+		deviceitem device;
+		device.OpenPaint(window);
+		device.Font(Handle.font); // Replace the Windows 3.1 font with something more modern
+		device.BackgroundColor(Handle.background.color);
+		PaintWindow(&device);
+		return 0;
+	}
 	// A timer expired
 	break;
 	case WM_TIMER:

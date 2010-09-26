@@ -72,7 +72,8 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		return true; // Let the system set the focus
+		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Put the path in the text box
+		return true; // Let the system place the focus
 
 	// The user clicked a button on the page
 	break;
@@ -81,9 +82,11 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Browse
 		switch (LOWORD(wparam)) {
 		case IDC_BROWSE:
-
+		{
+			CString browse = FileBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files.")); // Show the dialog
+			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
-
+		}
 		// Unknown command
 		break;
 		default:
@@ -100,6 +103,9 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_APPLY:
+
+			// Save the contents of the dialog
+			Data.folder = TextDialog(dialog, IDC_FOLDER);
 
 			// Must return true from apply
 			SetWindowLong(dialog, DWL_MSGRESULT, true);
@@ -120,7 +126,7 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		return true; // Let the system set the focus
+		return true; // Let the system place the focus
 
 	// The user clicked a button on the page
 	break;
@@ -153,7 +159,7 @@ BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		return true; // Let the system set the focus
+		return true; // Let the system place the focus
 
 	// The user clicked a button on the page
 	break;
@@ -192,52 +198,50 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 	// The dialog needs to be painted
 	break;
 	case WM_PAINT:
-		
-		{
-			// Do custom painting in the dialog
-			deviceitem device;
-			device.OpenPaint(dialog);
-			device.BackgroundColor(Handle.background.color);
-			device.Font(Handle.arial);
+	{
+		// Do custom painting in the dialog
+		deviceitem device;
+		device.OpenPaint(dialog);
+		device.BackgroundColor(Handle.background.color);
+		device.Font(Handle.arial);
 
-			// Compose text
-			CString about = L"about " + PROGRAM_NAME;
+		// Compose text
+		CString about = L"about " + PROGRAM_NAME;
 
-			// Prepare rectangles
-			sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box
-			sizeitem blue = client; // Blue bar at top
-			blue.h = 23;
-			sizeitem white = client; // White area beneath
-			white.SetTop(blue.h);
-			sizeitem title = SizeText(&device, about); // Title above the edge
-			title.x = client.w - 8 - title.w;
-			title.y = -7;
-			title.SetBottom(blue.h);
+		// Prepare rectangles
+		sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box
+		sizeitem blue = client; // Blue bar at top
+		blue.h = 23;
+		sizeitem white = client; // White area beneath
+		white.SetTop(blue.h);
+		sizeitem title = SizeText(&device, about); // Title above the edge
+		title.x = client.w - 8 - title.w;
+		title.y = -7;
+		title.SetBottom(blue.h);
 
-			// Paint the rectangles
-			PaintFill(&device, blue, State.start.background.brush);
-			PaintText(&device, about, title, false, false, false, false, 0, Handle.arial, &State.start.ink, &State.start.background);
-			PaintFill(&device, white, Handle.background.brush);
+		// Paint the rectangles
+		PaintFill(&device, blue, State.start.background.brush);
+		PaintText(&device, about, title, false, false, false, false, 0, Handle.arial, &State.start.ink, &State.start.background);
+		PaintFill(&device, white, Handle.background.brush);
 
-			// Set heights
-			int text = Area.height; // Text height is usually 13
-			int space = 5;
+		// Set heights
+		int text = Area.height; // Text height is usually 13
+		int space = 5;
 
-			// Size the text
-			sizeitem s = white;
-			s.SetLeft(89);
-			s.SetTop(46);
-			s.h = text;
+		// Size the text
+		sizeitem s = white;
+		s.SetLeft(89);
+		s.SetTop(46);
+		s.h = text;
 
-			// Paint the text
-			device.Font(Handle.font);
-			PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-			PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
-			PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-			PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
-			return false;
-		}
-
+		// Paint the text
+		device.Font(Handle.font);
+		PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
+		PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+		PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
+		PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+		return false;
+	}
 	// The message is a command
 	break;
 	case WM_COMMAND:

@@ -42,46 +42,20 @@ void print(std::vector<torrentitem> v) {
 }
 
 
+//TODO now you're thinking that Data.torrents should be a vector that holds pointers to torrentitems
+//new and delete are worth being able to return null or a pointer to an object
+
+
 //TODO make a function that takes a hash value and finds the torrentitem in Data.torrents, false if not found
 
 //if its the default path, consider blanking it in case it changes again
 
-
-// Call when the program starts up
-// Reads the optn.db file next to this running exe, and loads values in Data
-void OptionLoad() {
-
-	libtorrent::entry d;
-	if (LoadEntry(PathOption(), d)) { // Loaded
-
-		Data.path = widenStoC(d[narrowRtoS(L"path")].string());
-		log(L"loaded: ", Data.path);
-
-	} else { // Not loaded, use factory defaults
-
-		Data.path = PathDocuments() + L"\\Torrents";
-		log(L"factory default: ", Data.path);
-	}
-}
-
-// Call when the program is shutting down
-// Saves values from Data to optn.db next to this running exe
-void OptionSave() {
-
-	libtorrent::entry::dictionary_type d;
-	d[narrowRtoS(L"path")] = narrowRtoS(Data.path);
-	SaveEntry(PathOption(), d);
-}
 
 
 
 // Run a snippet of test code
 void Test() {
 
-
-	OptionSave();
-
-	OptionLoad();
 
 	/*
 
