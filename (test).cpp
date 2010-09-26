@@ -27,6 +27,10 @@ extern statetop  State;
 
 
 
+
+
+
+
 void print(std::vector<torrentitem> v) {
 	log(L"print:");
 
@@ -38,10 +42,83 @@ void print(std::vector<torrentitem> v) {
 }
 
 
+//make a function that takes a hash value and finds the torrentitem in Data.torrents, false if not found
+
+
+// Call when the program starts up
+// Reads the optn.db file next to this running exe, and loads values in Data
+void LoadOption() {
+
+	libtorrent::entry d;
+	if (LoadEntry(PathOption(), d)) { // Loaded
+
+		Data.path = d[narrowRtoS(L"path")];
+		log(L"loaded: ", Data.path);
+
+	} else { // Not loaded, use factory defaults
+
+		Data.path = PathDocuments() + L"\\Torrents";
+		log(L"factory default: ", Data.path);
+	}
+}
+
+// Call when the program is shutting down
+// Saves values from Data to optn.db next to this running exe
+void SaveOption() {
+
+	libtorrent::entry::dictionary_type d;
+	d[narrowRtoS(L"path")] = narrowRtoS(Data.path);
+	SaveEntry(PathOption(), d);
+}
+
+
 
 // Run a snippet of test code
 void Test() {
 
+
+	SaveOption();
+
+	LoadOption();
+
+	/*
+
+	m.
+	std::map<CString, CString>::iterator i = m.find(L"color");
+	if (i != stringCounts.end()) {
+
+		log(i->first, i->second);
+
+	}
+
+
+
+
+	/*
+	libtorrent::entry e;
+	libtorrent::entry::dictionary_type d = e.dict();
+	d.insert(
+
+	libtorrent::entry::dictionary_type::const_iterator i;
+	i = dict.find("announce");
+	if (i != dict.end()) {
+
+		std::string tracker_url = i->second.string();
+		std::cout << tracker_url << "\n";
+	}
+
+
+
+
+
+
+
+	/*
+
+	SaveEntry(PathOption(), d);
+
+
+	/*
 	int choice = Dialog(L"DIALOG_REGISTER"); // Enter IDYES, IDNO, or Ask X Escape are IDCANCEL
 	log(L"choice is ", numerals(choice));
 
@@ -108,3 +185,46 @@ void Test() {
 
 
 }
+
+
+
+
+/*
+void LoadOption() {
+
+	/*
+
+	CString option = PathOption();
+
+	libtorrent::entry e;
+	e.construct(dictionary_type);
+
+	LoadEntry(PathOption(), e));
+
+	e.dict(
+
+
+	Data.path = L"C:";
+	*/
+
+/*
+}
+*/
+
+/*
+
+void SaveOption() {
+
+	libtorrent::entry::string_type name, value;
+	name = narrowRtoS(L"path");
+	value = narrowRtoS(L"documents");
+
+	libtorrent::entry::dictionary_type d;
+	d.insert(name, value);
+
+
+
+
+}
+
+*/

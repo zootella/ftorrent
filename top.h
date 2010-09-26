@@ -114,6 +114,9 @@ public:
 
 	std::vector<torrentitem> torrents;
 
+
+	CString path; // Path to folder to save files
+
 };
 
 // Current program stage
