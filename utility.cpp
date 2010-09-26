@@ -1514,9 +1514,7 @@ bool FileLink(read path, read target, read description) {
 
 		if (SUCCEEDED(result)) {
 
-			WCHAR bay[MAX_PATH];
-			MultiByteToWideChar(CP_ACP, 0, path, -1, bay, MAX_PATH);
-			result = i2->Save(bay, true);
+			result = i2->Save(path, true);
 			i2->Release();
 		}
 		i1->Release();
