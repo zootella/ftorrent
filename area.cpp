@@ -39,45 +39,47 @@ void AreaCreate() {
 	HICON yellow32 = LoadIconResource(L"STAGE_YELLOW", 32, 32);
 
 	// Make colors
-	brushitem blue        = CreateBrush(RGB(  0, 102, 204));
-	brushitem lightblue   = CreateBrush(RGB( 51, 153, 255));
-	brushitem green       = CreateBrush(RGB(102, 204,  51));
-	brushitem lightgreen  = CreateBrush(RGB(153, 255, 102));
-	brushitem red         = CreateBrush(RGB(255, 102,  51));
-	brushitem lightred    = CreateBrush(RGB(255, 153, 102));
-	brushitem yellow      = CreateBrush(RGB(255, 204,   0));
-	brushitem lightyellow = CreateBrush(RGB(255, 255, 102));
+	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
+	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
+	Handle.green       = CreateBrush(RGB(102, 204,  51));
+	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
+	Handle.red         = CreateBrush(RGB(255, 102,  51));
+	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
+	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
+	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
+	Handle.rednotice   = CreateBrush(RGB(135,   0,   0));
+	Handle.greennotice = CreateBrush(RGB(  0, 135,   0));
 
 	// Assemble stages
 	State.start.title = PROGRAM_NAME;
 	State.start.icon16 = blue16;
 	State.start.icon32 = blue32;
-	State.start.ink = lightblue;
-	State.start.background = blue;
+	State.start.ink = Handle.lightblue;
+	State.start.background = Handle.blue;
 
 	State.downloading.title = L"downloading";
 	State.downloading.icon16 = blue16;
 	State.downloading.icon32 = blue32;
-	State.downloading.ink = lightblue;
-	State.downloading.background = blue;
+	State.downloading.ink = Handle.lightblue;
+	State.downloading.background = Handle.blue;
 
 	State.paused.title = L"paused";
 	State.paused.icon16 = yellow16;
 	State.paused.icon32 = yellow32;
-	State.paused.ink = lightyellow;
-	State.paused.background = yellow;
+	State.paused.ink = Handle.lightyellow;
+	State.paused.background = Handle.yellow;
 
 	State.seeding.title = L"seeding";
 	State.seeding.icon16 = green16;
 	State.seeding.icon32 = green32;
-	State.seeding.ink = lightgreen;
-	State.seeding.background = green;
+	State.seeding.ink = Handle.lightgreen;
+	State.seeding.background = Handle.green;
 
 	State.missing.title = L"missing";
 	State.missing.icon16 = red16;
 	State.missing.icon32 = red32;
-	State.missing.ink = lightred;
-	State.missing.background = red;
+	State.missing.ink = Handle.lightred;
+	State.missing.background = Handle.red;
 
 	// Text size
 	deviceitem device;

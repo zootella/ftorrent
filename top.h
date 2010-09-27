@@ -54,6 +54,7 @@ public:
 	HFONT font, underline, arial;
 
 	// Colors
+	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, greennotice; // Defined colors
 	brushitem face, shadow, background, ink, select; // Shell brushes
 	brushitem line; // Mixed color brush
 
