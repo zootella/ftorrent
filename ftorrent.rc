@@ -136,7 +136,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,39,183,10
     PUSHBUTTON      "&Choose ftorrent to open torrent files and magnet links",IDC_CHOOSE,7,76,195,14
     LTEXT           "Download files to this folder:",IDC_STATIC,7,7,92,8
-    LTEXT           "ftorrent is not set as your default.",IDC_STATIC,7,63,195,8
+    LTEXT           "Message placeholder",IDC_MESSAGE,7,63,346,8,NOT WS_VISIBLE
 END
 
 OPTIONS_PAGE_2 DIALOGEX 0, 0, 360, 180
