@@ -44,17 +44,22 @@ void print(std::vector<torrentitem> v) {
 
 //TODO now you're thinking that Data.torrents should be a vector that holds pointers to torrentitems
 //new and delete are worth being able to return null or a pointer to an object
+//maybe not, just use Find() and Get() in order and it's the same thing
 
 
 //TODO make a function that takes a hash value and finds the torrentitem in Data.torrents, false if not found
 
-//if its the default path, consider blanking it in case it changes again
+
+
+
 
 
 
 
 // Run a snippet of test code
 void Test() {
+
+
 
 
 	/*

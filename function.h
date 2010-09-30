@@ -55,7 +55,6 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 void WindowSize(HWND window, int x, int y);
 void WindowMove(HWND window, sizeitem size, bool paint = false); // Has defaults
 void WindowEdit(HWND window, boolean edit);
-CString DialogBrowse(read display);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
 brushitem CreateBrush(COLORREF color);
 void PaintMessage(HWND window = NULL); // Has defaults
@@ -146,7 +145,9 @@ CString PathLinkQuick();
 CString PathRunningFolder();
 CString PathRunningFile();
 CString PathShell(int id);
-CString FileBrowse(read display);
+CString DialogBrowse(read message);
+CString DialogOpen();
+CString DialogSave(read suggest);
 
 // Paint
 void PaintWindow(deviceitem *device);

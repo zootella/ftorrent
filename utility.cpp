@@ -270,36 +270,6 @@ void WindowEdit(HWND window, boolean edit) {
 		0);             // Not used, must be 0
 }
 
-// Takes text to display in the dialog box
-// Shows the user the browse for folder dialog box
-// Returns the path the user chose, blank on cancel or error
-CString DialogBrowse(read display) {
-
-	// Setup information for the dialog box
-	WCHAR name[MAX_PATH];
-	BROWSEINFO info;
-	ZeroMemory(&info, sizeof(info));
-	info.hwndOwner      = Handle.window;        // Handle to parent window for the browse dialog
-	info.pidlRoot       = NULL;                 // Browse from the desktop
-	info.pszDisplayName = name;                 // Write the name of the chosen folder here
-	info.lpszTitle      = display;              // Text to display in the browse dialog
-	info.ulFlags        = BIF_RETURNONLYFSDIRS; // Only allow file system folders
-	info.lpfn           = NULL;                 // No callback function
-	info.lParam         = 0;                    // No program-defined value
-	info.iImage         = 0;                    // Will be filled with the icon index in the system image list
-
-	// Show the user the browse for folder system dialog box
-	CoInitialize(NULL);
-	LPITEMIDLIST list = SHBrowseForFolder(&info); // Returns memory we are responsible for freeing
-	if (!list) return L""; // The user clicked Cancel or the close X
-
-	// Get the path the user chose
-	WCHAR buffer[MAX_PATH];
-	SHGetPathFromIDList(list, buffer);
-	CoTaskMemFree(list); // Free the COM memory the system allocated for us
-	return buffer;
-}
-
 // Mix two colors in the given amounts
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 
@@ -1629,29 +1599,86 @@ CString PathShell(int id) {
 	return path; // Return the path we found, or blank on error
 }
 
-// Takes text to show the user in the dialog box
+// Takes a text message to show the user in the dialog box
 // Displays the browse for folder dialog box
 // Returns the path the user chose, or blank if cancel or error
-CString FileBrowse(read display) {
+CString DialogBrowse(read message) {
 
 	// Show the box
 	OleInitialize(NULL); // If not already
 	WCHAR name[MAX_PATH];
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
-	info.hwndOwner      = Handle.window;        // Parent window for the dialog
-	info.pidlRoot       = NULL;                 // Browse from the desktop
-	info.pszDisplayName = name;                 // Destination buffer
-	info.lpszTitle      = display;              // Text to show the user
-	info.ulFlags        = BIF_RETURNONLYFSDIRS; // Only allow file system folders
-	info.lpfn           = NULL;                 // No callback function
-	info.lParam         = 0;                    // No lparam
-	info.iImage         = 0;                    // Filled with the icon index of the selected item
-	LPITEMIDLIST result = SHBrowseForFolder(&info);
+	info.hwndOwner      = Handle.window;            // Parent window for the dialog
+	info.pidlRoot       = NULL;                     // Browse from the desktop
+	info.pszDisplayName = name;                     // Destination buffer
+	info.lpszTitle      = message;                  // Text to show the user in the box
+	info.ulFlags        = BIF_RETURNONLYFSDIRS |    // Only allow file system folders
+	                      BIF_NEWDIALOGSTYLE;       // Use the new dialog that sizes makes folders
+	info.lpfn           = NULL;                     // No callback function
+	info.lParam         = 0;                        // No lparam
+	info.iImage         = 0;                        // Filled with the icon index of the selected item
+	LPITEMIDLIST result = SHBrowseForFolder(&info); // May be really slow in Visual Studio, but double clicking the exe is fine
 	if (!result) return L""; // The user cancelled the box
 
 	// Get the path of the folder the user chose
 	WCHAR bay[MAX_PATH];
 	SHGetPathFromIDList(result, bay);
 	return bay;
+}
+
+// Show the user the file open dialog to get them to pick a torrent file
+// Returns the path to the torrent file, or blank on cancel
+CString DialogOpen() {
+
+	// Filter and extension text for torrents
+	read filter = L"Torrents\0*.torrent\0\0"; // List ends with two wide terminators
+	read extension = L"torrent";
+	WCHAR path[MAX_PATH];
+	lstrcpy(path, L""); // Blank the buffer because the system reads initalization information there
+
+	// Show the user the dialog box
+	OPENFILENAME info;
+	ZeroMemory(&info, sizeof(info));
+	info.lStructSize = sizeof(info);  // Size of this structure to tell it what version we're using
+	info.hwndOwner   = Handle.window; // Main window handle to show the box above it
+	info.hInstance   = NULL;          // Not using a template handle
+	info.lpstrFilter = filter;        // File type text pairs terminated by two wide nulls
+	info.lpstrFile   = path;          // Destination buffer and size in characters
+	info.nMaxFile    = MAX_PATH;
+	info.Flags       =
+		OFN_DONTADDTORECENT |         // Don't add this document to the system's recently opened documents menu
+		OFN_FILEMUSTEXIST   |         // Only let the user open files that exist, not type a new path
+		OFN_PATHMUSTEXIST   |
+		OFN_HIDEREADONLY;             // Hide the read only checkbox
+	info.lpstrDefExt = extension;     // File extension to add if the user doesn't type one
+	int result = GetOpenFileName(&info);
+	if (!result) return L""; // The user canceled the box
+	return path;
+}
+
+// Takes a suggested file name, like "Suggested Name" without the extension
+// Shows the user the file save dialog to get them to save a torrent file
+// Returns the path to save the torrent file with the extension, or blank on cancel
+CString DialogSave(read suggest) {
+
+	// Filter and extension text for torrents
+	read filter = L"Torrents\0*.torrent\0\0"; // List ends with two wide terminators
+	read extension = L"torrent";
+	WCHAR path[MAX_PATH];
+	lstrcpy(path, suggest);
+
+	// Show the user the dialog box
+	OPENFILENAME info;
+	ZeroMemory(&info, sizeof(info));
+	info.lStructSize = sizeof(info);        // Size of this structure to tell it what version we're using
+	info.hwndOwner   = Handle.window;       // Main window handle to show the box above it
+	info.lpstrFilter = filter;              // File type text pairs terminated by two wide nulls
+	info.lpstrFile   = path;                // Destination buffer and size in characters
+	info.nMaxFile    = MAX_PATH;
+	info.Flags       = OFN_OVERWRITEPROMPT; // Warn the user if there's already a file at the path they pick
+	info.lpstrDefExt = extension;           // File extension to add if the user doesn't type one
+	int result = GetSaveFileName(&info);
+	if (!result) return L""; // The user canceled the box
+	return path;
 }

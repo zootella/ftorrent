@@ -120,7 +120,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		switch (LOWORD(wparam)) {
 		case IDC_BROWSE:
 		{
-			CString browse = FileBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files.")); // Show the dialog
+			CString browse = DialogBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files:")); // Show the dialog
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
 		}
