@@ -192,15 +192,26 @@ bool CheckFolder(read path) {
 
 
 
-void EnterPath(read path) {
+// Parse the infohash and name from the given magnet link
+bool LookLink(read link, libtorrent::big_number *hash, CString *name) {
 
-	log(L"enter ", path);
+	return true;
 }
 
-void EnterLink(read link) {
+// Read the torrent file at path to get its infohash and name
+bool LookPath(read path, libtorrent::big_number *hash, CString *name) {
 
-	log(L"enter ", link);
+	return true;
 }
+
+
+
+
+
+
+
+
+
 
 
 

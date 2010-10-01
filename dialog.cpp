@@ -25,6 +25,15 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+// Show a message box to the user
+void Message(int options, read r) {
+
+	// Show the message box with the mouse away
+	AreaPopUp();
+	MessageBox(Handle.window, r, PROGRAM_NAME, options);
+	AreaPopDown();
+}
+
 // A message from the add box
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
 
@@ -53,7 +62,7 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 			} else {
 
 				// Looks invalid, pop a message box above this dialog, and keep it open
-				MessageBox(Handle.window, L"Not a valid magnet link. Check the text and try again.", PROGRAM_NAME, MB_ICONEXCLAMATION | MB_OK);
+				Message(MB_ICONWARNING | MB_OK, L"Not a valid magnet link. Check the text and try again.");
 			}
 		}
 		// The user clicked Cancel
@@ -184,7 +193,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 			} else {
 
-				MessageBox(Handle.window, L"Unable to save files to the folder at '" + s + "'. Check the path and try again.", PROGRAM_NAME, MB_ICONEXCLAMATION | MB_OK);
+				Message(MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + s + "'. Check the path and try again.");
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_INVALID); // Keep the property sheet open so the user can fix the invalid data
 				return true;
 			}

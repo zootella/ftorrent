@@ -177,6 +177,7 @@ void CommandAdd();
 void CommandNew();
 
 // Dialog
+void Message(int options, read r);
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void DialogOptions();
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);

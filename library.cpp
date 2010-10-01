@@ -274,34 +274,6 @@ void LibraryClose() {
 	}
 }
 
-
-void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
-
-	//TODO somewhre in here, look for duplicates
-
-	// add it to libtorrent
-	torrentitem t = AddTorrentLibrary(folder, torrent, hash, name, tracker, store);
-	if (!t.handle.is_valid()) return;
-
-	// copy it into the program's list
-	Data.torrents.push_back(t);
-
-	// add it to the list view
-	ListAdd(
-		Handle.list,
-		5,
-		(LPARAM)t.Hash(),
-		t.ComposeStatusIcon(),
-		t.ComposeStatus(),
-		t.ComposeNameIcon(),
-		t.ComposeName(),
-		t.ComposeSize(),
-		t.ComposeHash(),
-		t.ComposePath(),
-		L"");
-}
-
-
 // Add a torrent to our libtorrent session
 // folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
 // torrent is the path to the torrent file on the disk
@@ -313,6 +285,7 @@ torrentitem AddTorrentLibrary(read folder, read torrent, read hash, read name, r
 
 	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
 	torrentitem t;
+	//TODO change this to write in t and return true
 
 	try {
 

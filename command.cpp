@@ -92,17 +92,13 @@ void OptionSave() {
 	SaveEntry(PathOption(), d);
 }
 
-void CommandOpen() {
 
-	CString path = DialogOpen();
-	if (isblank(path)) return;
-	EnterPath(path);
-}
 
-void CommandAdd() {
 
-	Dialog(L"DIALOG_ADD", DialogAdd);
-}
+
+
+
+
 
 void CommandNew() {
 
