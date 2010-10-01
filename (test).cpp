@@ -177,6 +177,41 @@ void Test() {
 
 
 
+// True if the given text looks like a good magnet link
+bool CheckMagnet(read link) {
+
+	return starts(link, L"magnet:", Matching); // Just require it to start with the magnet protocol
+}
+
+// True if the given path is to a folder we can make and write in
+bool CheckFolder(read path) {
+
+	return DiskFolder(path, true, true);
+}
+
+
+
+
+void EnterPath(read path) {
+
+	log(L"enter ", path);
+}
+
+void EnterLink(read link) {
+
+	log(L"enter ", link);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -117,6 +117,12 @@ public:
 
 
 	CString folder; // Path to folder to save files
+	bool ask; // True to ask where to save each torrent
+
+	datatop() {
+		ask = false;
+
+	}
 
 };
 

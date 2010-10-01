@@ -34,8 +34,7 @@ void sizeitem::Screen(HWND window) {
 	if (!window) window = Handle.window;
 
 	// Make a point with the x and y coordinates of this size item
-	POINT p;
-	p = Point();
+	POINT p = Point();
 
 	// Convert the point
 	sizeitem size;
@@ -55,8 +54,7 @@ void sizeitem::Client(HWND window) {
 	if (!window) window = Handle.window;
 
 	// Make a point with the x and y coordinates of this size item
-	POINT p;
-	p = Point();
+	POINT p = Point();
 
 	// Convert the point
 	sizeitem size;

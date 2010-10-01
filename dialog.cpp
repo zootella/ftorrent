@@ -25,6 +25,53 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+// A message from the add box
+BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
+
+	// The dialog is about to be displayed
+	switch (message) {
+	case WM_INITDIALOG:
+
+		return true; // Let the system place the focus
+
+	// The message is a command
+	break;
+	case WM_COMMAND:
+
+		// The user clicked OK
+		switch (LOWORD(wparam)) {
+		case IDOK:
+		{
+			CString s = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
+			if (CheckMagnet(s)) { // See if it looks like a valid magnet link or not
+
+				// Looks valid
+				EnterLink(s); // Add it to the program
+				EndDialog(dialog, 0); // Close the dialog
+				return true;
+				
+			} else {
+
+				// Looks invalid, pop a message box above this dialog, and keep it open
+				MessageBox(Handle.window, L"Not a valid magnet link. Check the text and try again.", PROGRAM_NAME, MB_ICONEXCLAMATION | MB_OK);
+			}
+		}
+		// The user clicked Cancel
+		break;
+		case IDCANCEL:
+			
+			EndDialog(dialog, 0); // Close the dialog
+			return true;
+
+		break;
+		}
+
+	break;
+	}
+
+	return false; // We didn't process the message
+}
+
 // Shows the options dialog box
 void DialogOptions() {
 
@@ -70,15 +117,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 	// The page is about to be displayed
 	switch (message) {
-	case WM_INITDIALOG:
+	break; case WM_INITDIALOG: {
 
+		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED);
 		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Put the path in the text box
 		return true; // Let the system place the focus
-
+	}
 	// The dialog needs to be painted
-	break;
-	case WM_PAINT:
-	{
+	break; case WM_PAINT: {
+
 		// Pick the red or green message
 		CString message;
 		brushitem *brush;
@@ -113,46 +160,46 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		return false;
 	}
 	// The user clicked a button on the page
-	break;
-	case WM_COMMAND:
+	break; case WM_COMMAND: {
 
 		// Browse
 		switch (LOWORD(wparam)) {
-		case IDC_BROWSE:
-		{
+		break; case IDC_BROWSE: {
+
 			CString browse = DialogBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files:")); // Show the dialog
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
-		}
-		// Unknown command
-		break;
-		default:
-
-			return false; // We didn't handle the message
-
-		break;
-		}
-
-	// The user clicked one of the bottom property sheet buttons
-	break;
-	case WM_NOTIFY:
-
-		// The user clicked OK
-		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
-		case PSN_APPLY:
-
-			// Save the contents of the dialog
-			Data.folder = TextDialog(dialog, IDC_FOLDER);
-
-			// Must return true from apply
-			SetWindowLong(dialog, DWL_MSGRESULT, true);
-
-		break;
-		}
-
-	break;
+		}}
 	}
+	// The user clicked one of the bottom property sheet buttons
+	break; case WM_NOTIFY: {
 
+		// Check what the user entered on this page
+		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
+		break; case PSN_KILLACTIVE: {
+
+			CString s = TextDialog(dialog, IDC_FOLDER);
+			if (CheckFolder(s)) {
+
+				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+				return true;
+
+			} else {
+
+				MessageBox(Handle.window, L"Unable to save files to the folder at '" + s + "'. Check the path and try again.", PROGRAM_NAME, MB_ICONEXCLAMATION | MB_OK);
+				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_INVALID); // Keep the property sheet open so the user can fix the invalid data
+				return true;
+			}
+		}
+		// Save what the user entered on this page
+		break; case PSN_APPLY: {
+
+			Data.folder = TextDialog(dialog, IDC_FOLDER);
+			Data.ask = IsDlgButtonChecked(dialog, IDC_ASK) ? true : false; // Avoid forcing value to bool
+			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+			return true;
+		}}
+	}}
 	return false; // We didn't handle the message
 }
 
@@ -175,10 +222,17 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
+		break;
+		case PSN_KILLACTIVE:
+
+			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+			return true;
+
+		break;
 		case PSN_APPLY:
 
-			// Must return true from apply
-			SetWindowLong(dialog, DWL_MSGRESULT, true);
+			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+			return true;
 
 		break;
 		}
@@ -208,10 +262,17 @@ BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
+		break;
+		case PSN_KILLACTIVE:
+
+			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+			return true;
+
+		break;
 		case PSN_APPLY:
 
-			// Must return true from apply
-			SetWindowLong(dialog, DWL_MSGRESULT, true);
+			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
+			return true;
 
 		break;
 		}

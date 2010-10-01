@@ -24,11 +24,3 @@ extern handletop Handle;
 extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
-
-
-
-
-
-
-
-

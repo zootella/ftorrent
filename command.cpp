@@ -43,9 +43,9 @@ void AreaCommand(areaitem *area) {
 			// Show the popup menu and wait here for the user to click on one of the menu choices
 			UINT choice = MenuShow(Handle.menu, false, &size); // Wait here for the user to make a choice
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
-			else if (choice == ID_TOOLS_OPEN)    {  }
-			else if (choice == ID_TOOLS_ADD)     {  }
-			else if (choice == ID_TOOLS_NEW)     {  }
+			else if (choice == ID_TOOLS_OPEN)    { CommandOpen(); }
+			else if (choice == ID_TOOLS_ADD)     { CommandAdd(); }
+			else if (choice == ID_TOOLS_NEW)     { CommandNew(); }
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
 			else if (choice == ID_TOOLS_ABOUT)   { Dialog(L"DIALOG_ABOUT", DialogAbout); }
 			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
@@ -68,8 +68,10 @@ void OptionLoad() {
 	libtorrent::entry d;
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
-		// Read values
-		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string());
+		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
+
+		CString ask = widenStoC(d[narrowRtoS(L"ask")].string()); // True to ask where to save each torrent
+		Data.ask = same(ask, L"t");
 	}
 
 	// Replace blank or invalid with factory defaults
@@ -81,6 +83,28 @@ void OptionLoad() {
 void OptionSave() {
 
 	libtorrent::entry::dictionary_type d;
+
 	d[narrowRtoS(L"folder")] = narrowRtoS(Data.folder);
+
+	if (Data.ask) d[narrowRtoS(L"ask")] = narrowRtoS(L"t");
+	else          d[narrowRtoS(L"ask")] = narrowRtoS(L"f");
+	
 	SaveEntry(PathOption(), d);
 }
+
+void CommandOpen() {
+
+	CString path = DialogOpen();
+	if (isblank(path)) return;
+	EnterPath(path);
+}
+
+void CommandAdd() {
+
+	Dialog(L"DIALOG_ADD", DialogAdd);
+}
+
+void CommandNew() {
+
+}
+

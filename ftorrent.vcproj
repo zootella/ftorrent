@@ -235,6 +235,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\workbench4.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\wrap.cpp"
 				>
 			</File>

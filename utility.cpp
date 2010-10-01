@@ -1632,7 +1632,7 @@ CString DialogBrowse(read message) {
 CString DialogOpen() {
 
 	// Filter and extension text for torrents
-	read filter = L"Torrents\0*.torrent\0\0"; // List ends with two wide terminators
+	read filter = L"Torrents (*.torrent)\0*.torrent\0\0"; // List ends with two wide terminators
 	read extension = L"torrent";
 	WCHAR path[MAX_PATH];
 	lstrcpy(path, L""); // Blank the buffer because the system reads initalization information there
@@ -1663,7 +1663,7 @@ CString DialogOpen() {
 CString DialogSave(read suggest) {
 
 	// Filter and extension text for torrents
-	read filter = L"Torrents\0*.torrent\0\0"; // List ends with two wide terminators
+	read filter = L"Torrents (*.torrent)\0*.torrent\0\0"; // List ends with two wide terminators
 	read extension = L"torrent";
 	WCHAR path[MAX_PATH];
 	lstrcpy(path, suggest);
@@ -1681,4 +1681,100 @@ CString DialogSave(read suggest) {
 	int result = GetSaveFileName(&info);
 	if (!result) return L""; // The user canceled the box
 	return path;
+}
+
+// True if path is to a folder, drive root, or network share
+// Set create to true to make folders if necessary
+// Set write to true to also confirm we can write to it
+bool DiskFolder(read path, bool create, bool write) {
+
+	// A trailing backslash is not allowed, give this "C:", not "C:\"
+	if (trails(path, L"\\")) return false;
+
+	// Strings to split
+	CString s = path;
+	CString b, build;
+
+	// Drive path, like "C:" or "C:\folder\subfolder"
+	if (clip(s, 1, 1) == L":") {
+
+		// Loop making build like "C:", "C:\folder", "C:\folder\subfolder"
+		while (is(s)) {
+			split(s, L"\\", &b, &s);
+			if (is(build)) build += L"\\";
+			build += b;
+			if (!DiskFolderCheck(build, create)) return false; // Make it a folder
+		}
+
+	// Network path, like "\\computer\share" or "\\computer\share\folder\subfolder"
+	} else if (starts(s, L"\\\\")) {
+
+		// Make build like "\\computer\share"
+		s = clip(s, 2);
+		CString computer, share, build;
+		split(s, L"\\", &computer, &s);
+		split(s, L"\\", &share, &s);
+		build = L"\\\\" + computer + L"\\" + share;
+		if (!DiskFolderCheck(build, create)) return false; // Make it a folder
+
+		// Loop making build like "\\computer\share\folder", "\\computer\share\folder\subfolder"
+		while (is(s)) {
+			split(s, L"\\", &b, &s);
+			build += L"\\" + b;
+			if (!DiskFolderCheck(build, create)) return false; // Make it a folder
+		}
+
+	// Invalid path
+	} else {
+		return false;
+	}
+
+	// Also confirm writing there works
+	if (write) {
+		CString tick = make(path, L"\\", numerals(GetTickCount())); // Try making and deleting a subfolder
+		if (!DiskMakeFolder(tick)) return false;
+		if (!DiskDeleteFolder(tick)) return false;
+	}
+
+	// Everything worked
+	return true;
+}
+
+// True if path is to a folder on the disk
+// Also returns true for drive roots and network shares like "C:" and "\\computer\share"
+bool DiskIsFolder(read path) {
+
+	// Only return true if we can get the file attributes and they include the directory flag
+	DWORD d = GetFileAttributes(path);
+	return d != INVALID_FILE_ATTRIBUTES && (d & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+// Look for a folder at path, set create true to try to make one there if necessary
+// True if there's a folder at path
+bool DiskFolderCheck(read path, bool create) {
+
+	// Check or make one folder
+	if (DiskIsFolder(path)) return true; // Already a folder, return true
+	if (create) return DiskMakeFolder(path); // Try to make the folder, return false on error
+	else return false; // Can't make the folder and no folder there
+}
+
+// Make a new folder at path, or confirm one is already there
+bool DiskMakeFolder(read path) {
+
+	// See or make
+	if (DiskIsFolder(path)) return true; // Already there
+	return CreateDirectory(path, NULL) != 0; // NULL to use default security attributes
+}
+
+// Delete the empty folder at path
+bool DiskDeleteFolder(read path) {
+
+	// Remove a read-only attribute that would prevent delete from working
+	SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
+
+	// Delete the folder and check the result
+	int result = RemoveDirectory(path);
+	DWORD error = GetLastError();
+	return result != 0 || error == ERROR_FILE_NOT_FOUND;
 }

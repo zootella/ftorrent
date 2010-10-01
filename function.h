@@ -149,6 +149,13 @@ CString DialogBrowse(read message);
 CString DialogOpen();
 CString DialogSave(read suggest);
 
+bool DiskFolder(read path, bool create, bool write);
+bool DiskIsFolder(read path);
+bool DiskFolderCheck(read path, bool create);
+bool DiskMakeFolder(read path);
+bool DiskDeleteFolder(read path);
+
+
 // Paint
 void PaintWindow(deviceitem *device);
 void PaintArea(deviceitem *device, areaitem *a);
@@ -165,8 +172,12 @@ void Size(int move = 0); // Has defaults
 void AreaCommand(areaitem *area);
 void OptionLoad();
 void OptionSave();
+void CommandOpen();
+void CommandAdd();
+void CommandNew();
 
 // Dialog
+BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void DialogOptions();
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
@@ -283,6 +294,12 @@ void Test();
 
 void ListPulse();
 
+
+bool CheckMagnet(read link);
+bool CheckFolder(read path);
+
+void EnterPath(read path);
+void EnterLink(read link);
 
 
 
