@@ -62,13 +62,8 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 			
 			EndDialog(dialog, 0); // Close the dialog
 			return true;
-
-		break;
 		}
-
-	break;
 	}
-
 	return false; // We didn't process the message
 }
 
@@ -117,15 +112,16 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 	// The page is about to be displayed
 	switch (message) {
-	break; case WM_INITDIALOG: {
+	case WM_INITDIALOG:
 
 		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED);
 		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Put the path in the text box
 		return true; // Let the system place the focus
-	}
-	// The dialog needs to be painted
-	break; case WM_PAINT: {
 
+	// The dialog needs to be painted
+	break;
+	case WM_PAINT:
+	{
 		// Pick the red or green message
 		CString message;
 		brushitem *brush;
@@ -160,24 +156,26 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		return false;
 	}
 	// The user clicked a button on the page
-	break; case WM_COMMAND: {
+	break;
+	case WM_COMMAND:
 
 		// Browse
 		switch (LOWORD(wparam)) {
-		break; case IDC_BROWSE: {
+		case IDC_BROWSE:
 
 			CString browse = DialogBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files:")); // Show the dialog
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
-		}}
-	}
+		}
+
 	// The user clicked one of the bottom property sheet buttons
-	break; case WM_NOTIFY: {
+	break;
+	case WM_NOTIFY:
 
 		// Check what the user entered on this page
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
-		break; case PSN_KILLACTIVE: {
-
+		case PSN_KILLACTIVE:
+		{
 			CString s = TextDialog(dialog, IDC_FOLDER);
 			if (CheckFolder(s)) {
 
@@ -192,14 +190,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 			}
 		}
 		// Save what the user entered on this page
-		break; case PSN_APPLY: {
+		break;
+		case PSN_APPLY:
 
 			Data.folder = TextDialog(dialog, IDC_FOLDER);
 			Data.ask = IsDlgButtonChecked(dialog, IDC_ASK) ? true : false; // Avoid forcing value to bool
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
-		}}
-	}}
+		}
+	}
 	return false; // We didn't handle the message
 }
 
@@ -222,7 +221,6 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		// The user clicked OK
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
-		break;
 		case PSN_KILLACTIVE:
 
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
@@ -233,13 +231,8 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
-
-		break;
 		}
-
-	break;
 	}
-
 	return false; // We didn't handle the message
 }
 
@@ -273,13 +266,8 @@ BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
-
-		break;
 		}
-
-	break;
 	}
-
 	return false; // We didn't handle the message
 }
 
@@ -352,12 +340,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 			// Close the dialog
 			EndDialog(dialog, 0);
 			return true;
-
-		break;
 		}
-
-	break;
 	}
-
 	return false; // We didn't process the message
 }
