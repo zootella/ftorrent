@@ -267,7 +267,7 @@ void ProcessAlert(const libtorrent::alert *alert, alert_structure *info) {
 		if (h.is_valid()) {
 
 			// Get the infohash
-			info->sha1 = convertSha1HashToC(h.info_hash());
+			info->sha1 = convertBigNumberToC(h.info_hash());
 
 			// If the alert is for save resume data
 			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);
@@ -320,7 +320,7 @@ void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wcha
 		// Fill out a torrent parameters object
 		libtorrent::add_torrent_params p;
 		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
-		p.info_hash          = convertPtoSha1Hash(infohash);
+		p.info_hash          = convertPtoBigNumber(infohash);
 		p.tracker_url        = trackerurl;
 		p.auto_managed       = false; // changed this to true
 		p.duplicate_is_error = true;
@@ -531,7 +531,7 @@ void GetTorrentInfo(const char *id, torrent_structure *info) {
 		// Fill out some information
 		info->created_by   = widenStoC(i.creator());
 		info->comment      = widenStoC(i.comment());
-		info->sha1         = convertSha1HashToC(i.info_hash());
+		info->sha1         = convertBigNumberToC(i.info_hash());
 		info->total_size   = (long long)i.total_size();
 		info->piece_length = (int)i.piece_length();
 

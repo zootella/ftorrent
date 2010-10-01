@@ -106,5 +106,7 @@ void CommandAdd() {
 
 void CommandNew() {
 
+	report(L"so you want to make a torrent");
+
 }
 

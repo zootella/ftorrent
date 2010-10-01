@@ -85,13 +85,9 @@ std::string narrowWtoS(std::wstring w) {
 
 // Convert a 20 byte hash value between
 // base 16 text like "e6a56670baae316ebf5d3ce91be729e8688f7256" and
-// libtorrent big_number and sha1_hash objects
-
-//TODO those two are typedefed the same, just use big_number
+// libtorrent::big_number and libtorrent::sha1_hash which are the same thing
 
 libtorrent::big_number convertRtoBigNumber(read r) { return convertPtoBigNumber(narrowRtoS(r).c_str()); }
-libtorrent::sha1_hash convertRtoSha1Hash(read r) { return convertPtoSha1Hash(narrowRtoS(r).c_str()); }
-
 libtorrent::big_number convertPtoBigNumber(const char *p) {
 
 	std::stringstream stream;
@@ -101,27 +97,21 @@ libtorrent::big_number convertPtoBigNumber(const char *p) {
 	return n;
 }
 
-libtorrent::sha1_hash convertPtoSha1Hash(const char *p) {
-
-	std::stringstream stream;
-	libtorrent::sha1_hash h;
-	stream << p;
-	stream >> h;
-	return h;
-}
-
-CString convertSha1HashToC(const libtorrent::sha1_hash &h) {
-
-	std::stringstream stream;
-	stream << h;
-	return widenStoC(stream.str());
-}
-
 CString convertBigNumberToC(const libtorrent::big_number &n) {
 
 	std::stringstream stream;
 	stream << n;
 	return widenStoC(stream.str());
+}
+
+// The first 4 bytes of the given hash as a DWORD
+DWORD HashStart(libtorrent::big_number hash) {
+
+	return
+		(((DWORD)hash[0]) << 24) |
+		(((DWORD)hash[1]) << 16) |
+		(((DWORD)hash[2]) <<  8) |
+		 ((DWORD)hash[3]);
 }
 
 
@@ -347,7 +337,7 @@ torrentitem AddTorrentLibrary(read folder, read torrent, read hash, read name, r
 		// Or, set hash, name, and tracker from a magnet link
 		} else {
 
-			p.info_hash = convertPtoSha1Hash(narrowRtoS(hash).c_str());
+			p.info_hash = convertPtoBigNumber(narrowRtoS(hash).c_str());
 			if (name)    p.name        = namestring.c_str();
 			if (tracker) p.tracker_url = trackerstring.c_str();
 		}
@@ -452,7 +442,7 @@ void AlertLook(const libtorrent::alert *alert) {
 		if (h.is_valid()) {
 
 			// Get the infohash
-			CString id = convertSha1HashToC(h.info_hash());
+			CString id = convertBigNumberToC(h.info_hash());
 
 			// If the alert is for save resume data
 			const libtorrent::save_resume_data_alert *a1 = dynamic_cast<const libtorrent::save_resume_data_alert *>(alert);

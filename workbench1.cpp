@@ -100,7 +100,7 @@ CString torrentitem::ComposeSize() {
 // This torrent's infohash in base 16
 CString torrentitem::ComposeHash() {
 
-	return convertSha1HashToC(handle.info_hash());
+	return convertBigNumberToC(handle.info_hash());
 }
 
 CString torrentitem::ComposePath() {
@@ -110,10 +110,6 @@ CString torrentitem::ComposePath() {
 // The first 4 bytes of the infohash in a DWORD
 DWORD torrentitem::Hash() {
 
-	return
-		(((DWORD)handle.info_hash()[0]) << 24) |
-		(((DWORD)handle.info_hash()[1]) << 16) |
-		(((DWORD)handle.info_hash()[2]) <<  8) |
-		 ((DWORD)handle.info_hash()[3]);
+	return HashStart(handle.info_hash());
 }
 
