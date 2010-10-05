@@ -234,11 +234,10 @@ bool LoadEntry(read path, libtorrent::entry &e);
 void LibraryStart();
 void LibraryStop();
 void LibraryClose();
-void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store);
 torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store);
 void LibraryPulse();
 void AlertLoop();
-void AlertLook(const libtorrent::alert *a);
+void AlertLook(const libtorrent::alert *alert);
 
 // User
 void StartIcon();
@@ -256,7 +255,7 @@ void OptionSave();
 bool CheckMagnet(read link);
 bool CheckFolder(read path);
 bool LookLink(read link, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
-bool LookPath(read path, libtorrent::big_number *hash, CString *name);
+bool LookPath(read path, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
 void CommandNew();
 void Message(int options, read r);
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
@@ -266,19 +265,20 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
-// Workbenches
+// Bay and Bench
 
 
-
+void ListPulse();
 
 void Test();
-void ListPulse();
 void CommandOpen();
 void CommandPath(read path);
-void EnterPath(libtorrent::big_number, read path, read folder);
 void CommandAdd();
-void EnterLink(read link);
-void EnterSave(libtorrent::big_number hash);
+void Restore(libtorrent::big_number hash);
+void EnterPath(libtorrent::big_number hash, read path, read folder);
+bool EnterLink(read link);
+torrentitem *FindTorrent(libtorrent::big_number hash);
+void Add(read folder, read torrent, read hash, read name, std::vector<CString> trackers, read store);
 
 
 

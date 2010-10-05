@@ -789,12 +789,14 @@ bool LookLink(read link, libtorrent::big_number *hash, CString *name, std::vecto
 }
 
 // Read the infohash and name from the torrent file at path
-bool LookPath(read path, libtorrent::big_number *hash, CString *name) {
+bool LookPath(read path, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers) {
 	try {
 
 		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(path)));
 		*hash = info.info_hash();
 		*name = widenPtoC(info.name().c_str());
+		for (int i = 0; i < (int)info.trackers().size(); i++)
+			trackers->push_back(widenPtoC(info.trackers()[i].url.c_str()));
 		return true;
 
 	} catch (std::exception &e) {

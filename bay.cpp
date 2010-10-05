@@ -32,11 +32,6 @@ void Test() {
 
 
 
-
-
-
-
-
 //TODO add
 //factor all add paths in for open, link, and restore session to branch together
 //show the user messages while you can prove he's there
@@ -82,29 +77,13 @@ void CommandPath(read path) {
 	EnterPath(hash, path, folder); // Now we can't show messages to the user anymore
 }
 
-void EnterPath(libtorrent::big_number, read path, read folder) {
-
-	log(L"enter ", path);
-
-//	AddTorrent(Data.folder, path, NULL, NULL, NULL, NULL);
-
-
-}
-
-
-//user clicks tools, add, TODO clicks magnet link
-
+// The user clicked Tools, Add
 void CommandAdd() {
 
+	// Show the Add dialog box to let the user paste in a magnet link
 	Dialog(L"DIALOG_ADD", DialogAdd);
 }
 
-void EnterLink(read link) {
-
-	log(L"enter ", link);
-
-//	AddTorrent(Data.folder, NULL, hash, name, tracker, NULL);
-}
 
 
 
@@ -114,34 +93,40 @@ void EnterLink(read link) {
 
 
 //program loads stuff from last time
-
-void EnterSave(libtorrent::big_number hash) {
-
-
-	//compose paths to
-
-	CString meta = PathTorrentMeta(hash);
-	CString stor = PathTorrentStore(hash);
-	CString optn = PathTorrentOption(hash);
+void Restore(libtorrent::big_number hash) {
 
 
 
-	libtorrent::entry d;
-	if (LoadEntry(PathOption(), d)) { // Loaded
-	}
+	CString pathmeta = PathTorrentMeta(hash);
+	CString pathstore = PathTorrentStore(hash);
+	CString pathoption = PathTorrentOption(hash);
+
+
+	libtorrent::entry entrymeta, entrystore, entryoption;
+	bool hasmeta = LoadEntry(pathmeta, entrymeta);
+	bool hasstore = LoadEntry(pathstore, entrystore);
+	bool hasoption = LoadEntry(pathoption, entryoption);
+
+
+
+	read folder = NULL;
+	read torrent = NULL;
+	read hash = NULL;
+	read name = NULL;
+	std::vector<CString> trackers;
+	read store = NULL;
 
 
 
 
-	if (true) { // Torrent file on the disk
+
+//	Add(read folder, read torrent, read hash, read name, std::vector<CString> trackers, read store) {
 
 
-	} else { // No torrent file
 
 
-	}
 
-//	AddTorrent(folder, torrent, hash, name, tracker, store);
+
 
 
 
@@ -150,12 +135,53 @@ void EnterSave(libtorrent::big_number hash) {
 
 
 
+void EnterPath(libtorrent::big_number hash, read path, read folder) {
 
-/*
-void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
 
-	//TODO look for duplicates before you get here
-	//TODO don't show a error messge in the case of a duplicate, rather, select that item in the list
+	Add(Data.folder, path, NULL, NULL, NULL, NULL);
+
+
+}
+
+bool EnterLink(read link) {
+
+	libtorrent::big_number hash;
+	CString name;
+	std::vector<CString> trackers;
+	
+	if (!LookLink(link, &hash, &name, &trackers)) return false;
+
+
+	read tracker = NULL;
+	Add(Data.folder, NULL, hash, name, tracker, NULL);
+}
+
+
+
+
+
+// Find the torrent with the given infohash in our list, or null if not a duplicate
+torrentitem *FindTorrent(libtorrent::big_number hash) {
+
+	// Loop through all the torrents loaded into the program and library
+	for (int i = 0; i < (int)Data.torrents.size(); i++) {
+		torrentitem *t = &(Data.torrents[i]); // Point t at the torrentitem that is copied into the list
+		if (hash == /*(libtorrent::big_number)*/t->handle.info_hash()) return t; // Compare the 20 byte hash values
+	}
+
+	// Not found, you can add hash without creating a duplicate
+	return NULL;
+}
+
+
+
+
+
+void Add(read folder, read torrent, libtorrent::big_number hash, read name, std::vector<CString> trackers, read store) {
+
+	//TODO look for duplicates here, if you find one, add the trackers and blink that item in the list
+
+	read tracker = NULL;
 
 	// add it to libtorrent
 	torrentitem t = LibraryAdd(folder, torrent, hash, name, tracker, store);
@@ -178,7 +204,6 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 		t.ComposePath(),
 		L"");
 }
-*/
 
 
 
