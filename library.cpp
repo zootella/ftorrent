@@ -281,7 +281,7 @@ void LibraryClose() {
 // store is the path to libtorrent resume data from a previous session, or null if this is the first time
 // Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
 // If you add the same infohash twice, sets the existing handle instead of producing an error
-torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store) {
+torrentitem LibraryAdd(read folder, read torrent, libtorrent::big_number hash, read name, std::vector<CString> trackers, read store) {
 
 	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
 	torrentitem t;
@@ -290,14 +290,12 @@ torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tra
 	try {
 
 		// Local objects in memory for the add call below
-		std::string namestring, trackerstring;
+		std::string namestring;
 		if (name)    namestring    = narrowRtoS(name);
-		if (tracker) trackerstring = narrowRtoS(tracker);
 		std::vector<char> charvector;
 
 		// Make a torrent params object to fill out
 		libtorrent::add_torrent_params p;
-		p.duplicate_is_error = false; // Return the existing torrent handle instead of producing an error
 
 		// Set folder, the path to the folder where the torrent is or will be saved, required
 		p.save_path = boost::filesystem::path(narrowRtoS(folder));
@@ -310,9 +308,9 @@ torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tra
 		// Or, set hash, name, and tracker from a magnet link
 		} else {
 
-			p.info_hash = convertPtoBigNumber(narrowRtoS(hash).c_str());
-			if (name)    p.name        = namestring.c_str();
-			if (tracker) p.tracker_url = trackerstring.c_str();
+			p.info_hash = hash;
+			if (name) p.name = namestring.c_str();
+			if (trackers.size() > 0) p.tracker_url = narrowRtoS(trackers[0]).c_str();
 		}
 
 		// Specify store data saved from a previous session, optional
@@ -335,8 +333,24 @@ torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tra
 			}
 		}
 
+
 		// Add the torrent to the session and save the torrent handle we get
 		t.handle = Handle.session->add_torrent(p);
+
+		// Add all the trackers
+		for (int i = 1; i < (int)trackers.size(); i++) {
+
+			libtorrent::announce_entry a(narrowRtoS(trackers[i]));
+			t.handle.add_tracker(a);
+		}
+
+		// Return
+
+
+
+
+
+
 		return t;
 
 	} catch (std::exception &e) {
