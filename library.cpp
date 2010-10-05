@@ -281,7 +281,7 @@ void LibraryClose() {
 // store is the path to libtorrent resume data from a previous session, or null if this is the first time
 // Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
 // If you add the same infohash twice, sets the existing handle instead of producing an error
-torrentitem AddTorrentLibrary(read folder, read torrent, read hash, read name, read tracker, read store) {
+torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store) {
 
 	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
 	torrentitem t;

@@ -25,6 +25,15 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+// Run a snippet of test code
+void Test() {
+
+}
+
+
+
+
+
 
 
 
@@ -77,7 +86,7 @@ void EnterPath(libtorrent::big_number, read path, read folder) {
 
 	log(L"enter ", path);
 
-	AddTorrent(Data.folder, path, NULL, NULL, NULL, NULL);
+//	AddTorrent(Data.folder, path, NULL, NULL, NULL, NULL);
 
 
 }
@@ -94,7 +103,7 @@ void EnterLink(read link) {
 
 	log(L"enter ", link);
 
-	AddTorrent(Data.folder, NULL, hash, name, tracker, NULL);
+//	AddTorrent(Data.folder, NULL, hash, name, tracker, NULL);
 }
 
 
@@ -119,6 +128,7 @@ void EnterSave(libtorrent::big_number hash) {
 
 	libtorrent::entry d;
 	if (LoadEntry(PathOption(), d)) { // Loaded
+	}
 
 
 
@@ -131,7 +141,7 @@ void EnterSave(libtorrent::big_number hash) {
 
 	}
 
-	AddTorrent(folder, torrent, hash, name, tracker, store);
+//	AddTorrent(folder, torrent, hash, name, tracker, store);
 
 
 
@@ -141,14 +151,14 @@ void EnterSave(libtorrent::big_number hash) {
 
 
 
-
+/*
 void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store) {
 
 	//TODO look for duplicates before you get here
 	//TODO don't show a error messge in the case of a duplicate, rather, select that item in the list
 
 	// add it to libtorrent
-	torrentitem t = AddTorrentLibrary(folder, torrent, hash, name, tracker, store);
+	torrentitem t = LibraryAdd(folder, torrent, hash, name, tracker, store);
 	if (!t.handle.is_valid()) return;
 
 	// copy it into the program's list
@@ -168,5 +178,15 @@ void AddTorrent(read folder, read torrent, read hash, read name, read tracker, r
 		t.ComposePath(),
 		L"");
 }
+*/
+
+
+
+
+
+
+
+
+
 
 

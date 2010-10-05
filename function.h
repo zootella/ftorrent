@@ -1,4 +1,11 @@
 
+// Window
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
+void WindowPulse();
+void WindowExit();
+LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
+void MenuTaskbar();
+
 // String
 CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 CString upper(read r);
@@ -25,17 +32,12 @@ CString clip(read r, int startindex, int characters = -1); // Has defaults
 CString on(read r, read t, direction d = Forward, matching m = Different); // Has defaults
 CString off(read r, read t, direction d = Forward, matching m = Different); // Has defaults
 CString trim(read r, read t1 = L"", read t2 = L"", read t3 = L""); // Has defaults
-CString saynumber(int number, read name);
-CString insertcommas(read r);
-CString saytime(DWORD time);
-CString saynow();
-
-// Window
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
-void WindowPulse();
-void WindowExit();
-LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
-void MenuTaskbar();
+std::vector<CString> words(read r, read t);
+CString SayNumber(int number, read name);
+CString InsertCommas(read r);
+CString SayTime(DWORD time);
+CString SayNow();
+CString ReplacePercent(read r);
 
 // Utility
 void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
@@ -148,45 +150,67 @@ CString PathShell(int id);
 CString DialogBrowse(read message);
 CString DialogOpen();
 CString DialogSave(read suggest);
-
 bool DiskFolder(read path, bool create, bool write);
 bool DiskIsFolder(read path);
 bool DiskFolderCheck(read path, bool create);
 bool DiskMakeFolder(read path);
 bool DiskDeleteFolder(read path);
 
-
-// Paint
-void PaintWindow(deviceitem *device);
-void PaintArea(deviceitem *device, areaitem *a);
-
-// Area
-void AreaCreate();
-void AreaPulse();
-void AreaPopUp();
-void AreaPopDown();
-std::vector<int> SizeColumns(std::vector<int> w);
-void Size(int move = 0); // Has defaults
-
-// Command
-void AreaCommand(areaitem *area);
-void OptionLoad();
-void OptionSave();
-void CommandOpen();
-void CommandAdd();
-void CommandNew();
-
-// Dialog
-void Message(int options, read r);
-BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
-void DialogOptions();
-BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
-BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
-BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
-BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
-
-// Start
-void StartIcon();
+// Wrap
+// start
+void InitializeLibtorrent(settings_structure *info);
+void UpdateSettings(settings_structure *info);
+// close
+void FreezeAndSaveAllFastResumeData();
+void AbortTorrents();
+void SignalFastResumeDataRequest(const char *id);
+void SaveFastResumeData(alert_structure *info, wchar_t *path);
+void SaveDhtState(const wchar_t *path);
+// update
+void GetAlerts();
+void ProcessAlert(const libtorrent::alert *alert, alert_structure *info);
+// torrent
+void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath);
+void RemoveTorrentWrap(const char *id);
+// change
+void PauseTorrent(const char *id);
+void ResumeTorrent(const char *id);
+void MoveTorrent(const char *id, wchar_t *path);
+void ForceReannounce(const char *id);
+void ClearErrorAndRetry(const char *id);
+void SetAutoManagedTorrent(const char *id, bool auto_managed);
+void SetSeedRatio(const char *id, float seed_ratio);
+// look
+void IsValid(const char *id, int &is_valid);
+void HasMetadata(const char *id, int &has_metadata);
+void GetTorrentInfo(const char *id, torrent_structure *info);
+void GetTorrentStatus(const char *id, status_structure *info);
+// tracker
+void AddTracker(const char *id, char *url, int tier);
+void RemoveTracker(const char *id, char *url, int tier);
+void GetNumTrackers(const char *id, int &n);
+void GetTrackers(const char *id, announce_structure **torrent_trackers, int n);
+void ScrapeTracker(const char *id);
+// tabs
+void GetNumFiles(const char *id, int &num_files);
+void GetFiles(const char *id, file_structure **file_entries);
+void GetNumPeers(const char *id, int &num_peers);
+void GetPeers(const char *id, std::vector<peer_structure> *v);
+void GetPiecesStatus(const char *id, pieces_structure *info);
+void SetFilePriority(const char *id, int index, int priority);
+void SetFilePriorities(const char *id, int *priorities, int n);
+// dht
+void AddDhtNode(const char *address, int port);
+void AddDhtRouter(const char *address, int port);
+void StartDht(const wchar_t *path);
+void StopDht();
+// service
+void StartLsd();
+void StopLsd();
+void StartUpnp();
+void StopUpnp();
+void StartNatpmp();
+void StopNatpmp();
 
 // Library
 std::string convertPtoS(const char *p);
@@ -211,105 +235,50 @@ void LibraryStart();
 void LibraryStop();
 void LibraryClose();
 void AddTorrent(read folder, read torrent, read hash, read name, read tracker, read store);
-torrentitem AddTorrentLibrary(read folder, read torrent, read hash, read name, read tracker, read store);
+torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store);
 void LibraryPulse();
 void AlertLoop();
 void AlertLook(const libtorrent::alert *a);
 
-
-// Wrapper
-
-// Start
-void InitializeLibtorrent(settings_structure *info);
-void UpdateSettings(settings_structure *info);
-
-// Close
-void FreezeAndSaveAllFastResumeData();
-void AbortTorrents();
-void SignalFastResumeDataRequest(const char *id);
-void SaveFastResumeData(alert_structure *info, wchar_t *path);
-void SaveDhtState(const wchar_t *path);
-
-// Update
-void GetAlerts();
-void ProcessAlert(const libtorrent::alert *alert, alert_structure *info);
-
-// Torrent
-void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wchar_t *savepath, wchar_t *resumepath);
-void RemoveTorrentWrap(const char *id);
-
-// Change
-void PauseTorrent(const char *id);
-void ResumeTorrent(const char *id);
-void MoveTorrent(const char *id, wchar_t *path);
-void ForceReannounce(const char *id);
-void ClearErrorAndRetry(const char *id);
-void SetAutoManagedTorrent(const char *id, bool auto_managed);
-void SetSeedRatio(const char *id, float seed_ratio);
-
-// Look
-void IsValid(const char *id, int &is_valid);
-void HasMetadata(const char *id, int &has_metadata);
-void GetTorrentInfo(const char *id, torrent_structure *info);
-void GetTorrentStatus(const char *id, status_structure *info);
-
-// Tracker
-void AddTracker(const char *id, char *url, int tier);
-void RemoveTracker(const char *id, char *url, int tier);
-void GetNumTrackers(const char *id, int &n);
-void GetTrackers(const char *id, announce_structure **torrent_trackers, int n);
-void ScrapeTracker(const char *id);
-
-// Tabs
-void GetNumFiles(const char *id, int &num_files);
-void GetFiles(const char *id, file_structure **file_entries);
-void GetNumPeers(const char *id, int &num_peers);
-void GetPeers(const char *id, std::vector<peer_structure> *v);
-void GetPiecesStatus(const char *id, pieces_structure *info);
-void SetFilePriority(const char *id, int index, int priority);
-void SetFilePriorities(const char *id, int *priorities, int n);
-
-// DHT
-void AddDhtNode(const char *address, int port);
-void AddDhtRouter(const char *address, int port);
-void StartDht(const wchar_t *path);
-void StopDht();
-
-// Service
-void StartLsd();
-void StopLsd();
-void StartUpnp();
-void StopUpnp();
-void StartNatpmp();
-void StopNatpmp();
-
-
-
-
-
-// Test
-void Test();
-
-
-void ListPulse();
-
-
+// User
+void StartIcon();
+void PaintWindow(deviceitem *device);
+void PaintArea(deviceitem *device, areaitem *a);
+void AreaCreate();
+void AreaPulse();
+void AreaPopUp();
+void AreaPopDown();
+std::vector<int> SizeColumns(std::vector<int> w);
+void Size(int move = 0); // Has defaults
+void AreaCommand(areaitem *area);
+void OptionLoad();
+void OptionSave();
 bool CheckMagnet(read link);
 bool CheckFolder(read path);
+bool LookLink(read link, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
+bool LookPath(read path, libtorrent::big_number *hash, CString *name);
+void CommandNew();
+void Message(int options, read r);
+BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
+void DialogOptions();
+BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
+BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
+BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
+BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
-void EnterPath(read path);
+// Workbenches
+
+
+
+
+void Test();
+void ListPulse();
+void CommandOpen();
+void CommandPath(read path);
+void EnterPath(libtorrent::big_number, read path, read folder);
+void CommandAdd();
 void EnterLink(read link);
-
-
-
-
-
-
-
-
-
-
-
+void EnterSave(libtorrent::big_number hash);
 
 
 

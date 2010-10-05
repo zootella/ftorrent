@@ -383,20 +383,36 @@ CString trim(read r, read t1, read t2, read t3) {
 	return s;
 }
 
+// Split r into a list of words separated by a tag
+std::vector<CString> words(read r, read t) {
+
+	CString raw = r;        // The end of the given text that still needs to be processed
+	CString word;           // An individual word the loop has found
+	std::vector<CString> v; // The list of words we build up and return
+	while (has(raw, t)) {   // There's a tag
+
+		split(raw, t, &word, &raw); // Split off the word before it
+		v.push_back(word);          // Add the word to our list
+	}
+
+	v.push_back(raw); // Everything after the last tag is the last word
+	return v;         // Return the list we built up
+}
+
 // Takes a number and a name
 // Composes text like "14 apples"
 // Returns a string
-CString saynumber(int number, read name) {
+CString SayNumber(int number, read name) {
 
 	if      (number == 0) return make(L"no ", name, L"s");                               // Zero yields "no [name]s"
 	else if (number == 1) return make(L"1 ", name);                                      // One yields "1 [name]"
-	else                  return make(insertcommas(numerals(number)), L" ", name, L"s"); // Greater yields "[number] [name]s"
+	else                  return make(InsertCommas(numerals(number)), L" ", name, L"s"); // Greater yields "[number] [name]s"
 }
 
 // Takes text
 // Inserts commas between groups of three characters
 // Returns a string
-CString insertcommas(read r) {
+CString InsertCommas(read r) {
 
 	// Make strings
 	CString s, left, bottom;
@@ -418,7 +434,7 @@ CString insertcommas(read r) {
 // Takes a number of milliseconds
 // Composes text to describe how long that is
 // Returns a string
-CString saytime(DWORD time) {
+CString SayTime(DWORD time) {
 
 	// Return explination for less than a second
 	if (time < 1000) return L"less than a second";
@@ -431,14 +447,14 @@ CString saytime(DWORD time) {
 
 	// Compose the text to display and return it
 	CString s;
-	if (hour) s += saynumber(hour, L"hour");
-	if (hour || minute) s += L" " + saynumber(minute, L"minute");
-	s += L" " + saynumber(second, L"second");
+	if (hour) s += SayNumber(hour, L"hour");
+	if (hour || minute) s += L" " + SayNumber(minute, L"minute");
+	s += L" " + SayNumber(second, L"second");
 	return trim(s, L" ");
 }
 
 // Composes text like "Tue 2:07p 03.789s" with the current day and time to milliseconds
-CString saynow() {
+CString SayNow() {
 
 	// Get the local time right now
 	SYSTEMTIME info;
@@ -471,4 +487,48 @@ CString saynow() {
 
 	// Put it all together
 	return day + L" " + hour + L":" + minute + m + L" " + second + L"." + millisecond + L"s";
+}
+
+// Turn URI codes like "%20" and "+" into text to show the user
+CString ReplacePercent(read r) {
+
+	CString s = replace(r, L"+", L" ");
+
+	s = replace(s, L"%20", L" ",  Matching); // Match case for hexidecimal digits
+	s = replace(s, L"%21", L"!",  Matching);
+	s = replace(s, L"%22", L"\"", Matching);
+	s = replace(s, L"%23", L"#",  Matching);
+	s = replace(s, L"%24", L"$",  Matching);
+	s = replace(s, L"%25", L"%",  Matching);
+	s = replace(s, L"%26", L"&",  Matching);
+	s = replace(s, L"%27", L"'",  Matching);
+	s = replace(s, L"%28", L"(",  Matching);
+	s = replace(s, L"%29", L")",  Matching);
+	s = replace(s, L"%2A", L"*",  Matching);
+	s = replace(s, L"%2B", L"+",  Matching);
+	s = replace(s, L"%2C", L",",  Matching);
+	s = replace(s, L"%2D", L"-",  Matching);
+	s = replace(s, L"%2E", L".",  Matching);
+	s = replace(s, L"%2F", L"/",  Matching);
+
+	s = replace(s, L"%3A", L":",  Matching);
+	s = replace(s, L"%3B", L";",  Matching);
+	s = replace(s, L"%3C", L"<",  Matching);
+	s = replace(s, L"%3D", L"=",  Matching);
+	s = replace(s, L"%3E", L">",  Matching);
+	s = replace(s, L"%3F", L"?",  Matching);
+	s = replace(s, L"%40", L"@",  Matching);
+
+	s = replace(s, L"%5B", L"[",  Matching);
+	s = replace(s, L"%5C", L"\\", Matching);
+	s = replace(s, L"%5D", L"]",  Matching);
+	s = replace(s, L"%5E", L"^",  Matching);
+	s = replace(s, L"%5F", L"_",  Matching);
+	s = replace(s, L"%60", L"`",  Matching);
+
+	s = replace(s, L"%7B", L"{",  Matching);
+	s = replace(s, L"%7C", L"|",  Matching);
+	s = replace(s, L"%7D", L"}",  Matching);
+	s = replace(s, L"%7E", L"~",  Matching);
+	return s;
 }
