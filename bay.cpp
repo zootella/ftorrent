@@ -40,6 +40,34 @@ void Test() {
 
 
 
+
+void AddTorrent(bool user, read torrent) {
+
+	if (!torrent) {
+
+
+
+	}
+
+
+
+
+}
+
+void AddMagnet(bool user, read magnet) {
+
+
+
+}
+
+void AddRestore(bool user, libtorrent::big_number hash) {
+
+
+
+}
+
+
+
 // The user clicked Tools, Open
 void CommandOpen() {
 
@@ -74,15 +102,9 @@ void CommandPath(read path) {
 	}
 
 	// What remains is the same as restoring torrents from the last session
-	EnterPath(hash, path, folder); // Now we can't show messages to the user anymore
+	EnterTorrent(folder, path); // Now we can't show messages to the user anymore
 }
 
-// The user clicked Tools, Add
-void CommandAdd() {
-
-	// Show the Add dialog box to let the user paste in a magnet link
-	Dialog(L"DIALOG_ADD", DialogAdd);
-}
 
 
 
@@ -93,7 +115,7 @@ void CommandAdd() {
 
 
 //program loads stuff from last time
-void Restore(libtorrent::big_number hash) {
+void CommandRestore(libtorrent::big_number hash) {
 
 
 
@@ -117,6 +139,19 @@ void Restore(libtorrent::big_number hash) {
 	read store = NULL;
 
 
+	if (true) {
+
+		EnterTorrent(hash, path, folder);
+
+
+
+	} else {
+
+		EnterMagnet(link);
+
+
+
+	}
 
 
 
@@ -135,15 +170,25 @@ void Restore(libtorrent::big_number hash) {
 
 
 
-void EnterPath(libtorrent::big_number hash, read path, read folder) {
+bool EnterTorrent(read folder, libtorrent::big_number hash, read path) {
+
+	if (FindTorrent(hash)) { // Duplicate
 
 
-	Add(Data.folder, path, NULL, NULL, NULL, NULL);
+
+		return true;
+	}
+
+	if (!LibraryAddTorrent(&handle, folder, L"", path)) return false;
 
 
+	AddToList(handle);
+
+
+	return true;
 }
 
-bool EnterLink(read link) {
+bool EnterMagnet(read folder, read link) {
 
 	libtorrent::big_number hash;
 	CString name;
@@ -151,6 +196,18 @@ bool EnterLink(read link) {
 	
 	if (!LookLink(link, &hash, &name, &trackers)) return false;
 
+	if (FindTorrent(hash)) { // Duplicate
+
+		return true;
+	}
+
+	if (!LibraryAddMagnet(&handle, folder, L"", hash, name)) return false;
+
+	for (int i = 0; i < (int)trackers.size(); i++) {
+		if (!LibraryAddTracker(handle, trackers[i])) { return false };
+	}
+
+	AddToList(handle);
 
 	read tracker = NULL;
 	Add(Data.folder, NULL, hash, name, tracker, NULL);
@@ -177,17 +234,9 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 
 
 
-void Add(read folder, read torrent, libtorrent::big_number hash, read name, std::vector<CString> trackers, read store) {
+void AddToList(libtorrent::torrent_handle handle) {
 
-	//TODO look for duplicates here, if you find one, add the trackers and blink that item in the list
-
-	read tracker = NULL;
-
-	// add it to libtorrent
-	torrentitem t = LibraryAdd(folder, torrent, hash, name, tracker, store);
-	if (!t.handle.is_valid()) return;
-
-	// copy it into the program's list
+	torrentitem t(handle);
 	Data.torrents.push_back(t);
 
 	// add it to the list view
