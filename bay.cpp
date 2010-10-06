@@ -25,10 +25,48 @@ extern areatop   Area;
 extern datatop   Data;
 extern statetop  State;
 
+
+
+
+
+void TorrentOptionSave(libtorrent::big_number hash, read folder, read name, std::set<CString> trackers) {
+
+	libtorrent::entry::list_type l;
+	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end( ); i++) {
+		l.push_back(narrowRtoS(*i));
+	}
+
+	libtorrent::entry::dictionary_type d;
+	d[narrowRtoS(L"folder")] = narrowRtoS(folder);
+	d[narrowRtoS(L"name")] = narrowRtoS(name);
+	d[narrowRtoS(L"trackers")] = l;
+
+	SaveEntry(PathTorrentOption(hash), d);
+}
+
+
+
+
+
 // Run a snippet of test code
 void Test() {
 
+
+	libtorrent::big_number hash = convertRtoBigNumber(L"1122334455667788990011223344556677889900");
+	CString folder = L"MY FOLDER";
+	CString name = L"MY NAME";
+
+	std::set<CString> trackers;
+	trackers.insert(L"TRACKER A");
+	trackers.insert(L"TRACKER B");
+	trackers.insert(L"TRACKER C");
+	trackers.insert(L"TRACKER B");
+
+	TorrentOptionSave(hash, folder, name, trackers);
+
+
 }
+
 
 
 
@@ -117,8 +155,8 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	libtorrent::torrent_handle handle;
 	if (!LibraryAddTorrent(&handle, folder, store, torrent)) return; // libtorrent error
 
-	// Add the torrent handle to the data list and window
-	AddList(handle);
+	// Add the torrent to the data list, window, and make store files
+	AddList(user, handle, folder, torrent, L"");
 }
 
 /*
@@ -154,8 +192,8 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	if (!LibraryAddMagnet(&handle, folder, store, hash, name)) return; // libtorrent error
 	LibraryAddTrackers(handle, trackers); // Add the trackers we parsed right afterwards
 
-	// Add the torrent handle to the data list and window
-	AddList(handle);
+	// Add the torrent handle to the data list, window, and make store files
+	AddList(user, handle, folder, L"", magnet);
 }
 
 
@@ -195,7 +233,7 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 }
 
 // Place the given libtorrent handle in the data list and on the screen
-void AddList(libtorrent::torrent_handle handle) {
+void AddList(bool user, libtorrent::torrent_handle handle, read folder, read torrent, read magnet) {
 
 	// Add it to the data list
 	torrentitem t;              // Make a new empty torrentitem
@@ -215,7 +253,60 @@ void AddList(libtorrent::torrent_handle handle) {
 		t.ComposeHash(),
 		t.ComposePath(),
 		L"");
+
+/*
+	if (is(torrent));
+
+
+	//format for a torrent's optn file
+	//folder
+	//trackers - set of trackers from all previous magnets and torrents
+
+
+
+	std::set<CString> s;
+	s.insert(
+
+*/
+
+
+
 }
+
+
+
+
+
+/*
+
+
+bool TorrentOptionLoad(libtorrent::big_number hash, CString *folder, CString *name, std::set<CString> *trackers) {
+
+	libtorrent::entry d;
+	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
+
+		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
+
+		CString ask = widenStoC(d[narrowRtoS(L"ask")].string()); // True to ask where to save each torrent
+		Data.ask = same(ask, L"t");
+	}
+
+	// Replace blank or invalid with factory defaults
+	if (isblank(Data.folder)) Data.folder = PathTorrents();
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+
 
 
 
