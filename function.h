@@ -253,12 +253,9 @@ void Size(int move = 0); // Has defaults
 void AreaCommand(areaitem *area);
 void OptionLoad();
 void OptionSave();
-bool CheckMagnet(read link);
-bool CheckFolder(read path);
-bool LookLink(read link, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
-bool LookPath(read path, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
-void CommandNew();
-void Message(int options, read r);
+bool CheckMagnet(read magnet);
+bool CheckFolder(read folder);
+void Message(bool user, int options, read r);
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void DialogOptions();
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
@@ -272,14 +269,18 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 void ListPulse();
 
 void Test();
-void CommandOpen();
-void CommandPath(read path);
-void CommandAdd();
-void Restore(libtorrent::big_number hash);
-void EnterPath(libtorrent::big_number hash, read path, read folder);
-bool EnterLink(read link);
+void AddRestore(libtorrent::big_number hash);
+void AddTorrent(bool user, CString store, CString folder, CString torrent);
+void AddMagnet(bool user, CString store, CString folder, CString magnet);
+void Blink(bool user, torrentitem *t);
+CString ChooseFolder(bool user, read name);
 torrentitem *FindTorrent(libtorrent::big_number hash);
-void Add(read folder, read torrent, read hash, read name, std::vector<CString> trackers, read store);
+void AddList(libtorrent::torrent_handle handle);
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
+void LibraryAddTrackers(libtorrent::torrent_handle handle, std::vector<CString> trackers);
+bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
+bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
 
 
 

@@ -203,6 +203,7 @@ bool LoadVector(read path, std::vector<char> &c) {
 	} catch (...) {
 		log(L"loadvector exception");
 	}
+	return false;
 }
 
 // Start libtorrent and get the session handle
@@ -310,6 +311,7 @@ Or set torrent blank and use this function to add a torrent with information fro
 - name
 - trackers
 */
+/*
 bool LibraryAdd(libtorrent::torrent_handle *handle, read folder, read store, read torrent, libtorrent::big_number hash, read name, std::vector<CString> trackers) {
 	try {
 
@@ -322,7 +324,7 @@ bool LibraryAdd(libtorrent::torrent_handle *handle, read folder, read store, rea
 
 		if (is(torrent)) { // Torrent file
 
-			p.ti = info;
+			p.ti = &info;
 
 		} else { // Magnet link
 
@@ -362,6 +364,7 @@ bool LibraryAdd(libtorrent::torrent_handle *handle, read folder, read store, rea
 	}
 	return false; // There was an exception
 }
+*/
 
 
 

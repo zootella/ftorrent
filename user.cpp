@@ -674,7 +674,7 @@ void AreaCommand(areaitem *area) {
 			// Show the popup menu and wait here for the user to click on one of the menu choices
 			UINT choice = MenuShow(Handle.menu, false, &size); // Wait here for the user to make a choice
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
-			else if (choice == ID_TOOLS_OPEN)    { CommandOpen(); }
+			else if (choice == ID_TOOLS_OPEN)    { AddTorrent(true, L"", L"", L""); }
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
 			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
@@ -724,97 +724,25 @@ void OptionSave() {
 }
 
 // True if the given text looks like a good magnet link
-bool CheckMagnet(read link) {
+bool CheckMagnet(read magnet) {
 
 	libtorrent::big_number hash;
 	CString name;
 	std::vector<CString> trackers;
-	return LookLink(link, &hash, &name, &trackers); // Just see if it returns true
+	return ParseMagnet(magnet, &hash, &name, &trackers); // Just see if it returns true
 }
 
 // True if the given path is to a folder we can make and write in
-bool CheckFolder(read path) {
+bool CheckFolder(read folder) {
 
-	return DiskFolder(path, true, true);
-}
-
-// Parse the infohash, name, and trackers from the given magnet link
-bool LookLink(read link, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers) {
-
-	// Define tags
-	CString tag1 = L"magnet:?";
-	CString tag2 = L"urn:btih:";
-
-	// Flags to make true when we've found parts
-	bool foundhash = false;
-	bool foundname = false;
-
-	// Confirm and remove protocol at the start
-	if (!starts(link, tag1, Matching)) return false;
-	CString s = after(link, tag1, Forward, Matching);
-
-	// Loop through each part of the query string
-	std::vector<CString> v = words(s, L"&");
-	CString b, a;
-	for (int i = 0; i < (int)v.size(); i++) {
-		split(v[i], L"=", &b, &a);
-
-		// Exact topic, required
-		if (same(b, L"xt", Matching) && starts(a, tag2, Matching)) {
-
-			a = after(a, tag2, Forward, Matching);
-			if (length(a) == 40) {
-				*hash = convertRtoBigNumber(a);
-				foundhash = true;
-			}
-
-		// Download name, optional
-		} else if (same(b, L"dn", Matching)) {
-
-			*name = ReplacePercent(a);
-			foundname = true;
-
-		// Tracker, optional, 1 or several of these
-		} else if (same(b, L"tr", Matching)) {
-
-			trackers->push_back(ReplacePercent(a));
-		}
-	}
-
-	// See what we found
-	if (!foundhash) return false; // Hash is required
-	if (!foundname)
-		*name = L"(Untitled)"; // Name is optional
-	return true;
-}
-
-// Read the infohash and name from the torrent file at path
-bool LookPath(read path, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers) {
-	try {
-
-		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(path)));
-		*hash = info.info_hash();
-		*name = widenPtoC(info.name().c_str());
-		for (int i = 0; i < (int)info.trackers().size(); i++)
-			trackers->push_back(widenPtoC(info.trackers()[i].url.c_str()));
-		return true;
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what())); // Throws an exception like "invalid bencoding"
-	} catch (...) {
-		log(L"exception");
-	}
-	return false;
-}
-
-// Let the user create a new torrent
-void CommandNew() {
-
-	report(L"so you want to make a torrent");
+	return DiskFolder(folder, true, true);
 }
 
 // Show a message box to the user
-void Message(int options, read r) {
+void Message(bool user, int options, read r) {
+
+	// Don't show a message unless the user is here to see it
+	if (!user) return;
 
 	// Show the message box with the mouse away
 	AreaPopUp();
@@ -839,18 +767,18 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		switch (LOWORD(wparam)) {
 		case IDOK:
 		{
-			CString s = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
-			if (CheckMagnet(s)) { // See if it looks like a valid magnet link or not
+			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
+			if (CheckMagnet(magnet)) { // See if it looks like a valid magnet link or not
 
 				// Looks valid
-				EnterLink(s); // Add it to the program
 				EndDialog(dialog, 0); // Close the dialog
+				AddMagnet(true, L"", L"", magnet); // Add it to the program
 				return true;
 				
 			} else {
 
 				// Looks invalid, pop a message box above this dialog, and keep it open
-				Message(MB_ICONWARNING | MB_OK, L"Not a valid magnet link. Check the text and try again.");
+				Message(true, MB_ICONWARNING | MB_OK, L"Not a valid magnet link. Check the text and try again.");
 			}
 		}
 		// The user clicked Cancel
@@ -973,15 +901,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_KILLACTIVE:
 		{
-			CString s = TextDialog(dialog, IDC_FOLDER);
-			if (CheckFolder(s)) {
+			CString folder = TextDialog(dialog, IDC_FOLDER);
+			if (CheckFolder(folder)) {
 
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 				return true;
 
 			} else {
 
-				Message(MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + s + "'. Check the path and try again.");
+				Message(true, MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_INVALID); // Keep the property sheet open so the user can fix the invalid data
 				return true;
 			}

@@ -58,7 +58,7 @@ void Test() {
 	CString path = L"C:\\Documents\\no.doc";
 	libtorrent::big_number hash;
 	CString name;
-	bool result = LookPath(path, &hash, &name);
+	bool result = ParseTorrent(torrent, &hash, &name);
 	if (!result) { log(L"false"); return; }
 	log(L"hash: ", convertBigNumberToC(hash));
 	log(L"name: ", name);
