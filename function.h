@@ -231,6 +231,7 @@ CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);
+bool LoadVector(read path, std::vector<char> &c);
 void LibraryStart();
 void LibraryStop();
 void LibraryClose();

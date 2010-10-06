@@ -166,7 +166,7 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 	// Loop through all the torrents loaded into the program and library
 	for (int i = 0; i < (int)Data.torrents.size(); i++) {
 		torrentitem *t = &(Data.torrents[i]); // Point t at the torrentitem that is copied into the list
-		if (hash == /*(libtorrent::big_number)*/t->handle.info_hash()) return t; // Compare the 20 byte hash values
+		if (hash == t->handle.info_hash()) return t; // Compare the 20 byte hash values
 	}
 
 	// Not found, you can add hash without creating a duplicate
@@ -208,6 +208,83 @@ void Add(read folder, read torrent, libtorrent::big_number hash, read name, std:
 
 
 
+// Add a torrent to the libtorrent session from a torrent file on the disk
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
+	try {
+		libtorrent::add_torrent_params p; // Object to fill out
+
+		// Set folder
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		// Set store
+		std::vector<char> c;
+		if (is(store)) LoadVector(store, c);
+		p.resume_data = &c;
+
+		// Set torrent
+		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
+		p.ti = info;
+
+		// Add and save handle
+		*handle = Handle.session->add_torrent(p);
+		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
+
+		return true;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false;
+}
+
+// Add a torrent to the libtorrent session from information parsed from a magnet link
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name) {
+	try {
+		libtorrent::add_torrent_params p; // Object to fill out
+
+		// Set folder
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		// Set store
+		std::vector<char> c;
+		if (is(store)) LoadVector(store, c);
+		p.resume_data = &c;
+
+		// Set hash
+		p.info_hash = hash;
+
+		// Set name
+		std::string n = narrowRtoS(name);
+		p.name = n.c_str();
+
+		// Add and save handle
+		*handle = Handle.session->add_torrent(p);
+		if (!handle->is_valid()) { log(L"invalid add magnet"); return false; }
+
+		return true;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false;
+}
+
+// Add the given tracker to the given torrent in the libtorrent session
+bool LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
+	try {
+
+		// Add tracker
+		libtorrent::announce_entry a(narrowRtoS(tracker));
+		handle->add_tracker(a);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
 
 
 
