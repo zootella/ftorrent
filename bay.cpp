@@ -93,7 +93,7 @@ void AddRestore(libtorrent::big_number hash) {
 	// If we have a magnet link, parse the trackers from it
 	libtorrent::big_number e4;
 	CString e5;
-	std::vector<CString> trackers;
+	std::set<CString> trackers;
 	if (is(magnet)) ParseMagnet(magnet, &e4, &e5, &trackers);
 
 	// Add the torrent from last time
@@ -127,7 +127,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	// Parse the torrent file on the disk
 	libtorrent::big_number hash;
 	CString name;
-	std::vector<CString> trackers;
+	std::set<CString> trackers;
 	if (!ParseTorrent(torrent, &hash, &name, &trackers)) {
 		Message(user, MB_ICONSTOP | MB_OK, L"Unable to read the infohash. This torrent file may be corrupted. Check how you saved or downloaded it, and try again.");
 		return; // Corrupt torrent file
@@ -172,7 +172,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	// Parse the text of the magnet link
 	libtorrent::big_number hash;
 	CString name;
-	std::vector<CString> trackers;
+	std::set<CString> trackers;
 	if (!ParseMagnet(magnet, &hash, &name, &trackers)) return; // Inavlid text or missing parts
 
 	// Avoid a duplicate
@@ -377,12 +377,12 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 }
 
 // Add the given tracker to the given torrent in the libtorrent session
-void LibraryAddTrackers(libtorrent::torrent_handle handle, std::vector<CString> trackers) {
+void LibraryAddTrackers(libtorrent::torrent_handle handle, std::set<CString> trackers) {
 	try {
 
-		for (int i = 0; i < (int)trackers.size(); i++) {
+		for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end( ); i++) {
 
-			libtorrent::announce_entry a(narrowRtoS(trackers[i]));
+			libtorrent::announce_entry a(narrowRtoS(*i));
 			handle.add_tracker(a);
 		}
 
@@ -400,7 +400,7 @@ void LibraryAddTrackers(libtorrent::torrent_handle handle, std::vector<CString> 
 
 
 // Parse the infohash, name, and trackers from the given magnet link
-bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers) {
+bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
 
 	// Define tags
 	CString tag1 = L"magnet:?";
@@ -439,7 +439,7 @@ bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::
 		// Tracker, optional, 1 or several of these
 		} else if (same(b, L"tr", Matching)) {
 
-			trackers->push_back(ReplacePercent(a));
+			trackers->insert(ReplacePercent(a));
 		}
 	}
 
@@ -451,7 +451,7 @@ bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::
 }
 
 // Read the infohash and name from the torrent file at the given
-bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers) {
+bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
 	try {
 
 		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
@@ -459,7 +459,7 @@ bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std
 		if (hash->is_all_zeros()) return false; // Make sure the hash looks valid
 		*name = widenPtoC(info.name().c_str());
 		for (int i = 0; i < (int)info.trackers().size(); i++)
-			trackers->push_back(widenPtoC(info.trackers()[i].url.c_str()));
+			trackers->insert(widenPtoC(info.trackers()[i].url.c_str()));
 		return true;
 
 	} catch (std::exception &e) {

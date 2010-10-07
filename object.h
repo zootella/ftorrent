@@ -186,7 +186,6 @@ public:
 
 	// New
 	torrentitem() {
-		id = 0;
 
 	}
 

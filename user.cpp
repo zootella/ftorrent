@@ -728,7 +728,7 @@ bool CheckMagnet(read magnet) {
 
 	libtorrent::big_number hash;
 	CString name;
-	std::vector<CString> trackers;
+	std::set<CString> trackers;
 	return ParseMagnet(magnet, &hash, &name, &trackers); // Just see if it returns true
 }
 

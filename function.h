@@ -277,9 +277,9 @@ torrentitem *FindTorrent(libtorrent::big_number hash);
 void AddList(bool user, libtorrent::torrent_handle handle, read folder, read torrent, read magnet);
 bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
 bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
-void LibraryAddTrackers(libtorrent::torrent_handle handle, std::vector<CString> trackers);
-bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
-bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::vector<CString> *trackers);
+void LibraryAddTrackers(libtorrent::torrent_handle handle, std::set<CString> trackers);
+bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
+bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 
 
 
