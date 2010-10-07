@@ -29,12 +29,19 @@ extern statetop  State;
 
 
 
-void TorrentOptionSave(libtorrent::big_number hash, read folder, read name, std::set<CString> trackers) {
+
+
+
+
+void torrentitem::Save() {
+
+	//fakery
+	libtorrent::big_number hash = convertRtoBigNumber(L"1122334455667788990011223344556677889900");
+
 
 	libtorrent::entry::list_type l;
-	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end( ); i++) {
+	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
 		l.push_back(narrowRtoS(*i));
-	}
 
 	libtorrent::entry::dictionary_type d;
 	d[narrowRtoS(L"folder")] = narrowRtoS(folder);
@@ -44,25 +51,44 @@ void TorrentOptionSave(libtorrent::big_number hash, read folder, read name, std:
 	SaveEntry(PathTorrentOption(hash), d);
 }
 
+bool torrentitem::Load(libtorrent::big_number hash) {
 
+	libtorrent::entry d;
+	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
+		
+	folder = widenStoC(d[narrowRtoS(L"folder")].string());
+	name = widenStoC(d[narrowRtoS(L"name")].string());
+
+	libtorrent::entry::list_type l = d[narrowRtoS(L"trackers")].list();
+	for (libtorrent::entry::list_type::const_iterator i = l.begin(); i != l.end(); i++)
+		trackers.insert(widenStoC(i->string()));
+	return true;
+}
 
 
 
 // Run a snippet of test code
 void Test() {
 
+	torrentitem t;
+	t.folder = L"MY FOLDER";
+	t.name = L"MY NAME";
+	t.trackers.insert(L"TRACKER A");
+	t.trackers.insert(L"TRACKER B");
+	t.trackers.insert(L"TRACKER C");
+	t.trackers.insert(L"TRACKER B");
 
 	libtorrent::big_number hash = convertRtoBigNumber(L"1122334455667788990011223344556677889900");
-	CString folder = L"MY FOLDER";
-	CString name = L"MY NAME";
+	t.Save();
 
-	std::set<CString> trackers;
-	trackers.insert(L"TRACKER A");
-	trackers.insert(L"TRACKER B");
-	trackers.insert(L"TRACKER C");
-	trackers.insert(L"TRACKER B");
+	torrentitem u;
+	u.Load(hash);
+	log(L"folder: ", u.folder);
+	log(L"name:   ", u.name);
+	for (std::set<CString>::const_iterator i = u.trackers.begin(); i != u.trackers.end(); i++)
+		log(*i);
 
-	TorrentOptionSave(hash, folder, name, trackers);
+
 
 
 }
@@ -102,7 +128,7 @@ void AddRestore(libtorrent::big_number hash) {
 
 		// If options also contained a magnet link, add the additional trackers
 		torrentitem *t = FindTorrent(hash);
-		if (t) LibraryAddTrackers(t->handle, trackers);
+		if (t) AddTrackers(t, trackers);
 
 	// Add the magnet from last time
 	} else if (is(folder) && is(magnet)) {
@@ -136,7 +162,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	// Avoid a duplicate
 	torrentitem *t = FindTorrent(hash);
 	if (t) {
-		LibraryAddTrackers(t->handle, trackers);
+		AddTrackers(t, trackers);
 		Blink(user, t);
 		return; // Added trackers from duplicate
 	}
@@ -178,7 +204,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	// Avoid a duplicate
 	torrentitem *t = FindTorrent(hash);
 	if (t) {
-		LibraryAddTrackers(t->handle, trackers);
+		AddTrackers(t, trackers);
 		Blink(user, t);
 		return; // Added trackers from duplicate
 	}
@@ -190,7 +216,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	// Add the torrent to the libtorrent session
 	libtorrent::torrent_handle handle;
 	if (!LibraryAddMagnet(&handle, folder, store, hash, name)) return; // libtorrent error
-	LibraryAddTrackers(handle, trackers); // Add the trackers we parsed right afterwards
+	AddTrackers(t, trackers); // Add the trackers we parsed
 
 	// Add the torrent handle to the data list, window, and make store files
 	AddList(user, handle, folder, L"", magnet);
@@ -198,8 +224,59 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 
 
 
+// Add the given new trackers in the add list to both the torrent item and the libtorrent torrent handle
+void AddTrackers(torrentitem *t, std::set<CString> add) {
+
+	// Insert the given add trackers into the list the given torrentitem keeps
+	for (std::set<CString>::const_iterator i = add.begin(); i != add.end(); i++) {
+		t->trackers.insert(*i); // The set will keep duplicates out
+	}
+
+	// If there are any we haven't told libtorrent about yet, add them there too
+	for (std::set<CString>::const_iterator i = t->trackers.begin(); i != t->trackers.end(); i++) {
+		if (!LibraryHasTracker(t->handle, *i)) { // Avoid duplicates because libtorrent uses a vector instead of a set
+			LibraryAddTracker(t->handle, *i);
+		}
+	}
+}
 
 
+
+
+
+
+// True if tracker is already in libtorrent's list of trackers for handle
+bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker) {
+	try {
+
+		for (int i = 0; i < (int)handle.trackers().size(); i++) {
+
+			libtorrent::announce_entry a = handle.trackers()[i];
+			CString s = widenStoC(a.url);
+			if (same(s, tracker)) return true;
+		}
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false; // Not found
+}
+
+// Add the given tracker to libtorrent's list of trackers for handle
+void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
+	try {
+
+		libtorrent::announce_entry a(narrowRtoS(tracker));
+		handle.add_tracker(a);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
 
 
 
@@ -272,32 +349,6 @@ void AddList(bool user, libtorrent::torrent_handle handle, read folder, read tor
 
 
 }
-
-
-
-
-
-/*
-
-
-bool TorrentOptionLoad(libtorrent::big_number hash, CString *folder, CString *name, std::set<CString> *trackers) {
-
-	libtorrent::entry d;
-	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
-
-		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
-
-		CString ask = widenStoC(d[narrowRtoS(L"ask")].string()); // True to ask where to save each torrent
-		Data.ask = same(ask, L"t");
-	}
-
-	// Replace blank or invalid with factory defaults
-	if (isblank(Data.folder)) Data.folder = PathTorrents();
-}
-
-*/
-
-
 
 
 
@@ -376,22 +427,6 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 	return false;
 }
 
-// Add the given tracker to the given torrent in the libtorrent session
-void LibraryAddTrackers(libtorrent::torrent_handle handle, std::set<CString> trackers) {
-	try {
-
-		for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end( ); i++) {
-
-			libtorrent::announce_entry a(narrowRtoS(*i));
-			handle.add_tracker(a);
-		}
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
 
 
 

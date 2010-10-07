@@ -271,13 +271,15 @@ void Test();
 void AddRestore(libtorrent::big_number hash);
 void AddTorrent(bool user, CString store, CString folder, CString torrent);
 void AddMagnet(bool user, CString store, CString folder, CString magnet);
+void AddTrackers(torrentitem *t, std::set<CString> add);
+bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
+void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
 void Blink(bool user, torrentitem *t);
 CString ChooseFolder(bool user, read name);
 torrentitem *FindTorrent(libtorrent::big_number hash);
 void AddList(bool user, libtorrent::torrent_handle handle, read folder, read torrent, read magnet);
 bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
 bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
-void LibraryAddTrackers(libtorrent::torrent_handle handle, std::set<CString> trackers);
 bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 

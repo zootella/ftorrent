@@ -175,10 +175,9 @@ public:
 class torrentitem {
 public:
 
-	libtorrent::big_number hash;
 	CString folder; //save folder, required
 	CString name; //name from the magnet link, blank if we've got the torrent file
-	std::set<CString> trackers;
+	std::set<CString> trackers; //trackers from all sources
 
 
 
@@ -188,6 +187,9 @@ public:
 	torrentitem() {
 
 	}
+
+	void Save();
+	bool Load(libtorrent::big_number hash);
 
 	void Edit();
 
