@@ -674,7 +674,7 @@ void AreaCommand(areaitem *area) {
 			// Show the popup menu and wait here for the user to click on one of the menu choices
 			UINT choice = MenuShow(Handle.menu, false, &size); // Wait here for the user to make a choice
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
-			else if (choice == ID_TOOLS_OPEN)    { AddTorrent(true, L"", L"", L""); }
+			else if (choice == ID_TOOLS_OPEN)    { AddTorrent(L""); }
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
 			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }

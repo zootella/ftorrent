@@ -48,8 +48,98 @@ void Test() {
 
 
 
+
+
+
+
+void OpenTorrent() {
+
+	AddTorrent(DialogOpen());
+}
+
+
+
+
+
+// The user clicked to add the torrent file at the given path, or blank to ask the user
+void AddTorrent(CString torrent) {
+
+	// Have the user pick the torrent to open
+	if (isblank(torrent)) torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
+	if (isblank(torrent)) return; // Canceled the file open dialog
+
+	// Parse the torrent file on the disk
+	libtorrent::big_number hash;
+	CString name;
+	std::set<CString> trackers;
+	if (!ParseTorrent(torrent, &hash, &name, &trackers)) {
+		Message(MB_ICONSTOP | MB_OK, L"Unable to read the infohash. This torrent file may be corrupted. Check how you saved or downloaded it, and try again.");
+		return; // Corrupt torrent file
+	}
+
+	// Avoid a duplicate
+	torrentitem *t = FindTorrent(hash);
+	if (t) {
+		AddTrackers(t, trackers);
+		Blink(t);
+		return; // Added trackers from duplicate
+	}
+
+	// Find the download folder, asking the user if necessary
+	if (isblank(folder)) folder = ChooseFolder(name);
+	if (isblank(folder)) return; // User canceled browse for folder dialog
+
+	// Make sure we can write in the folder
+	if (!CheckFolder(folder)) {
+		Message(MB_ICONSTOP | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
+		return; // Can't write to folder
+	}
+
+	// Add the torrent file to the libtorrent session
+	libtorrent::torrent_handle handle;
+	if (!LibraryAddTorrent(&handle, folder, L"", torrent)) return; // libtorrent error
+
+	// Add the torrent to the data list, window, and make store files
+	AddList(handle, folder, torrent, L"");
+	AddStore();
+}
+
+// The user clicked to add the given magnet link
+void AddMagnet(CString magnet) {
+
+	// Parse the text of the magnet link
+	libtorrent::big_number hash;
+	CString name;
+	std::set<CString> trackers;
+	if (!ParseMagnet(magnet, &hash, &name, &trackers)) return; // Inavlid text or missing parts
+	//TODO message text not valid for a magnet link
+
+	// Avoid a duplicate
+	torrentitem *t = FindTorrent(hash);
+	if (t) {
+		AddTrackers(t, trackers);
+		Blink(t);
+		return; // Added trackers from duplicate
+	}
+
+	// Find the download folder, asking the user if necessary
+	if (isblank(folder)) folder = ChooseFolder(name);
+	if (isblank(folder)) return; // User canceled browse for folder dialog
+
+	// Add the torrent to the libtorrent session
+	libtorrent::torrent_handle handle;
+	if (!LibraryAddMagnet(&handle, folder, L"", hash, name)) return; // libtorrent error
+	AddTrackers(t, trackers); // Add the trackers we parsed
+
+	// Add the torrent handle to the data list, window, and make store files
+	AddList(handle, folder, L"", magnet);
+	AddStore();
+}
+
+
+
 // Restore the torrent with the given infohash to this new session from files saved in the previous one
-void AddRestore(libtorrent::big_number hash) {
+void AddStore(libtorrent::big_number hash) {
 
 	// Read the folder, name, and trackers from the options file
 	torrentitem o;
@@ -72,6 +162,7 @@ void AddRestore(libtorrent::big_number hash) {
 		return; // Added trackers from this duplicate
 	}
 
+	// Add to libtorrent
 	libtorrent::torrent_handle handle;
 	if (hastorrent) {
 		if (!LibraryAddTorrent(&handle, folder, PathTorrentStore(hash), torrent)) return; // libtorrent error
@@ -79,113 +170,16 @@ void AddRestore(libtorrent::big_number hash) {
 		if (!LibraryAddMagnet(&handle, folder, PathTorrentStore(hash), hash, name)) return;
 	}
 
-	// Add the torrent handle to the data list, window, and make store files
-	AddList(user, handle, folder, L"", magnet);
+	// Add the torrent handle to the data list and window
+	AddList(handle, folder, L"", magnet);
 
+	// Add all the trackers we know about to the torrent item and handle
 	torrentitem *t = FindTorrent(hash); // Find the torrent we just added
 	if (t) {
 		AddTrackers(t, o.trackers);
 		AddTrackers(t, torrenttrackers);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-/*
-Add a torrent file
-
-user     true if the user clicked to do this, so we should show message boxes
-folder   path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
-torrent  path to the torrent file on the disk, or blank to ask them
-*/
-void AddTorrent(bool user, CString folder, CString torrent) {
-
-	// Have the user pick the torrent to open
-	if (torrent == L"<ask>") torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
-	if (isblank(torrent)) return; // Canceled the file open dialog
-
-	// Parse the torrent file on the disk
-	libtorrent::big_number hash;
-	CString name;
-	std::set<CString> trackers;
-	if (!ParseTorrent(torrent, &hash, &name, &trackers)) {
-		Message(user, MB_ICONSTOP | MB_OK, L"Unable to read the infohash. This torrent file may be corrupted. Check how you saved or downloaded it, and try again.");
-		return; // Corrupt torrent file
-	}
-
-	// Avoid a duplicate
-	torrentitem *t = FindTorrent(hash);
-	if (t) {
-		AddTrackers(t, trackers);
-		Blink(user, t);
-		return; // Added trackers from duplicate
-	}
-
-	// Find the download folder, asking the user if necessary
-	if (isblank(folder)) folder = ChooseFolder(name);
-	if (isblank(folder)) return; // User canceled browse for folder dialog
-
-	// Make sure we can write in the folder
-	if (!CheckFolder(folder)) {
-		Message(user, MB_ICONSTOP | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
-		return; // Can't write to folder
-	}
-
-	// Add the torrent file to the libtorrent session
-	libtorrent::torrent_handle handle;
-	if (!LibraryAddTorrent(&handle, folder, L"", torrent)) return; // libtorrent error
-
-	// Add the torrent to the data list, window, and make store files
-	AddList(user, handle, folder, torrent, L"");
-	AddStore();
-}
-
-/*
-Add a magnet link
-
-user    true if the user clicked to do this, so we should show message boxes
-folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
-magnet  text of the magnet link
-*/
-void AddMagnet(bool user, CString folder, CString magnet) {
-
-	// Parse the text of the magnet link
-	libtorrent::big_number hash;
-	CString name;
-	std::set<CString> trackers;
-	if (!ParseMagnet(magnet, &hash, &name, &trackers)) return; // Inavlid text or missing parts
-
-	// Avoid a duplicate
-	torrentitem *t = FindTorrent(hash);
-	if (t) {
-		AddTrackers(t, trackers);
-		Blink(user, t);
-		return; // Added trackers from duplicate
-	}
-
-	// Find the download folder, asking the user if necessary
-	if (isblank(folder)) folder = ChooseFolder(name);
-	if (isblank(folder)) return; // User canceled browse for folder dialog
-
-	// Add the torrent to the libtorrent session
-	libtorrent::torrent_handle handle;
-	if (!LibraryAddMagnet(&handle, folder, L"", hash, name)) return; // libtorrent error
-	AddTrackers(t, trackers); // Add the trackers we parsed
-
-	// Add the torrent handle to the data list, window, and make store files
-	AddList(user, handle, folder, L"", magnet);
-	AddStore();
-}
-
-
 
 
 
@@ -250,9 +244,8 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 
 
 // Blink the selection of t in the list view to draw the users attention to it
-void Blink(bool user, torrentitem *t) {
+void Blink(torrentitem *t) {
 
-	if (!user) return; // Only do this if the user is here
 }
 
 // Find the download folder, asking the user if necessary
@@ -276,7 +269,7 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 }
 
 // Place the given libtorrent handle in the data list and on the screen
-void AddList(bool user, libtorrent::torrent_handle handle, read folder, read torrent, read magnet) {
+void AddList(libtorrent::torrent_handle handle, read folder, read torrent, read magnet) {
 
 	// Add it to the data list
 	torrentitem t;              // Make a new empty torrentitem
