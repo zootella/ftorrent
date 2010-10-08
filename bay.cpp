@@ -51,33 +51,41 @@ void Test() {
 // Restore the torrent with the given infohash to this new session from files saved in the previous one
 void AddRestore(libtorrent::big_number hash) {
 
-	// Compose paths to the torrent and store files
-	CString torrent = PathTorrentMeta(hash);
-	CString store   = PathTorrentStore(hash);
-	libtorrent::entry e1, e2;
-	if (!LoadEntry(torrent, e1)) torrent = L""; // Blank paths that have corrupted or missing files
-	if (!LoadEntry(store,   e2)) store   = L"";
-
 	// Read the folder, name, and trackers from the options file
 	torrentitem o;
 	o.Load(hash);
-	if (isblank(o.folder)) return; // Only folder is necessary, name and trackers are optional
+	if (isblank(o.folder)) return; // Only hash and folder are required
 
+	// Parse the torrent file on the disk
+	CString torrent = PathTorrentMeta(hash);
+	libtorrent::big_number torrenthash;
+	CString torrentname;
+	std::set<CString> torrenttrackers;
+	bool hastorrent = ParseTorrent(torrent, &torrenthash, &torrentname, &torrenttrackers);
+	if (hastorrent && hash != torrenthash) hastorrent = false; // Make sure the hash inside matches
 
+	// Avoid a duplicate
+	torrentitem *d = FindTorrent(hash);
+	if (d) {
+		AddTrackers(d, o.trackers);
+		AddTrackers(d, torrenttrackers);
+		return; // Added trackers from this duplicate
+	}
 
+	libtorrent::torrent_handle handle;
+	if (hastorrent) {
+		if (!LibraryAddTorrent(&handle, folder, PathTorrentStore(hash), torrent)) return; // libtorrent error
+	} else {
+		if (!LibraryAddMagnet(&handle, folder, PathTorrentStore(hash), hash, name)) return;
+	}
 
+	// Add the torrent handle to the data list, window, and make store files
+	AddList(user, handle, folder, L"", magnet);
 
-	// Add the torrent from last time
-	if (is(torrent)) {
-
-		AddTorrent(false, store, folder, torrent);
-		torrentitem *t = FindTorrent(hash); // Find the torrent we just added
-		if (t) AddTrackers(t, o.trackers);  // If add worked and we found it, add trackers from the options file
-
-	// Add the magnet from last time
-	} else if (is(magnet)) {
-
-		AddParts(false, store, folder, name, trackers);
+	torrentitem *t = FindTorrent(hash); // Find the torrent we just added
+	if (t) {
+		AddTrackers(t, o.trackers);
+		AddTrackers(t, torrenttrackers);
 	}
 }
 
@@ -121,7 +129,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (folder == L"<ask>") folder = ChooseFolder(name);
+	if (isblank(folder)) folder = ChooseFolder(name);
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Make sure we can write in the folder
@@ -136,6 +144,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 
 	// Add the torrent to the data list, window, and make store files
 	AddList(user, handle, folder, torrent, L"");
+	AddStore();
 }
 
 /*
@@ -163,7 +172,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (folder == L"<ask>") folder = ChooseFolder(name);
+	if (isblank(folder)) folder = ChooseFolder(name);
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Add the torrent to the libtorrent session
@@ -173,9 +182,23 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 
 	// Add the torrent handle to the data list, window, and make store files
 	AddList(user, handle, folder, L"", magnet);
+	AddStore();
 }
 
 
+
+/*
+Add a magnet link
+
+user    true if the user clicked to do this, so we should show message boxes
+store   path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
+folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
+
+
+*/
+void AddParts(bool user, CString store, CString folder, libtorrent::big_number hash, CString name, std::set<CString> trackers) {
+
+}
 
 
 
@@ -286,6 +309,10 @@ void AddList(bool user, libtorrent::torrent_handle handle, read folder, read tor
 		t.ComposeHash(),
 		t.ComposePath(),
 		L"");
+}
+
+void AddStore() {
+
 
 /*
 	if (is(torrent));
@@ -301,8 +328,6 @@ void AddList(bool user, libtorrent::torrent_handle handle, read folder, read tor
 	s.insert(
 
 */
-
-
 
 }
 
