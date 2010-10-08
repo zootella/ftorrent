@@ -287,6 +287,51 @@ DWORD torrentitem::Hash() {
 
 
 
+// Save the folder, name, and trackers in this torrent item to a file like "optn.infohash.db" next to the running exe
+void torrentitem::Save() {
+
+	// Copy the torrent item's set into a libtorrent bencoded list
+	libtorrent::entry::list_type l;
+	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
+		l.push_back(narrowRtoS(*i));
+
+	// Make and fill the bencoded dictionary
+	libtorrent::entry::dictionary_type d;
+	d[narrowRtoS(L"folder")] = narrowRtoS(folder);
+	d[narrowRtoS(L"name")] = narrowRtoS(name);
+	d[narrowRtoS(L"trackers")] = l;
+
+	// Save it to disk
+	SaveEntry(PathTorrentOption(handle.info_hash()), d);
+}
+
+// Given an infohash, load the folder, name, and trackers from "optn.infohash.db" to this torrent item
+bool torrentitem::Load(libtorrent::big_number hash) {
+
+	// Look for a file named with the given hash, and read the bencoded data inside
+	libtorrent::entry d;
+	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
+
+	// Load the folder path and name into this torrent item
+	folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Not found returns blank
+	name = widenStoC(d[narrowRtoS(L"name")].string());
+
+	// Load in the list of trackers
+	trackers.clear();
+	libtorrent::entry::list_type l = d[narrowRtoS(L"trackers")].list();
+	for (libtorrent::entry::list_type::const_iterator i = l.begin(); i != l.end(); i++)
+		trackers.insert(widenStoC(i->string()));
+	return true;
+}
+
+
+
+
+
+
+
+
+
 
 
 

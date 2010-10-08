@@ -33,60 +33,11 @@ extern statetop  State;
 
 
 
-void torrentitem::Save() {
-
-	//fakery
-	libtorrent::big_number hash = convertRtoBigNumber(L"1122334455667788990011223344556677889900");
-
-
-	libtorrent::entry::list_type l;
-	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
-		l.push_back(narrowRtoS(*i));
-
-	libtorrent::entry::dictionary_type d;
-	d[narrowRtoS(L"folder")] = narrowRtoS(folder);
-	d[narrowRtoS(L"name")] = narrowRtoS(name);
-	d[narrowRtoS(L"trackers")] = l;
-
-	SaveEntry(PathTorrentOption(hash), d);
-}
-
-bool torrentitem::Load(libtorrent::big_number hash) {
-
-	libtorrent::entry d;
-	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
-		
-	folder = widenStoC(d[narrowRtoS(L"folder")].string());
-	name = widenStoC(d[narrowRtoS(L"name")].string());
-
-	libtorrent::entry::list_type l = d[narrowRtoS(L"trackers")].list();
-	for (libtorrent::entry::list_type::const_iterator i = l.begin(); i != l.end(); i++)
-		trackers.insert(widenStoC(i->string()));
-	return true;
-}
-
 
 
 // Run a snippet of test code
 void Test() {
 
-	torrentitem t;
-	t.folder = L"MY FOLDER";
-	t.name = L"MY NAME";
-	t.trackers.insert(L"TRACKER A");
-	t.trackers.insert(L"TRACKER B");
-	t.trackers.insert(L"TRACKER C");
-	t.trackers.insert(L"TRACKER B");
-
-	libtorrent::big_number hash = convertRtoBigNumber(L"1122334455667788990011223344556677889900");
-	t.Save();
-
-	torrentitem u;
-	u.Load(hash);
-	log(L"folder: ", u.folder);
-	log(L"name:   ", u.name);
-	for (std::set<CString>::const_iterator i = u.trackers.begin(); i != u.trackers.end(); i++)
-		log(*i);
 
 
 
