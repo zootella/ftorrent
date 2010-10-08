@@ -51,39 +51,35 @@ void Test() {
 // Restore the torrent with the given infohash to this new session from files saved in the previous one
 void AddRestore(libtorrent::big_number hash) {
 
-	// Compose paths to the torrent, store, and option files
+	// Compose paths to the torrent and store files
 	CString torrent = PathTorrentMeta(hash);
 	CString store   = PathTorrentStore(hash);
-	CString option  = PathTorrentOption(hash);
-	libtorrent::entry e1, e2, e3;
+	libtorrent::entry e1, e2;
 	if (!LoadEntry(torrent, e1)) torrent = L""; // Blank paths that have corrupted or missing files
 	if (!LoadEntry(store,   e2)) store   = L"";
-	if (!LoadEntry(option,  e3)) option  = L"";
 
-	// Read the folder path and magnet link from the options file
-	CString folder, magnet; // Blank if not found
-	if (is(option)) {
-		folder = widenStoC(e3[narrowRtoS(L"folder")].string());
-		magnet = widenStoC(e3[narrowRtoS(L"magnet")].string());
-	}
+	// Read the folder, name, and trackers from the options file
+	torrentitem o;
+	o.Load(hash);
+	if (isblank(o.folder)) return; // Only folder is necessary, name and trackers are optional
 
-	// If we have a magnet link, parse the trackers from it
-	libtorrent::big_number e4;
-	CString e5;
-	std::set<CString> trackers;
-	if (is(magnet)) ParseMagnet(magnet, &e4, &e5, &trackers);
+
+
+
 
 	// Add the torrent from last time
-	if (is(folder) && is(torrent)) {
-		AddTorrent(false, store, folder, torrent);
+	if (is(torrent)) {
 
-		// If options also contained a magnet link, add the additional trackers
-		torrentitem *t = FindTorrent(hash);
-		if (t) AddTrackers(t, trackers);
+		AddTorrent(false, store, folder, torrent);
+		torrentitem *t = FindTorrent(hash); // Find the torrent we just added
+		if (t) AddTrackers(t, o.trackers);  // If add worked and we found it, add trackers from the options file
 
 	// Add the magnet from last time
-	} else if (is(folder) && is(magnet)) {
+	} else if (is(magnet)) {
+
 		AddMagnet(false, store, folder, magnet);
+
+		AddParts(false, store, folder, name, trackers);
 	}
 }
 
@@ -119,7 +115,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (isblank(folder)) folder = ChooseFolder(user, name);
+	if (isblank(folder) && user) folder = ChooseFolder(user, name);
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Make sure we can write in the folder
@@ -161,7 +157,39 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (isblank(folder)) folder = ChooseFolder(user, name);
+	if (isblank(folder) && user) folder = ChooseFolder(user, name);
+	if (isblank(folder)) return; // User canceled browse for folder dialog
+
+	// Add the torrent to the libtorrent session
+	libtorrent::torrent_handle handle;
+	if (!LibraryAddMagnet(&handle, folder, store, hash, name)) return; // libtorrent error
+	AddTrackers(t, trackers); // Add the trackers we parsed
+
+	// Add the torrent handle to the data list, window, and make store files
+	AddList(user, handle, folder, L"", magnet);
+}
+
+/*
+Add a torrent from individual parts
+
+user    true if the user clicked to do this, so we should show message boxes
+store   path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
+folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
+torrent
+name
+trackers
+*/
+void AddParts(bool user, CString store, CString folder, CString torrent, CString name, CString trackers) {
+
+	// Avoid a duplicate
+	torrentitem *t = FindTorrent(hash);
+	if (t) {
+		AddTrackers(t, trackers);
+		Blink(user, t);
+		return; // Added trackers from duplicate
+	}
+
+	// Find the download folder, asking the user if necessary
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Add the torrent to the libtorrent session
