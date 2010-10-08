@@ -77,11 +77,17 @@ void AddRestore(libtorrent::big_number hash) {
 	// Add the magnet from last time
 	} else if (is(magnet)) {
 
-		AddMagnet(false, store, folder, magnet);
-
 		AddParts(false, store, folder, name, trackers);
 	}
 }
+
+
+
+
+//TODO have teh functions that call these pick torrent and folder before you get here
+// have these return error messages, or blank on success, and then the caller can decide to show them or not
+// then, you might be able to combine them into one
+
 
 /*
 Add a torrent file
@@ -94,7 +100,7 @@ torrent  path to the torrent file on the disk, or blank to ask them
 void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 
 	// Have the user pick the torrent to open
-	if (isblank(torrent) && user) torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
+	if (torrent == L"<ask>") torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
 	if (isblank(torrent)) return; // Canceled the file open dialog
 
 	// Parse the torrent file on the disk
@@ -115,7 +121,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (isblank(folder) && user) folder = ChooseFolder(user, name);
+	if (folder == L"<ask>") folder = ChooseFolder(name);
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Make sure we can write in the folder
@@ -157,7 +163,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	}
 
 	// Find the download folder, asking the user if necessary
-	if (isblank(folder) && user) folder = ChooseFolder(user, name);
+	if (folder == L"<ask>") folder = ChooseFolder(name);
 	if (isblank(folder)) return; // User canceled browse for folder dialog
 
 	// Add the torrent to the libtorrent session
@@ -169,37 +175,13 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 	AddList(user, handle, folder, L"", magnet);
 }
 
-/*
-Add a torrent from individual parts
 
-user    true if the user clicked to do this, so we should show message boxes
-store   path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
-folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
-torrent
-name
-trackers
-*/
-void AddParts(bool user, CString store, CString folder, CString torrent, CString name, CString trackers) {
 
-	// Avoid a duplicate
-	torrentitem *t = FindTorrent(hash);
-	if (t) {
-		AddTrackers(t, trackers);
-		Blink(user, t);
-		return; // Added trackers from duplicate
-	}
 
-	// Find the download folder, asking the user if necessary
-	if (isblank(folder)) return; // User canceled browse for folder dialog
 
-	// Add the torrent to the libtorrent session
-	libtorrent::torrent_handle handle;
-	if (!LibraryAddMagnet(&handle, folder, store, hash, name)) return; // libtorrent error
-	AddTrackers(t, trackers); // Add the trackers we parsed
 
-	// Add the torrent handle to the data list, window, and make store files
-	AddList(user, handle, folder, L"", magnet);
-}
+
+
 
 
 
@@ -218,11 +200,6 @@ void AddTrackers(torrentitem *t, std::set<CString> add) {
 		}
 	}
 }
-
-
-
-
-
 
 // True if tracker is already in libtorrent's list of trackers for handle
 bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker) {
@@ -270,9 +247,9 @@ void Blink(bool user, torrentitem *t) {
 
 // Find the download folder, asking the user if necessary
 // Returns blank if the user cancels the box
-CString ChooseFolder(bool user, read name) {
-	if (user && Data.ask) return DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
-	return Data.folder;
+CString ChooseFolder(read name) {
+	if (Data.ask) return DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
+	else          return Data.folder;
 }
 
 // Find the torrent with the given infohash in our list, or null if not found

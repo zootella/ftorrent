@@ -275,7 +275,7 @@ void AddTrackers(torrentitem *t, std::set<CString> add);
 bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
 void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
 void Blink(bool user, torrentitem *t);
-CString ChooseFolder(bool user, read name);
+CString ChooseFolder(read name);
 torrentitem *FindTorrent(libtorrent::big_number hash);
 void AddList(bool user, libtorrent::torrent_handle handle, read folder, read torrent, read magnet);
 bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
