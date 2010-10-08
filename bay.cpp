@@ -92,20 +92,21 @@ void AddRestore(libtorrent::big_number hash) {
 
 
 
-//TODO have teh functions that call these pick torrent and folder before you get here
-// have these return error messages, or blank on success, and then the caller can decide to show them or not
-// then, you might be able to combine them into one
+
+
+
+
+
 
 
 /*
 Add a torrent file
 
 user     true if the user clicked to do this, so we should show message boxes
-store    path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
 folder   path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
 torrent  path to the torrent file on the disk, or blank to ask them
 */
-void AddTorrent(bool user, CString store, CString folder, CString torrent) {
+void AddTorrent(bool user, CString folder, CString torrent) {
 
 	// Have the user pick the torrent to open
 	if (torrent == L"<ask>") torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
@@ -140,7 +141,7 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 
 	// Add the torrent file to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddTorrent(&handle, folder, store, torrent)) return; // libtorrent error
+	if (!LibraryAddTorrent(&handle, folder, L"", torrent)) return; // libtorrent error
 
 	// Add the torrent to the data list, window, and make store files
 	AddList(user, handle, folder, torrent, L"");
@@ -151,11 +152,10 @@ void AddTorrent(bool user, CString store, CString folder, CString torrent) {
 Add a magnet link
 
 user    true if the user clicked to do this, so we should show message boxes
-store   path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
 folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
 magnet  text of the magnet link
 */
-void AddMagnet(bool user, CString store, CString folder, CString magnet) {
+void AddMagnet(bool user, CString folder, CString magnet) {
 
 	// Parse the text of the magnet link
 	libtorrent::big_number hash;
@@ -177,7 +177,7 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 
 	// Add the torrent to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddMagnet(&handle, folder, store, hash, name)) return; // libtorrent error
+	if (!LibraryAddMagnet(&handle, folder, L"", hash, name)) return; // libtorrent error
 	AddTrackers(t, trackers); // Add the trackers we parsed
 
 	// Add the torrent handle to the data list, window, and make store files
@@ -186,19 +186,6 @@ void AddMagnet(bool user, CString store, CString folder, CString magnet) {
 }
 
 
-
-/*
-Add a magnet link
-
-user    true if the user clicked to do this, so we should show message boxes
-store   path to libtorrent resume data from this torrent running in a previous session, or blank if this is the first time
-folder  path to the save folder, like "C:\Documents\Torrents" without a trailing slash or the name of the torrent folder like "Torrent Name" on the end
-
-
-*/
-void AddParts(bool user, CString store, CString folder, libtorrent::big_number hash, CString name, std::set<CString> trackers) {
-
-}
 
 
 
