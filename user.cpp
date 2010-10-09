@@ -723,15 +723,6 @@ void OptionSave() {
 	SaveEntry(PathOption(), d);
 }
 
-// True if the given text looks like a good magnet link
-bool CheckMagnet(read magnet) {
-
-	libtorrent::big_number hash;
-	CString name;
-	std::set<CString> trackers;
-	return ParseMagnet(magnet, &hash, &name, &trackers); // Just see if it returns true
-}
-
 // True if the given path is to a folder we can make and write in
 bool CheckFolder(read folder) {
 
@@ -739,10 +730,7 @@ bool CheckFolder(read folder) {
 }
 
 // Show a message box to the user
-void Message(bool user, int options, read r) {
-
-	// Don't show a message unless the user is here to see it
-	if (!user) return;
+void Message(int options, read r) {
 
 	// Show the message box with the mouse away
 	AreaPopUp();
@@ -768,18 +756,9 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		case IDOK:
 		{
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
-			if (CheckMagnet(magnet)) { // See if it looks like a valid magnet link or not
-
-				// Looks valid
-				EndDialog(dialog, 0); // Close the dialog
-				AddMagnet(true, L"", L"", magnet); // Add it to the program
-				return true;
-				
-			} else {
-
-				// Looks invalid, pop a message box above this dialog, and keep it open
-				Message(true, MB_ICONWARNING | MB_OK, L"Not a valid magnet link. Check the text and try again.");
-			}
+			EndDialog(dialog, 0); // Close the dialog
+			AddMagnet(); // Add it to the program or show the user an error message
+			return true;
 		}
 		// The user clicked Cancel
 		break;
@@ -909,7 +888,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 			} else {
 
-				Message(true, MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
+				Message(MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_INVALID); // Keep the property sheet open so the user can fix the invalid data
 				return true;
 			}

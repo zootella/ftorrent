@@ -252,9 +252,8 @@ void Size(int move = 0); // Has defaults
 void AreaCommand(areaitem *area);
 void OptionLoad();
 void OptionSave();
-bool CheckMagnet(read magnet);
 bool CheckFolder(read folder);
-void Message(bool user, int options, read r);
+void Message(int options, read r);
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void DialogOptions();
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
