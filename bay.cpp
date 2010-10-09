@@ -30,7 +30,78 @@ extern statetop  State;
 
 
 
+// Add a torrent to our libtorrent session
+// folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
+// torrent is the path to the torrent file on the disk
+// or set torrent null and specify hash, name, and tracker from the magnet link
+// store is the path to libtorrent resume data from a previous session, or null if this is the first time
+// Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
+// If you add the same infohash twice, sets the existing handle instead of producing an error
+torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store) {
 
+	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
+	torrentitem t;
+	//TODO change this to write in t and return true
+
+	try {
+
+		// Local objects in memory for the add call below
+		std::string namestring, trackerstring;
+		if (name)    namestring    = narrowRtoS(name);
+		if (tracker) trackerstring = narrowRtoS(tracker);
+		std::vector<char> charvector;
+
+		// Make a torrent params object to fill out
+		libtorrent::add_torrent_params p;
+		p.duplicate_is_error = false; // Return the existing torrent handle instead of producing an error
+
+		// Set folder, the path to the folder where the torrent is or will be saved, required
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		// Set torrent, the path to the torrent file on the disk
+		if (torrent) {
+
+			p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
+
+		// Or, set hash, name, and tracker from a magnet link
+		} else {
+
+			p.info_hash = convertPtoBigNumber(narrowRtoS(hash).c_str());
+			if (name)    p.name        = namestring.c_str();
+			if (tracker) p.tracker_url = trackerstring.c_str();
+		}
+
+		// Specify store data saved from a previous session, optional
+		if (store) {
+
+			boost::filesystem::ifstream f(store, std::ios_base::binary); // Try to open the file on the disk
+			if (!f.fail()) { // Opening it worked
+
+				// Copy the file contents into charvector
+				f.unsetf(std::ios_base::skipws); // Set whitespace option
+				std::istream_iterator<char> fileiterator(f);
+				std::istream_iterator<char> streamiterator;
+				std::copy(fileiterator, streamiterator, std::back_inserter(charvector));
+
+				// Add the charvector to the torrent parameters we're filling out
+				p.resume_data = &charvector;
+
+				// Close the disk file we opened
+				f.close();
+			}
+		}
+
+		// Add the torrent to the session and save the torrent handle we get
+		t.handle = Handle.session->add_torrent(p);
+		return t;
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return t; // Something went wrong, return an empty torrent item with an invalid handle
+}
 
 
 
@@ -38,14 +109,15 @@ extern statetop  State;
 // Run a snippet of test code
 void Test() {
 
-	libtorrent::torrent_handle handle;
 
-	LibraryAddTorrent(
-		&handle,
-		L"C:\\Documents\\test",
-		L"",
-		L"C:\\Documents\\my.torrent");
 
+	LibraryAdd(
+		L"C:\\Documents\\test",       // folder
+		L"C:\\Documents\\my.torrent", // torrent
+		NULL,  // magnet hash
+		NULL,  //        name
+		NULL,  //        tracker
+		NULL); // store file from before	
 
 
 }
@@ -345,7 +417,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 		// Set store
 		std::vector<char> c;
 		if (is(store)) LoadVector(store, c);
-		p.resume_data = &c;
+		if (c.size() > 0) p.resume_data = &c;
 
 		// Set torrent
 		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
@@ -375,7 +447,7 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 		// Set store
 		std::vector<char> c;
 		if (is(store)) LoadVector(store, c);
-		p.resume_data = &c;
+		if (c.size() > 0) p.resume_data = &c;
 
 		// Set hash
 		p.info_hash = hash;
