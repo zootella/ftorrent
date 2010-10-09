@@ -393,6 +393,7 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 
 
 // Parse the infohash, name, and trackers from the given magnet link
+// Returns true with nonzero hash and nonblank name, or false
 bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
 
 	// Define tags
@@ -438,12 +439,13 @@ bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::
 
 	// See what we found
 	if (!foundhash) return false; // Hash is required
-	if (!foundname)
+	if (!foundname || isblank(*name))
 		*name = L"(Untitled)"; // Name is optional
 	return true;
 }
 
 // Read the infohash and name from the torrent file at the given
+// Returns true with nonzero hash and nonblank name, or false
 bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
 	try {
 
