@@ -438,9 +438,9 @@ bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::
 	}
 
 	// See what we found
-	if (!foundhash) return false; // Hash is required
+	if (!foundhash || hash->is_all_zeros()) return false; // Hash cannot be zero
 	if (!foundname || isblank(*name))
-		*name = L"(Untitled)"; // Name is optional
+		*name = L"Untitled " + base16(HashStart(*hash)); // Name never blank
 	return true;
 }
 
@@ -451,12 +451,9 @@ bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std
 
 		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
 		*hash = info.info_hash();
-		if (hash->is_all_zeros()) return false; // Make sure the hash looks valid
+		if (hash->is_all_zeros()) return false; // Hash cannot be zero
 		*name = widenPtoC(info.name().c_str());
-
-		if (isblank(*name)) *name = L"Untitled " + base16(HashStart(number));
-
-
+		if (isblank(*name)) *name = L"Untitled " + base16(HashStart(*hash)); // Name never blank
 		for (int i = 0; i < (int)info.trackers().size(); i++)
 			trackers->insert(widenPtoC(info.trackers()[i].url.c_str()));
 		return true;
