@@ -268,5 +268,22 @@ void ListPulse();
 
 
 
+void Test();
+CString AddTorrent(CString torrent);
+CString AddMagnet(read magnet);
+void AddStore(libtorrent::big_number hash);
+void AddTrackers(libtorrent::big_number hash, std::set<CString> add);
+bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
+void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
+void Blink(libtorrent::big_number hash);
+torrentitem *FindTorrent(libtorrent::big_number hash);
+void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
+void AddRow(libtorrent::big_number hash);
+void AddMeta(libtorrent::big_number hash, read torrent);
+void AddOption(libtorrent::big_number hash);
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
+bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
+bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 
 

@@ -674,7 +674,11 @@ void AreaCommand(areaitem *area) {
 			// Show the popup menu and wait here for the user to click on one of the menu choices
 			UINT choice = MenuShow(Handle.menu, false, &size); // Wait here for the user to make a choice
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
-			else if (choice == ID_TOOLS_OPEN)    { AddTorrent(L""); }
+			else if (choice == ID_TOOLS_OPEN)    {
+
+				CString message = AddTorrent(L"");
+				if (is(message)) Message(MB_ICONWARNING | MB_OK, message);
+			}
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
 			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }
 			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
@@ -757,7 +761,8 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		{
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
-			AddMagnet(); // Add it to the program or show the user an error message
+			CString message = AddMagnet(L""); // Add it to the program or cancel or
+			if (is(message)) Message(MB_ICONWARNING | MB_OK, message); // Show the user an error message 
 			return true;
 		}
 		// The user clicked Cancel

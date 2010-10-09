@@ -58,102 +58,83 @@ void Test() {
 
 
 // The user clicked to add the torrent file at the given path, or blank to ask the user
-void AddTorrent(CString torrent) {
+// Returns error message text for the user, or blank on cancel or success
+CString AddTorrent(CString torrent) {
 
 	// Have the user pick the torrent to open
 	if (isblank(torrent)) torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
-	if (isblank(torrent)) return; // Canceled the file open dialog
+	if (isblank(torrent)) return L""; // Canceled the file open dialog
 
 	// Parse the torrent file on the disk
 	libtorrent::big_number hash;
 	CString name;
 	std::set<CString> trackers;
-	if (!ParseTorrent(torrent, &hash, &name, &trackers)) {
-		Message(MB_ICONSTOP | MB_OK, L"Unable to read the infohash. This torrent file may be corrupted. Check how you saved or downloaded it, and try again.");
-		return; // Corrupt torrent file
-	}
+	if (!ParseTorrent(torrent, &hash, &name, &trackers))
+		return L"Unable to read the torrent file. Check how you saved or downloaded it, and try again."; // Corrupt torrent file
 
 	// Avoid a duplicate
-	torrentitem *t = FindTorrent(hash);
-	if (t) {
-		AddTrackers(t, trackers);
-		Blink(t);
-		return; // Added trackers from duplicate
+	if (FindTorrent(hash)) {
+		AddTrackers(hash, trackers);
+		Blink(hash);
+		return L""; // Added trackers from duplicate
 	}
 
 	// Choose the download folder
 	CString folder = Data.folder;
 	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
-	if (isblank(folder)) return; // User canceled the browse dialog
-	if (!CheckFolder(folder)) {
-		Message(MB_ICONSTOP | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
-		return; // Can't write to folder
-	}
+	if (isblank(folder)) return L""; // User canceled the browse dialog
+	if (!CheckFolder(folder))
+		return L"Unable to save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
 
 	// Add the torrent file to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddTorrent(&handle, folder, L"", torrent)) {
-		Message(MB_ICONSTOP | MB_OK, L"Cannot add this torrent. Check how you saved or downloaded it, and try again.");
-		return; // libtorrent error
-	}
+	if (!LibraryAddTorrent(&handle, folder, L"", torrent))
+		return L"Cannot add this torrent. Check how you saved or downloaded it, and try again."; // libtorrent error
 
-	// Add the torrent to the data list, window, and make store files
-	AddList(handle, folder, torrent, L"");
-
-	DiskCopyFile(torrent, PathTorrentMeta(hash));
-	torrentitem *t = FindTorrent(hash);
-	if (t) t->Save();
+	AddData(handle, folder, name, trackers); // Make a torrent item in data
+	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
+	AddRow(hash);                            // Make a row in the list view
+	AddMeta(hash, torrent);                  // Copy the torrent file to "meta.infohash.db"
+	AddOption(hash);                         // Save the torrent item to "optn.infohash.db"
+	return L""; // Success
 }
 
 // The user clicked to add the given magnet link
-void AddMagnet(read magnet) {
+// Returns error message text for the user, or blank on cancel or success
+CString AddMagnet(read magnet) {
 
 	// Parse the text of the magnet link
 	libtorrent::big_number hash;
 	CString name;
 	std::set<CString> trackers;
-	if (!ParseMagnet(magnet, &hash, &name, &trackers)) {
-		Message(MB_ICONWARNING | MB_OK, L"Not a valid magnet link. Check the link and try again.");
-		return; // Inavlid text or missing parts
-	}
+	if (!ParseMagnet(magnet, &hash, &name, &trackers))
+		return L"Not a valid magnet link. Check the link and try again."; // Inavlid text or missing parts
 
 	// Avoid a duplicate
-	torrentitem *t = FindTorrent(hash);
-	if (t) {
-		AddTrackers(t, trackers);
-		Blink(t);
-		return; // Added trackers from duplicate
+	if (FindTorrent(hash)) {
+		AddTrackers(hash, trackers);
+		Blink(hash);
+		return L""; // Added trackers from duplicate
 	}
 
 	// Choose the download folder
 	CString folder = Data.folder;
 	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
-	if (isblank(folder)) return; // User canceled the browse dialog
-	if (!CheckFolder(folder)) {
-		Message(MB_ICONSTOP | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
-		return; // Can't write to folder
-	}
+	if (isblank(folder)) return L""; // User canceled the browse dialog
+	if (!CheckFolder(folder))
+		return L"Unable to save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
 
 	// Add the torrent to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddMagnet(&handle, folder, L"", hash, name)) {
-		Message(MB_ICONSTOP | MB_OK, L"Cannot add this magnet link. Check the link and try again.");
-		return; // libtorrent error
-	}
+	if (!LibraryAddMagnet(&handle, folder, L"", hash, name))
+		return L"Cannot add this magnet link. Check the link and try again."; // libtorrent error
 
-	AddTrackers(t, trackers); // Add the trackers we parsed
-
-	// Add the torrent handle to the data list, window, and make store files
-	AddList(handle, folder, L"", magnet);
-
-
-	torrentitem *t = FindTorrent(hash);
-	if (t) t->Save();
-
-
+	AddData(handle, folder, name, trackers); // Make a torrent item in data
+	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
+	AddRow(hash);                            // Make a row in the list view
+	AddOption(hash);                         // Save the torrent item to "optn.infohash.db"
+	return L""; // Success
 }
-
-
 
 // Restore the torrent with the given infohash to this new session from files saved in the previous one
 void AddStore(libtorrent::big_number hash) {
@@ -161,41 +142,35 @@ void AddStore(libtorrent::big_number hash) {
 	// Read the folder, name, and trackers from the options file
 	torrentitem o;
 	o.Load(hash);
-	if (isblank(o.folder)) return; // Only hash and folder are required
+	if (isblank(o.folder)) return; // Hash and folder are required
 
 	// Parse the torrent file on the disk
-	CString torrent = PathTorrentMeta(hash);
-	libtorrent::big_number torrenthash;
-	CString torrentname;
-	std::set<CString> torrenttrackers;
-	bool hastorrent = ParseTorrent(torrent, &torrenthash, &torrentname, &torrenttrackers);
-	if (hastorrent && hash != torrenthash) hastorrent = false; // Make sure the hash inside matches
+	libtorrent::big_number mhash;
+	CString mname;
+	std::set<CString> mtrackers;
+	bool hastorrent = ParseTorrent(PathTorrentMeta(hash), &mhash, &mname, &mtrackers);
+	if (hastorrent && hash != mhash) hastorrent = false; // Hash inside must match
 
 	// Avoid a duplicate
-	torrentitem *d = FindTorrent(hash);
-	if (d) {
-		AddTrackers(d, o.trackers);
-		AddTrackers(d, torrenttrackers);
+	if (FindTorrent(hash)) {
+		AddTrackers(hash, o.trackers);
+		AddTrackers(hash, mtrackers);
 		return; // Added trackers from this duplicate
 	}
 
 	// Add to libtorrent
 	libtorrent::torrent_handle handle;
 	if (hastorrent) {
-		if (!LibraryAddTorrent(&handle, folder, PathTorrentStore(hash), torrent)) return; // libtorrent error
+		if (!LibraryAddTorrent(&handle, o.folder, PathTorrentStore(hash), PathTorrentMeta(hash))) return; // libtorrent error
 	} else {
-		if (!LibraryAddMagnet(&handle, folder, PathTorrentStore(hash), hash, name)) return;
+		if (!LibraryAddMagnet(&handle, o.folder, PathTorrentStore(hash), hash, o.name)) return;
 	}
 
 	// Add the torrent handle to the data list and window
-	AddList(handle, folder, L"", magnet);
-
-	// Add all the trackers we know about to the torrent item and handle
-	torrentitem *t = FindTorrent(hash); // Find the torrent we just added
-	if (t) {
-		AddTrackers(t, o.trackers);
-		AddTrackers(t, torrenttrackers);
-	}
+	AddData(handle, o.folder, o.name, o.trackers); // Make a torrent item in data
+	AddTrackers(hash, o.trackers);                 // Add trackers to the torrent item and handle
+	AddTrackers(hash, mtrackers);
+	AddRow(hash);                                  // Make a row in the list view
 }
 
 
@@ -206,8 +181,12 @@ void AddStore(libtorrent::big_number hash) {
 
 
 
-// Add the given new trackers in the add list to both the torrent item and the libtorrent torrent handle
-void AddTrackers(torrentitem *t, std::set<CString> add) {
+// Add the given trackers in the add list to both the torrent item and the libtorrent torrent handle
+void AddTrackers(libtorrent::big_number hash, std::set<CString> add) {
+
+	// Find the torrent item in the data list
+	torrentitem *t = FindTorrent(hash);
+	if (!t) return;
 
 	// Insert the given add trackers into the list the given torrentitem keeps
 	for (std::set<CString>::const_iterator i = add.begin(); i != add.end(); i++) {
@@ -261,8 +240,9 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 
 
 // Blink the selection of t in the list view to draw the users attention to it
-void Blink(torrentitem *t) {
+void Blink(libtorrent::big_number hash) {
 
+	//TODO
 }
 
 // Find the torrent with the given infohash in our list, or null if not found
@@ -278,41 +258,67 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 	return NULL;
 }
 
-// Place the given libtorrent handle in the data list and on the screen
-void AddList(libtorrent::torrent_handle handle, read folder, read torrent, read name, std::set<CString> trackers) {
 
-	// Add it to the data list
-	torrentitem t;              // Make a new empty torrentitem
-	t.handle = handle;          // Add the libtorrent handle
+
+// Copy the given information into a new torrent handle in data
+void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers) {
+
+	// Never add a zero or duplicate hash
+	if (handle.info_hash().is_all_zeros() || FindTorrent(handle.info_hash())) return;
+
+	// Make a new empty torrent item and copy in the given information
+	torrentitem t;
+	t.handle = handle;
 	t.folder = folder;
 	t.name = name;
 	t.trackers = trackers;
-	Data.torrents.push_back(t); // Add the torrentitem to the program's list
 
-	// Add it to the list view
+	// Copy the local torrent item t into a new one at the end of the program's list
+	Data.torrents.push_back(t);
+}
+
+// Add a new row to the window's list view control for the torrent item in data with the given hash
+void AddRow(libtorrent::big_number hash) {
+
+	// Find the torrent item in data
+	torrentitem *t = FindTorrent(hash);
+	if (!t) return;
+
+	// Make a new row for it at the bottom of the list view
 	ListAdd(
 		Handle.list,
 		5,
-		(LPARAM)t.Hash(),
-		t.ComposeStatusIcon(),
-		t.ComposeStatus(),
-		t.ComposeNameIcon(),
-		t.ComposeName(),
-		t.ComposeSize(),
-		t.ComposeHash(),
-		t.ComposePath(),
+		(LPARAM)t->Hash(),
+		t->ComposeStatusIcon(),
+		t->ComposeStatus(),
+		t->ComposeNameIcon(),
+		t->ComposeName(),
+		t->ComposeSize(),
+		t->ComposeHash(),
+		t->ComposePath(),
 		L"");
 }
 
+// Copy the torrent file at the given path to "meta.infohash.db" next to this running exe if not there already
+void AddMeta(libtorrent::big_number hash, read torrent) {
 
-
-
-
-// Copy the file at source to the available path destination, will not overwrite
-bool DiskCopyFile(read source, read destination) {
-	if (source == destination) return true; // Do nothing and report success on copy to self
-	return CopyFile(source, destination, true) != 0; // true to not overwrite
+	if (same(torrent, PathTorrentMeta(hash), Matching)) return; // Don't copy a file onto itself
+	CopyFile(torrent, PathTorrentMeta(hash), true); // True to not overwrite
 }
+
+// Have the torrent item with hash in the data list save "optn.infohash.db" next to this running exe
+void AddOption(libtorrent::big_number hash) {
+
+	torrentitem *t = FindTorrent(hash);
+	if (!t) return;
+	t->Save(); // Overwrite a file already there
+}
+
+
+
+
+
+
 
 
 
