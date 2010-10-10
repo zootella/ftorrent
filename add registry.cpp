@@ -1,12 +1,39 @@
 
+// Include libtorrent
+#include "libtorrent/session.hpp"
+#include "libtorrent/torrent_handle.hpp"
+#include "libtorrent/create_torrent.hpp"
+#include "libtorrent/alert_types.hpp"
+
+// Include platform
+#include <windows.h>
+#include <windef.h>
+#include <atlstr.h>
+#include <shlobj.h>
+#include <netfw.h>
+
+// Include program
+#include "resource.h"
+#include "define.h"
+#include "object.h"
+#include "library.h"
+#include "top.h"
+#include "function.h"
+
+// Access to global objects
+extern handletop Handle;
+extern areatop   Area;
+extern datatop   Data;
+extern statetop  State;
+
 // Takes a root key handle name, a key path, and a registry variable name
 // Gets the information from the registry
-// Returns the number, or 0 if not found or any error
-int RegistryReadNumber(JNIEnv *e, HKEY root, read path, read name) {
+// Returns true if it works, and writes the value
+bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value) {
 
 	// Open the key
 	CRegistry registry;
-	if (!registry.Open(root, path, false)) return 0;
+	if (!registry.Open(root, path, false)) return false;
 
 	// Read the number value
 	DWORD d;
@@ -18,25 +45,21 @@ int RegistryReadNumber(JNIEnv *e, HKEY root, read path, read name) {
 		NULL,
 		(LPBYTE)&d,   // Data buffer
 		&size);       // Size of data buffer
-	if (result != ERROR_SUCCESS) {
+	if (result != ERROR_SUCCESS) return false;
 
-		// Throw an exception back to Java
-		ThrowIOException(e, L"couldn't read integer");
-		return 0;
-	}
-
-	// Return the number
-	return d;
+	// Write the number
+	*value = d;
+	return true;
 }
 
 // Takes a root key handle name, a key path, and a registry variable name
 // Gets the information from the registry
-// Returns the text, blank if not found or any error
-CString RegistryReadText(JNIEnv *e, HKEY root, read path, read name) {
+// Returns true if it works, and writes the value
+bool RegistryReadText(HKEY root, read path, read name, CString *value) {
 
 	// Open the key
 	CRegistry registry;
-	if (!registry.Open(root, path, false)) return L"";
+	if (!registry.Open(root, path, false)) return false;
 
 	// Get the size required
 	DWORD size;
@@ -47,7 +70,7 @@ CString RegistryReadText(JNIEnv *e, HKEY root, read path, read name) {
 		NULL,
 		NULL,         // No data buffer, we're requesting the size
 		&size);       // Required size in bytes including the null terminator
-	if (result != ERROR_SUCCESS) return L"";
+	if (result != ERROR_SUCCESS) return false;
 
 	// Open a string
 	CString s;
@@ -62,10 +85,11 @@ CString RegistryReadText(JNIEnv *e, HKEY root, read path, read name) {
 		(LPBYTE)buffer, // Data buffer, writes the null terminator
 		&size);         // Size of data buffer in bytes
 	s.ReleaseBuffer();
-	if (result != ERROR_SUCCESS) ThrowIOException(e, L"couldn't read text"); // Throw an exception back to Java
+	if (result != ERROR_SUCCESS) return false;
 
-	// Return the string
-	return s;
+	// Write the string
+	*value = s;
+	return true;
 }
 
 // Takes a root key handle name, a key path, a registry variable name, and an integer
@@ -148,7 +172,7 @@ bool RegistryDelete(HKEY base, read path) {
 bool CRegistry::Open(HKEY root, read path, bool write) {
 
 	// Make sure we were given a key and path
-	if (!root || path == CString(L"")) return false;
+	if (!root || isblank(path)) return false;
 
 	// Variables for opening the key
 	HKEY key;

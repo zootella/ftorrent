@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <atlstr.h>
 #include <shlobj.h>
+#include <netfw.h>
 
 // Include program
 #include "resource.h"

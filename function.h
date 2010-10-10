@@ -261,6 +261,28 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
+
+
+// Firewall and Registry
+
+bool WindowsFirewallPresent();
+bool WindowsFirewallEnabled();
+bool WindowsFirewallExceptionsNotAllowed();
+bool WindowsFirewallIsProgramListed(read path);
+bool WindowsFirewallIsProgramEnabled(read path);
+bool WindowsFirewallAdd(read path, read name);
+bool WindowsFirewallRemove(read path);
+
+bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
+bool RegistryReadText(HKEY root, read path, read name, CString *value);
+bool RegistryWriteNumber(HKEY root, read path, read name, int value);
+bool RegistryWriteText(HKEY root, read path, read name, read value);
+bool RegistryDelete(HKEY base, read path);
+
+
+
+
+
 // Bay and Bench
 
 
