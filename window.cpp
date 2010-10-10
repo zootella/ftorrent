@@ -186,6 +186,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
+	FirewallAdd(PathRunningFile(), PROGRAM_NAME);
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent
 	log(L"library start after");
@@ -216,6 +217,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	log(L"library close before");
 	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
 	log(L"library close after");
+	FirewallRemove(PathRunningFile());
 
 	// Return the value from the quit message
 	return (int)message.wParam;

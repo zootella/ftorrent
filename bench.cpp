@@ -327,29 +327,48 @@ bool torrentitem::Load(libtorrent::big_number hash) {
 
 
 
+//TODO make stuff that uses registry and firewall
+//Firewall Add, Firewall Remove, done
+//Setup Add, Setup Remove, done
+//Has Magnet, Has Torrent, Register Magnet, Register Torrent, see how these are used above native TODO
+
+
+// True if this running exe is registered to open magnet links, false it's not or we can't tell
+bool HasMagnet() {
+}
+
+// True if this running exe is registered to open torrent files, false it's not or we can't tell
+bool HasTorrent() {
+}
+
+// Register this running exe to open magnet links
+void GetMagnet() {
+}
+
+// Register this running exe to open torrent files
+void GetTorrent() {
+}
 
 
 
 
-/*
+
 
 
 
 
 // List the program in Add or Remove Programs
-void SetupList() {
-	RegistryWrite(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, "DisplayName", PROGRAM_NAME);
-	RegistryWrite(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, "UninstallString", PathLaunch() + " /addremove");
+void SetupAdd() {
+	RegistryWriteText(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
+	RegistryWriteText(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathLaunch() + L" /addremove");
 }
 
 // Remove our listing in Add or Remove programs
-CString RemoveList() {
-	bool result = RegistryDelete(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
-	return result ? "" : "Unable to remove Add or Remove Programs listing";
+CString SetupRemove() {
+	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
 
-*/
 
 
 
