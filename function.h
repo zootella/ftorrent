@@ -265,13 +265,13 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 // Firewall and Registry
 
-bool WindowsFirewallPresent();
-bool WindowsFirewallEnabled();
-bool WindowsFirewallExceptionsNotAllowed();
-bool WindowsFirewallIsProgramListed(read path);
-bool WindowsFirewallIsProgramEnabled(read path);
-bool WindowsFirewallAdd(read path, read name);
-bool WindowsFirewallRemove(read path);
+bool FirewallPresent();
+bool FirewallEnabled();
+bool FirewallExceptionsNotAllowed();
+bool FirewallProgramListed(read path);
+bool FirewallProgramEnabled(read path);
+bool FirewallAdd(read path, read name);
+bool FirewallRemove(read path);
 
 bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
 bool RegistryReadText(HKEY root, read path, read name, CString *value);

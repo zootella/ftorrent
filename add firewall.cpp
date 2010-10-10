@@ -28,20 +28,20 @@ extern statetop  State;
 
 // Determines if this copy of Windows has Windows Firewall
 // Returns true if it does, false if not or there was an error
-bool WindowsFirewallPresent() {
+bool FirewallPresent() {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 	return true;
 }
 
 // Determines if Windows Firewall is off or on
 // Returns true if the firewall is on, false if it's off or there was an error
-bool WindowsFirewallEnabled() {
+bool FirewallEnabled() {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Determine if Windows Firewall is off or on
@@ -52,10 +52,10 @@ bool WindowsFirewallEnabled() {
 
 // Determines if the Exceptions not allowed check box in Windows Firewall is checked
 // Returns true if the exceptions not allowed box is checked, false if it's not checked or there was an error
-bool WindowsFirewallExceptionsNotAllowed() {
+bool FirewallExceptionsNotAllowed() {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Determine if the Exceptions not allowed box is checked
@@ -67,40 +67,40 @@ bool WindowsFirewallExceptionsNotAllowed() {
 // Takes a program path and file name, like "C:\Folder\Program.exe"
 // Determines if it's listed in Windows Firewall
 // Returns true if is listed, false if it's not or there was an error
-bool WindowsFirewallIsProgramListed(read path) {
+bool FirewallProgramListed(read path) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Determine if the program has a listing on the Exceptions tab
 	bool listed = false;
-	if (!firewall.IsProgramListed(path, &listed)) return false;
+	if (!firewall.ProgramListed(path, &listed)) return false;
 	return listed;
 }
 
 // Takes a program path and file name like "C:\Folder\Program.exe"
 // Determines if the listing for that program in Windows Firewall is checked or unchecked
 // Returns true if it is enabled, false if it's not or there was an error
-bool WindowsFirewallIsProgramEnabled(read path) {
+bool FirewallProgramEnabled(read path) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Determine if the program has a listing on the Exceptions tab, and that listing is checked
 	bool enabled = false;
-	if (!firewall.IsProgramEnabled(path, &enabled)) return false;
+	if (!firewall.ProgramEnabled(path, &enabled)) return false;
 	return enabled;
 }
 
 // Takes a path like "C:\Folder\Program.exe" and a name like "My Program"
 // Adds the program's listing in Windows Firewall to make sure it is listed and checked
 // Returns false on error
-bool WindowsFirewallAdd(read path, read name) {
+bool FirewallAdd(read path, read name) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Add the program's listing
@@ -111,10 +111,10 @@ bool WindowsFirewallAdd(read path, read name) {
 // Takes a path and file name like "C:\Folder\Program.exe"
 // Removes the program's listing from the Windows Firewall exceptions list
 // Returns false on error
-bool WindowsFirewallRemove(read path) {
+bool FirewallRemove(read path) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	CWindowsFirewall firewall;
+	CFirewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Remove the program's listing
@@ -124,7 +124,7 @@ bool WindowsFirewallRemove(read path) {
 
 // Get access to the COM objects
 // Returns true if it works, false if there was an error
-bool CWindowsFirewall::Access() {
+bool CFirewall::Access() {
 
 	// Initialize COM itself so this thread can use it
 	HRESULT result = CoInitialize(NULL); // Must be NULL
@@ -152,7 +152,7 @@ bool CWindowsFirewall::Access() {
 
 // Determines if Windows Firewall is off or on
 // Returns true if it works, and writes the answer in enabled
-bool CWindowsFirewall::FirewallEnabled(bool *enabled) {
+bool CFirewall::FirewallEnabled(bool *enabled) {
 
 	// Find out if the firewall is enabled
 	VARIANT_BOOL v;
@@ -174,7 +174,7 @@ bool CWindowsFirewall::FirewallEnabled(bool *enabled) {
 
 // Determines if the Exceptions not allowed check box is checked
 // Returns true if it works, and writes the answer in enabled
-bool CWindowsFirewall::ExceptionsNotAllowed(bool *notallowed) {
+bool CFirewall::ExceptionsNotAllowed(bool *notallowed) {
 
 	// Find out if the exceptions box is checked
 	VARIANT_BOOL v;
@@ -197,7 +197,7 @@ bool CWindowsFirewall::ExceptionsNotAllowed(bool *notallowed) {
 // Takes a program path and file name, like "C:\Folder\Program.exe"
 // Determines if it's listed in Windows Firewall
 // Returns true if it works, and writes the answer in listed
-bool CWindowsFirewall::IsProgramListed(read path, bool *listed) {
+bool CFirewall::ProgramListed(read path, bool *listed) {
 
 	// Look for the program in the list
 	if (Program) { Program->Release(); Program = NULL; }
@@ -231,11 +231,11 @@ bool CWindowsFirewall::IsProgramListed(read path, bool *listed) {
 // Takes a program path and file name like "C:\Folder\Program.exe"
 // Determines if the listing for that program in Windows Firewall is checked or unchecked
 // Returns true if it works, and writes the answer in enabled
-bool CWindowsFirewall::IsProgramEnabled(read path, bool *enabled) {
+bool CFirewall::ProgramEnabled(read path, bool *enabled) {
 
 	// First, make sure the program is listed
 	bool listed;
-	if (!IsProgramListed(path, &listed)) return false; // This sets the Program interface we can use here
+	if (!ProgramListed(path, &listed)) return false; // This sets the Program interface we can use here
 	if (!listed) return false; // The program isn't in the list at all
 
 	// Find out if the program is enabled
@@ -259,7 +259,7 @@ bool CWindowsFirewall::IsProgramEnabled(read path, bool *enabled) {
 // Takes a path and file name like "C:\Folder\Program.exe" and a name like "My Program"
 // Lists and checks the program on Windows Firewall, so now it can listed on a socket without a warning popping up
 // Returns false on error
-bool CWindowsFirewall::AddProgram(read path, read name) {
+bool CFirewall::AddProgram(read path, read name) {
 
 	// Create an instance of an authorized application, we'll use this to add our new application
 	if (Program) { Program->Release(); Program = NULL; }
@@ -283,11 +283,11 @@ bool CWindowsFirewall::AddProgram(read path, read name) {
 // Takes a program path and file name like "C:\Folder\Program.exe"
 // Checks the checkbox next to its listing in Windows Firewall
 // Returns false on error
-bool CWindowsFirewall::EnableProgram(read path) {
+bool CFirewall::EnableProgram(read path) {
 
 	// First, make sure the program is listed
 	bool listed;
-	if (!IsProgramListed(path, &listed)) return false; // This sets the Program interface we can use here
+	if (!ProgramListed(path, &listed)) return false; // This sets the Program interface we can use here
 	if (!listed) return false; // The program isn't on the list at all
 
 	// Check the box next to the program
@@ -300,7 +300,7 @@ bool CWindowsFirewall::EnableProgram(read path) {
 // Takes a path like "C:\Folder\Program.exe"
 // Removes the program from Windows Firewall
 // Returns false on error
-bool CWindowsFirewall::RemoveProgram(read path) {
+bool CFirewall::RemoveProgram(read path) {
 
 	// Remove the program from the Windows Firewall exceptions list
 	CBstr p(path); // Express the text as a BSTR

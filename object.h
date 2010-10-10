@@ -229,7 +229,7 @@ public:
 };
 
 // Add an application to the Windows Firewall exceptions list
-class CWindowsFirewall {
+class CFirewall {
 public:
 
 	// COM interfaces
@@ -239,8 +239,8 @@ public:
 	INetFwAuthorizedApplications* ProgramList;
 	INetFwAuthorizedApplication*  Program;
 
-	// Make a new CWindowsFirewall object
-	CWindowsFirewall() {
+	// Make a new CFirewall object
+	CFirewall() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
 		Manager     = NULL;
@@ -250,8 +250,8 @@ public:
 		Program     = NULL;
 	}
 
-	// Delete the CWindowsFirewall object
-	~CWindowsFirewall() {
+	// Delete the CFirewall object
+	~CFirewall() {
 
 		// Release the COM interfaces that we got access to
 		if (Program)     { Program->Release();     Program     = NULL; } // Release them in reverse order
@@ -265,8 +265,8 @@ public:
 	bool Access();
 	bool FirewallEnabled(bool *enabled);
 	bool ExceptionsNotAllowed(bool *notallowed);
-	bool IsProgramListed(read path, bool *listed);
-	bool IsProgramEnabled(read path, bool *enabled);
+	bool ProgramListed(read path, bool *listed);
+	bool ProgramEnabled(read path, bool *enabled);
 	bool AddProgram(read path, read name);
 	bool EnableProgram(read path);
 	bool RemoveProgram(read path);
