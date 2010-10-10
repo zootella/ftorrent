@@ -212,53 +212,53 @@ public:
 
 
 // Wraps a BSTR, a COM string, taking care of memory allocation
-class CBstr {
+class bstritem {
 public:
 
 	// The BSTR
-	BSTR B;
+	BSTR bstr;
 
-	// Make a new CBstr object
-	CBstr()       { B = NULL; }         // With no BSTR allocated
-	CBstr(read r) { B = NULL; Set(r); } // From the given text
-	~CBstr()      { Clear(); }          // It frees its memory when you delete it
+	// Make a new bstritem object
+	bstritem()       { bstr = NULL; }         // With no BSTR allocated
+	bstritem(read r) { bstr = NULL; Set(r); } // From the given text
+	~bstritem()      { Clear(); }             // It frees its memory when you delete it
 
 	// Use AllocSysString and SysFreeString to allocate and free the BSTR
-	void Set(CString s) { Clear(); B = s.AllocSysString(); }
-	void Clear() { if (B) { SysFreeString(B); B = NULL; } }
+	void Set(CString s) { Clear(); bstr = s.AllocSysString(); }
+	void Clear() { if (bstr) { SysFreeString(bstr); bstr = NULL; } }
 };
 
 // Add an application to the Windows Firewall exceptions list
-class CFirewall {
+class firewallitem {
 public:
 
 	// COM interfaces
-	INetFwMgr*                    Manager;
-	INetFwPolicy*                 Policy;
-	INetFwProfile*                Profile;
-	INetFwAuthorizedApplications* ProgramList;
-	INetFwAuthorizedApplication*  Program;
+	INetFwMgr                    *manager;
+	INetFwPolicy                 *policy;
+	INetFwProfile                *profile;
+	INetFwAuthorizedApplications *list;
+	INetFwAuthorizedApplication  *program;
 
-	// Make a new CFirewall object
-	CFirewall() {
+	// Make a new firewallitem object
+	firewallitem() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
-		Manager     = NULL;
-		Policy      = NULL;
-		Profile     = NULL;
-		ProgramList = NULL;
-		Program     = NULL;
+		manager = NULL;
+		policy  = NULL;
+		profile = NULL;
+		list    = NULL;
+		program = NULL;
 	}
 
-	// Delete the CFirewall object
-	~CFirewall() {
+	// Delete the firewallitem object
+	~firewallitem() {
 
 		// Release the COM interfaces that we got access to
-		if (Program)     { Program->Release();     Program     = NULL; } // Release them in reverse order
-		if (ProgramList) { ProgramList->Release(); ProgramList = NULL; }
-		if (Profile)     { Profile->Release();     Profile     = NULL; }
-		if (Policy)      { Policy->Release();      Policy      = NULL; }
-		if (Manager)     { Manager->Release();     Manager     = NULL; }
+		if (program) { program->Release(); program = NULL; } // Release them in reverse order
+		if (list)    { list->Release();    list    = NULL; }
+		if (profile) { profile->Release(); profile = NULL; }
+		if (policy)  { policy->Release();  policy  = NULL; }
+		if (manager) { manager->Release(); manager = NULL; }
 	}
 
 	// Methods to adjust the settings of Windows Firewall
@@ -274,7 +274,7 @@ public:
 
 
 // Wraps a registry key, taking care of closing it
-class CRegistry {
+class registryitem {
 public:
 
 	// The handle to the registry key
@@ -284,8 +284,11 @@ public:
 	bool Open(HKEY root, read path, bool write);
 	void Close() { if (Key) RegCloseKey(Key); Key = NULL; }
 
-	// Make a new local CRegistry object, and delete it when it goes out of scope
-	CRegistry() { Key = NULL; }
-	~CRegistry() { Close(); }
+	// Make a new local registryitem object, and delete it when it goes out of scope
+	registryitem() { Key = NULL; }
+	~registryitem() { Close(); }
 };
+
+
+
 
