@@ -1972,6 +1972,7 @@ bool registryitem::Open(HKEY root, read path, bool write) {
 	return true;
 }
 
+/*
 // Determines if this copy of Windows has Windows Firewall
 // Returns true if it does, false if not or there was an error
 bool FirewallPresent() {
@@ -2039,6 +2040,7 @@ bool FirewallProgramEnabled(read path) {
 	if (!firewall.ProgramEnabled(path, &enabled)) return false;
 	return enabled;
 }
+*/
 
 // Takes a path like "C:\Folder\Program.exe" and a name like "My Program"
 // Adds the program's listing in Windows Firewall to make sure it is listed and checked
@@ -2096,6 +2098,7 @@ bool firewallitem::Access() {
 	return true;
 }
 
+/*
 // Determines if Windows Firewall is off or on
 // Returns true if it works, and writes the answer in enabled
 bool firewallitem::FirewallEnabled(bool *enabled) {
@@ -2202,6 +2205,7 @@ bool firewallitem::ProgramEnabled(read path, bool *enabled) {
 		return true;
 	}
 }
+*/
 
 // Takes a path and file name like "C:\Folder\Program.exe" and a name like "My Program"
 // Lists and checks the program on Windows Firewall, so now it can listed on a socket without a warning popping up
@@ -2227,6 +2231,7 @@ bool firewallitem::AddProgram(read path, read name) {
 	return true;
 }
 
+/*
 // Takes a program path and file name like "C:\Folder\Program.exe"
 // Checks the checkbox next to its listing in Windows Firewall
 // Returns false on error
@@ -2243,6 +2248,7 @@ bool firewallitem::EnableProgram(read path) {
 	if (FAILED(result)) { error(result, L"put_enabled"); return false; };
 	return true;
 }
+*/
 
 // Takes a path like "C:\Folder\Program.exe"
 // Removes the program from Windows Firewall

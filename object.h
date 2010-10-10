@@ -67,12 +67,12 @@ public:
 
 	// Methods to adjust the settings of Windows Firewall
 	bool Access();
-	bool FirewallEnabled(bool *enabled);
-	bool ExceptionsNotAllowed(bool *notallowed);
-	bool ProgramListed(read path, bool *listed);
-	bool ProgramEnabled(read path, bool *enabled);
+//	bool FirewallEnabled(bool *enabled);
+//	bool ExceptionsNotAllowed(bool *notallowed);
+//	bool ProgramListed(read path, bool *listed);
+//	bool ProgramEnabled(read path, bool *enabled);
 	bool AddProgram(read path, read name);
-	bool EnableProgram(read path);
+//	bool EnableProgram(read path);
 	bool RemoveProgram(read path);
 };
 

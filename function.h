@@ -161,11 +161,11 @@ bool RegistryReadText(HKEY root, read path, read name, CString *value);
 bool RegistryWriteNumber(HKEY root, read path, read name, int value);
 bool RegistryWriteText(HKEY root, read path, read name, read value);
 bool RegistryDelete(HKEY base, read path);
-bool FirewallPresent();
-bool FirewallEnabled();
-bool FirewallExceptionsNotAllowed();
-bool FirewallProgramListed(read path);
-bool FirewallProgramEnabled(read path);
+//bool FirewallPresent();
+//bool FirewallEnabled();
+//bool FirewallExceptionsNotAllowed();
+//bool FirewallProgramListed(read path);
+//bool FirewallProgramEnabled(read path);
 bool FirewallAdd(read path, read name);
 bool FirewallRemove(read path);
 
