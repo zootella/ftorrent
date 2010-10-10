@@ -41,6 +41,7 @@ CString ReplacePercent(read r);
 
 // Utility
 void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
+void error(int result, read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 void log(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 void report(read r);
 void CloseHandleSafely(HANDLE *handle);
@@ -155,6 +156,18 @@ bool DiskIsFolder(read path);
 bool DiskFolderCheck(read path, bool create);
 bool DiskMakeFolder(read path);
 bool DiskDeleteFolder(read path);
+bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
+bool RegistryReadText(HKEY root, read path, read name, CString *value);
+bool RegistryWriteNumber(HKEY root, read path, read name, int value);
+bool RegistryWriteText(HKEY root, read path, read name, read value);
+bool RegistryDelete(HKEY base, read path);
+bool FirewallPresent();
+bool FirewallEnabled();
+bool FirewallExceptionsNotAllowed();
+bool FirewallProgramListed(read path);
+bool FirewallProgramEnabled(read path);
+bool FirewallAdd(read path, read name);
+bool FirewallRemove(read path);
 
 // Wrap
 // start
@@ -260,28 +273,6 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
-
-
-
-// Firewall and Registry
-
-bool FirewallPresent();
-bool FirewallEnabled();
-bool FirewallExceptionsNotAllowed();
-bool FirewallProgramListed(read path);
-bool FirewallProgramEnabled(read path);
-bool FirewallAdd(read path, read name);
-bool FirewallRemove(read path);
-
-bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
-bool RegistryReadText(HKEY root, read path, read name, CString *value);
-bool RegistryWriteNumber(HKEY root, read path, read name, int value);
-bool RegistryWriteText(HKEY root, read path, read name, read value);
-bool RegistryDelete(HKEY base, read path);
-
-
-
-
 
 // Bay and Bench
 
