@@ -333,44 +333,46 @@ bool torrentitem::Load(libtorrent::big_number hash) {
 //Has Magnet, Has Torrent, Register Magnet, Register Torrent, see how these are used above native TODO
 
 
+
+
+
+
+
+
+
+
+
+
 // True if this running exe is registered to open torrent files and magnet links, false it's not or we can't tell
 bool AssociateCheck() {
-
-	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_CLASSES_ROOT
 	CString value;
-	if (!RegistryReadText(root, L".torrent",                              L"", &value) || value != PROGRAM_NAME)                            return false;
-	if (!RegistryReadText(root, PROGRAM_NAME + L"\\shell\\open\\command", L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
-	if (!RegistryReadText(root, L"Magnet\\shell\\open\\command",          L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
+	if (!RegistryRead(HKEY_CLASSES_ROOT, L".torrent",                              L"", &value) || value != PROGRAM_NAME)                            return false;
+	if (!RegistryRead(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\shell\\open\\command", L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
+	if (!RegistryRead(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
 	return true;
 }
 
 // Register this running exe to open torrent files and magnet links
 void AssociateGet() {
-	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_CLASSES_ROOT
+	RegistryWrite(HKEY_CLASSES_ROOT, L".torrent",                              L"",             PROGRAM_NAME);
+	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME,                             L"",             L"Torrent");
+	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathRunningFolder() + L"\\torrent.ico");
+	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\shell\\open\\command", L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 
-	RegistryWriteText(root, L".torrent",                              L"",             PROGRAM_NAME);
-	RegistryWriteText(root, PROGRAM_NAME,                             L"",             L"Torrent");
-	RegistryWriteText(root, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathRunningFolder() + L"\\torrent.ico");
-	RegistryWriteText(root, PROGRAM_NAME + L"\\shell\\open\\command", L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
-
-	RegistryWriteText(root, L"Magnet",                                L"",             L"Magnet URI");
-	RegistryWriteText(root, L"Magnet",                                L"URL Protocol", L"");
-	RegistryWriteText(root, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
+	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"",             L"Magnet URI");
+	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"URL Protocol", L"");
+	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 }
 
-// List the program in Add or Remove Programs
+// List this running exe in Add or Remove Programs
 void SetupAdd() {
-	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_LOCAL_MACHINE
-
-	RegistryWriteText(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
-	RegistryWriteText(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathLaunch() + L" /addremove");
+	RegistryWrite(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
+	RegistryWrite(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathRunningFile() + L" /addremove");
 }
 
 // Remove our listing in Add or Remove programs
 void SetupRemove() {
-	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_LOCAL_MACHINE
-
-	RegistryDelete(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
+	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
 

@@ -824,8 +824,14 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED);
-		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Put the path in the text box
+		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Torrents folder path
+		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED); // Ask checkbox
+
+		// Determine if the program has the magnet and torrent associations
+		bool associated = AssociateCheck();
+		TextDialogSet(dialog, IDC_MESSAGE, associated ? L"green" : L"red"); // Message color for paint below
+		EnableWindow(GetDlgItem(dialog, IDC_CHOOSE), !associated) // Button availability
+
 		return true; // Let the system place the focus
 
 	// The dialog needs to be painted
@@ -835,7 +841,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Pick the red or green message
 		CString message;
 		brushitem *brush;
-		if (true) { //TODO invalidate the rect of the dialog after changing this
+		if (TextDialogGet(dialog, IDC_MESSAGE) == L"red") {
 
 			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
 			brush = &Handle.rednotice;
@@ -876,6 +882,17 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 			CString browse = DialogBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files:")); // Show the dialog
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
+
+		// Choose
+		break;
+		case IDC_CHOOSE:
+
+			AssociateGet();
+			if (!AssociateCheck()) Message(MB_ICONWARNING | MB_OK, L"
+
+			//TODO invalidate the rect of the dialog after changing this
+
+			return true;
 		}
 
 	// The user clicked one of the bottom property sheet buttons

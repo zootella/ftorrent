@@ -1786,38 +1786,10 @@ bool DiskDeleteFolder(read path) {
 	return result != 0 || error == ERROR_FILE_NOT_FOUND;
 }
 
-/*
 // Takes a root key handle name, a key path, and a registry variable name or blank for default
 // Gets the information from the registry
 // Returns true if it works, and writes the value
-bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value) {
-
-	// Open the key
-	registryitem registry;
-	if (!registry.Open(root, path, false)) return false;
-
-	// Read the number value
-	DWORD d;
-	DWORD size = sizeof(DWORD);
-	int result = RegQueryValueEx(
-		registry.Key, // Handle to an open key
-		name,         // Name of the value to read
-		0,
-		NULL,
-		(LPBYTE)&d,   // Data buffer
-		&size);       // Size of data buffer
-	if (result != ERROR_SUCCESS) { error(result, L"regqueryvalueex number"); return false; }
-
-	// Write the number
-	*value = d;
-	return true;
-}
-*/
-
-// Takes a root key handle name, a key path, and a registry variable name or blank for default
-// Gets the information from the registry
-// Returns true if it works, and writes the value
-bool RegistryReadText(HKEY root, read path, read name, CString *value) {
+bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Open the key
 	registryitem registry;
@@ -1854,33 +1826,10 @@ bool RegistryReadText(HKEY root, read path, read name, CString *value) {
 	return true;
 }
 
-/*
-// Takes a root key handle name, a key path, a registry variable name or blank for default, and an integer
-// Stores the information in the registry
-// Returns false on error
-bool RegistryWriteNumber(HKEY root, read path, read name, int value) {
-
-	// Open the key
-	registryitem registry;
-	if (!registry.Open(root, path, true)) return false;
-
-	// Set or make and set the number value
-	int result = RegSetValueEx(
-		registry.Key,         // Handle to an open key
-		name,                 // Name of the value to set or make and set
-		0,
-		REG_DWORD,            // Variable type is a 32-bit number
-		(const BYTE *)&value, // Address of the value data to load
-		sizeof(DWORD));       // Size of the value data
-	if (result != ERROR_SUCCESS) { error(result, L"regsetvalueex number"); return false; }
-	return true;
-}
-*/
-
 // Takes a root key handle name, a key path, a registry variable name or blank for default, and value text
 // Stores the information in the registry
 // Returns false on error
-bool RegistryWriteText(HKEY root, read path, read name, read value) {
+bool RegistryWrite(HKEY root, read path, read name, read value) {
 
 	// Open the key
 	registryitem registry;
@@ -1976,76 +1925,6 @@ bool registryitem::Open(HKEY root, read path, bool write) {
 	return true;
 }
 
-/*
-// Determines if this copy of Windows has Windows Firewall
-// Returns true if it does, false if not or there was an error
-bool FirewallPresent() {
-
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
-	if (!firewall.Access()) return false;
-	return true;
-}
-
-// Determines if Windows Firewall is off or on
-// Returns true if the firewall is on, false if it's off or there was an error
-bool FirewallEnabled() {
-
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
-	if (!firewall.Access()) return false;
-
-	// Determine if Windows Firewall is off or on
-	bool enabled = false;
-	if (!firewall.FirewallEnabled(&enabled)) return false;
-	return enabled;
-}
-
-// Determines if the Exceptions not allowed check box in Windows Firewall is checked
-// Returns true if the exceptions not allowed box is checked, false if it's not checked or there was an error
-bool FirewallExceptionsNotAllowed() {
-
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
-	if (!firewall.Access()) return false;
-
-	// Determine if the Exceptions not allowed box is checked
-	bool notallowed = false;
-	if (!firewall.ExceptionsNotAllowed(&notallowed)) return false;
-	return notallowed;
-}
-
-// Takes a program path and file name, like "C:\Folder\Program.exe"
-// Determines if it's listed in Windows Firewall
-// Returns true if is listed, false if it's not or there was an error
-bool FirewallProgramListed(read path) {
-
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
-	if (!firewall.Access()) return false;
-
-	// Determine if the program has a listing on the Exceptions tab
-	bool listed = false;
-	if (!firewall.ProgramListed(path, &listed)) return false;
-	return listed;
-}
-
-// Takes a program path and file name like "C:\Folder\Program.exe"
-// Determines if the listing for that program in Windows Firewall is checked or unchecked
-// Returns true if it is enabled, false if it's not or there was an error
-bool FirewallProgramEnabled(read path) {
-
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
-	if (!firewall.Access()) return false;
-
-	// Determine if the program has a listing on the Exceptions tab, and that listing is checked
-	bool enabled = false;
-	if (!firewall.ProgramEnabled(path, &enabled)) return false;
-	return enabled;
-}
-*/
-
 // Takes a path like "C:\Folder\Program.exe" and a name like "My Program"
 // Adds the program's listing in Windows Firewall to make sure it is listed and checked
 // Returns false on error
@@ -2102,115 +1981,6 @@ bool firewallitem::Access() {
 	return true;
 }
 
-/*
-// Determines if Windows Firewall is off or on
-// Returns true if it works, and writes the answer in enabled
-bool firewallitem::FirewallEnabled(bool *enabled) {
-
-	// Find out if the firewall is enabled
-	VARIANT_BOOL v;
-	HRESULT result = profile->get_FirewallEnabled(&v);
-	if (FAILED(result)) { error(result, L"get_firewallenabled"); return false; }
-	if (v == VARIANT_FALSE) {
-
-		// The Windows Firewall setting is "Off (not recommended)"
-		*enabled = false;
-		return true;
-
-	} else {
-
-		// The Windows Firewall setting is "On (recommended)"
-		*enabled = true;
-		return true;
-	}
-}
-
-// Determines if the Exceptions not allowed check box is checked
-// Returns true if it works, and writes the answer in enabled
-bool firewallitem::ExceptionsNotAllowed(bool *notallowed) {
-
-	// Find out if the exceptions box is checked
-	VARIANT_BOOL v;
-	HRESULT result = profile->get_ExceptionsNotAllowed(&v);
-	if (FAILED(result)) { error(result, L"get_exceptionsnotallowed"); return false; }
-	if (v == VARIANT_FALSE) {
-
-		// The "Don't allow exceptions" box is checked
-		*notallowed = false;
-		return true;
-
-	} else {
-
-		// The "Don't allow exceptions" box is not checked
-		*notallowed = true;
-		return true;
-	}
-}
-
-// Takes a program path and file name, like "C:\Folder\Program.exe"
-// Determines if it's listed in Windows Firewall
-// Returns true if it works, and writes the answer in listed
-bool firewallitem::ProgramListed(read path, bool *listed) {
-
-	// Look for the program in the list
-	if (program) { program->Release(); program = NULL; }
-	bstritem p(path); // Express the name as a BSTR
-	HRESULT result = list->Item(p.bstr, &program); // Try to get the interface for the program with the given name
-	if (SUCCEEDED(result)) {
-
-		// The program is in the list
-		*listed = true;
-		return true;
-
-	// The list->Item call failed
-	} else {
-
-		// The error is not found
-		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-
-			// The program is not in the list
-			*listed = false;
-			return true;
-
-		// Some other error occurred
-		} else {
-
-			// Report it
-			error(result, L"firewall list");
-			return false;
-		}
-	}
-}
-
-// Takes a program path and file name like "C:\Folder\Program.exe"
-// Determines if the listing for that program in Windows Firewall is checked or unchecked
-// Returns true if it works, and writes the answer in enabled
-bool firewallitem::ProgramEnabled(read path, bool *enabled) {
-
-	// First, make sure the program is listed
-	bool listed;
-	if (!ProgramListed(path, &listed)) return false; // This sets the program interface we can use here
-	if (!listed) return false; // The program isn't in the list at all
-
-	// Find out if the program is enabled
-	VARIANT_BOOL v;
-	HRESULT result = program->get_Enabled(&v);
-	if (FAILED(result)) { error(result, L"get_enabled"); return false; };
-	if (v == VARIANT_FALSE) {
-
-		// The program is on the list, but the checkbox next to it is cleared
-		*enabled = false;
-		return true;
-
-	} else {
-
-		// The program is on the list and the checkbox is checked
-		*enabled = true;
-		return true;
-	}
-}
-*/
-
 // Takes a path and file name like "C:\Folder\Program.exe" and a name like "My Program"
 // Lists and checks the program on Windows Firewall, so now it can listed on a socket without a warning popping up
 // Returns false on error
@@ -2234,25 +2004,6 @@ bool firewallitem::AddProgram(read path, read name) {
 	if (FAILED(result)) { error(result, L"firewall add"); return false; };
 	return true;
 }
-
-/*
-// Takes a program path and file name like "C:\Folder\Program.exe"
-// Checks the checkbox next to its listing in Windows Firewall
-// Returns false on error
-bool firewallitem::EnableProgram(read path) {
-
-	// First, make sure the program is listed
-	bool listed;
-	if (!ProgramListed(path, &listed)) return false; // This sets the program interface we can use here
-	if (!listed) return false; // The program isn't on the list at all
-
-	// Check the box next to the program
-	VARIANT_BOOL v = true;
-	HRESULT result = program->put_Enabled(v);
-	if (FAILED(result)) { error(result, L"put_enabled"); return false; };
-	return true;
-}
-*/
 
 // Takes a path like "C:\Folder\Program.exe"
 // Removes the program from Windows Firewall
