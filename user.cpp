@@ -899,8 +899,8 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		case IDC_CHOOSE:
 
 			AssociateGet();
-			if (!AssociateCheck()) Message(L"Cannot register torrent and magnet. Run " + PROGRAM_NAME + " as administrator and try again.");
 			AssociateUpdate(dialog);
+			if (TextDialog(dialog, IDC_MESSAGE) == L"red") Message(L"Cannot register torrent and magnet. Run " + PROGRAM_NAME + L" as administrator and try again.");
 			return true;
 		}
 
