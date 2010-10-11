@@ -111,14 +111,20 @@ torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tra
 void Test() {
 
 
+	AssociateGet();
+	SetupAdd();
 
+
+	/*
 	LibraryAdd(
 		L"C:\\Documents\\test",       // folder
 		L"C:\\Documents\\my.torrent", // torrent
 		NULL,  // magnet hash
 		NULL,  //        name
 		NULL,  //        tracker
-		NULL); // store file from before	
+		NULL); // store file from before
+		*/
+
 
 
 }

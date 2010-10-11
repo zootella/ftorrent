@@ -1786,7 +1786,8 @@ bool DiskDeleteFolder(read path) {
 	return result != 0 || error == ERROR_FILE_NOT_FOUND;
 }
 
-// Takes a root key handle name, a key path, and a registry variable name
+/*
+// Takes a root key handle name, a key path, and a registry variable name or blank for default
 // Gets the information from the registry
 // Returns true if it works, and writes the value
 bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value) {
@@ -1811,8 +1812,9 @@ bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value) {
 	*value = d;
 	return true;
 }
+*/
 
-// Takes a root key handle name, a key path, and a registry variable name
+// Takes a root key handle name, a key path, and a registry variable name or blank for default
 // Gets the information from the registry
 // Returns true if it works, and writes the value
 bool RegistryReadText(HKEY root, read path, read name, CString *value) {
@@ -1852,7 +1854,8 @@ bool RegistryReadText(HKEY root, read path, read name, CString *value) {
 	return true;
 }
 
-// Takes a root key handle name, a key path, a registry variable name, and an integer
+/*
+// Takes a root key handle name, a key path, a registry variable name or blank for default, and an integer
 // Stores the information in the registry
 // Returns false on error
 bool RegistryWriteNumber(HKEY root, read path, read name, int value) {
@@ -1872,8 +1875,9 @@ bool RegistryWriteNumber(HKEY root, read path, read name, int value) {
 	if (result != ERROR_SUCCESS) { error(result, L"regsetvalueex number"); return false; }
 	return true;
 }
+*/
 
-// Takes a root key handle name, a key path, a registry variable name, and value text
+// Takes a root key handle name, a key path, a registry variable name or blank for default, and value text
 // Stores the information in the registry
 // Returns false on error
 bool RegistryWriteText(HKEY root, read path, read name, read value) {

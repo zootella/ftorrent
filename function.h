@@ -156,9 +156,9 @@ bool DiskIsFolder(read path);
 bool DiskFolderCheck(read path, bool create);
 bool DiskMakeFolder(read path);
 bool DiskDeleteFolder(read path);
-bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
+//bool RegistryReadNumber(HKEY root, read path, read name, DWORD *value);
 bool RegistryReadText(HKEY root, read path, read name, CString *value);
-bool RegistryWriteNumber(HKEY root, read path, read name, int value);
+//bool RegistryWriteNumber(HKEY root, read path, read name, int value);
 bool RegistryWriteText(HKEY root, read path, read name, read value);
 bool RegistryDelete(HKEY base, read path);
 //bool FirewallPresent();
@@ -298,5 +298,13 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
 bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
+
+
+
+bool AssociateCheck();
+void AssociateGet();
+void SetupAdd();
+void SetupRemove();
+
 
 

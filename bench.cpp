@@ -333,39 +333,44 @@ bool torrentitem::Load(libtorrent::big_number hash) {
 //Has Magnet, Has Torrent, Register Magnet, Register Torrent, see how these are used above native TODO
 
 
-// True if this running exe is registered to open magnet links, false it's not or we can't tell
-bool HasMagnet() {
+// True if this running exe is registered to open torrent files and magnet links, false it's not or we can't tell
+bool AssociateCheck() {
+
+	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_CLASSES_ROOT
+	CString value;
+	if (!RegistryReadText(root, L".torrent",                              L"", &value) || value != PROGRAM_NAME)                            return false;
+	if (!RegistryReadText(root, PROGRAM_NAME + L"\\shell\\open\\command", L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
+	if (!RegistryReadText(root, L"Magnet\\shell\\open\\command",          L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
+	return true;
 }
 
-// True if this running exe is registered to open torrent files, false it's not or we can't tell
-bool HasTorrent() {
+// Register this running exe to open torrent files and magnet links
+void AssociateGet() {
+	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_CLASSES_ROOT
+
+	RegistryWriteText(root, L".torrent",                              L"",             PROGRAM_NAME);
+	RegistryWriteText(root, PROGRAM_NAME,                             L"",             L"Torrent");
+	RegistryWriteText(root, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathRunningFolder() + L"\\torrent.ico");
+	RegistryWriteText(root, PROGRAM_NAME + L"\\shell\\open\\command", L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
+
+	RegistryWriteText(root, L"Magnet",                                L"",             L"Magnet URI");
+	RegistryWriteText(root, L"Magnet",                                L"URL Protocol", L"");
+	RegistryWriteText(root, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 }
-
-// Register this running exe to open magnet links
-void GetMagnet() {
-}
-
-// Register this running exe to open torrent files
-void GetTorrent() {
-}
-
-
-
-
-
-
-
-
 
 // List the program in Add or Remove Programs
 void SetupAdd() {
-	RegistryWriteText(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
-	RegistryWriteText(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathLaunch() + L" /addremove");
+	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_LOCAL_MACHINE
+
+	RegistryWriteText(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
+	RegistryWriteText(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathLaunch() + L" /addremove");
 }
 
 // Remove our listing in Add or Remove programs
-CString SetupRemove() {
-	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
+void SetupRemove() {
+	HKEY root = HKEY_CURRENT_USER; // Documentation says this should be HKEY_LOCAL_MACHINE
+
+	RegistryDelete(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
 
