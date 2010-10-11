@@ -155,7 +155,7 @@ CString AddTorrent(CString torrent) {
 	CString name;
 	std::set<CString> trackers;
 	if (!ParseTorrent(torrent, &hash, &name, &trackers))
-		return L"Unable to read the torrent file. Check how you saved or downloaded it, and try again."; // Corrupt torrent file
+		return L"Cannot read the torrent file. Check how you saved or downloaded it, and try again."; // Corrupt torrent file
 
 	// Avoid a duplicate
 	if (FindTorrent(hash)) {
@@ -169,7 +169,7 @@ CString AddTorrent(CString torrent) {
 	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
-		return L"Unable to save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
+		return L"Cannot save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
 
 	// Add the torrent file to the libtorrent session
 	libtorrent::torrent_handle handle;
@@ -207,7 +207,7 @@ CString AddMagnet(read magnet) {
 	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
-		return L"Unable to save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
+		return L"Cannot save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
 
 	// Add the torrent to the libtorrent session
 	libtorrent::torrent_handle handle;

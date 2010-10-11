@@ -678,7 +678,7 @@ void AreaCommand(areaitem *area) {
 			else if (choice == ID_TOOLS_OPEN)    {
 
 				CString message = AddTorrent(L"");
-				if (is(message)) Message(MB_ICONWARNING | MB_OK, message);
+				if (is(message)) Message(message);
 			}
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
 			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }
@@ -735,11 +735,11 @@ bool CheckFolder(read folder) {
 }
 
 // Show a message box to the user
-void Message(int options, read r) {
+void Message(read r) {
 
 	// Show the message box with the mouse away
 	AreaPopUp();
-	MessageBox(Handle.window, r, PROGRAM_NAME, options);
+	MessageBox(Handle.window, r, PROGRAM_NAME, MB_ICONWARNING | MB_OK);
 	AreaPopDown();
 }
 
@@ -763,7 +763,7 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
 			CString message = AddMagnet(L""); // Add it to the program or cancel or
-			if (is(message)) Message(MB_ICONWARNING | MB_OK, message); // Show the user an error message 
+			if (is(message)) Message(message); // Show the user an error message 
 			return true;
 		}
 		// The user clicked Cancel
@@ -817,6 +817,21 @@ void DialogOptions() {
 	AreaPopDown();
 }
 
+// Set the color of the associations message and the availiaility of the button
+void AssociateUpdate(HWND dialog) {
+
+	// Find out what state the dialog is in before we change it
+	CString before = TextDialog(dialog, IDC_MESSAGE); // "here", "red" or "green"
+
+	// Set red or green now
+	CString now = AssociateCheck() ? L"green" : L"red";
+	TextDialogSet(dialog, IDC_MESSAGE, now); // Set the text of the hidden label for paint to use
+	EnableWindow(GetDlgItem(dialog, IDC_CHOOSE), now == L"red"); // Enable or disable the button
+
+	// Repaint the dialog so red becomes green
+	if (before == L"red" && now == L"green") InvalidateRect(dialog, NULL, true);
+}
+
 // A message from options page 1
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
 
@@ -826,12 +841,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Torrents folder path
 		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED); // Ask checkbox
-
-		// Determine if the program has the magnet and torrent associations
-		bool associated = AssociateCheck();
-		TextDialogSet(dialog, IDC_MESSAGE, associated ? L"green" : L"red"); // Message color for paint below
-		EnableWindow(GetDlgItem(dialog, IDC_CHOOSE), !associated) // Button availability
-
+		AssociateUpdate(dialog); // Color label and choose button
 		return true; // Let the system place the focus
 
 	// The dialog needs to be painted
@@ -841,15 +851,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Pick the red or green message
 		CString message;
 		brushitem *brush;
-		if (TextDialogGet(dialog, IDC_MESSAGE) == L"red") {
-
-			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
-			brush = &Handle.rednotice;
-
-		} else {
+		if (TextDialog(dialog, IDC_MESSAGE) == L"green") {
 
 			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
 			brush = &Handle.greennotice;
+
+		} else {
+
+			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
+			brush = &Handle.rednotice;
 		}
 
 		// Calculate where in the dialog to paint
@@ -878,20 +888,18 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Browse
 		switch (LOWORD(wparam)) {
 		case IDC_BROWSE:
-
-			CString browse = DialogBrowse(make(L"Choose the folder where ", PROGRAM_NAME, L" will download files:")); // Show the dialog
+		{
+			CString browse = DialogBrowse(L"Choose the folder where " + PROGRAM_NAME + L" will download files:"); // Show the dialog
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
-
+		}
 		// Choose
 		break;
 		case IDC_CHOOSE:
 
 			AssociateGet();
-			if (!AssociateCheck()) Message(MB_ICONWARNING | MB_OK, L"
-
-			//TODO invalidate the rect of the dialog after changing this
-
+			if (!AssociateCheck()) Message(L"Cannot register torrent and magnet. Run " + PROGRAM_NAME + " as administrator and try again.");
+			AssociateUpdate(dialog);
 			return true;
 		}
 
@@ -911,7 +919,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 			} else {
 
-				Message(MB_ICONWARNING | MB_OK, L"Unable to save files to the folder at '" + folder + "'. Check the path and try again.");
+				Message(L"Cannot save files to the folder at '" + folder + "'. Check the path and try again.");
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_INVALID); // Keep the property sheet open so the user can fix the invalid data
 				return true;
 			}
