@@ -186,7 +186,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	FirewallAdd(PathRunningFile(), PROGRAM_NAME);
+	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent
 	log(L"library start after");
