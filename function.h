@@ -161,6 +161,10 @@ bool RegistryWrite(HKEY root, read path, read name, read value);
 bool RegistryDelete(HKEY base, read path);
 bool FirewallAdd(read path, read name);
 bool FirewallRemove(read path);
+bool AssociateCheck();
+void AssociateGet();
+void SetupAdd();
+void SetupRemove();
 
 // Wrap
 // start
@@ -295,10 +299,6 @@ bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std
 
 
 
-bool AssociateCheck();
-void AssociateGet();
-void SetupAdd();
-void SetupRemove();
 
 
 

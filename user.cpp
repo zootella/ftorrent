@@ -821,7 +821,7 @@ void DialogOptions() {
 void AssociateUpdate(HWND dialog) {
 
 	// Find out what state the dialog is in before we change it
-	CString before = TextDialog(dialog, IDC_MESSAGE); // "here", "red" or "green"
+	CString before = TextDialog(dialog, IDC_MESSAGE); // "Message" before we change it to "red" or "green"
 
 	// Set red or green now
 	CString now = AssociateCheck() ? L"green" : L"red";
@@ -848,37 +848,38 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	break;
 	case WM_PAINT:
 	{
-		// Pick the red or green message
+		// Compose the red or green message
 		CString message;
 		brushitem *brush;
-		if (TextDialog(dialog, IDC_MESSAGE) == L"green") {
-
-			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
-			brush = &Handle.greennotice;
-
-		} else {
+		if (TextDialog(dialog, IDC_MESSAGE) == L"red") {
 
 			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
 			brush = &Handle.rednotice;
+
+		} else {
+
+			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
+			brush = &Handle.greennotice;
 		}
 
 		// Calculate where in the dialog to paint
 		RECT r1, r2, r3;
 		GetWindowRect(dialog, &r1);
-		GetWindowRect(GetDlgItem(dialog, IDC_MESSAGE), &r2); // The message control has false visibility
+		GetWindowRect(GetDlgItem(dialog, IDC_MESSAGE), &r2); // The message text dialog item has false visibility
 		GetClientRect(GetDlgItem(dialog, IDC_MESSAGE), &r3);
 		sizeitem size;
 		size.x = r2.left - r1.left;
 		size.y = r2.top - r1.top;
 		size.w = r3.right;
 		size.h = r3.bottom;
+		RECT rectangle = size.Rectangle();
 
 		// Custom paint the message in the dialog
 		deviceitem device;
 		device.OpenPaint(dialog);
-		device.BackgroundColor(Handle.background.color);
 		device.Font(Handle.font);
-		PaintText(&device, message, size, false, false, false, false, 0, Handle.font, brush, &Handle.face);
+		device.FontColor(brush->color);
+		if (!DrawText(device.device, message, -1, &rectangle, 0)) error(L"drawtext");
 		return false;
 	}
 	// The user clicked a button on the page
