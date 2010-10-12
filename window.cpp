@@ -29,8 +29,9 @@ statetop  State;  // State variables
 // Start the program
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
 
-	// Save the given instance handle
+	// Save the given instance handle and command text
 	Handle.instance = instance;
+	State.command = widenPtoC(command);
 
 	// Tell the system we're going to use the list and tree view controls
 	InitializeCommonControls();
@@ -52,12 +53,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
 
 	// Make brushes
-	Handle.face        = BrushSystem(COLOR_3DFACE); // Shared handles to system brushes
-	Handle.shadow      = BrushSystem(COLOR_3DSHADOW);
-	Handle.background  = BrushSystem(COLOR_WINDOW);
-	Handle.ink         = BrushSystem(COLOR_WINDOWTEXT);
-	Handle.select      = BrushSystem(COLOR_HIGHLIGHT);
-	Handle.line        = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
+	Handle.face       = BrushSystem(COLOR_3DFACE); // Shared handles to system brushes
+	Handle.shadow     = BrushSystem(COLOR_3DSHADOW);
+	Handle.background = BrushSystem(COLOR_WINDOW);
+	Handle.ink        = BrushSystem(COLOR_WINDOWTEXT);
+	Handle.select     = BrushSystem(COLOR_HIGHLIGHT);
+	Handle.line       = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
 
 	// Make fonts
 	Handle.font      = FontMenu(false);
@@ -186,7 +187,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
+//	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent
 	log(L"library start after");
@@ -217,7 +218,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	log(L"library close before");
 	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
 	log(L"library close after");
-	FirewallRemove(PathRunningFile());
+//	FirewallRemove(PathRunningFile());
 
 	// Return the value from the quit message
 	return (int)message.wParam;
@@ -229,6 +230,7 @@ void WindowPulse() {
 
 	// Pulse the program from data to display
 	LibraryPulse();
+	RestorePulse();
 	ListPulse();
 	AreaPulse();
 }

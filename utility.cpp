@@ -849,15 +849,11 @@ HFONT FontName(read face, int points) {
 	return font;
 }
 
-int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
-{
-	// takes numbers
-	// determines the greatest amongst them
-	// returns it
+// Return the largest positive number amongst the given numbers, 0 if none
+int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
 
-	// FIND THE BIGGEST POSITIVE NUMBER AND RETURN IT
-	int i;
-	i = 0;
+	// Find the biggest positive number and return it
+	int i = 0;
 	if (i < i1) i = i1;
 	if (i < i2) i = i2;
 	if (i < i3) i = i3;
@@ -866,7 +862,7 @@ int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
 	if (i < i6) i = i6;
 	if (i < i7) i = i7;
 	if (i < i8) i = i8;
-	return(i);
+	return i;
 }
 
 // Initialize our use of the common controls
@@ -2037,6 +2033,9 @@ void AssociateGet() {
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"",             L"Magnet URI");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"URL Protocol", L"");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
+
+
+	//TODO i think firefox actually shows the icon for magnet links, so add it here
 }
 
 // List this running exe in Add or Remove Programs

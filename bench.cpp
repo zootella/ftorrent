@@ -194,7 +194,41 @@ void Test() {
 
 
 
+void RestorePulse() {
+	if (State.restored) return; // Only do this once
+	State.restored = true;
 
+
+	//TODO restore the files saved next to this running exe here
+
+
+
+
+
+	//then, do the command we were launched with
+
+	CString s = State.command;
+	if (has(s, L"\"")) {
+		s = after(s, L"\"");
+		if (has(s, L"\"")) {
+			s = before(s, L"\"");
+			if (starts(s, L"magnet:?", Matching)) {
+
+				Message(make(L"MAGNET[", s, L"]"));
+
+			} else if (trails(s, L".torrent", Matching)) {
+
+				Message(make(L"TORRENT[", s, L"]"));
+			}
+		}
+	}
+
+
+
+
+
+
+}
 
 
 
@@ -202,6 +236,7 @@ void Test() {
 
 
 void ListPulse() {
+
 
 
 	for (int i = 0; i < (int)Data.torrents.size(); i++)

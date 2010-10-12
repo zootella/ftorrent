@@ -115,6 +115,8 @@ public:
 
 	std::vector<torrentitem> torrents;
 
+	CString command; // Command line arguments the system gave or main function
+
 
 	CString folder; // Path to folder to save files
 	bool ask; // True to ask where to save each torrent
@@ -183,6 +185,9 @@ public:
 	stageitem *stage; // Current program stage shown on the screen
 	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
 
+	bool restored;
+	CString command;
+
 	statetop() {
 
 		taskbar = NULL;
@@ -190,5 +195,6 @@ public:
 		stage = &start;
 		exit = 0;
 		expect = 0;
+		restored = false;
 	}
 };
