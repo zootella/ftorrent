@@ -30,7 +30,7 @@ extern statetop  State;
 
 
 
-
+//WORKS
 // Add a torrent to our libtorrent session
 // folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
 // torrent is the path to the torrent file on the disk
@@ -38,7 +38,7 @@ extern statetop  State;
 // store is the path to libtorrent resume data from a previous session, or null if this is the first time
 // Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
 // If you add the same infohash twice, sets the existing handle instead of producing an error
-torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tracker, read store) {
+torrentitem LibraryAdd0(read folder, read torrent, read hash, read name, read tracker, read store) {
 
 	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
 	torrentitem t;
@@ -104,22 +104,101 @@ torrentitem LibraryAdd(read folder, read torrent, read hash, read name, read tra
 	return t; // Something went wrong, return an empty torrent item with an invalid handle
 }
 
+//WORKS
+void LibraryAdd1(read folder, read torrent) {
+	try {
+
+		std::vector<char> charvector;
+		libtorrent::add_torrent_params p;
+		p.duplicate_is_error = false;
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
+		Handle.session->add_torrent(p);
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+bool LibraryAddTorrent99(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
+	try {
+		libtorrent::add_torrent_params p;
+
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		std::vector<char> c;
+		if (is(store)) LoadVector(store, c);
+		if (c.size() > 0) p.resume_data = &c;
+
+		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
+
+		*handle = Handle.session->add_torrent(p);
+		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
+
+		return true;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false;
+}
+
+//MAKES FOLDERS BUT WONT SAVE FILES, THEN CRASHES ON CLOSE
+bool LibraryAddTorrent100(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
+	try {
+		libtorrent::add_torrent_params p;
+
+		p.save_path = boost::filesystem::path(narrowRtoS(folder));
+
+		std::vector<char> c;
+		if (is(store)) LoadVector(store, c);
+		if (c.size() > 0) p.resume_data = &c;
+
+		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
+		p.ti = &info;
+
+		*handle = Handle.session->add_torrent(p);
+		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
+
+		return true;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 // Run a snippet of test code
 void Test() {
 
+	/*
+	LibraryAdd1(L"C:\\Documents\\test", L"C:\\Documents\\my.torrent"); //WORKS
+	*/
 
+	//The fix is that boost intrusive pointer wants new
 
-
-	LibraryAdd(
-		L"C:\\Documents\\test",       // folder
-		L"C:\\Documents\\my.torrent", // torrent
-		NULL,  // magnet hash
-		NULL,  //        name
-		NULL,  //        tracker
-		NULL); // store file from before
+	libtorrent::torrent_handle handle;
+	LibraryAddTorrent99(&handle, L"C:\\Documents\\test", L"", L"C:\\Documents\\my.torrent");
 
 
 
