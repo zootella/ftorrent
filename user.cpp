@@ -762,7 +762,7 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		{
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
-			CString message = AddMagnet(L""); // Add it to the program or cancel or
+			CString message = AddMagnet(magnet); // Add it to the program or cancel or
 			if (is(message)) Message(message); // Show the user an error message 
 			return true;
 		}
@@ -831,6 +831,37 @@ void AssociateUpdate(HWND dialog) {
 	// Repaint the dialog so red becomes green
 	if (before == L"red" && now == L"green") InvalidateRect(dialog, NULL, true);
 }
+
+
+
+/*
+void AssociateLogic() {
+
+	//startup
+	if (Data.associate) AssociateGet();
+
+	//the dialog is initialized or the user checks the box
+	if (AssociateIs()) green;
+	else if (checked) yellow;
+	else red;
+
+	//the user checks the box
+	AssociateGet();
+	refresh;
+
+
+
+
+
+}
+*/
+
+
+
+
+
+
+
 
 // A message from options page 1
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
@@ -902,6 +933,11 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 			AssociateUpdate(dialog);
 			if (TextDialog(dialog, IDC_MESSAGE) == L"red") Message(L"Cannot register torrent and magnet. Run " + PROGRAM_NAME + L" as administrator and try again.");
 			return true;
+
+		break;
+		case IDC_ASK:
+
+			log(IsDlgButtonChecked(dialog, IDC_ASK) ? L"ask checked" : L"ask unchecked");
 		}
 
 	// The user clicked one of the bottom property sheet buttons
