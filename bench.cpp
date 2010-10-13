@@ -169,43 +169,28 @@ void Test() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void RestorePulse() {
-	if (State.restored) return; // Only do this once
+
+	// Only do this once
+	if (State.restored) return;
 	State.restored = true;
 
+	// Add all the torrents from last time the program ran
+	std::set<libtorrent::big_number> hashes;
+	finditem f(PathRunningFolder());
+	while (f.result()) { // Loop for each file in the folder this exe is running in
+		if (!f.folder()) {
+			CString s = f.info.cFileName;
+			if (length(s) == length(L"optn.") + 40 + length(L".db") && // Look for "optn.infohash.db"
+				starts(s, L"optn.", Matching) && trails(s, L".db", Matching)) {
 
-	//TODO restore the files saved next to this running exe here
-
-
-
-
-
-	//then, do the command we were launched with
+				s = clip(s, length(L"optn."), 40);
+				libtorrent::big_number hash = convertRtoBigNumber(s);
+				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
+			}
+		}
+	}
+	for (std::set<libtorrent::big_number>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
 
 	// Add the torrent or magnet the system launched this program with
 	CString s = State.command;
@@ -220,10 +205,6 @@ void RestorePulse() {
 }
 
 
-
-
-
-
 void ListPulse() {
 
 
@@ -235,8 +216,6 @@ void ListPulse() {
 
 
 }
-
-
 
 
 // Edit the list view row to match the information in this torrent item
