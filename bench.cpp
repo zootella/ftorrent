@@ -207,27 +207,16 @@ void RestorePulse() {
 
 	//then, do the command we were launched with
 
+	// Add the torrent or magnet the system launched this program with
 	CString s = State.command;
-	if (has(s, L"\"")) {
+	if (starts(s, L"\"")) { // Parse the command like ["C:\Folder\file.torrent" /more /arguments]
 		s = after(s, L"\"");
 		if (has(s, L"\"")) {
 			s = before(s, L"\"");
-			if (starts(s, L"magnet:?", Matching)) {
-
-				Message(make(L"MAGNET[", s, L"]"));
-
-			} else if (trails(s, L".torrent", Matching)) {
-
-				Message(make(L"TORRENT[", s, L"]"));
-			}
+			if (trails(s, L".torrent", Matching)) AddTorrent(s);
+			else if (starts(s, L"magnet:", Matching)) AddMagnet(s);
 		}
 	}
-
-
-
-
-
-
 }
 
 

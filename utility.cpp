@@ -2015,36 +2015,46 @@ bool firewallitem::RemoveProgram(read path) {
 
 // True if this running exe is registered to open torrent files and magnet links, false it's not or we can't tell
 bool AssociateCheck() {
+
 	CString value;
 	if (!RegistryRead(HKEY_CLASSES_ROOT, L".torrent",                              L"", &value) || value != PROGRAM_NAME)                            return false;
 	if (!RegistryRead(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\shell\\open\\command", L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
-
 	if (!RegistryRead(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"", &value) || value != L"\"" + PathRunningFile() + "\" \"%1\"") return false;
 	return true;
 }
 
 // Register this running exe to open torrent files and magnet links
 void AssociateGet() {
+
+	RegistryDelete(HKEY_CLASSES_ROOT, L".torrent");
 	RegistryWrite(HKEY_CLASSES_ROOT, L".torrent",                              L"",             PROGRAM_NAME);
+
+	RegistryDelete(HKEY_CLASSES_ROOT, PROGRAM_NAME);
 	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME,                             L"",             L"Torrent");
 	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathRunningFolder() + L"\\torrent.ico");
 	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\shell\\open\\command", L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 
+	RegistryDelete(HKEY_CLASSES_ROOT, L"Magnet");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"",             L"Magnet URI");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"URL Protocol", L"");
+	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\DefaultIcon",                   L"",             PathRunningFolder() + L"\\torrent.ico");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
-
-
-	//TODO i think firefox actually shows the icon for magnet links, so add it here
 }
 
 // List this running exe in Add or Remove Programs
 void SetupAdd() {
+
 	RegistryWrite(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"DisplayName", PROGRAM_NAME);
 	RegistryWrite(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME, L"UninstallString", PathRunningFile() + L" /addremove");
 }
 
-// Remove our listing in Add or Remove programs
+// Remove us from the registry
 void SetupRemove() {
+
+	CString value;
+	if (RegistryRead(HKEY_CLASSES_ROOT, L".torrent",                     L"", &value) && value == PROGRAM_NAME)                            RegistryDelete(HKEY_CLASSES_ROOT, L".torrent");
+	if (RegistryRead(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command", L"", &value) && value == L"\"" + PathRunningFile() + "\" \"%1\"") RegistryDelete(HKEY_CLASSES_ROOT, L"Magnet");
+	RegistryDelete(HKEY_CLASSES_ROOT, PROGRAM_NAME);
+
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }

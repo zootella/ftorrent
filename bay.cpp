@@ -191,14 +191,41 @@ bool LibraryAddTorrent100(libtorrent::torrent_handle *handle, read folder, read 
 // Run a snippet of test code
 void Test() {
 
+
+	std::set<libtorrent::big_number> hashes;
+	finditem f(PathRunningFolder());
+	while (f.result()) {
+		if (!f.folder()) {
+			CString s = f.info.cFileName;
+			if (length(s) == length(L"optn.") + 40 + length(L".db") &&
+				starts(s, L"optn.", Matching) && trails(s, L".db", Matching)) {
+
+				s = clip(s, length(L"optn."), 40);
+				libtorrent::big_number hash = convertRtoBigNumber(s);
+				if (!hash.is_all_zeros()) hashes.insert(hash);
+			}
+		}
+	}
+
+	for (std::set<libtorrent::big_number>::const_iterator i = hashes.begin(); i != hashes.end(); i++) {
+
+		log(L"add store: ", convertBigNumberToC(*i));
+//		AddStore(*i);
+	}
+
+
+
+
 	/*
 	LibraryAdd1(L"C:\\Documents\\test", L"C:\\Documents\\my.torrent"); //WORKS
 	*/
 
 	//The fix is that boost intrusive pointer wants new
 
+	/*
 	libtorrent::torrent_handle handle;
-	LibraryAddTorrent99(&handle, L"C:\\Documents\\test", L"", L"C:\\Documents\\my.torrent");
+	LibraryAddTorrent99(&handle, L"C:\\Documents\\test", L"", L"C:\\Documents\\my.torrent"); //WORKS
+	*/
 
 
 
