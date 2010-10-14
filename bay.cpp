@@ -29,7 +29,7 @@ extern statetop  State;
 
 
 
-
+/*
 //WORKS
 // Add a torrent to our libtorrent session
 // folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
@@ -122,6 +122,7 @@ void LibraryAdd1(read folder, read torrent) {
 	}
 }
 
+//WORKS
 bool LibraryAddTorrent99(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
 	try {
 		libtorrent::add_torrent_params p;
@@ -171,7 +172,7 @@ bool LibraryAddTorrent100(libtorrent::torrent_handle *handle, read folder, read 
 	}
 	return false;
 }
-
+*/
 
 
 
@@ -192,40 +193,6 @@ bool LibraryAddTorrent100(libtorrent::torrent_handle *handle, read folder, read 
 void Test() {
 
 
-	std::set<libtorrent::big_number> hashes;
-	finditem f(PathRunningFolder());
-	while (f.result()) {
-		if (!f.folder()) {
-			CString s = f.info.cFileName;
-			if (length(s) == length(L"optn.") + 40 + length(L".db") &&
-				starts(s, L"optn.", Matching) && trails(s, L".db", Matching)) {
-
-				s = clip(s, length(L"optn."), 40);
-				libtorrent::big_number hash = convertRtoBigNumber(s);
-				if (!hash.is_all_zeros()) hashes.insert(hash);
-			}
-		}
-	}
-
-	for (std::set<libtorrent::big_number>::const_iterator i = hashes.begin(); i != hashes.end(); i++) {
-
-		log(L"add store: ", convertBigNumberToC(*i));
-//		AddStore(*i);
-	}
-
-
-
-
-	/*
-	LibraryAdd1(L"C:\\Documents\\test", L"C:\\Documents\\my.torrent"); //WORKS
-	*/
-
-	//The fix is that boost intrusive pointer wants new
-
-	/*
-	libtorrent::torrent_handle handle;
-	LibraryAddTorrent99(&handle, L"C:\\Documents\\test", L"", L"C:\\Documents\\my.torrent"); //WORKS
-	*/
 
 
 
@@ -525,8 +492,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 		if (c.size() > 0) p.resume_data = &c;
 
 		// Set torrent
-		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
-		p.ti = &info;
+		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
 
 		// Add and save handle
 		*handle = Handle.session->add_torrent(p);
