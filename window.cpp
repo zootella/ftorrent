@@ -187,11 +187,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
+	OptionLoad(); // Load optn.db from last time into Data variables
+	if (Data.associate) AssociateGet();
 //	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent
 	log(L"library start after");
-	OptionLoad(); // Load optn.db from last time into Data variables
 
 	// Message loop
 	MSG message;

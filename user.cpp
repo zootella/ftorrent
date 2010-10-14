@@ -205,16 +205,17 @@ void AreaCreate() {
 	HICON yellow32 = LoadIconResource(L"STAGE_YELLOW", 32, 32);
 
 	// Make colors
-	Handle.blue        = CreateBrush(RGB(  0, 102, 204));
-	Handle.lightblue   = CreateBrush(RGB( 51, 153, 255));
-	Handle.green       = CreateBrush(RGB(102, 204,  51));
-	Handle.lightgreen  = CreateBrush(RGB(153, 255, 102));
-	Handle.red         = CreateBrush(RGB(255, 102,  51));
-	Handle.lightred    = CreateBrush(RGB(255, 153, 102));
-	Handle.yellow      = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow = CreateBrush(RGB(255, 255, 102));
-	Handle.rednotice   = CreateBrush(RGB(135,   0,   0));
-	Handle.greennotice = CreateBrush(RGB(  0, 135,   0));
+	Handle.blue         = CreateBrush(RGB(  0, 102, 204));
+	Handle.lightblue    = CreateBrush(RGB( 51, 153, 255));
+	Handle.green        = CreateBrush(RGB(102, 204,  51));
+	Handle.lightgreen   = CreateBrush(RGB(153, 255, 102));
+	Handle.red          = CreateBrush(RGB(255, 102,  51));
+	Handle.lightred     = CreateBrush(RGB(255, 153, 102));
+	Handle.yellow       = CreateBrush(RGB(255, 204,   0));
+	Handle.lightyellow  = CreateBrush(RGB(255, 255, 102));
+	Handle.rednotice    = CreateBrush(RGB(135,   0,   0));
+	Handle.yellownotice = CreateBrush(RGB(135, 135,   0));
+	Handle.greennotice  = CreateBrush(RGB(  0, 135,   0));
 
 	// Assemble stages
 	State.start.title = PROGRAM_NAME;
@@ -758,7 +759,7 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		{
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
-			CString message = AddMagnet(magnet);
+			CString message = AddMagnet(magnet, true);
 			if (is(message)) Message(message); // Show any error text to the user
 			return true;
 		}
@@ -813,51 +814,21 @@ void DialogOptions() {
 	AreaPopDown();
 }
 
-// Set the color of the associations message and the availiaility of the button
+// Associate this program with magnet and torrent and show the user a color label about it
 void AssociateUpdate(HWND dialog) {
 
-	// Find out what state the dialog is in before we change it
-	CString before = TextDialog(dialog, IDC_MESSAGE); // "Message" before we change it to "red" or "green"
+	Data.associate = IsDlgButtonChecked(dialog, IDC_ASSOCIATE) ? true : false; // Copy the check to data
+	if (Data.associate && !AssociateIs()) AssociateGet(); // Change the registry if necessary
 
-	// Set red or green now
-	CString now = AssociateCheck() ? L"green" : L"red";
-	TextDialogSet(dialog, IDC_MESSAGE, now); // Set the text of the hidden label for paint to use
-	EnableWindow(GetDlgItem(dialog, IDC_CHOOSE), now == L"red"); // Enable or disable the button
+	CString before = TextDialog(dialog, IDC_LABEL); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
+	CString now;
+	if (AssociateIs())       now = L"green";  // We have the associations
+	else if (Data.associate) now = L"yellow"; // We tried to get them, but it didn't work
+	else                     now = L"red";    // The user has not told the program to get them
 
-	// Repaint the dialog so red becomes green
-	if (before == L"red" && now == L"green") InvalidateRect(dialog, NULL, true);
+	TextDialogSet(dialog, IDC_LABEL, now); // Set the text of the hidden label for paint to use below
+	if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
 }
-
-
-
-/*
-void AssociateLogic() {
-
-	//startup
-	if (Data.associate) AssociateGet();
-
-	//the dialog is initialized or the user checks the box
-	if (AssociateIs()) green;
-	else if (checked) yellow;
-	else red;
-
-	//the user checks the box
-	AssociateGet();
-	refresh;
-
-
-
-
-
-}
-*/
-
-
-
-
-
-
-
 
 // A message from options page 1
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam) {
@@ -867,33 +838,42 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	case WM_INITDIALOG:
 
 		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Torrents folder path
-		CheckDlgButton(dialog, IDC_ASSOCIATE, Data.associate ? BST_CHECKED : BST_UNCHECKED); // Ask checkbox
-		AssociateUpdate(dialog); // Color label and choose button
+		CheckDlgButton(dialog, IDC_ASSOCIATE, Data.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
+		AssociateUpdate(dialog);
 		return true; // Let the system place the focus
+
+	// The dialog has lost or received the keyboard focus
+	break;
+	case WM_ACTIVATE:
+
+		AssociateUpdate(dialog);
 
 	// The dialog needs to be painted
 	break;
 	case WM_PAINT:
 	{
-		// Compose the red or green message
-		CString message;
+		// Compose the color label
+		CString code = TextDialog(dialog, IDC_LABEL);
 		brushitem *brush;
-		if (TextDialog(dialog, IDC_MESSAGE) == L"red") {
-
-			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
+		CString message;
+		if (code == L"red") {
 			brush = &Handle.rednotice;
+			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
 
-		} else {
+		} else if (code == L"yellow") {
+			brush = &Handle.yellownotice;
+			message = L"Run " + PROGRAM_NAME + L" as administrator to make it your default BitTorrent client.";
 
-			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
+		} else if (code == L"green") {
 			brush = &Handle.greennotice;
+			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
 		}
 
 		// Calculate where in the dialog to paint
 		RECT r1, r2, r3;
 		GetWindowRect(dialog, &r1);
-		GetWindowRect(GetDlgItem(dialog, IDC_MESSAGE), &r2); // The message text dialog item has false visibility
-		GetClientRect(GetDlgItem(dialog, IDC_MESSAGE), &r3);
+		GetWindowRect(GetDlgItem(dialog, IDC_LABEL), &r2); // The message text dialog item has false visibility
+		GetClientRect(GetDlgItem(dialog, IDC_LABEL), &r3);
 		sizeitem size;
 		size.x = r2.left - r1.left;
 		size.y = r2.top - r1.top;
@@ -921,19 +901,11 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
 		}
-		// Choose
+		// The user checked or unchecked the associate checkbox
 		break;
-		case IDC_CHOOSE:
+		case IDC_ASSOCIATE:
 
-			AssociateGet();
 			AssociateUpdate(dialog);
-			if (TextDialog(dialog, IDC_MESSAGE) == L"red") Message(L"Cannot register torrent and magnet. Run " + PROGRAM_NAME + L" as administrator and try again.");
-			return true;
-
-		break;
-		case IDC_ASK:
-
-			log(IsDlgButtonChecked(dialog, IDC_ASK) ? L"ask checked" : L"ask unchecked");
 		}
 
 	// The user clicked one of the bottom property sheet buttons

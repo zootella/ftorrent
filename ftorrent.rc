@@ -132,11 +132,10 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_FOLDER,7,20,291,14,ES_AUTOHSCROLL
     PUSHBUTTON      "&Browse...",IDC_BROWSE,303,20,50,14
-    CONTROL         "&Choose ftorrent to open torrent files and magnet links",IDC_ASK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,39,189,10
-    PUSHBUTTON      "&Choose ftorrent to open torrent files and magnet links",IDC_CHOOSE,7,76,195,14
+    CONTROL         "&Choose ftorrent to open torrent files and magnet links",IDC_ASSOCIATE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,189,10
     LTEXT           "Download files to this folder:",IDC_STATIC,7,7,92,8
-    LTEXT           "Message",IDC_MESSAGE,7,63,346,8,NOT WS_VISIBLE
+    LTEXT           "Label",IDC_LABEL,7,44,346,8,NOT WS_VISIBLE
 END
 
 OPTIONS_PAGE_2 DIALOGEX 0, 0, 360, 180
@@ -152,17 +151,6 @@ CAPTION "About ftorrent"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "OK",IDCANCEL,59,100,50,14
-END
-
-DIALOG_REGISTER DIALOGEX 0, 0, 235, 47
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ftorrent"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    DEFPUSHBUTTON   "&Yes",IDYES,40,26,50,14
-    PUSHBUTTON      "&No",IDNO,94,26,50,14
-    PUSHBUTTON      "&Ask me next time",IDCANCEL,148,26,80,14
-    LTEXT           "Choose ftorrent to open torrent files and magnet links?",IDC_STATIC,7,7,177,8
 END
 
 DIALOG_ADD DIALOGEX 0, 0, 400, 65
@@ -207,14 +195,6 @@ BEGIN
         RIGHTMARGIN, 353
         TOPMARGIN, 7
         BOTTOMMARGIN, 173
-    END
-
-    "DIALOG_REGISTER", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 228
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 40
     END
 
     "DIALOG_ADD", DIALOG

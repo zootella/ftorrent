@@ -2014,7 +2014,7 @@ bool firewallitem::RemoveProgram(read path) {
 }
 
 // True if this running exe is registered to open torrent files and magnet links, false it's not or we can't tell
-bool AssociateCheck() {
+bool AssociateIs() {
 
 	CString value;
 	if (!RegistryRead(HKEY_CLASSES_ROOT, L".torrent",                              L"", &value) || value != PROGRAM_NAME)                            return false;

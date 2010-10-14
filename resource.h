@@ -16,10 +16,8 @@
 #define IDC_GET                         1073
 #define IDC_GETTEXT                     1074
 #define IDC_GETSPIN                     1075
-#define IDC_ASK                         1078
-#define IDC_CHOOSE                      1079
-#define IDC_MESSAGE                     1083
-#define IDC_EDIT1                       1084
+#define IDC_ASSOCIATE                   1078
+#define IDC_LABEL                       1083
 #define ID_TASKBAR_RESTORE              40001
 #define ID_TASKBAR_EXIT                 40002
 #define ID_TOOLS_TEST                   40003

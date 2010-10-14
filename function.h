@@ -161,7 +161,7 @@ bool RegistryWrite(HKEY root, read path, read name, read value);
 bool RegistryDelete(HKEY base, read path);
 bool FirewallAdd(read path, read name);
 bool FirewallRemove(read path);
-bool AssociateCheck();
+bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
