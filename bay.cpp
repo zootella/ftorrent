@@ -246,7 +246,7 @@ void Test() {
 
 // The user clicked to add the torrent file at the given path
 // Returns error message text for the user, or blank on success or cancel
-CString AddTorrent(read torrent) {
+CString AddTorrent(read torrent, bool ask) {
 
 	// Parse the torrent file on the disk
 	libtorrent::big_number hash;
@@ -264,7 +264,7 @@ CString AddTorrent(read torrent) {
 
 	// Choose the download folder
 	CString folder = Data.folder;
-	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
+	if (ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
 		return L"Cannot save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder
@@ -284,7 +284,7 @@ CString AddTorrent(read torrent) {
 
 // The user clicked to add the given magnet link
 // Returns error message text for the user, or blank on success or cancel
-CString AddMagnet(read magnet) {
+CString AddMagnet(read magnet, bool ask) {
 
 	// Parse the text of the magnet link
 	libtorrent::big_number hash;
@@ -302,7 +302,7 @@ CString AddMagnet(read magnet) {
 
 	// Choose the download folder
 	CString folder = Data.folder;
-	if (Data.ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
+	if (ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
 		return L"Cannot save files to the folder at '" + folder + "'. Check the path and try again."; // Can't write to folder

@@ -119,10 +119,10 @@ public:
 
 
 	CString folder; // Path to folder to save files
-	bool ask; // True to ask where to save each torrent
+	bool associate; // True to associate torrent and magnet
 
 	datatop() {
-		ask = false;
+		associate = true;
 
 	}
 

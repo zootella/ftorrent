@@ -322,8 +322,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_COPYDATA:
 	{
 		CString s = (read)(((PCOPYDATASTRUCT)lparam)->lpData); // Copy the null terminated wide characters into a string
-		if (starts(s, L"magnet:", Matching)) AddMagnet(s); // Look for magnet first because link text might also end torrent
-		else if (trails(s, L".torrent", Matching)) AddTorrent(s);
+		if (starts(s, L"magnet:", Matching)) AddMagnet(s, false); // Look for magnet first because link text might also end torrent
+		else if (trails(s, L".torrent", Matching)) AddTorrent(s, false);
 	}
 	// The system has removed the window from the screen
 	break;

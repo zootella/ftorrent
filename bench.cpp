@@ -198,8 +198,8 @@ void StorePulse() {
 		s = after(s, L"\"");
 		if (has(s, L"\"")) {
 			s = before(s, L"\"");
-			if (starts(s, L"magnet:", Matching)) AddMagnet(s); // Look for magnet first because link text might also end torrent
-			else if (trails(s, L".torrent", Matching)) AddTorrent(s);
+			if (starts(s, L"magnet:", Matching)) AddMagnet(s, false); // Look for magnet first because link text might also end torrent
+			else if (trails(s, L".torrent", Matching)) AddTorrent(s, false);
 		}
 	}
 }

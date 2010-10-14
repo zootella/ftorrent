@@ -679,7 +679,7 @@ void AreaCommand(areaitem *area) {
 
 				CString torrent = DialogOpen(); // Let the user choose a torrent file
 				if (isblank(torrent)) return; // Canceled the file open dialog
-				CString message = AddTorrent(torrent);
+				CString message = AddTorrent(torrent, true);
 				if (is(message)) Message(message); // Show any error text to the user
 			}
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
@@ -707,9 +707,7 @@ void OptionLoad() {
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
 		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
-
-		CString ask = widenStoC(d[narrowRtoS(L"ask")].string()); // True to ask where to save each torrent
-		Data.ask = same(ask, L"t");
+		Data.associate = same(widenStoC(d[narrowRtoS(L"associate")].string()), L"t"); // True to associate magnet and torrent
 	}
 
 	// Replace blank or invalid with factory defaults
@@ -721,12 +719,8 @@ void OptionLoad() {
 void OptionSave() {
 
 	libtorrent::entry::dictionary_type d;
-
 	d[narrowRtoS(L"folder")] = narrowRtoS(Data.folder);
-
-	if (Data.ask) d[narrowRtoS(L"ask")] = narrowRtoS(L"t");
-	else          d[narrowRtoS(L"ask")] = narrowRtoS(L"f");
-
+	d[narrowRtoS(L"associate")] = Data.associate ? narrowRtoS(L"t") : narrowRtoS(L"f");
 	SaveEntry(PathOption(), d);
 }
 
@@ -873,7 +867,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	case WM_INITDIALOG:
 
 		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Torrents folder path
-		CheckDlgButton(dialog, IDC_ASK, Data.ask ? BST_CHECKED : BST_UNCHECKED); // Ask checkbox
+		CheckDlgButton(dialog, IDC_ASSOCIATE, Data.associate ? BST_CHECKED : BST_UNCHECKED); // Ask checkbox
 		AssociateUpdate(dialog); // Color label and choose button
 		return true; // Let the system place the focus
 
@@ -968,7 +962,6 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		case PSN_APPLY:
 
 			Data.folder = TextDialog(dialog, IDC_FOLDER);
-			Data.ask = IsDlgButtonChecked(dialog, IDC_ASK) ? true : false; // Avoid forcing value to bool
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
 		}
