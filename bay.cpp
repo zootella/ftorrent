@@ -244,13 +244,9 @@ void Test() {
 
 
 
-// The user clicked to add the torrent file at the given path, or blank to ask the user
-// Returns error message text for the user, or blank on cancel or success
-CString AddTorrent(CString torrent) {
-
-	// Have the user pick the torrent to open
-	if (isblank(torrent)) torrent = DialogOpen(); // Show the file open box to have the user choose a torrent file
-	if (isblank(torrent)) return L""; // Canceled the file open dialog
+// The user clicked to add the torrent file at the given path
+// Returns error message text for the user, or blank on success or cancel
+CString AddTorrent(read torrent) {
 
 	// Parse the torrent file on the disk
 	libtorrent::big_number hash;
@@ -287,7 +283,7 @@ CString AddTorrent(CString torrent) {
 }
 
 // The user clicked to add the given magnet link
-// Returns error message text for the user, or blank on cancel or success
+// Returns error message text for the user, or blank on success or cancel
 CString AddMagnet(read magnet) {
 
 	// Parse the text of the magnet link

@@ -677,8 +677,10 @@ void AreaCommand(areaitem *area) {
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
 			else if (choice == ID_TOOLS_OPEN)    {
 
-				CString message = AddTorrent(L"");
-				if (is(message)) Message(message);
+				CString torrent = DialogOpen(); // Let the user choose a torrent file
+				if (isblank(torrent)) return; // Canceled the file open dialog
+				CString message = AddTorrent(torrent); // Add the torrent to the program
+				if (is(message)) Message(message); // Show any error text to the user
 			}
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
 			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }

@@ -281,7 +281,7 @@ void ListPulse();
 
 
 void Test();
-CString AddTorrent(CString torrent);
+CString AddTorrent(read torrent);
 CString AddMagnet(read magnet);
 void AddStore(libtorrent::big_number hash);
 void AddTrackers(libtorrent::big_number hash, std::set<CString> add);
