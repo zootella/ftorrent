@@ -842,7 +842,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		AssociateUpdate(dialog);
 		return true; // Let the system place the focus
 
-	// The dialog has lost or received the keyboard focus
+	// The dialog lost or received the keyboard focus
 	break;
 	case WM_ACTIVATE:
 
@@ -866,7 +866,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		} else if (code == L"green") {
 			brush = &Handle.greennotice;
-			message = L"Thanks for making " + PROGRAM_NAME + L" your default BitTorrent client.";
+			message = L"Thanks for using " + PROGRAM_NAME + L" as your default BitTorrent client.";
 		}
 
 		// Calculate where in the dialog to paint
