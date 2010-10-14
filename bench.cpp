@@ -169,7 +169,7 @@ void Test() {
 
 
 
-void RestorePulse() {
+void StorePulse() {
 
 	// Only do this once
 	if (State.restored) return;
@@ -198,11 +198,13 @@ void RestorePulse() {
 		s = after(s, L"\"");
 		if (has(s, L"\"")) {
 			s = before(s, L"\"");
-			if (trails(s, L".torrent", Matching)) AddTorrent(s);
-			else if (starts(s, L"magnet:", Matching)) AddMagnet(s);
+			if (starts(s, L"magnet:", Matching)) AddMagnet(s); // Look for magnet first because link text might also end torrent
+			else if (trails(s, L".torrent", Matching)) AddTorrent(s);
 		}
 	}
 }
+
+
 
 
 void ListPulse() {

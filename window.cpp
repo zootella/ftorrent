@@ -230,7 +230,7 @@ void WindowPulse() {
 
 	// Pulse the program from data to display
 	LibraryPulse();
-	RestorePulse();
+	StorePulse();
 	ListPulse();
 	AreaPulse();
 }
@@ -317,6 +317,14 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		// The program has lost the mouse capture, mark no area pressed
 		if (Handle.window != (HWND)lparam) Area.pressed = NULL;
 
+	// Another window is copying data to this one
+	break;
+	case WM_COPYDATA:
+	{
+		CString s = (read)(((PCOPYDATASTRUCT)lparam)->lpData); // Copy the null terminated wide characters into a string
+		if (starts(s, L"magnet:", Matching)) AddMagnet(s); // Look for magnet first because link text might also end torrent
+		else if (trails(s, L".torrent", Matching)) AddTorrent(s);
+	}
 	// The system has removed the window from the screen
 	break;
 	case WM_DESTROY:

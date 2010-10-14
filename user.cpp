@@ -679,7 +679,7 @@ void AreaCommand(areaitem *area) {
 
 				CString torrent = DialogOpen(); // Let the user choose a torrent file
 				if (isblank(torrent)) return; // Canceled the file open dialog
-				CString message = AddTorrent(torrent); // Add the torrent to the program
+				CString message = AddTorrent(torrent);
 				if (is(message)) Message(message); // Show any error text to the user
 			}
 			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
@@ -764,8 +764,8 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		{
 			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
-			CString message = AddMagnet(magnet); // Add it to the program or cancel or
-			if (is(message)) Message(message); // Show the user an error message 
+			CString message = AddMagnet(magnet);
+			if (is(message)) Message(message); // Show any error text to the user
 			return true;
 		}
 		// The user clicked Cancel
