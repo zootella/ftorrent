@@ -90,12 +90,11 @@ std::string narrowWtoS(std::wstring w) {
 // base 16 text like "e6a56670baae316ebf5d3ce91be729e8688f7256" and
 // libtorrent::big_number and libtorrent::sha1_hash which are the same thing
 
-libtorrent::big_number convertRtoBigNumber(read r) { return convertPtoBigNumber(narrowRtoS(r).c_str()); }
-libtorrent::big_number convertPtoBigNumber(const char *p) {
+libtorrent::big_number convertRtoBigNumber(read r) {
 
 	std::stringstream stream;
 	libtorrent::big_number n;
-	stream << p;
+	stream << narrowRtoS(r).c_str();
 	stream >> n;
 	return n;
 }
@@ -133,7 +132,7 @@ CString PeerToString(const libtorrent::peer_id &id) {
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
-	libtorrent::big_number hash = convertPtoBigNumber(id);
+	libtorrent::big_number hash = convertRtoBigNumber(widenPtoC(id));
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }

@@ -321,7 +321,7 @@ void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wcha
 		// Fill out a torrent parameters object
 		libtorrent::add_torrent_params p;
 		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
-		p.info_hash          = convertPtoBigNumber(infohash);
+		p.info_hash          = convertRtoBigNumber(widenPtoC(infohash));
 		p.tracker_url        = trackerurl;
 		p.auto_managed       = false; // changed this to true
 		p.duplicate_is_error = true;

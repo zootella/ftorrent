@@ -236,7 +236,6 @@ std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
 libtorrent::big_number convertRtoBigNumber(read r);
-libtorrent::big_number convertPtoBigNumber(const char *p);
 CString convertBigNumberToC(const libtorrent::big_number &n);
 DWORD HashStart(libtorrent::big_number hash);
 CString PeerToString(const libtorrent::peer_id &id);
