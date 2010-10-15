@@ -56,7 +56,7 @@ void StorePulse() {
 			CString s = f.info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
-				libtorrent::big_number hash = convertRtoBigNumber(clip(s, 0, 40));
+				libtorrent::big_number hash = ParseHash(clip(s, 0, 40));
 				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
 			}
 		}
@@ -143,7 +143,7 @@ CString torrentitem::ComposeSize() {
 // This torrent's infohash in base 16
 CString torrentitem::ComposeHash() {
 
-	return convertBigNumberToC(handle.info_hash());
+	return base16(handle.info_hash());
 }
 
 CString torrentitem::ComposePath() {

@@ -235,8 +235,8 @@ std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
-libtorrent::big_number convertRtoBigNumber(read r);
-CString convertBigNumberToC(const libtorrent::big_number &n);
+libtorrent::big_number ParseHash(read r);
+CString base16(const libtorrent::big_number &n);
 DWORD HashStart(libtorrent::big_number hash);
 CString PeerToString(const libtorrent::peer_id &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
@@ -246,6 +246,22 @@ bool LoadVector(read path, std::vector<char> &c);
 void LibraryStart();
 void LibraryStop();
 void LibraryClose();
+CString AddTorrent(read torrent, bool ask);
+CString AddMagnet(read magnet, bool ask);
+void AddStore(libtorrent::big_number hash);
+void AddTrackers(libtorrent::big_number hash, std::set<CString> add);
+bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
+void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
+void Blink(libtorrent::big_number hash);
+torrentitem *FindTorrent(libtorrent::big_number hash);
+void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
+void AddRow(libtorrent::big_number hash);
+void AddMeta(libtorrent::big_number hash, read torrent);
+void AddOption(libtorrent::big_number hash);
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
+bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
+bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 void LibraryPulse();
 void AlertLoop();
 void AlertLook(const libtorrent::alert *alert);
@@ -273,31 +289,12 @@ BOOL APIENTRY DialogOptionsPage2(HWND dialog, UINT message, UINT wparam, LPARAM 
 BOOL APIENTRY DialogOptionsPage3(HWND dialog, UINT message, UINT wparam, LPARAM lparam);
 BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 
-// Bay and Bench
+// bay and bench
 
-
+void Test();
 void StorePulse();
 void ListPulse();
 
-
-
-void Test();
-CString AddTorrent(read torrent, bool ask);
-CString AddMagnet(read magnet, bool ask);
-void AddStore(libtorrent::big_number hash);
-void AddTrackers(libtorrent::big_number hash, std::set<CString> add);
-bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
-void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
-void Blink(libtorrent::big_number hash);
-torrentitem *FindTorrent(libtorrent::big_number hash);
-void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
-void AddRow(libtorrent::big_number hash);
-void AddMeta(libtorrent::big_number hash, read torrent);
-void AddOption(libtorrent::big_number hash);
-bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
-bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name);
-bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
-bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers);
 
 
 
