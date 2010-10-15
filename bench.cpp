@@ -181,11 +181,9 @@ void StorePulse() {
 	while (f.result()) { // Loop for each file in the folder this exe is running in
 		if (!f.folder()) {
 			CString s = f.info.cFileName;
-			if (length(s) == length(L"optn.") + 40 + length(L".db") && // Look for "optn.infohash.db"
-				starts(s, L"optn.", Matching) && trails(s, L".db", Matching)) {
+			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
-				s = clip(s, length(L"optn."), 40);
-				libtorrent::big_number hash = convertRtoBigNumber(s);
+				libtorrent::big_number hash = convertRtoBigNumber(clip(s, 0, 40));
 				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
 			}
 		}
@@ -288,7 +286,7 @@ DWORD torrentitem::Hash() {
 
 
 
-// Save the folder, name, and trackers in this torrent item to a file like "optn.infohash.db" next to the running exe
+// Save the folder, name, and trackers in this torrent item to a file like "infohash.optn.db" next to the running exe
 void torrentitem::Save() {
 
 	// Copy the torrent item's set into a libtorrent bencoded list
@@ -306,7 +304,7 @@ void torrentitem::Save() {
 	SaveEntry(PathTorrentOption(handle.info_hash()), d);
 }
 
-// Given an infohash, load the folder, name, and trackers from "optn.infohash.db" to this torrent item
+// Given an infohash, load the folder, name, and trackers from "infohash.optn.db" to this torrent item
 bool torrentitem::Load(libtorrent::big_number hash) {
 
 	// Look for a file named with the given hash, and read the bencoded data inside

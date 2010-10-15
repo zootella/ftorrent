@@ -1529,17 +1529,17 @@ PathPortable      "port.db"          The portable marker
 PathStore         "stor.db"          libtorrent session state
 PathOption        "optn.db"          Program options the user edits
 
-PathTorrentMeta   "meta.infohash.db" Copy of the torrent file
-PathTorrentStore  "stor.infohash.db" libtorrent resume data for the torrent
-PathTorrentOption "optn.infohash.db" Torrent options the user edits
+PathTorrentMeta   "infohash.meta.db" Copy of the torrent file
+PathTorrentStore  "infohash.stor.db" libtorrent resume data for the torrent
+PathTorrentOption "infohash.optn.db" Torrent options the user edits
 */
 CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
 CString PathStore()    { return PathRunningFolder() + L"\\stor.db"; }
 CString PathOption()   { return PathRunningFolder() + L"\\optn.db"; }
 
-CString PathTorrentMeta(libtorrent::big_number hash)   { return PathRunningFolder() + L"\\meta." + convertBigNumberToC(hash) + L".db"; }
-CString PathTorrentStore(libtorrent::big_number hash)  { return PathRunningFolder() + L"\\stor." + convertBigNumberToC(hash) + L".db"; }
-CString PathTorrentOption(libtorrent::big_number hash) { return PathRunningFolder() + L"\\optn." + convertBigNumberToC(hash) + L".db"; }
+CString PathTorrentMeta(libtorrent::big_number hash)   { return PathRunningFolder() + L"\\" + convertBigNumberToC(hash) + L".meta.db"; }
+CString PathTorrentStore(libtorrent::big_number hash)  { return PathRunningFolder() + L"\\" + convertBigNumberToC(hash) + L".stor.db"; }
+CString PathTorrentOption(libtorrent::big_number hash) { return PathRunningFolder() + L"\\" + convertBigNumberToC(hash) + L".optn.db"; }
 
 // Shell paths
 /*

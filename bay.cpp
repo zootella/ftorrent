@@ -244,8 +244,8 @@ CString AddTorrent(read torrent, bool ask) {
 	AddData(handle, folder, name, trackers); // Make a torrent item in data
 	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
 	AddRow(hash);                            // Make a row in the list view
-	AddMeta(hash, torrent);                  // Copy the torrent file to "meta.infohash.db"
-	AddOption(hash);                         // Save the torrent item to "optn.infohash.db"
+	AddMeta(hash, torrent);                  // Copy the torrent file to "infohash.meta.db"
+	AddOption(hash);                         // Save the torrent item to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -282,7 +282,7 @@ CString AddMagnet(read magnet, bool ask) {
 	AddData(handle, folder, name, trackers); // Make a torrent item in data
 	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
 	AddRow(hash);                            // Make a row in the list view
-	AddOption(hash);                         // Save the torrent item to "optn.infohash.db"
+	AddOption(hash);                         // Save the torrent item to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -456,7 +456,7 @@ void AddMeta(libtorrent::big_number hash, read torrent) {
 	CopyFile(torrent, PathTorrentMeta(hash), true); // True to not overwrite
 }
 
-// Have the torrent item with hash in the data list save "optn.infohash.db" next to this running exe
+// Have the torrent item with hash in the data list save "infohash.optn.db" next to this running exe
 void AddOption(libtorrent::big_number hash) {
 
 	torrentitem *t = FindTorrent(hash);
