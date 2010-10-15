@@ -29,151 +29,6 @@ extern statetop  State;
 
 
 
-/*
-//WORKS
-// Add a torrent to our libtorrent session
-// folder is the path to the save folder, like "C:\Documents\torrents" without a trailing slash or the name of the torrent folder like "My Torrent" on the end
-// torrent is the path to the torrent file on the disk
-// or set torrent null and specify hash, name, and tracker from the magnet link
-// store is the path to libtorrent resume data from a previous session, or null if this is the first time
-// Returns a torrent item with a torrent handle, check t.handle.is_valid() to see if adding worked or not
-// If you add the same infohash twice, sets the existing handle instead of producing an error
-torrentitem LibraryAdd0(read folder, read torrent, read hash, read name, read tracker, read store) {
-
-	// Make a new torrent item to return, will contain the torrent handle, or null if we don't get one
-	torrentitem t;
-	//TODO change this to write in t and return true
-
-	try {
-
-		// Local objects in memory for the add call below
-		std::string namestring, trackerstring;
-		if (name)    namestring    = narrowRtoS(name);
-		if (tracker) trackerstring = narrowRtoS(tracker);
-		std::vector<char> charvector;
-
-		// Make a torrent params object to fill out
-		libtorrent::add_torrent_params p;
-		p.duplicate_is_error = false; // Return the existing torrent handle instead of producing an error
-
-		// Set folder, the path to the folder where the torrent is or will be saved, required
-		p.save_path = boost::filesystem::path(narrowRtoS(folder));
-
-		// Set torrent, the path to the torrent file on the disk
-		if (torrent) {
-
-			p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
-
-		// Or, set hash, name, and tracker from a magnet link
-		} else {
-
-			p.info_hash = convertPtoBigNumber(narrowRtoS(hash).c_str());
-			if (name)    p.name        = namestring.c_str();
-			if (tracker) p.tracker_url = trackerstring.c_str();
-		}
-
-		// Specify store data saved from a previous session, optional
-		if (store) {
-
-			boost::filesystem::ifstream f(store, std::ios_base::binary); // Try to open the file on the disk
-			if (!f.fail()) { // Opening it worked
-
-				// Copy the file contents into charvector
-				f.unsetf(std::ios_base::skipws); // Set whitespace option
-				std::istream_iterator<char> fileiterator(f);
-				std::istream_iterator<char> streamiterator;
-				std::copy(fileiterator, streamiterator, std::back_inserter(charvector));
-
-				// Add the charvector to the torrent parameters we're filling out
-				p.resume_data = &charvector;
-
-				// Close the disk file we opened
-				f.close();
-			}
-		}
-
-		// Add the torrent to the session and save the torrent handle we get
-		t.handle = Handle.session->add_torrent(p);
-		return t;
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-	return t; // Something went wrong, return an empty torrent item with an invalid handle
-}
-
-//WORKS
-void LibraryAdd1(read folder, read torrent) {
-	try {
-
-		std::vector<char> charvector;
-		libtorrent::add_torrent_params p;
-		p.duplicate_is_error = false;
-		p.save_path = boost::filesystem::path(narrowRtoS(folder));
-		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
-		Handle.session->add_torrent(p);
-
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-}
-
-//WORKS
-bool LibraryAddTorrent99(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
-	try {
-		libtorrent::add_torrent_params p;
-
-		p.save_path = boost::filesystem::path(narrowRtoS(folder));
-
-		std::vector<char> c;
-		if (is(store)) LoadVector(store, c);
-		if (c.size() > 0) p.resume_data = &c;
-
-		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
-
-		*handle = Handle.session->add_torrent(p);
-		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
-
-		return true;
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-	return false;
-}
-
-//MAKES FOLDERS BUT WONT SAVE FILES, THEN CRASHES ON CLOSE
-bool LibraryAddTorrent100(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
-	try {
-		libtorrent::add_torrent_params p;
-
-		p.save_path = boost::filesystem::path(narrowRtoS(folder));
-
-		std::vector<char> c;
-		if (is(store)) LoadVector(store, c);
-		if (c.size() > 0) p.resume_data = &c;
-
-		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));
-		p.ti = &info;
-
-		*handle = Handle.session->add_torrent(p);
-		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
-
-		return true;
-	} catch (std::exception &e) {
-		log(widenPtoC(e.what()));
-	} catch (...) {
-		log(L"exception");
-	}
-	return false;
-}
-*/
-
 
 
 
@@ -323,14 +178,6 @@ void AddStore(libtorrent::big_number hash) {
 	AddRow(hash);                                  // Make a row in the list view
 }
 
-
-
-
-
-
-
-
-
 // Add the given trackers in the add list to both the torrent item and the libtorrent torrent handle
 void AddTrackers(libtorrent::big_number hash, std::set<CString> add) {
 
@@ -384,11 +231,6 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 	}
 }
 
-
-
-
-
-
 // Blink the selection of t in the list view to draw the users attention to it
 void Blink(libtorrent::big_number hash) {
 
@@ -407,8 +249,6 @@ torrentitem *FindTorrent(libtorrent::big_number hash) {
 	// Not found, you can add hash without creating a duplicate
 	return NULL;
 }
-
-
 
 // Copy the given information into a new torrent handle in data
 void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers) {
@@ -463,20 +303,6 @@ void AddOption(libtorrent::big_number hash) {
 	if (!t) return;
 	t->Save(); // Overwrite a file already there
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Add a torrent to the libtorrent session from a torrent file on the disk
 bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
@@ -539,13 +365,6 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 	}
 	return false;
 }
-
-
-
-
-
-
-
 
 // Parse the infohash, name, and trackers from the given magnet link
 // Returns true with nonzero hash and nonblank name, or false
