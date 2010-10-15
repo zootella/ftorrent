@@ -1752,6 +1752,14 @@ bool DiskIsFolder(read path) {
 	return d != INVALID_FILE_ATTRIBUTES && (d & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+// True if path is to a file on the disk
+bool DiskIsFile(read path) {
+
+	// Only return true if we can get the file attributes and they don't include the directory flag
+	DWORD d = GetFileAttributes(path);
+	return d != INVALID_FILE_ATTRIBUTES && !(d & FILE_ATTRIBUTE_DIRECTORY);
+}
+
 // Look for a folder at path, set create true to try to make one there if necessary
 // True if there's a folder at path
 bool DiskFolderCheck(read path, bool create) {

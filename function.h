@@ -153,6 +153,7 @@ CString DialogOpen();
 CString DialogSave(read suggest);
 bool DiskFolder(read path, bool create, bool write);
 bool DiskIsFolder(read path);
+bool DiskIsFile(read path);
 bool DiskFolderCheck(read path, bool create);
 bool DiskMakeFolder(read path);
 bool DiskDeleteFolder(read path);

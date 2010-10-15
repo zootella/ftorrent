@@ -187,6 +187,7 @@ public:
 
 	bool restored;
 	CString command;
+	bool portable;
 
 	statetop() {
 
@@ -196,5 +197,6 @@ public:
 		exit = 0;
 		expect = 0;
 		restored = false;
+		portable = false;
 	}
 };

@@ -492,7 +492,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 		if (c.size() > 0) p.resume_data = &c;
 
 		// Set torrent
-		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent)));
+		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent))); // Uses boost intrustive pointer
 
 		// Add and save handle
 		*handle = Handle.session->add_torrent(p);

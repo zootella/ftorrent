@@ -33,6 +33,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	Handle.instance = instance;
 	State.command = widenPtoC(command);
 
+	// Look for the portable marker
+	State.portable = DiskIsFile(PathPortable());
+
 	// Tell the system we're going to use the list and tree view controls
 	InitializeCommonControls();
 
@@ -183,6 +186,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	ShowWindow(Handle.edit,   SW_SHOWNORMAL);
 	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
+
+	// Make sure we can edit files next to this running exe
+	if (!DiskFolder(PathRunningFolder(), true, true)) {
+		Message("Cannot edit files beside '" + PathRunningFile() + L"'. Run as administrator or move the program to try again.");
+		return 0; // Exit the process
+	}
 
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
