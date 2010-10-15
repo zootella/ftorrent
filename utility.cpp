@@ -1521,18 +1521,21 @@ CString TextGuid() {
 	return s;                                                                                      // Return the string
 }
 
-//TODO write a function that looks at meta.*.db in the running folder, and returns a list of hash objects of everything it finds there
-
-// Paths next to this running exe
 /*
-PathPortable      "port.db"          The portable marker
-PathStore         "stor.db"          libtorrent session state
-PathOption        "optn.db"          Program options the user edits
+Paths next to this running exe
 
-PathTorrentMeta   "infohash.meta.db" Copy of the torrent file
-PathTorrentStore  "infohash.stor.db" libtorrent resume data for the torrent
-PathTorrentOption "infohash.optn.db" Torrent options the user edits
+PathTorrentIcon    "torrent.ico"       The torrent icon
+
+PathPortable       "port.db"           The portable marker
+PathStore          "stor.db"           libtorrent session state
+PathOption         "optn.db"           Program options the user edits
+
+PathTorrentMeta    "infohash.meta.db"  Copy of the torrent file
+PathTorrentStore   "infohash.stor.db"  libtorrent resume data for the torrent
+PathTorrentOption  "infohash.optn.db"  Torrent options the user edits
 */
+CString PathTorrentIcon() { return PathRunningFolder() + L"\\torrent.ico"; }
+
 CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
 CString PathStore()    { return PathRunningFolder() + L"\\stor.db"; }
 CString PathOption()   { return PathRunningFolder() + L"\\optn.db"; }
@@ -1541,18 +1544,19 @@ CString PathTorrentMeta(libtorrent::big_number hash)   { return PathRunningFolde
 CString PathTorrentStore(libtorrent::big_number hash)  { return PathRunningFolder() + L"\\" + convertBigNumberToC(hash) + L".stor.db"; }
 CString PathTorrentOption(libtorrent::big_number hash) { return PathRunningFolder() + L"\\" + convertBigNumberToC(hash) + L".optn.db"; }
 
-// Shell paths
 /*
-PathDocuments       "C:\Documents and Settings\user\My Documents"                                                       "C:\Users\user\Documents"
-PathTorrents        "C:\Documents and Settings\user\My Documents\Torrents"                                              "C:\Users\user\Documents\Torrents"
+Shell paths
 
-PathApplicationData "C:\Documents and Settings\user\Application Data"                                                   "C:\Users\user\AppData\Roaming"
-PathFolder          "C:\Documents and Settings\user\Application Data\name"                                              "C:\Users\user\AppData\Roaming\name"
-PathLaunch          "C:\Documents and Settings\user\Application Data\name\name.exe"                                     "C:\Users\user\AppData\Roaming\name.exe"
+PathDocuments        "C:\Documents and Settings\user\My Documents"                                                        "C:\Users\user\Documents"
+PathTorrents         "C:\Documents and Settings\user\My Documents\Torrents"                                               "C:\Users\user\Documents\Torrents"
 
-PathLinkDesktop     "C:\Documents and Settings\user\Desktop\name.lnk"                                                   "C:\Users\user\Desktop\name.lnk"
-PathLinkStart       "C:\Documents and Settings\user\Start Menu\Programs\name.lnk"                                       "C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\name.lnk"
-PathLinkQuick       "C:\Documents and Settings\user\Application Data\Microsoft\Internet Explorer\Quick Launch\name.lnk" "C:\Users\user\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\name.lnk"
+PathApplicationData  "C:\Documents and Settings\user\Application Data"                                                    "C:\Users\user\AppData\Roaming"
+PathFolder           "C:\Documents and Settings\user\Application Data\name"                                               "C:\Users\user\AppData\Roaming\name"
+PathLaunch           "C:\Documents and Settings\user\Application Data\name\name.exe"                                      "C:\Users\user\AppData\Roaming\name.exe"
+
+PathLinkDesktop      "C:\Documents and Settings\user\Desktop\name.lnk"                                                    "C:\Users\user\Desktop\name.lnk"
+PathLinkStart        "C:\Documents and Settings\user\Start Menu\Programs\name.lnk"                                        "C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\name.lnk"
+PathLinkQuick        "C:\Documents and Settings\user\Application Data\Microsoft\Internet Explorer\Quick Launch\name.lnk"  "C:\Users\user\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\name.lnk"
 */
 CString PathDocuments()       { return PathShell(CSIDL_MYDOCUMENTS); }
 CString PathTorrents()        { return PathShell(CSIDL_MYDOCUMENTS) + L"\\Torrents"; }
@@ -2039,13 +2043,13 @@ void AssociateGet() {
 
 	RegistryDelete(HKEY_CLASSES_ROOT, PROGRAM_NAME);
 	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME,                             L"",             L"Torrent");
-	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathRunningFolder() + L"\\torrent.ico");
+	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\DefaultIcon",          L"",             PathTorrentIcon());
 	RegistryWrite(HKEY_CLASSES_ROOT, PROGRAM_NAME + L"\\shell\\open\\command", L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 
 	RegistryDelete(HKEY_CLASSES_ROOT, L"Magnet");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"",             L"Magnet URI");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"URL Protocol", L"");
-	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\DefaultIcon",                   L"",             PathRunningFolder() + L"\\torrent.ico");
+	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\DefaultIcon",                   L"",             PathTorrentIcon());
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
 }
 

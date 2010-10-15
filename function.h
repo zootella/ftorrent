@@ -131,6 +131,7 @@ bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
 bool FileLink(read path, read target, read description);
 CString TextGuid();
+CString PathTorrentIcon();
 CString PathPortable();
 CString PathStore();
 CString PathOption();
