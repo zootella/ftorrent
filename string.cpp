@@ -95,10 +95,10 @@ CString numerals(int number, int width, int base) {
 	return s;
 }
 
-// Turn a number into base 16 numerals like "0x11223344"
+// Turn a 4 byte number into base 16 numerals like "11223344"
 CString base16(DWORD number) {
 
-	return "0x" + numerals(number, 8, 16);
+	return numerals(number, 8, 16);
 }
 
 // Takes text

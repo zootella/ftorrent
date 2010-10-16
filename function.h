@@ -275,7 +275,7 @@ void AreaPulse();
 void AreaPopUp();
 void AreaPopDown();
 std::vector<int> SizeColumns(std::vector<int> w);
-void Size(int move = 0); // Has defaults
+void Layout(int move = 0); // Has defaults
 void AreaCommand(areaitem *area);
 void OptionLoad();
 void OptionSave();

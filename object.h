@@ -1,6 +1,6 @@
 
 // Get information about a single file, or list the contents of a folder
-class finditem {
+class finditem { // change to Find
 public:
 
 	// Members
@@ -62,7 +62,7 @@ public:
 };
 
 // Wraps a registry key, taking care of closing it
-class registryitem {
+class registryitem { // change to Registry
 public:
 
 	// The handle to the registry key
@@ -78,7 +78,7 @@ public:
 };
 
 // Wraps a BSTR, a COM string, taking care of memory allocation
-class bstritem {
+class bstritem { // change to Bstr
 public:
 
 	// The BSTR
@@ -95,7 +95,7 @@ public:
 };
 
 // Add an application to the Windows Firewall exceptions list
-class firewallitem {
+class firewallitem { // change to Firewall
 public:
 
 	// COM interfaces
@@ -134,7 +134,7 @@ public:
 };
 
 // A device context with information about how to put it away
-enum deviceopen {
+enum deviceopen { // change to Device
 
 	DeviceNone,   // We haven't obtained the device context yet
 	DeviceUse,    // The system provided a device context for the program to use
@@ -180,7 +180,7 @@ public:
 };
 
 // Hold a color and brush
-class brushitem {
+class brushitem { // change to Brush
 public:
 
 	// The color and brush

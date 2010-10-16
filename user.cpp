@@ -427,12 +427,12 @@ void AreaPulse() {
 		if (Area.pressed->command == CommandSizeHorizontal && move.x != 0) {
 
 			// Horizontal bar
-			Size(move.x);
+			Layout(move.x);
 
 		} else if (Area.pressed->command == CommandSizeVertical && move.y != 0) {
 
 			// Vertical bar
-			Size(move.y);
+			Layout(move.y);
 
 		} else if (Area.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
 
@@ -555,7 +555,7 @@ std::vector<int> SizeColumns(std::vector<int> w) {
 
 // Takes a number of pixels to move the bar
 // Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
-void Size(int move) {
+void Layout(int move) {
 
 	// Remember how things are now
 	sizeitem client = SizeClient();  // Get the width and height of the client area

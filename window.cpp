@@ -263,7 +263,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_SIZE:
 
 		// Size the window and send it a paint message
-		Size();
+		Layout();
 		PaintMessage();
 		return 0;
 
