@@ -436,9 +436,9 @@ CString SayNow() {
 
 	// Turn numbers into text
 	CString hour        = numerals(h);
-	CString minute      = numerals(info.wMinute, 2);
-	CString second      = numerals(info.wSecond, 2); // Say "09" seconds instead of just "9" so things line up vertically
-	CString millisecond = numerals(info.wMilliseconds, 3);
+	CString minute      = numerals(info.wMinute, 10, 2);
+	CString second      = numerals(info.wSecond, 10, 2); // Say "09" seconds instead of just "9" so things line up vertically
+	CString millisecond = numerals(info.wMilliseconds, 10, 3);
 
 	// Put it all together
 	return day + L" " + hour + L":" + minute + m + L" " + second + L"." + millisecond + L"s";

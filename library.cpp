@@ -86,7 +86,7 @@ std::string narrowWtoS(std::wstring w) {
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
-	hbig hash = ParseHash(widenPtoC(id));
+	hbig hash = tohbig(widenPtoC(id));
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
@@ -579,7 +579,7 @@ bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trac
 
 			a = after(a, tag2, Forward, Matching);
 			if (length(a) == 40) {
-				*hash = ParseHash(a);
+				*hash = tohbig(a);
 				if (hash->is_all_zeros()) return false; // Make sure the hash looks valid
 				foundhash = true;
 			}

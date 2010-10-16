@@ -321,7 +321,7 @@ void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wcha
 		// Fill out a torrent parameters object
 		libtorrent::add_torrent_params p;
 		p.save_path          = boost::filesystem::path(narrowRtoS(savepath));
-		p.info_hash          = ParseHash(widenPtoC(infohash));
+		p.info_hash          = tohbig(widenPtoC(infohash));
 		p.tracker_url        = trackerurl;
 		p.auto_managed       = false; // changed this to true
 		p.duplicate_is_error = true;
@@ -848,7 +848,7 @@ void GetPeers(const char *id, std::vector<peer_structure> *v) {
 			p.down_speed         = (float)i->down_speed;
 			p.payload_up_speed   = (float)i->payload_up_speed;
 			p.payload_down_speed = (float)i->payload_down_speed;
-			p.peer_id            = PeerToString(i->pid);
+			p.peer_id            = base16(i->pid);
 			p.progress           = i->progress;
 
 			// Get the country code

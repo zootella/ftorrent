@@ -10,11 +10,6 @@ void MenuTaskbar();
 CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 CString upper(read r);
 CString lower(read r);
-int number(read r);
-CString ubigtoC(ubig number, int base = 10); // Has defaults
-CString sbigtoC(sbig number, int base = 10); // Has defaults
-CString numerals(int number, int width = 0, int base = 10); // Has defaults
-CString base16(DWORD number);
 bool is(read r);
 bool isblank(read r);
 bool same(read r1, read r2, matching m = Different); // Has defaults
@@ -235,10 +230,6 @@ std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
-hbig ParseHash(read r);
-CString base16(const hbig &n);
-DWORD HashStart(hbig hash);
-CString PeerToString(const hbig &id);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);
@@ -297,7 +288,15 @@ void ListPulse();
 
 
 
+int toi(read r);
+CString ubigtoC(ubig number, int base = 10); // Has defaults
+CString sbigtoC(sbig number, int base = 10); // Has defaults
+CString numerals(int number, int base = 10, int width = 0); // Has defaults
+CString base16(DWORD number);
 
+hbig tohbig(read r);
+CString base16(const hbig &n);
+DWORD HashStart(hbig hash);
 
 
 

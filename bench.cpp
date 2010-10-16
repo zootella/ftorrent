@@ -56,7 +56,7 @@ void StorePulse() {
 			CString s = f.info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
-				hbig hash = ParseHash(clip(s, 0, 40));
+				hbig hash = tohbig(clip(s, 0, 40));
 				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
 			}
 		}

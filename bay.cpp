@@ -39,16 +39,34 @@ void Test() {
 
 
 
-
-
+//text to number
 
 // Takes text
 // Reads the text as a number, handling a leading minus sign properly
 // Returns the number, or 0 if given blank or alphabetic text
-int number(read r) {
+int toi(read r) {
 
 	return _wtoi(r); // Use function like atoi
 }
+
+// Convert a 20 byte hash value in 40 characters of base 16 text into a libtorrent big number, which is the same thing as a libtorrent SHA1 hash
+hbig tohbig(read r) {
+
+	std::stringstream stream;
+	hbig n;
+	stream << narrowRtoS(r).c_str();
+	stream >> n;
+	return n;
+}
+
+
+
+
+
+
+
+
+//number to text
 
 // Convert the unsigned 64 bit number into text numerals using base 10 or 16
 CString ubigtoC(ubig number, int base) {
@@ -69,7 +87,7 @@ CString sbigtoC(sbig number, int base) {
 // Takes a number and width like 3 for 001, base 10 or 16
 // Writes the minus sign and number into text
 // Returns a string
-CString numerals(int number, int width, int base) {
+CString numerals(int number, int base, int width) {
 
 	WCHAR bay[MAX_PATH];
 	_itow_s(number, bay, MAX_PATH, base);
@@ -85,22 +103,7 @@ CString numerals(int number, int width, int base) {
 // Turn a 4 byte number into base 16 numerals like "11223344"
 CString base16(DWORD number) {
 
-	return numerals(number, 8, 16);
-}
-
-
-
-
-
-
-// Convert a 20 byte hash value in 40 characters of base 16 text into a libtorrent big number, which is the same thing as a libtorrent SHA1 hash
-hbig ParseHash(read r) {
-
-	std::stringstream stream;
-	hbig n;
-	stream << narrowRtoS(r).c_str();
-	stream >> n;
-	return n;
+	return numerals(number, 16, 8);
 }
 
 // Convert a libtorrent big number or SHA1 hash into 40 characters of base 16 text
@@ -111,6 +114,29 @@ CString base16(const hbig &n) {
 	return widenStoC(stream.str());
 }
 
+
+
+
+
+//sort
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // The first 4 bytes of the given hash value as a DWORD
 DWORD HashStart(hbig hash) {
 
@@ -119,15 +145,6 @@ DWORD HashStart(hbig hash) {
 		(((DWORD)hash[1]) << 16) |
 		(((DWORD)hash[2]) <<  8) |
 		 ((DWORD)hash[3]);
-}
-
-//TODO this is the same as hbig
-// Convert the given peer ID object into text
-CString PeerToString(const hbig &id) {
-
-	std::stringstream stream;
-	stream << id;
-	return widenStoC(stream.str());
 }
 
 
