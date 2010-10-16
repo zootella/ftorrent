@@ -30,6 +30,7 @@ extern statetop  State;
 void Test() {
 
 
+	libtorrent::sha1_hash h;
 
 	std::map<CString, CString> map;
 	// map string to a little object that has text and an icon index int, Cell

@@ -29,8 +29,9 @@
 #define MESSAGE_TASKBAR (WM_APP + 1)
 
 // Number types
-typedef          __int64 sbig; // Signed 8 byte integer, same as "long long"
-typedef unsigned __int64 ubig; // Unsigned 8 byte integer, same as "ULONGLONG"
+typedef          __int64       sbig; // Signed 8 byte integer, same as "long long"
+typedef unsigned __int64       ubig; // Unsigned 8 byte integer, same as "ULONGLONG"
+typedef libtorrent::big_number hbig; // 20 byte SHA1 hash value, same as libtorrent::big_number, sha1_hash and peer_id
 
 // Text define
 #define length lstrlenW // Rename function

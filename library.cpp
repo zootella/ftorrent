@@ -111,6 +111,7 @@ DWORD HashStart(libtorrent::big_number hash) {
 		 ((DWORD)hash[3]);
 }
 
+//TODO this is the same as hbig
 // Convert the given peer ID object into text
 CString PeerToString(const libtorrent::peer_id &id) {
 
