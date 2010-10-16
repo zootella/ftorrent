@@ -56,7 +56,7 @@ void StorePulse() {
 			CString s = f.info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
-				hbig hash = tohbig(clip(s, 0, 40));
+				hbig hash = ParseHash(clip(s, 0, 40));
 				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
 			}
 		}
@@ -137,7 +137,7 @@ CString torrentitem::ComposeSize() {
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
 
-	return make(InsertCommas(sbigtoC(done)), L"/", InsertCommas(sbigtoC(size)), L" bytes");
+	return make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
 }
 
 // This torrent's infohash in base 16

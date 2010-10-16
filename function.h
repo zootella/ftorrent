@@ -220,6 +220,18 @@ void StartNatpmp();
 void StopNatpmp();
 
 // Library
+CString numerals(DWORD n, int base = 10, int width = 0); // Has defaults
+CString numerals(int n, int base = 10, int width = 0); // Has defaults
+CString numerals(ubig n, int base = 10, int width = 0); // Has defaults
+CString numerals(sbig n, int base = 10, int width = 0); // Has defaults
+CString base16(DWORD n);
+CString base16(int n);
+CString base16(ubig n);
+CString base16(sbig n);
+CString AddLeadingZeroes(CString s, int width);
+hbig ParseHash(read r);
+CString base16(hbig n);
+DWORD HashStart(hbig n);
 std::string convertPtoS(const char *p);
 std::wstring convertRtoW(const wchar_t *r);
 CString convertRtoC(const wchar_t *r);
@@ -288,15 +300,11 @@ void ListPulse();
 
 
 
-int toi(read r);
-CString ubigtoC(ubig number, int base = 10); // Has defaults
-CString sbigtoC(sbig number, int base = 10); // Has defaults
-CString numerals(int number, int base = 10, int width = 0); // Has defaults
-CString base16(DWORD number);
 
-hbig tohbig(read r);
-CString base16(const hbig &n);
-DWORD HashStart(hbig hash);
+
+
+
+
 
 
 

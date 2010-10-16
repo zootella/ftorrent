@@ -51,6 +51,60 @@ extern datatop   Data;
 extern statetop  State;
 
 /*
+Write out a number as text
+Use base 10 or 16
+Add leading zeros to make the text width numerals, width 0 to leave unchanged
+
+DWORD  4 byte  unsigned
+int    4 byte  signed
+ubig   8 byte  unsigned
+sbig   8 byte  signed
+*/
+CString numerals(DWORD n, int base, int width) { WCHAR s[MAX_PATH];   _ultow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(int n,   int base, int width) { WCHAR s[MAX_PATH];    _itow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(ubig n,  int base, int width) { WCHAR s[MAX_PATH]; _ui64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(sbig n,  int base, int width) { WCHAR s[MAX_PATH];  _i64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+
+CString base16(DWORD n) { return numerals(n, 16,  8); }
+CString base16(int n)   { return numerals(n, 16,  8); }
+CString base16(ubig n)  { return numerals(n, 16, 16); }
+CString base16(sbig n)  { return numerals(n, 16, 16); }
+
+CString AddLeadingZeroes(CString s, int width) {
+	if (width > 0) {
+		while (length(s) < width) // Loop until we've put enough 0s at the start to make the whole thing width
+			s = L"0" + s;
+	}
+	return s;
+}
+
+// Parse 40 characters of base 16 text into a 20 byte number
+hbig ParseHash(read r) {
+	std::stringstream stream;
+	hbig n;
+	stream << narrowRtoS(r).c_str();
+	stream >> n;
+	return n;
+}
+
+// Write out the given 20 byte number as 40 characters of base 16 text
+CString base16(hbig n) {
+	std::stringstream stream;
+	stream << n;
+	return widenStoC(stream.str());
+}
+
+// The first 4 bytes of the given 20 byte number as a DWORD
+DWORD HashStart(hbig n) {
+
+	return
+		(((DWORD)n[0]) << 24) |
+		(((DWORD)n[1]) << 16) |
+		(((DWORD)n[2]) <<  8) |
+		 ((DWORD)n[3]);
+}
+
+/*
 Text
 
 P  const char *     narrow  in
@@ -86,7 +140,7 @@ std::string narrowWtoS(std::wstring w) {
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
-	hbig hash = tohbig(widenPtoC(id));
+	hbig hash = ParseHash(widenPtoC(id));
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
@@ -579,7 +633,7 @@ bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trac
 
 			a = after(a, tag2, Forward, Matching);
 			if (length(a) == 40) {
-				*hash = tohbig(a);
+				*hash = ParseHash(a);
 				if (hash->is_all_zeros()) return false; // Make sure the hash looks valid
 				foundhash = true;
 			}
