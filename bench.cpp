@@ -49,19 +49,19 @@ void StorePulse() {
 	State.restored = true;
 
 	// Add all the torrents from last time the program ran
-	std::set<libtorrent::big_number> hashes;
+	std::set<hbig> hashes;
 	finditem f(PathRunningFolder());
 	while (f.result()) { // Loop for each file in the folder this exe is running in
 		if (!f.folder()) {
 			CString s = f.info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
-				libtorrent::big_number hash = ParseHash(clip(s, 0, 40));
+				hbig hash = ParseHash(clip(s, 0, 40));
 				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
 			}
 		}
 	}
-	for (std::set<libtorrent::big_number>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
+	for (std::set<hbig>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
 
 	// Add the torrent or magnet the system launched this program with
 	CString s = State.command;
@@ -178,7 +178,7 @@ void torrentitem::Save() {
 }
 
 // Given an infohash, load the folder, name, and trackers from "infohash.optn.db" to this torrent item
-bool torrentitem::Load(libtorrent::big_number hash) {
+bool torrentitem::Load(hbig hash) {
 
 	// Look for a file named with the given hash, and read the bencoded data inside
 	libtorrent::entry d;

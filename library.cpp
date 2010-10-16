@@ -83,47 +83,10 @@ std::string narrowWtoS(std::wstring w) {
 	return s;
 }
 
-// Convert a 20 byte hash value in 40 characters of base 16 text into a libtorrent big number, which is the same thing as a libtorrent SHA1 hash
-libtorrent::big_number ParseHash(read r) {
-
-	std::stringstream stream;
-	libtorrent::big_number n;
-	stream << narrowRtoS(r).c_str();
-	stream >> n;
-	return n;
-}
-
-// Convert a libtorrent big number or SHA1 hash into 40 characters of base 16 text
-CString base16(const libtorrent::big_number &n) {
-
-	std::stringstream stream;
-	stream << n;
-	return widenStoC(stream.str());
-}
-
-// The first 4 bytes of the given hash value as a DWORD
-DWORD HashStart(libtorrent::big_number hash) {
-
-	return
-		(((DWORD)hash[0]) << 24) |
-		(((DWORD)hash[1]) << 16) |
-		(((DWORD)hash[2]) <<  8) |
-		 ((DWORD)hash[3]);
-}
-
-//TODO this is the same as hbig
-// Convert the given peer ID object into text
-CString PeerToString(const libtorrent::peer_id &id) {
-
-	std::stringstream stream;
-	stream << id;
-	return widenStoC(stream.str());
-}
-
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
-	libtorrent::big_number hash = ParseHash(widenPtoC(id));
+	hbig hash = ParseHash(widenPtoC(id));
 	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
 	return h;
 }
@@ -294,7 +257,7 @@ void LibraryClose() {
 CString AddTorrent(read torrent, bool ask) {
 
 	// Parse the torrent file on the disk
-	libtorrent::big_number hash;
+	hbig hash;
 	CString name;
 	std::set<CString> trackers;
 	if (!ParseTorrent(torrent, &hash, &name, &trackers))
@@ -332,7 +295,7 @@ CString AddTorrent(read torrent, bool ask) {
 CString AddMagnet(read magnet, bool ask) {
 
 	// Parse the text of the magnet link
-	libtorrent::big_number hash;
+	hbig hash;
 	CString name;
 	std::set<CString> trackers;
 	if (!ParseMagnet(magnet, &hash, &name, &trackers))
@@ -365,7 +328,7 @@ CString AddMagnet(read magnet, bool ask) {
 }
 
 // Restore the torrent with the given infohash to this new session from files saved in the previous one
-void AddStore(libtorrent::big_number hash) {
+void AddStore(hbig hash) {
 
 	// Read the folder, name, and trackers from the options file
 	torrentitem o;
@@ -373,7 +336,7 @@ void AddStore(libtorrent::big_number hash) {
 	if (isblank(o.folder)) return; // Hash and folder are required
 
 	// Parse the torrent file on the disk
-	libtorrent::big_number mhash;
+	hbig mhash;
 	CString mname;
 	std::set<CString> mtrackers;
 	bool hastorrent = ParseTorrent(PathTorrentMeta(hash), &mhash, &mname, &mtrackers);
@@ -402,7 +365,7 @@ void AddStore(libtorrent::big_number hash) {
 }
 
 // Add the given trackers in the add list to both the torrent item and the libtorrent torrent handle
-void AddTrackers(libtorrent::big_number hash, std::set<CString> add) {
+void AddTrackers(hbig hash, std::set<CString> add) {
 
 	// Find the torrent item in the data list
 	torrentitem *t = FindTorrent(hash);
@@ -455,13 +418,13 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 }
 
 // Blink the selection of t in the list view to draw the users attention to it
-void Blink(libtorrent::big_number hash) {
+void Blink(hbig hash) {
 
 	//TODO
 }
 
 // Find the torrent with the given infohash in our list, or null if not found
-torrentitem *FindTorrent(libtorrent::big_number hash) {
+torrentitem *FindTorrent(hbig hash) {
 
 	// Loop through all the torrents loaded into the program and library
 	for (int i = 0; i < (int)Data.torrents.size(); i++) {
@@ -491,7 +454,7 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 }
 
 // Add a new row to the window's list view control for the torrent item in data with the given hash
-void AddRow(libtorrent::big_number hash) {
+void AddRow(hbig hash) {
 
 	// Find the torrent item in data
 	torrentitem *t = FindTorrent(hash);
@@ -513,14 +476,14 @@ void AddRow(libtorrent::big_number hash) {
 }
 
 // Copy the torrent file at the given path to "meta.infohash.db" next to this running exe if not there already
-void AddMeta(libtorrent::big_number hash, read torrent) {
+void AddMeta(hbig hash, read torrent) {
 
 	if (same(torrent, PathTorrentMeta(hash), Matching)) return; // Don't copy a file onto itself
 	CopyFile(torrent, PathTorrentMeta(hash), true); // True to not overwrite
 }
 
 // Have the torrent item with hash in the data list save "infohash.optn.db" next to this running exe
-void AddOption(libtorrent::big_number hash) {
+void AddOption(hbig hash) {
 
 	torrentitem *t = FindTorrent(hash);
 	if (!t) return;
@@ -557,7 +520,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 }
 
 // Add a torrent to the libtorrent session from information parsed from a magnet link
-bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, libtorrent::big_number hash, read name) {
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name) {
 	try {
 		libtorrent::add_torrent_params p; // Object to fill out
 
@@ -591,7 +554,7 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 
 // Parse the infohash, name, and trackers from the given magnet link
 // Returns true with nonzero hash and nonblank name, or false
-bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
+bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trackers) {
 
 	// Define tags
 	CString tag1 = L"magnet:?";
@@ -643,7 +606,7 @@ bool ParseMagnet(read magnet, libtorrent::big_number *hash, CString *name, std::
 
 // Read the infohash and name from the torrent file at the given
 // Returns true with nonzero hash and nonblank name, or false
-bool ParseTorrent(read torrent, libtorrent::big_number *hash, CString *name, std::set<CString> *trackers) {
+bool ParseTorrent(read torrent, hbig *hash, CString *name, std::set<CString> *trackers) {
 	try {
 
 		libtorrent::torrent_info info(boost::filesystem::path(narrowRtoS(torrent)));

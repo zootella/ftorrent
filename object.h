@@ -323,7 +323,7 @@ public:
 	}
 
 	void Save();
-	bool Load(libtorrent::big_number hash);
+	bool Load(hbig hash);
 
 	void Edit();
 

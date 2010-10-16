@@ -1540,9 +1540,9 @@ CString PathPortable() { return PathRunningFolder() + L"\\port.db"; }
 CString PathStore()    { return PathRunningFolder() + L"\\stor.db"; }
 CString PathOption()   { return PathRunningFolder() + L"\\optn.db"; }
 
-CString PathTorrentMeta(libtorrent::big_number hash)   { return PathRunningFolder() + L"\\" + base16(hash) + L".meta.db"; }
-CString PathTorrentStore(libtorrent::big_number hash)  { return PathRunningFolder() + L"\\" + base16(hash) + L".stor.db"; }
-CString PathTorrentOption(libtorrent::big_number hash) { return PathRunningFolder() + L"\\" + base16(hash) + L".optn.db"; }
+CString PathTorrentMeta(hbig hash)   { return PathRunningFolder() + L"\\" + base16(hash) + L".meta.db"; }
+CString PathTorrentStore(hbig hash)  { return PathRunningFolder() + L"\\" + base16(hash) + L".stor.db"; }
+CString PathTorrentOption(hbig hash) { return PathRunningFolder() + L"\\" + base16(hash) + L".optn.db"; }
 
 /*
 Shell paths
