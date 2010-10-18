@@ -65,9 +65,9 @@ CString numerals(int n,   int base, int width) { WCHAR s[MAX_PATH];    _itow_s(n
 CString numerals(ubig n,  int base, int width) { WCHAR s[MAX_PATH]; _ui64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
 CString numerals(sbig n,  int base, int width) { WCHAR s[MAX_PATH];  _i64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
 
-CString base16(DWORD n) { return numerals(n, 16,  8); }
+CString base16(DWORD n) { return numerals(n, 16,  8); } // 4 bytes written in 8 characters
 CString base16(int n)   { return numerals(n, 16,  8); }
-CString base16(ubig n)  { return numerals(n, 16, 16); }
+CString base16(ubig n)  { return numerals(n, 16, 16); } // 8 bytes written in 16 characters
 CString base16(sbig n)  { return numerals(n, 16, 16); }
 
 CString AddLeadingZeroes(CString s, int width) {
@@ -113,14 +113,13 @@ R  const wchar_t *  wide    in
 W  std::wstring     wide    in  out
 C  CString          wide        out
 */
-
 std::string convertPtoS(const char *p) { return p; }
 std::wstring convertRtoW(const wchar_t *r) { return r; }
 CString convertRtoC(const wchar_t *r) { return r; }
 CString convertWtoC(std::wstring w) { return w.c_str(); }
 
-CString widenPtoC(const char *p) { return widenStoW(p).c_str(); }
-CString widenStoC(std::string s) { return widenStoW(s).c_str(); }
+CString widenPtoC(const char *p) { return widenStoW(p).c_str(); } // Popular
+CString widenStoC(std::string s) { return widenStoW(s).c_str(); } // Popular
 std::wstring widenPtoW(const char *p) { return widenStoW(p); }
 std::wstring widenStoW(std::string s) {
 
@@ -129,7 +128,7 @@ std::wstring widenStoW(std::string s) {
 	return w;
 }
 
-std::string narrowRtoS(const wchar_t *r) { return narrowWtoS(r); }
+std::string narrowRtoS(const wchar_t *r) { return narrowWtoS(r); } // Popular
 std::string narrowWtoS(std::wstring w) {
 
 	std::string s;

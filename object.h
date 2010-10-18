@@ -195,7 +195,7 @@ public:
 };
 
 // A rectangular size in the window
-class sizeitem {
+class sizeitem { // change to Size
 public:
 
 	// Coordinates from client area origin and width and height dimensions
@@ -218,7 +218,7 @@ public:
 	// Convert
 	POINT Point() { POINT p; p.x = x; p.y = y; return(p); }
 	RECT Rectangle() { RECT r; r.left = x; r.top = y; r.right = x + w; r.bottom = y + h; return(r); }
-	SIZE Size() { SIZE s; s.cx = w; s.cy = h; return(s); }
+//	SIZE Size() { SIZE s; s.cx = w; s.cy = h; return(s); }
 
 	// Take negative width or height to 0
 	void Check() { if (w < 0) w = 0; if (h < 0) h = 0; }
@@ -306,7 +306,7 @@ public:
 };
 
 // Torrent
-class torrentitem {
+class torrentitem { // change to Torrent
 public:
 
 	CString folder; //save folder, required
