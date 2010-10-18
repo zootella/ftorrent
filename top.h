@@ -54,9 +54,9 @@ public:
 	HFONT font, underline, arial;
 
 	// Colors
-	brushitem blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, yellownotice, greennotice; // Defined colors
-	brushitem face, shadow, background, ink, select; // Shell brushes
-	brushitem line; // Mixed color brush
+	Brush blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, yellownotice, greennotice; // Defined colors
+	Brush face, shadow, background, ink, select; // Shell brushes
+	Brush line; // Mixed color brush
 
 	// Session in libtorrent
 	libtorrent::session *session;
@@ -83,12 +83,12 @@ public:
 	areaitem bar, corner;
 
 	// Sizes in the client area
-	sizeitem list, tabs, info; // Child window control sizes
-	sizeitem stage, status; // Sizes in the client area used when painting
+	Size list, tabs, info; // Child window control sizes
+	Size stage, status; // Sizes in the client area used when painting
 
 	// Sizing positions
-	sizeitem collapse; // Where the corner area would be if the window were very small
-	sizeitem stick; // The point in the pressed area where the mouse started dragging
+	Size collapse; // Where the corner area would be if the window were very small
+	Size stick; // The point in the pressed area where the mouse started dragging
 
 	// Sizes
 	int height; // Pixel height of the default font
@@ -113,7 +113,7 @@ public:
 class datatop {
 public:
 
-	std::vector<torrentitem> torrents;
+	std::vector<Torrent> torrents;
 
 	CString command; // Command line arguments the system gave or main function
 
@@ -134,9 +134,9 @@ public:
 
 	// Text and resources to describe this stage
 	CString title;
-	sizeitem size; // How big the text will be painted in the title font
+	Size size; // How big the text will be painted in the title font
 	HICON icon16, icon32;
-	brushitem ink, background;
+	Brush ink, background;
 
 	// New
 	stageitem() {

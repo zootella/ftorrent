@@ -384,7 +384,7 @@ CString AddMagnet(read magnet, bool ask) {
 void AddStore(hbig hash) {
 
 	// Read the folder, name, and trackers from the options file
-	torrentitem o;
+	Torrent o;
 	o.Load(hash);
 	if (isblank(o.folder)) return; // Hash and folder are required
 
@@ -421,10 +421,10 @@ void AddStore(hbig hash) {
 void AddTrackers(hbig hash, std::set<CString> add) {
 
 	// Find the torrent item in the data list
-	torrentitem *t = FindTorrent(hash);
+	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 
-	// Insert the given add trackers into the list the given torrentitem keeps
+	// Insert the given add trackers into the list the given Torrent keeps
 	for (std::set<CString>::const_iterator i = add.begin(); i != add.end(); i++) {
 		t->trackers.insert(*i); // The set will keep duplicates out
 	}
@@ -477,11 +477,11 @@ void Blink(hbig hash) {
 }
 
 // Find the torrent with the given infohash in our list, or null if not found
-torrentitem *FindTorrent(hbig hash) {
+Torrent *FindTorrent(hbig hash) {
 
 	// Loop through all the torrents loaded into the program and library
 	for (int i = 0; i < (int)Data.torrents.size(); i++) {
-		torrentitem *t = &(Data.torrents[i]); // Point t at the torrentitem that is copied into the list
+		Torrent *t = &(Data.torrents[i]); // Point t at the Torrent that is copied into the list
 		if (hash == t->handle.info_hash()) return t; // Compare the 20 byte hash values
 	}
 
@@ -496,7 +496,7 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 	if (handle.info_hash().is_all_zeros() || FindTorrent(handle.info_hash())) return;
 
 	// Make a new empty torrent item and copy in the given information
-	torrentitem t;
+	Torrent t;
 	t.handle = handle;
 	t.folder = folder;
 	t.name = name;
@@ -510,7 +510,7 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 void AddRow(hbig hash) {
 
 	// Find the torrent item in data
-	torrentitem *t = FindTorrent(hash);
+	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 
 	// Make a new row for it at the bottom of the list view
@@ -538,7 +538,7 @@ void AddMeta(hbig hash, read torrent) {
 // Have the torrent item with hash in the data list save "infohash.optn.db" next to this running exe
 void AddOption(hbig hash) {
 
-	torrentitem *t = FindTorrent(hash);
+	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 	t->Save(); // Overwrite a file already there
 }

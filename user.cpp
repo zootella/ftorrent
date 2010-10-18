@@ -53,23 +53,23 @@ void StartIcon() {
 
 // Takes a device context to use to paint in the window
 // Paints the client area of the window outside the child window controls, and resizes the child window controls
-void PaintWindow(deviceitem *device) {
+void PaintWindow(Device *device) {
 
 	// Get the size of the client area
-	sizeitem client = SizeClient();
+	Size client = SizeClient();
 
 	// Define sizes
 	int margin = 8; // Margin to the left or right of stage text
 	int above = -7; // Draw the stage text this many pixels above the client area
 
 	// Paint the area between the toolbar buttons and the stage text
-	sizeitem s1 = Area.stage;
+	Size s1 = Area.stage;
 	s1.w = Area.stage.w - State.stage->size.w - margin;
 	if (s1.w < margin) s1.w = margin; // Narrow window, pin to left instead of right
 	PaintFill(device, s1, State.stage->background.brush);
 
 	// Paint the stage text
-	sizeitem s2 = State.stage->size; // Start with text width and height
+	Size s2 = State.stage->size; // Start with text width and height
 	s2.x = s1.Right();
 	s2.y = above;
 	s2.SetBottom(Area.stage.Bottom()); // Don't paint down into the list view control
@@ -79,7 +79,7 @@ void PaintWindow(deviceitem *device) {
 	PaintLabel(device, State.stage->title, s2);
 
 	// Paint the area to the right of the stage text
-	sizeitem s3 = Area.stage;
+	Size s3 = Area.stage;
 	s3.SetLeft(s2.Right());
 	PaintFill(device, s3, State.stage->background.brush);
 
@@ -94,7 +94,7 @@ void PaintWindow(deviceitem *device) {
 	device->Font(Handle.font);
 	device->FontColor(Handle.ink.color);
 	device->BackgroundColor(Handle.background.color);
-	sizeitem s = Area.status;
+	Size s = Area.status;
 	s.h = 1;
 	PaintFill(device, s, Handle.line.brush);
 	s = Area.status;
@@ -104,14 +104,14 @@ void PaintWindow(deviceitem *device) {
 
 // Takes a device context and an area item
 // Paints the area item in the window
-void PaintArea(deviceitem *device, areaitem *a) {
+void PaintArea(Device *device, areaitem *a) {
 
 	// Only paint areas that are in use and have size
 	if (a->command == CommandNone || !a->size.Is()) return;
 
 	// Define sizes as local variables
 	int space = 2;
-	sizeitem icon, s;
+	Size icon, s;
 
 	// Button
 	if (a->command == CommandMenu || a->command == CommandUnavailable || a->command == CommandReady || a->command == CommandSet) {
@@ -249,7 +249,7 @@ void AreaCreate() {
 	State.missing.background = Handle.red;
 
 	// Text size
-	deviceitem device;
+	Device device;
 	device.OpenCreate();
 	device.Font(Handle.font); // Find the height of the default font
 	Area.height = SizeText(&device, L"A").h;
@@ -356,7 +356,7 @@ void AreaPulse() {
 
 	// Compose the display of each area and draw those that have changed
 	areadisplay display;
-	deviceitem device;
+	Device device;
 	areaitem *a = Area.all;
 	while (a) {
 
@@ -414,7 +414,7 @@ void AreaPulse() {
 	if (Area.pressed) {
 
 		// Get positions in client coordinates
-		sizeitem mouse, stick, min, move;
+		Size mouse, stick, min, move;
 		mouse = MouseClient();                         // Where the mouse is
 		stick.x = Area.pressed->size.x + Area.stick.x; // The stick is the point the mouse is dragging
 		stick.y = Area.pressed->size.y + Area.stick.y;
@@ -558,14 +558,14 @@ std::vector<int> SizeColumns(std::vector<int> w) {
 void Layout(int move) {
 
 	// Remember how things are now
-	sizeitem client = SizeClient();  // Get the width and height of the client area
+	Size client = SizeClient();  // Get the width and height of the client area
 	if (!client.Is()) return;        // The client size is 0 when the window is minimized, don't size areas
-	sizeitem before = Area.bar.size; // Record where the bar is before the size
+	Size before = Area.bar.size; // Record where the bar is before the size
 
 	// All size constants for the program are defined here as local variables to be read in this function
 	int text = Area.height; // Text height on Windows XP is usually 13
 	int icon = 16;          // Small square icons
-	sizeitem tools;         // Tools icon
+	Size tools;         // Tools icon
 	tools.w = 30;
 	tools.h = 19;
 
@@ -576,7 +576,7 @@ void Layout(int move) {
 	int status = text + 4;
 
 	// Toolbar buttons
-	sizeitem button;
+	Size button;
 	button.w = button.h = title;
 	Area.tools.size  = button;
 	Area.start.size  = button;
@@ -669,7 +669,7 @@ void AreaCommand(areaitem *area) {
 		if (area == &Area.tools) {
 
 			// Position the menu beneath the tools link area
-			sizeitem size = Area.tools.size;
+			Size size = Area.tools.size;
 			size.CloseBottom();
 			size.w = 0;
 
@@ -854,7 +854,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	{
 		// Compose the color label
 		CString code = TextDialog(dialog, IDC_LABEL);
-		brushitem *brush;
+		Brush *brush;
 		CString message;
 		if (code == L"red") {
 			brush = &Handle.rednotice;
@@ -874,7 +874,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		GetWindowRect(dialog, &r1);
 		GetWindowRect(GetDlgItem(dialog, IDC_LABEL), &r2); // The message text dialog item has false visibility
 		GetClientRect(GetDlgItem(dialog, IDC_LABEL), &r3);
-		sizeitem size;
+		Size size;
 		size.x = r2.left - r1.left;
 		size.y = r2.top - r1.top;
 		size.w = r3.right;
@@ -882,7 +882,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		RECT rectangle = size.Rectangle();
 
 		// Custom paint the message in the dialog
-		deviceitem device;
+		Device device;
 		device.OpenPaint(dialog);
 		device.Font(Handle.font);
 		device.FontColor(brush->color);
@@ -1025,7 +1025,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 	case WM_PAINT:
 	{
 		// Do custom painting in the dialog
-		deviceitem device;
+		Device device;
 		device.OpenPaint(dialog);
 		device.BackgroundColor(Handle.background.color);
 		device.Font(Handle.arial);
@@ -1034,12 +1034,12 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		CString about = L"about " + PROGRAM_NAME;
 
 		// Prepare rectangles
-		sizeitem client = SizeClient(dialog); // Get the width of the client area of the dialog box
-		sizeitem blue = client; // Blue bar at top
+		Size client = SizeClient(dialog); // Get the width of the client area of the dialog box
+		Size blue = client; // Blue bar at top
 		blue.h = 23;
-		sizeitem white = client; // White area beneath
+		Size white = client; // White area beneath
 		white.SetTop(blue.h);
-		sizeitem title = SizeText(&device, about); // Title above the edge
+		Size title = SizeText(&device, about); // Title above the edge
 		title.x = client.w - 8 - title.w;
 		title.y = -7;
 		title.SetBottom(blue.h);
@@ -1054,7 +1054,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		int space = 5;
 
 		// Size the text
-		sizeitem s = white;
+		Size s = white;
 		s.SetLeft(89);
 		s.SetTop(46);
 		s.h = text;

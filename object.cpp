@@ -29,7 +29,7 @@ extern statetop  State;
 // Takes a window
 // Uses this size in client coordinates
 // Converts the size to screen coordinates
-void sizeitem::Screen(HWND window) {
+void Size::Screen(HWND window) {
 
 	// Choose window
 	if (!window) window = Handle.window;
@@ -38,7 +38,7 @@ void sizeitem::Screen(HWND window) {
 	POINT p = Point();
 
 	// Convert the point
-	sizeitem size;
+	Size size;
 	if (!ClientToScreen(window, &p)) { error(L"clienttoscreen"); return; }
 
 	// Store the converted position in this size item
@@ -49,7 +49,7 @@ void sizeitem::Screen(HWND window) {
 // Takes a window
 // Uses this size in screen coordinates
 // Converts the size to client coordinates
-void sizeitem::Client(HWND window) {
+void Size::Client(HWND window) {
 
 	// Choose window
 	if (!window) window = Handle.window;
@@ -58,7 +58,7 @@ void sizeitem::Client(HWND window) {
 	POINT p = Point();
 
 	// Convert the point
-	sizeitem size;
+	Size size;
 	if (!ScreenToClient(window, &p)) { error(L"screentoclient"); return; }
 
 	// Store the converted position in this size item
@@ -67,7 +67,7 @@ void sizeitem::Client(HWND window) {
 }
 
 // Load the given handle to a device context into this object
-void deviceitem::OpenUse(HDC newdevice) {
+void Device::OpenUse(HDC newdevice) {
 
 	// Record how we opened the device
 	if (open != DeviceNone) return;
@@ -78,7 +78,7 @@ void deviceitem::OpenUse(HDC newdevice) {
 }
 
 // Create a default display device context for the screen
-void deviceitem::OpenCreate() {
+void Device::OpenCreate() {
 
 	// Record how we opened the device
 	if (open != DeviceNone) return;
@@ -90,7 +90,7 @@ void deviceitem::OpenCreate() {
 }
 
 // Get the device context from the given window
-void deviceitem::OpenGet(HWND newwindow) {
+void Device::OpenGet(HWND newwindow) {
 
 	// Record how we opened the device
 	if (open != DeviceNone) return;
@@ -103,7 +103,7 @@ void deviceitem::OpenGet(HWND newwindow) {
 }
 
 // Tell the system the program will start painting
-void deviceitem::OpenPaint(HWND newwindow) {
+void Device::OpenPaint(HWND newwindow) {
 
 	// Record how we opened the device
 	if (open != DeviceNone) return;
@@ -116,7 +116,7 @@ void deviceitem::OpenPaint(HWND newwindow) {
 }
 
 // Restore the contents of the device context and end or delete it
-deviceitem::~deviceitem() {
+Device::~Device() {
 
 	// Put everything back into the device context
 	if (font) SelectObject(device, font);
@@ -131,7 +131,7 @@ deviceitem::~deviceitem() {
 }
 
 // Load the given font into this device
-void deviceitem::Font(HFONT newfont) {
+void Device::Font(HFONT newfont) {
 
 	// Keep the first one that comes out
 	HFONT outfont = (HFONT)SelectObject(device, newfont);
@@ -139,7 +139,7 @@ void deviceitem::Font(HFONT newfont) {
 }
 
 // Load the given background mode into this device
-void deviceitem::Background(int newbackground) {
+void Device::Background(int newbackground) {
 
 	// Keep the first one that comes out
 	int outbackground = SetBkMode(device, newbackground);
@@ -147,7 +147,7 @@ void deviceitem::Background(int newbackground) {
 }
 
 // Load the given text color into this device
-void deviceitem::FontColor(COLORREF newcolor) {
+void Device::FontColor(COLORREF newcolor) {
 
 	// Keep the first one that comes out
 	COLORREF outcolor = SetTextColor(device, newcolor);
@@ -155,7 +155,7 @@ void deviceitem::FontColor(COLORREF newcolor) {
 }
 
 // Loads the given background color into this device
-void deviceitem::BackgroundColor(COLORREF newcolor) {
+void Device::BackgroundColor(COLORREF newcolor) {
 
 	// Keep the first one that comes out
 	COLORREF outcolor = SetBkColor(device, newcolor);

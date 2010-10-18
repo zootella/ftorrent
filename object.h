@@ -1,6 +1,6 @@
 
 // Get information about a single file, or list the contents of a folder
-class finditem { // change to Find
+class Find {
 public:
 
 	// Members
@@ -9,7 +9,7 @@ public:
 	CString search;       // Query path
 
 	// Takes a path to a file or folder, and false to get information about it, or true to list its contents
-	finditem(read path, bool list = true) {
+	Find(read path, bool list = true) {
 
 		// Set values to start the search
 		handle = INVALID_HANDLE_VALUE;
@@ -22,7 +22,7 @@ public:
 	}
 
 	// Clean up contents when this object goes out of scope
-	~finditem() { close(); }
+	~Find() { close(); }
 
 	// Loop calling this method to get results until it returns false
 	bool result() {
@@ -62,7 +62,7 @@ public:
 };
 
 // Wraps a registry key, taking care of closing it
-class registryitem { // change to Registry
+class Registry {
 public:
 
 	// The handle to the registry key
@@ -73,21 +73,21 @@ public:
 	void Close() { if (Key) RegCloseKey(Key); Key = NULL; }
 
 	// Make a new local registryitem object, and delete it when it goes out of scope
-	registryitem() { Key = NULL; }
-	~registryitem() { Close(); }
+	Registry() { Key = NULL; }
+	~Registry() { Close(); }
 };
 
 // Wraps a BSTR, a COM string, taking care of memory allocation
-class bstritem { // change to Bstr
+class Bstr { // change to Bstr
 public:
 
 	// The BSTR
 	BSTR bstr;
 
-	// Make a new bstritem object
-	bstritem()       { bstr = NULL; }         // With no BSTR allocated
-	bstritem(read r) { bstr = NULL; Set(r); } // From the given text
-	~bstritem()      { Clear(); }             // It frees its memory when you delete it
+	// Make a new Bstr object
+	Bstr()       { bstr = NULL; }         // With no BSTR allocated
+	Bstr(read r) { bstr = NULL; Set(r); } // From the given text
+	~Bstr()      { Clear(); }             // It frees its memory when you delete it
 
 	// Use AllocSysString and SysFreeString to allocate and free the BSTR
 	void Set(CString s) { Clear(); bstr = s.AllocSysString(); }
@@ -95,7 +95,7 @@ public:
 };
 
 // Add an application to the Windows Firewall exceptions list
-class firewallitem { // change to Firewall
+class Firewall {
 public:
 
 	// COM interfaces
@@ -105,8 +105,8 @@ public:
 	INetFwAuthorizedApplications *list;
 	INetFwAuthorizedApplication  *program;
 
-	// Make a new firewallitem object
-	firewallitem() {
+	// Make a new Firewall object
+	Firewall() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
 		manager = NULL;
@@ -116,8 +116,8 @@ public:
 		program = NULL;
 	}
 
-	// Delete the firewallitem object
-	~firewallitem() {
+	// Delete the object
+	~Firewall() {
 
 		// Release the COM interfaces that we got access to
 		if (program) { program->Release(); program = NULL; } // Release them in reverse order
@@ -134,7 +134,7 @@ public:
 };
 
 // A device context with information about how to put it away
-enum deviceopen { // change to Device
+enum deviceopen {
 
 	DeviceNone,   // We haven't obtained the device context yet
 	DeviceUse,    // The system provided a device context for the program to use
@@ -142,9 +142,9 @@ enum deviceopen { // change to Device
 	DeviceGet,    // The program asked the system for the window's device context
 	DevicePaint,  // The program got the device context in response to a paint message
 };
-class deviceitem {
+class Device {
 public:
-~deviceitem();
+~Device();
 
 	// Methods
 	void OpenUse(HDC newdevice);
@@ -169,7 +169,7 @@ public:
 	int background;
 
 	// New
-	deviceitem() {
+	Device() {
 
 		open = DeviceNone;
 		device = NULL;
@@ -180,7 +180,7 @@ public:
 };
 
 // Hold a color and brush
-class brushitem { // change to Brush
+class Brush {
 public:
 
 	// The color and brush
@@ -188,24 +188,24 @@ public:
 	HBRUSH brush;
 
 	// New
-	brushitem() {
+	Brush() {
 		color = 0;
 		brush = NULL;
 	}
 };
 
 // A rectangular size in the window
-class sizeitem { // change to Size
+class Size {
 public:
 
 	// Coordinates from client area origin and width and height dimensions
 	int x, y, w, h;
 
 	// New
-	sizeitem() { Clear(); }
-	sizeitem(POINT p) { Set(p); }
-	sizeitem(RECT  r) { Set(r); }
-	sizeitem(SIZE  s) { Set(s); }
+	Size() { Clear(); }
+	Size(POINT p) { Set(p); }
+	Size(RECT  r) { Set(r); }
+	Size(SIZE  s) { Set(s); }
 
 	// Clear
 	void Clear() { x = y = w = h = 0; }
@@ -225,7 +225,7 @@ public:
 
 	// Determine if the size holds any pixels, and if a point is inside the size
 	bool Is() { return(w > 0 && h > 0); }
-	bool Inside(sizeitem s) { return(s.x >= x && s.x < x + w && s.y >= y && s.y < y + h); }
+	bool Inside(Size s) { return(s.x >= x && s.x < x + w && s.y >= y && s.y < y + h); }
 
 	// Read like a rectangle
 	int Right() { return(x + w); }
@@ -287,12 +287,12 @@ public:
 	areaitem *next;
 
 	// Data
-	sizeitem    size;           // Position and size of area in the main client window
+	Size        size;           // Position and size of area in the main client window
 	areacommand command;        // The state of the command this area item represents
 	areadisplay display;        // How this area is currently drawn in the window
 	CString     text, tip;      // Text painted in the area item and any for a tooltip
 	int         adjust;         // Pixels to nudge the text horizontally
-	sizeitem    textsize;       // How big the text is when painted
+	Size        textsize;       // How big the text is when painted
 	HICON       icon, hot, dim; // Icons for normal, hot and dim appearances
 
 	// New
@@ -306,7 +306,7 @@ public:
 };
 
 // Torrent
-class torrentitem { // change to Torrent
+class Torrent { // change to Torrent
 public:
 
 	CString folder; //save folder, required
@@ -318,7 +318,7 @@ public:
 	libtorrent::torrent_handle handle;
 
 	// New
-	torrentitem() {
+	Torrent() {
 
 	}
 

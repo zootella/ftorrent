@@ -176,7 +176,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	AreaPulse(); // Choose the program stage and set the display state of each area
 
 	// Lower the window
-	sizeitem size = SizeWindow(Handle.window);
+	Size size = SizeWindow(Handle.window);
 	size.ShiftTop((size.h * 1) / 4);
 	WindowMove(Handle.window, size, false);
 
@@ -272,7 +272,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_PAINT:
 	{
 		// Paint the window
-		deviceitem device;
+		Device device;
 		device.OpenPaint(window);
 		device.Font(Handle.font); // Replace the Windows 3.1 font with something more modern
 		device.BackgroundColor(Handle.background.color);

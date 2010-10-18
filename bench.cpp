@@ -50,7 +50,7 @@ void StorePulse() {
 
 	// Add all the torrents from last time the program ran
 	std::set<hbig> hashes;
-	finditem f(PathRunningFolder());
+	Find f(PathRunningFolder());
 	while (f.result()) { // Loop for each file in the folder this exe is running in
 		if (!f.folder()) {
 			CString s = f.info.cFileName;
@@ -92,7 +92,7 @@ void ListPulse() {
 
 
 // Edit the list view row to match the information in this torrent item
-void torrentitem::Edit() {
+void Torrent::Edit() {
 
 	// Update the cells that have different text
 	ListEdit(
@@ -115,24 +115,24 @@ void torrentitem::Edit() {
 
 
 
-int torrentitem::ComposeStatusIcon() {
+int Torrent::ComposeStatusIcon() {
 	return Handle.icon.clear;
 }
 
-CString torrentitem::ComposeStatus() {
+CString Torrent::ComposeStatus() {
 	return L"status text";
 }
 
-int torrentitem::ComposeNameIcon() {
+int Torrent::ComposeNameIcon() {
 	return Handle.icon.clear;
 }
 
 // This torrent's name
-CString torrentitem::ComposeName() {
+CString Torrent::ComposeName() {
 	return widenStoC(handle.name());
 }
 
-CString torrentitem::ComposeSize() {
+CString Torrent::ComposeSize() {
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
@@ -141,17 +141,17 @@ CString torrentitem::ComposeSize() {
 }
 
 // This torrent's infohash in base 16
-CString torrentitem::ComposeHash() {
+CString Torrent::ComposeHash() {
 
 	return base16(handle.info_hash());
 }
 
-CString torrentitem::ComposePath() {
+CString Torrent::ComposePath() {
 	return L"path text";
 }
 
 // The first 4 bytes of the infohash in a DWORD
-DWORD torrentitem::Hash() {
+DWORD Torrent::Hash() {
 
 	return HashStart(handle.info_hash());
 }
@@ -160,7 +160,7 @@ DWORD torrentitem::Hash() {
 
 
 // Save the folder, name, and trackers in this torrent item to a file like "infohash.optn.db" next to the running exe
-void torrentitem::Save() {
+void Torrent::Save() {
 
 	// Copy the torrent item's set into a libtorrent bencoded list
 	libtorrent::entry::list_type l;
@@ -178,7 +178,7 @@ void torrentitem::Save() {
 }
 
 // Given an infohash, load the folder, name, and trackers from "infohash.optn.db" to this torrent item
-bool torrentitem::Load(hbig hash) {
+bool Torrent::Load(hbig hash) {
 
 	// Look for a file named with the given hash, and read the bencoded data inside
 	libtorrent::entry d;

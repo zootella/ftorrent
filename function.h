@@ -51,10 +51,10 @@ HWND WindowCreateEdit(bool scrollbars, bool capacity);
 HWND WindowCreateButton(read r);
 HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
 void WindowSize(HWND window, int x, int y);
-void WindowMove(HWND window, sizeitem size, bool paint = false); // Has defaults
+void WindowMove(HWND window, Size size, bool paint = false); // Has defaults
 void WindowEdit(HWND window, boolean edit);
 COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2);
-brushitem CreateBrush(COLORREF color);
+Brush CreateBrush(COLORREF color);
 void PaintMessage(HWND window = NULL); // Has defaults
 void TaskbarIconAdd();
 void TaskbarIconUpdate();
@@ -65,26 +65,26 @@ void CursorSet(HCURSOR cursor);
 HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
-UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size);
-void TipAdd(sizeitem size, read r);
+UINT MenuShow(HMENU menu, bool taskbar, Size *size);
+void TipAdd(Size size, read r);
 void MouseCapture(HWND window = NULL); // Has defaults
 void MouseRelease(HWND window = NULL); // Has defaults
 bool MouseInside();
 areaitem *MouseOver();
-sizeitem MouseArea(areaitem *a);
-sizeitem MouseClient(HWND window = NULL); // Has defaults
-sizeitem MouseScreen();
-brushitem BrushSystem(int color);
-brushitem BrushColor(COLORREF color);
+Size MouseArea(areaitem *a);
+Size MouseClient(HWND window = NULL); // Has defaults
+Size MouseScreen();
+Brush BrushSystem(int color);
+Brush BrushColor(COLORREF color);
 COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2);
-sizeitem SizeClient(HWND window = NULL); // Has defaults
-sizeitem SizeWindow(HWND window = NULL); // Has defaults
-sizeitem SizeText(deviceitem *device, read r);
-void PaintLabel(deviceitem *device, read r, sizeitem size);
-void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal = false, bool vertical = false, bool left = false, bool right = false, int adjust = 0, HFONT font = NULL, brushitem *color = NULL, brushitem *background = NULL); // Has defaults
-void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush = NULL); // Has defaults
-void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2);
-void PaintIcon(deviceitem *device, sizeitem position, HICON icon, HBRUSH background = NULL); // Has defaults
+Size SizeClient(HWND window = NULL); // Has defaults
+Size SizeWindow(HWND window = NULL); // Has defaults
+Size SizeText(Device *device, read r);
+void PaintLabel(Device *device, read r, Size size);
+void PaintText(Device *device, read r, Size size, bool horizontal = false, bool vertical = false, bool left = false, bool right = false, int adjust = 0, HFONT font = NULL, Brush *color = NULL, Brush *background = NULL); // Has defaults
+void PaintFill(Device *device, Size size, HBRUSH brush = NULL); // Has defaults
+void PaintBorder(Device *device, Size size, HBRUSH brush1, HBRUSH brush2);
+void PaintIcon(Device *device, Size position, HICON icon, HBRUSH background = NULL); // Has defaults
 HFONT FontMenu(boolean underline);
 HFONT FontName(read face, int points);
 int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 = 0, int i7 = 0, int i8 = 0); // Has defaults
@@ -107,7 +107,7 @@ void ListColumnDelete(HWND window, int column);
 LPARAM ListGet(HWND window, int row);
 LPARAM ListMark(HWND window);
 LPARAM ListMouse(HWND window);
-sizeitem ListCell(HWND window, int row, int column);
+Size ListCell(HWND window, int row, int column);
 int ListRows(HWND window);
 int ListSelectedRows(HWND window);
 bool ListSelected(HWND window, int row);
@@ -256,7 +256,7 @@ void AddTrackers(hbig hash, std::set<CString> add);
 bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
 void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
 void Blink(hbig hash);
-torrentitem *FindTorrent(hbig hash);
+Torrent *FindTorrent(hbig hash);
 void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
 void AddRow(hbig hash);
 void AddMeta(hbig hash, read torrent);
@@ -271,8 +271,8 @@ void AlertLook(const libtorrent::alert *alert);
 
 // User
 void StartIcon();
-void PaintWindow(deviceitem *device);
-void PaintArea(deviceitem *device, areaitem *a);
+void PaintWindow(Device *device);
+void PaintArea(Device *device, areaitem *a);
 void AreaCreate();
 void AreaPulse();
 void AreaPopUp();

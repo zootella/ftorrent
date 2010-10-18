@@ -243,7 +243,7 @@ void WindowSize(HWND window, int x, int y)
 	if (!GetWindowRect(window, &r)) { error(L"windowsize: error getwindowrect"); return; }
 
 	// ADJUST THE SIZE
-	sizeitem size;
+	Size size;
 	size.x = r.left;
 	size.y = r.top;
 	size.w = r.right - r.left + x;
@@ -253,7 +253,7 @@ void WindowSize(HWND window, int x, int y)
 	WindowMove(window, size, true);
 }
 
-void WindowMove(HWND window, sizeitem size, bool paint)
+void WindowMove(HWND window, Size size, bool paint)
 {
 	// takes a window and size item
 	// moves the window
@@ -303,11 +303,11 @@ COLORREF ColorMix(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 	return RGB(red, green, blue);
 }
 
-// Make a brushitem from the given color
-// Returns a brushitem that must be deleted, or null on error
-brushitem CreateBrush(COLORREF color) {
+// Make a Brush from the given color
+// Returns a Brush that must be deleted, or null on error
+Brush CreateBrush(COLORREF color) {
 
-	brushitem brush;
+	Brush brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
 	if (!brush.brush) error(L"createsolidbrush");
@@ -459,10 +459,10 @@ void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 // Takes size null to put the menu at the mouse pointer, or a size item in client coordinates
 // Displays the context menu and waits for the user to make a choice
 // Returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
-UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
+UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 
 	// Use the given size or mouse position
-	sizeitem position;
+	Size position;
 	if (size) {
 		position = *size;
 		position.Screen(); // Convert the given client size into screen coordinates
@@ -496,7 +496,7 @@ UINT MenuShow(HMENU menu, bool taskbar, sizeitem *size) {
 
 // Takes the size in the client area where the tool will be shown, and the text to show
 // Assigns the tooltip window to this area and sets its text
-void TipAdd(sizeitem size, read r) {
+void TipAdd(Size size, read r) {
 
 	// Attach the tooltip to a rectangle in the main window
 	TOOLINFO info;
@@ -530,8 +530,8 @@ void MouseRelease(HWND window) {
 bool MouseInside() {
 
 	// Get the mouse cursor's position in client window coordinates, and the size of the client window
-	sizeitem mouse = MouseClient();
-	sizeitem client = SizeClient();
+	Size mouse = MouseClient();
+	Size client = SizeClient();
 
 	// The mouse is inside if it is inside the client area and outside all the child window controls
 	return
@@ -545,8 +545,8 @@ bool MouseInside() {
 areaitem *MouseOver() {
 
 	// Get the mouse cursor's position in client window coordinates
-	sizeitem mouse = MouseClient();
-	sizeitem client = SizeClient();
+	Size mouse = MouseClient();
+	Size client = SizeClient();
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area item to find the one the mouse is over
@@ -559,9 +559,9 @@ areaitem *MouseOver() {
 }
 
 // Get the mouse position in x and y coordinates inside the given area item
-sizeitem MouseArea(areaitem *a) {
+Size MouseArea(areaitem *a) {
 
-	sizeitem s = MouseClient(); // Get the mouse position in client window coordinates
+	Size s = MouseClient(); // Get the mouse position in client window coordinates
 	s.x -= a->size.x; // Convert to area coordinates
 	s.y -= a->size.y;
 	return s;
@@ -570,20 +570,20 @@ sizeitem MouseArea(areaitem *a) {
 // Takes a window or null to use the main one
 // Gets the mouse position in client coordinates
 // Returns x and y coordinates in a size item
-sizeitem MouseClient(HWND window) {
+Size MouseClient(HWND window) {
 
 	if (!window) window = Handle.window; // Choose window
-	sizeitem s = MouseScreen(); // Get the mouse pointer position in screen coordinates
+	Size s = MouseScreen(); // Get the mouse pointer position in screen coordinates
 	s.Client(window); // Convert the position to the client coordinates of the given window
 	return s;
 }
 
 // Gets the mouse position in screen coordinates
 // Returns x and y coordinates in a size item
-sizeitem MouseScreen() {
+Size MouseScreen() {
 
 	// If we have a popup window or menu open, report that the mouse is off the screen
-	sizeitem s;
+	Size s;
 	s.x = -1;
 	s.y = -1;
 	if (State.pop) return s;
@@ -598,10 +598,10 @@ sizeitem MouseScreen() {
 // Takes a system color index
 // Gets the system brush for that color
 // Returns a brush that should not be deleted, or null if any error
-brushitem BrushSystem(int color) {
+Brush BrushSystem(int color) {
 
 	// Get the system brush for the given color index, as well as the color itself
-	brushitem brush;
+	Brush brush;
 	brush.color = GetSysColor(color);
 	brush.brush = GetSysColorBrush(color);
 	if (!brush.brush) error(L"getsyscolorbrush");
@@ -611,10 +611,10 @@ brushitem BrushSystem(int color) {
 // Takes a color
 // Creates a brush of that color
 // Returns a brush that must be deleted, or null if any error
-brushitem BrushColor(COLORREF color) {
+Brush BrushColor(COLORREF color) {
 
 	// Create a new brush of the given solid color
-	brushitem brush;
+	Brush brush;
 	brush.color = color;
 	brush.brush = CreateSolidBrush(color);
 	if (!brush.brush) error(L"createsolidbrush");
@@ -650,13 +650,13 @@ COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 }
 
 // Measure the width and height of the client area of the given window
-sizeitem SizeClient(HWND window) {
+Size SizeClient(HWND window) {
 
 	// Pick main window if none given
 	if (!window) window = Handle.window;
 
 	// Find the width and height of the client area
-	sizeitem size;
+	Size size;
 	RECT rectangle;
 	if (!GetClientRect(window, &rectangle)) { error(L"getclientrect"); return size; }
 	size.Set(rectangle);
@@ -664,13 +664,13 @@ sizeitem SizeClient(HWND window) {
 }
 
 // Find the size of the given window on the screen
-sizeitem SizeWindow(HWND window) {
+Size SizeWindow(HWND window) {
 
 	// Pick main window if none given
 	if (!window) window = Handle.window;
 
 	// Find the width and height of the client area
-	sizeitem size;
+	Size size;
 	RECT rectangle;
 	if (!GetWindowRect(window, &rectangle)) { error(L"getwindowrect"); return size; }
 	size.Set(rectangle);
@@ -680,7 +680,7 @@ sizeitem SizeWindow(HWND window) {
 // Takes a device context with a font loaded inside, and text
 // Determines how wide and high in pixels the text painted will be
 // Returns the size width and height, or zeroes if any error
-sizeitem SizeText(deviceitem *device, read r) {
+Size SizeText(Device *device, read r) {
 
 	// Get the pixel dimensions of text written in the loaded font
 	SIZE size;
@@ -691,13 +691,13 @@ sizeitem SizeText(deviceitem *device, read r) {
 	}
 
 	// Return the size, will be all 0 for blank text
-	sizeitem s(size);
+	Size s(size);
 	return s;
 }
 
-// Takes a deviceitem that has a font, text, and a bounding position and size
+// Takes a Device that has a font, text, and a bounding position and size
 // Paints the text there
-void PaintLabel(deviceitem *device, read r, sizeitem size) {
+void PaintLabel(Device *device, read r, Size size) {
 
 	// Paint the text, if the background is opaque, this will cause a flicker
 	RECT rectangle = size.Rectangle();
@@ -706,7 +706,7 @@ void PaintLabel(deviceitem *device, read r, sizeitem size) {
 
 // Takes a device context that has a font loaded into it, text, position and bounding size, and formatting options
 // Fills the size and paints the text with an ellipsis
-void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool vertical, bool left, bool right, int adjust, HFONT font, brushitem *color, brushitem *background) {
+void PaintText(Device *device, read r, Size size, bool horizontal, bool vertical, bool left, bool right, int adjust, HFONT font, Brush *color, Brush *background) {
 
 	// Prepare the device context
 	if (font)       device->Font(font);
@@ -714,7 +714,7 @@ void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool 
 	if (background) device->BackgroundColor(background->color);
 
 	// Find out how big the text will be when painted
-	sizeitem text;
+	Size text;
 	text = SizeText(device, r);
 
 	// If only a position was provided, put in the necessary size
@@ -725,7 +725,7 @@ void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool 
 	int space = 4;
 
 	// Add margins
-	sizeitem bound = size;
+	Size bound = size;
 	if (left) bound.ShiftLeft(space);
 	if (right) bound.w -= space;
 	bound.Check();
@@ -763,7 +763,7 @@ void PaintText(deviceitem *device, read r, sizeitem size, bool horizontal, bool 
 }
 
 // Use the device to paint size with brush
-void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush) {
+void PaintFill(Device *device, Size size, HBRUSH brush) {
 
 	// Make sure there is a size to fill
 	if (!size.Is()) return;
@@ -778,13 +778,13 @@ void PaintFill(deviceitem *device, sizeitem size, HBRUSH brush) {
 
 // Takes a device context, size, and brushes for the upper left and lower right corners
 // Paints a 1 pixel wide border inside the size
-void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2) {
+void PaintBorder(Device *device, Size size, HBRUSH brush1, HBRUSH brush2) {
 
 	// Use the same brush for both corners
 	if (!brush2) brush2 = brush1;
 
 	// Paint the 4 edges of the border
-	sizeitem edge;
+	Size edge;
 	edge = size;                       edge.w--;                         edge.h = 1;  PaintFill(device, edge, brush1);
 	edge = size;                       edge.w = 1; edge.y++;             edge.h -= 2; PaintFill(device, edge, brush1);
 	edge = size; edge.x += edge.w - 1; edge.w = 1;                       edge.h--;    PaintFill(device, edge, brush2);
@@ -794,7 +794,7 @@ void PaintBorder(deviceitem *device, sizeitem size, HBRUSH brush1, HBRUSH brush2
 // Takes a device context, position, and icon
 // Provide a background brush for flicker free drawing, or NULL for a transparent background
 // Paints the icon
-void PaintIcon(deviceitem *device, sizeitem position, HICON icon, HBRUSH background) {
+void PaintIcon(Device *device, Size position, HICON icon, HBRUSH background) {
 
 	int result = DrawIconEx(
 		device->device,          // Handle to device context
@@ -1168,10 +1168,10 @@ LPARAM ListMouse(HWND window) {
 // Takes row and column coordinates
 // Gets the bounding size of the list view sub item cell
 // Returns the size
-sizeitem ListCell(HWND window, int row, int column) {
+Size ListCell(HWND window, int row, int column) {
 
 	// Get the rectangle of the list view sub item and return the size
-	sizeitem size;
+	Size size;
 	RECT rectangle;
 	if (!ListView_GetSubItemRect(window, row, column, LVIR_BOUNDS, &rectangle)) { error(L"listview_getsubitemrect"); return size; }
 	size.Set(rectangle);
@@ -1800,7 +1800,7 @@ bool DiskDeleteFolder(read path) {
 bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Open the key
-	registryitem registry;
+	Registry registry;
 	if (!registry.Open(root, path, false)) return false;
 
 	// Get the size required
@@ -1840,7 +1840,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 bool RegistryWrite(HKEY root, read path, read name, read value) {
 
 	// Open the key
-	registryitem registry;
+	Registry registry;
 	if (!registry.Open(root, path, true)) return false;
 
 	// Set or make and set the text value
@@ -1861,7 +1861,7 @@ bool RegistryWrite(HKEY root, read path, read name, read value) {
 bool RegistryDelete(HKEY base, read path) {
 
 	// Open the key
-	registryitem key;
+	Registry key;
 	if (!key.Open(base, path, true)) return false;
 
 	// Loop for each subkey, deleting them all
@@ -1889,7 +1889,7 @@ bool RegistryDelete(HKEY base, read path) {
 
 // Takes a root key handle name, a key path, and true to make keys and get write access
 // Opens or creates and opens the key and returns true
-bool registryitem::Open(HKEY root, read path, bool write) {
+bool Registry::Open(HKEY root, read path, bool write) {
 
 	// Make sure we were given a key and path
 	if (!root || isblank(path)) return false;
@@ -1928,7 +1928,7 @@ bool registryitem::Open(HKEY root, read path, bool write) {
 		if (result != ERROR_SUCCESS) { error(result, L"regopenkeyex"); return false; }
 	}
 
-	// Save the open key in this registryitem object
+	// Save the open key in this registry object
 	Key = key;
 	return true;
 }
@@ -1939,7 +1939,7 @@ bool registryitem::Open(HKEY root, read path, bool write) {
 bool FirewallAdd(read path, read name) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
+	Firewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Add the program's listing
@@ -1953,7 +1953,7 @@ bool FirewallAdd(read path, read name) {
 bool FirewallRemove(read path) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	firewallitem firewall;
+	Firewall firewall;
 	if (!firewall.Access()) return false;
 
 	// Remove the program's listing
@@ -1963,7 +1963,7 @@ bool FirewallRemove(read path) {
 
 // Get access to the COM objects
 // Returns true if it works, false if there was an error
-bool firewallitem::Access() {
+bool Firewall::Access() {
 
 	// Initialize COM itself so this thread can use it
 	HRESULT result = CoInitialize(NULL); // Must be NULL
@@ -1992,7 +1992,7 @@ bool firewallitem::Access() {
 // Takes a path and file name like "C:\Folder\Program.exe" and a name like "My Program"
 // Lists and checks the program on Windows Firewall, so now it can listed on a socket without a warning popping up
 // Returns false on error
-bool firewallitem::AddProgram(read path, read name) {
+bool Firewall::AddProgram(read path, read name) {
 
 	// Create an instance of an authorized application, we'll use this to add our new application
 	if (program) { program->Release(); program = NULL; }
@@ -2000,10 +2000,10 @@ bool firewallitem::AddProgram(read path, read name) {
 	if (FAILED(result)) { error(result, L"cocreateinstance netfwauthorizedapplication"); return false; };
 
 	// Set the text
-	bstritem p(path);                                   // Express the text as BSTRs
+	Bstr p(path);                                       // Express the text as BSTRs
 	result = program->put_ProcessImageFileName(p.bstr); // Set the process image file name
 	if (FAILED(result)) { error(result, L"put_processimagefilename"); return false; };
-	bstritem n(name);
+	Bstr n(name);
 	result = program->put_Name(n.bstr);                 // Set the program name
 	if (FAILED(result)) { error(result, L"put_name"); return false; };
 
@@ -2016,10 +2016,10 @@ bool firewallitem::AddProgram(read path, read name) {
 // Takes a path like "C:\Folder\Program.exe"
 // Removes the program from Windows Firewall
 // Returns false on error
-bool firewallitem::RemoveProgram(read path) {
+bool Firewall::RemoveProgram(read path) {
 
 	// Remove the program from the Windows Firewall exceptions list
-	bstritem p(path); // Express the text as a BSTR
+	Bstr p(path); // Express the text as a BSTR
 	HRESULT result = list->Remove(p.bstr);
 	if (FAILED(result)) { error(result, L"firewall remove"); return false; };
 	return true;
