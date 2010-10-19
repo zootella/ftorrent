@@ -53,7 +53,7 @@ void StorePulse() {
 	Find f(PathRunningFolder());
 	while (f.result()) { // Loop for each file in the folder this exe is running in
 		if (!f.folder()) {
-			CString s = f.info.cFileName;
+			CString s = f._info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
 				hbig hash = ParseHash(clip(s, 0, 40));

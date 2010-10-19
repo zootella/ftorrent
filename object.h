@@ -4,18 +4,18 @@ class Find {
 public:
 
 	// Members
-	HANDLE handle;        // Search handle
-	WIN32_FIND_DATA info; // Information about what we found this time
-	CString search;       // Query path
+	HANDLE _handle;        // Search handle
+	WIN32_FIND_DATA _info; // Information about what we found this time
+	CString _search;       // Query path
 
 	// Takes a path to a file or folder, and false to get information about it, or true to list its contents
 	Find(read path, bool list = true) {
 
 		// Set values to start the search
-		handle = INVALID_HANDLE_VALUE;
-		ZeroMemory(&info, sizeof(info));
-		search = path;
-		if (list) search += L"\\*.*";
+		_handle = INVALID_HANDLE_VALUE;
+		ZeroMemory(&_info, sizeof(_info));
+		_search = path;
+		if (list) _search += L"\\*.*";
 
 		// We're not going to use this in a loop, run the single search now
 		if (!list) result();
@@ -28,19 +28,19 @@ public:
 	bool result() {
 
 		// Start the search
-		if (handle == INVALID_HANDLE_VALUE) {
-			handle = FindFirstFile(search, &info);
-			if (handle == INVALID_HANDLE_VALUE) return false; // Not found or other error
+		if (_handle == INVALID_HANDLE_VALUE) {
+			_handle = FindFirstFile(_search, &_info);
+			if (_handle == INVALID_HANDLE_VALUE) return false; // Not found or other error
 
 			// Skip over "." and ".." at the start
-			if (info.cFileName != CString(L".") && info.cFileName != CString(L"..")) return true;
+			if (_info.cFileName != CString(L".") && _info.cFileName != CString(L"..")) return true;
 		}
 
 		// Get the next file or folder in the list
-		while (FindNextFile(handle, &info)) {
+		while (FindNextFile(_handle, &_info)) {
 
 			// Skip over "." and ".." at the start
-			if (info.cFileName != CString(L".") && info.cFileName != CString(L"..")) return true;
+			if (_info.cFileName != CString(L".") && _info.cFileName != CString(L"..")) return true;
 		}
 
 		// Done listing the files
@@ -49,14 +49,14 @@ public:
 	}
 
 	// True if this object found
-	bool found() { return handle != INVALID_HANDLE_VALUE; } // A file or folder
-	bool folder() { return (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
+	bool found() { return _handle != INVALID_HANDLE_VALUE; } // A file or folder
+	bool folder() { return (_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
 
 	// Close the search we started
 	void close() {
-		if (handle != INVALID_HANDLE_VALUE) {
-			FindClose(handle);
-			handle = INVALID_HANDLE_VALUE;
+		if (_handle != INVALID_HANDLE_VALUE) {
+			FindClose(_handle);
+			_handle = INVALID_HANDLE_VALUE;
 		}
 	}
 };
@@ -66,32 +66,32 @@ class Registry {
 public:
 
 	// The handle to the registry key
-	HKEY Key;
+	HKEY _key;
 
 	// Open a registry key and store its handle in this object
-	bool Open(HKEY root, read path, bool write);
-	void Close() { if (Key) RegCloseKey(Key); Key = NULL; }
+	bool open(HKEY root, read path, bool write);
+	void close() { if (_key) RegCloseKey(_key); _key = NULL; }
 
 	// Make a new local registryitem object, and delete it when it goes out of scope
-	Registry() { Key = NULL; }
-	~Registry() { Close(); }
+	Registry() { _key = NULL; }
+	~Registry() { close(); }
 };
 
 // Wraps a BSTR, a COM string, taking care of memory allocation
-class Bstr { // change to Bstr
+class Bstr {
 public:
 
 	// The BSTR
-	BSTR bstr;
+	BSTR _bstr;
 
 	// Make a new Bstr object
-	Bstr()       { bstr = NULL; }         // With no BSTR allocated
-	Bstr(read r) { bstr = NULL; Set(r); } // From the given text
-	~Bstr()      { Clear(); }             // It frees its memory when you delete it
+	Bstr()       { _bstr = NULL; }         // With no BSTR allocated
+	Bstr(read r) { _bstr = NULL; set(r); } // From the given text
+	~Bstr()      { clear(); }              // It frees its memory when you delete it
 
 	// Use AllocSysString and SysFreeString to allocate and free the BSTR
-	void Set(CString s) { Clear(); bstr = s.AllocSysString(); }
-	void Clear() { if (bstr) { SysFreeString(bstr); bstr = NULL; } }
+	void set(CString s) { clear(); _bstr = s.AllocSysString(); }
+	void clear() { if (_bstr) { SysFreeString(_bstr); _bstr = NULL; } }
 };
 
 // Add an application to the Windows Firewall exceptions list
@@ -99,38 +99,38 @@ class Firewall {
 public:
 
 	// COM interfaces
-	INetFwMgr                    *manager;
-	INetFwPolicy                 *policy;
-	INetFwProfile                *profile;
-	INetFwAuthorizedApplications *list;
-	INetFwAuthorizedApplication  *program;
+	INetFwMgr                    *_manager;
+	INetFwPolicy                 *_policy;
+	INetFwProfile                *_profile;
+	INetFwAuthorizedApplications *_list;
+	INetFwAuthorizedApplication  *_program;
 
 	// Make a new Firewall object
 	Firewall() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
-		manager = NULL;
-		policy  = NULL;
-		profile = NULL;
-		list    = NULL;
-		program = NULL;
+		_manager = NULL;
+		_policy  = NULL;
+		_profile = NULL;
+		_list    = NULL;
+		_program = NULL;
 	}
 
 	// Delete the object
 	~Firewall() {
 
 		// Release the COM interfaces that we got access to
-		if (program) { program->Release(); program = NULL; } // Release them in reverse order
-		if (list)    { list->Release();    list    = NULL; }
-		if (profile) { profile->Release(); profile = NULL; }
-		if (policy)  { policy->Release();  policy  = NULL; }
-		if (manager) { manager->Release(); manager = NULL; }
+		if (_program) { _program->Release(); _program = NULL; } // Release them in reverse order
+		if (_list)    { _list->Release();    _list    = NULL; }
+		if (_profile) { _profile->Release(); _profile = NULL; }
+		if (_policy)  { _policy->Release();  _policy  = NULL; }
+		if (_manager) { _manager->Release(); _manager = NULL; }
 	}
 
 	// Methods to adjust the settings of Windows Firewall
-	bool Access();
-	bool AddProgram(read path, read name);
-	bool RemoveProgram(read path);
+	bool access();
+	bool add(read path, read name);
+	bool remove(read path);
 };
 
 // A device context with information about how to put it away
