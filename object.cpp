@@ -67,7 +67,7 @@ void Size::Client(HWND window) {
 }
 
 // Load the given handle to a device context into this object
-void Device::openUse(HDC newdevice) {
+void Device::OpenUse(HDC newdevice) {
 
 	// Record how we opened the device
 	if (open != device_none) return;
@@ -94,7 +94,7 @@ void Device::OpenGet(HWND newwindow) {
 
 	// Record how we opened the device
 	if (open != device_none) return;
-	open = DeviceGet;
+	open = device_get;
 
 	// Get the device context
 	window = newwindow;
@@ -107,7 +107,7 @@ void Device::OpenPaint(HWND newwindow) {
 
 	// Record how we opened the device
 	if (open != device_none) return;
-	open = DevicePaint;
+	open = device_paint;
 
 	// Paint the device context
 	window = newwindow;

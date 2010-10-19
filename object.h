@@ -4,18 +4,18 @@ class Find {
 public:
 
 	// Members
-	HANDLE _handle;        // Search handle
-	WIN32_FIND_DATA _info; // Information about what we found this time
-	CString _search;       // Query path
+	HANDLE handle;        // Search handle
+	WIN32_FIND_DATA info; // Information about what we found this time
+	CString search;       // Query path
 
 	// Takes a path to a file or folder, and false to get information about it, or true to list its contents
 	Find(read path, bool list = true) {
 
 		// Set values to start the search
-		_handle = INVALID_HANDLE_VALUE;
-		ZeroMemory(&_info, sizeof(_info));
-		_search = path;
-		if (list) _search += L"\\*.*";
+		handle = INVALID_HANDLE_VALUE;
+		ZeroMemory(&info, sizeof(info));
+		search = path;
+		if (list) search += L"\\*.*";
 
 		// We're not going to use this in a loop, run the single search now
 		if (!list) result();
@@ -28,19 +28,19 @@ public:
 	bool result() {
 
 		// Start the search
-		if (_handle == INVALID_HANDLE_VALUE) {
-			_handle = FindFirstFile(_search, &_info);
-			if (_handle == INVALID_HANDLE_VALUE) return false; // Not found or other error
+		if (handle == INVALID_HANDLE_VALUE) {
+			handle = FindFirstFile(search, &info);
+			if (handle == INVALID_HANDLE_VALUE) return false; // Not found or other error
 
 			// Skip over "." and ".." at the start
-			if (_info.cFileName != CString(L".") && _info.cFileName != CString(L"..")) return true;
+			if (info.cFileName != CString(L".") && info.cFileName != CString(L"..")) return true;
 		}
 
 		// Get the next file or folder in the list
-		while (FindNextFile(_handle, &_info)) {
+		while (FindNextFile(handle, &info)) {
 
 			// Skip over "." and ".." at the start
-			if (_info.cFileName != CString(L".") && _info.cFileName != CString(L"..")) return true;
+			if (info.cFileName != CString(L".") && info.cFileName != CString(L"..")) return true;
 		}
 
 		// Done listing the files
@@ -49,14 +49,14 @@ public:
 	}
 
 	// True if this object found
-	bool found() { return _handle != INVALID_HANDLE_VALUE; } // A file or folder
-	bool folder() { return (_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
+	bool found() { return handle != INVALID_HANDLE_VALUE; } // A file or folder
+	bool folder() { return (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
 
 	// Close the search we started
 	void close() {
-		if (_handle != INVALID_HANDLE_VALUE) {
-			FindClose(_handle);
-			_handle = INVALID_HANDLE_VALUE;
+		if (handle != INVALID_HANDLE_VALUE) {
+			FindClose(handle);
+			handle = INVALID_HANDLE_VALUE;
 		}
 	}
 };
