@@ -280,11 +280,11 @@ enum areadisplay {
 	DisplayHot,     // The mouse has activated the button
 	DisplayPressed, // The button is pressed, set, set hot, or set pressed, which all look the same
 };
-class areaitem {
+class Area {
 public:
 
 	// Pointers
-	areaitem *next;
+	Area *next;
 
 	// Data
 	Size        size;           // Position and size of area in the main client window
@@ -296,7 +296,7 @@ public:
 	HICON       icon, hot, dim; // Icons for normal, hot and dim appearances
 
 	// New
-	areaitem() {
+	Area() {
 
 		command = CommandNone;
 		display = DisplayNone;

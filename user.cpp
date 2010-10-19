@@ -84,7 +84,7 @@ void PaintWindow(Device *device) {
 	PaintFill(device, s3, State.stage->background.brush);
 
 	// Paint all the areas
-	areaitem *a = Areas.all;
+	Area *a = Areas.all;
 	while (a) {
 		PaintArea(device, a);
 		a = a->next;
@@ -104,7 +104,7 @@ void PaintWindow(Device *device) {
 
 // Takes a device context and an area item
 // Paints the area item in the window
-void PaintArea(Device *device, areaitem *a) {
+void PaintArea(Device *device, Area *a) {
 
 	// Only paint areas that are in use and have size
 	if (a->command == CommandNone || !a->size.Is()) return;
@@ -316,7 +316,7 @@ void AreaPulse() {
 	Areas.remove.command = CommandUnavailable;
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
-	areaitem *over = MouseOver();
+	Area *over = MouseOver();
 	bool inside = MouseInside();
 	int pressing = GetKeyState(VK_LBUTTON) & 0x8000;
 
@@ -357,7 +357,7 @@ void AreaPulse() {
 	// Compose the display of each area and draw those that have changed
 	areadisplay display;
 	Device device;
-	areaitem *a = Areas.all;
+	Area *a = Areas.all;
 	while (a) {
 
 		// Compose the display for the area
@@ -660,7 +660,7 @@ void Layout(int move) {
 
 // Takes an area item that has been pressed and released
 // Performs its command
-void AreaCommand(areaitem *area) {
+void AreaCommand(Area *area) {
 
 	// Menus
 	if (area->command == CommandMenu) {

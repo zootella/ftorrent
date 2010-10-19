@@ -78,9 +78,9 @@ class areatop {
 public:
 
 	// The list of area items, the area item the mouse pressed, and pointers to the area items
-	areaitem *all, *pressed;
-	areaitem tools, start, pause, stop, remove;
-	areaitem bar, corner;
+	Area *all, *pressed;
+	Area tools, start, pause, stop, remove;
+	Area bar, corner;
 
 	// Sizes in the client area
 	Size list, tabs, info; // Child window control sizes

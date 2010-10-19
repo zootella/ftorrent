@@ -542,7 +542,7 @@ bool MouseInside() {
 }
 
 // Find the area, if any, the mouse is currently positioned over, null if none
-areaitem *MouseOver() {
+Area *MouseOver() {
 
 	// Get the mouse cursor's position in client window coordinates
 	Size mouse = MouseClient();
@@ -550,7 +550,7 @@ areaitem *MouseOver() {
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area item to find the one the mouse is over
-	areaitem *a = Areas.all;
+	Area *a = Areas.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;
@@ -559,7 +559,7 @@ areaitem *MouseOver() {
 }
 
 // Get the mouse position in x and y coordinates inside the given area item
-Size MouseArea(areaitem *a) {
+Size MouseArea(Area *a) {
 
 	Size s = MouseClient(); // Get the mouse position in client window coordinates
 	s.x -= a->size.x; // Convert to area coordinates

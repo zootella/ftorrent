@@ -70,8 +70,8 @@ void TipAdd(Size size, read r);
 void MouseCapture(HWND window = NULL); // Has defaults
 void MouseRelease(HWND window = NULL); // Has defaults
 bool MouseInside();
-areaitem *MouseOver();
-Size MouseArea(areaitem *a);
+Area *MouseOver();
+Size MouseArea(Area *a);
 Size MouseClient(HWND window = NULL); // Has defaults
 Size MouseScreen();
 Brush BrushSystem(int color);
@@ -272,14 +272,14 @@ void AlertLook(const libtorrent::alert *alert);
 // User
 void StartIcon();
 void PaintWindow(Device *device);
-void PaintArea(Device *device, areaitem *a);
+void PaintArea(Device *device, Area *a);
 void AreaCreate();
 void AreaPulse();
 void AreaPopUp();
 void AreaPopDown();
 std::vector<int> SizeColumns(std::vector<int> w);
 void Layout(int move = 0); // Has defaults
-void AreaCommand(areaitem *area);
+void AreaCommand(Area *area);
 void OptionLoad();
 void OptionSave();
 bool CheckFolder(read folder);
