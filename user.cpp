@@ -397,7 +397,7 @@ void AreaPulse() {
 			a->display = display;
 
 			// Get the window device context if we don't already have it and paint the area
-			if (device.open == DeviceNone) {
+			if (device.open == device_none) {
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);
@@ -479,7 +479,7 @@ void AreaPulse() {
 		if (Areas.status.Is()) {
 
 			// Get the window device context if we don't have it already
-			if (device.open == DeviceNone) {
+			if (device.open == device_none) {
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);

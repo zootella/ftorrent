@@ -67,11 +67,11 @@ void Size::Client(HWND window) {
 }
 
 // Load the given handle to a device context into this object
-void Device::OpenUse(HDC newdevice) {
+void Device::openUse(HDC newdevice) {
 
 	// Record how we opened the device
-	if (open != DeviceNone) return;
-	open = DeviceUse;
+	if (open != device_none) return;
+	open = device_use;
 
 	// Use the given device context
 	device = newdevice;
@@ -81,8 +81,8 @@ void Device::OpenUse(HDC newdevice) {
 void Device::OpenCreate() {
 
 	// Record how we opened the device
-	if (open != DeviceNone) return;
-	open = DeviceCreate;
+	if (open != device_none) return;
+	open = device_create;
 
 	// Create the device context
 	device = CreateDC(L"DISPLAY", NULL, NULL, NULL);
@@ -93,7 +93,7 @@ void Device::OpenCreate() {
 void Device::OpenGet(HWND newwindow) {
 
 	// Record how we opened the device
-	if (open != DeviceNone) return;
+	if (open != device_none) return;
 	open = DeviceGet;
 
 	// Get the device context
@@ -106,7 +106,7 @@ void Device::OpenGet(HWND newwindow) {
 void Device::OpenPaint(HWND newwindow) {
 
 	// Record how we opened the device
-	if (open != DeviceNone) return;
+	if (open != device_none) return;
 	open = DevicePaint;
 
 	// Paint the device context
@@ -125,9 +125,9 @@ Device::~Device() {
 	if (replacebackgroundcolor) SetBkColor(device, backgroundcolor);
 
 	// Close the device context
-	if      (open == DeviceCreate) { if (!DeleteDC(device))          error(L"deletedc"); }
-	else if (open == DeviceGet)    { if (!ReleaseDC(window, device)) error(L"releasedc"); }
-	else if (open == DevicePaint)  { EndPaint(window, &paint); }
+	if      (open == device_create) { if (!DeleteDC(device))          error(L"deletedc"); }
+	else if (open == device_get)    { if (!ReleaseDC(window, device)) error(L"releasedc"); }
+	else if (open == device_paint)  { EndPaint(window, &paint); }
 }
 
 // Load the given font into this device

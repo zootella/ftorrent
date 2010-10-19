@@ -134,13 +134,13 @@ public:
 };
 
 // A device context with information about how to put it away
-enum deviceopen {
+enum DeviceOpen {
 
-	DeviceNone,   // We haven't obtained the device context yet
-	DeviceUse,    // The system provided a device context for the program to use
-	DeviceCreate, // The program created a default display device context
-	DeviceGet,    // The program asked the system for the window's device context
-	DevicePaint,  // The program got the device context in response to a paint message
+	device_none,   // We haven't obtained the device context yet
+	device_use,    // The system provided a device context for the program to use
+	device_create, // The program created a default display device context
+	device_get,    // The program asked the system for the window's device context
+	device_paint,  // The program got the device context in response to a paint message
 };
 class Device {
 public:
@@ -157,7 +157,7 @@ public:
 	void BackgroundColor(COLORREF newcolor);
 
 	// The device context
-	deviceopen open;
+	DeviceOpen open;
 	HDC device;
 	HWND window;
 	PAINTSTRUCT paint;
@@ -171,7 +171,7 @@ public:
 	// New
 	Device() {
 
-		open = DeviceNone;
+		open = device_none;
 		device = NULL;
 		window = NULL;
 		font = NULL;
