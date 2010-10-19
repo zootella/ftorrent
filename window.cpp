@@ -22,7 +22,7 @@
 
 // Global objects
 handletop Handle; // Window handles
-areatop   Area;   // Button and drag areas
+areatop   Areas;   // Button and drag areas
 datatop   Data;   // Linked data items
 statetop  State;  // State variables
 
@@ -303,21 +303,21 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	break;
 	case WM_LBUTTONDOWN:
 
-		Area.pressed = MouseOver();                               // Save the area the mouse pressed
-		if (Area.pressed) Area.stick = MouseArea(Area.pressed);   // Save where in that area it started dragging
-		MouseCapture();                                           // Have our window get all the mouse messages
-		if (Area.pressed && Area.pressed->command == CommandMenu) // Show a menu on the downclick
-			AreaCommand(Area.pressed);
+		Areas.pressed = MouseOver();                                // Save the area the mouse pressed
+		if (Areas.pressed) Areas.stick = MouseArea(Areas.pressed);  // Save where in that area it started dragging
+		MouseCapture();                                             // Have our window get all the mouse messages
+		if (Areas.pressed && Areas.pressed->command == CommandMenu) // Show a menu on the downclick
+			AreaCommand(Areas.pressed);
 		return 0;
 
 	// The primary mouse button has clicked up in the main window, or anywhere if the mouse is captured
 	break;
 	case WM_LBUTTONUP:
 
-		if (Area.pressed && Area.pressed == MouseOver()) // If the mouse released the same button it clicked
-			AreaCommand(Area.pressed);                   // Perform that command
-		Area.pressed = NULL;                             // Clear our record of the area the mouse pressed
-		MouseRelease();                                  // Stop getting all mouse messages
+		if (Areas.pressed && Areas.pressed == MouseOver()) // If the mouse released the same button it clicked
+			AreaCommand(Areas.pressed);                    // Perform that command
+		Areas.pressed = NULL;                              // Clear our record of the area the mouse pressed
+		MouseRelease();                                    // Stop getting all mouse messages
 		return 0;
 
 	// A new window has captured the mouse
@@ -325,7 +325,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_CAPTURECHANGED:
 
 		// The program has lost the mouse capture, mark no area pressed
-		if (Handle.window != (HWND)lparam) Area.pressed = NULL;
+		if (Handle.window != (HWND)lparam) Areas.pressed = NULL;
 
 	// Another window is copying data to this one
 	break;

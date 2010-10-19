@@ -46,7 +46,7 @@
 
 // Access to global objects
 extern handletop Handle;
-extern areatop   Area;
+extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
 

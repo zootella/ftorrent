@@ -22,7 +22,7 @@
 
 // Access to global objects
 extern handletop Handle;
-extern areatop   Area;
+extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
 
@@ -535,10 +535,10 @@ bool MouseInside() {
 
 	// The mouse is inside if it is inside the client area and outside all the child window controls
 	return
-		client.Inside(mouse)     &&
-		!Area.list.Inside(mouse) &&
-		!Area.tabs.Inside(mouse) &&
-		!Area.info.Inside(mouse);
+		client.Inside(mouse)      &&
+		!Areas.list.Inside(mouse) &&
+		!Areas.tabs.Inside(mouse) &&
+		!Areas.info.Inside(mouse);
 }
 
 // Find the area, if any, the mouse is currently positioned over, null if none
@@ -550,7 +550,7 @@ areaitem *MouseOver() {
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area item to find the one the mouse is over
-	areaitem *a = Area.all;
+	areaitem *a = Areas.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;

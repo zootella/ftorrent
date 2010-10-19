@@ -22,7 +22,7 @@
 
 // Access to global objects
 extern handletop Handle;
-extern areatop   Area;
+extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
 
@@ -63,8 +63,8 @@ void PaintWindow(Device *device) {
 	int above = -7; // Draw the stage text this many pixels above the client area
 
 	// Paint the area between the toolbar buttons and the stage text
-	Size s1 = Area.stage;
-	s1.w = Area.stage.w - State.stage->size.w - margin;
+	Size s1 = Areas.stage;
+	s1.w = Areas.stage.w - State.stage->size.w - margin;
 	if (s1.w < margin) s1.w = margin; // Narrow window, pin to left instead of right
 	PaintFill(device, s1, State.stage->background.brush);
 
@@ -72,19 +72,19 @@ void PaintWindow(Device *device) {
 	Size s2 = State.stage->size; // Start with text width and height
 	s2.x = s1.Right();
 	s2.y = above;
-	s2.SetBottom(Area.stage.Bottom()); // Don't paint down into the list view control
+	s2.SetBottom(Areas.stage.Bottom()); // Don't paint down into the list view control
 	device->Font(Handle.arial);
 	device->FontColor(State.stage->ink.color);
 	device->BackgroundColor(State.stage->background.color);
 	PaintLabel(device, State.stage->title, s2);
 
 	// Paint the area to the right of the stage text
-	Size s3 = Area.stage;
+	Size s3 = Areas.stage;
 	s3.SetLeft(s2.Right());
 	PaintFill(device, s3, State.stage->background.brush);
 
 	// Paint all the areas
-	areaitem *a = Area.all;
+	areaitem *a = Areas.all;
 	while (a) {
 		PaintArea(device, a);
 		a = a->next;
@@ -94,10 +94,10 @@ void PaintWindow(Device *device) {
 	device->Font(Handle.font);
 	device->FontColor(Handle.ink.color);
 	device->BackgroundColor(Handle.background.color);
-	Size s = Area.status;
+	Size s = Areas.status;
 	s.h = 1;
 	PaintFill(device, s, Handle.line.brush);
-	s = Area.status;
+	s = Areas.status;
 	s.ShiftTop(1);
 	PaintText(device, State.status, s, false, true, true, true);
 }
@@ -151,22 +151,22 @@ void PaintArea(Device *device, areaitem *a) {
 	} else {
 
 		// Bar
-		if (a == &Area.bar) {
+		if (a == &Areas.bar) {
 
-			s = Area.bar.size;
+			s = Areas.bar.size;
 			s.h = 1;
 			PaintFill(device, s, Handle.line.brush);
-			s = Area.bar.size;
+			s = Areas.bar.size;
 			s.ShiftTop(1);
 			PaintFill(device, s, Handle.face.brush);
 
 		// Corner
-		} else if (a == &Area.corner) {
+		} else if (a == &Areas.corner) {
 
-			s = Area.corner.size;
+			s = Areas.corner.size;
 			s.h = 1;
 			PaintFill(device, s, Handle.line.brush);
-			s = Area.corner.size;
+			s = Areas.corner.size;
 			s.ShiftTop(1);
 			PaintFill(device, s);
 			s.CloseRight();
@@ -252,7 +252,7 @@ void AreaCreate() {
 	Device device;
 	device.OpenCreate();
 	device.Font(Handle.font); // Find the height of the default font
-	Area.height = SizeText(&device, L"A").h;
+	Areas.height = SizeText(&device, L"A").h;
 	device.Font(Handle.arial); // Find the widths of the stage titles
 	State.start.size       = SizeText(&device, State.start.title);
 	State.downloading.size = SizeText(&device, State.downloading.title);
@@ -261,35 +261,35 @@ void AreaCreate() {
 	State.missing.size     = SizeText(&device, State.missing.title);
 
 	// Buttons
-	Area.tools.command  = CommandMenu;
-	Area.start.command  = CommandUnavailable;
-	Area.pause.command  = CommandUnavailable;
-	Area.stop.command   = CommandUnavailable;
-	Area.remove.command = CommandUnavailable;
-	Area.tools.tip  = L"Tools";
-	Area.start.tip  = L"Start";
-	Area.pause.tip  = L"Pause";
-	Area.stop.tip   = L"Stop";
-	Area.remove.tip = L"Remove";
-	Area.tools.dim   = NULL; // Tools is always available
-	Area.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  30, 19); // Rectangular icon
-	Area.tools.icon  = LoadIconResource(L"BUTTON_TOOLS",      30, 19);
-	Area.start.dim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19); // Custom size icons
-	Area.start.hot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
-	Area.start.icon  = LoadIconResource(L"BUTTON_START",      19, 19);
-	Area.pause.dim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
-	Area.pause.hot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
-	Area.pause.icon  = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
-	Area.stop.dim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
-	Area.stop.hot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
-	Area.stop.icon   = LoadIconResource(L"BUTTON_STOP",       19, 19);
-	Area.remove.dim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
-	Area.remove.hot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
-	Area.remove.icon = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
+	Areas.tools.command  = CommandMenu;
+	Areas.start.command  = CommandUnavailable;
+	Areas.pause.command  = CommandUnavailable;
+	Areas.stop.command   = CommandUnavailable;
+	Areas.remove.command = CommandUnavailable;
+	Areas.tools.tip  = L"Tools";
+	Areas.start.tip  = L"Start";
+	Areas.pause.tip  = L"Pause";
+	Areas.stop.tip   = L"Stop";
+	Areas.remove.tip = L"Remove";
+	Areas.tools.dim   = NULL; // Tools is always available
+	Areas.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  30, 19); // Rectangular icon
+	Areas.tools.icon  = LoadIconResource(L"BUTTON_TOOLS",      30, 19);
+	Areas.start.dim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19); // Custom size icons
+	Areas.start.hot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
+	Areas.start.icon  = LoadIconResource(L"BUTTON_START",      19, 19);
+	Areas.pause.dim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
+	Areas.pause.hot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
+	Areas.pause.icon  = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
+	Areas.stop.dim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
+	Areas.stop.hot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
+	Areas.stop.icon   = LoadIconResource(L"BUTTON_STOP",       19, 19);
+	Areas.remove.dim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
+	Areas.remove.hot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
+	Areas.remove.icon = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
 
 	// Size controls
-	Area.bar.command    = CommandSizeVertical;
-	Area.corner.command = CommandSizeDiagonal;
+	Areas.bar.command    = CommandSizeVertical;
+	Areas.corner.command = CommandSizeDiagonal;
 }
 
 // Update the appearance of area items and issue commands that occur
@@ -309,11 +309,11 @@ void AreaPulse() {
 	}
 
 	// Set button command states
-	Area.tools.command  = CommandMenu;
-	Area.start.command  = CommandReady; //TODO base these on what's selected, if anything
-	Area.pause.command  = CommandReady;
-	Area.stop.command   = CommandReady;
-	Area.remove.command = CommandUnavailable;
+	Areas.tools.command  = CommandMenu;
+	Areas.start.command  = CommandReady; //TODO base these on what's selected, if anything
+	Areas.pause.command  = CommandReady;
+	Areas.stop.command   = CommandReady;
+	Areas.remove.command = CommandUnavailable;
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	areaitem *over = MouseOver();
@@ -321,15 +321,15 @@ void AreaPulse() {
 	int pressing = GetKeyState(VK_LBUTTON) & 0x8000;
 
 	// Set the pointer based on the area it pressed
-	if (Area.pressed) {
+	if (Areas.pressed) {
 
-		if      (Area.pressed->command == CommandReady)          CursorSet(Handle.arrow);
-		else if (Area.pressed->command == CommandSet)            CursorSet(Handle.arrow);
-		else if (Area.pressed->command == CommandMenu)           CursorSet(Handle.arrow);
-		else if (Area.pressed->command == CommandLink)           CursorSet(Handle.hand);
-		else if (Area.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
-		else if (Area.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
-		else if (Area.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
+		if      (Areas.pressed->command == CommandReady)          CursorSet(Handle.arrow);
+		else if (Areas.pressed->command == CommandSet)            CursorSet(Handle.arrow);
+		else if (Areas.pressed->command == CommandMenu)           CursorSet(Handle.arrow);
+		else if (Areas.pressed->command == CommandLink)           CursorSet(Handle.hand);
+		else if (Areas.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
+		else if (Areas.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
+		else if (Areas.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
 		else                                                     CursorSet(Handle.arrow);
 
 	// Set the pointer based on the area it's over
@@ -351,13 +351,13 @@ void AreaPulse() {
 	}
 
 	// The tab control doesn't set the pointer, so we do it for it
-	if (!Area.pressed && Area.tabs.Inside(MouseClient()))
+	if (!Areas.pressed && Areas.tabs.Inside(MouseClient()))
 		CursorSet(Handle.arrow);
 
 	// Compose the display of each area and draw those that have changed
 	areadisplay display;
 	Device device;
-	areaitem *a = Area.all;
+	areaitem *a = Areas.all;
 	while (a) {
 
 		// Compose the display for the area
@@ -368,10 +368,10 @@ void AreaPulse() {
 
 		} else if (a->command == CommandReady) {
 
-			if      (a == over && a == Area.pressed)              display = DisplayPressed;
-			else if (a == over &&                      !pressing) display = DisplayHot;
-			else if (a != over && a == Area.pressed &&  pressing) display = DisplayHot; // Hot when the mouse drags away
-			else                                                  display = DisplayReady;
+			if      (a == over && a == Areas.pressed)              display = DisplayPressed;
+			else if (a == over &&                       !pressing) display = DisplayHot;
+			else if (a != over && a == Areas.pressed &&  pressing) display = DisplayHot; // Hot when the mouse drags away
+			else                                                   display = DisplayReady;
 
 		} else if (a->command == CommandSet) {
 
@@ -379,15 +379,15 @@ void AreaPulse() {
 
 		} else if (a->command == CommandMenu) {
 
-			if      (a == over && a == Area.pressed) display = DisplayPressed;
-			else if (a == over && !pressing)         display = DisplayHot;
-			else                                     display = DisplayReady;
+			if      (a == over && a == Areas.pressed) display = DisplayPressed;
+			else if (a == over && !pressing)          display = DisplayHot;
+			else                                      display = DisplayReady;
 
 		} else if (a->command == CommandLink) {
 
-			if      (a == over && a == Area.pressed) display = DisplayHot;
-			else if (a == over && !pressing)         display = DisplayHot;
-			else                                     display = DisplayReady;
+			if      (a == over && a == Areas.pressed) display = DisplayHot;
+			else if (a == over && !pressing)          display = DisplayHot;
+			else                                      display = DisplayReady;
 		}
 
 		// The display of the area on the screen is different from the newly composed display
@@ -411,30 +411,30 @@ void AreaPulse() {
 	}
 
 	// Adjust size
-	if (Area.pressed) {
+	if (Areas.pressed) {
 
 		// Get positions in client coordinates
 		Size mouse, stick, min, move;
-		mouse = MouseClient();                         // Where the mouse is
-		stick.x = Area.pressed->size.x + Area.stick.x; // The stick is the point the mouse is dragging
-		stick.y = Area.pressed->size.y + Area.stick.y;
-		min.x = Area.collapse.x + Area.stick.x;        // The closest the stick can be to the client origin
-		min.y = Area.collapse.y + Area.stick.y;
-		move.x = mouse.x - stick.x;                    // From the stick to the mouse
+		mouse = MouseClient();                           // Where the mouse is
+		stick.x = Areas.pressed->size.x + Areas.stick.x; // The stick is the point the mouse is dragging
+		stick.y = Areas.pressed->size.y + Areas.stick.y;
+		min.x = Areas.collapse.x + Areas.stick.x;        // The closest the stick can be to the client origin
+		min.y = Areas.collapse.y + Areas.stick.y;
+		move.x = mouse.x - stick.x;                      // From the stick to the mouse
 		move.y = mouse.y - stick.y;
 
 		// If the mouse is away from the stick, try to move the stick to it
-		if (Area.pressed->command == CommandSizeHorizontal && move.x != 0) {
+		if (Areas.pressed->command == CommandSizeHorizontal && move.x != 0) {
 
 			// Horizontal bar
 			Layout(move.x);
 
-		} else if (Area.pressed->command == CommandSizeVertical && move.y != 0) {
+		} else if (Areas.pressed->command == CommandSizeVertical && move.y != 0) {
 
 			// Vertical bar
 			Layout(move.y);
 
-		} else if (Area.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
+		} else if (Areas.pressed->command == CommandSizeDiagonal && (move.x != 0 || move.y != 0)) {
 
 			// Don't try to move the stick closer to the client origin than min
 			if (mouse.x < min.x) move.x = min.x - stick.x;
@@ -476,7 +476,7 @@ void AreaPulse() {
 		State.status = s; // Update it
 
 		// The status bar has size
-		if (Area.status.Is()) {
+		if (Areas.status.Is()) {
 
 			// Get the window device context if we don't have it already
 			if (device.open == DeviceNone) {
@@ -487,7 +487,7 @@ void AreaPulse() {
 			}
 
 			// Paint the status text to the window
-			PaintText(&device, State.status, Area.status, false, true, true, true);
+			PaintText(&device, State.status, Areas.status, false, true, true, true);
 		}
 	}
 }
@@ -497,7 +497,7 @@ void AreaPulse() {
 void AreaPopUp() {
 
 	// Clear record of the area the mouse pressed and release the mouse if captured
-	Area.pressed = NULL;
+	Areas.pressed = NULL;
 	MouseRelease();
 
 	// Record there is one more pop up window
@@ -558,14 +558,14 @@ std::vector<int> SizeColumns(std::vector<int> w) {
 void Layout(int move) {
 
 	// Remember how things are now
-	Size client = SizeClient();  // Get the width and height of the client area
-	if (!client.Is()) return;        // The client size is 0 when the window is minimized, don't size areas
-	Size before = Area.bar.size; // Record where the bar is before the size
+	Size client = SizeClient();   // Get the width and height of the client area
+	if (!client.Is()) return;     // The client size is 0 when the window is minimized, don't size areas
+	Size before = Areas.bar.size; // Record where the bar is before the size
 
 	// All size constants for the program are defined here as local variables to be read in this function
-	int text = Area.height; // Text height on Windows XP is usually 13
-	int icon = 16;          // Small square icons
-	Size tools;         // Tools icon
+	int text = Areas.height; // Text height on Windows XP is usually 13
+	int icon = 16;           // Small square icons
+	Size tools;              // Tools icon
 	tools.w = 30;
 	tools.h = 19;
 
@@ -578,84 +578,84 @@ void Layout(int move) {
 	// Toolbar buttons
 	Size button;
 	button.w = button.h = title;
-	Area.tools.size  = button;
-	Area.start.size  = button;
-	Area.pause.size  = button;
-	Area.stop.size   = button;
-	Area.remove.size = button;
-	Area.tools.size.w  = tools.w + 4;
-	Area.start.size.x  = Area.tools.size.w + (0 * button.w);
-	Area.pause.size.x  = Area.tools.size.w + (1 * button.w);
-	Area.stop.size.x   = Area.tools.size.w + (2 * button.w);
-	Area.remove.size.x = Area.tools.size.w + (3 * button.w);
+	Areas.tools.size  = button;
+	Areas.start.size  = button;
+	Areas.pause.size  = button;
+	Areas.stop.size   = button;
+	Areas.remove.size = button;
+	Areas.tools.size.w  = tools.w + 4;
+	Areas.start.size.x  = Areas.tools.size.w + (0 * button.w);
+	Areas.pause.size.x  = Areas.tools.size.w + (1 * button.w);
+	Areas.stop.size.x   = Areas.tools.size.w + (2 * button.w);
+	Areas.remove.size.x = Areas.tools.size.w + (3 * button.w);
 
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
 	int max = client.h - bar - status - tabs;
-	if (!Area.bar.size.y) Area.bar.size.y = ((client.h - title - bar - tabs - status) * 3 / 7) + title; // Set the bar 3/7ths down the available area
-	Area.bar.size.y += move; // Move the bar
-	if (Area.bar.size.y > max) Area.bar.size.y = max; // Don't let it go beyond the bounds
-	if (Area.bar.size.y < min) Area.bar.size.y = min; // Enforce min from the top if both are in violation
-	Area.bar.size.x = 0;
-	Area.bar.size.w = client.w;
-	Area.bar.size.h = bar;
+	if (!Areas.bar.size.y) Areas.bar.size.y = ((client.h - title - bar - tabs - status) * 3 / 7) + title; // Set the bar 3/7ths down the available area
+	Areas.bar.size.y += move; // Move the bar
+	if (Areas.bar.size.y > max) Areas.bar.size.y = max; // Don't let it go beyond the bounds
+	if (Areas.bar.size.y < min) Areas.bar.size.y = min; // Enforce min from the top if both are in violation
+	Areas.bar.size.x = 0;
+	Areas.bar.size.w = client.w;
+	Areas.bar.size.h = bar;
 
 	// Stage
-	Area.stage.x = Area.remove.size.Right();
-	Area.stage.w = client.w - Area.remove.size.Right();
-	if (Area.stage.w < 0) Area.stage.w = 0;
-	Area.stage.h = title;
+	Areas.stage.x = Areas.remove.size.Right();
+	Areas.stage.w = client.w - Areas.remove.size.Right();
+	if (Areas.stage.w < 0) Areas.stage.w = 0;
+	Areas.stage.h = title;
 
 	// List
-	Area.list.y = Area.stage.Bottom();
-	Area.list.w = client.w;
-	Area.list.SetBottom(Area.bar.size.y);
-	Area.list.Check(); // If the height is negative, make it 0
+	Areas.list.y = Areas.stage.Bottom();
+	Areas.list.w = client.w;
+	Areas.list.SetBottom(Areas.bar.size.y);
+	Areas.list.Check(); // If the height is negative, make it 0
 
 	// Tabs
-//	Area.tabs.x = 2; // Shift to the right to paint left margin and move right border under window edge
-	Area.tabs.y = Area.bar.size.Bottom();
-	Area.tabs.w = client.w;
-	Area.tabs.h = tabs;
+//	Areas.tabs.x = 2; // Shift to the right to paint left margin and move right border under window edge
+	Areas.tabs.y = Areas.bar.size.Bottom();
+	Areas.tabs.w = client.w;
+	Areas.tabs.h = tabs;
 
 	// Info
-	Area.info.y = Area.tabs.Bottom();
-	Area.info.w = client.w;
-	Area.info.h = client.h - title - Area.list.h - bar - tabs - status;
+	Areas.info.y = Areas.tabs.Bottom();
+	Areas.info.w = client.w;
+	Areas.info.h = client.h - title - Areas.list.h - bar - tabs - status;
 
 	// Status and corner
-	Area.collapse.y = title + bar + tabs; // Determine where corner would be if the window were very small
-	Area.collapse.w = status;
-	Area.collapse.h = status;
-	Area.corner.size.x = Greatest(Area.collapse.x, client.w - status); // Corner
-	Area.corner.size.y = Greatest(Area.collapse.y, Area.info.Bottom());
-	Area.corner.size.w = status;
-	Area.corner.size.h = status;
-	Area.status.y = Area.corner.size.y; // Status
-	Area.status.w = Greatest(0, client.w - status);
-	Area.status.h = status;
+	Areas.collapse.y = title + bar + tabs; // Determine where corner would be if the window were very small
+	Areas.collapse.w = status;
+	Areas.collapse.h = status;
+	Areas.corner.size.x = Greatest(Areas.collapse.x, client.w - status); // Corner
+	Areas.corner.size.y = Greatest(Areas.collapse.y, Areas.info.Bottom());
+	Areas.corner.size.w = status;
+	Areas.corner.size.h = status;
+	Areas.status.y = Areas.corner.size.y; // Status
+	Areas.status.w = Greatest(0, client.w - status);
+	Areas.status.h = status;
 	if (IsZoomed(Handle.window)) { // If the window is maximized, make status the entire row and hide the size corner
-		Area.status.w = client.w;
-		Area.corner.size.CloseRight();
+		Areas.status.w = client.w;
+		Areas.corner.size.CloseRight();
 	}
 
 	// Position and resize child window controls without sending paint messages
-	WindowMove(Handle.list, Area.list);
-	WindowMove(Handle.tabs, Area.tabs);
-	WindowMove(Handle.edit, Area.info);
+	WindowMove(Handle.list, Areas.list);
+	WindowMove(Handle.tabs, Areas.tabs);
+	WindowMove(Handle.edit, Areas.info);
 
 	// The first time this runs, assign the tooltip regions
 	if (!before.Is()) {
 
-		TipAdd(Area.tools.size,  Area.tools.tip);
-		TipAdd(Area.start.size,  Area.start.tip);
-		TipAdd(Area.pause.size,  Area.pause.tip);
-		TipAdd(Area.stop.size,   Area.stop.tip);
-		TipAdd(Area.remove.size, Area.remove.tip);
+		TipAdd(Areas.tools.size,  Areas.tools.tip);
+		TipAdd(Areas.start.size,  Areas.start.tip);
+		TipAdd(Areas.pause.size,  Areas.pause.tip);
+		TipAdd(Areas.stop.size,   Areas.stop.tip);
+		TipAdd(Areas.remove.size, Areas.remove.tip);
 	}
 
 	// If the bar moved, paint the window
-	if (before.y && before.y != Area.bar.size.y) PaintMessage();
+	if (before.y && before.y != Areas.bar.size.y) PaintMessage();
 }
 
 // Takes an area item that has been pressed and released
@@ -666,10 +666,10 @@ void AreaCommand(areaitem *area) {
 	if (area->command == CommandMenu) {
 
 		// Tools
-		if (area == &Area.tools) {
+		if (area == &Areas.tools) {
 
 			// Position the menu beneath the tools link area
-			Size size = Area.tools.size;
+			Size size = Areas.tools.size;
 			size.CloseBottom();
 			size.w = 0;
 
@@ -1050,7 +1050,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		PaintFill(&device, white, Handle.background.brush);
 
 		// Set heights
-		int text = Area.height; // Text height is usually 13
+		int text = Areas.height; // Text height is usually 13
 		int space = 5;
 
 		// Size the text

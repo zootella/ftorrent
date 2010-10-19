@@ -306,7 +306,7 @@ public:
 };
 
 // Torrent
-class Torrent { // change to Torrent
+class Torrent {
 public:
 
 	CString folder; //save folder, required
