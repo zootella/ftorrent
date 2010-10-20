@@ -18,14 +18,14 @@ public:
 		if (list) search += L"\\*.*";
 
 		// We're not going to use this in a loop, run the single search now
-		if (!list) result();
+		if (!list) Result();
 	}
 
 	// Clean up contents when this object goes out of scope
-	~Find() { close(); }
+	~Find() { Close(); }
 
 	// Loop calling this method to get results until it returns false
-	bool result() {
+	bool Result() {
 
 		// Start the search
 		if (handle == INVALID_HANDLE_VALUE) {
@@ -44,16 +44,16 @@ public:
 		}
 
 		// Done listing the files
-		close();
+		Close();
 		return false;
 	}
 
 	// True if this object found
-	bool found() { return handle != INVALID_HANDLE_VALUE; } // A file or folder
-	bool folder() { return (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
+	bool Found() { return handle != INVALID_HANDLE_VALUE; } // A file or folder
+	bool Folder() { return (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; } // A folder
 
 	// Close the search we started
-	void close() {
+	void Close() {
 		if (handle != INVALID_HANDLE_VALUE) {
 			FindClose(handle);
 			handle = INVALID_HANDLE_VALUE;
@@ -69,12 +69,12 @@ public:
 	HKEY _key;
 
 	// Open a registry key and store its handle in this object
-	bool open(HKEY root, read path, bool write);
-	void close() { if (_key) RegCloseKey(_key); _key = NULL; }
+	bool Open(HKEY root, read path, bool write);
+	void Close() { if (_key) RegCloseKey(_key); _key = NULL; }
 
 	// Make a new local registryitem object, and delete it when it goes out of scope
 	Registry() { _key = NULL; }
-	~Registry() { close(); }
+	~Registry() { Close(); }
 };
 
 // Wraps a BSTR, a COM string, taking care of memory allocation
@@ -82,16 +82,16 @@ class Bstr {
 public:
 
 	// The BSTR
-	BSTR _bstr;
+	BSTR bstr;
 
 	// Make a new Bstr object
-	Bstr()       { _bstr = NULL; }         // With no BSTR allocated
-	Bstr(read r) { _bstr = NULL; set(r); } // From the given text
-	~Bstr()      { clear(); }              // It frees its memory when you delete it
+	Bstr()       { bstr = NULL; }         // With no BSTR allocated
+	Bstr(read r) { bstr = NULL; Set(r); } // From the given text
+	~Bstr()      { Clear(); }             // It frees its memory when you delete it
 
 	// Use AllocSysString and SysFreeString to allocate and free the BSTR
-	void set(CString s) { clear(); _bstr = s.AllocSysString(); }
-	void clear() { if (_bstr) { SysFreeString(_bstr); _bstr = NULL; } }
+	void Set(CString s) { Clear(); bstr = s.AllocSysString(); }
+	void Clear() { if (bstr) { SysFreeString(bstr); bstr = NULL; } }
 };
 
 // Add an application to the Windows Firewall exceptions list
@@ -99,38 +99,38 @@ class Firewall {
 public:
 
 	// COM interfaces
-	INetFwMgr                    *_manager;
-	INetFwPolicy                 *_policy;
-	INetFwProfile                *_profile;
-	INetFwAuthorizedApplications *_list;
-	INetFwAuthorizedApplication  *_program;
+	INetFwMgr                    *manager;
+	INetFwPolicy                 *policy;
+	INetFwProfile                *profile;
+	INetFwAuthorizedApplications *list;
+	INetFwAuthorizedApplication  *program;
 
 	// Make a new Firewall object
 	Firewall() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
-		_manager = NULL;
-		_policy  = NULL;
-		_profile = NULL;
-		_list    = NULL;
-		_program = NULL;
+		manager = NULL;
+		policy  = NULL;
+		profile = NULL;
+		list    = NULL;
+		program = NULL;
 	}
 
 	// Delete the object
 	~Firewall() {
 
 		// Release the COM interfaces that we got access to
-		if (_program) { _program->Release(); _program = NULL; } // Release them in reverse order
-		if (_list)    { _list->Release();    _list    = NULL; }
-		if (_profile) { _profile->Release(); _profile = NULL; }
-		if (_policy)  { _policy->Release();  _policy  = NULL; }
-		if (_manager) { _manager->Release(); _manager = NULL; }
+		if (program) { program->Release(); program = NULL; } // Release them in reverse order
+		if (list)    { list->Release();    list    = NULL; }
+		if (profile) { profile->Release(); profile = NULL; }
+		if (policy)  { policy->Release();  policy  = NULL; }
+		if (manager) { manager->Release(); manager = NULL; }
 	}
 
 	// Methods to adjust the settings of Windows Firewall
-	bool access();
-	bool add(read path, read name);
-	bool remove(read path);
+	bool Access();
+	bool Add(read path, read name);
+	bool Remove(read path);
 };
 
 // A device context with information about how to put it away

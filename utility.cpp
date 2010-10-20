@@ -1800,18 +1800,18 @@ bool DiskDeleteFolder(read path) {
 bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Open the key
-	Registry registry;
-	if (!registry.open(root, path, false)) return false;
+	Registry r;
+	if (!r.open(root, path, false)) return false;
 
 	// Get the size required
 	DWORD size;
 	int result = RegQueryValueEx(
-		registry._key, // Handle to an open key
-		name,          // Name of the value to read
+		r._key, // Handle to an open key
+		name,   // Name of the value to read
 		0,
 		NULL,
-		NULL,          // No data buffer, we're requesting the size
-		&size);        // Required size in bytes including the null terminator
+		NULL,   // No data buffer, we're requesting the size
+		&size); // Required size in bytes including the null terminator
 	if (result != ERROR_SUCCESS) { error(result, L"regqueryvalueex text size"); return false; }
 
 	// Open a string
@@ -1820,7 +1820,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Read the binary data
 	result = RegQueryValueEx(
-		registry._key,  // Handle to an open key
+		r._key,         // Handle to an open key
 		name,           // Name of the value to read
 		0,
 		NULL,
@@ -1840,12 +1840,12 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 bool RegistryWrite(HKEY root, read path, read name, read value) {
 
 	// Open the key
-	Registry registry;
-	if (!registry.open(root, path, true)) return false;
+	Registry r;
+	if (!r.open(root, path, true)) return false;
 
 	// Set or make and set the text value
 	int result = RegSetValueEx(
-		registry._key,                         // Handle to an open key
+		r._key,                                // Handle to an open key
 		name,                                  // Name of the value to set or make and set
 		0,
 		REG_SZ,                                // Variable type is a null-terminated string
@@ -1861,8 +1861,8 @@ bool RegistryWrite(HKEY root, read path, read name, read value) {
 bool RegistryDelete(HKEY base, read path) {
 
 	// Open the key
-	Registry key;
-	if (!key.open(base, path, true)) return false;
+	Registry r;
+	if (!r.open(base, path, true)) return false;
 
 	// Loop for each subkey, deleting them all
 	DWORD size;
@@ -1872,16 +1872,16 @@ bool RegistryDelete(HKEY base, read path) {
 
 		// Get the name of the first subkey
 		size = MAX_PATH;
-		result = RegEnumKeyEx(key._key, 0, subkey, &size, NULL, NULL, NULL, NULL);
+		result = RegEnumKeyEx(r._key, 0, subkey, &size, NULL, NULL, NULL, NULL);
 		if (result == ERROR_NO_MORE_ITEMS) break; // There are no subkeys
 		else if (result != ERROR_SUCCESS) { error(result, L"regenumkeyex"); return false; } // RegEnumKeyEx returned an error
 
 		// Delete it, making the next subkey the new first one
-		if (!RegistryDelete(key._key, subkey)) return false;
+		if (!RegistryDelete(r._key, subkey)) return false;
 	}
 
 	// We've cleared this key of subkeys, close it and delete it
-	key.close();
+	r.close();
 	result = RegDeleteKey(base, path);
 	if (result != ERROR_SUCCESS && result != ERROR_FILE_NOT_FOUND) { error(result, L"regdeletekey"); return false; }
 	return true;
@@ -1895,7 +1895,7 @@ bool Registry::open(HKEY root, read path, bool write) {
 	if (!root || isblank(path)) return false;
 
 	// Variables for opening the key
-	HKEY key;
+	HKEY k;
 	DWORD info;
 	int result;
 
@@ -1911,7 +1911,7 @@ bool Registry::open(HKEY root, read path, bool write) {
 			REG_OPTION_NON_VOLATILE, // Save information in the registry file
 			KEY_ALL_ACCESS,          // Get access to read and write values in the key we're making and opening
 			NULL,
-			&key,                    // The opened or created key handle is put here
+			&k,                      // The opened or created key handle is put here
 			&info);                  // Tells if the key was opened or created and opened
 		if (result != ERROR_SUCCESS) { error(result, L"regcreatekeyex"); return false; }
 
@@ -1924,12 +1924,12 @@ bool Registry::open(HKEY root, read path, bool write) {
 			path,     // Subkey name
 			0,
 			KEY_READ, // We only need to read the key we're opening
-			&key);    // The opened key handle is put here
+			&k);      // The opened key handle is put here
 		if (result != ERROR_SUCCESS) { error(result, L"regopenkeyex"); return false; }
 	}
 
 	// Save the open key in this registry object
-	_key = key;
+	_key = k;
 	return true;
 }
 
@@ -1940,10 +1940,10 @@ bool FirewallAdd(read path, read name) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
 	Firewall firewall;
-	if (!firewall.access()) return false;
+	if (!firewall.Access()) return false;
 
 	// Add the program's listing
-	if (!firewall.add(path, name)) return false;
+	if (!firewall.Add(path, name)) return false;
 	return true;
 }
 
@@ -1954,36 +1954,36 @@ bool FirewallRemove(read path) {
 
 	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
 	Firewall firewall;
-	if (!firewall.access()) return false;
+	if (!firewall.Access()) return false;
 
 	// Remove the program's listing
-	if (!firewall.remove(path)) return false;
+	if (!firewall.Remove(path)) return false;
 	return true;
 }
 
 // Get access to the COM objects
 // Returns true if it works, false if there was an error
-bool Firewall::access() {
+bool Firewall::Access() {
 
 	// Initialize COM itself so this thread can use it
 	HRESULT result = CoInitialize(NULL); // Must be NULL
 	if (FAILED(result)) { error(result, L"coinitialize"); return false; }
 
 	// Create an instance of the firewall settings manager
-	result = CoCreateInstance(__uuidof(NetFwMgr), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwMgr), (void **)&_manager);
-	if (FAILED(result) || !_manager) { error(result, L"cocreateinstance netfwmgr"); return false; }
+	result = CoCreateInstance(__uuidof(NetFwMgr), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwMgr), (void **)&manager);
+	if (FAILED(result) || !manager) { error(result, L"cocreateinstance netfwmgr"); return false; }
 
 	// Retrieve the local firewall policy
-	result = _manager->get_LocalPolicy(&_policy);
-	if (FAILED(result) || !_policy) { error(result, L"get_localpolicy"); return false; }
+	result = manager->get_LocalPolicy(&policy);
+	if (FAILED(result) || !policy) { error(result, L"get_localpolicy"); return false; }
 
 	// Retrieve the firewall profile currently in effect
-	result = _policy->get_CurrentProfile(&_profile);
-	if (FAILED(result) || !_profile) { error(result, L"get_currentprofile"); return false; }
+	result = policy->get_CurrentProfile(&profile);
+	if (FAILED(result) || !profile) { error(result, L"get_currentprofile"); return false; }
 
 	// Retrieve the authorized application collection
-	result = _profile->get_AuthorizedApplications(&_list);
-	if (FAILED(result) || !_list) { error(result, L"get_authorizedapplications"); return false; }
+	result = profile->get_AuthorizedApplications(&list);
+	if (FAILED(result) || !list) { error(result, L"get_authorizedapplications"); return false; }
 
 	// Everything worked
 	return true;
@@ -1992,23 +1992,23 @@ bool Firewall::access() {
 // Takes a path and file name like "C:\Folder\Program.exe" and a name like "Program Name"
 // Lists and checks the program on Windows Firewall, so now it can listed on a socket without a warning popping up
 // Returns false on error
-bool Firewall::add(read path, read name) {
+bool Firewall::Add(read path, read name) {
 
 	// Create an instance of an authorized application, we'll use this to add our new application
-	if (_program) { _program->Release(); _program = NULL; }
-	HRESULT result = CoCreateInstance(__uuidof(NetFwAuthorizedApplication), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwAuthorizedApplication), (void **)&_program);
+	if (program) { program->Release(); program = NULL; }
+	HRESULT result = CoCreateInstance(__uuidof(NetFwAuthorizedApplication), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwAuthorizedApplication), (void **)&program);
 	if (FAILED(result)) { error(result, L"cocreateinstance netfwauthorizedapplication"); return false; };
 
 	// Set the text
-	Bstr p(path);                                         // Express the text as BSTRs
-	result = _program->put_ProcessImageFileName(p._bstr); // Set the process image file name
+	Bstr p(path);                                       // Express the text as BSTRs
+	result = program->put_ProcessImageFileName(p.bstr); // Set the process image file name
 	if (FAILED(result)) { error(result, L"put_processimagefilename"); return false; };
 	Bstr n(name);
-	result = _program->put_Name(n._bstr);                 // Set the program name
+	result = program->put_Name(n.bstr);                 // Set the program name
 	if (FAILED(result)) { error(result, L"put_name"); return false; };
 
 	// Get the program on the Windows Firewall exceptions list
-	result = _list->Add(_program); // Add the application to the collection
+	result = list->Add(program); // Add the application to the collection
 	if (FAILED(result)) { error(result, L"firewall add"); return false; };
 	return true;
 }
@@ -2016,11 +2016,11 @@ bool Firewall::add(read path, read name) {
 // Takes a path like "C:\Folder\Program.exe"
 // Removes the program from Windows Firewall
 // Returns false on error
-bool Firewall::remove(read path) {
+bool Firewall::Remove(read path) {
 
 	// Remove the program from the Windows Firewall exceptions list
 	Bstr p(path); // Express the text as a BSTR
-	HRESULT result = _list->Remove(p._bstr);
+	HRESULT result = list->Remove(p.bstr);
 	if (FAILED(result)) { error(result, L"firewall remove"); return false; };
 	return true;
 }
