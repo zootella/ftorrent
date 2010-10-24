@@ -1801,7 +1801,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Open the key
 	Registry r;
-	if (!r.open(root, path, false)) return false;
+	if (!r.Open(root, path, false)) return false;
 
 	// Get the size required
 	DWORD size;
