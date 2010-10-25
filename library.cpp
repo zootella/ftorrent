@@ -136,7 +136,7 @@ std::string narrowWtoS(std::wstring w) {
 	return s;
 }
 
-// Given the text of a torrent infohash, look up and return the libtorrent torrent handle object
+// Given the text of a torrent infohash, look up and return the libtorrent torrent handle
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
 	hbig hash = ParseHash(widenPtoC(id));
@@ -149,7 +149,7 @@ libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 bool SaveEntry(read path, const libtorrent::entry &e) {
 	try {
 
-		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path object
+		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path
 		boost::filesystem::ofstream f(p, std::ios_base::binary); // Open a file for writing
 		if (f.fail()) { log(L"saveentry fail ", path); return false; }
 		f.unsetf(std::ios_base::skipws); // Include whitespace
@@ -172,7 +172,7 @@ bool SaveEntry(read path, const libtorrent::entry &e) {
 bool LoadEntry(read path, libtorrent::entry &e) {
 	try {
 
-		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path object
+		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path
 		boost::filesystem::ifstream f(p, std::ios_base::binary); // Open a file for reading
 		if (f.fail()) { log(L"loadentry fail ", path); return false; }
 		f.unsetf(std::ios_base::skipws); // Include whitespace
@@ -195,7 +195,7 @@ bool LoadEntry(read path, libtorrent::entry &e) {
 bool LoadVector(read path, std::vector<char> &c) {
 	try {
 
-		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path object
+		boost::filesystem::wpath p(convertRtoW(path)); // Make a boost path
 		boost::filesystem::ifstream f(p, std::ios_base::binary); // Open a file for reading
 		if (f.fail()) { log(L"loadvector fail ", path); return false; }
 		f.unsetf(std::ios_base::skipws); // Include whitespace
@@ -220,7 +220,7 @@ bool LoadVector(read path, std::vector<char> &c) {
 void LibraryStart() {
 	try {
 
-		// Make our libtorrent session object
+		// Make our libtorrent session
 		Handle.session = new libtorrent::session(
 			libtorrent::fingerprint("ftorrent", 0, 1, 0, 0), // Program name and version numbers separated by commas
 			std::pair<int, int>(6881, 6999),                 // Pick a port to listen on in this range
@@ -296,7 +296,7 @@ void LibraryStop() {
 void LibraryClose() {
 	try {
 
-		delete Handle.session; // Call the libtorrent session object destructor
+		delete Handle.session; // Call the libtorrent session destructor
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -335,11 +335,11 @@ CString AddTorrent(read torrent, bool ask) {
 	if (!LibraryAddTorrent(&handle, folder, L"", torrent))
 		return L"Cannot add this torrent. Check how you saved or downloaded it, and try again."; // libtorrent error
 
-	AddData(handle, folder, name, trackers); // Make a torrent item in data
-	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
+	AddData(handle, folder, name, trackers); // Make a torrent in data
+	AddTrackers(hash, trackers);             // Add trackers to the torrent and handle
 	AddRow(hash);                            // Make a row in the list view
 	AddMeta(hash, torrent);                  // Copy the torrent file to "infohash.meta.db"
-	AddOption(hash);                         // Save the torrent item to "infohash.optn.db"
+	AddOption(hash);                         // Save the torrent to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -373,10 +373,10 @@ CString AddMagnet(read magnet, bool ask) {
 	if (!LibraryAddMagnet(&handle, folder, L"", hash, name))
 		return L"Cannot add this magnet link. Check the link and try again."; // libtorrent error
 
-	AddData(handle, folder, name, trackers); // Make a torrent item in data
-	AddTrackers(hash, trackers);             // Add trackers to the torrent item and handle
+	AddData(handle, folder, name, trackers); // Make a torrent in data
+	AddTrackers(hash, trackers);             // Add trackers to the torrent and handle
 	AddRow(hash);                            // Make a row in the list view
-	AddOption(hash);                         // Save the torrent item to "infohash.optn.db"
+	AddOption(hash);                         // Save the torrent to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -411,16 +411,16 @@ void AddStore(hbig hash) {
 	}
 
 	// Add the torrent handle to the data list and window
-	AddData(handle, o.folder, o.name, o.trackers); // Make a torrent item in data
-	AddTrackers(hash, o.trackers);                 // Add trackers to the torrent item and handle
+	AddData(handle, o.folder, o.name, o.trackers); // Make a torrent in data
+	AddTrackers(hash, o.trackers);                 // Add trackers to the torrent and handle
 	AddTrackers(hash, mtrackers);
 	AddRow(hash);                                  // Make a row in the list view
 }
 
-// Add the given trackers in the add list to both the torrent item and the libtorrent torrent handle
+// Add the given trackers in the add list to both the torrent in data and the torrent handle in libtorrent
 void AddTrackers(hbig hash, std::set<CString> add) {
 
-	// Find the torrent item in the data list
+	// Find the torrent in the data list
 	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 
@@ -495,21 +495,21 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 	// Never add a zero or duplicate hash
 	if (handle.info_hash().is_all_zeros() || FindTorrent(handle.info_hash())) return;
 
-	// Make a new empty torrent item and copy in the given information
+	// Make a new empty torrent and copy in the given information
 	Torrent t;
 	t.handle = handle;
 	t.folder = folder;
 	t.name = name;
 	t.trackers = trackers;
 
-	// Copy the local torrent item t into a new one at the end of the program's list
+	// Copy the local torrent t into a new one at the end of the program's list
 	Data.torrents.push_back(t);
 }
 
-// Add a new row to the window's list view control for the torrent item in data with the given hash
+// Add a new row to the window's list view control for the torrent in data with the given hash
 void AddRow(hbig hash) {
 
-	// Find the torrent item in data
+	// Find the torrent in data
 	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 
@@ -535,7 +535,7 @@ void AddMeta(hbig hash, read torrent) {
 	CopyFile(torrent, PathTorrentMeta(hash), true); // True to not overwrite
 }
 
-// Have the torrent item with hash in the data list save "infohash.optn.db" next to this running exe
+// Have the torrent with hash in the data list save "infohash.optn.db" next to this running exe
 void AddOption(hbig hash) {
 
 	Torrent *t = FindTorrent(hash);

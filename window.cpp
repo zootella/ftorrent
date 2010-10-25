@@ -307,7 +307,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		if (Areas.pressed) Areas.stick = MouseArea(Areas.pressed);  // Save where in that area it started dragging
 		MouseCapture();                                             // Have our window get all the mouse messages
 		if (Areas.pressed && Areas.pressed->command == CommandMenu) // Show a menu on the downclick
-			AreaCommand(Areas.pressed);
+			AreaDoCommand(Areas.pressed);
 		return 0;
 
 	// The primary mouse button has clicked up in the main window, or anywhere if the mouse is captured
@@ -315,7 +315,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_LBUTTONUP:
 
 		if (Areas.pressed && Areas.pressed == MouseOver()) // If the mouse released the same button it clicked
-			AreaCommand(Areas.pressed);                    // Perform that command
+			AreaDoCommand(Areas.pressed);                  // Perform that command
 		Areas.pressed = NULL;                              // Clear our record of the area the mouse pressed
 		MouseRelease();                                    // Stop getting all mouse messages
 		return 0;

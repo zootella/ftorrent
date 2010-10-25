@@ -102,8 +102,8 @@ void PaintWindow(Device *device) {
 	PaintText(device, State.status, s, false, true, true, true);
 }
 
-// Takes a device context and an area item
-// Paints the area item in the window
+// Takes a device context and an area
+// Paints the area in the window
 void PaintArea(Device *device, Area *a) {
 
 	// Only paint areas that are in use and have size
@@ -292,7 +292,7 @@ void AreaCreate() {
 	Areas.corner.command = CommandSizeDiagonal;
 }
 
-// Update the appearance of area items and issue commands that occur
+// Update the appearance of areas and issue commands that occur
 void AreaPulse() {
 
 	// Determine what the program stage should be right now
@@ -355,7 +355,7 @@ void AreaPulse() {
 		CursorSet(Handle.arrow);
 
 	// Compose the display of each area and draw those that have changed
-	areadisplay display;
+	AreaDisplay display;
 	Device device;
 	Area *a = Areas.all;
 	while (a) {
@@ -397,7 +397,7 @@ void AreaPulse() {
 			a->display = display;
 
 			// Get the window device context if we don't already have it and paint the area
-			if (device.open == device_none) {
+			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);
@@ -452,7 +452,7 @@ void AreaPulse() {
 	rows = ListRows();
 	selected = ListSelectedRows();
 
-	// COUNT HOW MANY BOT ITEMS ARE PENDING
+	// COUNT HOW MANY ARE PENDING
 	pending = 0;
 	botitem *b;
 	b = Data.bot;
@@ -479,7 +479,7 @@ void AreaPulse() {
 		if (Areas.status.Is()) {
 
 			// Get the window device context if we don't have it already
-			if (device.open == device_none) {
+			if (device.open == DeviceNone) {
 
 				device.OpenGet(Handle.window);
 				device.Font(Handle.font);
@@ -658,9 +658,9 @@ void Layout(int move) {
 	if (before.y && before.y != Areas.bar.size.y) PaintMessage();
 }
 
-// Takes an area item that has been pressed and released
+// Takes an area that has been pressed and released
 // Performs its command
-void AreaCommand(Area *area) {
+void AreaDoCommand(Area *area) {
 
 	// Menus
 	if (area->command == CommandMenu) {

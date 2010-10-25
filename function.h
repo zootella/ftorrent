@@ -279,7 +279,7 @@ void AreaPopUp();
 void AreaPopDown();
 std::vector<int> SizeColumns(std::vector<int> w);
 void Layout(int move = 0); // Has defaults
-void AreaCommand(Area *area);
+void AreaDoCommand(Area *area);
 void OptionLoad();
 void OptionSave();
 bool CheckFolder(read folder);

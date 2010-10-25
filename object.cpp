@@ -34,14 +34,14 @@ void Size::Screen(HWND window) {
 	// Choose window
 	if (!window) window = Handle.window;
 
-	// Make a point with the x and y coordinates of this size item
+	// Make a point with the x and y coordinates of this size
 	POINT p = Point();
 
 	// Convert the point
 	Size size;
 	if (!ClientToScreen(window, &p)) { error(L"clienttoscreen"); return; }
 
-	// Store the converted position in this size item
+	// Store the converted position in this size
 	x = p.x;
 	y = p.y;
 }
@@ -54,14 +54,14 @@ void Size::Client(HWND window) {
 	// Choose window
 	if (!window) window = Handle.window;
 
-	// Make a point with the x and y coordinates of this size item
+	// Make a point with the x and y coordinates of this size
 	POINT p = Point();
 
 	// Convert the point
 	Size size;
 	if (!ScreenToClient(window, &p)) { error(L"screentoclient"); return; }
 
-	// Store the converted position in this size item
+	// Store the converted position in this size
 	x = p.x;
 	y = p.y;
 }
@@ -70,8 +70,8 @@ void Size::Client(HWND window) {
 void Device::OpenUse(HDC newdevice) {
 
 	// Record how we opened the device
-	if (open != device_none) return;
-	open = device_use;
+	if (open != DeviceNone) return;
+	open = DeviceUse;
 
 	// Use the given device context
 	device = newdevice;
@@ -81,8 +81,8 @@ void Device::OpenUse(HDC newdevice) {
 void Device::OpenCreate() {
 
 	// Record how we opened the device
-	if (open != device_none) return;
-	open = device_create;
+	if (open != DeviceNone) return;
+	open = DeviceCreate;
 
 	// Create the device context
 	device = CreateDC(L"DISPLAY", NULL, NULL, NULL);
@@ -93,8 +93,8 @@ void Device::OpenCreate() {
 void Device::OpenGet(HWND newwindow) {
 
 	// Record how we opened the device
-	if (open != device_none) return;
-	open = device_get;
+	if (open != DeviceNone) return;
+	open = DeviceGet;
 
 	// Get the device context
 	window = newwindow;
@@ -106,8 +106,8 @@ void Device::OpenGet(HWND newwindow) {
 void Device::OpenPaint(HWND newwindow) {
 
 	// Record how we opened the device
-	if (open != device_none) return;
-	open = device_paint;
+	if (open != DeviceNone) return;
+	open = DevicePaint;
 
 	// Paint the device context
 	window = newwindow;
@@ -125,9 +125,9 @@ Device::~Device() {
 	if (replacebackgroundcolor) SetBkColor(device, backgroundcolor);
 
 	// Close the device context
-	if      (open == device_create) { if (!DeleteDC(device))          error(L"deletedc"); }
-	else if (open == device_get)    { if (!ReleaseDC(window, device)) error(L"releasedc"); }
-	else if (open == device_paint)  { EndPaint(window, &paint); }
+	if      (open == DeviceCreate) { if (!DeleteDC(device))          error(L"deletedc"); }
+	else if (open == DeviceGet)    { if (!ReleaseDC(window, device)) error(L"releasedc"); }
+	else if (open == DevicePaint)  { EndPaint(window, &paint); }
 }
 
 // Load the given font into this device

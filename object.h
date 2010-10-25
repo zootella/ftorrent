@@ -66,14 +66,14 @@ class Registry {
 public:
 
 	// The handle to the registry key
-	HKEY _key;
+	HKEY key;
 
 	// Open a registry key and store its handle in this object
 	bool Open(HKEY root, read path, bool write);
-	void Close() { if (_key) RegCloseKey(_key); _key = NULL; }
+	void Close() { if (key) RegCloseKey(key); key = NULL; }
 
-	// Make a new local registryitem object, and delete it when it goes out of scope
-	Registry() { _key = NULL; }
+	// Make a new local registry object, and delete it when it goes out of scope
+	Registry() { key = NULL; }
 	~Registry() { Close(); }
 };
 
@@ -84,7 +84,7 @@ public:
 	// The BSTR
 	BSTR bstr;
 
-	// Make a new Bstr object
+	// Make a new object
 	Bstr()       { bstr = NULL; }         // With no BSTR allocated
 	Bstr(read r) { bstr = NULL; Set(r); } // From the given text
 	~Bstr()      { Clear(); }             // It frees its memory when you delete it
@@ -105,7 +105,7 @@ public:
 	INetFwAuthorizedApplications *list;
 	INetFwAuthorizedApplication  *program;
 
-	// Make a new Firewall object
+	// Make a new object
 	Firewall() {
 
 		// Set the COM interface pointers to NULL so we'll know if we've initialized them
@@ -136,11 +136,11 @@ public:
 // A device context with information about how to put it away
 enum DeviceOpen {
 
-	device_none,   // We haven't obtained the device context yet
-	device_use,    // The system provided a device context for the program to use
-	device_create, // The program created a default display device context
-	device_get,    // The program asked the system for the window's device context
-	device_paint,  // The program got the device context in response to a paint message
+	DeviceNone,   // We haven't obtained the device context yet
+	DeviceUse,    // The system provided a device context for the program to use
+	DeviceCreate, // The program created a default display device context
+	DeviceGet,    // The program asked the system for the window's device context
+	DevicePaint,  // The program got the device context in response to a paint message
 };
 class Device {
 public:
@@ -171,7 +171,7 @@ public:
 	// New
 	Device() {
 
-		open = device_none;
+		open = DeviceNone;
 		device = NULL;
 		window = NULL;
 		font = NULL;
@@ -216,20 +216,20 @@ public:
 	void Set(SIZE  s) { x = 0;      y = 0;     w = s.cx;        h = s.cy;         }
 
 	// Convert
-	POINT Point() { POINT p; p.x = x; p.y = y; return(p); }
-	RECT Rectangle() { RECT r; r.left = x; r.top = y; r.right = x + w; r.bottom = y + h; return(r); }
-//	SIZE Size() { SIZE s; s.cx = w; s.cy = h; return(s); }
+	POINT Point() { POINT p; p.x = x; p.y = y; return p; }
+	RECT Rectangle() { RECT r; r.left = x; r.top = y; r.right = x + w; r.bottom = y + h; return r; }
+	SIZE ToSize() { SIZE s; s.cx = w; s.cy = h; return s; }
 
 	// Take negative width or height to 0
 	void Check() { if (w < 0) w = 0; if (h < 0) h = 0; }
 
 	// Determine if the size holds any pixels, and if a point is inside the size
-	bool Is() { return(w > 0 && h > 0); }
-	bool Inside(Size s) { return(s.x >= x && s.x < x + w && s.y >= y && s.y < y + h); }
+	bool Is() { return w > 0 && h > 0; }
+	bool Inside(Size s) { return s.x >= x && s.x < x + w && s.y >= y && s.y < y + h; }
 
 	// Read like a rectangle
-	int Right() { return(x + w); }
-	int Bottom() { return(y + h); }
+	int Right() { return x + w; }
+	int Bottom() { return y + h; }
 
 	// Set like a rectangle
 	void SetLeft(int left) { w += x - left; x = left; }
@@ -258,9 +258,9 @@ public:
 };
 
 // A window area that acts as a button, link, or sizing grip
-enum areacommand {
+enum AreaCommand {
 
-	// The program changes an area item's command condition when teh availability or state of its command changes
+	// The program changes an area's command condition when teh availability or state of its command changes
 	CommandNone,           // Uninitialized
 	CommandUnavailable,    // The button's command is currently unavailable
 	CommandReady,          // The button's command is ready
@@ -271,9 +271,9 @@ enum areacommand {
 	CommandSizeHorizontal, // A vertical bar that sizes horizontally
 	CommandSizeDiagonal,   // An area that sizes the width and height of the window
 };
-enum areadisplay {
+enum AreaDisplay {
 
-	// These are all the ways an area item can be displayed on the screen
+	// These are all the ways an area can be displayed on the screen
 	DisplayNone,    // Bar or uninitialized button
 	DisplayGhosted, // The button is gray and unresponsive
 	DisplayReady,   // The button looks ready to be clicked
@@ -288,9 +288,9 @@ public:
 
 	// Data
 	Size        size;           // Position and size of area in the main client window
-	areacommand command;        // The state of the command this area item represents
-	areadisplay display;        // How this area is currently drawn in the window
-	CString     text, tip;      // Text painted in the area item and any for a tooltip
+	AreaCommand command;        // The state of the command this area represents
+	AreaDisplay display;        // How this area is currently drawn in the window
+	CString     text, tip;      // Text painted in the area and any for a tooltip
 	int         adjust;         // Pixels to nudge the text horizontally
 	Size        textsize;       // How big the text is when painted
 	HICON       icon, hot, dim; // Icons for normal, hot and dim appearances

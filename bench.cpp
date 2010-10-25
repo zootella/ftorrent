@@ -51,8 +51,8 @@ void StorePulse() {
 	// Add all the torrents from last time the program ran
 	std::set<hbig> hashes;
 	Find f(PathRunningFolder());
-	while (f.result()) { // Loop for each file in the folder this exe is running in
-		if (!f.folder()) {
+	while (f.Result()) { // Loop for each file in the folder this exe is running in
+		if (!f.Folder()) {
 			CString s = f.info.cFileName;
 			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
 
@@ -91,7 +91,7 @@ void ListPulse() {
 }
 
 
-// Edit the list view row to match the information in this torrent item
+// Edit the list view row to match the information in this torrent
 void Torrent::Edit() {
 
 	// Update the cells that have different text
@@ -159,10 +159,10 @@ DWORD Torrent::Hash() {
 
 
 
-// Save the folder, name, and trackers in this torrent item to a file like "infohash.optn.db" next to the running exe
+// Save the folder, name, and trackers in this torrent to a file like "infohash.optn.db" next to the running exe
 void Torrent::Save() {
 
-	// Copy the torrent item's set into a libtorrent bencoded list
+	// Copy the torrent's set of trackers into a libtorrent bencoded list
 	libtorrent::entry::list_type l;
 	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
 		l.push_back(narrowRtoS(*i));
@@ -177,14 +177,14 @@ void Torrent::Save() {
 	SaveEntry(PathTorrentOption(handle.info_hash()), d);
 }
 
-// Given an infohash, load the folder, name, and trackers from "infohash.optn.db" to this torrent item
+// Given an infohash, load the folder, name, and trackers from "infohash.optn.db" to this torrent
 bool Torrent::Load(hbig hash) {
 
 	// Look for a file named with the given hash, and read the bencoded data inside
 	libtorrent::entry d;
 	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
 
-	// Load the folder path and name into this torrent item
+	// Load the folder path and name into this torrent
 	folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Not found returns blank
 	name = widenStoC(d[narrowRtoS(L"name")].string());
 

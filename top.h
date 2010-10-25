@@ -77,7 +77,7 @@ public:
 class areatop {
 public:
 
-	// The list of area items, the area item the mouse pressed, and pointers to the area items
+	// The list of areas, the area the mouse pressed, and pointers to the areas
 	Area *all, *pressed;
 	Area tools, start, pause, stop, remove;
 	Area bar, corner;
@@ -96,7 +96,7 @@ public:
 	// New
 	areatop() {
 
-		all         = &tools; // Link area items into a list
+		all         = &tools; // Link areas into a list
 		tools.next  = &start;
 		start.next  = &pause;
 		pause.next  = &stop;
@@ -148,7 +148,7 @@ public:
 // List view control state
 struct listtop {
 
-	int max;       // The largest number of characters added into any list view item or subitem
+	int max;       // The largest number of characters added into any list view item
 	int sort;      // -1 no sort, OR 0+ column sorted
 	int direction; // 1 ascending or -1 descending
 

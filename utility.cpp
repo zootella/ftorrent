@@ -255,7 +255,7 @@ void WindowSize(HWND window, int x, int y)
 
 void WindowMove(HWND window, Size size, bool paint)
 {
-	// takes a window and size item
+	// takes a window and size
 	// moves the window
 	// returns nothing
 
@@ -456,7 +456,7 @@ void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 }
 
 // Takes menus and whether the context menu is being shown from the taskbar notification icon or not
-// Takes size null to put the menu at the mouse pointer, or a size item in client coordinates
+// Takes size null to put the menu at the mouse pointer, or a size in client coordinates
 // Displays the context menu and waits for the user to make a choice
 // Returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
 UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
@@ -549,7 +549,7 @@ Area *MouseOver() {
 	Size client = SizeClient();
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
-	// Move down each area item to find the one the mouse is over
+	// Move down each area to find the one the mouse is over
 	Area *a = Areas.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
@@ -558,7 +558,7 @@ Area *MouseOver() {
 	return NULL; // Not found, the mouse is away from them all
 }
 
-// Get the mouse position in x and y coordinates inside the given area item
+// Get the mouse position in x and y coordinates inside the given area
 Size MouseArea(Area *a) {
 
 	Size s = MouseClient(); // Get the mouse position in client window coordinates
@@ -569,7 +569,7 @@ Size MouseArea(Area *a) {
 
 // Takes a window or null to use the main one
 // Gets the mouse position in client coordinates
-// Returns x and y coordinates in a size item
+// Returns x and y coordinates in a size
 Size MouseClient(HWND window) {
 
 	if (!window) window = Handle.window; // Choose window
@@ -579,7 +579,7 @@ Size MouseClient(HWND window) {
 }
 
 // Gets the mouse position in screen coordinates
-// Returns x and y coordinates in a size item
+// Returns x and y coordinates in a size
 Size MouseScreen() {
 
 	// If we have a popup window or menu open, report that the mouse is off the screen
@@ -1806,7 +1806,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 	// Get the size required
 	DWORD size;
 	int result = RegQueryValueEx(
-		r._key, // Handle to an open key
+		r.key,  // Handle to an open key
 		name,   // Name of the value to read
 		0,
 		NULL,
@@ -1820,7 +1820,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Read the binary data
 	result = RegQueryValueEx(
-		r._key,         // Handle to an open key
+		r.key,          // Handle to an open key
 		name,           // Name of the value to read
 		0,
 		NULL,
@@ -1841,11 +1841,11 @@ bool RegistryWrite(HKEY root, read path, read name, read value) {
 
 	// Open the key
 	Registry r;
-	if (!r.open(root, path, true)) return false;
+	if (!r.Open(root, path, true)) return false;
 
 	// Set or make and set the text value
 	int result = RegSetValueEx(
-		r._key,                                // Handle to an open key
+		r.key,                                 // Handle to an open key
 		name,                                  // Name of the value to set or make and set
 		0,
 		REG_SZ,                                // Variable type is a null-terminated string
@@ -1862,7 +1862,7 @@ bool RegistryDelete(HKEY base, read path) {
 
 	// Open the key
 	Registry r;
-	if (!r.open(base, path, true)) return false;
+	if (!r.Open(base, path, true)) return false;
 
 	// Loop for each subkey, deleting them all
 	DWORD size;
@@ -1872,16 +1872,16 @@ bool RegistryDelete(HKEY base, read path) {
 
 		// Get the name of the first subkey
 		size = MAX_PATH;
-		result = RegEnumKeyEx(r._key, 0, subkey, &size, NULL, NULL, NULL, NULL);
+		result = RegEnumKeyEx(r.key, 0, subkey, &size, NULL, NULL, NULL, NULL);
 		if (result == ERROR_NO_MORE_ITEMS) break; // There are no subkeys
 		else if (result != ERROR_SUCCESS) { error(result, L"regenumkeyex"); return false; } // RegEnumKeyEx returned an error
 
 		// Delete it, making the next subkey the new first one
-		if (!RegistryDelete(r._key, subkey)) return false;
+		if (!RegistryDelete(r.key, subkey)) return false;
 	}
 
 	// We've cleared this key of subkeys, close it and delete it
-	r.close();
+	r.Close();
 	result = RegDeleteKey(base, path);
 	if (result != ERROR_SUCCESS && result != ERROR_FILE_NOT_FOUND) { error(result, L"regdeletekey"); return false; }
 	return true;
@@ -1889,7 +1889,7 @@ bool RegistryDelete(HKEY base, read path) {
 
 // Takes a root key handle name, a key path, and true to make keys and get write access
 // Opens or creates and opens the key and returns true
-bool Registry::open(HKEY root, read path, bool write) {
+bool Registry::Open(HKEY root, read path, bool write) {
 
 	// Make sure we were given a key and path
 	if (!root || isblank(path)) return false;
@@ -1928,8 +1928,8 @@ bool Registry::open(HKEY root, read path, bool write) {
 		if (result != ERROR_SUCCESS) { error(result, L"regopenkeyex"); return false; }
 	}
 
-	// Save the open key in this registry object
-	_key = k;
+	// Save the open key in this object
+	key = k;
 	return true;
 }
 
@@ -1938,12 +1938,12 @@ bool Registry::open(HKEY root, read path, bool write) {
 // Returns false on error
 bool FirewallAdd(read path, read name) {
 
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	Firewall firewall;
-	if (!firewall.Access()) return false;
+	// Make a firewall and have it access the COM interfaces of Windows Firewall
+	Firewall f;
+	if (!f.Access()) return false;
 
 	// Add the program's listing
-	if (!firewall.Add(path, name)) return false;
+	if (!f.Add(path, name)) return false;
 	return true;
 }
 
@@ -1952,12 +1952,12 @@ bool FirewallAdd(read path, read name) {
 // Returns false on error
 bool FirewallRemove(read path) {
 
-	// Make a Windows Firewall object and have it access the COM interfaces of Windows Firewall
-	Firewall firewall;
-	if (!firewall.Access()) return false;
+	// Make a firewall and have it access the COM interfaces of Windows Firewall
+	Firewall f;
+	if (!f.Access()) return false;
 
 	// Remove the program's listing
-	if (!firewall.Remove(path)) return false;
+	if (!f.Remove(path)) return false;
 	return true;
 }
 
