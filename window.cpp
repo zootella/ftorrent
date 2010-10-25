@@ -1,5 +1,6 @@
 
 #include "include.h"
+app App;
 
 // Global objects
 handletop Handle; // Window handles

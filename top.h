@@ -200,3 +200,24 @@ public:
 		portable = false;
 	}
 };
+
+
+class appIcon {
+public:
+
+
+	appIcon() {
+
+	}
+};
+
+class app {
+public:
+
+	appIcon icon;
+
+
+	app() {
+
+	}
+};

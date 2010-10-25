@@ -1,5 +1,6 @@
 
 #include "heavy.h"
+extern app App;
 
 // Access to global objects
 extern handletop Handle;
