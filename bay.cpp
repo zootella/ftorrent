@@ -1,5 +1,5 @@
 
-#include "all-light.h"
+#include "include.h"
 
 // Access to global objects
 extern handletop Handle;

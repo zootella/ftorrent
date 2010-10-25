@@ -1,5 +1,5 @@
 
-#include "all-heavy.h"
+#include "heavy.h"
 
 // Access to global objects
 extern handletop Handle;
