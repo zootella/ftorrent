@@ -119,9 +119,12 @@ public:
 	app_font font;
 	app_window window;
 	app_area area;
+	app_option option;
 
+	CString command; // Command line arguments the system gave our main function
 	HINSTANCE instance; // Program instance handle
 	libtorrent::session *session; // Session in libtorrent
+	std::vector<Torrent> torrents; // Torrents the program has in its list
 
 	app() {
 		instance = NULL;
@@ -136,25 +139,6 @@ public:
 
 
 
-
-// Program data
-class datatop {
-public:
-
-	std::vector<Torrent> torrents;
-
-	CString command; // Command line arguments the system gave or main function
-
-
-	CString folder; // Path to folder to save files
-	bool associate; // True to associate torrent and magnet
-
-	datatop() {
-		associate = true;
-
-	}
-
-};
 
 // Current program stage
 class stageitem {
