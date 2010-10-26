@@ -2,7 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
 

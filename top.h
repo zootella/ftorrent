@@ -6,8 +6,7 @@ public:
 	int        source[ICON_CAPACITY]; // Labels the source system index of each icon in the program list
 	int        count;                 // The number of icons loaded into the program list
 
-	int clear, ascending, descending;// Resource icons in the program image list
-	//TODO add status icons here
+	int clear, ascending, descending;// Resource icons in the program image list TODO add status icons
 
 	int file; // The icon a file with no extension gets in the shell
 
@@ -16,7 +15,6 @@ public:
 	CString type;  // Its looked up type text
 
 	app_icon() {
-
 		list = NULL;
 		count = 0;
 		clear = ascending = descending = -1; // Icon index -1 for not in list
@@ -35,7 +33,7 @@ public:
 
 class app_cursor {
 public:
-	HCURSOR arrow, hand, horizontal, vertical, diagonal;// Mouse pointers
+	HCURSOR arrow, hand, horizontal, vertical, diagonal; // Mouse pointers
 
 	app_cursor() {
 		arrow = hand = horizontal = vertical = diagonal = NULL;
@@ -45,7 +43,8 @@ public:
 class app_menu {
 public:
 
-	HMENU tray, tools;// Menus
+	HMENU tray, tools; // Menus
+
 	app_menu() {
 		tray = tools = NULL;
 	}
@@ -54,43 +53,27 @@ public:
 class app_font {
 public:
 
-	HFONT normal, underline, arial;// Fonts
+	HFONT normal, underline, arial; // Fonts
+	int height; // Pixel height of the default font
+
 	app_font() {
 		normal = underline = arial = NULL;
+		height = 0; // Not yet known
 	}
 };
 
 class app_window {
 public:
 
-	HWND main, list, tabs, edit, tip;// Windows
+	HWND main, list, tabs, edit, tip; // Windows
+
 	app_window() {
 		main = list = tabs = edit = tip = NULL;
 	}
 };
 
-class app {
-public:
-
-	app_icon icon;
-	app_brush brush;
-	app_cursor cursor;
-	app_menu menu;
-	app_font font;
-	app_window window;
-
-	HINSTANCE instance; // Program instance handle
-	libtorrent::session *session;// Session in libtorrent
-
-	app() {
-		instance = NULL;
-		session = NULL;
-
-	}
-};
-
 // Areas and sizes in the main window client area
-class areatop {
+class app_area {
 public:
 
 	// The list of areas, the area the mouse pressed, and pointers to the areas
@@ -106,12 +89,8 @@ public:
 	Size collapse; // Where the corner area would be if the window were very small
 	Size stick; // The point in the pressed area where the mouse started dragging
 
-	// Sizes
-	int height; // Pixel height of the default font
-
 	// New
-	areatop() {
-
+	app_area() {
 		all         = &tools; // Link areas into a list
 		tools.next  = &start;
 		start.next  = &pause;
@@ -120,10 +99,43 @@ public:
 		remove.next = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;
-
-		height = 0; // Not yet known
 	}
 };
+
+class app_option {
+public:
+
+	app_option() {
+	}
+};
+
+class app {
+public:
+
+	app_icon icon;
+	app_brush brush;
+	app_cursor cursor;
+	app_menu menu;
+	app_font font;
+	app_window window;
+	app_area area;
+
+	HINSTANCE instance; // Program instance handle
+	libtorrent::session *session; // Session in libtorrent
+
+	app() {
+		instance = NULL;
+		session = NULL;
+	}
+};
+
+
+
+
+
+
+
+
 
 // Program data
 class datatop {

@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
 
@@ -515,10 +514,10 @@ bool MouseInside() {
 
 	// The mouse is inside if it is inside the client area and outside all the child window controls
 	return
-		client.Inside(mouse)      &&
-		!Areas.list.Inside(mouse) &&
-		!Areas.tabs.Inside(mouse) &&
-		!Areas.info.Inside(mouse);
+		client.Inside(mouse)         &&
+		!App.area.list.Inside(mouse) &&
+		!App.area.tabs.Inside(mouse) &&
+		!App.area.info.Inside(mouse);
 }
 
 // Find the area, if any, the mouse is currently positioned over, null if none
@@ -530,7 +529,7 @@ Area *MouseOver() {
 	if (!client.Inside(mouse)) return NULL; // Make sure the mouse is inside the client area
 
 	// Move down each area to find the one the mouse is over
-	Area *a = Areas.all;
+	Area *a = App.area.all;
 	while (a) {
 		if (a->size.Inside(mouse)) return a; // Found it
 		a = a->next;
