@@ -2,7 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern handletop Handle;
 extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
@@ -97,7 +96,7 @@ std::string narrowWtoS(std::wstring w) {
 libtorrent::torrent_handle FindTorrentHandle(const char *id) {
 
 	hbig hash = ParseHash(widenPtoC(id));
-	libtorrent::torrent_handle h = Handle.session->find_torrent(hash);
+	libtorrent::torrent_handle h = App.session->find_torrent(hash);
 	return h;
 }
 
@@ -178,7 +177,7 @@ void LibraryStart() {
 	try {
 
 		// Make our libtorrent session
-		Handle.session = new libtorrent::session(
+		App.session = new libtorrent::session(
 			libtorrent::fingerprint("ftorrent", 0, 1, 0, 0), // Program name and version numbers separated by commas
 			std::pair<int, int>(6881, 6999),                 // Pick a port to listen on in this range
 			"0.0.0.0",                                       // Use the default network interface
@@ -187,19 +186,19 @@ void LibraryStart() {
 
 		// Load session state from settings file
 		libtorrent::entry e;
-		if (LoadEntry(PathStore(), e)) Handle.session->load_state(e);
+		if (LoadEntry(PathStore(), e)) App.session->load_state(e);
 
 		// Tell libtorrent to use all the plugins beyond the defaults
-		Handle.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash
-		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin); // Tracker and infohash swarm joining the uTorrent way
-		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);      // Peer exchange
-		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
+		App.session->add_extension(&libtorrent::create_metadata_plugin);    // Magnet links join swarm with just tracker and infohash
+		App.session->add_extension(&libtorrent::create_ut_metadata_plugin); // Tracker and infohash swarm joining the uTorrent way
+		App.session->add_extension(&libtorrent::create_ut_pex_plugin);      // Peer exchange
+		App.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
 
 		// Start libtorrent services
-		Handle.session->start_dht();  // Distributed hash table for trackerless torrents
-		Handle.session->start_lsd();  // Local service discovery to find peers on the LAN
-		Handle.session->start_upnp(); // Universal plug-n-play and NAT-PMP to make a mapping at the router
-		Handle.session->start_natpmp();
+		App.session->start_dht();  // Distributed hash table for trackerless torrents
+		App.session->start_lsd();  // Local service discovery to find peers on the LAN
+		App.session->start_upnp(); // Universal plug-n-play and NAT-PMP to make a mapping at the router
+		App.session->start_natpmp();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -214,21 +213,21 @@ void LibraryStop() {
 	try {
 
 		// Stop libtorrent services
-		Handle.session->stop_dht();
-		Handle.session->stop_lsd();
-		Handle.session->stop_upnp();
-		Handle.session->stop_natpmp();
+		App.session->stop_dht();
+		App.session->stop_lsd();
+		App.session->stop_upnp();
+		App.session->stop_natpmp();
 
 		// Pause all the torrents and have automanage not unpause them
-		Handle.session->pause();
+		App.session->pause();
 
 		// Save all libtorrent state except for the individual torrents
 		libtorrent::entry e;
-		Handle.session->save_state(e);
+		App.session->save_state(e);
 		SaveEntry(PathStore(), e);
 
 		// Loop through each torrent handle
-		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
+		std::vector<libtorrent::torrent_handle> handles = App.session->get_torrents();
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); i++) {
 			libtorrent::torrent_handle &h = *i;
 
@@ -253,7 +252,7 @@ void LibraryStop() {
 void LibraryClose() {
 	try {
 
-		delete Handle.session; // Call the libtorrent session destructor
+		delete App.session; // Call the libtorrent session destructor
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -517,7 +516,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 		p.ti = new libtorrent::torrent_info(boost::filesystem::path(narrowRtoS(torrent))); // Uses boost intrustive pointer
 
 		// Add and save handle
-		*handle = Handle.session->add_torrent(p);
+		*handle = App.session->add_torrent(p);
 		if (!handle->is_valid()) { log(L"invalid add torrent"); return false; }
 
 		return true;
@@ -550,7 +549,7 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 		p.name = n.c_str();
 
 		// Add and save handle
-		*handle = Handle.session->add_torrent(p);
+		*handle = App.session->add_torrent(p);
 		if (!handle->is_valid()) { log(L"invalid add magnet"); return false; }
 
 		return true;
@@ -681,7 +680,7 @@ void AlertLoop() {
 	try {
 
 		// Get an alert
-		std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Move an alert from libtorrent to p
+		std::auto_ptr<libtorrent::alert> p = App.session->pop_alert(); // Move an alert from libtorrent to p
 		while (p.get()) { // If p contans an alert
 			libtorrent::alert *alert = p.get(); // Get it
 
@@ -689,7 +688,7 @@ void AlertLoop() {
 			AlertLook(alert);
 
 			// Get the next alert
-			p = Handle.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
+			p = App.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
 		}
 
 	} catch (std::exception &e) {

@@ -2,7 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern handletop Handle;
 extern areatop   Areas;
 extern datatop   Data;
 extern statetop  State;
@@ -12,15 +11,15 @@ extern statetop  State;
 void InitializeLibtorrent(settings_structure *info) {
 	try {
 
-		Handle.session = new libtorrent::session; // Make the libtorrent session object
+		App.session = new libtorrent::session; // Make the libtorrent session object
 
 		if (info) // Added this
 			UpdateSettings(info); // Update settings if a structure was given
 
-		Handle.session->add_extension(&libtorrent::create_metadata_plugin); // Tell libtorrent which plugins to use
-		Handle.session->add_extension(&libtorrent::create_ut_metadata_plugin);
-		Handle.session->add_extension(&libtorrent::create_ut_pex_plugin);
-		Handle.session->add_extension(&libtorrent::create_smart_ban_plugin);
+		App.session->add_extension(&libtorrent::create_metadata_plugin); // Tell libtorrent which plugins to use
+		App.session->add_extension(&libtorrent::create_ut_metadata_plugin);
+		App.session->add_extension(&libtorrent::create_ut_pex_plugin);
+		App.session->add_extension(&libtorrent::create_smart_ban_plugin);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -42,17 +41,17 @@ void UpdateSettings(settings_structure *info) {
 		s.active_downloads      = info->active_downloads_limit;
 		s.active_seeds          = info->active_seeds_limit;
 		s.active_limit          = info->active_limit;
-		Handle.session->set_settings(s); // Apply the settings to libtorrent
+		App.session->set_settings(s); // Apply the settings to libtorrent
 
 		// Tell libtorrent what kinds of alerts we want to find out about
-		Handle.session->set_alert_mask(info->alert_mask);
+		App.session->set_alert_mask(info->alert_mask);
 
 		// Give libtorrent connection settings
-		Handle.session->listen_on(
+		App.session->listen_on(
 			std::make_pair(info->listen_start_port, info->listen_end_port), // Port range to listen on
 			narrowRtoS(info->listen_interface).c_str());                    // Network interface to use
-		Handle.session->set_upload_rate_limit(info->max_upload_bandwidth);  // Upload and download speed limits
-		Handle.session->set_download_rate_limit(info->max_download_bandwidth);
+		App.session->set_upload_rate_limit(info->max_upload_bandwidth);     // Upload and download speed limits
+		App.session->set_download_rate_limit(info->max_download_bandwidth);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -70,10 +69,10 @@ void FreezeAndSaveAllFastResumeData() {
 		int n = 0;
 
 		// Pausing the whole session is better than pausing torrents individually
-		Handle.session->pause();
+		App.session->pause();
 
 		// Loop through all the torrent handles
-		std::vector<libtorrent::torrent_handle> handles = Handle.session->get_torrents();
+		std::vector<libtorrent::torrent_handle> handles = App.session->get_torrents();
 		for (std::vector<libtorrent::torrent_handle>::iterator i = handles.begin(); i != handles.end(); ++i) {
 			libtorrent::torrent_handle &h = *i;
 			if (!h.has_metadata()) continue; // Skip this one unless it has filename and piece hash metadata
@@ -88,11 +87,11 @@ void FreezeAndSaveAllFastResumeData() {
 		while (n > 0) {
 
 			// Wait here for an alert
-			const libtorrent::alert *alert = Handle.session->wait_for_alert(libtorrent::seconds(10)); // Wait up to 10 seconds
+			const libtorrent::alert *alert = App.session->wait_for_alert(libtorrent::seconds(10)); // Wait up to 10 seconds
 			if (alert == NULL) break; // Didn't get one, leave
 
 			// Got an alert
-			std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Tell libtorrent we've got it
+			std::auto_ptr<libtorrent::alert> p = App.session->pop_alert(); // Tell libtorrent we've got it
 			alert_structure info;
 			ProcessAlert(alert, &info); // Copy information from alert into info
 
@@ -111,8 +110,8 @@ void FreezeAndSaveAllFastResumeData() {
 void AbortTorrents() {
 	try {
 
-		if (Handle.session)
-			Handle.session->abort(); // deleted the object instead of aborting it
+		if (App.session)
+			App.session->abort(); // deleted the object instead of aborting it
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -171,7 +170,7 @@ void SaveDhtState(const wchar_t *path) {
 		boost::filesystem::ofstream f(p, std::ios_base::binary);
 		f.unsetf(std::ios_base::skipws);
 
-		libtorrent::entry e = Handle.session->dht_state(); // Get the DHT state as a bencoded object
+		libtorrent::entry e = App.session->dht_state(); // Get the DHT state as a bencoded object
 		libtorrent::bencode(std::ostream_iterator<char>(f), e); // Serialize the bencoded information to a file
 
 		// Close the file
@@ -189,7 +188,7 @@ void GetAlerts() {
 	try {
 
 		// Get an alert
-		std::auto_ptr<libtorrent::alert> p = Handle.session->pop_alert(); // Move an alert from libtorrent to p
+		std::auto_ptr<libtorrent::alert> p = App.session->pop_alert(); // Move an alert from libtorrent to p
 		while (p.get()) { // If p contans an alert
 			libtorrent::alert *alert = p.get(); // Get it
 
@@ -198,7 +197,7 @@ void GetAlerts() {
 			ProcessAlert(alert, &info);
 
 			// Get the next alert
-			p = Handle.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
+			p = App.session->pop_alert(); // Move the next alert from libtorrent to p and loop until libtorrent runs out
 		}
 
 	} catch (std::exception &e) {
@@ -320,7 +319,7 @@ void AddTorrentWrap(char *infohash, char *trackerurl, wchar_t *torrentpath, wcha
 		}
 
 		// Add the new torrent we made to our libtorrent session
-		libtorrent::torrent_handle h = Handle.session->add_torrent(p);
+		libtorrent::torrent_handle h = App.session->add_torrent(p);
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -335,7 +334,7 @@ void RemoveTorrentWrap(const char *id) {
 
 		libtorrent::torrent_handle h = FindTorrentHandle(id);
 		h.pause();
-		Handle.session->remove_torrent(h); //TODO another option here would delete the files on the disk, too
+		App.session->remove_torrent(h); //TODO another option here would delete the files on the disk, too
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -972,7 +971,7 @@ void SetFilePriorities(const char *id, int *priorities, int n) {
 void AddDhtNode(const char *address, int port) {
 	try {
 
-		Handle.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
+		App.session->add_dht_node(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -985,7 +984,7 @@ void AddDhtNode(const char *address, int port) {
 void AddDhtRouter(const char *address, int port) {
 	try {
 
-		Handle.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
+		App.session->add_dht_router(std::pair<std::string, int>(std::string(address), port));
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1021,8 +1020,8 @@ void StartDht(const wchar_t *path) {
 		}
 
 		// Start the DHT
-		if (b) Handle.session->start_dht(e); // With the file information we got
-		else   Handle.session->start_dht();  // Without any information from a previous session
+		if (b) App.session->start_dht(e); // With the file information we got
+		else   App.session->start_dht();  // Without any information from a previous session
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1035,7 +1034,7 @@ void StartDht(const wchar_t *path) {
 void StopDht() {
 	try {
 
-		Handle.session->stop_dht();
+		App.session->stop_dht();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1048,7 +1047,7 @@ void StopDht() {
 void StartLsd() {
 	try {
 
-		Handle.session->start_lsd();
+		App.session->start_lsd();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1061,7 +1060,7 @@ void StartLsd() {
 void StopLsd() {
 	try {
 
-		Handle.session->stop_lsd();
+		App.session->stop_lsd();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1074,7 +1073,7 @@ void StopLsd() {
 void StartUpnp() {
 	try {
 
-		Handle.session->start_upnp(); // Returns an object you could use
+		App.session->start_upnp(); // Returns an object you could use
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1087,7 +1086,7 @@ void StartUpnp() {
 void StopUpnp() {
 	try {
 
-		Handle.session->stop_upnp();
+		App.session->stop_upnp();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1100,7 +1099,7 @@ void StopUpnp() {
 void StartNatpmp() {
 	try {
 
-		Handle.session->start_natpmp(); // Returns an object you could use
+		App.session->start_natpmp(); // Returns an object you could use
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));
@@ -1113,7 +1112,7 @@ void StartNatpmp() {
 void StopNatpmp() {
 	try {
 
-		Handle.session->stop_natpmp();
+		App.session->stop_natpmp();
 
 	} catch (std::exception &e) {
 		log(widenPtoC(e.what()));

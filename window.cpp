@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 app App; // Create global object
 
-handletop Handle;
 areatop   Areas;
 datatop   Data;
 statetop  State;

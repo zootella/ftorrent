@@ -80,22 +80,12 @@ public:
 	app_window window;
 
 	HINSTANCE instance; // Program instance handle
+	libtorrent::session *session;// Session in libtorrent
 
 	app() {
 		instance = NULL;
-
-	}
-};
-
-// Window and drawing resource handles
-class handletop {
-public:
-
-	libtorrent::session *session;// Session in libtorrent
-
-	handletop() {
-
 		session = NULL;
+
 	}
 };
 
