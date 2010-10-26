@@ -1,8 +1,7 @@
 
-#include "include.h"
-extern app App;
+#include "include.h" // Include headers and definitions
+extern app App; // Access global object
 
-// Access to global objects
 extern handletop Handle;
 extern areatop   Areas;
 extern datatop   Data;

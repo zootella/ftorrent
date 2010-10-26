@@ -1,8 +1,7 @@
 
 #include "heavy.h"
-extern app App;
+extern app App; // Access global object
 
-// Access to global objects
 extern handletop Handle;
 extern areatop   Areas;
 extern datatop   Data;

@@ -1,12 +1,11 @@
 
-#include "include.h"
-app App;
+#include "include.h" // Include headers and definitions
+app App; // Create global object
 
-// Global objects
-handletop Handle; // Window handles
-areatop   Areas;   // Button and drag areas
-datatop   Data;   // Linked data items
-statetop  State;  // State variables
+handletop Handle;
+areatop   Areas;
+datatop   Data;
+statetop  State;
 
 // Start the program
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
