@@ -472,7 +472,7 @@ void AddRow(hbig hash) {
 
 	// Make a new row for it at the bottom of the list view
 	ListAdd(
-		Handle.list,
+		App.window.list,
 		5,
 		(LPARAM)t->Hash(),
 		t->ComposeStatusIcon(),

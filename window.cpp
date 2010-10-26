@@ -66,10 +66,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.lpszMenuName  = NULL;                       // No menu
 	info.lpszClassName = name;                       // Window class name
 	if (!RegisterClassEx(&info)) error(L"registerclassex");
-	App.window = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	App.window.main = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Add Exit to the main window's system menu
-	HMENU menu = GetSystemMenu(App.window, false); // Get the menu for editing
+	HMENU menu = GetSystemMenu(App.window.main, false); // Get the menu for editing
 	if (!menu) error(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
@@ -81,16 +81,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
 		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
 		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
-	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window, (HMENU)WINDOW_LIST);
+	App.window.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
 
 	// Use the program image list
-	ListView_SetImageList(Handle.list, App.icon.list, LVSIL_SMALL);
+	ListView_SetImageList(App.window.list, App.icon.list, LVSIL_SMALL);
 
 	// Load extended list view styles, requires common control 4.70
 	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
 		LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
 		LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
-	ListView_SetExtendedListViewStyle(Handle.list, style);
+	ListView_SetExtendedListViewStyle(App.window.list, style);
 
 	// Determine how wide the columns should be
 	std::vector<int> widths;
@@ -102,49 +102,49 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	widths = SizeColumns(widths);
 
 	// Add the first column, which won't be able to show its icon on the right
-	ListColumnInsert(Handle.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
+	ListColumnInsert(App.window.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
 
 	// Add the columns
-	ListColumnInsert(Handle.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
-	ListColumnInsert(Handle.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
-	ListColumnInsert(Handle.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
-	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
-	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
+	ListColumnInsert(App.window.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
+	ListColumnInsert(App.window.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
+	ListColumnInsert(App.window.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
+	ListColumnInsert(App.window.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
+	ListColumnInsert(App.window.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
 
 	// Remove the first column so all the remaining columns can show their icons on the right
-	ListColumnDelete(Handle.list, 0);
+	ListColumnDelete(App.window.list, 0);
 
 	// Create the tabs window
 	style = WS_CHILD;            // Required for child windows
-	Handle.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, App.window, (HMENU)WINDOW_TABS);
+	App.window.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, App.window.main, (HMENU)WINDOW_TABS);
 	SendMessage(                 // Have it use Tahoma, not the default system font
-		(HWND)Handle.tabs,       // Send the message to this window
+		(HWND)App.window.tabs,   // Send the message to this window
 		WM_SETFONT,              // Message to send
 		(WPARAM)App.font.normal, // Handle to font
 		0);                      // Don't tell the control to immediately redraw itself
 
 	// Add the tabs
-	AddTab(Handle.tabs, 0, L"Torrent");
-	AddTab(Handle.tabs, 1, L"Trackers");
-	AddTab(Handle.tabs, 2, L"Peers");
-	AddTab(Handle.tabs, 3, L"Pieces");
-	AddTab(Handle.tabs, 4, L"Files");
-	AddTab(Handle.tabs, 5, L"Speed");
-	AddTab(Handle.tabs, 6, L"Log");
+	AddTab(App.window.tabs, 0, L"Torrent");
+	AddTab(App.window.tabs, 1, L"Trackers");
+	AddTab(App.window.tabs, 2, L"Peers");
+	AddTab(App.window.tabs, 3, L"Pieces");
+	AddTab(App.window.tabs, 4, L"Files");
+	AddTab(App.window.tabs, 5, L"Speed");
+	AddTab(App.window.tabs, 6, L"Log");
 
 	// Make child windows and menus
-	Handle.edit = WindowCreateEdit(true,  true);
-	WindowEdit(Handle.edit, true);
+	App.window.edit = WindowCreateEdit(true,  true);
+	WindowEdit(App.window.edit, true);
 
 	// Create the tooltip window
 	style =
 		WS_POPUP |     // Popup window instead of a child window
 		TTS_ALWAYSTIP; // Show the tooltip even if the window is inactive
-	Handle.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, App.window, NULL);
+	App.window.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, App.window.main, NULL);
 
 	// Make the tooltip topmost
 	int result = SetWindowPos(
-		Handle.tip,      // Handle to window
+		App.window.tip,  // Handle to window
 		HWND_TOPMOST,    // Place the window above others without this setting
 		0, 0, 0, 0,      // Retain the current position and size
 		SWP_NOMOVE |
@@ -157,15 +157,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	AreaPulse(); // Choose the program stage and set the display state of each area
 
 	// Lower the window
-	Size size = SizeWindow(App.window);
+	Size size = SizeWindow(App.window.main);
 	size.ShiftTop((size.h * 1) / 4);
-	WindowMove(App.window, size, false);
+	WindowMove(App.window.main, size, false);
 
 	// Show the child windows and then the main window
-	ShowWindow(Handle.list, SW_SHOWNORMAL);
-	ShowWindow(Handle.tabs, SW_SHOWNORMAL);
-	ShowWindow(Handle.edit, SW_SHOWNORMAL);
-	ShowWindow(App.window,  SW_SHOWNORMAL); // Calling this causes a paint message right now
+	ShowWindow(App.window.list, SW_SHOWNORMAL);
+	ShowWindow(App.window.tabs, SW_SHOWNORMAL);
+	ShowWindow(App.window.edit, SW_SHOWNORMAL);
+	ShowWindow(App.window.main,  SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
 	// Make sure we can edit files next to this running exe
@@ -229,8 +229,8 @@ void WindowPulse() {
 // Hide the window stop libtorrent
 void WindowExit() {
 
-	ShowWindow(App.window, SW_HIDE); // Hide the window
-	TaskbarIconRemove();             // Remove the taskbar icon if we have one
+	ShowWindow(App.window.main, SW_HIDE); // Hide the window
+	TaskbarIconRemove();                  // Remove the taskbar icon if we have one
 
 	State.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
 	LibraryStop();               // Ask libtorrent to prepare save data for each torrent
@@ -306,7 +306,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_CAPTURECHANGED:
 
 		// The program has lost the mouse capture, mark no area pressed
-		if (App.window != (HWND)lparam) Areas.pressed = NULL;
+		if (App.window.main != (HWND)lparam) Areas.pressed = NULL;
 
 	// Another window is copying data to this one
 	break;
@@ -332,7 +332,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		case SC_CLOSE:
 
 			// Hide the window and add the taskbar notification icon
-			ShowWindow(App.window, SW_HIDE);
+			ShowWindow(App.window.main, SW_HIDE);
 			TaskbarIconAdd();
 
 			// Prevent the program from closing
@@ -359,8 +359,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 
 			// Restore from the taskbar
 			TaskbarIconRemove();
-			ShowWindow(App.window, SW_SHOW);
-			if (IsIconic(App.window)) ShowWindow(App.window, SW_RESTORE);
+			ShowWindow(App.window.main, SW_SHOW);
+			if (IsIconic(App.window.main)) ShowWindow(App.window.main, SW_RESTORE);
 
 		// The secondary mouse button has clicked up on our icon
 		break;
@@ -392,8 +392,8 @@ void MenuTaskbar() {
 
 		// Restore from taskbar
 		TaskbarIconRemove();
-		ShowWindow(App.window, SW_SHOW);
-		if (IsIconic(App.window)) ShowWindow(App.window, SW_RESTORE);
+		ShowWindow(App.window.main, SW_SHOW);
+		if (IsIconic(App.window.main)) ShowWindow(App.window.main, SW_RESTORE);
 
 	// Exit
 	break;

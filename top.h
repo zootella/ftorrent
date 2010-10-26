@@ -1,27 +1,21 @@
 
-// Program icon image list
-class appIcon {
+class app_icon {
 public:
 
-	// Image list
 	HIMAGELIST list;                  // Handle the the program image list
 	int        source[ICON_CAPACITY]; // Labels the source system index of each icon in the program list
 	int        count;                 // The number of icons loaded into the program list
 
-	// Resource icons in the program image list
-	int clear, ascending, descending;
+	int clear, ascending, descending;// Resource icons in the program image list
 	//TODO add status icons here
 
-	// Shell icons in the program image list
 	int file; // The icon a file with no extension gets in the shell
 
-	// The most recently requested extension and its matching program index and type text
-	CString ext;
-	int     index;
-	CString type;
+	CString ext;   // The most recently requested extension we looked up
+	int     index; // Its looked up index
+	CString type;  // Its looked up type text
 
-	// New
-	appIcon() {
+	app_icon() {
 
 		list = NULL;
 		count = 0;
@@ -31,7 +25,7 @@ public:
 	}
 };
 
-class appBrush {
+class app_brush {
 public:
 
 	Brush blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, yellownotice, greennotice; // Defined colors
@@ -39,48 +33,56 @@ public:
 	Brush line; // Mixed color brush
 };
 
-class appCursor {
+class app_cursor {
 public:
 	HCURSOR arrow, hand, horizontal, vertical, diagonal;// Mouse pointers
 
-	appCursor() {
+	app_cursor() {
 		arrow = hand = horizontal = vertical = diagonal = NULL;
 	}
 };
 
-class appMenu {
+class app_menu {
 public:
 
 	HMENU tray, tools;// Menus
-	appMenu() {
+	app_menu() {
 		tray = tools = NULL;
 	}
 };
 
-class appFont {
+class app_font {
 public:
 
 	HFONT normal, underline, arial;// Fonts
-	appFont() {
+	app_font() {
 		normal = underline = arial = NULL;
+	}
+};
+
+class app_window {
+public:
+
+	HWND main, list, tabs, edit, tip;// Windows
+	app_window() {
+		main = list = tabs = edit = tip = NULL;
 	}
 };
 
 class app {
 public:
 
-	appIcon icon;
-	appBrush brush;
-	appCursor cursor;
-	appMenu menu;
-	appFont font;
+	app_icon icon;
+	app_brush brush;
+	app_cursor cursor;
+	app_menu menu;
+	app_font font;
+	app_window window;
 
 	HINSTANCE instance; // Program instance handle
-	HWND window; // Main window
 
 	app() {
 		instance = NULL;
-		window = NULL;
 
 	}
 };
@@ -89,12 +91,10 @@ public:
 class handletop {
 public:
 
-	HWND list, tabs, edit, tip;// Windows
 	libtorrent::session *session;// Session in libtorrent
 
 	handletop() {
 
-		list = tabs = edit = tip = NULL;
 		session = NULL;
 	}
 };

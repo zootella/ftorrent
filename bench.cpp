@@ -77,7 +77,7 @@ void Torrent::Edit() {
 
 	// Update the cells that have different text
 	ListEdit(
-		Handle.list,
+		App.window.list,
 		5,
 		(LPARAM)Hash(),
 		ComposeStatusIcon(),

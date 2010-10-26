@@ -284,7 +284,7 @@ void AreaPulse() {
 		State.stage = stage; // Save the new stage
 
 		// Update the display
-		SetIcon(App.window, State.stage->icon16, State.stage->icon32); // Window icon
+		SetIcon(App.window.main, State.stage->icon16, State.stage->icon32); // Window icon
 		TaskbarIconUpdate(); // Taskbar notification area icon
 		PaintMessage(); // Repaint the window now to show the new stage title
 	}
@@ -380,7 +380,7 @@ void AreaPulse() {
 			// Get the window device context if we don't already have it and paint the area
 			if (device.open == DeviceNone) {
 
-				device.OpenGet(App.window);
+				device.OpenGet(App.window.main);
 				device.Font(App.font.normal);
 				device.BackgroundColor(App.brush.background.color);
 			}
@@ -422,7 +422,7 @@ void AreaPulse() {
 			if (mouse.y < min.y) move.y = min.y - stick.y;
 
 			// Diagonal size corner
-			WindowSize(App.window, move.x, move.y);
+			WindowSize(App.window.main, move.x, move.y);
 		}
 	}
 
@@ -462,7 +462,7 @@ void AreaPulse() {
 			// Get the window device context if we don't have it already
 			if (device.open == DeviceNone) {
 
-				device.OpenGet(App.window);
+				device.OpenGet(App.window.main);
 				device.Font(App.font.normal);
 				device.BackgroundColor(App.brush.background.color);
 			}
@@ -615,15 +615,15 @@ void Layout(int move) {
 	Areas.status.y = Areas.corner.size.y; // Status
 	Areas.status.w = Greatest(0, client.w - status);
 	Areas.status.h = status;
-	if (IsZoomed(App.window)) { // If the window is maximized, make status the entire row and hide the size corner
+	if (IsZoomed(App.window.main)) { // If the window is maximized, make status the entire row and hide the size corner
 		Areas.status.w = client.w;
 		Areas.corner.size.CloseRight();
 	}
 
 	// Position and resize child window controls without sending paint messages
-	WindowMove(Handle.list, Areas.list);
-	WindowMove(Handle.tabs, Areas.tabs);
-	WindowMove(Handle.edit, Areas.info);
+	WindowMove(App.window.list, Areas.list);
+	WindowMove(App.window.tabs, Areas.tabs);
+	WindowMove(App.window.edit, Areas.info);
 
 	// The first time this runs, assign the tooltip regions
 	if (!before.Is()) {
@@ -717,7 +717,7 @@ void Message(read r) {
 
 	// Show the message box with the mouse away
 	AreaPopUp();
-	MessageBox(App.window, r, PROGRAM_NAME, MB_ICONWARNING | MB_OK);
+	MessageBox(App.window.main, r, PROGRAM_NAME, MB_ICONWARNING | MB_OK);
 	AreaPopDown();
 }
 
@@ -780,7 +780,7 @@ void DialogOptions() {
 	ZeroMemory(&header, sizeof(header));
 	header.dwSize      = sizeof(header);          // Size of the header
 	header.dwFlags     = PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP; // Leave out the apply button and the help question mark
-	header.hwndParent  = App.window;              // Handle to parent window
+	header.hwndParent  = App.window.main;         // Handle to parent window
 	header.hInstance   = App.instance;            // Handle to application instance
 	header.hIcon       = NULL;                    // No icon
 	header.pszCaption  = L"Options";              // Text in the title bar

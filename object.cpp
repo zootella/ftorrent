@@ -13,7 +13,7 @@ extern statetop  State;
 void Size::Screen(HWND window) {
 
 	// Choose window
-	if (!window) window = App.window;
+	if (!window) window = App.window.main;
 
 	// Make a point with the x and y coordinates of this size
 	POINT p = Point();
@@ -33,7 +33,7 @@ void Size::Screen(HWND window) {
 void Size::Client(HWND window) {
 
 	// Choose window
-	if (!window) window = App.window;
+	if (!window) window = App.window.main;
 
 	// Make a point with the x and y coordinates of this size
 	POINT p = Point();

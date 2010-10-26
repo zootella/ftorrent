@@ -31,7 +31,7 @@ void log(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8,
 // Show a message to the user
 void report(read r) {
 
-	if (PROGRAM_TEST) MessageBox(App.window, r, PROGRAM_NAME, MB_OK);
+	if (PROGRAM_TEST) MessageBox(App.window.main, r, PROGRAM_NAME, MB_OK);
 }
 
 // Given access to a handle, close it and make it null
@@ -149,7 +149,7 @@ HWND WindowCreateEdit(bool scrollbars, bool capacity) {
 		ES_AUTOHSCROLL | ES_AUTOVSCROLL; // Scroll when the user enters text
 
 	// Create the edit window
-	HWND window = WindowCreate(L"EDIT", NULL, style, 0, App.window, NULL);
+	HWND window = WindowCreate(L"EDIT", NULL, style, 0, App.window.main, NULL);
 
 	// Have it use Tahoma, not the default system font
 	SendMessage( 
@@ -174,7 +174,7 @@ HWND WindowCreateButton(read r) {
 		BS_PUSHBUTTON; // Have the button send the window a message when the user clicks it
 
 	// Create the edit window
-	HWND window = WindowCreate(L"BUTTON", NULL, style, 0, App.window, NULL);
+	HWND window = WindowCreate(L"BUTTON", NULL, style, 0, App.window.main, NULL);
 
 	// Title it
 	TextWindowSet(window, r);
@@ -299,7 +299,7 @@ Brush CreateBrush(COLORREF color) {
 void PaintMessage(HWND window) {
 
 	// Choose window
-	if (!window) window = App.window;
+	if (!window) window = App.window.main;
 
 	// Mark the client area of the main window as necessary to draw
 	int result = InvalidateRect(
@@ -323,7 +323,7 @@ void TaskbarIconAdd() {
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize           = sizeof(info);                     // Size of this structure
-	info.hWnd             = App.window;                       // Handle to the window that will receive messages
+	info.hWnd             = App.window.main;                  // Handle to the window that will receive messages
 	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
@@ -342,11 +342,11 @@ void TaskbarIconUpdate() {
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
-	info.cbSize           = sizeof(info);  // Size of this structure
-	info.hWnd             = App.window;    // Handle to the window that will receive messages
-	info.uID              = TASKBAR_ICON;  // Program defined identifier
-	info.uFlags           = NIF_ICON;      // Mask for icon only
-	info.hIcon            = State.taskbar; // Icon handle
+	info.cbSize           = sizeof(info);    // Size of this structure
+	info.hWnd             = App.window.main; // Handle to the window that will receive messages
+	info.uID              = TASKBAR_ICON;    // Program defined identifier
+	info.uFlags           = NIF_ICON;        // Mask for icon only
+	info.hIcon            = State.taskbar;   // Icon handle
 	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) error(L"shell_notifyicon nim_modify");
 }
 
@@ -359,9 +359,9 @@ void TaskbarIconRemove() {
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
-	info.cbSize = sizeof(info);  // Size of this structure
-	info.hWnd   = App.window;    // Handle to the window that will receive messages
-	info.uID    = TASKBAR_ICON;  // Program defined identifier
+	info.cbSize = sizeof(info);    // Size of this structure
+	info.hWnd   = App.window.main; // Handle to the window that will receive messages
+	info.uID    = TASKBAR_ICON;    // Program defined identifier
 	if (!Shell_NotifyIcon(NIM_DELETE, &info)) error(L"shell_notifyicon nim_delete");
 }
 
@@ -452,7 +452,7 @@ UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 	}
 
 	// Context menu for notification icon
-	if (taskbar) SetForegroundWindow(App.window);
+	if (taskbar) SetForegroundWindow(App.window.main);
 
 	// Show the context menu and hold execution here until the user chooses from the menu or cancels it
 	AreaPopUp();
@@ -464,12 +464,12 @@ UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 		position.x,      // Desired menu position in screen coordinates
 		position.y,
 		0,
-		App.window,
+		App.window.main,
 		NULL);
 	AreaPopDown();
 
 	// Context menu for notification icon
-	if (taskbar) PostMessage(App.window, WM_NULL, 0, 0);
+	if (taskbar) PostMessage(App.window.main, WM_NULL, 0, 0);
 
 	// Return the user's choice, 0 they clicked outside the menu
 	return choice;
@@ -484,26 +484,26 @@ void TipAdd(Size size, read r) {
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize      = sizeof(info);     // Size of this structure
 	info.uFlags      = TTF_SUBCLASS;     // Have the tooltip control get messages from the tool window
-	info.hwnd        = App.window;       // Handle to the window that contains the tool region
+	info.hwnd        = App.window.main;  // Handle to the window that contains the tool region
 	info.uId         = 0;                // Tool identifying number
 	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
 	info.hinst       = NULL;             // Only used when text is loaded from a resource
 	info.lpszText    = (LPWSTR)r;        // Text
 	info.lParam      = 0;                // No additional value assigned to tool
-	if (!SendMessage(Handle.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) error(L"sendmessage ttm_addtool");
+	if (!SendMessage(App.window.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) error(L"sendmessage ttm_addtool");
 }
 
 // Have window capture the mouse if it doesn't have it already, null to use the main window
 void MouseCapture(HWND window) {
 
-	if (!window) window = App.window; // Use the main window if the caller didn't specify one
+	if (!window) window = App.window.main; // Use the main window if the caller didn't specify one
 	if (GetCapture() != window) SetCapture(window); // If that window doesn't already have the mouse, capture it
 }
 
 // Have window release its capture of the mouse if it has it, null to use the main window
 void MouseRelease(HWND window) {
 
-	if (!window) window = App.window; // Pick the main window if the caller didn't specify one
+	if (!window) window = App.window.main; // Pick the main window if the caller didn't specify one
 	if (GetCapture() == window) ReleaseCapture(); // Only release it if window has it
 }
 
@@ -553,7 +553,7 @@ Size MouseArea(Area *a) {
 // Returns x and y coordinates in a size
 Size MouseClient(HWND window) {
 
-	if (!window) window = App.window; // Choose window
+	if (!window) window = App.window.main; // Choose window
 	Size s = MouseScreen(); // Get the mouse pointer position in screen coordinates
 	s.Client(window); // Convert the position to the client coordinates of the given window
 	return s;
@@ -634,7 +634,7 @@ COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 Size SizeClient(HWND window) {
 
 	// Pick main window if none given
-	if (!window) window = App.window;
+	if (!window) window = App.window.main;
 
 	// Find the width and height of the client area
 	Size size;
@@ -648,7 +648,7 @@ Size SizeClient(HWND window) {
 Size SizeWindow(HWND window) {
 
 	// Pick main window if none given
-	if (!window) window = App.window;
+	if (!window) window = App.window.main;
 
 	// Find the width and height of the client area
 	Size size;
@@ -860,7 +860,7 @@ void InitializeCommonControls() {
 // Kills the timer
 void KillTimerSafely(UINT_PTR timer, HWND window) {
 
-	if (!window) window = App.window; // Choose window
+	if (!window) window = App.window.main; // Choose window
 	if (!KillTimer(window, timer)) error(L"killtimer"); // Kill the timer
 }
 
@@ -868,7 +868,7 @@ void KillTimerSafely(UINT_PTR timer, HWND window) {
 // Sets the timer
 void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 
-	if (!window) window = App.window; // Choose window
+	if (!window) window = App.window.main; // Choose window
 	if (!SetTimer(window, timer, time, NULL)) error(L"settimer"); // Set the timer
 }
 
@@ -878,12 +878,12 @@ void FileRun(read path, read parameters) {
 
 	// Shell execute the given text
 	ShellExecute(
-		App.window,     // Handle to a window to get message boxes from this operation
-		NULL,           // Default run
-		path,           // File to run
-		parameters,     // Parameters ot pass to program
-		L"C:\\",        // Starting directory
-		SW_SHOWNORMAL); // Default show
+		App.window.main, // Handle to a window to get message boxes from this operation
+		NULL,            // Default run
+		path,            // File to run
+		parameters,      // Parameters ot pass to program
+		L"C:\\",         // Starting directory
+		SW_SHOWNORMAL);  // Default show
 }
 
 
@@ -898,8 +898,8 @@ int Dialog(read resource, DLGPROC procedure, LPARAM lparam) {
 	// Show the dialog box, sending messages to its procedure and returning here when it is closed
 	int result;
 	AreaPopUp();
-	if (lparam) result = (int)DialogBoxParam(App.instance, resource, App.window, procedure, lparam);
-    else result = (int)DialogBox(App.instance, resource, App.window, procedure);
+	if (lparam) result = (int)DialogBoxParam(App.instance, resource, App.window.main, procedure, lparam);
+    else result = (int)DialogBox(App.instance, resource, App.window.main, procedure);
 	AreaPopDown();
 	return result;
 }
@@ -1573,7 +1573,7 @@ CString PathShell(int id) {
 	CString path;        // String to return with path or blank on error
 
 	if (!SHGetMalloc(&memory)) {
-		if (!SHGetSpecialFolderLocation(App.window, id, &list)) {
+		if (!SHGetSpecialFolderLocation(App.window.main, id, &list)) {
 			if (SHGetPathFromIDList(list, bay)) {
 
 				path = bay; // Everything worked, copy the bay into a string
@@ -1597,7 +1597,7 @@ CString DialogBrowse(read message) {
 	WCHAR name[MAX_PATH];
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
-	info.hwndOwner      = App.window;               // Parent window for the dialog
+	info.hwndOwner      = App.window.main;          // Parent window for the dialog
 	info.pidlRoot       = NULL;                     // Browse from the desktop
 	info.pszDisplayName = name;                     // Destination buffer
 	info.lpszTitle      = message;                  // Text to show the user in the box
@@ -1628,18 +1628,18 @@ CString DialogOpen() {
 	// Show the user the dialog box
 	OPENFILENAME info;
 	ZeroMemory(&info, sizeof(info));
-	info.lStructSize = sizeof(info);  // Size of this structure to tell it what version we're using
-	info.hwndOwner   = App.window;    // Main window handle to show the box above it
-	info.hInstance   = NULL;          // Not using a template handle
-	info.lpstrFilter = filter;        // File type text pairs terminated by two wide nulls
-	info.lpstrFile   = path;          // Destination buffer and size in characters
+	info.lStructSize = sizeof(info);    // Size of this structure to tell it what version we're using
+	info.hwndOwner   = App.window.main; // Main window handle to show the box above it
+	info.hInstance   = NULL;            // Not using a template handle
+	info.lpstrFilter = filter;          // File type text pairs terminated by two wide nulls
+	info.lpstrFile   = path;            // Destination buffer and size in characters
 	info.nMaxFile    = MAX_PATH;
 	info.Flags       =
-		OFN_DONTADDTORECENT |         // Don't add this document to the system's recently opened documents menu
-		OFN_FILEMUSTEXIST   |         // Only let the user open files that exist, not type a new path
+		OFN_DONTADDTORECENT |           // Don't add this document to the system's recently opened documents menu
+		OFN_FILEMUSTEXIST   |           // Only let the user open files that exist, not type a new path
 		OFN_PATHMUSTEXIST   |
-		OFN_HIDEREADONLY;             // Hide the read only checkbox
-	info.lpstrDefExt = extension;     // File extension to add if the user doesn't type one
+		OFN_HIDEREADONLY;               // Hide the read only checkbox
+	info.lpstrDefExt = extension;       // File extension to add if the user doesn't type one
 	int result = GetOpenFileName(&info);
 	if (!result) return L""; // The user canceled the box
 	return path;
@@ -1660,7 +1660,7 @@ CString DialogSave(read suggest) {
 	OPENFILENAME info;
 	ZeroMemory(&info, sizeof(info));
 	info.lStructSize = sizeof(info);        // Size of this structure to tell it what version we're using
-	info.hwndOwner   = App.window;          // Main window handle to show the box above it
+	info.hwndOwner   = App.window.main;     // Main window handle to show the box above it
 	info.lpstrFilter = filter;              // File type text pairs terminated by two wide nulls
 	info.lpstrFile   = path;                // Destination buffer and size in characters
 	info.nMaxFile    = MAX_PATH;
