@@ -11,7 +11,7 @@ statetop  State;
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
 
 	// Save the given instance handle and command text
-	Handle.instance = instance;
+	App.instance = instance;
 	State.command = widenPtoC(command);
 
 	// Look for the portable marker
@@ -25,29 +25,29 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	Handle.tray = MenuClip(menus, 0);
-	Handle.menu = MenuClip(menus, 1);
-	if (!PROGRAM_TEST && !DeleteMenu(Handle.menu, ID_TOOLS_TEST, 0)) error(L"deletemenu"); // Remove the test menu item
+	App.menu.tray  = MenuClip(menus, 0);
+	App.menu.tools = MenuClip(menus, 1);
+	if (!PROGRAM_TEST && !DeleteMenu(App.menu.tools, ID_TOOLS_TEST, 0)) error(L"deletemenu"); // Remove the test menu item
 
 	// Load cursors
-	Handle.arrow      = LoadSharedCursor(IDC_ARROW);
-	Handle.hand       = LoadSharedCursor(IDC_HAND);
-	Handle.horizontal = LoadSharedCursor(IDC_SIZEWE);
-	Handle.vertical   = LoadSharedCursor(IDC_SIZENS);
-	Handle.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
+	App.cursor.arrow      = LoadSharedCursor(IDC_ARROW);
+	App.cursor.hand       = LoadSharedCursor(IDC_HAND);
+	App.cursor.horizontal = LoadSharedCursor(IDC_SIZEWE);
+	App.cursor.vertical   = LoadSharedCursor(IDC_SIZENS);
+	App.cursor.diagonal   = LoadSharedCursor(IDC_SIZENWSE);
 
 	// Make brushes
-	Handle.face       = BrushSystem(COLOR_3DFACE); // Shared handles to system brushes
-	Handle.shadow     = BrushSystem(COLOR_3DSHADOW);
-	Handle.background = BrushSystem(COLOR_WINDOW);
-	Handle.ink        = BrushSystem(COLOR_WINDOWTEXT);
-	Handle.select     = BrushSystem(COLOR_HIGHLIGHT);
-	Handle.line       = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
+	App.brush.face       = BrushSystem(COLOR_3DFACE); // Shared handles to system brushes
+	App.brush.shadow     = BrushSystem(COLOR_3DSHADOW);
+	App.brush.background = BrushSystem(COLOR_WINDOW);
+	App.brush.ink        = BrushSystem(COLOR_WINDOWTEXT);
+	App.brush.select     = BrushSystem(COLOR_HIGHLIGHT);
+	App.brush.line       = CreateBrush(ColorMix(GetSysColor(COLOR_3DFACE), 1, GetSysColor(COLOR_3DSHADOW), 1)); // Mix
 
 	// Make fonts
-	Handle.font      = FontMenu(false);
-	Handle.underline = FontMenu(true);
-	Handle.arial     = FontName(L"Arial", 28);
+	App.font.normal    = FontMenu(false);
+	App.font.underline = FontMenu(true);
+	App.font.arial     = FontName(L"Arial", 28);
 
 	// Register the class for the main window, and create it
 	CString name = PROGRAM_NAME + L"ClassName"; // Compose a unique window class name
@@ -58,7 +58,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.lpfnWndProc   = WindowProcedure;            // Function pointer to the window procedure
 	info.cbClsExtra    = 0;                          // No extra bytes
 	info.cbWndExtra    = 0;
-	info.hInstance     = Handle.instance;            // Instance handle
+	info.hInstance     = App.instance;               // Instance handle
 	info.hIcon         = NULL;                       // No icons yet
 	info.hIconSm       = NULL;
 	info.hCursor       = NULL;                       // Mouse cursor changes
@@ -66,10 +66,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.lpszMenuName  = NULL;                       // No menu
 	info.lpszClassName = name;                       // Window class name
 	if (!RegisterClassEx(&info)) error(L"registerclassex");
-	Handle.window = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
+	App.window = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Add Exit to the main window's system menu
-	HMENU menu = GetSystemMenu(Handle.window, false); // Get the menu for editing
+	HMENU menu = GetSystemMenu(App.window, false); // Get the menu for editing
 	if (!menu) error(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
@@ -81,10 +81,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
 		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
 		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
-	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, Handle.window, (HMENU)WINDOW_LIST);
+	Handle.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window, (HMENU)WINDOW_LIST);
 
 	// Use the program image list
-	ListView_SetImageList(Handle.list, Handle.icon.list, LVSIL_SMALL);
+	ListView_SetImageList(Handle.list, App.icon.list, LVSIL_SMALL);
 
 	// Load extended list view styles, requires common control 4.70
 	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
@@ -102,26 +102,26 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	widths = SizeColumns(widths);
 
 	// Add the first column, which won't be able to show its icon on the right
-	ListColumnInsert(Handle.list, 0, LVCFMT_LEFT, Handle.icon.clear, L"", 0);
+	ListColumnInsert(Handle.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
 
 	// Add the columns
-	ListColumnInsert(Handle.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Status",   widths[0]);
-	ListColumnInsert(Handle.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Name",     widths[1]);
-	ListColumnInsert(Handle.list, 3, LVCFMT_RIGHT,                         Handle.icon.clear, L"Size",     widths[2]);
-	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Infohash", widths[3]);
-	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, Handle.icon.clear, L"Location", widths[4]);
+	ListColumnInsert(Handle.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
+	ListColumnInsert(Handle.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
+	ListColumnInsert(Handle.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
+	ListColumnInsert(Handle.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
+	ListColumnInsert(Handle.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
 
 	// Remove the first column so all the remaining columns can show their icons on the right
 	ListColumnDelete(Handle.list, 0);
 
 	// Create the tabs window
-	style = WS_CHILD;        // Required for child windows
-	Handle.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, Handle.window, (HMENU)WINDOW_TABS);
-	SendMessage(             // Have it use Tahoma, not the default system font
-		(HWND)Handle.tabs,   // Send the message to this window
-		WM_SETFONT,          // Message to send
-		(WPARAM)Handle.font, // Handle to font
-		0);                  // Don't tell the control to immediately redraw itself
+	style = WS_CHILD;            // Required for child windows
+	Handle.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, App.window, (HMENU)WINDOW_TABS);
+	SendMessage(                 // Have it use Tahoma, not the default system font
+		(HWND)Handle.tabs,       // Send the message to this window
+		WM_SETFONT,              // Message to send
+		(WPARAM)App.font.normal, // Handle to font
+		0);                      // Don't tell the control to immediately redraw itself
 
 	// Add the tabs
 	AddTab(Handle.tabs, 0, L"Torrent");
@@ -140,7 +140,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	style =
 		WS_POPUP |     // Popup window instead of a child window
 		TTS_ALWAYSTIP; // Show the tooltip even if the window is inactive
-	Handle.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, Handle.window, NULL);
+	Handle.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, App.window, NULL);
 
 	// Make the tooltip topmost
 	int result = SetWindowPos(
@@ -157,15 +157,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	AreaPulse(); // Choose the program stage and set the display state of each area
 
 	// Lower the window
-	Size size = SizeWindow(Handle.window);
+	Size size = SizeWindow(App.window);
 	size.ShiftTop((size.h * 1) / 4);
-	WindowMove(Handle.window, size, false);
+	WindowMove(App.window, size, false);
 
 	// Show the child windows and then the main window
-	ShowWindow(Handle.list,   SW_SHOWNORMAL);
-	ShowWindow(Handle.tabs,   SW_SHOWNORMAL);
-	ShowWindow(Handle.edit,   SW_SHOWNORMAL);
-	ShowWindow(Handle.window, SW_SHOWNORMAL); // Calling this causes a paint message right now
+	ShowWindow(Handle.list, SW_SHOWNORMAL);
+	ShowWindow(Handle.tabs, SW_SHOWNORMAL);
+	ShowWindow(Handle.edit, SW_SHOWNORMAL);
+	ShowWindow(App.window,  SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
 	// Make sure we can edit files next to this running exe
@@ -229,8 +229,8 @@ void WindowPulse() {
 // Hide the window stop libtorrent
 void WindowExit() {
 
-	ShowWindow(Handle.window, SW_HIDE); // Hide the window
-	TaskbarIconRemove();                // Remove the taskbar icon if we have one
+	ShowWindow(App.window, SW_HIDE); // Hide the window
+	TaskbarIconRemove();             // Remove the taskbar icon if we have one
 
 	State.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
 	LibraryStop();               // Ask libtorrent to prepare save data for each torrent
@@ -255,8 +255,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		// Paint the window
 		Device device;
 		device.OpenPaint(window);
-		device.Font(Handle.font); // Replace the Windows 3.1 font with something more modern
-		device.BackgroundColor(Handle.background.color);
+		device.Font(App.font.normal); // Replace the Windows 3.1 font with something more modern
+		device.BackgroundColor(App.brush.background.color);
 		PaintWindow(&device);
 		return 0;
 	}
@@ -306,7 +306,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 	case WM_CAPTURECHANGED:
 
 		// The program has lost the mouse capture, mark no area pressed
-		if (Handle.window != (HWND)lparam) Areas.pressed = NULL;
+		if (App.window != (HWND)lparam) Areas.pressed = NULL;
 
 	// Another window is copying data to this one
 	break;
@@ -332,7 +332,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		case SC_CLOSE:
 
 			// Hide the window and add the taskbar notification icon
-			ShowWindow(Handle.window, SW_HIDE);
+			ShowWindow(App.window, SW_HIDE);
 			TaskbarIconAdd();
 
 			// Prevent the program from closing
@@ -359,8 +359,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 
 			// Restore from the taskbar
 			TaskbarIconRemove();
-			ShowWindow(Handle.window, SW_SHOW);
-			if (IsIconic(Handle.window)) ShowWindow(Handle.window, SW_RESTORE);
+			ShowWindow(App.window, SW_SHOW);
+			if (IsIconic(App.window)) ShowWindow(App.window, SW_RESTORE);
 
 		// The secondary mouse button has clicked up on our icon
 		break;
@@ -383,8 +383,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
-	MenuSet(Handle.tray, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-	UINT choice = MenuShow(Handle.tray, true, NULL); // Wait here while the menu is up
+	MenuSet(App.menu.tray, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	UINT choice = MenuShow(App.menu.tray, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {
@@ -392,8 +392,8 @@ void MenuTaskbar() {
 
 		// Restore from taskbar
 		TaskbarIconRemove();
-		ShowWindow(Handle.window, SW_SHOW);
-		if (IsIconic(Handle.window)) ShowWindow(Handle.window, SW_RESTORE);
+		ShowWindow(App.window, SW_SHOW);
+		if (IsIconic(App.window)) ShowWindow(App.window, SW_RESTORE);
 
 	// Exit
 	break;

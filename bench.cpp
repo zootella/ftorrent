@@ -97,7 +97,7 @@ void Torrent::Edit() {
 
 
 int Torrent::ComposeStatusIcon() {
-	return Handle.icon.clear;
+	return App.icon.clear;
 }
 
 CString Torrent::ComposeStatus() {
@@ -105,7 +105,7 @@ CString Torrent::ComposeStatus() {
 }
 
 int Torrent::ComposeNameIcon() {
-	return Handle.icon.clear;
+	return App.icon.clear;
 }
 
 // This torrent's name

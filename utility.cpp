@@ -31,7 +31,7 @@ void log(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8,
 // Show a message to the user
 void report(read r) {
 
-	if (PROGRAM_TEST) MessageBox(Handle.window, r, PROGRAM_NAME, MB_OK);
+	if (PROGRAM_TEST) MessageBox(App.window, r, PROGRAM_NAME, MB_OK);
 }
 
 // Given access to a handle, close it and make it null
@@ -149,14 +149,14 @@ HWND WindowCreateEdit(bool scrollbars, bool capacity) {
 		ES_AUTOHSCROLL | ES_AUTOVSCROLL; // Scroll when the user enters text
 
 	// Create the edit window
-	HWND window = WindowCreate(L"EDIT", NULL, style, 0, Handle.window, NULL);
+	HWND window = WindowCreate(L"EDIT", NULL, style, 0, App.window, NULL);
 
 	// Have it use Tahoma, not the default system font
 	SendMessage( 
-		(HWND)window,        // Send the message to this window
-		WM_SETFONT,          // Message to send
-		(WPARAM)Handle.font, // Handle to font
-		0);                  // Don't tell the control to immediately redraw itself
+		(HWND)window,            // Send the message to this window
+		WM_SETFONT,              // Message to send
+		(WPARAM)App.font.normal, // Handle to font
+		0);                      // Don't tell the control to immediately redraw itself
 
 	// Expand its text capacity
 	if (capacity) SendMessage(window, EM_LIMITTEXT, 0, 0);
@@ -174,17 +174,17 @@ HWND WindowCreateButton(read r) {
 		BS_PUSHBUTTON; // Have the button send the window a message when the user clicks it
 
 	// Create the edit window
-	HWND window = WindowCreate(L"BUTTON", NULL, style, 0, Handle.window, NULL);
+	HWND window = WindowCreate(L"BUTTON", NULL, style, 0, App.window, NULL);
 
 	// Title it
 	TextWindowSet(window, r);
 
 	// Have it use Tahoma, not the default system font
 	SendMessage( 
-		(HWND)window,        // Send the message to this window
-		WM_SETFONT,          // Message to send
-		(WPARAM)Handle.font, // Handle to font
-		0);                  // Don't tell the control to immediately redraw itself
+		(HWND)window,            // Send the message to this window
+		WM_SETFONT,              // Message to send
+		(WPARAM)App.font.normal, // Handle to font
+		0);                      // Don't tell the control to immediately redraw itself
 
 	// Return the handle to the button window we made
 	return window;
@@ -201,7 +201,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 		size, size, size, size, // Window position and size
 		parent,                 // Handle to parent window
 		menu,                   // Menu handle or child window identification number
-		Handle.instance,        // Program instance handle
+		App.instance,           // Program instance handle
 		NULL);                  // No parameter
 	if (!window) error(L"createwindow");
 	return window;
@@ -299,7 +299,7 @@ Brush CreateBrush(COLORREF color) {
 void PaintMessage(HWND window) {
 
 	// Choose window
-	if (!window) window = Handle.window;
+	if (!window) window = App.window;
 
 	// Mark the client area of the main window as necessary to draw
 	int result = InvalidateRect(
@@ -323,7 +323,7 @@ void TaskbarIconAdd() {
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize           = sizeof(info);                     // Size of this structure
-	info.hWnd             = Handle.window;                    // Handle to the window that will receive messages
+	info.hWnd             = App.window;                       // Handle to the window that will receive messages
 	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
@@ -343,7 +343,7 @@ void TaskbarIconUpdate() {
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize           = sizeof(info);  // Size of this structure
-	info.hWnd             = Handle.window; // Handle to the window that will receive messages
+	info.hWnd             = App.window;    // Handle to the window that will receive messages
 	info.uID              = TASKBAR_ICON;  // Program defined identifier
 	info.uFlags           = NIF_ICON;      // Mask for icon only
 	info.hIcon            = State.taskbar; // Icon handle
@@ -360,7 +360,7 @@ void TaskbarIconRemove() {
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(info);  // Size of this structure
-	info.hWnd   = Handle.window; // Handle to the window that will receive messages
+	info.hWnd   = App.window;    // Handle to the window that will receive messages
 	info.uID    = TASKBAR_ICON;  // Program defined identifier
 	if (!Shell_NotifyIcon(NIM_DELETE, &info)) error(L"shell_notifyicon nim_delete");
 }
@@ -388,7 +388,7 @@ HICON LoadIconResource(read name, int w, int h) {
 
 	// Create the icon from the resource
 	HICON icon = (HICON)LoadImage(
-		Handle.instance,  // Load from this instance
+		App.instance,     // Load from this instance
 		name,             // Resource name
 		IMAGE_ICON,       // Image type
 		w, h,             // Width and height to load
@@ -409,7 +409,7 @@ void CursorSet(HCURSOR cursor) {
 // Takes a menu name and loads it from resources
 HMENU MenuLoad(read name) {
 
-	HMENU menus = LoadMenu(Handle.instance, name); // Load the menu resource
+	HMENU menus = LoadMenu(App.instance, name); // Load the menu resource
 	if (!menus) error(L"loadmenu");
 	return menus;
 }
@@ -452,7 +452,7 @@ UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 	}
 
 	// Context menu for notification icon
-	if (taskbar) SetForegroundWindow(Handle.window);
+	if (taskbar) SetForegroundWindow(App.window);
 
 	// Show the context menu and hold execution here until the user chooses from the menu or cancels it
 	AreaPopUp();
@@ -464,12 +464,12 @@ UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 		position.x,      // Desired menu position in screen coordinates
 		position.y,
 		0,
-		Handle.window,
+		App.window,
 		NULL);
 	AreaPopDown();
 
 	// Context menu for notification icon
-	if (taskbar) PostMessage(Handle.window, WM_NULL, 0, 0);
+	if (taskbar) PostMessage(App.window, WM_NULL, 0, 0);
 
 	// Return the user's choice, 0 they clicked outside the menu
 	return choice;
@@ -484,7 +484,7 @@ void TipAdd(Size size, read r) {
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize      = sizeof(info);     // Size of this structure
 	info.uFlags      = TTF_SUBCLASS;     // Have the tooltip control get messages from the tool window
-	info.hwnd        = Handle.window;    // Handle to the window that contains the tool region
+	info.hwnd        = App.window;       // Handle to the window that contains the tool region
 	info.uId         = 0;                // Tool identifying number
 	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
 	info.hinst       = NULL;             // Only used when text is loaded from a resource
@@ -496,14 +496,14 @@ void TipAdd(Size size, read r) {
 // Have window capture the mouse if it doesn't have it already, null to use the main window
 void MouseCapture(HWND window) {
 
-	if (!window) window = Handle.window; // Use the main window if the caller didn't specify one
+	if (!window) window = App.window; // Use the main window if the caller didn't specify one
 	if (GetCapture() != window) SetCapture(window); // If that window doesn't already have the mouse, capture it
 }
 
 // Have window release its capture of the mouse if it has it, null to use the main window
 void MouseRelease(HWND window) {
 
-	if (!window) window = Handle.window; // Pick the main window if the caller didn't specify one
+	if (!window) window = App.window; // Pick the main window if the caller didn't specify one
 	if (GetCapture() == window) ReleaseCapture(); // Only release it if window has it
 }
 
@@ -553,7 +553,7 @@ Size MouseArea(Area *a) {
 // Returns x and y coordinates in a size
 Size MouseClient(HWND window) {
 
-	if (!window) window = Handle.window; // Choose window
+	if (!window) window = App.window; // Choose window
 	Size s = MouseScreen(); // Get the mouse pointer position in screen coordinates
 	s.Client(window); // Convert the position to the client coordinates of the given window
 	return s;
@@ -634,7 +634,7 @@ COLORREF MixColors(COLORREF color1, int amount1, COLORREF color2, int amount2) {
 Size SizeClient(HWND window) {
 
 	// Pick main window if none given
-	if (!window) window = Handle.window;
+	if (!window) window = App.window;
 
 	// Find the width and height of the client area
 	Size size;
@@ -648,7 +648,7 @@ Size SizeClient(HWND window) {
 Size SizeWindow(HWND window) {
 
 	// Pick main window if none given
-	if (!window) window = Handle.window;
+	if (!window) window = App.window;
 
 	// Find the width and height of the client area
 	Size size;
@@ -740,7 +740,7 @@ void PaintText(Device *device, read r, Size size, bool horizontal, bool vertical
 	// Put back the device context
 	if (background) device->BackgroundColor(device->backgroundcolor);
 	if (color)      device->FontColor(device->fontcolor);
-	if (font)       device->Font(Handle.font);
+	if (font)       device->Font(App.font.normal);
 }
 
 // Use the device to paint size with brush
@@ -750,7 +750,7 @@ void PaintFill(Device *device, Size size, HBRUSH brush) {
 	if (!size.Is()) return;
 
 	// Choose brush
-	if (!brush) brush = Handle.background.brush;
+	if (!brush) brush = App.brush.background.brush;
 
 	// Paint the rectangle
 	RECT rectangle = size.Rectangle();
@@ -860,7 +860,7 @@ void InitializeCommonControls() {
 // Kills the timer
 void KillTimerSafely(UINT_PTR timer, HWND window) {
 
-	if (!window) window = Handle.window; // Choose window
+	if (!window) window = App.window; // Choose window
 	if (!KillTimer(window, timer)) error(L"killtimer"); // Kill the timer
 }
 
@@ -868,7 +868,7 @@ void KillTimerSafely(UINT_PTR timer, HWND window) {
 // Sets the timer
 void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 
-	if (!window) window = Handle.window; // Choose window
+	if (!window) window = App.window; // Choose window
 	if (!SetTimer(window, timer, time, NULL)) error(L"settimer"); // Set the timer
 }
 
@@ -878,7 +878,7 @@ void FileRun(read path, read parameters) {
 
 	// Shell execute the given text
 	ShellExecute(
-		Handle.window,  // Handle to a window to get message boxes from this operation
+		App.window,     // Handle to a window to get message boxes from this operation
 		NULL,           // Default run
 		path,           // File to run
 		parameters,     // Parameters ot pass to program
@@ -898,8 +898,8 @@ int Dialog(read resource, DLGPROC procedure, LPARAM lparam) {
 	// Show the dialog box, sending messages to its procedure and returning here when it is closed
 	int result;
 	AreaPopUp();
-	if (lparam) result = (int)DialogBoxParam(Handle.instance, resource, Handle.window, procedure, lparam);
-    else result = (int)DialogBox(Handle.instance, resource, Handle.window, procedure);
+	if (lparam) result = (int)DialogBoxParam(App.instance, resource, App.window, procedure, lparam);
+    else result = (int)DialogBox(App.instance, resource, App.window, procedure);
 	AreaPopDown();
 	return result;
 }
@@ -968,7 +968,7 @@ void SetIcon(HWND window, HICON icon16, HICON icon32) {
 int Icon(read ext, CString *type) {
 
 	int icon = IconGet(ext, type);           // If the program list is full, icon will be -1 and type will be system or composed text
-	if (icon == -1) icon = Handle.icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
+	if (icon == -1) icon = App.icon.file; // If the icon could not be found or added in the program list, use the index of the default shell file icon in the list
 	return icon;
 }
 
@@ -978,10 +978,10 @@ int Icon(read ext, CString *type) {
 int IconGet(read ext, CString *type) {
 
 	// If the requested extension is the last one loaded, fill the request quickly
-	if (same(ext, Handle.icon.ext, Matching)) {
+	if (same(ext, App.icon.ext, Matching)) {
 
-		*type = Handle.icon.type;
-		return Handle.icon.index;
+		*type = App.icon.type;
+		return App.icon.index;
 	}
 
 	// Get the system index and type text for the extension
@@ -991,9 +991,9 @@ int IconGet(read ext, CString *type) {
 
 	// Find the system index in the program image list or make program index -1
 	int programindex;
-	for (programindex = Handle.icon.count - 1; programindex >= 0; programindex--) {
+	for (programindex = App.icon.count - 1; programindex >= 0; programindex--) {
 
-		if (Handle.icon.source[programindex] == systemindex) break;
+		if (App.icon.source[programindex] == systemindex) break;
 	}
 
 	// None of the icons in the program image list have the extension's system index
@@ -1012,9 +1012,9 @@ int IconGet(read ext, CString *type) {
 	else                   *type = L"File";
 
 	// Keep the information to answer the same question without calling the system
-	Handle.icon.ext   = ext;
-	Handle.icon.type  = *type;
-	Handle.icon.index = programindex;
+	App.icon.ext   = ext;
+	App.icon.type  = *type;
+	App.icon.index = programindex;
 
 	// Return the index of the icon in the program image list
 	return programindex;
@@ -1027,7 +1027,7 @@ int IconAddResource(read resource) {
 
 	// Load the icon from the resource
 	HICON icon = (HICON)LoadImage(
-		Handle.instance,  // Handle to instance
+		App.instance,     // Handle to instance
 		resource,         // Resource name text
 		IMAGE_ICON,       // This resource is an icon
 		16, 16,           // Size
@@ -1045,15 +1045,15 @@ int IconAddResource(read resource) {
 int IconAdd(HICON icon, int systemindex) {
 
 	// Make sure the program image list isn't full
-	if (Handle.icon.count >= ICON_CAPACITY) return -1;
+	if (App.icon.count >= ICON_CAPACITY) return -1;
 
 	// Add the icon to the end of the program image list
-	int programindex = ImageList_ReplaceIcon(Handle.icon.list, -1, icon);
+	int programindex = ImageList_ReplaceIcon(App.icon.list, -1, icon);
 	if (programindex == -1) { error(L"imagelist_replaceicon"); return -1; }
 
 	// Write the index in the array, up the count, and return the program index of the added icon
-	Handle.icon.source[Handle.icon.count] = systemindex;
-	Handle.icon.count++;
+	App.icon.source[App.icon.count] = systemindex;
+	App.icon.count++;
 	return programindex;
 }
 
@@ -1573,7 +1573,7 @@ CString PathShell(int id) {
 	CString path;        // String to return with path or blank on error
 
 	if (!SHGetMalloc(&memory)) {
-		if (!SHGetSpecialFolderLocation(Handle.window, id, &list)) {
+		if (!SHGetSpecialFolderLocation(App.window, id, &list)) {
 			if (SHGetPathFromIDList(list, bay)) {
 
 				path = bay; // Everything worked, copy the bay into a string
@@ -1597,7 +1597,7 @@ CString DialogBrowse(read message) {
 	WCHAR name[MAX_PATH];
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
-	info.hwndOwner      = Handle.window;            // Parent window for the dialog
+	info.hwndOwner      = App.window;               // Parent window for the dialog
 	info.pidlRoot       = NULL;                     // Browse from the desktop
 	info.pszDisplayName = name;                     // Destination buffer
 	info.lpszTitle      = message;                  // Text to show the user in the box
@@ -1629,7 +1629,7 @@ CString DialogOpen() {
 	OPENFILENAME info;
 	ZeroMemory(&info, sizeof(info));
 	info.lStructSize = sizeof(info);  // Size of this structure to tell it what version we're using
-	info.hwndOwner   = Handle.window; // Main window handle to show the box above it
+	info.hwndOwner   = App.window;    // Main window handle to show the box above it
 	info.hInstance   = NULL;          // Not using a template handle
 	info.lpstrFilter = filter;        // File type text pairs terminated by two wide nulls
 	info.lpstrFile   = path;          // Destination buffer and size in characters
@@ -1660,7 +1660,7 @@ CString DialogSave(read suggest) {
 	OPENFILENAME info;
 	ZeroMemory(&info, sizeof(info));
 	info.lStructSize = sizeof(info);        // Size of this structure to tell it what version we're using
-	info.hwndOwner   = Handle.window;       // Main window handle to show the box above it
+	info.hwndOwner   = App.window;          // Main window handle to show the box above it
 	info.lpstrFilter = filter;              // File type text pairs terminated by two wide nulls
 	info.lpstrFile   = path;                // Destination buffer and size in characters
 	info.nMaxFile    = MAX_PATH;

@@ -1,6 +1,6 @@
 
 // Program icon image list
-class icontop {
+class appIcon {
 public:
 
 	// Image list
@@ -21,7 +21,7 @@ public:
 	CString type;
 
 	// New
-	icontop() {
+	appIcon() {
 
 		list = NULL;
 		count = 0;
@@ -31,44 +31,70 @@ public:
 	}
 };
 
+class appBrush {
+public:
+
+	Brush blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, yellownotice, greennotice; // Defined colors
+	Brush face, shadow, background, ink, select; // Shell brushes
+	Brush line; // Mixed color brush
+};
+
+class appCursor {
+public:
+	HCURSOR arrow, hand, horizontal, vertical, diagonal;// Mouse pointers
+
+	appCursor() {
+		arrow = hand = horizontal = vertical = diagonal = NULL;
+	}
+};
+
+class appMenu {
+public:
+
+	HMENU tray, tools;// Menus
+	appMenu() {
+		tray = tools = NULL;
+	}
+};
+
+class appFont {
+public:
+
+	HFONT normal, underline, arial;// Fonts
+	appFont() {
+		normal = underline = arial = NULL;
+	}
+};
+
+class app {
+public:
+
+	appIcon icon;
+	appBrush brush;
+	appCursor cursor;
+	appMenu menu;
+	appFont font;
+
+	HINSTANCE instance; // Program instance handle
+	HWND window; // Main window
+
+	app() {
+		instance = NULL;
+		window = NULL;
+
+	}
+};
+
 // Window and drawing resource handles
 class handletop {
 public:
 
-	// Inside
-	icontop icon;
+	HWND list, tabs, edit, tip;// Windows
+	libtorrent::session *session;// Session in libtorrent
 
-	// Program instance handle
-	HINSTANCE instance;
-
-	// Windows
-	HWND window, list, tabs, edit, tip;
-
-	// Menus
-	HMENU tray, menu;
-
-	// Mouse pointers
-	HCURSOR arrow, hand, horizontal, vertical, diagonal;
-
-	// Fonts
-	HFONT font, underline, arial;
-
-	// Colors
-	Brush blue, lightblue, green, lightgreen, red, lightred, yellow, lightyellow, rednotice, yellownotice, greennotice; // Defined colors
-	Brush face, shadow, background, ink, select; // Shell brushes
-	Brush line; // Mixed color brush
-
-	// Session in libtorrent
-	libtorrent::session *session;
-
-	// New
 	handletop() {
 
-		instance = NULL;
-		window = list = tabs = edit = tip = NULL;
-		tray = menu = NULL;
-		arrow = hand = horizontal = vertical = diagonal = NULL;
-		font = underline = arial = NULL;
+		list = tabs = edit = tip = NULL;
 		session = NULL;
 	}
 };
@@ -201,23 +227,3 @@ public:
 	}
 };
 
-
-class appIcon {
-public:
-
-
-	appIcon() {
-
-	}
-};
-
-class app {
-public:
-
-	appIcon icon;
-
-
-	app() {
-
-	}
-};

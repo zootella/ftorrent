@@ -11,25 +11,25 @@ extern statetop  State;
 void StartIcon() {
 
 	// Initialize ext with a guid so the first requested extension will never match
-	Handle.icon.ext = TextGuid();
+	App.icon.ext = TextGuid();
 
 	// Create the program image list
-	Handle.icon.list = ImageList_Create(
+	App.icon.list = ImageList_Create(
 		16, 16,         // Image size
 		ILC_COLOR32 |   // Windows XP style 32 bit antialiased icons
 		ILC_MASK,       // Show icon transparency
 		0,              // Start with no icons
 		ICON_CAPACITY); // Be able to grow to hold this many more icons
-	if (!Handle.icon.list) error(L"imagelist_create");
+	if (!App.icon.list) error(L"imagelist_create");
 
 	// Load the resource icons into the program image list and get their indices there, or -1 if not loaded
-	Handle.icon.clear      = IconAddResource(L"CLEAR_ICON");
-	Handle.icon.ascending  = IconAddResource(L"COLUMN_ASCENDING");
-	Handle.icon.descending = IconAddResource(L"COLUMN_DESCENDING");
+	App.icon.clear      = IconAddResource(L"CLEAR_ICON");
+	App.icon.ascending  = IconAddResource(L"COLUMN_ASCENDING");
+	App.icon.descending = IconAddResource(L"COLUMN_DESCENDING");
 
 	// Load the shell icon for a file
 	CString type;
-	Handle.icon.file = IconGet(L"", &type);
+	App.icon.file = IconGet(L"", &type);
 }
 
 // Takes a device context to use to paint in the window
@@ -54,7 +54,7 @@ void PaintWindow(Device *device) {
 	s2.x = s1.Right();
 	s2.y = above;
 	s2.SetBottom(Areas.stage.Bottom()); // Don't paint down into the list view control
-	device->Font(Handle.arial);
+	device->Font(App.font.arial);
 	device->FontColor(State.stage->ink.color);
 	device->BackgroundColor(State.stage->background.color);
 	PaintLabel(device, State.stage->title, s2);
@@ -72,12 +72,12 @@ void PaintWindow(Device *device) {
 	}
 
 	// Status
-	device->Font(Handle.font);
-	device->FontColor(Handle.ink.color);
-	device->BackgroundColor(Handle.background.color);
+	device->Font(App.font.normal);
+	device->FontColor(App.brush.ink.color);
+	device->BackgroundColor(App.brush.background.color);
 	Size s = Areas.status;
 	s.h = 1;
-	PaintFill(device, s, Handle.line.brush);
+	PaintFill(device, s, App.brush.line.brush);
 	s = Areas.status;
 	s.ShiftTop(1);
 	PaintText(device, State.status, s, false, true, true, true);
@@ -136,17 +136,17 @@ void PaintArea(Device *device, Area *a) {
 
 			s = Areas.bar.size;
 			s.h = 1;
-			PaintFill(device, s, Handle.line.brush);
+			PaintFill(device, s, App.brush.line.brush);
 			s = Areas.bar.size;
 			s.ShiftTop(1);
-			PaintFill(device, s, Handle.face.brush);
+			PaintFill(device, s, App.brush.face.brush);
 
 		// Corner
 		} else if (a == &Areas.corner) {
 
 			s = Areas.corner.size;
 			s.h = 1;
-			PaintFill(device, s, Handle.line.brush);
+			PaintFill(device, s, App.brush.line.brush);
 			s = Areas.corner.size;
 			s.ShiftTop(1);
 			PaintFill(device, s);
@@ -155,19 +155,19 @@ void PaintArea(Device *device, Area *a) {
 			s.w = s.h = 2;
 			s.x -= 4;
 			s.y -= 12;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 			s.x -= 4;
 			s.y += 4;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 			s.x += 4;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 			s.x -= 8;
 			s.y += 4;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 			s.x += 4;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 			s.x += 4;
-			PaintFill(device, s, Handle.shadow.brush);
+			PaintFill(device, s, App.brush.shadow.brush);
 		}
 	}
 }
@@ -186,55 +186,55 @@ void AreaCreate() {
 	HICON yellow32 = LoadIconResource(L"STAGE_YELLOW", 32, 32);
 
 	// Make colors
-	Handle.blue         = CreateBrush(RGB(  0, 102, 204));
-	Handle.lightblue    = CreateBrush(RGB( 51, 153, 255));
-	Handle.green        = CreateBrush(RGB(102, 204,  51));
-	Handle.lightgreen   = CreateBrush(RGB(153, 255, 102));
-	Handle.red          = CreateBrush(RGB(255, 102,  51));
-	Handle.lightred     = CreateBrush(RGB(255, 153, 102));
-	Handle.yellow       = CreateBrush(RGB(255, 204,   0));
-	Handle.lightyellow  = CreateBrush(RGB(255, 255, 102));
-	Handle.rednotice    = CreateBrush(RGB(135,   0,   0));
-	Handle.yellownotice = CreateBrush(RGB(135, 135,   0));
-	Handle.greennotice  = CreateBrush(RGB(  0, 135,   0));
+	App.brush.blue         = CreateBrush(RGB(  0, 102, 204));
+	App.brush.lightblue    = CreateBrush(RGB( 51, 153, 255));
+	App.brush.green        = CreateBrush(RGB(102, 204,  51));
+	App.brush.lightgreen   = CreateBrush(RGB(153, 255, 102));
+	App.brush.red          = CreateBrush(RGB(255, 102,  51));
+	App.brush.lightred     = CreateBrush(RGB(255, 153, 102));
+	App.brush.yellow       = CreateBrush(RGB(255, 204,   0));
+	App.brush.lightyellow  = CreateBrush(RGB(255, 255, 102));
+	App.brush.rednotice    = CreateBrush(RGB(135,   0,   0));
+	App.brush.yellownotice = CreateBrush(RGB(135, 135,   0));
+	App.brush.greennotice  = CreateBrush(RGB(  0, 135,   0));
 
 	// Assemble stages
 	State.start.title = PROGRAM_NAME;
 	State.start.icon16 = blue16;
 	State.start.icon32 = blue32;
-	State.start.ink = Handle.lightblue;
-	State.start.background = Handle.blue;
+	State.start.ink = App.brush.lightblue;
+	State.start.background = App.brush.blue;
 
 	State.downloading.title = L"downloading";
 	State.downloading.icon16 = blue16;
 	State.downloading.icon32 = blue32;
-	State.downloading.ink = Handle.lightblue;
-	State.downloading.background = Handle.blue;
+	State.downloading.ink = App.brush.lightblue;
+	State.downloading.background = App.brush.blue;
 
 	State.paused.title = L"paused";
 	State.paused.icon16 = yellow16;
 	State.paused.icon32 = yellow32;
-	State.paused.ink = Handle.lightyellow;
-	State.paused.background = Handle.yellow;
+	State.paused.ink = App.brush.lightyellow;
+	State.paused.background = App.brush.yellow;
 
 	State.seeding.title = L"seeding";
 	State.seeding.icon16 = green16;
 	State.seeding.icon32 = green32;
-	State.seeding.ink = Handle.lightgreen;
-	State.seeding.background = Handle.green;
+	State.seeding.ink = App.brush.lightgreen;
+	State.seeding.background = App.brush.green;
 
 	State.missing.title = L"missing";
 	State.missing.icon16 = red16;
 	State.missing.icon32 = red32;
-	State.missing.ink = Handle.lightred;
-	State.missing.background = Handle.red;
+	State.missing.ink = App.brush.lightred;
+	State.missing.background = App.brush.red;
 
 	// Text size
 	Device device;
 	device.OpenCreate();
-	device.Font(Handle.font); // Find the height of the default font
+	device.Font(App.font.normal); // Find the height of the default font
 	Areas.height = SizeText(&device, L"A").h;
-	device.Font(Handle.arial); // Find the widths of the stage titles
+	device.Font(App.font.arial); // Find the widths of the stage titles
 	State.start.size       = SizeText(&device, State.start.title);
 	State.downloading.size = SizeText(&device, State.downloading.title);
 	State.paused.size      = SizeText(&device, State.paused.title);
@@ -284,7 +284,7 @@ void AreaPulse() {
 		State.stage = stage; // Save the new stage
 
 		// Update the display
-		SetIcon(Handle.window, State.stage->icon16, State.stage->icon32); // Window icon
+		SetIcon(App.window, State.stage->icon16, State.stage->icon32); // Window icon
 		TaskbarIconUpdate(); // Taskbar notification area icon
 		PaintMessage(); // Repaint the window now to show the new stage title
 	}
@@ -304,36 +304,36 @@ void AreaPulse() {
 	// Set the pointer based on the area it pressed
 	if (Areas.pressed) {
 
-		if      (Areas.pressed->command == CommandReady)          CursorSet(Handle.arrow);
-		else if (Areas.pressed->command == CommandSet)            CursorSet(Handle.arrow);
-		else if (Areas.pressed->command == CommandMenu)           CursorSet(Handle.arrow);
-		else if (Areas.pressed->command == CommandLink)           CursorSet(Handle.hand);
-		else if (Areas.pressed->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
-		else if (Areas.pressed->command == CommandSizeVertical)   CursorSet(Handle.vertical);
-		else if (Areas.pressed->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
-		else                                                     CursorSet(Handle.arrow);
+		if      (Areas.pressed->command == CommandReady)          CursorSet(App.cursor.arrow);
+		else if (Areas.pressed->command == CommandSet)            CursorSet(App.cursor.arrow);
+		else if (Areas.pressed->command == CommandMenu)           CursorSet(App.cursor.arrow);
+		else if (Areas.pressed->command == CommandLink)           CursorSet(App.cursor.hand);
+		else if (Areas.pressed->command == CommandSizeHorizontal) CursorSet(App.cursor.horizontal);
+		else if (Areas.pressed->command == CommandSizeVertical)   CursorSet(App.cursor.vertical);
+		else if (Areas.pressed->command == CommandSizeDiagonal)   CursorSet(App.cursor.diagonal);
+		else                                                      CursorSet(App.cursor.arrow);
 
 	// Set the pointer based on the area it's over
 	} else if (over && !pressing) {
 
-		if      (over->command == CommandReady)          CursorSet(Handle.arrow);
-		else if (over->command == CommandSet)            CursorSet(Handle.arrow);
-		else if (over->command == CommandMenu)           CursorSet(Handle.arrow);
-		else if (over->command == CommandLink)           CursorSet(Handle.hand);
-		else if (over->command == CommandSizeHorizontal) CursorSet(Handle.horizontal);
-		else if (over->command == CommandSizeVertical)   CursorSet(Handle.vertical);
-		else if (over->command == CommandSizeDiagonal)   CursorSet(Handle.diagonal);
-		else                                             CursorSet(Handle.arrow);
+		if      (over->command == CommandReady)          CursorSet(App.cursor.arrow);
+		else if (over->command == CommandSet)            CursorSet(App.cursor.arrow);
+		else if (over->command == CommandMenu)           CursorSet(App.cursor.arrow);
+		else if (over->command == CommandLink)           CursorSet(App.cursor.hand);
+		else if (over->command == CommandSizeHorizontal) CursorSet(App.cursor.horizontal);
+		else if (over->command == CommandSizeVertical)   CursorSet(App.cursor.vertical);
+		else if (over->command == CommandSizeDiagonal)   CursorSet(App.cursor.diagonal);
+		else                                             CursorSet(App.cursor.arrow);
 
 	// Neither of those, just a regular arrow
 	} else if (inside) {
 
-		CursorSet(Handle.arrow);
+		CursorSet(App.cursor.arrow);
 	}
 
 	// The tab control doesn't set the pointer, so we do it for it
 	if (!Areas.pressed && Areas.tabs.Inside(MouseClient()))
-		CursorSet(Handle.arrow);
+		CursorSet(App.cursor.arrow);
 
 	// Compose the display of each area and draw those that have changed
 	AreaDisplay display;
@@ -380,9 +380,9 @@ void AreaPulse() {
 			// Get the window device context if we don't already have it and paint the area
 			if (device.open == DeviceNone) {
 
-				device.OpenGet(Handle.window);
-				device.Font(Handle.font);
-				device.BackgroundColor(Handle.background.color);
+				device.OpenGet(App.window);
+				device.Font(App.font.normal);
+				device.BackgroundColor(App.brush.background.color);
 			}
 
 			if (device.device) PaintArea(&device, a);
@@ -422,7 +422,7 @@ void AreaPulse() {
 			if (mouse.y < min.y) move.y = min.y - stick.y;
 
 			// Diagonal size corner
-			WindowSize(Handle.window, move.x, move.y);
+			WindowSize(App.window, move.x, move.y);
 		}
 	}
 
@@ -462,9 +462,9 @@ void AreaPulse() {
 			// Get the window device context if we don't have it already
 			if (device.open == DeviceNone) {
 
-				device.OpenGet(Handle.window);
-				device.Font(Handle.font);
-				device.BackgroundColor(Handle.background.color);
+				device.OpenGet(App.window);
+				device.Font(App.font.normal);
+				device.BackgroundColor(App.brush.background.color);
 			}
 
 			// Paint the status text to the window
@@ -615,7 +615,7 @@ void Layout(int move) {
 	Areas.status.y = Areas.corner.size.y; // Status
 	Areas.status.w = Greatest(0, client.w - status);
 	Areas.status.h = status;
-	if (IsZoomed(Handle.window)) { // If the window is maximized, make status the entire row and hide the size corner
+	if (IsZoomed(App.window)) { // If the window is maximized, make status the entire row and hide the size corner
 		Areas.status.w = client.w;
 		Areas.corner.size.CloseRight();
 	}
@@ -655,7 +655,7 @@ void AreaDoCommand(Area *area) {
 			size.w = 0;
 
 			// Show the popup menu and wait here for the user to click on one of the menu choices
-			UINT choice = MenuShow(Handle.menu, false, &size); // Wait here for the user to make a choice
+			UINT choice = MenuShow(App.menu.tools, false, &size); // Wait here for the user to make a choice
 			if      (choice == ID_TOOLS_TEST)    { Test(); }
 			else if (choice == ID_TOOLS_OPEN)    {
 
@@ -717,7 +717,7 @@ void Message(read r) {
 
 	// Show the message box with the mouse away
 	AreaPopUp();
-	MessageBox(Handle.window, r, PROGRAM_NAME, MB_ICONWARNING | MB_OK);
+	MessageBox(App.window, r, PROGRAM_NAME, MB_ICONWARNING | MB_OK);
 	AreaPopDown();
 }
 
@@ -763,7 +763,7 @@ void DialogOptions() {
 	ZeroMemory(&page, sizeof(page)); // Size of the whole array
 	page[0].dwSize      = page[1].dwSize      = page[2].dwSize      = sizeof(page[0]); // Size of just one page
 	page[0].dwFlags     = page[1].dwFlags     = page[2].dwFlags     = PSP_DEFAULT;
-	page[0].hInstance   = page[1].hInstance   = page[2].hInstance   = Handle.instance;
+	page[0].hInstance   = page[1].hInstance   = page[2].hInstance   = App.instance;
 	page[0].pfnCallback = page[1].pfnCallback = page[2].pfnCallback = NULL;
 	page[0].lParam      = page[1].lParam      = page[2].lParam      = 0;
 
@@ -780,8 +780,8 @@ void DialogOptions() {
 	ZeroMemory(&header, sizeof(header));
 	header.dwSize      = sizeof(header);          // Size of the header
 	header.dwFlags     = PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP; // Leave out the apply button and the help question mark
-	header.hwndParent  = Handle.window;           // Handle to parent window
-	header.hInstance   = Handle.instance;         // Handle to application instance
+	header.hwndParent  = App.window;              // Handle to parent window
+	header.hInstance   = App.instance;            // Handle to application instance
 	header.hIcon       = NULL;                    // No icon
 	header.pszCaption  = L"Options";              // Text in the title bar
 	header.nPages      = 3;                       // Number of pages
@@ -838,15 +838,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		Brush *brush;
 		CString message;
 		if (code == L"red") {
-			brush = &Handle.rednotice;
+			brush = &App.brush.rednotice;
 			message = L"You haven't made " + PROGRAM_NAME + L" your default BitTorrent client:";
 
 		} else if (code == L"yellow") {
-			brush = &Handle.yellownotice;
+			brush = &App.brush.yellownotice;
 			message = L"Run " + PROGRAM_NAME + L" as administrator to make it your default BitTorrent client.";
 
 		} else if (code == L"green") {
-			brush = &Handle.greennotice;
+			brush = &App.brush.greennotice;
 			message = L"Thanks for using " + PROGRAM_NAME + L" as your default BitTorrent client.";
 		}
 
@@ -865,7 +865,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Custom paint the message in the dialog
 		Device device;
 		device.OpenPaint(dialog);
-		device.Font(Handle.font);
+		device.Font(App.font.normal);
 		device.FontColor(brush->color);
 		if (!DrawText(device.device, message, -1, &rectangle, 0)) error(L"drawtext");
 		return false;
@@ -1008,8 +1008,8 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		// Do custom painting in the dialog
 		Device device;
 		device.OpenPaint(dialog);
-		device.BackgroundColor(Handle.background.color);
-		device.Font(Handle.arial);
+		device.BackgroundColor(App.brush.background.color);
+		device.Font(App.font.arial);
 
 		// Compose text
 		CString about = L"about " + PROGRAM_NAME;
@@ -1026,9 +1026,9 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		title.SetBottom(blue.h);
 
 		// Paint the rectangles
-		PaintFill(&device, blue, Handle.blue.brush);
-		PaintText(&device, about, title, false, false, false, false, 0, Handle.arial, &Handle.lightblue, &Handle.blue);
-		PaintFill(&device, white, Handle.background.brush);
+		PaintFill(&device, blue, App.brush.blue.brush);
+		PaintText(&device, about, title, false, false, false, false, 0, App.font.arial, &App.brush.lightblue, &App.brush.blue);
+		PaintFill(&device, white, App.brush.background.brush);
 
 		// Set heights
 		int text = Areas.height; // Text height is usually 13
@@ -1041,11 +1041,11 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 		s.h = text;
 
 		// Paint the text
-		device.Font(Handle.font);
-		PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-		PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
-		PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text + space;
-		PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, Handle.font, &Handle.ink, &Handle.background); s.y += text;
+		device.Font(App.font.normal);
+		PaintText(&device, PROGRAM_ABOUT1, s, false, false, false, false, 0, App.font.normal, &App.brush.ink, &App.brush.background); s.y += text + space;
+		PaintText(&device, PROGRAM_ABOUT2, s, false, false, false, false, 0, App.font.normal, &App.brush.ink, &App.brush.background); s.y += text;
+		PaintText(&device, PROGRAM_ABOUT3, s, false, false, false, false, 0, App.font.normal, &App.brush.ink, &App.brush.background); s.y += text + space;
+		PaintText(&device, PROGRAM_ABOUT4, s, false, false, false, false, 0, App.font.normal, &App.brush.ink, &App.brush.background); s.y += text;
 		return false;
 	}
 	// The message is a command
