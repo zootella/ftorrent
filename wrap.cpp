@@ -2,7 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 // Takes a settings structure to look at, or null to not update settings

@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 // Takes text

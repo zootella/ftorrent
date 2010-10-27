@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 // Print an error message out on the output log
@@ -1246,7 +1245,7 @@ void ListAddDone(HWND window, int rows) {
 void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6) {
 
 	// Record the maximum text length
-	State.list.max = Greatest(State.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
+	App.list.max = Greatest(App.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
 
 	// Row and column position, the number of rows is the index of the next row
 	LVITEM column1, column2, column3, column4, column5, column6;
@@ -1301,7 +1300,7 @@ void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, 
 void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6) {
 
 	// Record the maximum text length
-	State.list.max = Greatest(State.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
+	App.list.max = Greatest(App.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
 
 	// Find the row that has the given parameter
 	int row = ListFind(window, p);
@@ -1369,7 +1368,7 @@ CString ListText(HWND window, int row, int column) {
 
 	// Open a string
 	CString s;
-	int     n = State.list.max + 1; // Add 1 character to have space to write the wide null terminator
+	int     n = App.list.max + 1; // Add 1 character to have space to write the wide null terminator
 	LPWSTR  w = s.GetBuffer(n);
 
 	// Copy in the characters

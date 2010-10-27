@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 app App; // Create global object
 
-datatop   Data;
 statetop  State;
 
 // Start the program
@@ -176,7 +175,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	TimerSet(TIMER_PULSE, 300);
 
 	OptionLoad(); // Load optn.db from last time into Data variables
-	if (Data.associate) AssociateGet();
+	if (App.option.associate) AssociateGet();
 //	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent

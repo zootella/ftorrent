@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 // Set up the program image list
@@ -275,7 +274,7 @@ void AreaCreate() {
 void AreaPulse() {
 
 	// Determine what the program stage should be right now
-	stageitem *stage = &State.start; //TODO replace this with code that actually chooses what it should be
+	Stage *stage = &State.start; //TODO replace this with code that actually chooses what it should be
 
 	// Update the display of the stage if necessary
 	if (!State.stage || State.stage != stage) {
@@ -680,18 +679,18 @@ void AreaDoCommand(Area *area) {
 }
 
 // Call when the program starts up
-// Reads the optn.db file next to this running exe, and loads values in Data
+// Reads the optn.db file next to this running exe, and loads values in option
 void OptionLoad() {
 
 	libtorrent::entry d;
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
-		Data.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
-		Data.associate = same(widenStoC(d[narrowRtoS(L"associate")].string()), L"t"); // True to associate magnet and torrent
+		App.option.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
+		App.option.associate = same(widenStoC(d[narrowRtoS(L"associate")].string()), L"t"); // True to associate magnet and torrent
 	}
 
 	// Replace blank or invalid with factory defaults
-	if (isblank(Data.folder)) Data.folder = PathTorrents();
+	if (isblank(App.option.folder)) App.option.folder = PathTorrents();
 }
 
 // Call when the program is shutting down
@@ -699,8 +698,8 @@ void OptionLoad() {
 void OptionSave() {
 
 	libtorrent::entry::dictionary_type d;
-	d[narrowRtoS(L"folder")] = narrowRtoS(Data.folder);
-	d[narrowRtoS(L"associate")] = Data.associate ? narrowRtoS(L"t") : narrowRtoS(L"f");
+	d[narrowRtoS(L"folder")] = narrowRtoS(App.option.folder);
+	d[narrowRtoS(L"associate")] = App.option.associate ? narrowRtoS(L"t") : narrowRtoS(L"f");
 	SaveEntry(PathOption(), d);
 }
 
@@ -796,14 +795,14 @@ void DialogOptions() {
 // Associate this program with magnet and torrent and show the user a color label about it
 void AssociateUpdate(HWND dialog) {
 
-	Data.associate = IsDlgButtonChecked(dialog, IDC_ASSOCIATE) ? true : false; // Copy the check to data
-	if (Data.associate && !AssociateIs()) AssociateGet(); // Change the registry if necessary
+	App.option.associate = IsDlgButtonChecked(dialog, IDC_ASSOCIATE) ? true : false; // Copy the check to data
+	if (App.option.associate && !AssociateIs()) AssociateGet(); // Change the registry if necessary
 
 	CString before = TextDialog(dialog, IDC_LABEL); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
 	CString now;
-	if (AssociateIs())       now = L"green";  // We have the associations
-	else if (Data.associate) now = L"yellow"; // We tried to get them, but it didn't work
-	else                     now = L"red";    // The user has not told the program to get them
+	if (AssociateIs())             now = L"green";  // We have the associations
+	else if (App.option.associate) now = L"yellow"; // We tried to get them, but it didn't work
+	else                           now = L"red";    // The user has not told the program to get them
 
 	TextDialogSet(dialog, IDC_LABEL, now); // Set the text of the hidden label for paint to use below
 	if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
@@ -816,8 +815,8 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		TextDialogSet(dialog, IDC_FOLDER, Data.folder); // Torrents folder path
-		CheckDlgButton(dialog, IDC_ASSOCIATE, Data.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
+		TextDialogSet(dialog, IDC_FOLDER, App.option.folder); // Torrents folder path
+		CheckDlgButton(dialog, IDC_ASSOCIATE, App.option.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
 		AssociateUpdate(dialog);
 		return true; // Let the system place the focus
 
@@ -912,7 +911,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		break;
 		case PSN_APPLY:
 
-			Data.folder = TextDialog(dialog, IDC_FOLDER);
+			App.option.folder = TextDialog(dialog, IDC_FOLDER);
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
 		}

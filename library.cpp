@@ -2,7 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 /*
@@ -279,7 +278,7 @@ CString AddTorrent(read torrent, bool ask) {
 	}
 
 	// Choose the download folder
-	CString folder = Data.folder;
+	CString folder = App.option.folder;
 	if (ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
@@ -317,7 +316,7 @@ CString AddMagnet(read magnet, bool ask) {
 	}
 
 	// Choose the download folder
-	CString folder = Data.folder;
+	CString folder = App.option.folder;
 	if (ask) folder = DialogBrowse(make(L"Choose a folder to download '", name, L"'."));
 	if (isblank(folder)) return L""; // User canceled the browse dialog
 	if (!CheckFolder(folder))
@@ -435,8 +434,8 @@ void Blink(hbig hash) {
 Torrent *FindTorrent(hbig hash) {
 
 	// Loop through all the torrents loaded into the program and library
-	for (int i = 0; i < (int)Data.torrents.size(); i++) {
-		Torrent *t = &(Data.torrents[i]); // Point t at the Torrent that is copied into the list
+	for (int i = 0; i < (int)App.torrents.size(); i++) {
+		Torrent *t = &(App.torrents[i]); // Point t at the Torrent that is copied into the list
 		if (hash == t->handle.info_hash()) return t; // Compare the 20 byte hash values
 	}
 
@@ -458,7 +457,7 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 	t.trackers = trackers;
 
 	// Copy the local torrent t into a new one at the end of the program's list
-	Data.torrents.push_back(t);
+	App.torrents.push_back(t);
 }
 
 // Add a new row to the window's list view control for the torrent in data with the given hash

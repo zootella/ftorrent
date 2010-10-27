@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern datatop   Data;
 extern statetop  State;
 
 
@@ -61,8 +60,8 @@ void ListPulse() {
 
 
 
-	for (int i = 0; i < (int)Data.torrents.size(); i++)
-		Data.torrents[i].Edit();
+	for (int i = 0; i < (int)App.torrents.size(); i++)
+		App.torrents[i].Edit();
 
 
 

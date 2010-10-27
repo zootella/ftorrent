@@ -305,6 +305,38 @@ public:
 	}
 };
 
+
+
+
+
+
+
+// Current program stage
+class Stage {
+public:
+
+	// Text and resources to describe this stage
+	CString title;
+	Size size; // How big the text will be painted in the title font
+	HICON icon16, icon32;
+	Brush ink, background;
+
+	// New
+	Stage() {
+
+		icon16 = icon32 = NULL;
+	}
+};
+
+
+
+
+
+
+
+
+
+
 // Torrent
 class Torrent {
 public:

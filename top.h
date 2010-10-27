@@ -105,7 +105,25 @@ public:
 class app_option {
 public:
 
+	CString folder; // Path to folder to save files
+	bool associate; // True to associate torrent and magnet
+
 	app_option() {
+		associate = true;
+	}
+};
+
+class app_list {
+public:
+
+	int max;       // The largest number of characters added into any list view item
+	int sort;      // -1 no sort, OR 0+ column sorted
+	int direction; // 1 ascending or -1 descending
+
+	app_list() {
+		max = 0;
+		sort = -1;
+		direction = 1;
 	}
 };
 
@@ -120,6 +138,7 @@ public:
 	app_window window;
 	app_area area;
 	app_option option;
+	app_list list;
 
 	CString command; // Command line arguments the system gave our main function
 	HINSTANCE instance; // Program instance handle
@@ -140,62 +159,23 @@ public:
 
 
 
-// Current program stage
-class stageitem {
-public:
-
-	// Text and resources to describe this stage
-	CString title;
-	Size size; // How big the text will be painted in the title font
-	HICON icon16, icon32;
-	Brush ink, background;
-
-	// New
-	stageitem() {
-
-		icon16 = icon32 = NULL;
-	}
-};
-
-// List view control state
-struct listtop {
-
-	int max;       // The largest number of characters added into any list view item
-	int sort;      // -1 no sort, OR 0+ column sorted
-	int direction; // 1 ascending or -1 descending
-
-	// New
-	listtop() {
-
-		max = 0;
-		sort = -1;
-		direction = 1;
-	}
-};
-
 // Current program state
 class statetop {
 public:
 
-	// Contains
-	listtop list;
-
-	// Window
 	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
 	int pop; // How many popup boxes and menus the program has put above the window
 
-	// Shown
 	CString status; // Status bar text
 
-	CString folder;
 
 
 	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
 	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
 
 
-	stageitem *stage; // Current program stage shown on the screen
-	stageitem start, downloading, paused, seeding, missing; // Available program stages with painting resources
+	Stage *stage; // Current program stage shown on the screen
+	Stage start, downloading, paused, seeding, missing; // Available program stages with painting resources
 
 	bool restored;
 	CString command;
