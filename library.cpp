@@ -2,8 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern statetop  State;
-
 /*
 Write out a number as text
 Use base 10 or 16
@@ -234,7 +232,7 @@ void LibraryStop() {
 				
 				// Tell the torrent to generate resume data
 				h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
-				State.expect++;       // Count that we expect one more torrent will give us resume data
+				App.state.expect++;   // Count that we expect one more torrent will give us resume data
 			}
 		}
 
@@ -648,9 +646,9 @@ bool ParseTorrent(read torrent, hbig *hash, CString *name, std::set<CString> *tr
 void LibraryPulse() {
 
 	// If we're done leaving libtorrent, quit the program message loop
-	if (State.exit &&                            // The user began the program exit process, and
-		(!State.expect ||                        // Either we've gotten all the resume data we expect, or
-		(State.exit + 4000 < GetTickCount()))) { // We've waited more than 4 seconds
+	if (App.state.exit &&                            // The user began the program exit process, and
+		(!App.state.expect ||                        // Either we've gotten all the resume data we expect, or
+		(App.state.exit + 4000 < GetTickCount()))) { // We've waited more than 4 seconds
 
 		PostQuitMessage(0); // Post the quit message to leave the message loop
 		return;             // Don't do anything else here
@@ -719,7 +717,7 @@ void AlertLook(const libtorrent::alert *alert) {
 				const boost::shared_ptr<libtorrent::entry> p = a1->resume_data;
 				libtorrent::entry *e = p.get(); // Copy across the pointer to the resume data
 				SaveEntry(PathTorrentStore(h.info_hash()), *e);
-				State.expect--;
+				App.state.expect--;
 				return;
 			}
 
@@ -729,7 +727,7 @@ void AlertLook(const libtorrent::alert *alert) {
 
 				// Get the error message
 				log(id, L" save resume failed ", widenStoC(a2->msg));
-				State.expect--;
+				App.state.expect--;
 				return;
 			}
 

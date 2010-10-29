@@ -2,8 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Print an error message out on the output log
 void error(read r1, read r2, read r3, read r4, read r5, read r6, read r7, read r8, read r9) {
 
@@ -313,8 +311,8 @@ void PaintMessage(HWND window) {
 // Adds the program icon to the taskbar notification area
 void TaskbarIconAdd() {
 
-	if (State.taskbar) return;           // Icon already there, leave
-	State.taskbar = State.stage->icon16; // Pick the icon for the current stage
+	if (App.state.taskbar) return;           // Icon already there, leave
+	App.state.taskbar = App.state.stage->icon16; // Pick the icon for the current stage
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -324,7 +322,7 @@ void TaskbarIconAdd() {
 	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = State.taskbar;                    // Icon handle
+	info.hIcon            = App.state.taskbar;                    // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) error(L"shell_notifyicon nim_add");
 }
@@ -332,9 +330,9 @@ void TaskbarIconAdd() {
 // Updates the program icon in the taskbar notification area
 void TaskbarIconUpdate() {
 
-	if (!State.taskbar) return;                       // No icon to update, leave
-	if (State.taskbar == State.stage->icon16) return; // Icon doesn't need to be updated, leave
-	State.taskbar = State.stage->icon16;              // Record that we updated the icon
+	if (!App.state.taskbar) return;                       // No icon to update, leave
+	if (App.state.taskbar == App.state.stage->icon16) return; // Icon doesn't need to be updated, leave
+	App.state.taskbar = App.state.stage->icon16;              // Record that we updated the icon
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -343,15 +341,15 @@ void TaskbarIconUpdate() {
 	info.hWnd             = App.window.main; // Handle to the window that will receive messages
 	info.uID              = TASKBAR_ICON;    // Program defined identifier
 	info.uFlags           = NIF_ICON;        // Mask for icon only
-	info.hIcon            = State.taskbar;   // Icon handle
+	info.hIcon            = App.state.taskbar;   // Icon handle
 	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) error(L"shell_notifyicon nim_modify");
 }
 
 // Removes the program icon from the taskbar notification area
 void TaskbarIconRemove() {
 
-	if (!State.taskbar) return; // No icon to remove, leave
-	State.taskbar = NULL;       // Record tha we removed the icon
+	if (!App.state.taskbar) return; // No icon to remove, leave
+	App.state.taskbar = NULL;       // Record tha we removed the icon
 
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -564,7 +562,7 @@ Size MouseScreen() {
 	Size s;
 	s.x = -1;
 	s.y = -1;
-	if (State.pop) return s;
+	if (App.state.pop) return s;
 
 	// Get the mouse position in screen coordinates
 	POINT p;

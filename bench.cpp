@@ -2,7 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
 
 
 
@@ -23,8 +22,8 @@ extern statetop  State;
 void StorePulse() {
 
 	// Only do this once
-	if (State.restored) return;
-	State.restored = true;
+	if (App.state.restored) return;
+	App.state.restored = true;
 
 	// Add all the torrents from last time the program ran
 	std::set<hbig> hashes;
@@ -42,7 +41,7 @@ void StorePulse() {
 	for (std::set<hbig>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
 
 	// Add the torrent or magnet the system launched this program with
-	CString s = State.command;
+	CString s = App.state.command;
 	if (starts(s, L"\"")) { // Parse the command like ["C:\Folder\file.torrent" /more /arguments]
 		s = after(s, L"\"");
 		if (has(s, L"\"")) {

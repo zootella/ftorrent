@@ -2,8 +2,6 @@
 #include "heavy.h"
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Takes a settings structure to look at, or null to not update settings
 // Starts libtorrent and adds extensions
 void InitializeLibtorrent(settings_structure *info) {

@@ -1,25 +1,34 @@
 
+class app_window {
+public:
+
+	HWND main, list, tabs, edit, tip; // Window handles
+
+	app_window() {
+		main = list = tabs = edit = tip = NULL;
+	}
+};
+
 class app_icon {
 public:
 
-	HIMAGELIST list;                  // Handle the the program image list
-	int        source[ICON_CAPACITY]; // Labels the source system index of each icon in the program list
-	int        count;                 // The number of icons loaded into the program list
+	HIMAGELIST list; // Handle the the program image list
+	int source[ICON_CAPACITY]; // Labels the source system index of each icon in the program list
+	int count; // The number of icons loaded into the program list
 
-	int clear, ascending, descending;// Resource icons in the program image list TODO add status icons
+	CString ext; // The most recently requested extension we looked up
+	int index; // Its looked up index
+	CString type; // Its looked up type text
 
+	int clear, ascending, descending; // Index of resource icons in the program image list
 	int file; // The icon a file with no extension gets in the shell
 
-	CString ext;   // The most recently requested extension we looked up
-	int     index; // Its looked up index
-	CString type;  // Its looked up type text
-
 	app_icon() {
-		list = NULL;
-		count = 0;
+		list = NULL; // We haven't made our list yet
+		count = 0; // It doesn't have any icons yet
+		index = -1; // We haven't done our first lookup yet
 		clear = ascending = descending = -1; // Icon index -1 for not in list
 		file = -1;
-		index = -1;
 	}
 };
 
@@ -33,6 +42,7 @@ public:
 
 class app_cursor {
 public:
+
 	HCURSOR arrow, hand, horizontal, vertical, diagonal; // Mouse pointers
 
 	app_cursor() {
@@ -62,34 +72,21 @@ public:
 	}
 };
 
-class app_window {
-public:
-
-	HWND main, list, tabs, edit, tip; // Windows
-
-	app_window() {
-		main = list = tabs = edit = tip = NULL;
-	}
-};
-
-// Areas and sizes in the main window client area
 class app_area {
 public:
 
-	// The list of areas, the area the mouse pressed, and pointers to the areas
-	Area *all, *pressed;
-	Area tools, start, pause, stop, remove;
-	Area bar, corner;
+	Area *all; // The list of areas
+	Area *pressed; // The area the mouse pressed
 
-	// Sizes in the client area
+	Area tools, start, pause, stop, remove; // Buttons
+	Area bar, corner; // Sizing grips
+
 	Size list, tabs, info; // Child window control sizes
 	Size stage, status; // Sizes in the client area used when painting
 
-	// Sizing positions
 	Size collapse; // Where the corner area would be if the window were very small
 	Size stick; // The point in the pressed area where the mouse started dragging
 
-	// New
 	app_area() {
 		all         = &tools; // Link areas into a list
 		tools.next  = &start;
@@ -99,6 +96,49 @@ public:
 		remove.next = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;
+	}
+};
+
+class app_list {
+public:
+
+	int max; // The largest number of characters added into any list view item
+	int sort; // -1 no sort, OR 0+ column sorted
+	int direction; // 1 ascending or -1 descending
+
+	app_list() {
+		max = 0;
+		sort = -1;
+		direction = 1;
+	}
+};
+
+class app_state {
+public:
+
+	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
+	int pop; // How many popup boxes and menus the program has put above the window
+	CString status; // Status bar text
+
+	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
+	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
+
+	Stage *stage; // Current program stage shown on the screen
+	Stage start, downloading, paused, seeding, missing; // Available program stages with painting resources
+
+	bool restored;
+	CString command;
+	bool portable;
+
+	app_state() {
+
+		taskbar = NULL;
+		pop = 0;
+		stage = &start;
+		exit = 0;
+		expect = 0;
+		restored = false;
+		portable = false;
 	}
 };
 
@@ -113,32 +153,21 @@ public:
 	}
 };
 
-class app_list {
-public:
-
-	int max;       // The largest number of characters added into any list view item
-	int sort;      // -1 no sort, OR 0+ column sorted
-	int direction; // 1 ascending or -1 descending
-
-	app_list() {
-		max = 0;
-		sort = -1;
-		direction = 1;
-	}
-};
-
 class app {
 public:
 
-	app_icon icon;
-	app_brush brush;
-	app_cursor cursor;
-	app_menu menu;
-	app_font font;
-	app_window window;
-	app_area area;
+	app_window window; // Window handles
+	app_icon icon; // Program image list and icons
+	app_brush brush; // Color brushes
+	app_cursor cursor; // Mouse pointers
+	app_menu menu; // Menus
+	app_font font; // Fonts
+
+	app_area area; // Areas and sizes in the main window client area
+	app_list list; // Size and sort of the main list view control
+
+	app_state state;
 	app_option option;
-	app_list list;
 
 	CString command; // Command line arguments the system gave our main function
 	HINSTANCE instance; // Program instance handle
@@ -150,46 +179,3 @@ public:
 		session = NULL;
 	}
 };
-
-
-
-
-
-
-
-
-
-// Current program state
-class statetop {
-public:
-
-	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
-	int pop; // How many popup boxes and menus the program has put above the window
-
-	CString status; // Status bar text
-
-
-
-	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
-	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
-
-
-	Stage *stage; // Current program stage shown on the screen
-	Stage start, downloading, paused, seeding, missing; // Available program stages with painting resources
-
-	bool restored;
-	CString command;
-	bool portable;
-
-	statetop() {
-
-		taskbar = NULL;
-		pop = 0;
-		stage = &start;
-		exit = 0;
-		expect = 0;
-		restored = false;
-		portable = false;
-	}
-};
-

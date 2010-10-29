@@ -2,17 +2,15 @@
 #include "include.h" // Include headers and definitions
 app App; // Create global object
 
-statetop  State;
-
 // Start the program
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
 
 	// Save the given instance handle and command text
 	App.instance = instance;
-	State.command = widenPtoC(command);
+	App.state.command = widenPtoC(command);
 
 	// Look for the portable marker
-	State.portable = DiskIsFile(PathPortable());
+	App.state.portable = DiskIsFile(PathPortable());
 
 	// Tell the system we're going to use the list and tree view controls
 	InitializeCommonControls();
@@ -229,7 +227,7 @@ void WindowExit() {
 	ShowWindow(App.window.main, SW_HIDE); // Hide the window
 	TaskbarIconRemove();                  // Remove the taskbar icon if we have one
 
-	State.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
+	App.state.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
 	LibraryStop();               // Ask libtorrent to prepare save data for each torrent
 }
 

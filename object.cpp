@@ -2,8 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Takes a window
 // Uses this size in client coordinates
 // Converts the size to screen coordinates

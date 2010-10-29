@@ -2,8 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Set up the program image list
 void StartIcon() {
 
@@ -42,24 +40,24 @@ void PaintWindow(Device *device) {
 
 	// Paint the area between the toolbar buttons and the stage text
 	Size s1 = App.area.stage;
-	s1.w = App.area.stage.w - State.stage->size.w - margin;
+	s1.w = App.area.stage.w - App.state.stage->size.w - margin;
 	if (s1.w < margin) s1.w = margin; // Narrow window, pin to left instead of right
-	PaintFill(device, s1, State.stage->background.brush);
+	PaintFill(device, s1, App.state.stage->background.brush);
 
 	// Paint the stage text
-	Size s2 = State.stage->size; // Start with text width and height
+	Size s2 = App.state.stage->size; // Start with text width and height
 	s2.x = s1.Right();
 	s2.y = above;
 	s2.SetBottom(App.area.stage.Bottom()); // Don't paint down into the list view control
 	device->Font(App.font.arial);
-	device->FontColor(State.stage->ink.color);
-	device->BackgroundColor(State.stage->background.color);
-	PaintLabel(device, State.stage->title, s2);
+	device->FontColor(App.state.stage->ink.color);
+	device->BackgroundColor(App.state.stage->background.color);
+	PaintLabel(device, App.state.stage->title, s2);
 
 	// Paint the area to the right of the stage text
 	Size s3 = App.area.stage;
 	s3.SetLeft(s2.Right());
-	PaintFill(device, s3, State.stage->background.brush);
+	PaintFill(device, s3, App.state.stage->background.brush);
 
 	// Paint all the areas
 	Area *a = App.area.all;
@@ -77,7 +75,7 @@ void PaintWindow(Device *device) {
 	PaintFill(device, s, App.brush.line.brush);
 	s = App.area.status;
 	s.ShiftTop(1);
-	PaintText(device, State.status, s, false, true, true, true);
+	PaintText(device, App.state.status, s, false, true, true, true);
 }
 
 // Takes a device context and an area
@@ -101,26 +99,26 @@ void PaintArea(Device *device, Area *a) {
 		icon.h = a->size.h - (2 * space);
 
 		// Paint icon
-		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  State.stage->background.brush);
-		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  State.stage->background.brush);
-		else                                   PaintIcon(device, icon, a->icon, State.stage->background.brush);
+		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  App.state.stage->background.brush);
+		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  App.state.stage->background.brush);
+		else                                   PaintIcon(device, icon, a->icon, App.state.stage->background.brush);
 
 		// Fill outside margins
 		s = a->size;
 		s.SetBottom(icon.y);
-		PaintFill(device, s, State.stage->background.brush); // Row above icon
+		PaintFill(device, s, App.state.stage->background.brush); // Row above icon
 		s = icon;
 		s.w = 0;
 		s.SetLeft(a->size.x);
-		PaintFill(device, s, State.stage->background.brush); // Left of icon
+		PaintFill(device, s, App.state.stage->background.brush); // Left of icon
 		s = icon;
 		s.CloseRight();
 		s.SetRight(a->size.Right());
-		PaintFill(device, s, State.stage->background.brush); // Right of icon
+		PaintFill(device, s, App.state.stage->background.brush); // Right of icon
 		s = a->size;
 		s.y = icon.Bottom();
 		s.SetBottom(a->size.Bottom());
-		PaintFill(device, s, State.stage->background.brush); // Row beneath icon
+		PaintFill(device, s, App.state.stage->background.brush); // Row beneath icon
 
 	// Link
 	} else if (a->command == CommandLink) {
@@ -196,35 +194,35 @@ void AreaCreate() {
 	App.brush.greennotice  = CreateBrush(RGB(  0, 135,   0));
 
 	// Assemble stages
-	State.start.title = PROGRAM_NAME;
-	State.start.icon16 = blue16;
-	State.start.icon32 = blue32;
-	State.start.ink = App.brush.lightblue;
-	State.start.background = App.brush.blue;
+	App.state.start.title = PROGRAM_NAME;
+	App.state.start.icon16 = blue16;
+	App.state.start.icon32 = blue32;
+	App.state.start.ink = App.brush.lightblue;
+	App.state.start.background = App.brush.blue;
 
-	State.downloading.title = L"downloading";
-	State.downloading.icon16 = blue16;
-	State.downloading.icon32 = blue32;
-	State.downloading.ink = App.brush.lightblue;
-	State.downloading.background = App.brush.blue;
+	App.state.downloading.title = L"downloading";
+	App.state.downloading.icon16 = blue16;
+	App.state.downloading.icon32 = blue32;
+	App.state.downloading.ink = App.brush.lightblue;
+	App.state.downloading.background = App.brush.blue;
 
-	State.paused.title = L"paused";
-	State.paused.icon16 = yellow16;
-	State.paused.icon32 = yellow32;
-	State.paused.ink = App.brush.lightyellow;
-	State.paused.background = App.brush.yellow;
+	App.state.paused.title = L"paused";
+	App.state.paused.icon16 = yellow16;
+	App.state.paused.icon32 = yellow32;
+	App.state.paused.ink = App.brush.lightyellow;
+	App.state.paused.background = App.brush.yellow;
 
-	State.seeding.title = L"seeding";
-	State.seeding.icon16 = green16;
-	State.seeding.icon32 = green32;
-	State.seeding.ink = App.brush.lightgreen;
-	State.seeding.background = App.brush.green;
+	App.state.seeding.title = L"seeding";
+	App.state.seeding.icon16 = green16;
+	App.state.seeding.icon32 = green32;
+	App.state.seeding.ink = App.brush.lightgreen;
+	App.state.seeding.background = App.brush.green;
 
-	State.missing.title = L"missing";
-	State.missing.icon16 = red16;
-	State.missing.icon32 = red32;
-	State.missing.ink = App.brush.lightred;
-	State.missing.background = App.brush.red;
+	App.state.missing.title = L"missing";
+	App.state.missing.icon16 = red16;
+	App.state.missing.icon32 = red32;
+	App.state.missing.ink = App.brush.lightred;
+	App.state.missing.background = App.brush.red;
 
 	// Text size
 	Device device;
@@ -232,11 +230,11 @@ void AreaCreate() {
 	device.Font(App.font.normal); // Find the height of the default font
 	App.font.height = SizeText(&device, L"A").h;
 	device.Font(App.font.arial); // Find the widths of the stage titles
-	State.start.size       = SizeText(&device, State.start.title);
-	State.downloading.size = SizeText(&device, State.downloading.title);
-	State.paused.size      = SizeText(&device, State.paused.title);
-	State.seeding.size     = SizeText(&device, State.seeding.title);
-	State.missing.size     = SizeText(&device, State.missing.title);
+	App.state.start.size       = SizeText(&device, App.state.start.title);
+	App.state.downloading.size = SizeText(&device, App.state.downloading.title);
+	App.state.paused.size      = SizeText(&device, App.state.paused.title);
+	App.state.seeding.size     = SizeText(&device, App.state.seeding.title);
+	App.state.missing.size     = SizeText(&device, App.state.missing.title);
 
 	// Buttons
 	App.area.tools.command  = CommandMenu;
@@ -274,14 +272,14 @@ void AreaCreate() {
 void AreaPulse() {
 
 	// Determine what the program stage should be right now
-	Stage *stage = &State.start; //TODO replace this with code that actually chooses what it should be
+	Stage *stage = &App.state.start; //TODO replace this with code that actually chooses what it should be
 
 	// Update the display of the stage if necessary
-	if (!State.stage || State.stage != stage) {
-		State.stage = stage; // Save the new stage
+	if (!App.state.stage || App.state.stage != stage) {
+		App.state.stage = stage; // Save the new stage
 
 		// Update the display
-		SetIcon(App.window.main, State.stage->icon16, State.stage->icon32); // Window icon
+		SetIcon(App.window.main, App.state.stage->icon16, App.state.stage->icon32); // Window icon
 		TaskbarIconUpdate(); // Taskbar notification area icon
 		PaintMessage(); // Repaint the window now to show the new stage title
 	}
@@ -442,7 +440,7 @@ void AreaPulse() {
 	*/
 
 	//TODO integrate this into what's next
-//	State.title = L"ftorrent";
+//	App.state.title = L"ftorrent";
 
 	// Compose status text
 	CString s = SayNumber(rows, L"file");
@@ -450,8 +448,8 @@ void AreaPulse() {
 	if (selected) s += L"  " + InsertCommas(numerals(selected)) + L" selected";
 
 	// The status text is different
-	if (State.status != s) {
-		State.status = s; // Update it
+	if (App.state.status != s) {
+		App.state.status = s; // Update it
 
 		// The status bar has size
 		if (App.area.status.Is()) {
@@ -465,7 +463,7 @@ void AreaPulse() {
 			}
 
 			// Paint the status text to the window
-			PaintText(&device, State.status, App.area.status, false, true, true, true);
+			PaintText(&device, App.state.status, App.area.status, false, true, true, true);
 		}
 	}
 }
@@ -479,7 +477,7 @@ void AreaPopUp() {
 	MouseRelease();
 
 	// Record there is one more pop up window
-	State.pop++;
+	App.state.pop++;
 
 	// Pulse the area now as the peeking popup won't pulse on idle
 	AreaPulse();
@@ -490,7 +488,7 @@ void AreaPopUp() {
 void AreaPopDown() {
 
 	// Record there is one fewer pop up window
-	State.pop--;
+	App.state.pop--;
 }
 
 // Given a list of ints like -5, -4, 120, 200

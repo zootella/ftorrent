@@ -2,8 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Takes text
 // Copies and catcatenates the text into a string
 // Returns a string

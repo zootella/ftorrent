@@ -2,8 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-extern statetop  State;
-
 // Run a snippet of test code
 void Test() {
 
