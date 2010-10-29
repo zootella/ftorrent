@@ -6,11 +6,11 @@ app App; // Create global object
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show) {
 
 	// Save the given instance handle and command text
-	App.instance = instance;
-	App.state.command = widenPtoC(command);
+	App.window.instance = instance;
+	App.cycle.command = widenPtoC(command);
 
 	// Look for the portable marker
-	App.state.portable = DiskIsFile(PathPortable());
+	App.cycle.portable = DiskIsFile(PathPortable());
 
 	// Tell the system we're going to use the list and tree view controls
 	InitializeCommonControls();
@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	info.lpfnWndProc   = WindowProcedure;            // Function pointer to the window procedure
 	info.cbClsExtra    = 0;                          // No extra bytes
 	info.cbWndExtra    = 0;
-	info.hInstance     = App.instance;               // Instance handle
+	info.hInstance     = App.window.instance;        // Instance handle
 	info.hIcon         = NULL;                       // No icons yet
 	info.hIconSm       = NULL;
 	info.hCursor       = NULL;                       // Mouse cursor changes
@@ -227,7 +227,7 @@ void WindowExit() {
 	ShowWindow(App.window.main, SW_HIDE); // Hide the window
 	TaskbarIconRemove();                  // Remove the taskbar icon if we have one
 
-	App.state.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
+	App.cycle.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
 	LibraryStop();                   // Ask libtorrent to prepare save data for each torrent
 }
 

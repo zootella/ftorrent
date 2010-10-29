@@ -196,7 +196,7 @@ HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HME
 		size, size, size, size, // Window position and size
 		parent,                 // Handle to parent window
 		menu,                   // Menu handle or child window identification number
-		App.instance,           // Program instance handle
+		App.window.instance,    // Program instance handle
 		NULL);                  // No parameter
 	if (!window) error(L"createwindow");
 	return window;
@@ -311,8 +311,8 @@ void PaintMessage(HWND window) {
 // Adds the program icon to the taskbar notification area
 void TaskbarIconAdd() {
 
-	if (App.state.taskbar) return;               // Icon already there, leave
-	App.state.taskbar = App.state.stage->icon16; // Pick the icon for the current stage
+	if (App.cycle.taskbar) return;              // Icon already there, leave
+	App.cycle.taskbar = App.stage.show->icon16; // Pick the icon for the current stage
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -322,7 +322,7 @@ void TaskbarIconAdd() {
 	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = App.state.taskbar;                // Icon handle
+	info.hIcon            = App.cycle.taskbar;                // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) error(L"shell_notifyicon nim_add");
 }
@@ -330,9 +330,9 @@ void TaskbarIconAdd() {
 // Updates the program icon in the taskbar notification area
 void TaskbarIconUpdate() {
 
-	if (!App.state.taskbar) return;                           // No icon to update, leave
-	if (App.state.taskbar == App.state.stage->icon16) return; // Icon doesn't need to be updated, leave
-	App.state.taskbar = App.state.stage->icon16;              // Record that we updated the icon
+	if (!App.cycle.taskbar) return;                          // No icon to update, leave
+	if (App.cycle.taskbar == App.stage.show->icon16) return; // Icon doesn't need to be updated, leave
+	App.cycle.taskbar = App.stage.show->icon16;              // Record that we updated the icon
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -341,15 +341,15 @@ void TaskbarIconUpdate() {
 	info.hWnd             = App.window.main;   // Handle to the window that will receive messages
 	info.uID              = TASKBAR_ICON;      // Program defined identifier
 	info.uFlags           = NIF_ICON;          // Mask for icon only
-	info.hIcon            = App.state.taskbar; // Icon handle
+	info.hIcon            = App.cycle.taskbar; // Icon handle
 	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) error(L"shell_notifyicon nim_modify");
 }
 
 // Removes the program icon from the taskbar notification area
 void TaskbarIconRemove() {
 
-	if (!App.state.taskbar) return; // No icon to remove, leave
-	App.state.taskbar = NULL;       // Record tha we removed the icon
+	if (!App.cycle.taskbar) return; // No icon to remove, leave
+	App.cycle.taskbar = NULL;       // Record tha we removed the icon
 
 	// Remove the taskbar notification icon
 	NOTIFYICONDATA info;
@@ -383,11 +383,11 @@ HICON LoadIconResource(read name, int w, int h) {
 
 	// Create the icon from the resource
 	HICON icon = (HICON)LoadImage(
-		App.instance,     // Load from this instance
-		name,             // Resource name
-		IMAGE_ICON,       // Image type
-		w, h,             // Width and height to load
-		LR_DEFAULTCOLOR); // Default flag does nothing
+		App.window.instance, // Load from this instance
+		name,                // Resource name
+		IMAGE_ICON,          // Image type
+		w, h,                // Width and height to load
+		LR_DEFAULTCOLOR);    // Default flag does nothing
 	if (!icon) error(L"loadimage icon");
 	return icon;
 }
@@ -404,7 +404,7 @@ void CursorSet(HCURSOR cursor) {
 // Takes a menu name and loads it from resources
 HMENU MenuLoad(read name) {
 
-	HMENU menus = LoadMenu(App.instance, name); // Load the menu resource
+	HMENU menus = LoadMenu(App.window.instance, name); // Load the menu resource
 	if (!menus) error(L"loadmenu");
 	return menus;
 }
@@ -562,7 +562,7 @@ Size MouseScreen() {
 	Size s;
 	s.x = -1;
 	s.y = -1;
-	if (App.state.pop) return s;
+	if (App.cycle.pop) return s;
 
 	// Get the mouse position in screen coordinates
 	POINT p;
@@ -893,8 +893,8 @@ int Dialog(read resource, DLGPROC procedure, LPARAM lparam) {
 	// Show the dialog box, sending messages to its procedure and returning here when it is closed
 	int result;
 	AreaPopUp();
-	if (lparam) result = (int)DialogBoxParam(App.instance, resource, App.window.main, procedure, lparam);
-    else result = (int)DialogBox(App.instance, resource, App.window.main, procedure);
+	if (lparam) result = (int)DialogBoxParam(App.window.instance, resource, App.window.main, procedure, lparam);
+    else result = (int)DialogBox(App.window.instance, resource, App.window.main, procedure);
 	AreaPopDown();
 	return result;
 }
@@ -1022,11 +1022,11 @@ int IconAddResource(read resource) {
 
 	// Load the icon from the resource
 	HICON icon = (HICON)LoadImage(
-		App.instance,     // Handle to instance
-		resource,         // Resource name text
-		IMAGE_ICON,       // This resource is an icon
-		16, 16,           // Size
-		LR_DEFAULTCOLOR); // No special options
+		App.window.instance, // Handle to instance
+		resource,            // Resource name text
+		IMAGE_ICON,          // This resource is an icon
+		16, 16,              // Size
+		LR_DEFAULTCOLOR);    // No special options
 	if (!icon) { error(L"loadimage"); return -1; }
 
 	int programindex = IconAdd(icon, -1); // Insert the icon into the program image list

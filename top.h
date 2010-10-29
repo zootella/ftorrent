@@ -3,9 +3,11 @@ class app_window {
 public:
 
 	HWND main, list, tabs, edit, tip; // Window handles
+	HINSTANCE instance; // Program instance handle
 
 	app_window() {
 		main = list = tabs = edit = tip = NULL;
+		instance = NULL;
 	}
 };
 
@@ -72,6 +74,13 @@ public:
 	}
 };
 
+class app_skin {
+public:
+
+	app_skin() {
+	}
+};
+
 class app_area {
 public:
 
@@ -116,21 +125,35 @@ public:
 class app_cycle {
 public:
 
+	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
+	int pop; // How many popup boxes and menus the program has put above the window
+	CString status; // Status bar text
+
+	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
+	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
+
+	bool restored; // True once torrents from the previous session are restored
+	CString command; // Command line arguments the program was launched with
+	bool portable; // True if we're running beside the portable marker
+
 	app_cycle() {
+		taskbar = NULL; // Nothing in the taskbar to start
+		pop = 0; // No popup boxes at the start
+		exit = 0; // The program starts out running
+		expect = 0; // No torrent resume data messages expected yet
+		restored = false; // Have not yet restored torrents from the previous session
+		portable = false; // Have not seen the portable marker beside us yet
 	}
 };
 
 class app_stage {
 public:
 
+	Stage start, downloading, paused, seeding, missing; // Available program stages with painting resources
+	Stage *show; // Current program stage shown in the window
+
 	app_stage() {
-	}
-};
-
-class app_skin {
-public:
-
-	app_skin() {
+		show = &start;
 	}
 };
 
@@ -145,39 +168,6 @@ public:
 	}
 };
 
-
-
-
-
-class app_state {
-public:
-
-	HICON taskbar; // The icon we're showing in the taskbar, NULL if no icon there now
-	int pop; // How many popup boxes and menus the program has put above the window
-	CString status; // Status bar text
-
-	DWORD exit; // The tick count when the user exited the window and the program hid it, 0 program still running
-	int expect; // How many torrent resume data messages we are still waiting for, 0 got them all or not in use yet
-
-	Stage *stage; // Current program stage shown on the screen
-	Stage start, downloading, paused, seeding, missing; // Available program stages with painting resources
-
-	bool restored;
-	CString command;
-	bool portable;
-
-	app_state() {
-
-		taskbar = NULL;
-		pop = 0;
-		stage = &start;
-		exit = 0;
-		expect = 0;
-		restored = false;
-		portable = false;
-	}
-};
-
 class app {
 public:
 
@@ -188,23 +178,18 @@ public:
 	app_menu menu; // Menus
 	app_font font; // Fonts
 
+	app_skin skin; // Drawing resources for the currently loaded skin
 	app_area area; // Areas and sizes in the main window client area
 	app_list list; // Size and sort of the main list view control
 
 	app_cycle cycle; // Start and close of the program
 	app_stage stage; // Current global download stage
-	app_skin skin; // Drawing resources for the currently loaded skin
 	app_option option; // Program options the user sets
 
-	app_state state;
-
-	CString command; // Command line arguments the system gave our main function
-	HINSTANCE instance; // Program instance handle
 	libtorrent::session *session; // Session in libtorrent
 	std::vector<Torrent> torrents; // Torrents the program has in its list
 
 	app() {
-		instance = NULL;
 		session = NULL;
 	}
 };

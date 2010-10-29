@@ -22,8 +22,8 @@ extern app App; // Access global object
 void StorePulse() {
 
 	// Only do this once
-	if (App.state.restored) return;
-	App.state.restored = true;
+	if (App.cycle.restored) return;
+	App.cycle.restored = true;
 
 	// Add all the torrents from last time the program ran
 	std::set<hbig> hashes;
@@ -41,7 +41,7 @@ void StorePulse() {
 	for (std::set<hbig>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
 
 	// Add the torrent or magnet the system launched this program with
-	CString s = App.state.command;
+	CString s = App.cycle.command;
 	if (starts(s, L"\"")) { // Parse the command like ["C:\Folder\file.torrent" /more /arguments]
 		s = after(s, L"\"");
 		if (has(s, L"\"")) {

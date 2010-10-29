@@ -40,24 +40,24 @@ void PaintWindow(Device *device) {
 
 	// Paint the area between the toolbar buttons and the stage text
 	Size s1 = App.area.stage;
-	s1.w = App.area.stage.w - App.state.stage->size.w - margin;
+	s1.w = App.area.stage.w - App.stage.show->size.w - margin;
 	if (s1.w < margin) s1.w = margin; // Narrow window, pin to left instead of right
-	PaintFill(device, s1, App.state.stage->background.brush);
+	PaintFill(device, s1, App.stage.show->background.brush);
 
 	// Paint the stage text
-	Size s2 = App.state.stage->size; // Start with text width and height
+	Size s2 = App.stage.show->size; // Start with text width and height
 	s2.x = s1.Right();
 	s2.y = above;
 	s2.SetBottom(App.area.stage.Bottom()); // Don't paint down into the list view control
 	device->Font(App.font.arial);
-	device->FontColor(App.state.stage->ink.color);
-	device->BackgroundColor(App.state.stage->background.color);
-	PaintLabel(device, App.state.stage->title, s2);
+	device->FontColor(App.stage.show->ink.color);
+	device->BackgroundColor(App.stage.show->background.color);
+	PaintLabel(device, App.stage.show->title, s2);
 
 	// Paint the area to the right of the stage text
 	Size s3 = App.area.stage;
 	s3.SetLeft(s2.Right());
-	PaintFill(device, s3, App.state.stage->background.brush);
+	PaintFill(device, s3, App.stage.show->background.brush);
 
 	// Paint all the areas
 	Area *a = App.area.all;
@@ -75,7 +75,7 @@ void PaintWindow(Device *device) {
 	PaintFill(device, s, App.brush.line.brush);
 	s = App.area.status;
 	s.ShiftTop(1);
-	PaintText(device, App.state.status, s, false, true, true, true);
+	PaintText(device, App.cycle.status, s, false, true, true, true);
 }
 
 // Takes a device context and an area
@@ -99,26 +99,26 @@ void PaintArea(Device *device, Area *a) {
 		icon.h = a->size.h - (2 * space);
 
 		// Paint icon
-		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  App.state.stage->background.brush);
-		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  App.state.stage->background.brush);
-		else                                   PaintIcon(device, icon, a->icon, App.state.stage->background.brush);
+		if      (a->display == DisplayGhosted) PaintIcon(device, icon, a->dim,  App.stage.show->background.brush);
+		else if (a->display == DisplayHot)     PaintIcon(device, icon, a->hot,  App.stage.show->background.brush);
+		else                                   PaintIcon(device, icon, a->icon, App.stage.show->background.brush);
 
 		// Fill outside margins
 		s = a->size;
 		s.SetBottom(icon.y);
-		PaintFill(device, s, App.state.stage->background.brush); // Row above icon
+		PaintFill(device, s, App.stage.show->background.brush); // Row above icon
 		s = icon;
 		s.w = 0;
 		s.SetLeft(a->size.x);
-		PaintFill(device, s, App.state.stage->background.brush); // Left of icon
+		PaintFill(device, s, App.stage.show->background.brush); // Left of icon
 		s = icon;
 		s.CloseRight();
 		s.SetRight(a->size.Right());
-		PaintFill(device, s, App.state.stage->background.brush); // Right of icon
+		PaintFill(device, s, App.stage.show->background.brush); // Right of icon
 		s = a->size;
 		s.y = icon.Bottom();
 		s.SetBottom(a->size.Bottom());
-		PaintFill(device, s, App.state.stage->background.brush); // Row beneath icon
+		PaintFill(device, s, App.stage.show->background.brush); // Row beneath icon
 
 	// Link
 	} else if (a->command == CommandLink) {
@@ -194,35 +194,35 @@ void AreaCreate() {
 	App.brush.greennotice  = CreateBrush(RGB(  0, 135,   0));
 
 	// Assemble stages
-	App.state.start.title = PROGRAM_NAME;
-	App.state.start.icon16 = blue16;
-	App.state.start.icon32 = blue32;
-	App.state.start.ink = App.brush.lightblue;
-	App.state.start.background = App.brush.blue;
+	App.stage.start.title = PROGRAM_NAME;
+	App.stage.start.icon16 = blue16;
+	App.stage.start.icon32 = blue32;
+	App.stage.start.ink = App.brush.lightblue;
+	App.stage.start.background = App.brush.blue;
 
-	App.state.downloading.title = L"downloading";
-	App.state.downloading.icon16 = blue16;
-	App.state.downloading.icon32 = blue32;
-	App.state.downloading.ink = App.brush.lightblue;
-	App.state.downloading.background = App.brush.blue;
+	App.stage.downloading.title = L"downloading";
+	App.stage.downloading.icon16 = blue16;
+	App.stage.downloading.icon32 = blue32;
+	App.stage.downloading.ink = App.brush.lightblue;
+	App.stage.downloading.background = App.brush.blue;
 
-	App.state.paused.title = L"paused";
-	App.state.paused.icon16 = yellow16;
-	App.state.paused.icon32 = yellow32;
-	App.state.paused.ink = App.brush.lightyellow;
-	App.state.paused.background = App.brush.yellow;
+	App.stage.paused.title = L"paused";
+	App.stage.paused.icon16 = yellow16;
+	App.stage.paused.icon32 = yellow32;
+	App.stage.paused.ink = App.brush.lightyellow;
+	App.stage.paused.background = App.brush.yellow;
 
-	App.state.seeding.title = L"seeding";
-	App.state.seeding.icon16 = green16;
-	App.state.seeding.icon32 = green32;
-	App.state.seeding.ink = App.brush.lightgreen;
-	App.state.seeding.background = App.brush.green;
+	App.stage.seeding.title = L"seeding";
+	App.stage.seeding.icon16 = green16;
+	App.stage.seeding.icon32 = green32;
+	App.stage.seeding.ink = App.brush.lightgreen;
+	App.stage.seeding.background = App.brush.green;
 
-	App.state.missing.title = L"missing";
-	App.state.missing.icon16 = red16;
-	App.state.missing.icon32 = red32;
-	App.state.missing.ink = App.brush.lightred;
-	App.state.missing.background = App.brush.red;
+	App.stage.missing.title = L"missing";
+	App.stage.missing.icon16 = red16;
+	App.stage.missing.icon32 = red32;
+	App.stage.missing.ink = App.brush.lightred;
+	App.stage.missing.background = App.brush.red;
 
 	// Text size
 	Device device;
@@ -230,11 +230,11 @@ void AreaCreate() {
 	device.Font(App.font.normal); // Find the height of the default font
 	App.font.height = SizeText(&device, L"A").h;
 	device.Font(App.font.arial); // Find the widths of the stage titles
-	App.state.start.size       = SizeText(&device, App.state.start.title);
-	App.state.downloading.size = SizeText(&device, App.state.downloading.title);
-	App.state.paused.size      = SizeText(&device, App.state.paused.title);
-	App.state.seeding.size     = SizeText(&device, App.state.seeding.title);
-	App.state.missing.size     = SizeText(&device, App.state.missing.title);
+	App.stage.start.size       = SizeText(&device, App.stage.start.title);
+	App.stage.downloading.size = SizeText(&device, App.stage.downloading.title);
+	App.stage.paused.size      = SizeText(&device, App.stage.paused.title);
+	App.stage.seeding.size     = SizeText(&device, App.stage.seeding.title);
+	App.stage.missing.size     = SizeText(&device, App.stage.missing.title);
 
 	// Buttons
 	App.area.tools.command  = CommandMenu;
@@ -272,14 +272,14 @@ void AreaCreate() {
 void AreaPulse() {
 
 	// Determine what the program stage should be right now
-	Stage *stage = &App.state.start; //TODO replace this with code that actually chooses what it should be
+	Stage *stage = &App.stage.start; //TODO replace this with code that actually chooses what it should be
 
 	// Update the display of the stage if necessary
-	if (!App.state.stage || App.state.stage != stage) {
-		App.state.stage = stage; // Save the new stage
+	if (!App.stage.show || App.stage.show != stage) {
+		App.stage.show = stage; // Save the new stage
 
 		// Update the display
-		SetIcon(App.window.main, App.state.stage->icon16, App.state.stage->icon32); // Window icon
+		SetIcon(App.window.main, App.stage.show->icon16, App.stage.show->icon32); // Window icon
 		TaskbarIconUpdate(); // Taskbar notification area icon
 		PaintMessage(); // Repaint the window now to show the new stage title
 	}
@@ -440,7 +440,7 @@ void AreaPulse() {
 	*/
 
 	//TODO integrate this into what's next
-//	App.state.title = L"ftorrent";
+//	App.stage.title = L"ftorrent";
 
 	// Compose status text
 	CString s = SayNumber(rows, L"file");
@@ -448,8 +448,8 @@ void AreaPulse() {
 	if (selected) s += L"  " + InsertCommas(numerals(selected)) + L" selected";
 
 	// The status text is different
-	if (App.state.status != s) {
-		App.state.status = s; // Update it
+	if (App.cycle.status != s) {
+		App.cycle.status = s; // Update it
 
 		// The status bar has size
 		if (App.area.status.Is()) {
@@ -463,7 +463,7 @@ void AreaPulse() {
 			}
 
 			// Paint the status text to the window
-			PaintText(&device, App.state.status, App.area.status, false, true, true, true);
+			PaintText(&device, App.cycle.status, App.area.status, false, true, true, true);
 		}
 	}
 }
@@ -477,7 +477,7 @@ void AreaPopUp() {
 	MouseRelease();
 
 	// Record there is one more pop up window
-	App.state.pop++;
+	App.cycle.pop++;
 
 	// Pulse the area now as the peeking popup won't pulse on idle
 	AreaPulse();
@@ -488,7 +488,7 @@ void AreaPopUp() {
 void AreaPopDown() {
 
 	// Record there is one fewer pop up window
-	App.state.pop--;
+	App.cycle.pop--;
 }
 
 // Given a list of ints like -5, -4, 120, 200
@@ -758,7 +758,7 @@ void DialogOptions() {
 	ZeroMemory(&page, sizeof(page)); // Size of the whole array
 	page[0].dwSize      = page[1].dwSize      = page[2].dwSize      = sizeof(page[0]); // Size of just one page
 	page[0].dwFlags     = page[1].dwFlags     = page[2].dwFlags     = PSP_DEFAULT;
-	page[0].hInstance   = page[1].hInstance   = page[2].hInstance   = App.instance;
+	page[0].hInstance   = page[1].hInstance   = page[2].hInstance   = App.window.instance;
 	page[0].pfnCallback = page[1].pfnCallback = page[2].pfnCallback = NULL;
 	page[0].lParam      = page[1].lParam      = page[2].lParam      = 0;
 
@@ -776,7 +776,7 @@ void DialogOptions() {
 	header.dwSize      = sizeof(header);          // Size of the header
 	header.dwFlags     = PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP; // Leave out the apply button and the help question mark
 	header.hwndParent  = App.window.main;         // Handle to parent window
-	header.hInstance   = App.instance;            // Handle to application instance
+	header.hInstance   = App.window.instance;     // Handle to application instance
 	header.hIcon       = NULL;                    // No icon
 	header.pszCaption  = L"Options";              // Text in the title bar
 	header.nPages      = 3;                       // Number of pages
