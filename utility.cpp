@@ -311,7 +311,7 @@ void PaintMessage(HWND window) {
 // Adds the program icon to the taskbar notification area
 void TaskbarIconAdd() {
 
-	if (App.state.taskbar) return;           // Icon already there, leave
+	if (App.state.taskbar) return;               // Icon already there, leave
 	App.state.taskbar = App.state.stage->icon16; // Pick the icon for the current stage
 
 	// Add the taskbar notification icon
@@ -322,7 +322,7 @@ void TaskbarIconAdd() {
 	info.uID              = TASKBAR_ICON;                     // Program defined identifier
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
-	info.hIcon            = App.state.taskbar;                    // Icon handle
+	info.hIcon            = App.state.taskbar;                // Icon handle
 	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) error(L"shell_notifyicon nim_add");
 }
@@ -330,18 +330,18 @@ void TaskbarIconAdd() {
 // Updates the program icon in the taskbar notification area
 void TaskbarIconUpdate() {
 
-	if (!App.state.taskbar) return;                       // No icon to update, leave
+	if (!App.state.taskbar) return;                           // No icon to update, leave
 	if (App.state.taskbar == App.state.stage->icon16) return; // Icon doesn't need to be updated, leave
 	App.state.taskbar = App.state.stage->icon16;              // Record that we updated the icon
 
 	// Add the taskbar notification icon
 	NOTIFYICONDATA info;
 	ZeroMemory(&info, sizeof(info));
-	info.cbSize           = sizeof(info);    // Size of this structure
-	info.hWnd             = App.window.main; // Handle to the window that will receive messages
-	info.uID              = TASKBAR_ICON;    // Program defined identifier
-	info.uFlags           = NIF_ICON;        // Mask for icon only
-	info.hIcon            = App.state.taskbar;   // Icon handle
+	info.cbSize           = sizeof(info);      // Size of this structure
+	info.hWnd             = App.window.main;   // Handle to the window that will receive messages
+	info.uID              = TASKBAR_ICON;      // Program defined identifier
+	info.uFlags           = NIF_ICON;          // Mask for icon only
+	info.hIcon            = App.state.taskbar; // Icon handle
 	if (!Shell_NotifyIcon(NIM_MODIFY, &info)) error(L"shell_notifyicon nim_modify");
 }
 

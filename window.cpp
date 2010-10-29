@@ -228,7 +228,7 @@ void WindowExit() {
 	TaskbarIconRemove();                  // Remove the taskbar icon if we have one
 
 	App.state.exit = GetTickCount(); // Record that the user gave the exit command and when it happened
-	LibraryStop();               // Ask libtorrent to prepare save data for each torrent
+	LibraryStop();                   // Ask libtorrent to prepare save data for each torrent
 }
 
 // Process a message from the system

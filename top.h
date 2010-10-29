@@ -113,6 +113,42 @@ public:
 	}
 };
 
+class app_cycle {
+public:
+
+	app_cycle() {
+	}
+};
+
+class app_stage {
+public:
+
+	app_stage() {
+	}
+};
+
+class app_skin {
+public:
+
+	app_skin() {
+	}
+};
+
+class app_option {
+public:
+
+	CString folder; // Path to folder to save files
+	bool associate; // True to associate torrent and magnet
+
+	app_option() {
+		associate = true;
+	}
+};
+
+
+
+
+
 class app_state {
 public:
 
@@ -142,17 +178,6 @@ public:
 	}
 };
 
-class app_option {
-public:
-
-	CString folder; // Path to folder to save files
-	bool associate; // True to associate torrent and magnet
-
-	app_option() {
-		associate = true;
-	}
-};
-
 class app {
 public:
 
@@ -166,8 +191,12 @@ public:
 	app_area area; // Areas and sizes in the main window client area
 	app_list list; // Size and sort of the main list view control
 
+	app_cycle cycle; // Start and close of the program
+	app_stage stage; // Current global download stage
+	app_skin skin; // Drawing resources for the currently loaded skin
+	app_option option; // Program options the user sets
+
 	app_state state;
-	app_option option;
 
 	CString command; // Command line arguments the system gave our main function
 	HINSTANCE instance; // Program instance handle
