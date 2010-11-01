@@ -7,8 +7,7 @@ void Test() {
 
 
 
-	std::map<CString, CString> map;
-	// map string to a little object that has text and an icon index int, Cell
+	std::map<CString, Cell> map;
 
 
 }

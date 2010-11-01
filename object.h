@@ -329,8 +329,19 @@ public:
 };
 
 
+// Information for a single item or subitem in a list view control
+class Cell {
+public:
 
+	CString text;
+	int icon;
+	sbig sort;
 
+	Cell() {
+		icon = -1; // No icon
+		sort = 0; //TODO define what this means
+	}
+};
 
 
 
