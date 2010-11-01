@@ -1057,7 +1057,7 @@ int IconAdd(HICON icon, int systemindex) {
 void ColumnIcon(HWND window, int column, int icon) {
 
 	// Set the icon in the column
-	LV_COLUMN info;
+	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
 	info.mask   = LVCF_IMAGE;
 	info.iImage = icon;
@@ -1077,7 +1077,7 @@ void ColumnSelect(HWND window, int column) {
 void ListColumnInsert(HWND window, int column, int format, int image, read r, int width) {
 
 	// Add the column to the list view control
-	LV_COLUMN info;
+	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
 	info.mask    = LVCF_FMT | LVCF_IMAGE | LVCF_TEXT | LVCF_WIDTH;
 	info.fmt     = format;
@@ -1369,6 +1369,7 @@ CString ListText(HWND window, int row, int column) {
 	int     n = App.list.max + 1; // Add 1 character to have space to write the wide null terminator
 	LPWSTR  w = s.GetBuffer(n);
 
+	//TODO do this without needing app list max
 	// Copy in the characters
 	ListView_GetItemText(window, row, column, w, n); // Writes null terminator
 	s.ReleaseBuffer();

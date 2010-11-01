@@ -329,6 +329,25 @@ public:
 };
 
 
+
+class Column {
+public:
+
+	int format;
+	int icon;
+	CString text;
+	int width;
+
+	Column() {
+		format = 0;
+		icon = -1;
+		width = 16;
+	}
+};
+
+
+
+
 // Information for a single item or subitem in a list view control
 class Cell {
 public:

@@ -470,17 +470,17 @@ void AddRow(hbig hash) {
 		App.window.list,
 		5,
 		(LPARAM)t->Hash(),
-		t->ComposeStatusIcon(),
-		t->ComposeStatus(),
-		t->ComposeNameIcon(),
-		t->ComposeName(),
-		t->ComposeSize(),
-		t->ComposeHash(),
-		t->ComposePath(),
+		t->ComposeStatus().icon,
+		t->ComposeStatus().text,
+		t->ComposeName().icon,
+		t->ComposeName().text,
+		t->ComposeSize().text,
+		t->ComposeHash().text,
+		t->ComposePath().text,
 		L"");
 }
 
-// Copy the torrent file at the given path to "meta.infohash.db" next to this running exe if not there already
+// Copy the torrent file at the given path to "infohash.meta.db" next to this running exe if not there already
 void AddMeta(hbig hash, read torrent) {
 
 	if (same(torrent, PathTorrentMeta(hash), Matching)) return; // Don't copy a file onto itself

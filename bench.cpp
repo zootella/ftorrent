@@ -76,13 +76,13 @@ void Torrent::Edit() {
 		App.window.list,
 		5,
 		(LPARAM)Hash(),
-		ComposeStatusIcon(),
-		ComposeStatus(),
-		ComposeNameIcon(),
-		ComposeName(),
-		ComposeSize(),
-		ComposeHash(),
-		ComposePath(),
+		ComposeStatus().icon,
+		ComposeStatus().text,
+		ComposeName().icon,
+		ComposeName().text,
+		ComposeSize().text,
+		ComposeHash().text,
+		ComposePath().text,
 		L"");
 }
 
@@ -126,7 +126,9 @@ Cell Torrent::ComposeHash() {
 }
 
 Cell Torrent::ComposePath() {
-	return L"path text";
+	Cell c;
+	c.text = L"path text";
+	return c;
 }
 
 
