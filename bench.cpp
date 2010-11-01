@@ -92,44 +92,51 @@ void Torrent::Edit() {
 
 
 
-int Torrent::ComposeStatusIcon() {
-	return App.icon.clear;
+Cell Torrent::ComposeStatus() {
+	Cell c;
+	c.text = L"status text";
+	c.icon = App.icon.clear;
+	return c;
 }
 
-CString Torrent::ComposeStatus() {
-	return L"status text";
+
+Cell Torrent::ComposeName() {
+	Cell c;
+	c.text = widenStoC(handle.name());
+	c.icon = App.icon.clear;
+	return c;
 }
 
-int Torrent::ComposeNameIcon() {
-	return App.icon.clear;
-}
-
-// This torrent's name
-CString Torrent::ComposeName() {
-	return widenStoC(handle.name());
-}
-
-CString Torrent::ComposeSize() {
+Cell Torrent::ComposeSize() {
+	Cell c;
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
 
-	return make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
+	c.text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
+	c.sort = size;
+	return c;
 }
 
 // This torrent's infohash in base 16
-CString Torrent::ComposeHash() {
-
-	return base16(handle.info_hash());
+Cell Torrent::ComposeHash() {
+	Cell c;
+	c.text = base16(handle.info_hash());
+	return c;
 }
 
-CString Torrent::ComposePath() {
+Cell Torrent::ComposePath() {
 	return L"path text";
 }
 
+
+
+
+
+
+
 // The first 4 bytes of the infohash in a DWORD
 DWORD Torrent::Hash() {
-
 	return HashStart(handle.info_hash());
 }
 

@@ -370,13 +370,11 @@ public:
 
 	void Edit();
 
-	int ComposeStatusIcon();
-	CString ComposeStatus();
-	int ComposeNameIcon();
-	CString ComposeName();
-	CString ComposeSize();
-	CString ComposeHash();
-	CString ComposePath();
+	Cell ComposeStatus();
+	Cell ComposeName();
+	Cell ComposeSize();
+	Cell ComposeHash();
+	Cell ComposePath();
 
 	DWORD Hash();
 
