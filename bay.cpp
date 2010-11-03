@@ -2,6 +2,22 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
+// Run a snippet of test code
+void Test() {
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
 
 
 
@@ -76,22 +92,6 @@ int ListFindColumn(HWND window, read title) {
 }
 
 
-
-// Run a snippet of test code
-void Test() {
-
-
-
-
-
-
-
-
-
-
-
-
-}
 
 void ListPrint(HWND window, std::list<Cell> c) {
 
