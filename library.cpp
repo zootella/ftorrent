@@ -475,8 +475,8 @@ void AddRow(hbig hash) {
 		t->ComposeName().icon,
 		t->ComposeName().text,
 		t->ComposeSize().text,
-		t->ComposeHash().text,
-		t->ComposePath().text,
+		t->ComposeInfohash().text,
+		t->ComposeLocation().text,
 		L"");
 }
 

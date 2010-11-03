@@ -81,8 +81,8 @@ void Torrent::Edit() {
 		ComposeName().icon,
 		ComposeName().text,
 		ComposeSize().text,
-		ComposeHash().text,
-		ComposePath().text,
+		ComposeInfohash().text,
+		ComposeLocation().text,
 		L"");
 }
 
@@ -93,22 +93,19 @@ void Torrent::Edit() {
 
 
 Cell Torrent::ComposeStatus() {
-	Cell c;
-	c.text = L"status text";
-	c.icon = App.icon.clear;
-	return c;
+	return Cell(Hash(), L"Status", 0, App.icon.clear, L"status text");
 }
 
 
 Cell Torrent::ComposeName() {
-	Cell c;
+	Cell c(Hash(), L"Name");
 	c.text = widenStoC(handle.name());
 	c.icon = App.icon.clear;
 	return c;
 }
 
 Cell Torrent::ComposeSize() {
-	Cell c;
+	Cell c(Hash(), L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
@@ -119,14 +116,14 @@ Cell Torrent::ComposeSize() {
 }
 
 // This torrent's infohash in base 16
-Cell Torrent::ComposeHash() {
-	Cell c;
+Cell Torrent::ComposeInfohash() {
+	Cell c(Hash(), L"Infohash");
 	c.text = base16(handle.info_hash());
 	return c;
 }
 
-Cell Torrent::ComposePath() {
-	Cell c;
+Cell Torrent::ComposeLocation() {
+	Cell c(Hash(), L"Location");
 	c.text = L"path text";
 	return c;
 }

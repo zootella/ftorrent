@@ -352,13 +352,21 @@ public:
 class Cell {
 public:
 
-	CString text;
-	int icon;
-	sbig sort;
+	// Location
+	LPARAM parameter; // Parameter that identifies the row this cell applies to
+	CString title; // Column title text that identifies the column this cell applies to
 
-	Cell() {
-		icon = -1; // No icon
-		sort = 0; //TODO define what this means
+	// Display
+	sbig sort; // Sort order
+	int icon; // Icon index in the program image list, or -1 to not have an icon
+	CString text; // Text for the cell
+
+	Cell(LPARAM set_parameter, read set_title, sbig set_sort = 0, int set_icon = -1, read set_text = L"") { // Has defaults
+		parameter = set_parameter;
+		title = set_title;
+		sort = set_sort;
+		icon = set_icon;
+		text = set_text;
 	}
 };
 
@@ -392,8 +400,8 @@ public:
 	Cell ComposeStatus();
 	Cell ComposeName();
 	Cell ComposeSize();
-	Cell ComposeHash();
-	Cell ComposePath();
+	Cell ComposeInfohash();
+	Cell ComposeLocation();
 
 	DWORD Hash();
 

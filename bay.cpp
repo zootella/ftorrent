@@ -50,18 +50,29 @@ int ListColumns(HWND window) {
 	return n;
 }
 
-
+// The name of column 0+, like "Status"
 CString ListColumnGet(HWND window, int column) {
 
-	WCHAR bay[MAX_PATH];
+	WCHAR bay[MAX_PATH]; // Destination buffer
 
 	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
 	info.mask       = LVCF_TEXT;
 	info.pszText    = bay;
 	info.cchTextMax = MAX_PATH;
-	if (ListView_GetColumn(window, column, &info) == -1) error(L"listview_getcolumn");
+	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn"); return L""; }
 	return bay;
+}
+
+// Find the 0+ index of the column with the given title in the window list view control
+int ListFindColumn(HWND window, read title) {
+	if (isblank(title)) return -1; // Make sure title has text
+
+	int columns = ListColumns(App.window.list);
+	for (int i = 0; i < columns; i++)
+		if (ListColumnGet(window, i) == CString(title))
+			return i;
+	return -1; // Not found
 }
 
 
@@ -70,10 +81,6 @@ CString ListColumnGet(HWND window, int column) {
 void Test() {
 
 
-	int n = ListColumns(App.window.list);
-	log(numerals(n));
-	for (int i = 0; i < n; i++)
-		log(ListColumnGet(App.window.list, i));
 
 
 
@@ -86,89 +93,49 @@ void Test() {
 
 }
 
+void ListPrint(HWND window, std::list<Cell> c) {
 
 
+}
 
-/*
 
-void ListAdd(HWND window, LPARAM p, std::map<Column, Cell> m) {
+//how about just a list of Cells, and keep p and title in the cell
 
-	// Row and column position, the number of rows is the index of the next row
-	LVITEM column1, column2, column3, column4, column5, column6;
-	ZeroMemory(&column1, sizeof(column1));
-	ZeroMemory(&column2, sizeof(column2));
-	ZeroMemory(&column3, sizeof(column3));
-	ZeroMemory(&column4, sizeof(column4));
-	ZeroMemory(&column5, sizeof(column5));
-	ZeroMemory(&column6, sizeof(column6));
-	column1.iItem = ListRows(window);
-	column1.iSubItem = 0;
-	column2.iSubItem = 1;
-	column3.iSubItem = 2;
-	column4.iSubItem = 3;
-	column5.iSubItem = 4;
-	column6.iSubItem = 5;
+void ListPrint(HWND window, Cell c) {
 
-	// Masks for text and the parameter
-	column1.mask = LVIF_TEXT | LVIF_PARAM;
-	column2.mask = column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
+	// Find the column and row index where the cell is currently located in the list view control
+	int column = ListFindColumn(window, c.title);
+	if (column == -1) return; // Column not currently on display, don't add or edit this cell
+	int row = ListFind(window, c.parameter);
+	bool found = row != -1; // True if we found the row and can edit it, false not found so we should add the row
+	if (row == -1) row = ListRows(window); // Not found, make a new row at the end
 
-	// Text
-	column1.pszText = (LPWSTR)r1;
-	column2.pszText = (LPWSTR)r2;
-	column3.pszText = (LPWSTR)r3;
-	column4.pszText = (LPWSTR)r4;
-	column5.pszText = (LPWSTR)r5;
-	column6.pszText = (LPWSTR)r6;
-
-	// Icons
-	if (icon1 != -1) { column1.mask = column1.mask | LVIF_IMAGE; column1.iImage = icon1; }
-	if (icon2 != -1) { column2.mask = column2.mask | LVIF_IMAGE; column2.iImage = icon2; }
+	// Make a list view item structure to edit the cell at those coordinates
+	LVITEM info;
+	ZeroMemory(&info, sizeof(info));
+	info.iSubItem = column;
+	info.iItem = row;
 
 	// Parameter
-	column1.lParam = p;
-
-	// Insert the item and set the row
-	int row = ListView_InsertItem(window, &column1);
-	if (row == -1) { error(L"listview_insertitem"); return; }
-	column2.iItem = column3.iItem = column4.iItem = column5.iItem = column6.iItem = row;
-
-	// Set the subitems
-	if (columns >= 2 && !ListView_SetItem(window, &column2)) { error(L"listview_setitem"); return; }
-	if (columns >= 3 && !ListView_SetItem(window, &column3)) { error(L"listview_setitem"); return; }
-	if (columns >= 4 && !ListView_SetItem(window, &column4)) { error(L"listview_setitem"); return; }
-	if (columns >= 5 && !ListView_SetItem(window, &column5)) { error(L"listview_setitem"); return; }
-	if (columns >= 6 && !ListView_SetItem(window, &column6)) { error(L"listview_setitem"); return; }
-}
-
-
-
-void ListEdit(HWND window, LPARAM p, read column, Cell c) {
-
-	
-	int row = ListFind(window, p); // Find the row number that has the given parameter
-	if (row == -1) { log(L"edit can't find"); return; }
-
-	// Find the column number that has the given title
-
-
-	// Row and column position
-	LVITEM column1, column2, column3, column4, column5, column6;
-	ZeroMemory(&column1, sizeof(column1));
-	column1.iItem = column2.iItem = column3.iItem = column4.iItem = column5.iItem = column6.iItem = row;
-	column1.iSubItem = 0;
-
-	// Masks for text and icons
-	column1.mask = column2.mask = LVIF_TEXT | LVIF_IMAGE;
-	column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
+	info.mask |= LVIF_PARAM;
+	info.lParam = c.parameter;
 
 	// Text
-	column1.pszText = (LPWSTR)r1;
+	info.mask |= LVIF_TEXT;
+	info.pszText = (LPWSTR)(read)c.text;
 
-	// Icons
-	column1.iImage = icon1;
+	// If specified, an icon
+	if (c.icon != -1) {
+		info.mask |= LVIF_IMAGE;
+		info.iImage = c.icon;
+	}
 
-	if (!ListView_SetItem(window, &column1)) error(L"listview_setitem");
+	// Edit or add
+	if (found) {
+		if (!ListView_SetItem(window, &info)) { error(L"listview_setitem"); return; } // Edit the existing row
+	} else {
+		if (ListView_InsertItem(window, &info) == -1) { error(L"listview_insertitem"); return; } // Add a new row
+	}
 }
 
-*/
+
