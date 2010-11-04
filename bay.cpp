@@ -5,6 +5,62 @@ extern app App; // Access global object
 
 
 
+
+HWND ListCreate() {
+
+	// Create the list view window
+	DWORD style =
+		WS_CHILD             | // Required for child windows
+		LVS_REPORT           | // Specifies report view, I think this puts it in details
+		LBS_EXTENDEDSEL      | // Allows multiple items to be selected
+		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
+		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
+		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
+	HWND window = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
+
+	// Use the program image list
+	ListView_SetImageList(window, App.icon.list, LVSIL_SMALL);
+
+	// Load extended list view styles, requires common control 4.70
+	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
+		LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
+		LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
+	ListView_SetExtendedListViewStyle(window, style);
+
+	// Determine how wide the columns should be
+	std::vector<int> widths;
+	widths.push_back(-4);  // Status
+	widths.push_back(200); // Name
+	widths.push_back(-5);  // Size
+	widths.push_back(100); // Infohash
+	widths.push_back(-10); // Location
+	widths = SizeColumns(widths);
+
+	// Add the first column, which won't be able to show its icon on the right
+	ListColumnInsert(window, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
+
+	// Add the columns
+	ListColumnInsert(window, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
+	ListColumnInsert(window, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
+	ListColumnInsert(window, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
+	ListColumnInsert(window, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
+	ListColumnInsert(window, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
+
+	// Remove the first column so all the remaining columns can show their icons on the right
+	ListColumnDelete(window, 0);
+	return window;
+}
+
+
+
+
+
+
+
+
+
+
+
 //new list view design
 //let the control keep its own data, don't switch to owner held data
 //keep a copy of all the data in the control yourself right behind it

@@ -2,12 +2,14 @@
 class app_window {
 public:
 
-	HWND main, list, tabs, edit, tip; // Window handles
 	HINSTANCE instance; // Program instance handle
+	HWND main, list, tabs, tip; // Window handles
+	HWND torrent, trackers, peers, pieces, files, speed, log;
 
 	app_window() {
-		main = list = tabs = edit = tip = NULL;
 		instance = NULL;
+		main = list = tabs = tip = NULL;
+		torrent = trackers = peers = pieces = files = speed = log = NULL;
 	}
 };
 

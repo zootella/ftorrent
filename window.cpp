@@ -68,46 +68,55 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!menu) error(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
-	// Create the list view window
-	DWORD style =
-		WS_CHILD             | // Required for child windows
-		LVS_REPORT           | // Specifies report view, I think this puts it in details
-		LBS_EXTENDEDSEL      | // Allows multiple items to be selected
-		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
-		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
-		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
-	App.window.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
 
-	// Use the program image list
-	ListView_SetImageList(App.window.list, App.icon.list, LVSIL_SMALL);
 
-	// Load extended list view styles, requires common control 4.70
-	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
-		LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
-		LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
-	ListView_SetExtendedListViewStyle(App.window.list, style);
 
-	// Determine how wide the columns should be
-	std::vector<int> widths;
-	widths.push_back(-4);  // Status
-	widths.push_back(200); // Name
-	widths.push_back(-5);  // Size
-	widths.push_back(100); // Infohash
-	widths.push_back(-10); // Location
-	widths = SizeColumns(widths);
+		// Create the list view window
+		DWORD style =
+			WS_CHILD             | // Required for child windows
+			LVS_REPORT           | // Specifies report view, I think this puts it in details
+			LBS_EXTENDEDSEL      | // Allows multiple items to be selected
+			LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
+			LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
+			LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
+		App.window.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
 
-	// Add the first column, which won't be able to show its icon on the right
-	ListColumnInsert(App.window.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
+		// Use the program image list
+		ListView_SetImageList(App.window.list, App.icon.list, LVSIL_SMALL);
 
-	// Add the columns
-	ListColumnInsert(App.window.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
-	ListColumnInsert(App.window.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
-	ListColumnInsert(App.window.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
-	ListColumnInsert(App.window.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
-	ListColumnInsert(App.window.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
+		// Load extended list view styles, requires common control 4.70
+		style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
+			LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
+			LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
+		ListView_SetExtendedListViewStyle(App.window.list, style);
 
-	// Remove the first column so all the remaining columns can show their icons on the right
-	ListColumnDelete(App.window.list, 0);
+		// Determine how wide the columns should be
+		std::vector<int> widths;
+		widths.push_back(-4);  // Status
+		widths.push_back(200); // Name
+		widths.push_back(-5);  // Size
+		widths.push_back(100); // Infohash
+		widths.push_back(-10); // Location
+		widths = SizeColumns(widths);
+
+		// Add the first column, which won't be able to show its icon on the right
+		ListColumnInsert(App.window.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
+
+		// Add the columns
+		ListColumnInsert(App.window.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
+		ListColumnInsert(App.window.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
+		ListColumnInsert(App.window.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
+		ListColumnInsert(App.window.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
+		ListColumnInsert(App.window.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
+
+		// Remove the first column so all the remaining columns can show their icons on the right
+		ListColumnDelete(App.window.list, 0);
+
+
+
+
+	App.window.files = ListCreate();
+
 
 	// Create the tabs window
 	style = WS_CHILD;            // Required for child windows
@@ -128,8 +137,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	AddTab(App.window.tabs, 6, L"Log");
 
 	// Make child windows and menus
-	App.window.edit = WindowCreateEdit(true,  true);
-	WindowEdit(App.window.edit, true);
+	App.window.log = WindowCreateEdit(true,  true);
+	WindowEdit(App.window.log, true);
 
 	// Create the tooltip window
 	style =
@@ -159,7 +168,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Show the child windows and then the main window
 	ShowWindow(App.window.list, SW_SHOWNORMAL);
 	ShowWindow(App.window.tabs, SW_SHOWNORMAL);
-	ShowWindow(App.window.edit, SW_SHOWNORMAL);
+	ShowWindow(App.window.files, SW_SHOWNORMAL);
 	ShowWindow(App.window.main,  SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 

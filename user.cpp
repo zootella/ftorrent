@@ -618,7 +618,7 @@ void Layout(int move) {
 	// Position and resize child window controls without sending paint messages
 	WindowMove(App.window.list, App.area.list);
 	WindowMove(App.window.tabs, App.area.tabs);
-	WindowMove(App.window.edit, App.area.info);
+	WindowMove(App.window.files, App.area.info);
 
 	// The first time this runs, assign the tooltip regions
 	if (!before.Is()) {

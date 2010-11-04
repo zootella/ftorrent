@@ -299,6 +299,7 @@ void StorePulse();
 void ListPulse();
 
 
+HWND ListCreate();
 
 
 
