@@ -337,11 +337,13 @@ public:
 	int icon;
 	CString text;
 	int width;
+	bool right;
 
 	Column() {
 		format = 0;
 		icon = -1;
 		width = 16;
+		right = false;
 	}
 };
 
@@ -396,6 +398,8 @@ public:
 	bool Load(hbig hash);
 
 	void Edit();
+
+	std::vector<Cell> Compose();
 
 	Cell ComposeStatus();
 	Cell ComposeName();

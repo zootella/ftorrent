@@ -2,22 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-// Run a snippet of test code
-void Test() {
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
 
 
 
@@ -93,49 +77,76 @@ int ListFindColumn(HWND window, read title) {
 
 
 
-void ListPrint(HWND window, std::list<Cell> c) {
+
+
+
+
+// Run a snippet of test code
+void Test() {
+
+
+
+
+
+
+
+
+
+
 
 
 }
 
 
-//how about just a list of Cells, and keep p and title in the cell
+//todo
+//have a map of CString to Cell in Torrent, use that to monitor and update what's onscreen
+//then you don't need text from cell anymore, comment it out
 
-void ListPrint(HWND window, Cell c) {
+//make teh files list in the tab below
+//set it up to load Fruit items thta have different properties
+//test adding and removing columns and rows this way
+//right click remove fruit, test adds another group of them
 
-	// Find the column and row index where the cell is currently located in the list view control
-	int column = ListFindColumn(window, c.title);
+
+void ListPrint(HWND window, Cell c, bool force) {
+
+	int column = ListFindColumn(window, c.title); // Find the column and row index where the cell is currently located in the list view control
 	if (column == -1) return; // Column not currently on display, don't add or edit this cell
 	int row = ListFind(window, c.parameter);
 	bool found = row != -1; // True if we found the row and can edit it, false not found so we should add the row
 	if (row == -1) row = ListRows(window); // Not found, make a new row at the end
 
-	// Make a list view item structure to edit the cell at those coordinates
-	LVITEM info;
+	LVITEM info; // Make a list view item structure to edit the cell at those coordinates
 	ZeroMemory(&info, sizeof(info));
 	info.iSubItem = column;
 	info.iItem = row;
 
-	// Parameter
-	info.mask |= LVIF_PARAM;
+	info.mask |= LVIF_PARAM; // Parameter
 	info.lParam = c.parameter;
 
-	// Text
-	info.mask |= LVIF_TEXT;
+	info.mask |= LVIF_TEXT; // Text
 	info.pszText = (LPWSTR)(read)c.text;
 
-	// If specified, an icon
-	if (c.icon != -1) {
+	if (c.icon != -1) { // If specified, an icon
 		info.mask |= LVIF_IMAGE;
 		info.iImage = c.icon;
 	}
 
-	// Edit or add
-	if (found) {
-		if (!ListView_SetItem(window, &info)) { error(L"listview_setitem"); return; } // Edit the existing row
-	} else {
-		if (ListView_InsertItem(window, &info) == -1) { error(L"listview_insertitem"); return; } // Add a new row
+	if (App.list.max < length(c.text)) // Keep track of the longest text ever added to a cell
+		App.list.max = length(c.text);
+
+	if (found) { // Edit
+		if (force || !same(ListText(window, row, column), c.text)) { // Only do something if this is a force edit or the text would change
+			if (!ListView_SetItem(window, &info)) { error(L"listview_setitem"); return; } // Edit the cell in the existing row
+		}
+	} else { // Add
+		if (ListView_InsertItem(window, &info) == -1) { error(L"listview_insertitem"); return; } // Add the cell in a new row
 	}
 }
 
 
+
+void ListPrintAll(HWND window, std::vector<Cell> c) {
+	for (int i = 0; i < (int)c.size(); i++)
+		ListPrint(window, c[i], false);
+}

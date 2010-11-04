@@ -88,19 +88,28 @@ void Torrent::Edit() {
 
 
 
+std::vector<Cell> Torrent::Compose() {
 
+	std::vector<Cell> c;
+	c.push_back(ComposeStatus());
+	c.push_back(ComposeName());
+	c.push_back(ComposeSize());
+	c.push_back(ComposeInfohash());
+	c.push_back(ComposeLocation());
+	return c;
+}
 
 
 
 Cell Torrent::ComposeStatus() {
-	return Cell(Hash(), L"Status", 0, App.icon.clear, L"status text");
+	return Cell(Hash(), L"Status", 0, App.icon.ascending, L"status text");
 }
 
 
 Cell Torrent::ComposeName() {
 	Cell c(Hash(), L"Name");
 	c.text = widenStoC(handle.name());
-	c.icon = App.icon.clear;
+	c.icon = App.icon.descending;
 	return c;
 }
 
