@@ -330,22 +330,6 @@ public:
 
 
 
-class Column {
-public:
-
-	int format;
-	int icon;
-	CString text;
-	int width;
-	bool right;
-
-	Column() {
-		format = 0;
-		icon = -1;
-		width = 16;
-		right = false;
-	}
-};
 
 
 

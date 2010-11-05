@@ -294,14 +294,20 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 // bay and bench
 
-void Test();
-void StorePulse();
-void ListPulse();
+
 
 
 HWND ListCreate();
-
-
+void ListColumnAdd(HWND window, bool right, read title, int width);
+void ListColumnRemove(HWND window, read title);
+void ListColumnRemove(HWND window, int column);
+HWND ListHeader(HWND window);
+int ListColumns(HWND window);
+CString ListColumnGet(HWND window, int column);
+int ListColumnFind(HWND window, read title);
+void Test();
+void ListPrint(HWND window, Cell c, bool force);
+void ListPrintAll(HWND window, std::vector<Cell> c);
 
 
 

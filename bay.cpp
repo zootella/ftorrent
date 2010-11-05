@@ -11,11 +11,11 @@ HWND ListCreate() {
 	// Create the list view window
 	DWORD style =
 		WS_CHILD             | // Required for child windows
-		LVS_REPORT           | // Specifies report view, I think this puts it in details
+		LVS_REPORT           | // Details view with multiple columns
 		LBS_EXTENDEDSEL      | // Allows multiple items to be selected
 		LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
 		LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
-		LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
+		LVS_SHAREIMAGELISTS;   // Will not delete the image list when the control is destroyed
 	HWND window = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
 
 	// Use the program image list
@@ -24,7 +24,8 @@ HWND ListCreate() {
 	// Load extended list view styles, requires common control 4.70
 	style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
 		LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
-		LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
+		LVS_EX_SUBITEMIMAGES | // Let subitems have icons
+		LVS_EX_HEADERDRAGDROP; // Let the user drag columns into a different order
 	ListView_SetExtendedListViewStyle(window, style);
 
 	// Determine how wide the columns should be
@@ -37,21 +38,66 @@ HWND ListCreate() {
 	widths = SizeColumns(widths);
 
 	// Add the first column, which won't be able to show its icon on the right
-	ListColumnInsert(window, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
+	ListColumnAdd(window, false, L"", 0);
 
 	// Add the columns
-	ListColumnInsert(window, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
-	ListColumnInsert(window, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
-	ListColumnInsert(window, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
-	ListColumnInsert(window, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
-	ListColumnInsert(window, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
+	ListColumnAdd(window, false, L"Status",   50);
+	ListColumnAdd(window, false, L"Name",     50);
+	ListColumnAdd(window, true,  L"Size",     50);
+	ListColumnAdd(window, false, L"Infohash", 50);
+	ListColumnAdd(window, false, L"Location", 50);
 
 	// Remove the first column so all the remaining columns can show their icons on the right
 	ListColumnDelete(window, 0);
 	return window;
 }
 
+//TODO try adding and removing icons instead of setting them to and from blank
+//TODO see if you still need the add and then remove the first column workaround
 
+
+
+void ListColumnAdd(HWND window, bool right, read title, int width) {
+
+	int format;
+	if (right) format = LVCFMT_RIGHT;
+	else format = LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT;
+
+	int column = ListColumns(window);
+
+
+
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask    = LVCF_FMT | LVCF_IMAGE | LVCF_TEXT | LVCF_WIDTH;
+	info.fmt     = format;
+	info.iImage  = App.icon.clear;
+	info.pszText = (LPWSTR)title;
+	info.cx      = width;
+	if (ListView_InsertColumn(window, column, &info) == -1) error(L"listview_insertcolumn");
+}
+
+void ListColumnRemove(HWND window, read title) {
+
+	int column = ListColumnFind(window, title);
+	if (column == -1) return;
+	ListColumnRemove(window, column);
+}
+
+void ListColumnRemove(HWND window, int column) {
+
+	if (!ListView_DeleteColumn(window, 0)) error(L"listview_deletecolumn");
+}
+
+
+
+
+/*
+ListColumnAdd
+
+ListColumnRemove
+
+*/
 
 
 
@@ -121,7 +167,7 @@ CString ListColumnGet(HWND window, int column) {
 }
 
 // Find the 0+ index of the column with the given title in the window list view control
-int ListFindColumn(HWND window, read title) {
+int ListColumnFind(HWND window, read title) {
 	if (isblank(title)) return -1; // Make sure title has text
 
 	int columns = ListColumns(App.window.list);
@@ -166,7 +212,7 @@ void Test() {
 
 void ListPrint(HWND window, Cell c, bool force) {
 
-	int column = ListFindColumn(window, c.title); // Find the column and row index where the cell is currently located in the list view control
+	int column = ListColumnFind(window, c.title); // Find the column and row index where the cell is currently located in the list view control
 	if (column == -1) return; // Column not currently on display, don't add or edit this cell
 	int row = ListFind(window, c.parameter);
 	bool found = row != -1; // True if we found the row and can edit it, false not found so we should add the row
