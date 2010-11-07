@@ -139,34 +139,50 @@ void Torrent::Edit() {
 
 
 
-std::vector<Cell> Torrent::Compose() {
+void Torrent::Compose() {
 
-	std::vector<Cell> c;
-	/*
-	c.push_back(ComposeStatus());
-	c.push_back(ComposeName());
-	c.push_back(ComposeSize());
-	c.push_back(ComposeInfohash());
-	c.push_back(ComposeLocation());
-	*/
-	return c;
+	ComposeStatus();
+	ComposeName();
+	ComposeSize();
+	ComposeInfohash();
+	ComposeLocation();
 }
 
 
+Cell *Torrent::FindCell(read title) {
 
-Cell Torrent::ComposeStatus() {
-	return Cell(Hash(), L"Status", 0, App.icon.ascending, L"status text");
+	for (int i = 0; i < (int)cells.size(); i++) {
+		if (cells[i].title == CString(title))
+			return &(cells[i]);
+	}
+
+	cells.push_back(Cell(Hash()), title);
+	return &(cells[cells.size() - 1]);
 }
 
 
-Cell Torrent::ComposeName() {
+//TODO
+//no, this is stupid
+//have named cells in the object hardcoded
+//have the constructor link them up into a vector of pointers
+
+
+void Torrent::ComposeStatus() {
+	Cell *c = FindCell(L"Status");
+	c->sort = 0;
+	c->icon = App.icon.ascending;
+	c->text = L"status text";
+}
+
+
+void Torrent::ComposeName() {
 	Cell c(Hash(), L"Name");
 	c.text = widenStoC(handle.name());
 	c.icon = App.icon.descending;
 	return c;
 }
 
-Cell Torrent::ComposeSize() {
+void Torrent::ComposeSize() {
 	Cell c(Hash(), L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
@@ -178,13 +194,13 @@ Cell Torrent::ComposeSize() {
 }
 
 // This torrent's infohash in base 16
-Cell Torrent::ComposeInfohash() {
+void Torrent::ComposeInfohash() {
 	Cell c(Hash(), L"Infohash");
 	c.text = base16(handle.info_hash());
 	return c;
 }
 
-Cell Torrent::ComposeLocation() {
+void Torrent::ComposeLocation() {
 	Cell c(Hash(), L"Location");
 	c.text = L"path text";
 	return c;

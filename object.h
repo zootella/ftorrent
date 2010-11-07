@@ -396,12 +396,17 @@ public:
 	std::set<CString> trackers; //trackers from all sources
 
 
+	std::vector<Cell> cells;
+
+
 
 	libtorrent::torrent_handle handle;
 
+
+
+
 	// New
 	Torrent() {
-
 	}
 
 	void Save();
@@ -409,13 +414,15 @@ public:
 
 	void Edit();
 
-	std::vector<Cell> Compose();
+	void Compose();
 
-	Cell ComposeStatus();
-	Cell ComposeName();
-	Cell ComposeSize();
-	Cell ComposeInfohash();
-	Cell ComposeLocation();
+	void ComposeStatus();
+	void ComposeName();
+	void ComposeSize();
+	void ComposeInfohash();
+	void ComposeLocation();
+
+	Cell *FindCell(read title);
 
 	DWORD Hash();
 
