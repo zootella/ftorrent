@@ -1886,3 +1886,10 @@ int ColumnCount(HWND window) {
 	if (n == -1) { error(L"header_getitemcount"); return -1; }
 	return n;
 }
+
+// Get the window handle of the column headers inside a list view control
+HWND ListHeader(HWND window) {
+	HWND header = ListView_GetHeader(window);
+	if (!header) { error(L"listview_getheader"); return NULL; }
+	return header;
+}
