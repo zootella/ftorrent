@@ -21,29 +21,30 @@ void Test() {
 
 	if (stage == 1) { log(L"stage 1"); stage = 2;
 
-		//the necessary workaround
-		/*
-		ColumnAdd(App.window.files, 0, L"Workaround", 10, false);
-		ColumnRemove(App.window.files, L"Workaround");
-		*/
 		//no, all you need to do for the workaround is never add with index 0, always add with 1+ index
 		//now all you need to see is how to add a column between other columns, to add it where the user right clicked or in the order of the ones on the menu
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
-		ColumnAdd(App.window.files, 1, L"Column A", 100, false);
-		ColumnAdd(App.window.files, 2, L"Column B", 100, false);
-		ColumnAdd(App.window.files, 3, L"Column C", 100, false);
+		ColumnAdd(App.window.files, L"Column A", 100, true);
+		ColumnAdd(App.window.files, L"Column B", 80, true);
+		ColumnAdd(App.window.files, L"Column C", 120, true);
+		ColumnAdd(App.window.files, L"Column D", 140, true);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		//0 places it first, but with the icon problem
-		//1 places it second, keeping that index and shifting other indices forward a number
-
-		ColumnAdd(App.window.files, 2, L"Column D", 100, false);
+		ColumnIcon(App.window.files, L"Column A", App.icon.ascending);
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
+
+		ColumnIcon(App.window.files, L"Column A", App.icon.clear);
+
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
+
+		ColumnIcon(App.window.files, L"Column A", App.icon.descending);
+
 	} else if (stage == 5) { log(L"stage 5"); stage = 6;
+
+		ColumnIcon(App.window.files, L"Column A", -1);
 	}
 
 	log(L"find:");
@@ -531,13 +532,6 @@ CString ListText(HWND window, int row, int column) {
 
 
 
-	/*
-	// Add the first column, which won't be able to show its icon on the right
-	ColumnAdd(window, false, L"", 0);
-
-	// Remove the first column so all the remaining columns can show their icons on the right
-	ColumnRemove(window, 0);
-	*/
 
 //TODO try adding and removing icons instead of setting them to and from blank
 //TODO see if you still need the add and then remove the first column workaround

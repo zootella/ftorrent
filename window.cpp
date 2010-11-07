@@ -70,11 +70,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Create the list view window that lists the torrents at the top
 	App.window.list = WindowCreateList();
-	ColumnAdd(App.window.list, 11, L"Status",   150, false);
-	ColumnAdd(App.window.list, 22, L"Name",     150, false);
-	ColumnAdd(App.window.list, 33, L"Size",     150, true);
-	ColumnAdd(App.window.list, 44, L"Infohash", 150, false);
-	ColumnAdd(App.window.list, 55, L"Location", 150, false);
+	ColumnAdd(App.window.list, L"Status",   150, false);
+	ColumnAdd(App.window.list, L"Name",     150, false);
+	ColumnAdd(App.window.list, L"Size",     150, true);
+	ColumnAdd(App.window.list, L"Infohash", 150, false);
+	ColumnAdd(App.window.list, L"Location", 150, false);
 
 
 	//TODO create windows for the contents of each tab

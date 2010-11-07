@@ -1772,3 +1772,117 @@ void SetupRemove() {
 
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
+
+// Make a new column named title before the one named before
+void ColumnAddBefore(HWND window, read before, read title, int width, bool right) {
+	int column = ColumnFind(window, before);
+	if (column == -1) column = 0; // Not found, make the new column before all of them
+	ColumnAddIndex(window, column, title, width, right);
+}
+// Make a new column on the left of any already there
+void ColumnAddLeft(HWND window, read title, int width, bool right) { ColumnAddIndex(window, 0, title, width, right); }
+// Make a new column on the right of any already there
+void ColumnAdd(HWND window, read title, int width, bool right) { ColumnAddIndex(window, -1, title, width, right); }
+
+// Make a new column in the list view window at index 0 first, 1 second, or -1 last with the title text, pixel width, and true to align right
+void ColumnAddIndex(HWND window, int column, read title, int width, bool right) {
+
+	// Convert -1 to add last into the index beyond the columns already there
+	if (column == -1) column = ColumnCount(window); // 1 column already there has an index of 0, so make a new one at index 1
+
+	// Never add column 0 because the text will be indented for the sort icon to be on the left, not the right
+	if (column == 0) {
+		ColumnAddIndexDo(window, 0, L"", 0, false); // Add a placeholder column with index 0
+		ColumnAddIndexDo(window, 1, title, width, right); // Add the real column with index 1
+		ColumnRemoveIndex(window, 0); // Remove the placeholder column at 0
+
+	// No workaround required
+	} else {
+		ColumnAddIndexDo(window, column, title, width, right);
+	}
+}
+void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right) {
+
+	// Compose format for left or right
+	int format;
+	if (right) format = LVCFMT_RIGHT;
+	else format = LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT;
+
+	// Add the column
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask    = LVCF_FMT | LVCF_IMAGE | LVCF_TEXT | LVCF_WIDTH;
+	info.fmt     = format;
+	info.iImage  = App.icon.clear;
+	info.pszText = (LPWSTR)title;
+	info.cx      = width;
+	if (ListView_InsertColumn(window, column, &info) == -1) error(L"listview_insertcolumn");
+}
+
+// Remove the column named title
+void ColumnRemove(HWND window, read title) {
+	int column = ColumnFind(window, title);
+	if (column == -1) return;
+	ColumnRemoveIndex(window, column);
+}
+
+// Remove the column at the given index
+void ColumnRemoveIndex(HWND window, int column) {
+	if (!ListView_DeleteColumn(window, 0)) error(L"listview_deletecolumn");
+}
+
+// Set the given icon index in the column header named title
+void ColumnIcon(HWND window, read title, int icon) {
+	int column = ColumnFind(window, title);
+	if (column == -1) return;
+
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask   = LVCF_IMAGE;
+	info.iImage = icon;
+	if (!ListView_SetColumn(window, column, &info)) error(L"listview_setcolumn");
+}
+
+// Highlight the column named title
+void ColumnSelect(HWND window, read title) {
+	int column = ColumnFind(window, title);
+	if (column == -1) return;
+
+	ListView_SetSelectedColumn(window, column);
+	InvalidateRect(window, NULL, true); // Invalidate the list view control and have it erased before painted
+}
+
+// Find the 0+ index of the column with the given title in the window list view control
+int ColumnFind(HWND window, read title) {
+	if (isblank(title)) return -1; // Make sure title has text
+
+	int columns = ColumnCount(App.window.list);
+	for (int i = 0; i < columns; i++)
+		if (ColumnTitle(window, i) == CString(title))
+			return i;
+	return -1; // Not found
+}
+
+// The title text of the column with the given index, like "Status"
+CString ColumnTitle(HWND window, int column) {
+	WCHAR bay[MAX_PATH]; // Destination buffer
+
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask       = LVCF_TEXT;
+	info.pszText    = bay;
+	info.cchTextMax = MAX_PATH;
+	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn"); return L""; }
+	return bay;
+}
+
+// Find out how many columns are in the given list view control
+int ColumnCount(HWND window) {
+
+	HWND header = ListHeader(window); // Get the header
+	if (!header) return -1;
+
+	int n = Header_GetItemCount(header); // Find out how many columns there are
+	if (n == -1) { error(L"header_getitemcount"); return -1; }
+	return n;
+}

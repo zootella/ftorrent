@@ -144,6 +144,18 @@ bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
+void ColumnAddBefore(HWND window, read before, read title, int width, bool right);
+void ColumnAddLeft(HWND window, read title, int width, bool right);
+void ColumnAdd(HWND window, read title, int width, bool right);
+void ColumnAddIndex(HWND window, int column, read title, int width, bool right);
+void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right);
+void ColumnRemove(HWND window, read title);
+void ColumnRemoveIndex(HWND window, int column);
+void ColumnIcon(HWND window, read title, int icon);
+void ColumnSelect(HWND window, read title);
+int ColumnFind(HWND window, read title);
+CString ColumnTitle(HWND window, int column);
+int ColumnCount(HWND window);
 
 // Wrap
 // start
@@ -275,26 +287,28 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 // bay and bench
 
-void StorePulse();
-void ListPulse();
 
-
-
-HWND WindowCreateList();
-void ColumnAdd(HWND window, int column, read title, int width, bool right);
+void ColumnIcon(HWND window, read title, int icon);
+void ColumnIconIndex(HWND window, int column, int icon);
+void ColumnSelect(HWND window, read title);
+void ColumnSelectIndex(HWND window, int column);
 void ColumnRemove(HWND window, read title);
-void ColumnRemove(HWND window, int column);
-HWND ListHeader(HWND window);
+void ColumnRemoveIndex(HWND window, int column);
+void ColumnAddBefore(HWND window, read before, read title, int width, bool right);
+void ColumnAddLeft(HWND window, read title, int width, bool right);
+void ColumnAdd(HWND window, read title, int width, bool right);
+void ColumnAddIndex(HWND window, int column, read title, int width, bool right);
+void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right);
 int ColumnCount(HWND window);
 CString ColumnTitle(HWND window, int column);
 int ColumnFind(HWND window, read title);
+
+
+
+void LogColumnFind(HWND window, read title);
 void Test();
-void ListPrint(HWND window, Cell c, bool force);
-void ListPrintAll(HWND window, std::vector<Cell> c);
-
-
-void ColumnIcon(HWND window, int column, int icon);
-void ColumnSelect(HWND window, int column);
+void StorePulse();
+void ListPulse();
 LPARAM ListGet(HWND window, int row);
 LPARAM ListMark(HWND window);
 LPARAM ListMouse(HWND window);
@@ -312,6 +326,14 @@ void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, 
 void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
 int ListFind(HWND window, LPARAM p);
 CString ListText(HWND window, int row, int column);
+HWND ListHeader(HWND window);
+void ListPrint(HWND window, Cell c, bool force);
+void ListPrintAll(HWND window, std::vector<Cell> c);
+
+
+
+
+
 
 
 
