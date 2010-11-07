@@ -79,7 +79,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	//TODO create windows for the contents of each tab
 	App.window.files = WindowCreateList();
-	ColumnAdd(App.window.files, 11, L"Column 11", 200, false);
 
 
 	// Create the tabs window

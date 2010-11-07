@@ -285,7 +285,7 @@ void ColumnAdd(HWND window, int column, read title, int width, bool right);
 void ColumnRemove(HWND window, read title);
 void ColumnRemove(HWND window, int column);
 HWND ListHeader(HWND window);
-int ListColumns(HWND window);
+int ColumnCount(HWND window);
 CString ColumnTitle(HWND window, int column);
 int ColumnFind(HWND window, read title);
 void Test();
@@ -295,8 +295,6 @@ void ListPrintAll(HWND window, std::vector<Cell> c);
 
 void ColumnIcon(HWND window, int column, int icon);
 void ColumnSelect(HWND window, int column);
-void ListColumnInsert(HWND window, int column, int format, int image, read r, int width);
-void ListColumnDelete(HWND window, int column);
 LPARAM ListGet(HWND window, int row);
 LPARAM ListMark(HWND window);
 LPARAM ListMouse(HWND window);
