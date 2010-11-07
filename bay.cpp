@@ -120,6 +120,7 @@ void ListPulse() {
 // Edit the list view row to match the information in this torrent
 void Torrent::Edit() {
 
+	/*
 	// Update the cells that have different text
 	ListEdit(
 		App.window.list,
@@ -133,6 +134,7 @@ void Torrent::Edit() {
 		ComposeInfohash().text,
 		ComposeLocation().text,
 		L"");
+		*/
 }
 
 
@@ -140,11 +142,13 @@ void Torrent::Edit() {
 std::vector<Cell> Torrent::Compose() {
 
 	std::vector<Cell> c;
+	/*
 	c.push_back(ComposeStatus());
 	c.push_back(ComposeName());
 	c.push_back(ComposeSize());
 	c.push_back(ComposeInfohash());
 	c.push_back(ComposeLocation());
+	*/
 	return c;
 }
 

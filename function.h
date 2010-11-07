@@ -303,11 +303,8 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 
 Size CellSize(HWND window, int row, int column);
-CString CellText(HWND window, int row, int column);
-void ListPrint(HWND window, Cell c, bool force);
-void ListPrintAll(HWND window, std::vector<Cell> c);
-void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
-void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+void CellShow(HWND window, std::vector<Cell> *row);
+void CellShowDo(HWND window, Cell *c, bool add);
 
 
 

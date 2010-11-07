@@ -113,12 +113,10 @@ public:
 class app_list {
 public:
 
-	int max; // The largest number of characters added into any list view item
 	int sort; // -1 no sort, OR 0+ column sorted
 	int direction; // 1 ascending or -1 descending
 
 	app_list() {
-		max = 0;
 		sort = -1;
 		direction = 1;
 	}

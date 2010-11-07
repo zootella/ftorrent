@@ -465,6 +465,7 @@ void AddRow(hbig hash) {
 	Torrent *t = FindTorrent(hash);
 	if (!t) return;
 
+	/*
 	// Make a new row for it at the bottom of the list view
 	ListAdd(
 		App.window.list,
@@ -478,6 +479,7 @@ void AddRow(hbig hash) {
 		t->ComposeInfohash().text,
 		t->ComposeLocation().text,
 		L"");
+		*/
 }
 
 // Copy the torrent file at the given path to "infohash.meta.db" next to this running exe if not there already

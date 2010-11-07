@@ -22,207 +22,64 @@ Size CellSize(HWND window, int row, int column) {
 
 
 
-// Takes row and column numbers
-// Gets the text from the list view subitem at that location
-// Returns the text
-CString CellText(HWND window, int row, int column) {
-
-	// Open a string
-	CString s;
-	int     n = App.list.max + 1; // Add 1 character to have space to write the wide null terminator
-	LPWSTR  w = s.GetBuffer(n);
-
-	//TODO do this without needing app list max
-	// Copy in the characters
-	ListView_GetItemText(window, row, column, w, n); // Writes null terminator
-	s.ReleaseBuffer();
-	return s;
-}
-
+//TODO confirm you can remove column 0, adn then find the paramter of the second column which became primary
 
 
 // takes a row of cells
 
-void CellShow(HWND window, std::vector<Cell> *c) {
+void CellShow(HWND window, std::vector<Cell> *cells) {
 
-
-
+	// Find each cell's current column index, picking out the one with special index 0
 	Cell *primary;
 	std::vector<Cell *> secondary;
-	for (int i = 0; i < (int)c->size(); i++) {
+	for (int i = 0; i < (int)cells->size(); i++) { // Loop through the given row of cells
+		Cell *c = &((*cells)[i]);
+		int column = ColumnFind(window, c->title); // Find the column index cell c is in right now
+		c->column = column;                        // Note the column index in the cell object
 
-		int column = ColumnFind(window, ((*c)[i]).title);
-
-		if (column == -1);
-		else if (column == 0) primary = &((*c)[i]);
-		else secondary.push_back(&((*c)[i]));
+		if      (column == -1) c->Hidden();            // The column is hidden, clear the cell's record of what it has on the screen
+		else if (column ==  0) primary = c;            // This cell is in column 0, point primary at it
+		else                   secondary.push_back(c); // The column is a list view submitem, add it to our list of them
 	}
+	if (!primary) { log(L"no primary cell found"); return; }
 
-	int row = ListFind(window, primary.parameter);
+	// Find the current row index for the given cells
+	int row = ListFind(window, primary->parameter);
+	bool add = row == -1; // Not found, we'll add the primary cell in a new row at the end
+	if (add) row = ListRows(window); // Choose the new last row index
+	for (int i = 0; i < (int)cells->size(); i++) ((*cells)[i]).row = row; // Note the row index in the cell object
 
-	bool add = column == 0 && row == -1;
-
-	for (int i = 0; i < (int)secondary->size(); i++) {
-		CellPrint(HWND window, ColumnFind(
-
-
-
-
-	}
-
-
-
-
-
+	// Update the list view control
+	CellShowDo(window, primary, add); // Add or edit the primary cell
+	for (int i = 0; i < (int)secondary.size(); i++) // Edit the secondary cells
+		CellShowDo(window, secondary[i], false);
 }
-
-
-
-
-
-
-void CellPrint(HWND window, Cell c, bool add) {
+void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
 
 	LVITEM info; // Make a list view item structure to edit the cell at those coordinates
 	ZeroMemory(&info, sizeof(info));
-	info.iSubItem = column;
-	info.iItem = row;
+	info.iSubItem = c->column;
+	info.iItem = c->row;
 
 	info.mask |= LVIF_PARAM; // Parameter
-	info.lParam = c.parameter;
+	info.lParam = c->parameter;
 
 	info.mask |= LVIF_TEXT; // Text
-	info.pszText = (LPWSTR)(read)c.text;
+	info.pszText = (LPWSTR)(read)(c->text);
 
-	if (c.icon != -1) { // If specified, an icon
+	if (c->icon != -1) { // If specified, an icon
 		info.mask |= LVIF_IMAGE;
-		info.iImage = c.icon;
+		info.iImage = c->icon;
 	}
-
-	if (App.list.max < length(c.text)) // Keep track of the longest text ever added to a cell
-		App.list.max = length(c.text);
 
 	if (add) {
 		if (ListView_InsertItem(window, &info) == -1) error(L"listview_insertitem");
-	} else {
-		if (c.NeedsUpdate()) {
-			if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
-			c.SetUpdated();
-		}
+		c->Same(); // Record what the cell put on the screen
+	} else if (c->Different()) { // The cell's record of what's on the screen differs from current composed information
+		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
+		c->Same(); // Record what the cell put on the screen
 	}
 }
 
 
-
-void ListPrintAll(HWND window, std::vector<Cell> c) {
-	for (int i = 0; i < (int)c.size(); i++)
-		ListPrint(window, c[i], false);
-}
-
-
-// Takes a parameter, icons and text
-// Adds a new row to the list view control
-void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6) {
-
-	// Record the maximum text length
-	App.list.max = Greatest(App.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
-
-	// Row and column position, the number of rows is the index of the next row
-	LVITEM column1, column2, column3, column4, column5, column6;
-	ZeroMemory(&column1, sizeof(column1));
-	ZeroMemory(&column2, sizeof(column2));
-	ZeroMemory(&column3, sizeof(column3));
-	ZeroMemory(&column4, sizeof(column4));
-	ZeroMemory(&column5, sizeof(column5));
-	ZeroMemory(&column6, sizeof(column6));
-	column1.iItem = ListRows(window);
-	column1.iSubItem = 0;
-	column2.iSubItem = 1;
-	column3.iSubItem = 2;
-	column4.iSubItem = 3;
-	column5.iSubItem = 4;
-	column6.iSubItem = 5;
-
-	// Masks for text and the parameter
-	column1.mask = LVIF_TEXT | LVIF_PARAM;
-	column2.mask = column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
-
-	// Text
-	column1.pszText = (LPWSTR)r1;
-	column2.pszText = (LPWSTR)r2;
-	column3.pszText = (LPWSTR)r3;
-	column4.pszText = (LPWSTR)r4;
-	column5.pszText = (LPWSTR)r5;
-	column6.pszText = (LPWSTR)r6;
-
-	// Icons
-	if (icon1 != -1) { column1.mask = column1.mask | LVIF_IMAGE; column1.iImage = icon1; }
-	if (icon2 != -1) { column2.mask = column2.mask | LVIF_IMAGE; column2.iImage = icon2; }
-
-	// Parameter
-	column1.lParam = p;
-
-	// Insert the item and set the row
-	int row = ListView_InsertItem(window, &column1);
-	if (row == -1) { error(L"listview_insertitem"); return; }
-	column2.iItem = column3.iItem = column4.iItem = column5.iItem = column6.iItem = row;
-
-	// Set the subitems
-	if (columns >= 2 && !ListView_SetItem(window, &column2)) { error(L"listview_setitem"); return; }
-	if (columns >= 3 && !ListView_SetItem(window, &column3)) { error(L"listview_setitem"); return; }
-	if (columns >= 4 && !ListView_SetItem(window, &column4)) { error(L"listview_setitem"); return; }
-	if (columns >= 5 && !ListView_SetItem(window, &column5)) { error(L"listview_setitem"); return; }
-	if (columns >= 6 && !ListView_SetItem(window, &column6)) { error(L"listview_setitem"); return; }
-}
-
-// Takes a parameter, icons and text
-// Edits the row in the list view control
-void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6) {
-
-	// Record the maximum text length
-	App.list.max = Greatest(App.list.max, length(r1), length(r2), length(r3), length(r4), length(r5), length(r6));
-
-	// Find the row that has the given parameter
-	int row = ListFind(window, p);
-
-	// Row and column position
-	LVITEM column1, column2, column3, column4, column5, column6;
-	ZeroMemory(&column1, sizeof(column1));
-	ZeroMemory(&column2, sizeof(column2));
-	ZeroMemory(&column3, sizeof(column3));
-	ZeroMemory(&column4, sizeof(column4));
-	ZeroMemory(&column5, sizeof(column5));
-	ZeroMemory(&column6, sizeof(column6));
-	column1.iItem = column2.iItem = column3.iItem = column4.iItem = column5.iItem = column6.iItem = row;
-	column1.iSubItem = 0;
-	column2.iSubItem = 1;
-	column3.iSubItem = 2;
-	column4.iSubItem = 3;
-	column5.iSubItem = 4;
-	column6.iSubItem = 5;
-
-	// Masks for text and icons
-	column1.mask = column2.mask = LVIF_TEXT | LVIF_IMAGE;
-	column3.mask = column4.mask = column5.mask = column6.mask = LVIF_TEXT;
-
-	// Text
-	column1.pszText = (LPWSTR)r1;
-	column2.pszText = (LPWSTR)r2;
-	column3.pszText = (LPWSTR)r3;
-	column4.pszText = (LPWSTR)r4;
-	column5.pszText = (LPWSTR)r5;
-	column6.pszText = (LPWSTR)r6;
-
-	// Icons
-	column1.iImage = icon1;
-	column2.iImage = icon2;
-
-	// Set the columns that have different text
-	if (columns >= 1 && !same(CellText(window, row, 0), r1) && !ListView_SetItem(window, &column1)) error(L"listview_setitem");
-	if (columns >= 2 && !same(CellText(window, row, 1), r2) && !ListView_SetItem(window, &column2)) error(L"listview_setitem");
-	if (columns >= 3 && !same(CellText(window, row, 2), r3) && !ListView_SetItem(window, &column3)) error(L"listview_setitem");
-	if (columns >= 4 && !same(CellText(window, row, 3), r4) && !ListView_SetItem(window, &column4)) error(L"listview_setitem");
-	if (columns >= 5 && !same(CellText(window, row, 4), r5) && !ListView_SetItem(window, &column5)) error(L"listview_setitem");
-	if (columns >= 6 && !same(CellText(window, row, 5), r6) && !ListView_SetItem(window, &column6)) error(L"listview_setitem");
-}
 

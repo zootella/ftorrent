@@ -354,21 +354,27 @@ public:
 	Cell(LPARAM set_parameter, read set_title, sbig set_sort = 0, int set_icon = -1, read set_text = L"") { // Has defaults
 		parameter = set_parameter;
 		title = set_title;
-		column = row = -1; // Coordinates not yet known
 		sort = set_sort;
 		icon = set_icon;
 		text = set_text;
-		screenicon = -2;
+
+		column = row = -1; // Coordinates not yet known
+		Hidden(); // Not shown on screen yet
 	}
 
-	bool NeedsUpdate() {
+	bool Different() {
 		return icon != screenicon || text != screentext;
 
 	}
 
-	void SetUpdated() {
+	void Same() {
 		screenicon = icon;
 		screentext = text;
+	}
+
+	void Hidden() {
+		screenicon = -2;
+		screentext = L"";
 	}
 
 
