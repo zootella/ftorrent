@@ -294,6 +294,8 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 // bay and bench
 
+void StorePulse();
+void ListPulse();
 
 
 
