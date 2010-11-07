@@ -341,19 +341,39 @@ public:
 	// Location
 	LPARAM parameter; // Parameter that identifies the row this cell applies to
 	CString title; // Column title text that identifies the column this cell applies to
+	int column, row; // Recent coordinates in the list view control
 
 	// Display
 	sbig sort; // Sort order
 	int icon; // Icon index in the program image list, or -1 to not have an icon
 	CString text; // Text for the cell
 
+	int screenicon; // Icon index on the screen
+	CString screentext; // Text on the screen
+
 	Cell(LPARAM set_parameter, read set_title, sbig set_sort = 0, int set_icon = -1, read set_text = L"") { // Has defaults
 		parameter = set_parameter;
 		title = set_title;
+		column = row = -1; // Coordinates not yet known
 		sort = set_sort;
 		icon = set_icon;
 		text = set_text;
+		screenicon = -2;
 	}
+
+	bool NeedsUpdate() {
+		return icon != screenicon || text != screentext;
+
+	}
+
+	void SetUpdated() {
+		screenicon = icon;
+		screentext = text;
+	}
+
+
+
+
 };
 
 

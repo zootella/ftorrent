@@ -41,15 +41,47 @@ CString CellText(HWND window, int row, int column) {
 
 
 
+// takes a row of cells
+
+void CellShow(HWND window, std::vector<Cell> *c) {
 
 
-void ListPrint(HWND window, Cell c, bool force) {
 
-	int column = ColumnFind(window, c.title); // Find the column and row index where the cell is currently located in the list view control
-	if (column == -1) return; // Column not currently on display, don't add or edit this cell
-	int row = ListFind(window, c.parameter);
-	bool found = row != -1; // True if we found the row and can edit it, false not found so we should add the row
-	if (row == -1) row = ListRows(window); // Not found, make a new row at the end
+	Cell *primary;
+	std::vector<Cell *> secondary;
+	for (int i = 0; i < (int)c->size(); i++) {
+
+		int column = ColumnFind(window, ((*c)[i]).title);
+
+		if (column == -1);
+		else if (column == 0) primary = &((*c)[i]);
+		else secondary.push_back(&((*c)[i]));
+	}
+
+	int row = ListFind(window, primary.parameter);
+
+	bool add = column == 0 && row == -1;
+
+	for (int i = 0; i < (int)secondary->size(); i++) {
+		CellPrint(HWND window, ColumnFind(
+
+
+
+
+	}
+
+
+
+
+
+}
+
+
+
+
+
+
+void CellPrint(HWND window, Cell c, bool add) {
 
 	LVITEM info; // Make a list view item structure to edit the cell at those coordinates
 	ZeroMemory(&info, sizeof(info));
@@ -70,12 +102,13 @@ void ListPrint(HWND window, Cell c, bool force) {
 	if (App.list.max < length(c.text)) // Keep track of the longest text ever added to a cell
 		App.list.max = length(c.text);
 
-	if (found) { // Edit
-		if (force || !same(CellText(window, row, column), c.text)) { // Only do something if this is a force edit or the text would change
-			if (!ListView_SetItem(window, &info)) { error(L"listview_setitem"); return; } // Edit the cell in the existing row
+	if (add) {
+		if (ListView_InsertItem(window, &info) == -1) error(L"listview_insertitem");
+	} else {
+		if (c.NeedsUpdate()) {
+			if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
+			c.SetUpdated();
 		}
-	} else { // Add
-		if (ListView_InsertItem(window, &info) == -1) { error(L"listview_insertitem"); return; } // Add the cell in a new row
 	}
 }
 
