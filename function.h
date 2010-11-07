@@ -47,6 +47,9 @@ void TextWindowSet(HWND window, read r);
 CString TextWindow(HWND window);
 void EditAppend(HWND window, read r);
 void EditScroll(HWND window);
+HWND WindowCreateList();
+HWND WindowCreateTabs();
+HWND WindowCreateTip();
 HWND WindowCreateEdit(bool scrollbars, bool capacity);
 HWND WindowCreateButton(read r);
 HWND WindowCreate(read name, read title, DWORD style, int size, HWND parent, HMENU menu);
@@ -100,27 +103,6 @@ int Icon(read ext, CString *type);
 int IconGet(read ext, CString *type);
 int IconAddResource(read resource);
 int IconAdd(HICON icon, int systemindex);
-void ColumnIcon(HWND window, int column, int icon);
-void ColumnSelect(HWND window, int column);
-void ListColumnInsert(HWND window, int column, int format, int image, read r, int width);
-void ListColumnDelete(HWND window, int column);
-LPARAM ListGet(HWND window, int row);
-LPARAM ListMark(HWND window);
-LPARAM ListMouse(HWND window);
-Size ListCell(HWND window, int row, int column);
-int ListRows(HWND window);
-int ListSelectedRows(HWND window);
-bool ListSelected(HWND window, int row);
-void ListSelectAll(HWND window);
-void ListScroll(HWND window);
-void ListRemove(HWND window, int row);
-void ListRemoveAll(HWND window);
-void ListAddStart(HWND window, int rows);
-void ListAddDone(HWND window, int rows);
-void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
-void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
-int ListFind(HWND window, LPARAM p);
-CString ListText(HWND window, int row, int column);
 bool ShellInfo(read ext, int *systemindex, CString *type);
 bool ShellIcon(read ext, HICON *icon);
 void DestroyIconSafely(HICON icon);
@@ -277,7 +259,6 @@ void AreaCreate();
 void AreaPulse();
 void AreaPopUp();
 void AreaPopDown();
-std::vector<int> SizeColumns(std::vector<int> w);
 void Layout(int move = 0); // Has defaults
 void AreaDoCommand(Area *area);
 void OptionLoad();
@@ -299,19 +280,40 @@ void ListPulse();
 
 
 
-HWND ListCreate();
-void ListColumnAdd(HWND window, bool right, read title, int width);
-void ListColumnRemove(HWND window, read title);
-void ListColumnRemove(HWND window, int column);
+HWND WindowCreateList();
+void ColumnAdd(HWND window, int column, read title, int width, bool right);
+void ColumnRemove(HWND window, read title);
+void ColumnRemove(HWND window, int column);
 HWND ListHeader(HWND window);
 int ListColumns(HWND window);
-CString ListColumnGet(HWND window, int column);
-int ListColumnFind(HWND window, read title);
+CString ColumnTitle(HWND window, int column);
+int ColumnFind(HWND window, read title);
 void Test();
 void ListPrint(HWND window, Cell c, bool force);
 void ListPrintAll(HWND window, std::vector<Cell> c);
 
 
+void ColumnIcon(HWND window, int column, int icon);
+void ColumnSelect(HWND window, int column);
+void ListColumnInsert(HWND window, int column, int format, int image, read r, int width);
+void ListColumnDelete(HWND window, int column);
+LPARAM ListGet(HWND window, int row);
+LPARAM ListMark(HWND window);
+LPARAM ListMouse(HWND window);
+Size ListCell(HWND window, int row, int column);
+int ListRows(HWND window);
+int ListSelectedRows(HWND window);
+bool ListSelected(HWND window, int row);
+void ListSelectAll(HWND window);
+void ListScroll(HWND window);
+void ListRemove(HWND window, int row);
+void ListRemoveAll(HWND window);
+void ListAddStart(HWND window, int rows);
+void ListAddDone(HWND window, int rows);
+void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+int ListFind(HWND window, LPARAM p);
+CString ListText(HWND window, int row, int column);
 
 
 

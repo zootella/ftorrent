@@ -68,67 +68,23 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!menu) error(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
+	// Create the list view window that lists the torrents at the top
+	App.window.list = WindowCreateList();
+	ColumnAdd(App.window.list, 11, L"Status",   150, false);
+	ColumnAdd(App.window.list, 22, L"Name",     150, false);
+	ColumnAdd(App.window.list, 33, L"Size",     150, true);
+	ColumnAdd(App.window.list, 44, L"Infohash", 150, false);
+	ColumnAdd(App.window.list, 55, L"Location", 150, false);
 
 
-
-		// Create the list view window
-		DWORD style =
-			WS_CHILD             | // Required for child windows
-			LVS_REPORT           | // Specifies report view, I think this puts it in details
-			LBS_EXTENDEDSEL      | // Allows multiple items to be selected
-			LVS_SHOWSELALWAYS    | // Shows the selection even when the control doesn't have the focus
-			LBS_NOINTEGRALHEIGHT | // Allows the size to be specified exactly without snap
-			LVS_SHAREIMAGELISTS;   // Will not delete the system image list when the control is destroyed
-		App.window.list = WindowCreate(WC_LISTVIEW, NULL, style, 0, App.window.main, (HMENU)WINDOW_LIST);
-
-		// Use the program image list
-		ListView_SetImageList(App.window.list, App.icon.list, LVSIL_SMALL);
-
-		// Load extended list view styles, requires common control 4.70
-		style = LVS_EX_LABELTIP  | // Unfold partially hidden labels in tooltips
-			LVS_EX_FULLROWSELECT | // When an item is selected, highlight it and all its subitems
-			LVS_EX_SUBITEMIMAGES;  // Let subitems have icons
-		ListView_SetExtendedListViewStyle(App.window.list, style);
-
-		// Determine how wide the columns should be
-		std::vector<int> widths;
-		widths.push_back(-4);  // Status
-		widths.push_back(200); // Name
-		widths.push_back(-5);  // Size
-		widths.push_back(100); // Infohash
-		widths.push_back(-10); // Location
-		widths = SizeColumns(widths);
-
-		// Add the first column, which won't be able to show its icon on the right
-		ListColumnInsert(App.window.list, 0, LVCFMT_LEFT, App.icon.clear, L"", 0);
-
-		// Add the columns
-		ListColumnInsert(App.window.list, 1, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Status",   widths[0]);
-		ListColumnInsert(App.window.list, 2, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Name",     widths[1]);
-		ListColumnInsert(App.window.list, 3, LVCFMT_RIGHT,                         App.icon.clear, L"Size",     widths[2]);
-		ListColumnInsert(App.window.list, 4, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Infohash", widths[3]);
-		ListColumnInsert(App.window.list, 5, LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, App.icon.clear, L"Location", widths[4]);
-
-		// Remove the first column so all the remaining columns can show their icons on the right
-		ListColumnDelete(App.window.list, 0);
-
-
-
-
-	App.window.files = ListCreate();
+	//TODO create windows for the contents of each tab
+	App.window.files = WindowCreateList();
+	ColumnAdd(App.window.files, 11, L"Column 11", 200, false);
 
 
 	// Create the tabs window
-	style = WS_CHILD;            // Required for child windows
-	App.window.tabs = WindowCreate(WC_TABCONTROL, NULL, style, 0, App.window.main, (HMENU)WINDOW_TABS);
-	SendMessage(                 // Have it use Tahoma, not the default system font
-		(HWND)App.window.tabs,   // Send the message to this window
-		WM_SETFONT,              // Message to send
-		(WPARAM)App.font.normal, // Handle to font
-		0);                      // Don't tell the control to immediately redraw itself
-
-	// Add the tabs
-	AddTab(App.window.tabs, 0, L"Torrent");
+	App.window.tabs = WindowCreateTabs();
+	AddTab(App.window.tabs, 0, L"Torrent"); // Add the tabs
 	AddTab(App.window.tabs, 1, L"Trackers");
 	AddTab(App.window.tabs, 2, L"Peers");
 	AddTab(App.window.tabs, 3, L"Pieces");
@@ -137,24 +93,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	AddTab(App.window.tabs, 6, L"Log");
 
 	// Make child windows and menus
-	App.window.log = WindowCreateEdit(true,  true);
-	WindowEdit(App.window.log, true);
+	App.window.log = WindowCreateEdit(true, true);
+	WindowEdit(App.window.log, true); // Let the user type text in the box
 
 	// Create the tooltip window
-	style =
-		WS_POPUP |     // Popup window instead of a child window
-		TTS_ALWAYSTIP; // Show the tooltip even if the window is inactive
-	App.window.tip = WindowCreate(TOOLTIPS_CLASS, NULL, style, 0, App.window.main, NULL);
-
-	// Make the tooltip topmost
-	int result = SetWindowPos(
-		App.window.tip,  // Handle to window
-		HWND_TOPMOST,    // Place the window above others without this setting
-		0, 0, 0, 0,      // Retain the current position and size
-		SWP_NOMOVE |
-		SWP_NOSIZE |
-		SWP_NOACTIVATE); // Do not activate the window
-	if (!result) error(L"setwindowpos");
+	App.window.tip = WindowCreateTip();
 
 	// Make the areas of the window like the buttons and sizing grips
 	AreaCreate();

@@ -491,44 +491,6 @@ void AreaPopDown() {
 	App.cycle.pop--;
 }
 
-// Given a list of ints like -5, -4, 120, 200
-// Turns negative weights into positive pixel widths based on how wide the window is on the screen
-// Returns a list with all positive pixel widths
-std::vector<int> SizeColumns(std::vector<int> w) {
-
-	// Total given weight and pixel widths
-	int totalweight = 0;
-	int assignedwidth = 0;
-	for (int i = 0; i < (int)w.size(); i++) {
-		if (w[i] < 0) {
-			totalweight += -w[i];  // Negative, a weight
-		} else {
-			assignedwidth += w[i]; // Positive, a width already assigned
-		}
-	}
-
-	// Measure total pixel width, making the colums fill the client width leaving a margin on the right 2 scrollbar widths wide
-	int totalwidth = SizeClient().w            // The main window has a size even before it's on the screen
-		- (2 * GetSystemMetrics(SM_CXVSCROLL)) // 2 widths of the vertical scroll bar like 16 pixels
-		- assignedwidth;                       // Already assigned column widths
-
-	// Calculate pixel width for each weight unit
-	int e = 0;
-	if (totalweight > 0)
-		e = totalwidth / totalweight;
-
-	// Turn weights into pixel widths
-	for (int i = 0; i < (int)w.size(); i++) {
-		if (w[i] < 0) { // Negative, a weight
-			w[i] = -(w[i] * e); // Turn it into a pixel width
-			if (w[i] < 32) { // Enforce a minimum width
-				w[i] = 32;
-			}
-		}
-	}
-	return w;
-}
-
 // Takes a number of pixels to move the bar
 // Uses text sizes and client area dimensions to compute internal sizes, and moves the child window controls and areas
 void Layout(int move) {
