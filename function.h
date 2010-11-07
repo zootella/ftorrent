@@ -157,6 +157,19 @@ int ColumnFind(HWND window, read title);
 CString ColumnTitle(HWND window, int column);
 int ColumnCount(HWND window);
 HWND ListHeader(HWND window);
+LPARAM ListGet(HWND window, int row);
+LPARAM ListMark(HWND window);
+LPARAM ListMouse(HWND window);
+int ListRows(HWND window);
+int ListSelectedRows(HWND window);
+bool ListSelected(HWND window, int row);
+void ListSelectAll(HWND window);
+void ListScroll(HWND window);
+void ListRemove(HWND window, int row);
+void ListRemoveAll(HWND window);
+void ListAddStart(HWND window, int rows);
+void ListAddDone(HWND window, int rows);
+int ListFind(HWND window, LPARAM p);
 
 // Wrap
 // start
@@ -289,25 +302,12 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 // bay and bench
 
 
-LPARAM ListGet(HWND window, int row);
-LPARAM ListMark(HWND window);
-LPARAM ListMouse(HWND window);
-Size ListCell(HWND window, int row, int column);
-int ListRows(HWND window);
-int ListSelectedRows(HWND window);
-bool ListSelected(HWND window, int row);
-void ListSelectAll(HWND window);
-void ListScroll(HWND window);
-void ListRemove(HWND window, int row);
-void ListRemoveAll(HWND window);
-void ListAddStart(HWND window, int rows);
-void ListAddDone(HWND window, int rows);
-void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
-void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
-int ListFind(HWND window, LPARAM p);
-CString ListText(HWND window, int row, int column);
+Size CellSize(HWND window, int row, int column);
+CString CellText(HWND window, int row, int column);
 void ListPrint(HWND window, Cell c, bool force);
 void ListPrintAll(HWND window, std::vector<Cell> c);
+void ListAdd(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
+void ListEdit(HWND window, int columns, LPARAM p, int icon1, read r1, int icon2, read r2, read r3, read r4, read r5, read r6);
 
 
 

@@ -1893,3 +1893,105 @@ HWND ListHeader(HWND window) {
 	if (!header) { error(L"listview_getheader"); return NULL; }
 	return header;
 }
+
+// Get the parameter stored at the given row number
+LPARAM ListGet(HWND window, int row) {
+
+	LVITEM info;
+	ZeroMemory(&info, sizeof(info));
+	info.iItem = row;        // Look at item in the given row number
+	info.mask  = LVIF_PARAM; // Get the parameter
+	int result;
+	result = ListView_GetItem(window, &info);
+	if (!result) { error(L"listview_getitem"); return 0; }
+	return info.lParam;
+}
+
+// Gets the parameter of the row that has the keyboard mark, 0 if no keyboard mark
+LPARAM ListMark(HWND window) {
+
+	int row = ListView_GetSelectionMark(window); // Get the row that has the mark
+	if (row == -1) return 0; // No mark
+	return ListGet(window, row); // Return the parameter of the row
+}
+
+// Gets the parameter of the row beneath the mouse, 0 if the mouse is not over a row
+LPARAM ListMouse(HWND window) {
+
+	LVHITTESTINFO info; // Get the list view row beneath the client coordinate
+	ZeroMemory(&info, sizeof(info));
+    info.pt = MouseClient(window).Point();
+	int row = ListView_HitTest(window, &info);
+	if (row == -1) return 0; // The mouse is not over a row
+	return ListGet(window, row); // Return the parameter of the row
+}
+
+// Counts how many rows are in the list view control
+int ListRows(HWND window) {
+	int rows = ListView_GetItemCount(window);
+	if (rows < 0) { error(L"listview_getitemcount"); return 0; }
+	return rows;
+}
+
+// Counts how many selected rows are in the list view control
+int ListSelectedRows(HWND window) {
+	int rows = ListView_GetSelectedCount(window);
+	if (rows < 0) { error(L"listview_getselectedcount"); return 0; }
+	return rows;
+}
+
+// True if the given row number is selected
+bool ListSelected(HWND window, int row) {
+	return ListView_GetItemState(window, row, LVIS_SELECTED) == LVIS_SELECTED;
+}
+
+// Select all the rows in the list view control
+void ListSelectAll(HWND window) {
+	int rows = ListRows(window);
+	for (int row = 0; row < rows; row++) // Loop down the rows, selecting each one
+		ListView_SetItemState(window, row, LVIS_SELECTED, LVIS_SELECTED);
+}
+
+// Scroll to the bottom of the list view control
+void ListScroll(HWND window) {
+	int rows = ListRows(window); // Count the number of rows in the list view control
+	if (rows && !ListView_EnsureVisible(window, rows - 1, false)) error(L"listview_ensurevisible"); // Scroll to make the last row completely visible
+}
+
+// Remove the given row index
+void ListRemove(HWND window, int row) {
+	if (!ListView_DeleteItem(window, row)) error(L"listview_deleteitem");
+}
+
+// Remove all the rows in the list view control
+void ListRemoveAll(HWND window) {
+	if (!ListView_DeleteAllItems(window)) error(L"listview_deleteallitems");
+}
+
+// Given the number of rows that we will add, turn painting off and tell the control the new size to hold
+void ListAddStart(HWND window, int rows) {
+	if (rows > 1) {                                             // Suspend drawing if more than 1 row is going to be added
+		SendMessage(window, WM_SETREDRAW, false, 0);            // Prevent changes in the list view window from being drawn
+		ListView_SetItemCount(window, ListRows(window) + rows); // Tell the list view control how many rows it will have total
+	}
+}
+
+// Given the number of rows that we added, turn painting back on and paints the list view control window
+void ListAddDone(HWND window, int rows) {
+	if (rows > 1) {                                 // Resume drawing if it was suspended
+		SendMessage(window, WM_SETREDRAW, true, 0); // Allow changes in the list view window to be drawn
+		InvalidateRect(window, NULL, true);         // Invalidate the list view control and have it erased before painted
+	}
+}
+
+// Find the row number where the given parameter appears in the list view control, or -1 not found
+int ListFind(HWND window, LPARAM p) {
+
+	LVFINDINFO info;
+	ZeroMemory(&info, sizeof(info));
+	info.flags  = LVFI_PARAM;                       // Search based on the parameter
+	info.lParam = p;                                // Here is the parameter to find
+	int row = ListView_FindItem(window, -1, &info); // -1 to start from the beginning
+	if (row == -1) error(L"listview_finditem");     // Not found
+	return row;                                     // Return the row number
+}
