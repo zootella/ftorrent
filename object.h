@@ -406,8 +406,7 @@ public:
 
 
 	// New
-	Torrent() {
-	}
+	Torrent() {}
 
 	void Save();
 	bool Load(hbig hash);
@@ -422,7 +421,7 @@ public:
 	void ComposeInfohash();
 	void ComposeLocation();
 
-	Cell *FindCell(read title);
+	Cell *GetCell(read title);
 
 	DWORD Hash();
 

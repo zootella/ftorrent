@@ -139,8 +139,30 @@ void Torrent::Edit() {
 
 
 
-void Torrent::Compose() {
 
+
+
+Cell *Torrent::GetCell(read title) {
+
+	if (cells.size() == 0) {
+
+		read r = L"Status,Name,Size,Infohash,Location";
+
+		std::vector<CString> titles = words(r, L",");
+
+		for (int i = 0; i < (int)titles.size(); i++)
+			cells.push_back(Cell(Hash(), titles[i]));
+	}
+
+	for (int i = 0; i < (int)cells.size(); i++) {
+		if (cells[i].title == CString(title))
+			return &(cells[i]);
+	}
+	return NULL;
+}
+
+
+void Torrent::Compose() {
 	ComposeStatus();
 	ComposeName();
 	ComposeSize();
@@ -149,61 +171,33 @@ void Torrent::Compose() {
 }
 
 
-Cell *Torrent::FindCell(read title) {
-
-	for (int i = 0; i < (int)cells.size(); i++) {
-		if (cells[i].title == CString(title))
-			return &(cells[i]);
-	}
-
-	cells.push_back(Cell(Hash()), title);
-	return &(cells[cells.size() - 1]);
-}
-
-
-//TODO
-//no, this is stupid
-//have named cells in the object hardcoded
-//have the constructor link them up into a vector of pointers
-
-
 void Torrent::ComposeStatus() {
-	Cell *c = FindCell(L"Status");
-	c->sort = 0;
-	c->icon = App.icon.ascending;
+	Cell *c = GetCell(L"Status");
 	c->text = L"status text";
 }
 
-
 void Torrent::ComposeName() {
-	Cell c(Hash(), L"Name");
-	c.text = widenStoC(handle.name());
-	c.icon = App.icon.descending;
-	return c;
+	Cell *c = GetCell(L"Name");
+	c->text = widenStoC(handle.name());
 }
 
 void Torrent::ComposeSize() {
-	Cell c(Hash(), L"Size");
+	Cell *c = GetCell(L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
 
-	c.text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
-	c.sort = size;
-	return c;
+	c->text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
 }
 
-// This torrent's infohash in base 16
 void Torrent::ComposeInfohash() {
-	Cell c(Hash(), L"Infohash");
-	c.text = base16(handle.info_hash());
-	return c;
+	Cell *c = GetCell(L"Infohash");
+	c->text = base16(handle.info_hash()); // This torrent's infohash in base 16
 }
 
 void Torrent::ComposeLocation() {
-	Cell c(Hash(), L"Location");
-	c.text = L"path text";
-	return c;
+	Cell *c = GetCell(L"Location");
+	c->text = L"path text";
 }
 
 
