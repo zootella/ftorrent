@@ -189,6 +189,9 @@ public:
 	libtorrent::session *session; // Session in libtorrent
 	std::vector<Torrent> torrents; // Torrents the program has in its list
 
+
+	std::vector<Cell> cells;
+
 	app() {
 		session = NULL;
 	}

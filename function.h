@@ -303,7 +303,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 
 Size CellSize(HWND window, int row, int column);
-void CellShow(HWND window, std::vector<Cell> *row);
+void CellShow(HWND window, std::vector<Cell> &row);
 void CellShowDo(HWND window, Cell *c, bool add);
 
 

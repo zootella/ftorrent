@@ -16,6 +16,8 @@ void LogColumnFind(HWND window, read title) {
 int stage = 1;
 
 
+
+
 // Run a snippet of test code
 void Test() {
 
@@ -25,26 +27,31 @@ void Test() {
 		//now all you need to see is how to add a column between other columns, to add it where the user right clicked or in the order of the ones on the menu
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
-		ColumnAdd(App.window.files, L"Column A", 100, true);
-		ColumnAdd(App.window.files, L"Column B", 80, true);
-		ColumnAdd(App.window.files, L"Column C", 120, true);
-		ColumnAdd(App.window.files, L"Column D", 140, true);
+		ColumnAdd(App.window.files, L"Column A", 100, false);
+		ColumnAdd(App.window.files, L"Column B",  80, false);
+		ColumnAdd(App.window.files, L"Column C", 120, false);
+		ColumnAdd(App.window.files, L"Column D", 140, false);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		ColumnIcon(App.window.files, L"Column A", App.icon.ascending);
+		App.cells.push_back(Cell(11, L"Column A", 0, -1, L"A 11"));
+		App.cells.push_back(Cell(22, L"Column B", 0, -1, L"B 11"));
+		App.cells.push_back(Cell(33, L"Column C", 0, -1, L"C 11"));
+		App.cells.push_back(Cell(44, L"Column D", 0, -1, L"D 11"));
+
+		CellShow(App.window.files, App.cells);
+
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
-		ColumnIcon(App.window.files, L"Column A", App.icon.clear);
+		ColumnRemove(App.window.files, L"Column A");
+
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
-		ColumnIcon(App.window.files, L"Column A", App.icon.descending);
 
 	} else if (stage == 5) { log(L"stage 5"); stage = 6;
 
-		ColumnIcon(App.window.files, L"Column A", -1);
 	}
 
 	log(L"find:");
