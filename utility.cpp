@@ -1828,7 +1828,7 @@ void ColumnRemove(HWND window, read title) {
 
 // Remove the column at the given index
 void ColumnRemoveIndex(HWND window, int column) {
-	if (!ListView_DeleteColumn(window, 0)) error(L"listview_deletecolumn");
+	if (!ListView_DeleteColumn(window, column)) error(L"listview_deletecolumn");
 }
 
 // Set the given icon index in the column header named title

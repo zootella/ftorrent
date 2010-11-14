@@ -44,7 +44,6 @@ void CellShow(HWND window, std::vector<Cell> &cells) {
 	Cell *p4 = &(cells[0]);
 	log(L"test4: ", p4->text);
 
-	//yeay, it works now
 
 
 	for (int i = 0; i < (int)cells.size(); i++) { // Loop through the given row of cells

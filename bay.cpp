@@ -28,24 +28,31 @@ void Test() {
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
 		ColumnAdd(App.window.files, L"Column A", 100, false);
-		ColumnAdd(App.window.files, L"Column B",  80, false);
+		ColumnAdd(App.window.files, L"Column B", 110, false);
 		ColumnAdd(App.window.files, L"Column C", 120, false);
 		ColumnAdd(App.window.files, L"Column D", 140, false);
 
-	} else if (stage == 2) { log(L"stage 2"); stage = 3;
-
 		App.cells.push_back(Cell(11, L"Column A", 0, -1, L"A 11"));
-		App.cells.push_back(Cell(22, L"Column B", 0, -1, L"B 11"));
-		App.cells.push_back(Cell(33, L"Column C", 0, -1, L"C 11"));
-		App.cells.push_back(Cell(44, L"Column D", 0, -1, L"D 11"));
+		App.cells.push_back(Cell(11, L"Column B", 0, -1, L"B 11"));
+		App.cells.push_back(Cell(11, L"Column C", 0, -1, L"C 11"));
+		App.cells.push_back(Cell(11, L"Column D", 0, -1, L"D 11"));
 
 		CellShow(App.window.files, App.cells);
 
+	} else if (stage == 2) { log(L"stage 2"); stage = 3;
+
+		log(L"2before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		ColumnRemove(App.window.files, L"Column B");
+//		CellShow(App.window.files, App.cells);
+		log(L"2after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
-		ColumnRemove(App.window.files, L"Column A");
-
+		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		ColumnAddBefore(App.window.files, L"Column C", L"Column B", 110, false);
+		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
+//		CellShow(App.window.files, App.cells);
+		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
@@ -54,12 +61,12 @@ void Test() {
 
 	}
 
-	log(L"find:");
+	/*
 	LogColumnFind(App.window.files, L"Column A");
 	LogColumnFind(App.window.files, L"Column B");
 	LogColumnFind(App.window.files, L"Column C");
 	LogColumnFind(App.window.files, L"Column D");
-	log(L"");
+	*/
 
 
 
