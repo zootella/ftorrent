@@ -6,6 +6,26 @@ extern app App; // Access global object
 
 
 
+bool CellText(HWND window, read title, LPARAM p) {
+
+	int row = ListFind(window, p);
+	int column = ColumnFind(window, title);
+	if (row == -1 || column == -1) return false; // Cell not found
+
+	return ListText(window, column, row);
+}
+
+
+// True if the cell in the list view control window at column and row has text, false if its text is blank
+bool CellText(HWND window, int column, int row) {
+
+	WCHAR bay[MAX_PATH];
+	ListView_GetItemText(window, column, row, bay, MAX_PATH);
+	return is(bay);
+}
+
+
+
 void LogColumnFind(HWND window, read title) {
 
 	int column = ColumnFind(window, title);
@@ -32,27 +52,41 @@ void Test() {
 		ColumnAdd(App.window.files, L"Column C", 120, false);
 		ColumnAdd(App.window.files, L"Column D", 140, false);
 
-		App.cells.push_back(Cell(11, L"Column A", 0, -1, L"A 11"));
-		App.cells.push_back(Cell(11, L"Column B", 0, -1, L"B 11"));
-		App.cells.push_back(Cell(11, L"Column C", 0, -1, L"C 11"));
-		App.cells.push_back(Cell(11, L"Column D", 0, -1, L"D 11"));
+		App.cells1.push_back(Cell(11, L"Column A", 0, -1, L"11a"));
+		App.cells1.push_back(Cell(11, L"Column B", 0, -1, L"11b"));
+		App.cells1.push_back(Cell(11, L"Column C", 0, -1, L"11c"));
+		App.cells1.push_back(Cell(11, L"Column D", 0, -1, L"11d"));
 
-		CellShow(App.window.files, App.cells);
+		App.cells2.push_back(Cell(22, L"Column A", 0, -1, L"22a"));
+		App.cells2.push_back(Cell(22, L"Column B", 0, -1, L"22b"));
+		App.cells2.push_back(Cell(22, L"Column C", 0, -1, L"22c"));
+		App.cells2.push_back(Cell(22, L"Column D", 0, -1, L"22d"));
+
+		CellShow(App.window.files, App.cells1);
+		CellShow(App.window.files, App.cells2);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		log(L"2before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		log(L"2before: found param 22 at row ", numerals(ListFind(App.window.files, 22)));
 		ColumnRemove(App.window.files, L"Column B");
 //		CellShow(App.window.files, App.cells);
-		log(L"2after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		log(L"2after:  found param 22 at row ", numerals(ListFind(App.window.files, 22)));
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
 		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
-		ColumnAddBefore(App.window.files, L"Column C", L"Column B", 110, false);
+		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, false);
 		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
 //		CellShow(App.window.files, App.cells);
 		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+
+		//ok, now you've added back b, and it's blank
+		//but it's ok, just confirm that your cell is blank function works, and then use that as part of the match
+
+		//ok, here's what it's doing
+		//when you add a column, it is of course blank
+		//if you add the leftmost column, both it and the column to the right are blank
+		//so, just find a quick way to look for blank cells
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 

@@ -190,7 +190,8 @@ public:
 	std::vector<Torrent> torrents; // Torrents the program has in its list
 
 
-	std::vector<Cell> cells;
+	std::vector<Cell> cells1;
+	std::vector<Cell> cells2;
 
 	app() {
 		session = NULL;

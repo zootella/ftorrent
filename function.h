@@ -144,7 +144,7 @@ bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
-void ColumnAddBefore(HWND window, read before, read title, int width, bool right);
+void ColumnAddBefore(HWND window, read title, read before, int width, bool right);
 void ColumnAddLeft(HWND window, read title, int width, bool right);
 void ColumnAdd(HWND window, read title, int width, bool right);
 void ColumnAddIndex(HWND window, int column, read title, int width, bool right);

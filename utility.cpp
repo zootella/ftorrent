@@ -1774,7 +1774,7 @@ void SetupRemove() {
 }
 
 // Make a new column named title before the one named before
-void ColumnAddBefore(HWND window, read before, read title, int width, bool right) {
+void ColumnAddBefore(HWND window, read title, read before, int width, bool right) {
 	int column = ColumnFind(window, before);
 	if (column == -1) column = 0; // Not found, make the new column before all of them
 	ColumnAddIndex(window, column, title, width, right);
