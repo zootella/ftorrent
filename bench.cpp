@@ -80,27 +80,14 @@ void Test() {
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		log(L"2before: found param 22 at row ", numerals(ListFind(App.window.files, 22)));
+		ColumnRemove(App.window.files, L"Column A");
 		ColumnRemove(App.window.files, L"Column B");
-//		CellShow(App.window.files, App.cells);
-		log(L"2after:  found param 22 at row ", numerals(ListFind(App.window.files, 22)));
+		ColumnRemove(App.window.files, L"Column C");
+		ColumnRemove(App.window.files, L"Column D");
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
-		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
-		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, true);
-		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
-//		CellShow(App.window.files, App.cells);
-		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
-
-		//ok, now you've added back b, and it's blank
-		//but it's ok, just confirm that your cell is blank function works, and then use that as part of the match
-
-		//ok, here's what it's doing
-		//when you add a column, it is of course blank
-		//if you add the leftmost column, both it and the column to the right are blank
-		//so, just find a quick way to look for blank cells
-
+		ColumnAdd(App.window.files, L"Column E", 110, true);
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
@@ -109,14 +96,10 @@ void Test() {
 
 	} else if (stage == 5) { log(L"stage 5"); stage = 6;
 
-		log(L"c0 r0 is ", CellBlank(App.window.files, 0, 0) ? L"blank" : L"text");
-		log(L"c0 r1 is ", CellBlank(App.window.files, 0, 1) ? L"blank" : L"text");
-
 	}
 
 
 
-	//TODO, test removing all the columns, then adding back the first one, confirm you can fill blanks in column 0
 
 
 }
@@ -174,7 +157,7 @@ void ListPulse() {
 		App.torrents[i].Edit();
 
 
-//	App.list.blanks = false; // We filled any blank cells caused by newly added columns
+//	App.list.refresh = false; // We filled any blank cells caused by newly added columns
 
 
 }
@@ -267,7 +250,7 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 		c->Same();
 
 	// If necessary, edit the contents of the existing cell
-	} else if (App.list.refresh || c->Different()) {
+	} else if (c->Different() || App.list.refresh) {
 
 		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
 		c->Same(); // Record that now display matches data
