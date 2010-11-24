@@ -306,12 +306,10 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 void Test();
 void StorePulse();
 void ListPulse();
-bool CellText(HWND window, read title, LPARAM p);
-bool CellTextIndex(HWND window, int column, int row);
+bool CellBlank(HWND window, int column, int row);
 Size CellSize(HWND window, int row, int column);
-void CellShow(HWND window, std::vector<Cell> &cells);
-void CellShowDo(HWND window, Cell *c, bool add);
-bool CellShowDifferent(HWND window, Cell *c);
+void CellShow(List *list, std::vector<Cell> &cells);
+void CellShowDo(List *list, Cell *c, bool add);
 
 
 

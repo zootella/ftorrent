@@ -71,8 +71,8 @@ void Test() {
 		App.cells2.push_back(Cell(22, L"Column C", 0, -1, L"22c"));
 		App.cells2.push_back(Cell(22, L"Column D", 0, -1, L"22d"));
 
-		CellShow(App.list.files.window, App.cells1);
-		CellShow(App.list.files.window, App.cells2);
+		CellShow(&App.list.files, App.cells1);
+		CellShow(&App.list.files, App.cells2);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
@@ -97,10 +97,6 @@ void Test() {
 		//if you add the leftmost column, both it and the column to the right are blank
 		//so, just find a quick way to look for blank cells
 
-		log(L"22a ", CellText(App.list.files.window, L"Column A", 22) ? L"text" : L"blank");
-		log(L"22b ", CellText(App.list.files.window, L"Column B", 22) ? L"text" : L"blank");
-		log(L"22c ", CellText(App.list.files.window, L"Column C", 22) ? L"text" : L"blank");
-		log(L"22d ", CellText(App.list.files.window, L"Column D", 22) ? L"text" : L"blank");
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
@@ -177,21 +173,13 @@ void ListPulse() {
 
 
 
-// True if the cell in the list view control window in column title with row parameter p is blank
-bool CellText(HWND window, read title, LPARAM p) {
 
-	int row = ListFind(window, p);
-	int column = ColumnFind(window, title);
-	if (row == -1 || column == -1) return false; // Cell not found
-	return CellTextIndex(window, column, row);
-}
-
-// True if the cell in the list view control window at column and row has text, false if its text is blank
-bool CellTextIndex(HWND window, int column, int row) {
+// True if the cell in the list view control window at column and row is blank, false if it has text
+bool CellBlank(HWND window, int column, int row) {
 
 	WCHAR bay[MAX_PATH];
 	ListView_GetItemText(window, column, row, bay, MAX_PATH);
-	return is(bay);
+	return isblank(bay);
 }
 
 // Given row and column coordinates, get the bounding size of the list view sub item cell
@@ -208,7 +196,7 @@ Size CellSize(HWND window, int row, int column) {
 
 // takes a row of cells
 
-void CellShow(HWND window, std::vector<Cell> &cells) {
+void CellShow(List *list, std::vector<Cell> &cells) {
 
 	// Find each cell's current column index, picking out the one with special index 0
 	Cell *primary = NULL;                         // Point primary at the cell in column 0
@@ -216,7 +204,7 @@ void CellShow(HWND window, std::vector<Cell> &cells) {
 	for (int i = 0; i < (int)cells.size(); i++) { // Loop through the given row of cells
 		Cell *c = &(cells[i]);
 
-		c->column = ColumnFind(window, c->title);         // Update the cell's record of the column index it's in right now
+		c->column = ColumnFind(list->window, c->title);   // Update the cell's record of the column index it's in right now
 		if      (c->column == -1) c->Hidden();            // The column is hidden, clear the cell's record of what it has on the screen
 		else if (c->column ==  0) primary = c;            // This cell is in column 0, point primary at it
 		else                      secondary.push_back(c); // The column is a list view submitem, add it to our list of them
@@ -224,17 +212,17 @@ void CellShow(HWND window, std::vector<Cell> &cells) {
 	if (!primary) { log(L"no primary cell found"); return; }
 
 	// Find the current row index for the given cells
-	int row = ListFind(window, primary->parameter);
+	int row = ListFind(list->window, primary->parameter);
 	bool add = row == -1; // Not found, we'll add the primary cell in a new row at the end
-	if (add) row = ListRows(window); // Choose the new last row index
+	if (add) row = ListRows(list->window); // Choose the new last row index
 	for (int i = 0; i < (int)cells.size(); i++) cells[i].row = row; // Note the row index in the cell object
 
 	// Update the list view control
-	CellShowDo(window, primary, add); // Add or edit the primary cell
+	CellShowDo(list, primary, add); // Add or edit the primary cell
 	for (int i = 0; i < (int)secondary.size(); i++) // Edit the secondary cells
-		CellShowDo(window, secondary[i], false);
+		CellShowDo(list, secondary[i], false);
 }
-void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
+void CellShowDo(List *list, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
 
 	// Make a list view item structure to edit the cell at those coordinates
 	LVITEM info;
@@ -260,30 +248,25 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 
 	// Add this cell in a new row in column 0
 	if (add) {
-		if (ListView_InsertItem(window, &info) == -1) error(L"listview_insertitem");
+
+		if (ListView_InsertItem(list->window, &info) == -1) error(L"listview_insertitem");
 		c->Same();
 
-	// Edit the contents of the existing cell
-	} else if (CellShowDifferent(window, c)) { // The cell's record of what's on the screen differs from current composed information
-		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
+	// If necessary, edit the contents of the existing cell
+	} else if (
+		c->Different() || // What the cell should show is different from our record of what the cell is showing, or
+		(
+			App.list.blanks && // A list may contain blank cells because a column was just added, and
+			is(c->text)     && // The cell should show text, and
+			CellBlank(list->window, c->column, c->row) // The cell has no text
+		)) {
+
+		if (!ListView_SetItem(list->window, &info)) error(L"listview_setitem");
 		c->Same(); // Record that now display matches data
 	}
 }
 
 
-bool CellShowDifferent(HWND window, Cell *c) {
-
-
-	if (c->Different()) return true;
-
-
-
-	if (App.list.direction);
-
-
-
-
-}
 
 
 

@@ -114,6 +114,11 @@ class app_list {
 public:
 
 	List torrents, files;
+	bool blanks; // True when a new column has been added that has blank cells
+
+	app_list() {
+		blanks = false; // No new columns with blank cells at the start
+	}
 };
 
 class app_cycle {

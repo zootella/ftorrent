@@ -338,13 +338,13 @@ public:
 	HWND window; // Handle to the list view child window control
 	CString sort; // blank no sort, or title of the column sorted
 	int direction; // 1 ascending or -1 descending
-	bool blank; // True if a newly added column may have caused blank cells
+
+	//TODO here is where you'll probably add the factory state and current state of column order, show, and widths
 
 	List() {
 		window = NULL;
 		sort = L"";
 		direction = 1;
-		blank = false;
 	}
 };
 
