@@ -351,8 +351,28 @@ public:
 
 
 
+// A column in a list view control
+class Column {
+public:
 
-// Information for a single item or subitem in a list view control
+	CString title; // Title text that also uniquely identifies the column
+	int factorywidth; // Default column width in pixels
+	bool factoryshow; // True if this column is shown by default
+	int width; // Current user-set width in pixels
+	int place; // Where this column does or should show up related to the others
+	bool show; // True if this column is added in the window, false if it's hidden
+
+	Column() {
+		title = L"";
+		factorywidth = -1;
+		factoryshow = false;
+		width = -1;
+		place = -1;
+		show = false;
+	}
+};
+
+// A single item or subitem in a list view control
 class Cell {
 public:
 

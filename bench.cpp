@@ -8,16 +8,29 @@ extern app App; // Access global object
 
 //TODO make right click menu on headers Customize... and modeless dialog box with checkboxes for each column
 
-// Column
-//title
-//factorywidth
-//factoryshow
-//width
-//place
-//show
+
+
+//On startup
+//compute places
+//show defaults
+
+//On add
+//use places to figure out index to put it, don't compute or change anything, though
+
+//On reorder, there's no event to respond to
+
+//On remove
+//compute places list for visible ones, leaving other places the same
+//remove the column
 
 
 
+//what does the format for persisting column data look like?
+//both factory settings, and a string for bencoding in optn.db
+//you need to save column order, width, show or hide
+//"t,0,110,Column A;t,25,130,Column B;"
+
+//what does the function that computes places look like?
 
 
 
