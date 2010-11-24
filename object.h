@@ -331,6 +331,24 @@ public:
 
 
 
+// State of the columns of a list view control
+class List {
+public:
+
+	HWND window; // Handle to the list view child window control
+	CString sort; // blank no sort, or title of the column sorted
+	int direction; // 1 ascending or -1 descending
+	bool blank; // True if a newly added column may have caused blank cells
+
+	List() {
+		window = NULL;
+		sort = L"";
+		direction = 1;
+		blank = false;
+	}
+};
+
+
 
 
 
@@ -362,9 +380,8 @@ public:
 		Hidden(); // Not shown on screen yet
 	}
 
-	bool Different() {
+	bool Different() { // True to check for blank cells in a column that was just added
 		return icon != screenicon || text != screentext;
-
 	}
 
 	void Same() {

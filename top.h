@@ -113,13 +113,7 @@ public:
 class app_list {
 public:
 
-	int sort; // -1 no sort, OR 0+ column sorted
-	int direction; // 1 ascending or -1 descending
-
-	app_list() {
-		sort = -1;
-		direction = 1;
-	}
+	List torrents, files;
 };
 
 class app_cycle {
