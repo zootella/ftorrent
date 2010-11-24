@@ -302,16 +302,15 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 // bay and bench
 
 
-Size CellSize(HWND window, int row, int column);
-void CellShow(HWND window, std::vector<Cell> &row);
-void CellShowDo(HWND window, Cell *c, bool add);
 
-
-
-void LogColumnFind(HWND window, read title);
 void Test();
 void StorePulse();
 void ListPulse();
+bool CellText(HWND window, read title, LPARAM p);
+bool CellTextIndex(HWND window, int column, int row);
+Size CellSize(HWND window, int row, int column);
+void CellShow(HWND window, std::vector<Cell> &cells);
+void CellShowDo(HWND window, Cell *c, bool add);
 
 
 
