@@ -6,23 +6,23 @@ extern app App; // Access global object
 
 
 
+// True if the cell in the list view control window at column and row has text, false if its text is blank
+bool CellTextIndex(HWND window, int column, int row) {
+
+	WCHAR bay[MAX_PATH];
+	ListView_GetItemText(window, column, row, bay, MAX_PATH);
+	return is(bay);
+}
+
 bool CellText(HWND window, read title, LPARAM p) {
 
 	int row = ListFind(window, p);
 	int column = ColumnFind(window, title);
 	if (row == -1 || column == -1) return false; // Cell not found
 
-	return ListText(window, column, row);
+	return CellTextIndex(window, column, row);
 }
 
-
-// True if the cell in the list view control window at column and row has text, false if its text is blank
-bool CellText(HWND window, int column, int row) {
-
-	WCHAR bay[MAX_PATH];
-	ListView_GetItemText(window, column, row, bay, MAX_PATH);
-	return is(bay);
-}
 
 
 
@@ -47,10 +47,10 @@ void Test() {
 		//now all you need to see is how to add a column between other columns, to add it where the user right clicked or in the order of the ones on the menu
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
-		ColumnAdd(App.window.files, L"Column A", 100, false);
-		ColumnAdd(App.window.files, L"Column B", 110, false);
-		ColumnAdd(App.window.files, L"Column C", 120, false);
-		ColumnAdd(App.window.files, L"Column D", 140, false);
+		ColumnAdd(App.window.files, L"Column A", 100, true);
+		ColumnAdd(App.window.files, L"Column B", 110, true);
+		ColumnAdd(App.window.files, L"Column C", 120, true);
+		ColumnAdd(App.window.files, L"Column D", 140, true);
 
 		App.cells1.push_back(Cell(11, L"Column A", 0, -1, L"11a"));
 		App.cells1.push_back(Cell(11, L"Column B", 0, -1, L"11b"));
@@ -75,7 +75,7 @@ void Test() {
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
 		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
-		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, false);
+		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, true);
 		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
 //		CellShow(App.window.files, App.cells);
 		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
@@ -87,6 +87,11 @@ void Test() {
 		//when you add a column, it is of course blank
 		//if you add the leftmost column, both it and the column to the right are blank
 		//so, just find a quick way to look for blank cells
+
+		log(L"22a ", CellText(App.window.files, L"Column A", 22) ? L"text" : L"blank");
+		log(L"22b ", CellText(App.window.files, L"Column B", 22) ? L"text" : L"blank");
+		log(L"22c ", CellText(App.window.files, L"Column C", 22) ? L"text" : L"blank");
+		log(L"22d ", CellText(App.window.files, L"Column D", 22) ? L"text" : L"blank");
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
