@@ -56,10 +56,10 @@ void Test() {
 		//now all you need to see is how to add a column between other columns, to add it where the user right clicked or in the order of the ones on the menu
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
-		ColumnAdd(App.window.files, L"Column A", 100, true);
-		ColumnAdd(App.window.files, L"Column B", 110, true);
-		ColumnAdd(App.window.files, L"Column C", 120, true);
-		ColumnAdd(App.window.files, L"Column D", 140, true);
+		ColumnAdd(App.list.files.window, L"Column A", 100, true);
+		ColumnAdd(App.list.files.window, L"Column B", 110, true);
+		ColumnAdd(App.list.files.window, L"Column C", 120, true);
+		ColumnAdd(App.list.files.window, L"Column D", 140, true);
 
 		App.cells1.push_back(Cell(11, L"Column A", 0, -1, L"11a"));
 		App.cells1.push_back(Cell(11, L"Column B", 0, -1, L"11b"));
@@ -71,23 +71,23 @@ void Test() {
 		App.cells2.push_back(Cell(22, L"Column C", 0, -1, L"22c"));
 		App.cells2.push_back(Cell(22, L"Column D", 0, -1, L"22d"));
 
-		CellShow(App.window.files, App.cells1);
-		CellShow(App.window.files, App.cells2);
+		CellShow(App.list.files.window, App.cells1);
+		CellShow(App.list.files.window, App.cells2);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		log(L"2before: found param 22 at row ", numerals(ListFind(App.window.files, 22)));
-		ColumnRemove(App.window.files, L"Column B");
+		log(L"2before: found param 22 at row ", numerals(ListFind(App.list.files.window, 22)));
+		ColumnRemove(App.list.files.window, L"Column B");
 //		CellShow(App.window.files, App.cells);
-		log(L"2after:  found param 22 at row ", numerals(ListFind(App.window.files, 22)));
+		log(L"2after:  found param 22 at row ", numerals(ListFind(App.list.files.window, 22)));
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
-		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
-		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, true);
+		log(L"3before: found param 11 at row ", numerals(ListFind(App.list.files.window, 11)));
+		ColumnAddBefore(App.list.files.window, L"Column B", L"Column A", 110, true);
 		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
 //		CellShow(App.window.files, App.cells);
-		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		log(L"3after:  found param 11 at row ", numerals(ListFind(App.list.files.window, 11)));
 
 		//ok, now you've added back b, and it's blank
 		//but it's ok, just confirm that your cell is blank function works, and then use that as part of the match
@@ -97,10 +97,10 @@ void Test() {
 		//if you add the leftmost column, both it and the column to the right are blank
 		//so, just find a quick way to look for blank cells
 
-		log(L"22a ", CellText(App.window.files, L"Column A", 22) ? L"text" : L"blank");
-		log(L"22b ", CellText(App.window.files, L"Column B", 22) ? L"text" : L"blank");
-		log(L"22c ", CellText(App.window.files, L"Column C", 22) ? L"text" : L"blank");
-		log(L"22d ", CellText(App.window.files, L"Column D", 22) ? L"text" : L"blank");
+		log(L"22a ", CellText(App.list.files.window, L"Column A", 22) ? L"text" : L"blank");
+		log(L"22b ", CellText(App.list.files.window, L"Column B", 22) ? L"text" : L"blank");
+		log(L"22c ", CellText(App.list.files.window, L"Column C", 22) ? L"text" : L"blank");
+		log(L"22d ", CellText(App.list.files.window, L"Column D", 22) ? L"text" : L"blank");
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 

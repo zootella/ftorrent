@@ -311,6 +311,7 @@ bool CellTextIndex(HWND window, int column, int row);
 Size CellSize(HWND window, int row, int column);
 void CellShow(HWND window, std::vector<Cell> &cells);
 void CellShowDo(HWND window, Cell *c, bool add);
+bool CellShowDifferent(HWND window, Cell *c);
 
 
 

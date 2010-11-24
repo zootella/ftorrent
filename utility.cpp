@@ -1856,7 +1856,7 @@ void ColumnSelect(HWND window, read title) {
 int ColumnFind(HWND window, read title) {
 	if (isblank(title)) return -1; // Make sure title has text
 
-	int columns = ColumnCount(App.window.list);
+	int columns = ColumnCount(window);
 	for (int i = 0; i < columns; i++)
 		if (ColumnTitle(window, i) == CString(title))
 			return i;
