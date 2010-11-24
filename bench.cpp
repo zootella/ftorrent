@@ -56,38 +56,42 @@ void Test() {
 		//now all you need to see is how to add a column between other columns, to add it where the user right clicked or in the order of the ones on the menu
 		//when floating over an item in the columns menu of checkboxes, have status text tell the user what that column means
 
-		ColumnAdd(App.list.files.window, L"Column A", 100, true);
-		ColumnAdd(App.list.files.window, L"Column B", 110, true);
-		ColumnAdd(App.list.files.window, L"Column C", 120, true);
-		ColumnAdd(App.list.files.window, L"Column D", 140, true);
+		ColumnAdd(App.window.files, L"Column A", 100, true);
+		ColumnAdd(App.window.files, L"Column B", 110, true);
+		ColumnAdd(App.window.files, L"Column C", 120, true);
+		ColumnAdd(App.window.files, L"Column D", 140, true);
 
 		App.cells1.push_back(Cell(11, L"Column A", 0, -1, L"11a"));
 		App.cells1.push_back(Cell(11, L"Column B", 0, -1, L"11b"));
 		App.cells1.push_back(Cell(11, L"Column C", 0, -1, L"11c"));
 		App.cells1.push_back(Cell(11, L"Column D", 0, -1, L"11d"));
+		App.cells1.push_back(Cell(11, L"Column E", 0, -1, L"11e"));
+		App.cells1.push_back(Cell(11, L"Column F", 0, -1, L"11f"));
 
 		App.cells2.push_back(Cell(22, L"Column A", 0, -1, L"22a"));
 		App.cells2.push_back(Cell(22, L"Column B", 0, -1, L"22b"));
 		App.cells2.push_back(Cell(22, L"Column C", 0, -1, L"22c"));
 		App.cells2.push_back(Cell(22, L"Column D", 0, -1, L"22d"));
+		App.cells2.push_back(Cell(22, L"Column E", 0, -1, L"22e"));
+		App.cells2.push_back(Cell(22, L"Column F", 0, -1, L"22f"));
 
-		CellShow(&App.list.files, App.cells1);
-		CellShow(&App.list.files, App.cells2);
+		CellShow(App.window.files, App.cells1);
+		CellShow(App.window.files, App.cells2);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
 
-		log(L"2before: found param 22 at row ", numerals(ListFind(App.list.files.window, 22)));
-		ColumnRemove(App.list.files.window, L"Column B");
+		log(L"2before: found param 22 at row ", numerals(ListFind(App.window.files, 22)));
+		ColumnRemove(App.window.files, L"Column B");
 //		CellShow(App.window.files, App.cells);
-		log(L"2after:  found param 22 at row ", numerals(ListFind(App.list.files.window, 22)));
+		log(L"2after:  found param 22 at row ", numerals(ListFind(App.window.files, 22)));
 
 	} else if (stage == 3) { log(L"stage 3"); stage = 4;
 
-		log(L"3before: found param 11 at row ", numerals(ListFind(App.list.files.window, 11)));
-		ColumnAddBefore(App.list.files.window, L"Column B", L"Column A", 110, true);
+		log(L"3before: found param 11 at row ", numerals(ListFind(App.window.files, 11)));
+		ColumnAddBefore(App.window.files, L"Column B", L"Column A", 110, true);
 		//bug, adding back a causes the contents of b to disappear, and cellshow won't do it because our record shows no change necessary
 //		CellShow(App.window.files, App.cells);
-		log(L"3after:  found param 11 at row ", numerals(ListFind(App.list.files.window, 11)));
+		log(L"3after:  found param 11 at row ", numerals(ListFind(App.window.files, 11)));
 
 		//ok, now you've added back b, and it's blank
 		//but it's ok, just confirm that your cell is blank function works, and then use that as part of the match
@@ -100,13 +104,19 @@ void Test() {
 
 	} else if (stage == 4) { log(L"stage 4"); stage = 5;
 
+		CellShow(App.window.files, App.cells1);
+		CellShow(App.window.files, App.cells2);
 
 	} else if (stage == 5) { log(L"stage 5"); stage = 6;
+
+		log(L"c0 r0 is ", CellBlank(App.window.files, 0, 0) ? L"blank" : L"text");
+		log(L"c0 r1 is ", CellBlank(App.window.files, 0, 1) ? L"blank" : L"text");
 
 	}
 
 
 
+	//TODO, test removing all the columns, then adding back the first one, confirm you can fill blanks in column 0
 
 
 }
@@ -164,6 +174,7 @@ void ListPulse() {
 		App.torrents[i].Edit();
 
 
+//	App.list.blanks = false; // We filled any blank cells caused by newly added columns
 
 
 }
@@ -176,9 +187,12 @@ void ListPulse() {
 
 // True if the cell in the list view control window at column and row is blank, false if it has text
 bool CellBlank(HWND window, int column, int row) {
-
 	WCHAR bay[MAX_PATH];
+	lstrcpy(bay, L"");//TODO put these everywhere
 	ListView_GetItemText(window, column, row, bay, MAX_PATH);
+
+	log(L"cell c", numerals(column), L" r", numerals(row), L" has text \"", CString(bay), L"\"");
+
 	return isblank(bay);
 }
 
@@ -196,7 +210,7 @@ Size CellSize(HWND window, int row, int column) {
 
 // takes a row of cells
 
-void CellShow(List *list, std::vector<Cell> &cells) {
+void CellShow(HWND window, std::vector<Cell> &cells) {
 
 	// Find each cell's current column index, picking out the one with special index 0
 	Cell *primary = NULL;                         // Point primary at the cell in column 0
@@ -204,7 +218,7 @@ void CellShow(List *list, std::vector<Cell> &cells) {
 	for (int i = 0; i < (int)cells.size(); i++) { // Loop through the given row of cells
 		Cell *c = &(cells[i]);
 
-		c->column = ColumnFind(list->window, c->title);   // Update the cell's record of the column index it's in right now
+		c->column = ColumnFind(window, c->title);         // Update the cell's record of the column index it's in right now
 		if      (c->column == -1) c->Hidden();            // The column is hidden, clear the cell's record of what it has on the screen
 		else if (c->column ==  0) primary = c;            // This cell is in column 0, point primary at it
 		else                      secondary.push_back(c); // The column is a list view submitem, add it to our list of them
@@ -212,17 +226,17 @@ void CellShow(List *list, std::vector<Cell> &cells) {
 	if (!primary) { log(L"no primary cell found"); return; }
 
 	// Find the current row index for the given cells
-	int row = ListFind(list->window, primary->parameter);
+	int row = ListFind(window, primary->parameter);
 	bool add = row == -1; // Not found, we'll add the primary cell in a new row at the end
-	if (add) row = ListRows(list->window); // Choose the new last row index
+	if (add) row = ListRows(window); // Choose the new last row index
 	for (int i = 0; i < (int)cells.size(); i++) cells[i].row = row; // Note the row index in the cell object
 
 	// Update the list view control
-	CellShowDo(list, primary, add); // Add or edit the primary cell
+	CellShowDo(window, primary, add); // Add or edit the primary cell
 	for (int i = 0; i < (int)secondary.size(); i++) // Edit the secondary cells
-		CellShowDo(list, secondary[i], false);
+		CellShowDo(window, secondary[i], false);
 }
-void CellShowDo(List *list, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
+void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
 
 	// Make a list view item structure to edit the cell at those coordinates
 	LVITEM info;
@@ -246,22 +260,31 @@ void CellShowDo(List *list, Cell *c, bool add) { // True to insert c in column 0
 		info.iImage = c->icon;
 	}
 
+	if (add) {
+	} else {
+		log(L"EDIT col", numerals(c->column), L", row", numerals(c->row), make(
+		L" different:", c->Different() ? L"true" : L"false",
+		L" blanks:", App.list.blanks ? L"true" : L"false",
+		L" is:", is(c->text) ? L"true" : L"false",
+		L" blank:", CellBlank(window, c->column, c->row) ? L"true" : L"false"));
+	}
+
 	// Add this cell in a new row in column 0
 	if (add) {
 
-		if (ListView_InsertItem(list->window, &info) == -1) error(L"listview_insertitem");
+		if (ListView_InsertItem(window, &info) == -1) error(L"listview_insertitem");
 		c->Same();
 
 	// If necessary, edit the contents of the existing cell
 	} else if (
 		c->Different() || // What the cell should show is different from our record of what the cell is showing, or
 		(
-			App.list.blanks && // A list may contain blank cells because a column was just added, and
+			App.list.blanks /*&& // A list may contain blank cells because a column was just added, and
 			is(c->text)     && // The cell should show text, and
-			CellBlank(list->window, c->column, c->row) // The cell has no text
+			CellBlank(window, c->column, c->row) // The cell has no text*/
 		)) {
 
-		if (!ListView_SetItem(list->window, &info)) error(L"listview_setitem");
+		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
 		c->Same(); // Record that now display matches data
 	}
 }

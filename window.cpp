@@ -69,16 +69,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
 	// Create the list view window that lists the torrents at the top
-	App.list.torrents.window = WindowCreateList();
-	ColumnAdd(App.list.torrents.window, L"Status",   150, false);
-	ColumnAdd(App.list.torrents.window, L"Name",     150, false);
-	ColumnAdd(App.list.torrents.window, L"Size",     150, true);
-	ColumnAdd(App.list.torrents.window, L"Infohash", 150, false);
-	ColumnAdd(App.list.torrents.window, L"Location", 150, false);
+	App.window.list = WindowCreateList();
+	ColumnAdd(App.window.list, L"Status",   150, false);
+	ColumnAdd(App.window.list, L"Name",     150, false);
+	ColumnAdd(App.window.list, L"Size",     150, true);
+	ColumnAdd(App.window.list, L"Infohash", 150, false);
+	ColumnAdd(App.window.list, L"Location", 150, false);
 
 
 	//TODO create windows for the contents of each tab
-	App.list.files.window = WindowCreateList();
+	App.window.files = WindowCreateList();
 
 
 	// Create the tabs window
@@ -108,10 +108,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	WindowMove(App.window.main, size, false);
 
 	// Show the child windows and then the main window
-	ShowWindow(App.list.torrents.window, SW_SHOWNORMAL);
-	ShowWindow(App.window.tabs,          SW_SHOWNORMAL);
-	ShowWindow(App.list.files.window,    SW_SHOWNORMAL);
-	ShowWindow(App.window.main,          SW_SHOWNORMAL); // Calling this causes a paint message right now
+	ShowWindow(App.window.list,  SW_SHOWNORMAL);
+	ShowWindow(App.window.tabs,  SW_SHOWNORMAL);
+	ShowWindow(App.window.files, SW_SHOWNORMAL);
+	ShowWindow(App.window.main,  SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
 	// Make sure we can edit files next to this running exe

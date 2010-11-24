@@ -3,13 +3,13 @@ class app_window {
 public:
 
 	HINSTANCE instance; // Program instance handle
-	HWND main, tabs, tip; // Window handles
-	HWND torrent, trackers, peers, pieces, speed, log;
+	HWND main, list, tabs, tip; // Window handles
+	HWND torrent, trackers, peers, pieces, files, speed, log;
 
 	app_window() {
 		instance = NULL;
-		main = tabs = tip = NULL;
-		torrent = trackers = peers = pieces = speed = log = NULL;
+		main = list = tabs = tip = NULL;
+		torrent = trackers = peers = pieces = files = speed = log = NULL;
 	}
 };
 
