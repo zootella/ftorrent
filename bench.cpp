@@ -260,15 +260,6 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 		info.iImage = c->icon;
 	}
 
-	if (add) {
-	} else {
-		log(L"EDIT col", numerals(c->column), L", row", numerals(c->row), make(
-		L" different:", c->Different() ? L"true" : L"false",
-		L" blanks:", App.list.blanks ? L"true" : L"false",
-		L" is:", is(c->text) ? L"true" : L"false",
-		L" blank:", CellBlank(window, c->column, c->row) ? L"true" : L"false"));
-	}
-
 	// Add this cell in a new row in column 0
 	if (add) {
 
@@ -276,13 +267,7 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 		c->Same();
 
 	// If necessary, edit the contents of the existing cell
-	} else if (
-		c->Different() || // What the cell should show is different from our record of what the cell is showing, or
-		(
-			App.list.blanks /*&& // A list may contain blank cells because a column was just added, and
-			is(c->text)     && // The cell should show text, and
-			CellBlank(window, c->column, c->row) // The cell has no text*/
-		)) {
+	} else if (App.list.refresh || c->Different()) {
 
 		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
 		c->Same(); // Record that now display matches data

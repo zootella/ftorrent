@@ -1787,8 +1787,8 @@ void ColumnAdd(HWND window, read title, int width, bool right) { ColumnAddIndex(
 // Make a new column in the list view window at index 0 first, 1 second, or -1 last with the title text, pixel width, and true to align right
 void ColumnAddIndex(HWND window, int column, read title, int width, bool right) {
 
-	// Have the next edit pulse look for blank cells
-	App.list.blanks = true; // There will be blank cells in the column we added, and if we add the first column, the second column will also be blank
+	// Have the next pulse edit all the cells
+	App.list.refresh = true; // There will be blank cells in the column we added, and if we add the first column, the second column will also be blank
 
 	// Convert -1 to add last into the index beyond the columns already there
 	if (column == -1) column = ColumnCount(window); // 1 column already there has an index of 0, so make a new one at index 1
