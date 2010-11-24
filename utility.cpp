@@ -1208,6 +1208,7 @@ CString TextGuid() {
 
 	// Convert the GUID into an OLE wide character string
 	WCHAR bay[MAX_PATH];
+	lstrcpy(bay, L"");
 	int characters = StringFromGUID2(
 		guid,          // GUID to convert
 		(LPOLESTR)bay, // Write text here
@@ -1281,6 +1282,7 @@ CString PathRunningFolder() {
 CString PathRunningFile() {
 
 	WCHAR bay[MAX_PATH];
+	lstrcpy(bay, L"");
 	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
 	return bay;
 }
@@ -1291,6 +1293,7 @@ CString PathShell(int id) {
 	LPMALLOC memory;
 	LPITEMIDLIST list;
 	WCHAR bay[MAX_PATH]; // Text buffer to write in
+	lstrcpy(bay, L"");
 	CString path;        // String to return with path or blank on error
 
 	if (!SHGetMalloc(&memory)) {
@@ -1316,6 +1319,7 @@ CString DialogBrowse(read message) {
 	// Show the box
 	OleInitialize(NULL); // If not already
 	WCHAR name[MAX_PATH];
+	lstrcpy(name, L"");
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
 	info.hwndOwner      = App.window.main;          // Parent window for the dialog
@@ -1332,6 +1336,7 @@ CString DialogBrowse(read message) {
 
 	// Get the path of the folder the user chose
 	WCHAR bay[MAX_PATH];
+	lstrcpy(bay, L"");
 	SHGetPathFromIDList(result, bay);
 	return bay;
 }
@@ -1569,6 +1574,7 @@ bool RegistryDelete(HKEY base, read path) {
 	// Loop for each subkey, deleting them all
 	DWORD size;
 	WCHAR subkey[MAX_PATH];
+	lstrcpy(subkey, L"");
 	int result;
 	while (true) {
 
@@ -1869,6 +1875,7 @@ int ColumnFind(HWND window, read title) {
 // The title text of the column with the given index, like "Status"
 CString ColumnTitle(HWND window, int column) {
 	WCHAR bay[MAX_PATH]; // Destination buffer
+	lstrcpy(bay, L"");
 
 	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
@@ -1997,4 +2004,76 @@ int ListFind(HWND window, LPARAM p) {
 	int row = ListView_FindItem(window, -1, &info); // -1 to start from the beginning
 	if (row == -1) error(L"listview_finditem");     // Not found
 	return row;                                     // Return the row number
+}
+
+// Given row and column coordinates, get the bounding size of the list view sub item cell
+Size CellSize(HWND window, int row, int column) {
+	RECT rectangle;
+	if (!ListView_GetSubItemRect(window, row, column, LVIR_BOUNDS, &rectangle)) { error(L"listview_getsubitemrect"); return Size(); }
+	return Size(rectangle);
+}
+
+// Given cells, add or edit a row in the list view window
+void CellShow(HWND window, std::vector<Cell> &cells) {
+
+	// Find each cell's current column index, picking out the one with special index 0
+	Cell *primary = NULL;                         // Point primary at the cell in column 0
+	std::vector<Cell *> secondary;                // Fill secondary with pointers to all the other cells
+	for (int i = 0; i < (int)cells.size(); i++) { // Loop through the given row of cells
+		Cell *c = &(cells[i]);
+
+		c->column = ColumnFind(window, c->title);         // Update the cell's record of the column index it's in right now
+		if      (c->column == -1) c->Hidden();            // The column is hidden, clear the cell's record of what it has on the screen
+		else if (c->column ==  0) primary = c;            // This cell is in column 0, point primary at it
+		else                      secondary.push_back(c); // The column is a list view submitem, add it to our list of them
+	}
+	if (!primary) { log(L"no primary cell found"); return; }
+
+	// Find the current row index for the given cells
+	int row = ListFind(window, primary->parameter);
+	bool add = row == -1; // Not found, we'll add the primary cell in a new row at the end
+	if (add) row = ListRows(window); // Choose the new last row index
+	for (int i = 0; i < (int)cells.size(); i++) cells[i].row = row; // Note the row index in the cell object
+
+	// Update the list view control
+	CellShowDo(window, primary, add); // Add or edit the primary cell
+	for (int i = 0; i < (int)secondary.size(); i++) // Edit the secondary cells
+		CellShowDo(window, secondary[i], false);
+}
+void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 0 and a new row at the end
+
+	// Make a list view item structure to edit the cell at those coordinates
+	LVITEM info;
+	ZeroMemory(&info, sizeof(info));
+	info.iSubItem = c->column;
+	info.iItem = c->row;
+
+	// If column 0, parameter
+	if (c->column == 0) {
+		info.mask |= LVIF_PARAM;
+		info.lParam = c->parameter;
+	}
+
+	// Text
+	info.mask |= LVIF_TEXT;
+	info.pszText = (LPWSTR)(read)(c->text);
+
+	// If specified, an icon
+	if (c->icon != -1) {
+		info.mask |= LVIF_IMAGE;
+		info.iImage = c->icon;
+	}
+
+	// Add this cell in a new row in column 0
+	if (add) {
+
+		if (ListView_InsertItem(window, &info) == -1) error(L"listview_insertitem");
+		c->Same();
+
+	// If necessary, edit the contents of the existing cell
+	} else if (c->Different() || App.list.refresh) {
+
+		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
+		c->Same(); // Record that now display matches data
+	}
 }

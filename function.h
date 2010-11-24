@@ -170,6 +170,9 @@ void ListRemoveAll(HWND window);
 void ListAddStart(HWND window, int rows);
 void ListAddDone(HWND window, int rows);
 int ListFind(HWND window, LPARAM p);
+Size CellSize(HWND window, int row, int column);
+void CellShow(HWND window, std::vector<Cell> &cells);
+void CellShowDo(HWND window, Cell *c, bool add);
 
 // Wrap
 // start
@@ -306,10 +309,6 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 void Test();
 void StorePulse();
 void ListPulse();
-bool CellBlank(HWND window, int column, int row);
-Size CellSize(HWND window, int row, int column);
-void CellShow(HWND window, std::vector<Cell> &cells);
-void CellShowDo(HWND window, Cell *c, bool add);
 
 
 

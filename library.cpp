@@ -12,10 +12,10 @@ int    4 byte  signed
 ubig   8 byte  unsigned
 sbig   8 byte  signed
 */
-CString numerals(DWORD n, int base, int width) { WCHAR s[MAX_PATH];   _ultow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(int n,   int base, int width) { WCHAR s[MAX_PATH];    _itow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(ubig n,  int base, int width) { WCHAR s[MAX_PATH]; _ui64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(sbig n,  int base, int width) { WCHAR s[MAX_PATH];  _i64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(DWORD n, int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");   _ultow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(int n,   int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");    _itow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(ubig n,  int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L""); _ui64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(sbig n,  int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");  _i64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
 
 CString base16(DWORD n) { return numerals(n, 16,  8); } // 4 bytes written in 8 characters
 CString base16(int n)   { return numerals(n, 16,  8); }
