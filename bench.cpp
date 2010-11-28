@@ -36,6 +36,54 @@ extern app App; // Access global object
 
 
 
+//simple solution to the sort problem
+//no numbered weights
+//in the background:
+//ColA,ColB,ColC,ColD,ColE,ColF,ColG
+//in the foreground
+//ColB,ColF,ColD
+//and then the user removes F
+//in the background, move it to be before D
+//and when you add one from the background, put it before the next visible one
+//thsi works, qed
+
+
+
+
+
+CString ColumnSave(HWND window) {
+
+	CString s;
+
+	int columns = ColumnCount(window);
+	for (int i = 0; i < columns; i++) {
+
+		// "s/h l/r w110 tTitle Text;"
+		// put this in Column.Load() and Column.Save(), no, maybe you don't need a column object at all
+		// have the format be key value with , ; = special, like
+		// "view=show,align=left,width=110,title=Title Text;"
+		// so then you can add sort or whatever later
+		// have the 
+
+		s += L"s "; // Show column
+		s += ColumnIndexRight(window, i) ? L"r " : L"l "; // Right or left aligned
+		s += L"" + numerals(ColumnIndexWidth(window, i))
+
+		s += L";";
+
+
+	}
+
+
+}
+
+void ColumnLoad(HWND window, read columns) {
+
+
+}
+
+
+
 int stage = 1;
 
 

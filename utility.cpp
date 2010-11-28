@@ -1867,13 +1867,13 @@ int ColumnFind(HWND window, read title) {
 
 	int columns = ColumnCount(window);
 	for (int i = 0; i < columns; i++)
-		if (ColumnTitle(window, i) == CString(title))
+		if (ColumnIndexTitle(window, i) == CString(title))
 			return i;
 	return -1; // Not found
 }
 
 // The title text of the column with the given index, like "Status"
-CString ColumnTitle(HWND window, int column) {
+CString ColumnIndexTitle(HWND window, int column) {
 	WCHAR bay[MAX_PATH]; // Destination buffer
 	lstrcpy(bay, L"");
 
@@ -1882,8 +1882,26 @@ CString ColumnTitle(HWND window, int column) {
 	info.mask       = LVCF_TEXT;
 	info.pszText    = bay;
 	info.cchTextMax = MAX_PATH;
-	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn"); return L""; }
+	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn title"); return L""; }
 	return bay;
+}
+
+// The width in pixels of the column with the given index, or -1 error or not found
+int ColumnIndexWidth(HWND window, int column) {
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask = LVCF_WIDTH;
+	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn width"); return -1; }
+	return info.cx;
+}
+
+// True if the column with the given index is right aligned, false if aligned left
+bool ColumnIndexRight(HWND window, int column) {
+	LVCOLUMN info;
+	ZeroMemory(&info, sizeof(info));
+	info.mask = LVCF_FMT;
+	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn right"); return -1; }
+	return info.fmt | LVCFMT_RIGHT;
 }
 
 // Find out how many columns are in the given list view control
