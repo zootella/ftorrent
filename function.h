@@ -10,6 +10,7 @@ void MenuTaskbar();
 CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
 CString upper(read r);
 CString lower(read r);
+int number(read r);
 bool is(read r);
 bool isblank(read r);
 bool same(read r1, read r2, matching m = Different); // Has defaults

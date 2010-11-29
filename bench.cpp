@@ -51,35 +51,47 @@ extern app App; // Access global object
 
 
 
+
+
 CString ColumnSave(HWND window) {
 
 	CString s;
-
 	int columns = ColumnCount(window);
 	for (int i = 0; i < columns; i++) {
 
-		// "s/h l/r w110 tTitle Text;"
-		// put this in Column.Load() and Column.Save(), no, maybe you don't need a column object at all
-		// have the format be key value with , ; = special, like
-		// "view=show,align=left,width=110,title=Title Text;"
-		// so then you can add sort or whatever later
-		// have the 
-
-		s += L"s "; // Show column
-		s += ColumnIndexRight(window, i) ? L"r " : L"l "; // Right or left aligned
-		s += L"" + numerals(ColumnIndexWidth(window, i))
-
-		s += L";";
-
-
+		s += make(L"view=show,");
+		s += make(L"align=", ColumnIndexRight(window, i) ? L"right," : L"left,");
+		s += make(L"width=", numerals(ColumnIndexWidth(window, i)), L",");
+		s += make(L"title=", ColumnIndexTitle(window, i), L";");
 	}
-
-
+	return s;
 }
 
-void ColumnLoad(HWND window, read columns) {
+void ColumnLoad(HWND window, read r) {
 
+	std::vector<CString> columns = words(r, L";");
+	for (int c = 0; c < (int)columns.size(); c++) {
 
+		bool show = false;
+		bool right = false;
+		int width = -1;
+		CString title;
+
+		std::vector<CString> parameters = words(columns[c], L",");
+		for (int p = 0; p < (int)parameters.size(); p++) {
+
+			CString name, value;
+			split(parameters[p], L"=", &name, &value);
+
+			if      (name == L"view")  show  = (value == L"show");
+			else if (name == L"align") right = (value == L"right");
+			else if (name == L"width") width = number(value);
+			else if (name == L"title") title = value;
+		}
+
+		if (show && width > -1 && is(title))
+			ColumnAdd(window, title, width, right);
+	}
 }
 
 
@@ -92,6 +104,19 @@ int stage = 1;
 // Run a snippet of test code
 void Test() {
 
+
+	CString s;
+	s += L"view=show,align=left,width=110,title=Column A;";
+	s += L"view=show,align=left,width=110,title=Column B;";
+	s += L"view=show,align=left,width=110,title=Column C;";
+	s += L"view=show,align=left,width=110,title=Column D;";
+	s += L"view=show,align=left,width=110,title=Column E;";
+	s += L"view=show,align=left,width=110,title=Column F;";
+	s += L"view=show,align=left,width=110,title=Column G;";
+	ColumnLoad(App.window.files, s);
+
+
+	/*
 	if (stage == 1) { log(L"stage 1"); stage = 2;
 
 		ColumnAdd(App.window.files, L"Column A", 100, true);
@@ -135,6 +160,7 @@ void Test() {
 	} else if (stage == 5) { log(L"stage 5"); stage = 6;
 
 	}
+	*/
 
 
 

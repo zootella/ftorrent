@@ -32,6 +32,14 @@ CString lower(read r) {
 }
 
 // Takes text
+// Reads the text as a number, handling a leading minus sign properly
+// Returns the number, or 0 if given blank or alphabetic text
+int number(read r) {
+
+	return _wtoi(r);
+}
+
+// Takes text
 // Determines if the text is not blank
 // Returns true if it is, false if not
 bool is(read r) {
