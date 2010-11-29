@@ -6,16 +6,41 @@ extern app App; // Access global object
 
 
 
-//TODO make right click menu on headers Customize... and modeless dialog box with checkboxes for each column
+/*
 
+std::vector<Column> back;
 
 
 //On startup
-//compute places
+void onStartup() {
+
+	CString s;
+	s += L"view=show,align=left,width=110,title=Column A;";
+	s += L"view=show,align=left,width=110,title=Column B;";
+	s += L"view=hide,align=left,width=110,title=Column C;";
+	s += L"view=show,align=right,width=110,title=Column D;";
+	s += L"view=show,align=left,width=80,title=Column E;";
+	s += L"view=show,align=left,width=110,title=Column F;";
+	s += L"view=show,align=left,width=110,title=Column G;";
+
+	//copy text from optn.db or factory default into back
+	back = ColumnTextToVector(s);
+
+	//load back into the control
+	ColumnVectorToWindow(App.window.files, back);
+}
 //show defaults
 
 //On add
 //use places to figure out index to put it, don't compute or change anything, though
+void onAdd() {
+
+
+
+
+
+}
+*/
 
 //On reorder, there's no event to respond to
 
@@ -49,11 +74,89 @@ extern app App; // Access global object
 
 
 
+std::vector<Column> ColumnWindowToList(HWND window) {
+
+	std::vector<Column> list;
+	int columns = ColumnCount(window);
+	for (int i = 0; i < columns; i++) {
+
+		Column c;
+		c.show = true;
+		c.right = ColumnIndexRight(window, i);
+		c.width = ColumnIndexWidth(window, i);
+		c.title = ColumnIndexTitle(window, i);
+		list.push_back(c);
+	}
+	return list;
+}
+
+CString ColumnListToText(std::vector<Column> list) {
+
+	CString s;
+	for (int i = 0; i < (int)list.size(); i++) {
+		Column c = list[i];
+
+		s += make(L"view=show,");
+		s += make(L"align=", c.right ? L"right," : L"left,");
+		s += make(L"width=", numerals(c.width), L",");
+		s += make(L"title=", c.title, L";");
+	}
+	return s;
+}
+
+std::vector<Column> ColumnTextToList(read r) {
+
+	std::vector<Column> list;
+	std::vector<CString> columns = words(r, L";");
+	for (int c = 0; c < (int)columns.size(); c++) {
+
+		bool show = false;
+		bool right = false;
+		int width = -1;
+		CString title;
+
+		std::vector<CString> parameters = words(columns[c], L",");
+		for (int p = 0; p < (int)parameters.size(); p++) {
+
+			CString name, value;
+			split(parameters[p], L"=", &name, &value);
+
+			if      (name == L"view")  show  = (value == L"show");
+			else if (name == L"align") right = (value == L"right");
+			else if (name == L"width") width = number(value);
+			else if (name == L"title") title = value;
+		}
+
+		if (width > -1 && is(title)) {
+
+			Column o;
+			o.show = show;
+			o.right = right;
+			o.width = width;
+			o.title = title;
+			list.push_back(o);
+		}
+	}
+	return list;
+}
+
+void ColumnListToWindow(HWND window, std::vector<Column> list) {
+
+	for (int i = 0; i < (int)list.size(); i++) {
+		Column c = list[i];
+
+		if (c.show && is(c.title) && c.width > -1) {
+			ColumnAdd(window, c.title, c.width, c.right);
+		}
+	}
+}
 
 
 
 
-CString ColumnSave(HWND window) {
+
+/*
+CString ColumnWindowToText(HWND window) {
 
 	CString s;
 	int columns = ColumnCount(window);
@@ -66,8 +169,10 @@ CString ColumnSave(HWND window) {
 	}
 	return s;
 }
+*/
 
-void ColumnLoad(HWND window, read r) {
+/*
+void ColumnTextToWindow(HWND window, read r) {
 
 	std::vector<CString> columns = words(r, L";");
 	for (int c = 0; c < (int)columns.size(); c++) {
@@ -89,10 +194,10 @@ void ColumnLoad(HWND window, read r) {
 			else if (name == L"title") title = value;
 		}
 
-		if (show && width > -1 && is(title))
-			ColumnAdd(window, title, width, right);
+		if (show && width > -1 && is(title)) ColumnAdd(window, title, width, right);
 	}
 }
+*/
 
 
 
@@ -105,16 +210,21 @@ int stage = 1;
 void Test() {
 
 
+	/*
 	CString s;
 	s += L"view=show,align=left,width=110,title=Column A;";
 	s += L"view=show,align=left,width=110,title=Column B;";
-	s += L"view=show,align=left,width=110,title=Column C;";
-	s += L"view=show,align=left,width=110,title=Column D;";
-	s += L"view=show,align=left,width=110,title=Column E;";
+	s += L"view=hide,align=left,width=110,title=Column C;";
+	s += L"view=show,align=right,width=110,title=Column D;";
+	s += L"view=show,align=left,width=80,title=Column E;";
 	s += L"view=show,align=left,width=110,title=Column F;";
 	s += L"view=show,align=left,width=110,title=Column G;";
-	ColumnLoad(App.window.files, s);
 
+
+	std::vector<Column> columns = ParseColumns(s);
+
+	ColumnLoad(App.window.files, columns);
+*/
 
 	/*
 	if (stage == 1) { log(L"stage 1"); stage = 2;
