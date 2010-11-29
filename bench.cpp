@@ -6,7 +6,14 @@ extern app App; // Access global object
 
 
 
-/*
+int FindColumn(std::vector<Column> list, read title) {
+	for (int i = 0; i < (int)list.size(); i++)
+		if (list[i].title == CString(title))
+			return i;
+	return -1;
+}
+
+
 
 std::vector<Column> back;
 
@@ -14,6 +21,7 @@ std::vector<Column> back;
 //On startup
 void onStartup() {
 
+	//factory default columns written in the code as text
 	CString s;
 	s += L"view=show,align=left,width=110,title=Column A;";
 	s += L"view=show,align=left,width=110,title=Column B;";
@@ -24,29 +32,61 @@ void onStartup() {
 	s += L"view=show,align=left,width=110,title=Column G;";
 
 	//copy text from optn.db or factory default into back
-	back = ColumnTextToVector(s);
+	back = ColumnTextToList(s);
 
 	//load back into the control
-	ColumnVectorToWindow(App.window.files, back);
+	ColumnListToWindow(App.window.files, back);
 }
-//show defaults
 
 //On add
-//use places to figure out index to put it, don't compute or change anything, though
-void onAdd() {
+void onAdd(read title) {
 
+//use places to figure out index to put it, don't compute or change anything, though
+
+	//find where it is in the back list
+	int i = 0;
+	int add, before;
+	add = before = -1;
+	CString before;
+	for (; i < (int)back.size(); i++) {
+
+		if (back[i].title == CString(title)) {
+			add = i;
+			i++;
+
+			//from where it is in the back list, find the next visible one
+			for (; i < (int)back.size(); i++) {
+
+				if (back[i].show) {
+					before = i;
+					break;
+				}
+			}
+		}
+
+		if (before != -1) break;
+	}
+
+
+	//add it before that one in the control
+
+
+
+	//remember to change its visibility in the back list
 
 
 
 
 }
-*/
 
 //On reorder, there's no event to respond to
 
 //On remove
 //compute places list for visible ones, leaving other places the same
 //remove the column
+
+
+	//remember to change its visiblity in the back list
 
 
 
@@ -155,49 +195,6 @@ void ColumnListToWindow(HWND window, std::vector<Column> list) {
 
 
 
-/*
-CString ColumnWindowToText(HWND window) {
-
-	CString s;
-	int columns = ColumnCount(window);
-	for (int i = 0; i < columns; i++) {
-
-		s += make(L"view=show,");
-		s += make(L"align=", ColumnIndexRight(window, i) ? L"right," : L"left,");
-		s += make(L"width=", numerals(ColumnIndexWidth(window, i)), L",");
-		s += make(L"title=", ColumnIndexTitle(window, i), L";");
-	}
-	return s;
-}
-*/
-
-/*
-void ColumnTextToWindow(HWND window, read r) {
-
-	std::vector<CString> columns = words(r, L";");
-	for (int c = 0; c < (int)columns.size(); c++) {
-
-		bool show = false;
-		bool right = false;
-		int width = -1;
-		CString title;
-
-		std::vector<CString> parameters = words(columns[c], L",");
-		for (int p = 0; p < (int)parameters.size(); p++) {
-
-			CString name, value;
-			split(parameters[p], L"=", &name, &value);
-
-			if      (name == L"view")  show  = (value == L"show");
-			else if (name == L"align") right = (value == L"right");
-			else if (name == L"width") width = number(value);
-			else if (name == L"title") title = value;
-		}
-
-		if (show && width > -1 && is(title)) ColumnAdd(window, title, width, right);
-	}
-}
-*/
 
 
 
