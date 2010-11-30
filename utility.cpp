@@ -1867,13 +1867,13 @@ int ColumnFind(HWND window, read title) {
 
 	int columns = ColumnCount(window);
 	for (int i = 0; i < columns; i++)
-		if (ColumnIndexTitle(window, i) == CString(title))
+		if (ColumnTitleIndex(window, i) == CString(title))
 			return i;
 	return -1; // Not found
 }
 
 // The title text of the column with the given index, like "Status"
-CString ColumnIndexTitle(HWND window, int column) {
+CString ColumnTitleIndex(HWND window, int column) {
 	WCHAR bay[MAX_PATH]; // Destination buffer
 	lstrcpy(bay, L"");
 
@@ -1887,7 +1887,7 @@ CString ColumnIndexTitle(HWND window, int column) {
 }
 
 // The width in pixels of the column with the given index, or -1 error or not found
-int ColumnIndexWidth(HWND window, int column) {
+int ColumnWidthIndex(HWND window, int column) {
 	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
 	info.mask = LVCF_WIDTH;
@@ -1896,7 +1896,7 @@ int ColumnIndexWidth(HWND window, int column) {
 }
 
 // True if the column with the given index is right aligned, false if aligned left
-bool ColumnIndexRight(HWND window, int column) {
+bool ColumnRightIndex(HWND window, int column) {
 	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
 	info.mask = LVCF_FMT;

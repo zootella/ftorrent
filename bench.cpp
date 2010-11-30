@@ -15,10 +15,8 @@ int FindColumn(std::vector<Column> list, read title) {
 
 
 
-std::vector<Column> back;
+/*
 
-
-//On startup
 void onStartup() {
 
 	//factory default columns written in the code as text
@@ -32,54 +30,96 @@ void onStartup() {
 	s += L"view=show,align=left,width=110,title=Column G;";
 
 	//copy text from optn.db or factory default into back
-	back = ColumnTextToList(s);
+	std::vector<Column> back = ColumnTextToList(s);
 
 	//load back into the control
 	ColumnListToWindow(App.window.files, back);
 }
 
-//On add
-void onAdd(read title) {
-
-//use places to figure out index to put it, don't compute or change anything, though
+void onAdd(HWND window, std::vector<Column> &back, read title) {
 
 	//find where it is in the back list
 	int i = 0;
-	int add, before;
-	add = before = -1;
-	CString before;
+	int add = -1;
 	for (; i < (int)back.size(); i++) {
 
 		if (back[i].title == CString(title)) {
 			add = i;
-			i++;
-
-			//from where it is in the back list, find the next visible one
-			for (; i < (int)back.size(); i++) {
-
-				if (back[i].show) {
-					before = i;
-					break;
-				}
-			}
+			break;
 		}
+	}
+	if (add == -1) { log(L"title to add not found"); return; }
 
-		if (before != -1) break;
+	//remember to change its visibility in the back list
+	back[add].show = true;
+
+	//move to the next one to start searching for the next visible one in the back list
+	i++;
+
+	//from where it is in the back list, find the next visible one
+	int before = -1;
+	for (; i < (int)back.size(); i++) {
+
+		if (back[i].show) {
+			before = i;
+			break;
+		}
+	}
+
+	//add it before that one in the control
+	if (before == -1)
+		ColumnAdd(window, back[add].title, back[add].width, back[add].right);
+	else
+		ColumnAddBefore(window, back[add].title, back[before].title, back[add].width, back[add].right);
+}
+
+void onRemove(HWND window, std::vector<Column> &back, read title) {
+
+	// find the column we're going to remove in the control
+	int column = ColumnFind(window, title);
+	if (column == -1) { log(L"column to remove not found"); return; }
+
+	// find the column we're going to remove in the back list
+	int i = 0;
+	int remove = -1;
+	for (; i < (int)back.size(); i++) {
+
+		if (back[i].title == CString(title)) {
+			remove = i;
+			break;
+		}
+	}
+	if (remove == -1) { log(L"title to remove not found"); return; }
+
+	//change our record of its visibility in the back list
+	back[remove].show = false;
+	back[remove].width = ColumnWidthIndex(window, column);
+
+	//find the name of the column after the one we're going to remove in the control
+	CString after; //blank if the one we're going to remove is the last one
+
+	//TODO, wait, the column indices don't run 0 through cols-1 in order on the control, do they?
+	if (int c = 0; 
+
+	if (column + 1 < ColumnCount(window)) {
+
+
+
 	}
 
 
-	//add it before that one in the control
 
 
 
-	//remember to change its visibility in the back list
 
 
+
+
+	ColumnRemoveIndex(window, column);
 
 
 }
 
-//On reorder, there's no event to respond to
 
 //On remove
 //compute places list for visible ones, leaving other places the same
@@ -112,7 +152,7 @@ void onAdd(read title) {
 //and when you add one from the background, put it before the next visible one
 //thsi works, qed
 
-
+*/
 
 std::vector<Column> ColumnWindowToList(HWND window) {
 
@@ -122,9 +162,9 @@ std::vector<Column> ColumnWindowToList(HWND window) {
 
 		Column c;
 		c.show = true;
-		c.right = ColumnIndexRight(window, i);
-		c.width = ColumnIndexWidth(window, i);
-		c.title = ColumnIndexTitle(window, i);
+		c.right = ColumnRightIndex(window, i);
+		c.width = ColumnWidthIndex(window, i);
+		c.title = ColumnTitleIndex(window, i);
 		list.push_back(c);
 	}
 	return list;
@@ -201,29 +241,74 @@ void ColumnListToWindow(HWND window, std::vector<Column> list) {
 int stage = 1;
 
 
+//TODO when you drag the columns into a different order, but dont' add or remove any, their indices don't change
+//and when you loop through the indexes, you get them in their original order
+//you need to figure out their screen order to be able to put them back the next time in their sorted order
+
+
+
+std::vector<int> ColumnOrder(HWND window) {
+
+	std::vector<int> v;
+	int columns = ColumnCount(window);
+	if (columns > MAX_PATH) { log(L"too many columns"); return v; }
+
+	int bay[MAX_PATH];
+	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
+	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return v; }
+
+	for (int i = 0; i < columns; i++)
+		v.push_back(bay[i]);
+
+	return v;
+}
+
+
+//maybe expand this to include column
+//order
+//index
+//title
+//width
+//right
+
+
+
+
 
 
 // Run a snippet of test code
 void Test() {
 
+	if (stage == 1) {
+		stage = 2;
+
+		CString s;
+		s += L"view=show,align=left,width=50,title=A;";
+		s += L"view=show,align=left,width=50,title=B;";
+		s += L"view=show,align=left,width=50,title=C;";
+		s += L"view=show,align=left,width=50,title=D;";
+		s += L"view=show,align=left,width=50,title=E;";
+		s += L"view=show,align=left,width=50,title=F;";
+		s += L"view=show,align=left,width=50,title=G;";
+		std::vector<Column> list = ColumnTextToList(s);
+		ColumnListToWindow(App.window.files, list);
+	}
 
 	/*
-	CString s;
-	s += L"view=show,align=left,width=110,title=Column A;";
-	s += L"view=show,align=left,width=110,title=Column B;";
-	s += L"view=hide,align=left,width=110,title=Column C;";
-	s += L"view=show,align=right,width=110,title=Column D;";
-	s += L"view=show,align=left,width=80,title=Column E;";
-	s += L"view=show,align=left,width=110,title=Column F;";
-	s += L"view=show,align=left,width=110,title=Column G;";
+	int columns = ColumnCount(App.window.files);
+	log(L"columns (", numerals(columns), L")");
+	for (int i = 0; i < columns; i++)
+		log(numerals(i), L" ", ColumnTitleIndex(App.window.files, i));
+		*/
+
+	std::vector<int> v = ColumnOrder(App.window.files);
+	for (int i = 0; i < (int)v.size(); i++)
+		log(numerals(v[i]), L" ", ColumnTitleIndex(App.window.files, v[i]));
 
 
-	std::vector<Column> columns = ParseColumns(s);
-
-	ColumnLoad(App.window.files, columns);
+	/*
 */
-
-	/*
+/*
 	if (stage == 1) { log(L"stage 1"); stage = 2;
 
 		ColumnAdd(App.window.files, L"Column A", 100, true);
@@ -249,6 +334,8 @@ void Test() {
 		CellShow(App.window.files, App.cells2);
 
 	} else if (stage == 2) { log(L"stage 2"); stage = 3;
+
+
 
 		ColumnRemove(App.window.files, L"Column A");
 		ColumnRemove(App.window.files, L"Column B");
