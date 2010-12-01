@@ -154,35 +154,8 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 
 */
 
-std::vector<Column> ColumnWindowToList(HWND window) {
 
-	std::vector<Column> list;
-	int columns = ColumnCount(window);
-	for (int i = 0; i < columns; i++) {
 
-		Column c;
-		c.show = true;
-		c.right = ColumnRightIndex(window, i);
-		c.width = ColumnWidthIndex(window, i);
-		c.title = ColumnTitleIndex(window, i);
-		list.push_back(c);
-	}
-	return list;
-}
-
-CString ColumnListToText(std::vector<Column> list) {
-
-	CString s;
-	for (int i = 0; i < (int)list.size(); i++) {
-		Column c = list[i];
-
-		s += make(L"view=show,");
-		s += make(L"align=", c.right ? L"right," : L"left,");
-		s += make(L"width=", numerals(c.width), L",");
-		s += make(L"title=", c.title, L";");
-	}
-	return s;
-}
 
 std::vector<Column> ColumnTextToList(read r) {
 
@@ -200,9 +173,10 @@ std::vector<Column> ColumnTextToList(read r) {
 
 			CString name, value;
 			split(parameters[p], L"=", &name, &value);
+			name = trim(name, L" ");
 
-			if      (name == L"view")  show  = (value == L"show");
-			else if (name == L"align") right = (value == L"right");
+			if      (name == L"show")  show  = (value == L"true");
+			else if (name == L"right") right = (value == L"true");
 			else if (name == L"width") width = number(value);
 			else if (name == L"title") title = value;
 		}
@@ -231,6 +205,44 @@ void ColumnListToWindow(HWND window, std::vector<Column> list) {
 	}
 }
 
+std::vector<Column> ColumnWindowToList(HWND window) {
+
+	std::vector<Column> list;
+	int columns = ColumnCount(window);
+	if (columns > MAX_PATH) { log(L"too many columns"); return list; }
+
+	int bay[MAX_PATH];
+	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
+	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return list; }
+
+	for (int i = 0; i < columns; i++) {
+
+		Column c;
+		c.order = i;
+		c.index = bay[i];
+		c.show = true;
+		c.right = ColumnRightIndex(window, c.index);
+		c.width = ColumnWidthIndex(window, c.index);
+		c.title = ColumnTitleIndex(window, c.index);
+		list.push_back(c);
+	}
+	return list;
+}
+
+CString ColumnListToText(std::vector<Column> list) {
+
+	CString s;
+	for (int i = 0; i < (int)list.size(); i++) {
+		Column c = list[i];
+
+		s += make(L"show=",  c.show  ? L"true," : L"false,");
+		s += make(L"right=", c.right ? L"true," : L"false,");
+		s += make(L"width=", numerals(c.width), L",");
+		s += make(L"title=", c.title, L";");
+	}
+	return s;
+}
+
 
 
 
@@ -247,21 +259,6 @@ int stage = 1;
 
 
 
-std::vector<int> ColumnOrder(HWND window) {
-
-	std::vector<int> v;
-	int columns = ColumnCount(window);
-	if (columns > MAX_PATH) { log(L"too many columns"); return v; }
-
-	int bay[MAX_PATH];
-	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
-	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return v; }
-
-	for (int i = 0; i < columns; i++)
-		v.push_back(bay[i]);
-
-	return v;
-}
 
 //TODO, next, confirm that when you add one, where does it go?
 
@@ -272,32 +269,6 @@ std::vector<int> ColumnOrder(HWND window) {
 //width
 //right
 
-
-//this is ColumnWindowToList?
-
-std::vector<Column> ColumnList(HWND window) {
-
-	std::vector<Column> v;
-	int columns = ColumnCount(window);
-	if (columns > MAX_PATH) { log(L"too many columns"); return v; }
-
-	int bay[MAX_PATH];
-	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
-	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return v; }
-
-	for (int i = 0; i < columns; i++) {
-
-		Column c;
-		c.order = i;
-		c.index = bay[i];
-		c.show = true;
-		c.right = ColumnRightIndex(window, c.index);
-		c.width = ColumnWidthIndex(window, c.index);
-		c.title = ColumnTitleIndex(window, c.index);
-		v.push_back(c);
-	}
-	return v;
-}
 
 
 
@@ -310,25 +281,28 @@ void Test() {
 		stage = 2;
 
 		CString s;
-		s += L"view=show,align=left,width=50,title=A;";
-		s += L"view=show,align=right,width=50,title=B;";
-		s += L"view=show,align=left,width=50,title=C;";
-		s += L"view=show,align=left,width=50,title=D;";
-		s += L"view=show,align=left,width=50,title=E;";
-		s += L"view=show,align=left,width=50,title=F;";
-		s += L"view=show,align=left,width=50,title=G;";
+		s += L"show=true,right=false,width=50,title=A;";
+		s += L"show=true,right=false,width=50,title=B;";
+		s += L"show=true,right=false,width=50,title=C;";
+		s += L"show=true,right=false,width=50,title=D;";
+		s += L"show=true,right=false,width=50,title=E;";
+		s += L"show=true,right=false,width=50,title=F;";
+		s += L"show=true,right=false,width=50,title=G;";
 		std::vector<Column> list = ColumnTextToList(s);
 		ColumnListToWindow(App.window.files, list);
+
+	} else if (stage == 2) {
+		stage = 3;
+
+		//confirm adding 0, 1, 2, always adds in that position, regardless of how the indices beneath are sorted
+		ColumnAddIndex(App.window.files, 7, L"New", 80, false);
+
+
+
+
 	}
 
-	/*
-	int columns = ColumnCount(App.window.files);
-	log(L"columns (", numerals(columns), L")");
-	for (int i = 0; i < columns; i++)
-		log(numerals(i), L" ", ColumnTitleIndex(App.window.files, i));
-		*/
-
-	std::vector<Column> v = ColumnList(App.window.files);
+	std::vector<Column> v = ColumnWindowToList(App.window.files);
 	log(L"");
 	for (int i = 0; i < (int)v.size(); i++)
 		log(L"order", numerals(v[i].order), L" index", numerals(v[i].index), L" ", v[i].title, L" width", numerals(v[i].width), v[i].right ? L" right" : L"");
