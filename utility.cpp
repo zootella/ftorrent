@@ -1901,7 +1901,7 @@ bool ColumnRightIndex(HWND window, int column) {
 	ZeroMemory(&info, sizeof(info));
 	info.mask = LVCF_FMT;
 	if (ListView_GetColumn(window, column, &info) == -1) { error(L"listview_getcolumn right"); return false; }
-	return (info.fmt | LVCFMT_RIGHT) != 0;
+	return (info.fmt & LVCFMT_RIGHT) != 0;
 }
 
 // Find out how many columns are in the given list view control

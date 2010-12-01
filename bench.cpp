@@ -21,7 +21,7 @@ void onStartup() {
 
 	//factory default columns written in the code as text
 	CString s;
-	s += L"view=show,align=left,width=110,title=Column A;";
+	s += L"view=show,align=left,width=110,title=Column A;";//TODO change to show=true, right=true
 	s += L"view=show,align=left,width=110,title=Column B;";
 	s += L"view=hide,align=left,width=110,title=Column C;";
 	s += L"view=show,align=right,width=110,title=Column D;";
@@ -263,6 +263,7 @@ std::vector<int> ColumnOrder(HWND window) {
 	return v;
 }
 
+//TODO, next, confirm that when you add one, where does it go?
 
 //maybe expand this to include column
 //order
@@ -271,6 +272,32 @@ std::vector<int> ColumnOrder(HWND window) {
 //width
 //right
 
+
+//this is ColumnWindowToList?
+
+std::vector<Column> ColumnList(HWND window) {
+
+	std::vector<Column> v;
+	int columns = ColumnCount(window);
+	if (columns > MAX_PATH) { log(L"too many columns"); return v; }
+
+	int bay[MAX_PATH];
+	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
+	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return v; }
+
+	for (int i = 0; i < columns; i++) {
+
+		Column c;
+		c.order = i;
+		c.index = bay[i];
+		c.show = true;
+		c.right = ColumnRightIndex(window, c.index);
+		c.width = ColumnWidthIndex(window, c.index);
+		c.title = ColumnTitleIndex(window, c.index);
+		v.push_back(c);
+	}
+	return v;
+}
 
 
 
@@ -284,7 +311,7 @@ void Test() {
 
 		CString s;
 		s += L"view=show,align=left,width=50,title=A;";
-		s += L"view=show,align=left,width=50,title=B;";
+		s += L"view=show,align=right,width=50,title=B;";
 		s += L"view=show,align=left,width=50,title=C;";
 		s += L"view=show,align=left,width=50,title=D;";
 		s += L"view=show,align=left,width=50,title=E;";
@@ -301,9 +328,10 @@ void Test() {
 		log(numerals(i), L" ", ColumnTitleIndex(App.window.files, i));
 		*/
 
-	std::vector<int> v = ColumnOrder(App.window.files);
+	std::vector<Column> v = ColumnList(App.window.files);
+	log(L"");
 	for (int i = 0; i < (int)v.size(); i++)
-		log(numerals(v[i]), L" ", ColumnTitleIndex(App.window.files, v[i]));
+		log(L"order", numerals(v[i].order), L" index", numerals(v[i].index), L" ", v[i].title, L" width", numerals(v[i].width), v[i].right ? L" right" : L"");
 
 
 	/*

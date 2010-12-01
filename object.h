@@ -355,12 +355,18 @@ public:
 class Column {
 public:
 
+	int order;
+	int index;
+
 	bool show;
 	bool right;
 	int width;
 	CString title;
 
 	Column() {
+		order = -1;
+		index = -1;
+
 		show = false;
 		right = false;
 		width = -1;
