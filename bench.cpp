@@ -6,7 +6,7 @@ extern app App; // Access global object
 
 
 
-int FindColumn(std::vector<Column> list, read title) {
+int ColumnFindList(std::vector<Column> list, read title) {
 	for (int i = 0; i < (int)list.size(); i++)
 		if (list[i].title == CString(title))
 			return i;
@@ -175,8 +175,8 @@ std::vector<Column> ColumnTextToList(read r) {
 			split(parameters[p], L"=", &name, &value);
 			name = trim(name, L" ");
 
-			if      (name == L"show")  show  = (value == L"true");
-			else if (name == L"right") right = (value == L"true");
+			if      (name == L"show")  show  = (value == CString(L"true"));
+			else if (name == L"right") right = (value == CString(L"true"));
 			else if (name == L"width") width = number(value);
 			else if (name == L"title") title = value;
 		}

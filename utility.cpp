@@ -1779,25 +1779,16 @@ void SetupRemove() {
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
-// Make a new column named title before the one named before
-void ColumnAddBefore(HWND window, read title, read before, int width, bool right) {
-	int column = ColumnFind(window, before);
-	if (column == -1) column = 0; // Not found, make the new column before all of them
-	ColumnAddIndex(window, column, title, width, right);
-}
-// Make a new column on the left of any already there
-void ColumnAddLeft(HWND window, read title, int width, bool right) { ColumnAddIndex(window, 0, title, width, right); }
 // Make a new column on the right of any already there
-void ColumnAdd(HWND window, read title, int width, bool right) { ColumnAddIndex(window, -1, title, width, right); }
+void ColumnAdd(HWND window, read title, int width, bool right) {
+	ColumnAddIndex(window, ColumnCount(window), title, width, right); // 1 column already there has an index of 0, so make a new one at index 1
+}
 
-// Make a new column in the list view window at index 0 first, 1 second, or -1 last with the title text, pixel width, and true to align right
+// Make a new column in the list view window at 0+ column place, title text, pixel width, and true to align right
 void ColumnAddIndex(HWND window, int column, read title, int width, bool right) {
 
 	// Have the next pulse edit all the cells
 	App.list.refresh = true; // There will be blank cells in the column we added, and if we add the first column, the second column will also be blank
-
-	// Convert -1 to add last into the index beyond the columns already there
-	if (column == -1) column = ColumnCount(window); // 1 column already there has an index of 0, so make a new one at index 1
 
 	// Never add column 0 because the text will be indented for the sort icon to be on the left, not the right
 	if (column == 0) {
@@ -1861,7 +1852,9 @@ void ColumnSelect(HWND window, read title) {
 	InvalidateRect(window, NULL, true); // Invalidate the list view control and have it erased before painted
 }
 
-// Find the 0+ index of the column with the given title in the window list view control
+// Find the current 0+ index of the column with the given title in the window list view control
+// This is the column index, not the order the column appears in the window, use ColumnWindowToList for that
+// Also, these indices can change, so it's not necessarily the index you added the column with
 int ColumnFind(HWND window, read title) {
 	if (isblank(title)) return -1; // Make sure title has text
 
