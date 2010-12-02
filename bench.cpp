@@ -6,28 +6,23 @@ extern app App; // Access global object
 
 
 
-int ColumnFindList(std::vector<Column> list, read title) {
-	for (int i = 0; i < (int)list.size(); i++)
-		if (list[i].title == CString(title))
-			return i;
-	return -1;
-}
 
 
 
-/*
+
+
 
 void onStartup() {
 
 	//factory default columns written in the code as text
 	CString s;
-	s += L"view=show,align=left,width=110,title=Column A;";//TODO change to show=true, right=true
-	s += L"view=show,align=left,width=110,title=Column B;";
-	s += L"view=hide,align=left,width=110,title=Column C;";
-	s += L"view=show,align=right,width=110,title=Column D;";
-	s += L"view=show,align=left,width=80,title=Column E;";
-	s += L"view=show,align=left,width=110,title=Column F;";
-	s += L"view=show,align=left,width=110,title=Column G;";
+	s += L"show=true,right=false,width=50,title=A;";
+	s += L"show=true,right=false,width=50,title=B;";
+	s += L"show=true,right=false,width=50,title=C;";
+	s += L"show=true,right=false,width=50,title=D;";
+	s += L"show=true,right=false,width=50,title=E;";
+	s += L"show=true,right=false,width=50,title=F;";
+	s += L"show=true,right=false,width=50,title=G;";
 
 	//copy text from optn.db or factory default into back
 	std::vector<Column> back = ColumnTextToList(s);
@@ -39,44 +34,35 @@ void onStartup() {
 void onAdd(HWND window, std::vector<Column> &back, read title) {
 
 	//find where it is in the back list
-	int i = 0;
-	int add = -1;
-	for (; i < (int)back.size(); i++) {
-
-		if (back[i].title == CString(title)) {
-			add = i;
-			break;
-		}
-	}
+	int add = ColumnFindList(back, title);
 	if (add == -1) { log(L"title to add not found"); return; }
 
 	//remember to change its visibility in the back list
 	back[add].show = true;
-
-	//move to the next one to start searching for the next visible one in the back list
-	i++;
+	if (back[add].width < 32) back[add].width = 32; // adding a column with no width would be very confusing
 
 	//from where it is in the back list, find the next visible one
-	int before = -1;
-	for (; i < (int)back.size(); i++) {
-
+	CString anchor;
+	for (int i = add + 1; i < (int)back.size(); i++) {
 		if (back[i].show) {
-			before = i;
+			anchor = back[i].title;
 			break;
 		}
 	}
+	int place = -1;
+	if (is(anchor)) place = ColumnFindPlace(window, anchor); //and where it is in the window
 
-	//add it before that one in the control
-	if (before == -1)
-		ColumnAdd(window, back[add].title, back[add].width, back[add].right);
+	//add it
+	if (place != -1)
+		ColumnAddIndex(window, place, back[add].title, back[add].width, back[add].right);//before the next visible one in the back list
 	else
-		ColumnAddBefore(window, back[add].title, back[before].title, back[add].width, back[add].right);
+		ColumnAdd(window, back[add].title, back[add].width, back[add].right);//no next visible, add it at the end
 }
 
 void onRemove(HWND window, std::vector<Column> &back, read title) {
 
 	// find the column we're going to remove in the control
-	int column = ColumnFind(window, title);
+	int column = ColumnFindIndex(window, title);
 	if (column == -1) { log(L"column to remove not found"); return; }
 
 	// find the column we're going to remove in the back list
@@ -98,6 +84,7 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 	//find the name of the column after the one we're going to remove in the control
 	CString after; //blank if the one we're going to remove is the last one
 
+	/*
 	//TODO, wait, the column indices don't run 0 through cols-1 in order on the control, do they?
 	if (int c = 0; 
 
@@ -116,7 +103,7 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 
 
 	ColumnRemoveIndex(window, column);
-
+*/
 
 }
 
@@ -152,96 +139,8 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 //and when you add one from the background, put it before the next visible one
 //thsi works, qed
 
-*/
 
 
-
-
-std::vector<Column> ColumnTextToList(read r) {
-
-	std::vector<Column> list;
-	std::vector<CString> columns = words(r, L";");
-	for (int c = 0; c < (int)columns.size(); c++) {
-
-		bool show = false;
-		bool right = false;
-		int width = -1;
-		CString title;
-
-		std::vector<CString> parameters = words(columns[c], L",");
-		for (int p = 0; p < (int)parameters.size(); p++) {
-
-			CString name, value;
-			split(parameters[p], L"=", &name, &value);
-			name = trim(name, L" ");
-
-			if      (name == L"show")  show  = (value == CString(L"true"));
-			else if (name == L"right") right = (value == CString(L"true"));
-			else if (name == L"width") width = number(value);
-			else if (name == L"title") title = value;
-		}
-
-		if (width > -1 && is(title)) {
-
-			Column o;
-			o.show = show;
-			o.right = right;
-			o.width = width;
-			o.title = title;
-			list.push_back(o);
-		}
-	}
-	return list;
-}
-
-void ColumnListToWindow(HWND window, std::vector<Column> list) {
-
-	for (int i = 0; i < (int)list.size(); i++) {
-		Column c = list[i];
-
-		if (c.show && is(c.title) && c.width > -1) {
-			ColumnAdd(window, c.title, c.width, c.right);
-		}
-	}
-}
-
-std::vector<Column> ColumnWindowToList(HWND window) {
-
-	std::vector<Column> list;
-	int columns = ColumnCount(window);
-	if (columns > MAX_PATH) { log(L"too many columns"); return list; }
-
-	int bay[MAX_PATH];
-	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
-	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return list; }
-
-	for (int i = 0; i < columns; i++) {
-
-		Column c;
-		c.order = i;
-		c.index = bay[i];
-		c.show = true;
-		c.right = ColumnRightIndex(window, c.index);
-		c.width = ColumnWidthIndex(window, c.index);
-		c.title = ColumnTitleIndex(window, c.index);
-		list.push_back(c);
-	}
-	return list;
-}
-
-CString ColumnListToText(std::vector<Column> list) {
-
-	CString s;
-	for (int i = 0; i < (int)list.size(); i++) {
-		Column c = list[i];
-
-		s += make(L"show=",  c.show  ? L"true," : L"false,");
-		s += make(L"right=", c.right ? L"true," : L"false,");
-		s += make(L"width=", numerals(c.width), L",");
-		s += make(L"title=", c.title, L";");
-	}
-	return s;
-}
 
 
 
@@ -280,16 +179,6 @@ void Test() {
 	if (stage == 1) {
 		stage = 2;
 
-		CString s;
-		s += L"show=true,right=false,width=50,title=A;";
-		s += L"show=true,right=false,width=50,title=B;";
-		s += L"show=true,right=false,width=50,title=C;";
-		s += L"show=true,right=false,width=50,title=D;";
-		s += L"show=true,right=false,width=50,title=E;";
-		s += L"show=true,right=false,width=50,title=F;";
-		s += L"show=true,right=false,width=50,title=G;";
-		std::vector<Column> list = ColumnTextToList(s);
-		ColumnListToWindow(App.window.files, list);
 
 	} else if (stage == 2) {
 		stage = 3;
@@ -305,7 +194,7 @@ void Test() {
 	std::vector<Column> v = ColumnWindowToList(App.window.files);
 	log(L"");
 	for (int i = 0; i < (int)v.size(); i++)
-		log(L"order", numerals(v[i].order), L" index", numerals(v[i].index), L" ", v[i].title, L" width", numerals(v[i].width), v[i].right ? L" right" : L"");
+		log(L"place", numerals(v[i].place), L" index", numerals(v[i].index), L" ", v[i].title, L" width", numerals(v[i].width), v[i].right ? L" right" : L"");
 
 
 	/*

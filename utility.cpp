@@ -1779,6 +1779,107 @@ void SetupRemove() {
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
+// Find the current index of the column with the given title in the window list view control
+// This is the column index, not the order the column appears in the window, use ColumnWindowToList for that
+// Also, these indices can change, so it's not necessarily the index you added the column with
+int ColumnFindIndex(HWND window, read title) {
+	if (isblank(title)) return -1; // Make sure title has text
+
+	int columns = ColumnCount(window);
+	for (int i = 0; i < columns; i++)
+		if (ColumnTitleIndex(window, i) == CString(title))
+			return i;
+	return -1; // Not found
+}
+
+// The 0+ place column title is currently located in the given list view window
+int ColumnFindPlace(HWND window, read title) {
+	std::vector<Column> list = ColumnWindowToList(window);
+	return ColumnFindList(list, title);
+}
+
+// The index in list of the column with title, -1 not found
+int ColumnFindList(std::vector<Column> list, read title) {
+	for (int i = 0; i < (int)list.size(); i++)
+		if (list[i].title == CString(title))
+			return i;
+	return -1;
+}
+
+// Parse column text into a list of column objects
+std::vector<Column> ColumnTextToList(read r) {
+
+	std::vector<Column> list;                       // List to fill and return
+	std::vector<CString> columns = words(r, L";");  // Text about each column ends with a semicolon
+	for (int c = 0; c < (int)columns.size(); c++) { // Loop for each piece of text about a column
+
+		Column o; // New blank column object to fill out and add if valid
+		std::vector<CString> parameters = words(columns[c], L","); // Split apart parameters
+		for (int p = 0; p < (int)parameters.size(); p++) {         // Loop for each parameter about the column
+
+			CString name, value;     // Parse out the name and value of the parameter
+			split(parameters[p], L"=", &name, &value);
+			name = trim(name, L" "); // Allow space after a comma before the next name
+
+			if      (name == L"show")  o.show  = (value == CString(L"true")); // Extract the value
+			else if (name == L"right") o.right = (value == CString(L"true"));
+			else if (name == L"width") o.width = number(value);
+			else if (name == L"title") o.title = value;
+		}
+		if (is(o.title) && o.width > -1) list.push_back(o); // If valid, add it to the list
+	}
+	return list; // Return the list we filled with valid column objects parsed from the given text
+}
+
+// Convert a list of column objects to text
+CString ColumnListToText(std::vector<Column> list) {
+
+	CString s;
+	for (int i = 0; i < (int)list.size(); i++) { // Loop for each column object in the given list
+
+		s += make(L"show=",  list[i].show  ? L"true," : L"false,"); // Compose text about it
+		s += make(L"right=", list[i].right ? L"true," : L"false,");
+		s += make(L"width=", numerals(list[i].width), L",");
+		s += make(L"title=", list[i].title, L";");
+	}
+	return s; // Return the text with all the columns
+}
+
+// Add all the columns in the given list to window
+void ColumnListToWindow(HWND window, std::vector<Column> list) {
+
+	for (int i = 0; i < (int)list.size(); i++) {                            // Loop for each colum in the given list
+		if (list[i].show && is(list[i].title) && list[i].width > -1) {      // Make sure we should show it and the contents look valid
+			ColumnAdd(window, list[i].title, list[i].width, list[i].right); // Add the column to the right of any already there
+		}
+	}
+}
+
+// See what columns are in window right now, and in what order
+std::vector<Column> ColumnWindowToList(HWND window) {
+
+	std::vector<Column> list; // List to fill and return
+	int columns = ColumnCount(window);
+	if (columns > MAX_PATH) { log(L"too many columns"); return list; }
+
+	int bay[MAX_PATH];             // Destination buffer
+	ZeroMemory(&bay, sizeof(bay)); // Size of the whole array
+	if (!ListView_GetColumnOrderArray(window, columns, bay)) { error(L"listview_getcolumnorderarray"); return list; }
+
+	for (int i = 0; i < columns; i++) { // Loop for each int the system wrote in bay
+
+		Column c;          // Make a column object about the column
+		c.place = i;       // Output array index is the column's current place in the window
+		c.index = bay[i];  // Value in the array is the column's current index parameter
+		c.show  = true;    // Shown in the window
+		c.right = ColumnRightIndex(window, c.index); // See if the column is right aligned
+		c.width = ColumnWidthIndex(window, c.index); // Get the current column width
+		c.title = ColumnTitleIndex(window, c.index); // Get the unique and identifying column title
+		list.push_back(c); // Add the column to the list
+	}
+	return list; // Return the list we filled
+}
+
 // Make a new column on the right of any already there
 void ColumnAdd(HWND window, read title, int width, bool right) {
 	ColumnAddIndex(window, ColumnCount(window), title, width, right); // 1 column already there has an index of 0, so make a new one at index 1
@@ -1821,7 +1922,7 @@ void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right
 
 // Remove the column named title
 void ColumnRemove(HWND window, read title) {
-	int column = ColumnFind(window, title);
+	int column = ColumnFindIndex(window, title);
 	if (column == -1) return;
 	ColumnRemoveIndex(window, column);
 }
@@ -1833,7 +1934,7 @@ void ColumnRemoveIndex(HWND window, int column) {
 
 // Set the given icon index in the column header named title
 void ColumnIcon(HWND window, read title, int icon) {
-	int column = ColumnFind(window, title);
+	int column = ColumnFindIndex(window, title);
 	if (column == -1) return;
 
 	LVCOLUMN info;
@@ -1845,24 +1946,11 @@ void ColumnIcon(HWND window, read title, int icon) {
 
 // Highlight the column named title
 void ColumnSelect(HWND window, read title) {
-	int column = ColumnFind(window, title);
+	int column = ColumnFindIndex(window, title);
 	if (column == -1) return;
 
 	ListView_SetSelectedColumn(window, column);
 	InvalidateRect(window, NULL, true); // Invalidate the list view control and have it erased before painted
-}
-
-// Find the current 0+ index of the column with the given title in the window list view control
-// This is the column index, not the order the column appears in the window, use ColumnWindowToList for that
-// Also, these indices can change, so it's not necessarily the index you added the column with
-int ColumnFind(HWND window, read title) {
-	if (isblank(title)) return -1; // Make sure title has text
-
-	int columns = ColumnCount(window);
-	for (int i = 0; i < columns; i++)
-		if (ColumnTitleIndex(window, i) == CString(title))
-			return i;
-	return -1; // Not found
 }
 
 // The title text of the column with the given index, like "Status"
@@ -2033,7 +2121,7 @@ void CellShow(HWND window, std::vector<Cell> &cells) {
 	for (int i = 0; i < (int)cells.size(); i++) { // Loop through the given row of cells
 		Cell *c = &(cells[i]);
 
-		c->column = ColumnFind(window, c->title);         // Update the cell's record of the column index it's in right now
+		c->column = ColumnFindIndex(window, c->title);    // Update the cell's record of the column index it's in right now
 		if      (c->column == -1) c->Hidden();            // The column is hidden, clear the cell's record of what it has on the screen
 		else if (c->column ==  0) primary = c;            // This cell is in column 0, point primary at it
 		else                      secondary.push_back(c); // The column is a list view submitem, add it to our list of them

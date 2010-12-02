@@ -145,6 +145,13 @@ bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
+int ColumnFindIndex(HWND window, read title);
+int ColumnFindPlace(HWND window, read title);
+int ColumnFindList(std::vector<Column> list, read title);
+std::vector<Column> ColumnTextToList(read r);
+CString ColumnListToText(std::vector<Column> list);
+void ColumnListToWindow(HWND window, std::vector<Column> list);
+std::vector<Column> ColumnWindowToList(HWND window);
 void ColumnAdd(HWND window, read title, int width, bool right);
 void ColumnAddIndex(HWND window, int column, read title, int width, bool right);
 void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right);
@@ -152,7 +159,6 @@ void ColumnRemove(HWND window, read title);
 void ColumnRemoveIndex(HWND window, int column);
 void ColumnIcon(HWND window, read title, int icon);
 void ColumnSelect(HWND window, read title);
-int ColumnFind(HWND window, read title);
 CString ColumnTitleIndex(HWND window, int column);
 int ColumnWidthIndex(HWND window, int column);
 bool ColumnRightIndex(HWND window, int column);
@@ -307,6 +313,14 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 
 
+int ColumnFindList(std::vector<Column> list, read title);
+void onStartup();
+void onAdd(HWND window, std::vector<Column> &back, read title);
+void onRemove(HWND window, std::vector<Column> &back, read title);
+std::vector<Column> ColumnTextToList(read r);
+void ColumnListToWindow(HWND window, std::vector<Column> list);
+std::vector<Column> ColumnWindowToList(HWND window);
+CString ColumnListToText(std::vector<Column> list);
 void Test();
 void StorePulse();
 void ListPulse();

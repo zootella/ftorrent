@@ -355,21 +355,19 @@ public:
 class Column {
 public:
 
-	int order;
-	int index;
-
-	bool show;
-	bool right;
-	int width;
-	CString title;
+	int place;     // 0+ index where this column is currently shown in the control, changes when the user drags columns to a different order
+	int index;     // 0+ index the control uses to identify this column, changes when any columns are added or removed
+	bool show;     // True when this column is shown in the control
+	bool right;    // Right align the column
+	int width;     // Column width in pixels, changes when the user sizes the column
+	CString title; // Column title text, doesn't change and uniquely identifies the column
 
 	Column() {
-		order = -1;
+		place = -1; // Indices unknown
 		index = -1;
-
-		show = false;
+		show  = false;
 		right = false;
-		width = -1;
+		width = -1; // Width not defined
 	}
 };
 
