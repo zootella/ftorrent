@@ -1886,6 +1886,7 @@ void ColumnAdd(HWND window, read title, int width, bool right) {
 }
 
 // Make a new column in the list view window at 0+ column place, title text, pixel width, and true to align right
+// This works even if the columns already there have indexes dragged into whatever order, including a duplicate index to the given place number
 void ColumnAddIndex(HWND window, int column, read title, int width, bool right) {
 
 	// Have the next pulse edit all the cells

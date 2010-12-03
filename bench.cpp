@@ -9,6 +9,26 @@ extern app App; // Access global object
 
 
 
+// The next visible column in list after title, blank if last or none more visible
+CString ColumnNextVisible(std::vector<Column> list, read title) {
+	CString found1, found2;
+	for (int i = 0; i < (int)list.size(); i++) {
+		if (isblank(found1)) { // looking for first column
+			if (list[i].title == CString(title)) {
+				found1 = list[i].title;
+			}
+		} else if (isblank(found2)) { // looking for second column
+			if (list[i].show) {
+				found2 = list[i].title;
+			}
+		}
+	}
+	return found2;
+}
+
+
+
+
 
 
 
@@ -31,41 +51,77 @@ void onStartup() {
 	ColumnListToWindow(App.window.files, back);
 }
 
-void onAdd(HWND window, std::vector<Column> &back, read title) {
+void onAdd(HWND window, std::vector<Column> &list, read title) {
 
 	//find where it is in the back list
-	int add = ColumnFindList(back, title);
-	if (add == -1) { log(L"title to add not found"); return; }
+	int a = ColumnFindList(list, title);
+	if (a == -1) { log(L"title to add not found"); return; }
 
 	//remember to change its visibility in the back list
-	back[add].show = true;
-	if (back[add].width < 32) back[add].width = 32; // adding a column with no width would be very confusing
+	list[a].show = true;
+	if (list[a].width < 32) list[a].width = 32; // adding a column with no width would be very confusing
 
 	//from where it is in the back list, find the next visible one
 	CString anchor;
-	for (int i = add + 1; i < (int)back.size(); i++) {
-		if (back[i].show) {
-			anchor = back[i].title;
+	for (int i = a + 1; i < (int)back.size(); i++) {
+		if (list[i].show) {
+			anchor = list[i].title;
 			break;
 		}
 	}
 	int place = -1;
-	if (is(anchor)) place = ColumnFindPlace(window, anchor); //and where it is in the window
+	if (is(anchor)) place = ColumnFindPlace(window, anchor); //and where the next visible one is in the window
 
 	//add it
 	if (place != -1)
-		ColumnAddIndex(window, place, back[add].title, back[add].width, back[add].right);//before the next visible one in the back list
+		ColumnAddIndex(window, place, list[a].title, list[a].width, list[a].right);//before the next visible one in the back list
 	else
-		ColumnAdd(window, back[add].title, back[add].width, back[add].right);//no next visible, add it at the end
+		ColumnAdd(window, list[a].title, list[a].width, list[a].right);//no next visible, so just add it at the end
 }
 
-void onRemove(HWND window, std::vector<Column> &back, read title) {
+void onRemove(HWND window, std::vector<Column> &list, read title) {
 
-	// find the column we're going to remove in the control
-	int column = ColumnFindIndex(window, title);
-	if (column == -1) { log(L"column to remove not found"); return; }
+	//simple remove
 
-	// find the column we're going to remove in the back list
+	//find the column in the background list
+	int i = ColumnFindList(list, title);
+	//set its show false
+	if (i != -1) list[i].show = false;
+	//remove it from the window
+	ColumnRemove(window, title);
+
+
+
+
+
+
+
+
+	// find the column we're going to remove
+	std::vector<Column> show = ColumnWindowToList(window); //get the current columns in the window
+	int place = ColumnFindList(show, title); //where the column to remove is in the window
+	int index = ColumnFindList(list, title); //where the column is in the background list
+	if (index == -1 || place == -1) { log(L"column to remove not found"); return; }
+
+	// next visible column
+	if (place + 1 < show.size()) {//if the one we're removing isn't last
+
+		CString anchor = show[place + 1].title; //anchor is the next visible one
+		int anchorplace = ColumnFindList(show, anchor);
+		int anchorindex = ColumnFindList(list, anchor);
+
+		//if the next visible one in the back list isn't the same as the next visible one in the window
+		
+
+
+
+
+
+	}
+
+
+
+
 	int i = 0;
 	int remove = -1;
 	for (; i < (int)back.size(); i++) {
@@ -84,7 +140,6 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 	//find the name of the column after the one we're going to remove in the control
 	CString after; //blank if the one we're going to remove is the last one
 
-	/*
 	//TODO, wait, the column indices don't run 0 through cols-1 in order on the control, do they?
 	if (int c = 0; 
 
@@ -102,8 +157,7 @@ void onRemove(HWND window, std::vector<Column> &back, read title) {
 
 
 
-	ColumnRemoveIndex(window, column);
-*/
+	ColumnRemoveIndex(window, place);
 
 }
 
