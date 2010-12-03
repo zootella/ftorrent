@@ -3,13 +3,13 @@ class app_window {
 public:
 
 	HINSTANCE instance; // Program instance handle
-	HWND main, list, tabs, tip; // Window handles
-	HWND torrent, trackers, peers, pieces, files, speed, log;
+	HWND main, tabs, tip; // Window handles
+	HWND torrent, speed, log;
 
 	app_window() {
 		instance = NULL;
-		main = list = tabs = tip = NULL;
-		torrent = trackers = peers = pieces = files = speed = log = NULL;
+		main = tabs = tip = NULL;
+		torrent = speed = log = NULL;
 	}
 };
 
@@ -113,7 +113,7 @@ public:
 class app_list {
 public:
 
-	List torrents, files;
+	List torrents, trackers, peers, pieces, files;
 	bool refresh; // True when a new column has been added that has blank cells
 
 	app_list() {

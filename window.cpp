@@ -69,16 +69,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
 	// Create the list view window that lists the torrents at the top
-	App.window.list = WindowCreateList();
-	ColumnAdd(App.window.list, L"Status",   150, false);
-	ColumnAdd(App.window.list, L"Name",     150, false);
-	ColumnAdd(App.window.list, L"Size",     150, true);
-	ColumnAdd(App.window.list, L"Infohash", 150, false);
-	ColumnAdd(App.window.list, L"Location", 150, false);
+	App.list.torrents.window = WindowCreateList();
+	CString s;
+	s += L"show=true,right=false,width=150,title=Status;";
+	s += L"show=true,right=false,width=150,title=Name;";
+	s += L"show=true,right=true ,width=150,title=Size;";
+	s += L"show=true,right=false,width=150,title=Infohash;";
+	s += L"show=true,right=false,width=150,title=Location;";
+	App.list.torrents.factory = s;
+	App.list.torrents.current = ColumnTextToList(s);
+	ColumnListToWindow(App.list.torrents.window, App.list.torrents.current); //TODO link this with options and factor down better
 
 
 	//TODO create windows for the contents of each tab
-	App.window.files = WindowCreateList();
+	App.list.files.window = WindowCreateList();
 
 
 	// Create the tabs window
@@ -108,10 +112,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	WindowMove(App.window.main, size, false);
 
 	// Show the child windows and then the main window
-	ShowWindow(App.window.list,  SW_SHOWNORMAL);
-	ShowWindow(App.window.tabs,  SW_SHOWNORMAL);
-	ShowWindow(App.window.files, SW_SHOWNORMAL);
-	ShowWindow(App.window.main,  SW_SHOWNORMAL); // Calling this causes a paint message right now
+	ShowWindow(App.list.torrents.window, SW_SHOWNORMAL);
+	ShowWindow(App.window.tabs,          SW_SHOWNORMAL);
+	ShowWindow(App.list.files.window,    SW_SHOWNORMAL);
+	ShowWindow(App.window.main,          SW_SHOWNORMAL); // Calling this causes a paint message right now
 	PaintMessage(); // Necessary to draw child window controls
 
 	// Make sure we can edit files next to this running exe

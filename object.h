@@ -331,24 +331,6 @@ public:
 
 
 
-// State of the columns of a list view control
-class List {
-public:
-
-	HWND window; // Handle to the list view child window control
-	CString sort; // blank no sort, or title of the column sorted
-	int direction; // 1 ascending or -1 descending
-
-	//TODO here is where you'll probably add the factory state and current state of column order, show, and widths
-
-	List() {
-		window = NULL;
-		sort = L"";
-		direction = 1;
-	}
-};
-
-
 
 
 // A column in a list view control
@@ -368,6 +350,22 @@ public:
 		show  = false;
 		right = false;
 		width = -1; // Width not defined
+	}
+};
+
+// State of the columns of a list view control
+class List {
+public:
+
+	HWND window; // Handle to the list view child window control
+	CString factory; // Factory default columns for this list
+	std::vector<Column> current; // Current record of which columns are shown
+	CString sort; // blank no sort, or title of the column sorted
+	int direction; // 1 ascending, -1 descending, or 0 none
+
+	List() {
+		window = NULL;
+		direction = 0;
 	}
 };
 

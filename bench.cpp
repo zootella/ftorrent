@@ -48,7 +48,7 @@ void onStartup() {
 	std::vector<Column> back = ColumnTextToList(s);
 
 	//load back into the control
-	ColumnListToWindow(App.window.files, back);
+	ColumnListToWindow(App.list.files.window, back);
 }
 
 //List
@@ -88,14 +88,14 @@ void Test() {
 		stage = 3;
 
 		//confirm adding 0, 1, 2, always adds in that position, regardless of how the indices beneath are sorted
-		ColumnAddIndex(App.window.files, 7, L"New", 80, false);
+		ColumnAddIndex(App.list.files.window, 7, L"New", 80, false);
 
 
 
 
 	}
 
-	std::vector<Column> v = ColumnWindowToList(App.window.files);
+	std::vector<Column> v = ColumnWindowToList(App.list.files.window);
 	log(L"");
 	for (int i = 0; i < (int)v.size(); i++)
 		log(L"place", numerals(v[i].place), L" index", numerals(v[i].index), L" ", v[i].title, L" width", numerals(v[i].width), v[i].right ? L" right" : L"");

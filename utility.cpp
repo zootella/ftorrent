@@ -1876,7 +1876,7 @@ CString ColumnListToText(std::vector<Column> list) {
 	return s; // Return the text with all the columns
 }
 
-// Add all the columns in the given list to window
+// Add all the visible columns in the given list to window
 void ColumnListToWindow(HWND window, std::vector<Column> list) {
 
 	for (int i = 0; i < (int)list.size(); i++) {                            // Loop for each colum in the given list
