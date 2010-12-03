@@ -51,147 +51,12 @@ void onStartup() {
 	ColumnListToWindow(App.window.files, back);
 }
 
-void onAdd(HWND window, std::vector<Column> &list, read title) {
-
-	//find where it is in the back list
-	int a = ColumnFindList(list, title);
-	if (a == -1) { log(L"title to add not found"); return; }
-
-	//remember to change its visibility in the back list
-	list[a].show = true;
-	if (list[a].width < 32) list[a].width = 32; // adding a column with no width would be very confusing
-
-	//from where it is in the back list, find the next visible one
-	CString anchor;
-	for (int i = a + 1; i < (int)back.size(); i++) {
-		if (list[i].show) {
-			anchor = list[i].title;
-			break;
-		}
-	}
-	int place = -1;
-	if (is(anchor)) place = ColumnFindPlace(window, anchor); //and where the next visible one is in the window
-
-	//add it
-	if (place != -1)
-		ColumnAddIndex(window, place, list[a].title, list[a].width, list[a].right);//before the next visible one in the back list
-	else
-		ColumnAdd(window, list[a].title, list[a].width, list[a].right);//no next visible, so just add it at the end
-}
-
-void onRemove(HWND window, std::vector<Column> &list, read title) {
-
-	//simple remove
-
-	//find the column in the background list
-	int i = ColumnFindList(list, title);
-	//set its show false
-	if (i != -1) list[i].show = false;
-	//remove it from the window
-	ColumnRemove(window, title);
+//List
+//
 
 
 
 
-
-
-
-
-	// find the column we're going to remove
-	std::vector<Column> show = ColumnWindowToList(window); //get the current columns in the window
-	int place = ColumnFindList(show, title); //where the column to remove is in the window
-	int index = ColumnFindList(list, title); //where the column is in the background list
-	if (index == -1 || place == -1) { log(L"column to remove not found"); return; }
-
-	// next visible column
-	if (place + 1 < show.size()) {//if the one we're removing isn't last
-
-		CString anchor = show[place + 1].title; //anchor is the next visible one
-		int anchorplace = ColumnFindList(show, anchor);
-		int anchorindex = ColumnFindList(list, anchor);
-
-		//if the next visible one in the back list isn't the same as the next visible one in the window
-		
-
-
-
-
-
-	}
-
-
-
-
-	int i = 0;
-	int remove = -1;
-	for (; i < (int)back.size(); i++) {
-
-		if (back[i].title == CString(title)) {
-			remove = i;
-			break;
-		}
-	}
-	if (remove == -1) { log(L"title to remove not found"); return; }
-
-	//change our record of its visibility in the back list
-	back[remove].show = false;
-	back[remove].width = ColumnWidthIndex(window, column);
-
-	//find the name of the column after the one we're going to remove in the control
-	CString after; //blank if the one we're going to remove is the last one
-
-	//TODO, wait, the column indices don't run 0 through cols-1 in order on the control, do they?
-	if (int c = 0; 
-
-	if (column + 1 < ColumnCount(window)) {
-
-
-
-	}
-
-
-
-
-
-
-
-
-
-	ColumnRemoveIndex(window, place);
-
-}
-
-
-//On remove
-//compute places list for visible ones, leaving other places the same
-//remove the column
-
-
-	//remember to change its visiblity in the back list
-
-
-
-//what does the format for persisting column data look like?
-//both factory settings, and a string for bencoding in optn.db
-//you need to save column order, width, show or hide
-//"t,0,110,Column A;t,25,130,Column B;"
-
-//what does the function that computes places look like?
-
-
-
-
-
-//simple solution to the sort problem
-//no numbered weights
-//in the background:
-//ColA,ColB,ColC,ColD,ColE,ColF,ColG
-//in the foreground
-//ColB,ColF,ColD
-//and then the user removes F
-//in the background, move it to be before D
-//and when you add one from the background, put it before the next visible one
-//thsi works, qed
 
 
 
@@ -206,21 +71,6 @@ void onRemove(HWND window, std::vector<Column> &list, read title) {
 int stage = 1;
 
 
-//TODO when you drag the columns into a different order, but dont' add or remove any, their indices don't change
-//and when you loop through the indexes, you get them in their original order
-//you need to figure out their screen order to be able to put them back the next time in their sorted order
-
-
-
-
-//TODO, next, confirm that when you add one, where does it go?
-
-//maybe expand this to include column
-//order
-//index
-//title
-//width
-//right
 
 
 

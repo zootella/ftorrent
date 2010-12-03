@@ -1779,6 +1779,37 @@ void SetupRemove() {
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
+// Given access to the list of all columns behind window where some of them are shown, add title
+void ColumnListAdd(HWND window, std::vector<Column> &list, read title) {
+
+	int i = ColumnFindList(list, title); // Find title in the background list
+	if (i == -1) { log(L"title to add not found"); return; }
+	list[i].show = true; // Mark it as shown
+
+	CString anchor; // Find the next visible column after title in the background list
+	for (int j = i + 1; j < (int)list.size(); j++) { // Look starting with the next one in the background list
+		if (list[j].show) {                          // Found one that is shown
+			anchor = list[j].title;                  // Grab its title
+			break;
+		}
+	}
+	int place = -1; // The place index of the next visible column, or -1 if none
+	if (is(anchor)) place = ColumnFindPlace(window, anchor);
+
+	if (place != -1) ColumnAddIndex(window, place, list[i].title, list[i].width, list[i].right); // Add it there
+	else ColumnAdd(window, list[i].title, list[i].width, list[i].right); // Just add it at the end
+}
+
+// Given access to the list of all columns behind window where some of them are shown, remove title
+void ColumnListRemove(HWND window, std::vector<Column> &list, read title) {
+
+	int i = ColumnFindList(list, title); // Find title in the background list
+	if (i == -1) { log(L"title to remove not found"); return; }
+	list[i].show = false; // Mark it as not shown
+
+	ColumnRemove(window, title); // Remove its column in the window
+}
+
 // Find the current index of the column with the given title in the window list view control
 // This is the column index, not the order the column appears in the window, use ColumnWindowToList for that
 // Also, these indices can change, so it's not necessarily the index you added the column with

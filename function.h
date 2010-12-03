@@ -145,6 +145,8 @@ bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
+void ColumnListAdd(HWND window, std::vector<Column> &list, read title);
+void ColumnListRemove(HWND window, std::vector<Column> &list, read title);
 int ColumnFindIndex(HWND window, read title);
 int ColumnFindPlace(HWND window, read title);
 int ColumnFindList(std::vector<Column> list, read title);
