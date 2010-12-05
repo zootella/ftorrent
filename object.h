@@ -455,7 +455,7 @@ public:
 	void ComposeInfohash();
 	void ComposeLocation();
 
-	Cell *GetCell(read title);
+	Cell &GetCell(read title);
 
 	DWORD Hash();
 

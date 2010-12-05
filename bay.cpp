@@ -34,17 +34,18 @@ void Torrent::Edit() {
 
 //TODO test this, make some cells and confirm you can change them
 
-Cell *Torrent::GetCell(read title) {
+Cell &Torrent::GetCell(read title) {
 
 	int n = (int)cells.size();
+
 	for (int i = 0; i < n; i++) {
 		if (cells[i].title == CString(title))
-			return &(cells[i]);
+			return cells[i];
 	}
 
-	Cell c(Hash(), title);
-	cells.push_back(c);
-	return &(cells[n]); // Size before is index of the last one we just added
+
+	cells.push_back(Cell(1122/*Hash()*/, title));
+	return cells[n]; // Size before is index of the last one we just added
 }
 
 
@@ -58,32 +59,32 @@ void Torrent::Compose() {
 
 
 void Torrent::ComposeStatus() {
-	Cell *c = GetCell(L"Status");
-	c->text = L"status text";
+	Cell c = GetCell(L"Status");
+	c.text = L"status text";
 }
 
 void Torrent::ComposeName() {
-	Cell *c = GetCell(L"Name");
-	c->text = widenStoC(handle.name());
+	Cell c = GetCell(L"Name");
+	c.text = widenStoC(handle.name());
 }
 
 void Torrent::ComposeSize() {
-	Cell *c = GetCell(L"Size");
+	Cell c = GetCell(L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
 
-	c->text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
+	c.text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
 }
 
 void Torrent::ComposeInfohash() {
-	Cell *c = GetCell(L"Infohash");
-	c->text = base16(handle.info_hash()); // This torrent's infohash in base 16
+	Cell c = GetCell(L"Infohash");
+	c.text = base16(handle.info_hash()); // This torrent's infohash in base 16
 }
 
 void Torrent::ComposeLocation() {
-	Cell *c = GetCell(L"Location");
-	c->text = L"path text";
+	Cell c = GetCell(L"Location");
+	c.text = L"path text";
 }
 
 
