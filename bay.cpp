@@ -32,25 +32,19 @@ void Torrent::Edit() {
 
 
 
-
+//TODO test this, make some cells and confirm you can change them
 
 Cell *Torrent::GetCell(read title) {
 
-	if (cells.size() == 0) {
-
-		read r = L"Status,Name,Size,Infohash,Location";
-
-		std::vector<CString> titles = words(r, L",");
-
-		for (int i = 0; i < (int)titles.size(); i++)
-			cells.push_back(Cell(Hash(), titles[i]));
-	}
-
-	for (int i = 0; i < (int)cells.size(); i++) {
+	int n = (int)cells.size();
+	for (int i = 0; i < n; i++) {
 		if (cells[i].title == CString(title))
 			return &(cells[i]);
 	}
-	return NULL;
+
+	Cell c(Hash(), title);
+	cells.push_back(c);
+	return &(cells[n]); // Size before is index of the last one we just added
 }
 
 
@@ -116,8 +110,8 @@ void Torrent::Save() {
 
 	// Make and fill the bencoded dictionary
 	libtorrent::entry::dictionary_type d;
-	d[narrowRtoS(L"folder")] = narrowRtoS(folder);
-	d[narrowRtoS(L"name")] = narrowRtoS(name);
+	d[narrowRtoS(L"folder")]   = narrowRtoS(folder);
+	d[narrowRtoS(L"name")]     = narrowRtoS(name);
 	d[narrowRtoS(L"trackers")] = l;
 
 	// Save it to disk

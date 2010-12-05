@@ -165,17 +165,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	return (int)message.wParam;
 }
 
-// Called after each group of messages and every .3 seconds
-// Updates the program's data and display
-void WindowPulse() {
-
-	// Pulse the program from data to display
-	LibraryPulse();
-	StorePulse();
-	ListPulse();
-	AreaPulse();
-}
-
 // Hide the window stop libtorrent
 void WindowExit() {
 
@@ -355,3 +344,74 @@ void MenuTaskbar() {
 	break;
 	}
 }
+
+// Called after each group of messages and every .3 seconds
+// Updates the program's data and display
+void WindowPulse() {
+
+	// Pulse the program from data to display
+	LibraryPulse();
+	StorePulse();
+	ListPulse();
+	AreaPulse();
+}
+
+
+
+
+
+void StorePulse() {
+
+	// Only do this once
+	if (App.cycle.restored) return;
+	App.cycle.restored = true;
+
+	// Add all the torrents from last time the program ran
+	std::set<hbig> hashes;
+	Find f(PathRunningFolder());
+	while (f.Result()) { // Loop for each file in the folder this exe is running in
+		if (!f.Folder()) {
+			CString s = f.info.cFileName;
+			if (length(s) == 40 + length(L".optn.db") && trails(s, L".optn.db", Matching)) { // Look for "infohash.optn.db"
+
+				hbig hash = ParseHash(clip(s, 0, 40));
+				if (!hash.is_all_zeros()) hashes.insert(hash); // Only collect unique nonzero hashes
+			}
+		}
+	}
+	for (std::set<hbig>::const_iterator i = hashes.begin(); i != hashes.end(); i++) AddStore(*i);
+
+	// Add the torrent or magnet the system launched this program with
+	CString s = App.cycle.command;
+	if (starts(s, L"\"")) { // Parse the command like ["C:\Folder\file.torrent" /more /arguments]
+		s = after(s, L"\"");
+		if (has(s, L"\"")) {
+			s = before(s, L"\"");
+			if (starts(s, L"magnet:", Matching)) AddMagnet(s, false); // Look for magnet first because link text might also end torrent
+			else if (trails(s, L".torrent", Matching)) AddTorrent(s, false);
+		}
+	}
+}
+
+
+
+
+void ListPulse() {
+
+
+
+	for (int i = 0; i < (int)App.torrents.size(); i++)
+		App.torrents[i].Edit();
+
+
+	App.list.refresh = false; // We filled any blank cells caused by newly added columns
+
+
+}
+
+
+
+
+
+
+

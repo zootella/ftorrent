@@ -1,10 +1,12 @@
 
 // Window
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int show);
-void WindowPulse();
 void WindowExit();
 LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
+void WindowPulse();
+void StorePulse();
+void ListPulse();
 
 // String
 CString make(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
@@ -315,17 +317,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 
 
-int ColumnFindList(std::vector<Column> list, read title);
-void onStartup();
-void onAdd(HWND window, std::vector<Column> &back, read title);
-void onRemove(HWND window, std::vector<Column> &back, read title);
-std::vector<Column> ColumnTextToList(read r);
-void ColumnListToWindow(HWND window, std::vector<Column> list);
-std::vector<Column> ColumnWindowToList(HWND window);
-CString ColumnListToText(std::vector<Column> list);
 void Test();
-void StorePulse();
-void ListPulse();
 
 
 
