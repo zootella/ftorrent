@@ -12,39 +12,26 @@ extern app App; // Access global object
 // Edit the list view row to match the information in this torrent
 void Torrent::Edit() {
 
-	/*
-	// Update the cells that have different text
-	ListEdit(
-		App.window.list,
-		5,
-		(LPARAM)Hash(),
-		ComposeStatus().icon,
-		ComposeStatus().text,
-		ComposeName().icon,
-		ComposeName().text,
-		ComposeSize().text,
-		ComposeInfohash().text,
-		ComposeLocation().text,
-		L"");
-		*/
+	// Edit the row of cells in the list view control window
+	Compose();
+	CellShow(App.list.torrents.window, cells);
 }
 
 
 
 
-//TODO test this, make some cells and confirm you can change them
-
+// Access the cell under the title column for this torrent
 Cell &Torrent::GetCell(read title) {
 
-	int n = (int)cells.size();
-
+	// Look for it
+	int n = (int)cells.size(); // How many cells are in our list
 	for (int i = 0; i < n; i++) {
 		if (cells[i].title == CString(title))
-			return cells[i];
+			return cells[i]; // Found it
 	}
 
-
-	cells.push_back(Cell(1122/*Hash()*/, title));
+	// Not found, make it
+	cells.push_back(Cell(Hash(), title));
 	return cells[n]; // Size before is index of the last one we just added
 }
 
@@ -57,19 +44,18 @@ void Torrent::Compose() {
 	ComposeLocation();
 }
 
-
 void Torrent::ComposeStatus() {
-	Cell c = GetCell(L"Status");
+	Cell &c = GetCell(L"Status");
 	c.text = L"status text";
 }
 
 void Torrent::ComposeName() {
-	Cell c = GetCell(L"Name");
+	Cell &c = GetCell(L"Name");
 	c.text = widenStoC(handle.name());
 }
 
 void Torrent::ComposeSize() {
-	Cell c = GetCell(L"Size");
+	Cell &c = GetCell(L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
 	sbig size = handle.get_torrent_info().total_size();
@@ -78,12 +64,12 @@ void Torrent::ComposeSize() {
 }
 
 void Torrent::ComposeInfohash() {
-	Cell c = GetCell(L"Infohash");
+	Cell &c = GetCell(L"Infohash");
 	c.text = base16(handle.info_hash()); // This torrent's infohash in base 16
 }
 
 void Torrent::ComposeLocation() {
-	Cell c = GetCell(L"Location");
+	Cell &c = GetCell(L"Location");
 	c.text = L"path text";
 }
 

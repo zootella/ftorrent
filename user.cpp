@@ -2,6 +2,19 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
+// Define factory default columns in list view controls
+void DefaultColumns() {
+
+
+
+
+
+
+
+
+
+}
+
 // Set up the program image list
 void StartIcon() {
 

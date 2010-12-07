@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	CString s;
 	s += L"show=true,right=false,width=150,title=Status;";
 	s += L"show=true,right=false,width=150,title=Name;";
-	s += L"show=true,right=true ,width=150,title=Size;";
+	s += L"show=true,right=true, width=150,title=Size;";
 	s += L"show=true,right=false,width=150,title=Infohash;";
 	s += L"show=true,right=false,width=150,title=Location;";
 	App.list.torrents.factory = s;
