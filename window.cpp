@@ -9,11 +9,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	App.window.instance = instance;
 	App.cycle.command = widenPtoC(command);
 
-	// Look for the portable marker
-	App.cycle.portable = DiskIsFile(PathPortable());
+	// Load options
+	App.cycle.portable = DiskIsFile(PathPortable()); // Look for the portable marker
+	OptionLoad(); // Load optn.db from last time into App.option variables
 
-	// Tell the system we're going to use the list and tree view controls
-	InitializeCommonControls();
+	// Tell the system we're going to use COM, OLE, and the list and tree view controls
+	InitializeSystem();
 
 	// Set up the program image list
 	StartIcon();
@@ -68,22 +69,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	if (!menu) error(L"getsystemmenu");
 	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
 
-	// Create the list view window that lists the torrents at the top
+	// Create the list view windows
 	App.list.torrents.window = WindowCreateList();
-	CString s;
-	s += L"show=true,right=false,width=150,title=Status;";
-	s += L"show=true,right=false,width=150,title=Name;";
-	s += L"show=true,right=true, width=150,title=Size;";
-	s += L"show=true,right=false,width=150,title=Infohash;";
-	s += L"show=true,right=false,width=150,title=Location;";
-	App.list.torrents.factory = s;
-	App.list.torrents.current = ColumnTextToList(s);
-	ColumnListToWindow(App.list.torrents.window, App.list.torrents.current); //TODO link this with options and factor down better
+	App.list.trackers.window = WindowCreateList();
+	App.list.peers.window    = WindowCreateList();
+	App.list.pieces.window   = WindowCreateList();
+	App.list.files.window    = WindowCreateList();
 
-
-	//TODO create windows for the contents of each tab
-	App.list.files.window = WindowCreateList();
-
+	// Create the list view window that lists the torrents at the top
+	ColumnListToWindow(App.list.torrents.window, App.list.torrents.current);
+	ColumnListToWindow(App.list.trackers.window, App.list.trackers.current);
+	ColumnListToWindow(App.list.peers.window,    App.list.peers.current);
+	ColumnListToWindow(App.list.pieces.window,   App.list.pieces.current);
+	ColumnListToWindow(App.list.files.window,    App.list.files.current);
 
 	// Create the tabs window
 	App.window.tabs = WindowCreateTabs();
@@ -127,7 +125,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	OptionLoad(); // Load optn.db from last time into Data variables
 	if (App.option.associate) AssociateGet();
 //	FirewallAdd(PathRunningFile(), PROGRAM_NAME); //TODO commenting this out may solve the hang on run bug
 	log(L"library start before");
@@ -155,7 +152,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 		}
 	}
 
-	OptionSave(); // Save Data varibles to optn.db for next time
+	OptionSave(); // Save App.option varibles to optn.db for next time
 	log(L"library close before");
 	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
 	log(L"library close after");

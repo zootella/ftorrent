@@ -5,14 +5,16 @@ extern app App; // Access global object
 // Define factory default columns in list view controls
 void DefaultColumns() {
 
+	App.list.torrents.factory += L"show=true,right=false,width=150,title=Status;";
+	App.list.torrents.factory += L"show=true,right=false,width=170,title=Name;";
+	App.list.torrents.factory += L"show=true,right=true, width=200,title=Size;";
+	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
+	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
 
-
-
-
-
-
-
-
+	App.list.trackers.factory += L"";
+	App.list.peers.factory    += L"";
+	App.list.pieces.factory   += L"";
+	App.list.files.factory    += L"";
 }
 
 // Set up the program image list
@@ -655,24 +657,59 @@ void AreaDoCommand(Area *area) {
 // Reads the optn.db file next to this running exe, and loads values in option
 void OptionLoad() {
 
+	CString torrents, trackers, peers, pieces, files;
 	libtorrent::entry d;
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
 		App.option.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
 		App.option.associate = same(widenStoC(d[narrowRtoS(L"associate")].string()), L"t"); // True to associate magnet and torrent
+
+		/*
+		//TODO persist column customizations
+		torrents = widenStoC(d[narrowRtoS(L"listtorrents")].string());
+		trackers = widenStoC(d[narrowRtoS(L"listtrackers")].string());
+		peers    = widenStoC(d[narrowRtoS(L"listpeers")].string());
+		pieces   = widenStoC(d[narrowRtoS(L"listpieces")].string());
+		files    = widenStoC(d[narrowRtoS(L"listfiles")].string());
+		*/
 	}
 
 	// Replace blank or invalid with factory defaults
 	if (isblank(App.option.folder)) App.option.folder = PathTorrents();
+
+	// List view columns
+	DefaultColumns();
+	App.list.torrents.current = ColumnTextToList(is(torrents) ? torrents : App.list.torrents.factory);
+	App.list.trackers.current = ColumnTextToList(is(trackers) ? trackers : App.list.trackers.factory);
+	App.list.peers.current    = ColumnTextToList(is(peers)    ? peers    : App.list.peers.factory);
+	App.list.pieces.current   = ColumnTextToList(is(pieces)   ? pieces   : App.list.pieces.factory);
+	App.list.files.current    = ColumnTextToList(is(files)    ? files    : App.list.files.factory);
 }
 
 // Call when the program is shutting down
-// Saves values from Data to optn.db next to this running exe
+// Saves values from App.option to optn.db next to this running exe
 void OptionSave() {
 
 	libtorrent::entry::dictionary_type d;
+
 	d[narrowRtoS(L"folder")] = narrowRtoS(App.option.folder);
 	d[narrowRtoS(L"associate")] = App.option.associate ? narrowRtoS(L"t") : narrowRtoS(L"f");
+
+	/*
+	//TODO update current lists to get widths before you save these
+	ColumnIntegrate(&App.list.torrents.current, ColumnWindowToList(App.list.torrents.window));
+	ColumnIntegrate(&App.list.trackers.current, ColumnWindowToList(App.list.trackers.window));
+	ColumnIntegrate(&App.list.peers.current,    ColumnWindowToList(App.list.peers.window));
+	ColumnIntegrate(&App.list.pieces.current,   ColumnWindowToList(App.list.pieces.window));
+	ColumnIntegrate(&App.list.files.current,    ColumnWindowToList(App.list.files.window));
+
+	d[narrowRtoS(L"listtorrents")] = narrowRtoS(ColumnListToText(App.list.torrents.current));
+	d[narrowRtoS(L"listtrackers")] = narrowRtoS(ColumnListToText(App.list.trackers.current));
+	d[narrowRtoS(L"listpeers")]    = narrowRtoS(ColumnListToText(App.list.peers.current));
+	d[narrowRtoS(L"listpieces")]   = narrowRtoS(ColumnListToText(App.list.pieces.current));
+	d[narrowRtoS(L"listfiles")]    = narrowRtoS(ColumnListToText(App.list.files.current));
+	*/
+
 	SaveEntry(PathOption(), d);
 }
 

@@ -890,9 +890,13 @@ int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
 	return i;
 }
 
-// Initialize our use of the common controls
-void InitializeCommonControls() {
+// Tell the system what libraries this new process will use
+void InitializeSystem() {
 
+	// Initialize the COM library including OLE
+	if (!OleInitialize(NULL)) error(L"ole initialize");
+
+	// Initialize our use of the common controls
 	INITCOMMONCONTROLSEX info; // Oh yeah
 	ZeroMemory(&info, sizeof(info));
 	info.dwSize = sizeof(info); // Size of this structure

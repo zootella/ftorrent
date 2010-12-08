@@ -94,7 +94,7 @@ void PaintIcon(Device *device, Size position, HICON icon, HBRUSH background = NU
 HFONT FontMenu(boolean underline);
 HFONT FontName(read face, int points);
 int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 = 0, int i7 = 0, int i8 = 0); // Has defaults
-void InitializeCommonControls();
+void InitializeSystem();
 void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
 void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
 void FileRun(read path, read parameters = L""); // Has defaults
@@ -292,6 +292,7 @@ void AlertLoop();
 void AlertLook(const libtorrent::alert *alert);
 
 // User
+void DefaultColumns();
 void StartIcon();
 void PaintWindow(Device *device);
 void PaintArea(Device *device, Area *a);
