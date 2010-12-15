@@ -4,6 +4,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 void WindowExit();
 LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
 void MenuTaskbar();
+void NotifySetFocus(HWND window);
+void NotifyDoubleClick(HWND window);
+void NotifyRightClick(HWND window);
+void NotifyColumnClick(HWND window, int column);
+void NotifyKeyEnter(HWND window);
+void NotifyKeyDelete(HWND window);
+void NotifyKeyControlA(HWND window);
+void NotifyKeyControlC(HWND window);
+void NotifyKeyControlV(HWND window);
 void WindowPulse();
 void StorePulse();
 void ListPulse();
@@ -320,6 +329,7 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 void Test();
 
+bool PaintCustom(LPNMLVCUSTOMDRAW draw);
 
 
 

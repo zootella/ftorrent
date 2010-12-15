@@ -308,6 +308,46 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		break;
 		}
 
+	// Notification from a common control
+	break;
+	case WM_NOTIFY:
+
+		// The user pressed a key in the control
+		HWND window = ((LPNMHDR)lparam)->hwndFrom; // Get the window handle of the common control the notification is about
+		switch (((LPNMLISTVIEW)lparam)->hdr.code) {
+		case NM_SETFOCUS:     NotifySetFocus(window);                                      break; // The list view control window has gained the focus
+		case NM_DBLCLK:       NotifyDoubleClick(window);                                   break; // The user double clicked
+		case NM_RCLICK:       NotifyRightClick(window);                                    break; // The user right clicked
+		case LVN_COLUMNCLICK: NotifyColumnClick(window, ((LPNMLISTVIEW)lparam)->iSubItem); break; // The user clicked a column
+		case LVN_KEYDOWN:
+
+			switch (((LPNMLVKEYDOWN)lparam)->wVKey) {
+			case VK_RETURN: NotifyKeyEnter(window);  break; // The user pressed the Enter key
+			case VK_DELETE: NotifyKeyDelete(window); break; // The user pressed the Delete key
+			}
+
+			if (GetKeyState(VK_CONTROL) & 0x8000) {
+				switch (((LPNMLVKEYDOWN)lparam)->wVKey) {
+				case 'A': NotifyKeyControlA(window); break; // The user pressed Control A to select all
+				case 'C': NotifyKeyControlC(window); break; // The user pressed Control C to copy
+				case 'V': NotifyKeyControlV(window); break; // The user pressed Control V to paste
+				}
+			}
+
+		// A drawing operation is happening
+		break;
+		case NM_CUSTOMDRAW:
+
+			LPNMLVCUSTOMDRAW draw = (LPNMLVCUSTOMDRAW)lparam; // Point to the custom draw structure
+			switch (draw->nmcd.dwDrawStage) {
+			case CDDS_PREPAINT:                    return CDRF_NOTIFYITEMDRAW;                     break; // Draw the control, request the next message
+			case CDDS_ITEMPREPAINT:                return CDRF_NOTIFYITEMDRAW;                     break; // Draw an item, request the next message TODO what if status is in the first one
+			case CDDS_SUBITEM | CDDS_ITEMPREPAINT: if (PaintCustom(draw)) return CDRF_SKIPDEFAULT; break; // Draw a subitem, do custom drawing and have the control skip default drawing
+			}
+
+		break;
+		}
+
 	break;
 	}
 
@@ -341,6 +381,59 @@ void MenuTaskbar() {
 	break;
 	}
 }
+
+
+
+
+
+
+
+
+void NotifySetFocus(HWND window) {
+	log(L"set focus");
+}
+void NotifyDoubleClick(HWND window) {
+	log(L"double click");
+}
+void NotifyRightClick(HWND window) {
+	int row = ListMouse(window);
+	log(L"right click, row ", numerals(row));
+}
+void NotifyColumnClick(HWND window, int column) {
+	log(L"column click, number ", numerals(column));
+}
+void NotifyKeyEnter(HWND window) {
+	log(L"enter");
+}
+void NotifyKeyDelete(HWND window) {
+	log(L"delete");
+}
+void NotifyKeyControlA(HWND window) {
+	log(L"control a");
+}
+void NotifyKeyControlC(HWND window) {
+	log(L"control c");
+}
+void NotifyKeyControlV(HWND window) {
+	log(L"control v");
+}
+
+//TODO right click is appearing when it's in the column, but how do you get it only when it's in the column
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Called after each group of messages and every .3 seconds
 // Updates the program's data and display

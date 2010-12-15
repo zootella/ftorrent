@@ -4,6 +4,9 @@ extern app App; // Access global object
 
 
 
+bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
+	return false; // TODO Don't do any custom drawing yet
+}
 
 
 

@@ -2067,6 +2067,9 @@ LPARAM ListMouse(HWND window) {
 	ZeroMemory(&info, sizeof(info));
     info.pt = MouseClient(window).Point();
 	int row = ListView_HitTest(window, &info);
+
+	log(L"hit test ", numerals(row));//TODO see if you can get the column header separate from the space outside rows
+
 	if (row == -1) return 0; // The mouse is not over a row
 	return ListGet(window, row); // Return the parameter of the row
 }
