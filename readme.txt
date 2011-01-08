@@ -141,11 +141,11 @@ Application Settings, check Empty Project
 Finish
 
 Place files in the ftorrent folder and then drag them into Visual Studio
-*.h, Header Files
-*.cpp, Source Files
-*.ico, Resource Files
-ftorrent.rc, Resource Files
-ftorrent.exe.manifest, Resource Files
+*.h
+*.cpp
+*.ico
+ftorrent.rc
+ftorrent.exe.manifest
 
 ==Or, start resources from scratch==
 
