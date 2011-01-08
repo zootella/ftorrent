@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="ftorrent"
-	ProjectGUID="{EBFCC154-D7B0-4E8B-B395-31DD8E95C19B}"
+	ProjectGUID="{92E28A25-60DF-4D78-91A1-FF20631A0846}"
 	RootNamespace="ftorrent"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -42,9 +42,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;BOOST_ALL_NO_LIB;BOOST_THREAD_USE_LIB;_FILE_OFFSET_BITS=64;WITH_SHIPPED_GEOIP_H"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
 				ExceptionHandling="2"
-				BasicRuntimeChecks="0"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
+				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -247,6 +247,34 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\ftorrent.exe.manifest"
+				>
+			</File>
+			<File
+				RelativePath=".\ftorrent.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Include Files"
+			>
+			<File
+				RelativePath=".\heavy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Icon Files"
+			>
+			<File
 				RelativePath=".\0 stage blue.ico"
 				>
 			</File>
@@ -323,18 +351,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ftorrent.exe.manifest"
-				>
-			</File>
-			<File
-				RelativePath=".\ftorrent.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\resource.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stage green.ico"
 				>
 			</File>
@@ -344,18 +360,6 @@
 			</File>
 			<File
 				RelativePath=".\stage yellow.ico"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Include Files"
-			>
-			<File
-				RelativePath=".\heavy.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include.h"
 				>
 			</File>
 		</Filter>

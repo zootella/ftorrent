@@ -1,190 +1,202 @@
-=How to Build libtorrent in Visual Studio=
 
-''<font face=serif>for Fun and Profit</font>''
+ _   _                 _          ____        _ _     _ 
+| | | | _____      __ | |_ ___   | __ ) _   _(_) | __| |
+| |_| |/ _ \ \ /\ / / | __/ _ \  |  _ \| | | | | |/ _` |
+|  _  | (_) \ V  V /  | || (_) | | |_) | |_| | | | (_| |
+|_| |_|\___/ \_/\_/    \__\___/  |____/ \__,_|_|_|\__,_|
+ _ _ _     _                            _     _       
+| (_) |__ | |_ ___  _ __ _ __ ___ _ __ | |_  (_)_ __  
+| | | '_ \| __/ _ \| '__| '__/ _ \ '_ \| __| | | '_ \ 
+| | | |_) | || (_) | |  | | |  __/ | | | |_  | | | | |
+|_|_|_.__/ \__\___/|_|  |_|  \___|_| |_|\__| |_|_| |_|
+__     ___                 _   ____  _             _ _       
+\ \   / (_)___ _   _  __ _| | / ___|| |_ _   _  __| (_) ___  
+ \ \ / /| / __| | | |/ _` | | \___ \| __| | | |/ _` | |/ _ \ 
+  \ V / | \__ \ |_| | (_| | |  ___) | |_| |_| | (_| | | (_) |
+   \_/  |_|___/\__,_|\__,_|_| |____/ \__|\__,_|\__,_|_|\___/ 
+                                                             
+for Fun and Profit
 
-http://www.rasterbar.com/products/libtorrent/building.html do section building with BBv2<br>
-http://www.rasterbar.com/products/libtorrent/vs2005_build_notes.html out of date<br>
-http://code.rasterbar.com/libtorrent/wiki/Building down<br>
-http://github.com/zootella/ftorrent code and project<br>
+==Links==
+
+http://www.rasterbar.com/products/libtorrent/building.html
+Do section building with BBv2
+
+http://www.rasterbar.com/products/libtorrent/vs2005_build_notes.html
+Out of date
+
+http://code.rasterbar.com/libtorrent/wiki/Building
+Down
 
 ==Windows==
 
-Windows XP SP3 and [http://windowsupdate.microsoft.com Windows Update]<br>
-[[Visual Studio]] 2008 and SP1<br>
-[http://www.microsoft.com/downloads/details.aspx?FamilyID=c17ba869-9671-4330-a63e-1fd44e0e2505&displaylang=en Windows SDK] Version 7, published July 24 2009<br>
+http://windowsupdate.microsoft.com
+Windows XP SP3 and Windows Update
+Visual Studio 2008 and SP1
 
-<font color="gray">'''----snapshot vs2008----'''</font>
+http://www.microsoft.com/downloads/details.aspx?FamilyID=c17ba869-9671-4330-a63e-1fd44e0e2505&displaylang=en 
+Windows SDK Version 7, published July 24 2009
 
-[[Cygwin]] including ''perl'' and ''nasm''
+==Perl==
+
+http://www.activestate.com/activeperl
+Download a file like ActivePerl-5.12.2.1203-MSWin32-x86-294165.msi
+Install with all the defaults
+
+==Place==
+
+http://www.openssl.org/
+Download a file like openssl-1.0.0c.tar.gz
+Unzip to path like:
+C:\openssl\Makefile.org
+
+http://www.boost.org/
+Download a file like boost_1_45_0.zip
+Unzip to path like:
+C:\boost\boost-build.jam
+
+https://libtorrent.svn.sourceforge.net/svnroot/libtorrent/tags
+Find the highest numbered tag
+svn co https://libtorrent.svn.sourceforge.net/svnroot/libtorrent/tags/libtorrent-0_15_4 libtorrent
+Move to path like:
+C:\libtorrent\project-root.jam
+
+==Make bjam==
+
+Visual Studio 2008 Command Prompt
+cd C:\boost\tools\build\v2\engine\src
+build.bat
+
+Creates the file:
+C:\boost\tools\build\v2\engine\src\bin.ntx86\bjam.exe
+Copy bjam.exe to the build folder, alongside the v2 folder:
+C:\boost\tools\build\bjam.exe
+
+Open in Notepad:
+C:\boost\tools\build\v2\user-config.jam
+Uncomment the line using msvc ;
+
+==Build libraries==
+
+Visual Studio 2008 Command Prompt
+set PATH=%PATH%;C:\boost\tools\build
+
+Build OpenSSL
+cd C:\openssl
+perl Configure --openssldir=C:/openssl VC-WIN32
+ms\do_ms.bat
+nmake -f ms\nt.mak
+nmake -f ms\nt.mak test
+nmake -f ms\nt.mak install
+
+Build boost
+cd C:\boost
+bjam --toolset=msvc link=static runtime-link=static variant=debug
+bjam --toolset=msvc link=static runtime-link=static variant=release
+
+Build libtorrent
+cd C:\libtorrent
+set BOOST_ROOT=C:\boost
+set INCLUDE=%INCLUDE%;C:\openssl\include
+set LIB=%LIB%;C:\openssl\out32
+bjam --without-python --toolset=msvc boost=source link=static runtime-link=static character-set=unicode variant=debug
+bjam --without-python --toolset=msvc boost=source link=static runtime-link=static character-set=unicode variant=release
+
+==Move libtorrent.lib==
+
+Move from:
+C:\libtorrent\bin\msvc-9.0\debug\boost-source\link-static\runtime-link-static\threading-multi\libtorrent.lib
+C:\libtorrent\bin\msvc-9.0\release\boost-source\link-static\runtime-link-static\threading-multi\libtorrent.lib
+Rename to:
+C:\libtorrent\lib\libtorrent-debug.lib
+C:\libtorrent\lib\libtorrent-release.lib
+
+==Include and lib==
+
+Tools, Options, Projects and Solutions, VC++ Directories, Include files
+C:\libtorrent\include
+C:\libtorrent\zlib
+C:\boost
+C:\openssl\include
+
+Library files
+C:\libtorrent\lib
+C:\boost\stage\lib
+C:\openssl\lib
 
 ==Code==
 
-===Place Code===
+git clone git@github.com:zootella/ftorrent.git
 
-[http://www.openssl.org/ openssl.org]
-download a file like ''openssl-0.9.8n.tar.gz''<br>
-Unzip to path like:<br>
-''C:\openssl\Makefile.org''
+==Or, make a new project==
 
-[http://www.boost.org/ boost.org]
-download a file like ''boost_1_43_0.zip''<br>
-Unzip to path like:<br>
-''C:\boost\boost-build.jam''
+Visual Studio 2008
+File, New, Project
+Project types: Visual C++, Win32, Win32 Project
+Name: ftorrent
+Location: C:\Documents
+Uncheck Create directory for solution
+OK
+Application Settings, check Empty Project
+Finish
 
-https://libtorrent.svn.sourceforge.net/svnroot/libtorrent/tags
-find the highest numbered tag
- svn co <nowiki>https://libtorrent.svn.sourceforge.net/svnroot/libtorrent/tags/libtorrent-0_15_0</nowiki> libtorrent
-Move to path like<br>
-''C:\libtorrent\project-root.jam''
+Place files in the ftorrent folder and then drag them into Visual Studio
+*.h, Header Files
+*.cpp, Source Files
+*.ico, Resource Files
+ftorrent.rc, Resource Files
+ftorrent.exe.manifest, Resource Files
 
-===Make bjam===
+==Or, start resources from scratch==
 
-Visual Studio 2008 Command Prompt
- cd C:\boost\tools\jam\src
- build.bat
+File, Add New Item
+choose Resource File (.rc), enter name, Open
 
-Creates the file:<br>
-''C:\boost\tools\jam\src\bin.ntx86\bjam.exe''<br>
-Copy ''bjam.exe'' to the ''build'' folder, alongside the ''v2'' folder:<br>
-''C:\boost\tools\build\bjam.exe''
+==Properties==
 
-Open in Notepad:<br>
-''C:\boost\tools\build\v2\user-config.jam''<br>
-Uncomment the line ''using msvc ;''
-
-===Build libraries===
-
-Visual Studio 2008 Command Prompt
-
- set PATH=%PATH%;C:\boost\tools\build;C:\cygwin\bin
-
-Build OpenSSL
- cd C:\openssl
- perl Configure --openssldir=C:/openssl VC-WIN32
- ms\do_nasm.bat
- nmake -f ms\nt.mak
- nmake -f ms\nt.mak test
- nmake -f ms\nt.mak install
-
-Build boost
- cd C:\boost
- bjam --toolset=msvc link=static runtime-link=static variant=debug
- bjam --toolset=msvc link=static runtime-link=static variant=release
-
-Build libtorrent
- cd C:\libtorrent
- set BOOST_ROOT=C:\boost
- set INCLUDE=%INCLUDE%;C:\openssl\include
- set LIB=%LIB%;C:\openssl\out32
- bjam --without-python --toolset=msvc boost=source link=static runtime-link=static character-set=unicode variant=debug openssl=off
- bjam --without-python --toolset=msvc boost=source link=static runtime-link=static character-set=unicode variant=release
-
-===Move libtorrent.lib===
-
-Move from:<br>
-''C:\libtorrent\bin\msvc-9.0\debug\boost-source\link-static\threading-multi\libtorrent.lib''<br>
-''C:\libtorrent\bin\msvc-9.0\release\boost-source\link-static\threading-multi\libtorrent.lib''<br>
-Rename to:<br>
-''C:\libtorrent\lib\libtorrent-debug.lib''<br>
-''C:\libtorrent\lib\libtorrent-release.lib''<br>
-
-==Visual Studio==
-
-===Include and Lib===
-
-Tools, Options, Projects and Solutions, VC++ Directories
-
-Include files
-*C:\libtorrent\include
-*C:\libtorrent\zlib
-*C:\boost
-*C:\openssl\include
-
-Library files
-*C:\libtorrent\lib
-*C:\boost\stage\lib
-*C:\openssl\lib
-
-===Code===
-
- git clone git@github.com:zootella/ftorrent.git
-
-===Properties===
-
-Project, Properties, Configuration Properties
-*General, Use of ATL: Not Using ATL
-*General, Character Set: Use Unicode Character Set
-*C/C++, Code Generation, Enable Minimal Rebuild: No
-*C/C++, Code Generation, Enable C++ Exceptions: Yes With SEH Exceptions (/EHa)
-*C/C++, Code Generation, Basic Runtime Checks: Default
-*C/C++, Code Generation, Runtime Library: change /MDd to /MTd and /MD to /MT to get rid of dll
-*C/C++, Precompiled Headers, Create/Use Precompiled Header: Not Using Precompiled Headers
-*Linker, Manifest File, Generate Manifest: No
-*Manifest Tool, Input and Output, Embed Manifest: No
-Check all with Configuration Debug and Release<br>
-
-Project, Properties, Configuration Properties, Release
-*General, Whole Program Optimization: Use Link Time Code Generation
-*C/C++, Optimization, Optimization: Minimize Size (/O1)
+Project, Properties, Configuration Properties, Configuration: Debug | Release
+General, Use of ATL: Not Using ATL
+General, Character Set: Use Unicode Character Set
+General, Whole Program Optimization: No Whole Program Optimization | Use Link Time Code Generation
+C/C++, Optimization, Optimization: Disabled (/Od) | Minimize Size (/O1)
+C/C++, Code Generation, Enable Minimal Rebuild: Yes (/Gm) | No
+C/C++, Code Generation, Enable C++ Exceptions: Yes With SEH Exceptions (/EHa)
+C/C++, Code Generation, Basic Runtime Checks: Both | Default
+C/C++, Code Generation, Runtime Library: Multi-threaded Debug (/MTd) | Multi-threaded (/MT)
+C/C++, Precompiled Headers, Create/Use Precompiled Header: Not Using Precompiled Headers
+Linker, Manifest File, Generate Manifest: No
+Manifest Tool, Input and Output, Embed Manifest: No
 
 Project, Properties, Configuration Properties, C/C++, Preprocessor, Preprocessor Definitions, Debug/Release
-*WIN32
-*_DEBUG/NDEBUG
-*_WINDOWS
-*_WIN32_WINNT=0x0501
-*BOOST_ALL_NO_LIB
-*BOOST_THREAD_USE_LIB
-*_FILE_OFFSET_BITS=64
-*WITH_SHIPPED_GEOIP_H
+WIN32
+_DEBUG/NDEBUG
+_WINDOWS
+_WIN32_WINNT=0x0501
+BOOST_ALL_NO_LIB
+BOOST_THREAD_USE_LIB
+_FILE_OFFSET_BITS=64
+WITH_SHIPPED_GEOIP_H
 
 Project, Properties, Configuration Properties, Linker, Input, Additional Dependencies, Debug
-*comctl32.lib
-*libboost_date_time-vc90-mt-sgd.lib
-*libboost_filesystem-vc90-mt-sgd.lib
-*libboost_system-vc90-mt-sgd.lib
-*libboost_thread-vc90-mt-sgd.lib
-*libtorrent-debug.lib
+comctl32.lib
+ssleay32.lib
+libeay32.lib
+libboost_date_time-vc90-mt-sgd.lib
+libboost_filesystem-vc90-mt-sgd.lib
+libboost_system-vc90-mt-sgd.lib
+libboost_thread-vc90-mt-sgd.lib
+libtorrent-debug.lib
 
 Release
-*comctl32.lib
-*ssleay32.lib
-*libeay32.lib
-*libboost_date_time-vc90-mt-s.lib
-*libboost_filesystem-vc90-mt-s.lib
-*libboost_system-vc90-mt-s.lib
-*libboost_thread-vc90-mt-s.lib
-*libtorrent-release.lib
+comctl32.lib
+ssleay32.lib
+libeay32.lib
+libboost_date_time-vc90-mt-s.lib
+libboost_filesystem-vc90-mt-s.lib
+libboost_system-vc90-mt-s.lib
+libboost_thread-vc90-mt-s.lib
+libtorrent-release.lib
 
-See the whole command line at ''C/C++, Command Line'' and ''Linker, Command Line''
+See the whole command line at C/C++, Command Line and Linker, Command Line
 
-==Notes==
-
-===New Project===
-
-Visual Studio 2008<br>
-File, New, Project<br>
-Project types: Visual C++, Win32, Win32 Project<br>
-Name: ftorrent<br>
-Location: C:\Documents<br>
-Uncheck Create directory for solution<br>
-OK<br>
-Application Settings, check Empty Project<br>
-Finish<br>
-
-Project, Add Existing Item<br>
-select all the ''.h'' files, Add<br>
-Do it again for the ''.cpp'' files<br>
-
-===Resources===
-
-Optional steps to start the resources from scratch
-*menu File, Add New Item
-*choose Resource File (.rc), enter name, Open
-
-===Add Code===
-
-Drop libtorrentwrapper.cpp next to Hello.cpp<br>
-''C:\Documents\Visual Studio 2008\Projects\Hello\libtorrentwrapper.cpp''<br>
-Project, Add Existing Item, libtorrentwrapper.cpp, Add<br>
-
-Comment out ''class blacklist_ip_filter_callback'' and fix errors<br>
+==The end==
