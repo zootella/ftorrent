@@ -130,7 +130,6 @@ git clone git@github.com:zootella/ftorrent.git
 
 ==Or, make a new project==
 
-Visual Studio 2008
 File, New, Project
 Project types: Visual C++, Win32, Win32 Project
 Name: ftorrent
