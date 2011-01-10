@@ -8,7 +8,7 @@
 // Compose display text
 #define PROGRAM_ABOUT1 CString(L"Version 0.1")
 #define PROGRAM_ABOUT2 CString(L"Released under the GNU General Public License")
-#define PROGRAM_ABOUT3 CString(L"Built on Rasterbar libtorrent 0.15.0, Boost 1.43.0, and OpenSSL 0.9.8n")
+#define PROGRAM_ABOUT3 CString(L"Built on Rasterbar libtorrent 0.15.4, Boost 1.45.0, and OpenSSL 1.0.0c")
 #define PROGRAM_ABOUT4 CString(L"http://ftorrent.com")
 
 // Windows
