@@ -442,6 +442,21 @@ public:
 	// New
 	Torrent() {}
 
+	bool CanStart();
+	void Start();
+	bool CanStop();
+	void Stop();
+	bool CanPause();
+	void Pause();
+	bool CanResume();
+	void Resume();
+	bool CanRemove();
+	void Remove();
+	bool CanDelete();
+	void Delete();
+
+
+
 	void Save();
 	bool Load(hbig hash);
 

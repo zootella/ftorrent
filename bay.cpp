@@ -10,6 +10,40 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
+Torrent *ListFindTorrent() {
+
+	ListGet();
+
+}
+
+
+
+
+
+
+bool Torrent::CanStart() { return false; }
+void Torrent::Start() {}
+
+bool Torrent::CanStop() { return false; }
+void Torrent::Stop() {}
+
+bool Torrent::CanPause() { return false; }
+void Torrent::Pause() {}
+
+bool Torrent::CanResume() { return false; }
+void Torrent::Resume() {}
+
+bool Torrent::CanRemove() { return false; }
+void Torrent::Remove() {}
+
+bool Torrent::CanDelete() { return false; }
+void Torrent::Delete() {}
+
+
+
+
+
+
 
 
 // Edit the list view row to match the information in this torrent

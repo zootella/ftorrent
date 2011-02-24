@@ -301,10 +301,60 @@ void AreaPulse() {
 
 	// Set button command states
 	App.area.tools.command  = CommandMenu;
-	App.area.start.command  = CommandReady; //TODO base these on what's selected, if anything
-	App.area.pause.command  = CommandReady;
-	App.area.stop.command   = CommandReady;
-	App.area.remove.command = CommandUnavailable;
+
+	// 
+
+
+
+
+	if (ListSelectedRows(App.list.torrents.window)) {
+
+		App.area.start.command  = CommandAvailable;
+		App.area.pause.command  = CommandAvailable;
+		App.area.stop.command   = CommandAvailable;
+		App.area.remove.command = CommandAvailable;
+
+		int rows = ListRows(App.list.torrents.window);
+		for (int row = 0; row < rows; row++) {
+
+			if (ListSelected(App.list.torrents.window, row)) {
+
+				
+
+
+
+			}
+		}
+
+
+
+
+	// No torrents selected
+	} else {
+
+		// Buttons unavailable
+		App.area.start.command  = CommandUnavailable;
+		App.area.pause.command  = CommandUnavailable;
+		App.area.stop.command   = CommandUnavailable;
+		App.area.remove.command = CommandUnavailable;
+	}
+
+
+
+
+	//
+
+	// loop down rows
+	//
+
+
+
+
+
+
+
+
+
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	Area *over = MouseOver();
