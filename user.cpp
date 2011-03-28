@@ -302,59 +302,25 @@ void AreaPulse() {
 	// Set button command states
 	App.area.tools.command  = CommandMenu;
 
-	// 
+	// Set buttons unavailable to begin
+	App.area.start.command  = CommandUnavailable;
+	App.area.pause.command  = CommandUnavailable;
+	App.area.stop.command   = CommandUnavailable;
+	App.area.remove.command = CommandUnavailable;
 
+	// Loop for each selected row
+	int rows = ListRows(App.list.torrents.window);
+	for (int row = 0; row < rows; row++) {
+		if (ListSelected(App.list.torrents.window, row)) {
 
-
-
-	if (ListSelectedRows(App.list.torrents.window)) {
-
-		App.area.start.command  = CommandAvailable;
-		App.area.pause.command  = CommandAvailable;
-		App.area.stop.command   = CommandAvailable;
-		App.area.remove.command = CommandAvailable;
-
-		int rows = ListRows(App.list.torrents.window);
-		for (int row = 0; row < rows; row++) {
-
-			if (ListSelected(App.list.torrents.window, row)) {
-
-				
-
-
-
-			}
+			// Any selected available torrent enables the button
+			Torrent *torrent = (Torrent *)ListGet(App.list.torrents.window, row);
+			if (torrent->CanStart())  App.area.start.command  = CommandReady;
+			if (torrent->CanPause())  App.area.pause.command  = CommandReady;
+			if (torrent->CanStop())   App.area.stop.command   = CommandReady;
+			if (torrent->CanRemove()) App.area.remove.command = CommandReady;
 		}
-
-
-
-
-	// No torrents selected
-	} else {
-
-		// Buttons unavailable
-		App.area.start.command  = CommandUnavailable;
-		App.area.pause.command  = CommandUnavailable;
-		App.area.stop.command   = CommandUnavailable;
-		App.area.remove.command = CommandUnavailable;
 	}
-
-
-
-
-	//
-
-	// loop down rows
-	//
-
-
-
-
-
-
-
-
-
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
 	Area *over = MouseOver();
@@ -486,31 +452,8 @@ void AreaPulse() {
 		}
 	}
 
-	// Find out how many rows there are, and how many are selected
-	int rows, selected, pending;
-	rows = selected = pending = 0;
-	/*
-	rows = ListRows();
-	selected = ListSelectedRows();
-
-	// COUNT HOW MANY ARE PENDING
-	pending = 0;
-	botitem *b;
-	b = Data.bot;
-	while (b) {
-
-		if (b->status == StatusPending) pending++;
-
-	b = b->next; }
-	*/
-
-	//TODO integrate this into what's next
-//	App.stage.title = L"ftorrent";
-
 	// Compose status text
-	CString s = SayNumber(rows, L"file");
-	if (pending)  s += L"  " + InsertCommas(numerals(pending))  + L" to get";
-	if (selected) s += L"  " + InsertCommas(numerals(selected)) + L" selected";
+	CString s = SayNumber(ListRows(App.list.torrents.window), L"torrent");
 
 	// The status text is different
 	if (App.cycle.status != s) {
