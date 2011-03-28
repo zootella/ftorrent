@@ -11,7 +11,7 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
-
+/*
 
 // Called when the user right clicks a torrent row
 // Displays the popup menu, waits for a response, and performs the command
@@ -88,7 +88,7 @@ void MenuBot() {
 
 
 
-
+*/
 
 
 
