@@ -302,24 +302,37 @@ void AreaPulse() {
 	// Set button command states
 	App.area.tools.command  = CommandMenu;
 
-	// Set buttons unavailable to begin
-	App.area.start.command  = CommandUnavailable;
-	App.area.pause.command  = CommandUnavailable;
-	App.area.stop.command   = CommandUnavailable;
-	App.area.remove.command = CommandUnavailable;
+	// One or more rows are selected
+	if (ListSelectedRows(App.list.torrents.window)) {
 
-	// Loop for each selected row
-	int rows = ListRows(App.list.torrents.window);
-	for (int row = 0; row < rows; row++) {
-		if (ListSelected(App.list.torrents.window, row)) {
+		// Set buttons available to begin
+		App.area.start.command  = CommandReady;
+		App.area.pause.command  = CommandReady;
+		App.area.stop.command   = CommandReady;
+		App.area.remove.command = CommandReady;
 
-			// Any selected available torrent enables the button
-			Torrent *torrent = (Torrent *)ListGet(App.list.torrents.window, row);
-			if (torrent->CanStart())  App.area.start.command  = CommandReady;
-			if (torrent->CanPause())  App.area.pause.command  = CommandReady;
-			if (torrent->CanStop())   App.area.stop.command   = CommandReady;
-			if (torrent->CanRemove()) App.area.remove.command = CommandReady;
+		// Loop for each selected row
+		int rows = ListRows(App.list.torrents.window);
+		for (int row = 0; row < rows; row++) {
+			if (ListSelected(App.list.torrents.window, row)) {
+
+				// Any selected unavailable torrent disables the button
+				Torrent *torrent = (Torrent *)ListGet(App.list.torrents.window, row);
+				if (!torrent->CanStart())  App.area.start.command  = CommandUnavailable;
+				if (!torrent->CanPause())  App.area.pause.command  = CommandUnavailable;
+				if (!torrent->CanStop())   App.area.stop.command   = CommandUnavailable;
+				if (!torrent->CanRemove()) App.area.remove.command = CommandUnavailable;
+			}
 		}
+
+	// Nothing selected
+	} else {
+
+		// Set buttons unavailable
+		App.area.start.command  = CommandUnavailable;
+		App.area.pause.command  = CommandUnavailable;
+		App.area.stop.command   = CommandUnavailable;
+		App.area.remove.command = CommandUnavailable;
 	}
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
