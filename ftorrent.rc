@@ -103,6 +103,43 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Exit",                       ID_TOOLS_EXIT
     END
+    POPUP "Torrent"
+    BEGIN
+        MENUITEM "&Open",                       ID_TORRENT_PROPERTIES
+        MENUITEM "Open Containing &Folder",     ID_TORRENT_OPENCONTAININGFOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "Copy &Magnet Link",           ID_TORRENT_COPYMAGNETLINK
+        MENUITEM "Save Torrent &As...",         ID_TORRENT_SAVETORRENTAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Start",                      ID_TORRENT_START
+        MENUITEM "&Pause",                      ID_TORRENT_PAUSE
+        MENUITEM "S&top",                       ID_TORRENT_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "&Remove",                     ID_TORRENT_REMOVE
+        MENUITEM "Remove and &Delete Data",     ID_TORRENT_REMOVEANDDELETEDATA
+    END
+    POPUP "Tracker"
+    BEGIN
+        MENUITEM "&Add Tracker...",             ID_TRACKER_PROPERTIES
+    END
+    POPUP "Peer"
+    BEGIN
+        MENUITEM "&Add Peer...",                ID_PEER_ADDPEER
+    END
+    POPUP "Piece"
+    BEGIN
+        MENUITEM "&Properties...",              ID_PIECE_PROPERTIES
+    END
+    POPUP "File"
+    BEGIN
+        MENUITEM "&Open",                       ID_FILE_PROPERTIES
+        MENUITEM "Open Containing &Folder",     ID_FILE_OPENCONTAININGFOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "&High Priority",              ID_FILE_HIGHPRIORITY
+        MENUITEM "&Normal Priority",            ID_FILE_NORMALPRIORITY
+        MENUITEM "&Low Priority",               ID_FILE_LOWPRIORITY
+        MENUITEM "&Don't Download",             ID_FILE_DON
+    END
 END
 
 
