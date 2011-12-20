@@ -4,12 +4,12 @@ public:
 
 	HINSTANCE instance; // Program instance handle
 	HWND main, tabs, tip; // Window handles
-	HWND torrent, speed, log;
+	HWND speed, log;
 
 	app_window() {
 		instance = NULL;
 		main = tabs = tip = NULL;
-		torrent = speed = log = NULL;
+		speed = log = NULL;
 	}
 };
 
