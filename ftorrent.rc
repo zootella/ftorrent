@@ -86,59 +86,59 @@ CONTEXT_MENU MENU
 BEGIN
     POPUP "Taskbar"
     BEGIN
-        MENUITEM "&Restore",                    ID_TASKBAR_RESTORE
+        MENUITEM "&Restore",                    IdentifyTaskbarRestore
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       ID_TASKBAR_EXIT
+        MENUITEM "&Exit",                       IdentifyTaskbarExit
     END
     POPUP "Tools"
     BEGIN
-        MENUITEM "(test)",                      ID_TOOLS_TEST
-        MENUITEM "Open &torrent...",            ID_TOOLS_OPEN
-        MENUITEM "Add &magnet...",              ID_TOOLS_ADD
-        MENUITEM "&Create torrent...",          ID_TOOLS_NEW
+        MENUITEM "(test)",                      IdentifyToolsTest
+        MENUITEM "Open &torrent...",            IdentifyToolsOpenTorrent
+        MENUITEM "Add &magnet...",              IdentifyToolsAddMagnet
+        MENUITEM "&Create torrent...",          IdentifyToolsCreateTorrent
         MENUITEM SEPARATOR
-        MENUITEM "&Options...",                 ID_TOOLS_OPTIONS
-        MENUITEM "&About ftorrent",             ID_TOOLS_ABOUT
-        MENUITEM "&Help",                       ID_TOOLS_HELP
+        MENUITEM "&Options...",                 IdentifyToolsOptions
+        MENUITEM "&About ftorrent",             IdentifyToolsAbout
+        MENUITEM "&Help",                       IdentifyToolsHelp
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       ID_TOOLS_EXIT
+        MENUITEM "&Exit",                       IdentifyToolsExit
     END
     POPUP "Torrent"
     BEGIN
-        MENUITEM "&Open",                       ID_TORRENT_PROPERTIES
-        MENUITEM "Open Containing &Folder",     ID_TORRENT_OPENCONTAININGFOLDER
+        MENUITEM "&Open",                       IdentifyTorrentOpen
+        MENUITEM "Open Containing &Folder",     IdentifyTorrentOpenContainingFolder
         MENUITEM SEPARATOR
-        MENUITEM "Copy &Magnet Link",           ID_TORRENT_COPYMAGNETLINK
-        MENUITEM "Save Torrent &As...",         ID_TORRENT_SAVETORRENTAS
+        MENUITEM "Copy &Magnet Link",           IdentifyTorrentCopyMagnetLink
+        MENUITEM "Save Torrent &As...",         IdentifyTorrentSaveTorrentAs
         MENUITEM SEPARATOR
-        MENUITEM "&Start",                      ID_TORRENT_START
-        MENUITEM "&Pause",                      ID_TORRENT_PAUSE
-        MENUITEM "S&top",                       ID_TORRENT_STOP
+        MENUITEM "&Start",                      IdentifyTorrentStart
+        MENUITEM "&Pause",                      IdentifyTorrentPause
+        MENUITEM "S&top",                       IdentifyTorrentStop
         MENUITEM SEPARATOR
-        MENUITEM "&Remove",                     ID_TORRENT_REMOVE
-        MENUITEM "Remove and &Delete Data",     ID_TORRENT_REMOVEANDDELETEDATA
+        MENUITEM "&Remove",                     IdentifyTorrentRemove
+        MENUITEM "Remove and &Delete Data",     IdentifyTorrentRemoveAndDeleteData
     END
     POPUP "Tracker"
     BEGIN
-        MENUITEM "&Add Tracker...",             ID_TRACKER_PROPERTIES
+        MENUITEM "&Add Tracker...",             IdentifyTrackerAddTracker
     END
     POPUP "Peer"
     BEGIN
-        MENUITEM "&Add Peer...",                ID_PEER_ADDPEER
+        MENUITEM "&Add Peer...",                IdentifyPeerAddPeer
     END
     POPUP "Piece"
     BEGIN
-        MENUITEM "&Properties...",              ID_PIECE_PROPERTIES
+        MENUITEM "&Properties...",              IdentifyPieceProperties
     END
     POPUP "File"
     BEGIN
-        MENUITEM "&Open",                       ID_FILE_PROPERTIES
-        MENUITEM "Open Containing &Folder",     ID_FILE_OPENCONTAININGFOLDER
+        MENUITEM "&Open",                       IdentifyFileOpen
+        MENUITEM "Open Containing &Folder",     IdentifyFileOpenContainingFolder
         MENUITEM SEPARATOR
-        MENUITEM "&High Priority",              ID_FILE_HIGHPRIORITY
-        MENUITEM "&Normal Priority",            ID_FILE_NORMALPRIORITY
-        MENUITEM "&Low Priority",               ID_FILE_LOWPRIORITY
-        MENUITEM "&Don't Download",             ID_FILE_DON
+        MENUITEM "&High Priority",              IdentifyFileHighPriority
+        MENUITEM "&Normal Priority",            IdentifyFileNormalPriority
+        MENUITEM "&Low Priority",               IdentifyFileLowPriority
+        MENUITEM "&Don't Download",             IdentifyFileDontDownload
     END
 END
 
@@ -167,12 +167,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Download"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_FOLDER,7,20,291,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse...",IDC_BROWSE,303,20,50,14
-    CONTROL         "&Choose ftorrent to open torrent files and magnet links",IDC_ASSOCIATE,
+    EDITTEXT        IdentifyFolder,7,20,291,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IdentifyBrowse,303,20,50,14
+    CONTROL         "&Choose ftorrent to open torrent files and magnet links",IdentifyAssociate,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,189,10
     LTEXT           "Download files to this folder:",IDC_STATIC,7,7,92,8
-    LTEXT           "Label",IDC_LABEL,7,44,346,8,NOT WS_VISIBLE
+    LTEXT           "Label",IdentifyLabel,7,44,346,8,NOT WS_VISIBLE
 END
 
 OPTIONS_PAGE_2 DIALOGEX 0, 0, 360, 180
@@ -195,7 +195,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTI
 CAPTION "Add Magnet Link"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT,7,20,386,14,ES_AUTOHSCROLL
+    EDITTEXT        IdentifyEdit,7,20,386,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,289,44,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,343,44,50,14
     LTEXT           "Type or paste a 'magnet:' link below to download the torrent it identifies:",IDC_STATIC,7,7,386,8

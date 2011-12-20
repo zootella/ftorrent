@@ -21,9 +21,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	App.menu.tray  = MenuClip(menus, 0);
-	App.menu.tools = MenuClip(menus, 1);
-	if (!PROGRAM_TEST && !DeleteMenu(App.menu.tools, ID_TOOLS_TEST, 0)) error(L"deletemenu"); // Remove the test menu item
+	App.menu.tray    = MenuClip(menus, 0);
+	App.menu.tools   = MenuClip(menus, 1);
+	App.menu.torrent = MenuClip(menus, 2);
+	App.menu.tracker = MenuClip(menus, 3);
+	App.menu.peer    = MenuClip(menus, 4);
+	App.menu.piece   = MenuClip(menus, 5);
+	App.menu.file    = MenuClip(menus, 6);
+	if (!PROGRAM_TEST && !DeleteMenu(App.menu.tools, IdentifyToolsTest, 0)) error(L"deletemenu"); // Remove the test menu item
 
 	// Load cursors
 	App.cursor.arrow      = LoadSharedCursor(IDC_ARROW);
@@ -67,7 +72,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Add Exit to the main window's system menu
 	HMENU menu = GetSystemMenu(App.window.main, false); // Get the menu for editing
 	if (!menu) error(L"getsystemmenu");
-	if (menu && !AppendMenu(menu, MF_STRING, ID_TOOLS_EXIT, L"&Exit")) error(L"appendmenu");
+	if (menu && !AppendMenu(menu, MF_STRING, IdentifyToolsExit, L"&Exit")) error(L"appendmenu");
 
 	// Create the list view windows
 	App.list.torrents.window = WindowCreateList();
@@ -276,7 +281,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 
 		// The user clicked the Exit window menu item that we added
 		break;
-		case ID_TOOLS_EXIT:
+		case IdentifyToolsExit:
 
 			// Hide the window and stop libtorrent
 			WindowExit();
@@ -359,12 +364,12 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
-	MenuSet(App.menu.tray, ID_TASKBAR_RESTORE, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	MenuSet(App.menu.tray, IdentifyTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
 	UINT choice = MenuShow(App.menu.tray, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {
-	case ID_TASKBAR_RESTORE:
+	case IdentifyTaskbarRestore:
 
 		// Restore from taskbar
 		TaskbarIconRemove();
@@ -373,7 +378,7 @@ void MenuTaskbar() {
 
 	// Exit
 	break;
-	case ID_TASKBAR_EXIT:
+	case IdentifyTaskbarExit:
 
 		// Hide the window and stop libtorrent
 		WindowExit();

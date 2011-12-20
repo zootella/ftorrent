@@ -57,10 +57,10 @@ public:
 class app_menu {
 public:
 
-	HMENU tray, tools; // Menus
+	HMENU tray, tools, torrent, tracker, peer, piece, file; // Menus
 
 	app_menu() {
-		tray = tools = NULL;
+		tray = tools = torrent = tracker = peer = piece = file = NULL;
 	}
 };
 

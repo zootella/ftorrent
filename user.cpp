@@ -634,20 +634,20 @@ void AreaDoCommand(Area *area) {
 
 			// Show the popup menu and wait here for the user to click on one of the menu choices
 			UINT choice = MenuShow(App.menu.tools, false, &size); // Wait here for the user to make a choice
-			if      (choice == ID_TOOLS_TEST)    { Test(); }
-			else if (choice == ID_TOOLS_OPEN)    {
+			if      (choice == IdentifyToolsTest)          { Test(); }
+			else if (choice == IdentifyToolsOpenTorrent)   {
 
 				CString torrent = DialogOpen(); // Let the user choose a torrent file
 				if (isblank(torrent)) return; // Canceled the file open dialog
 				CString message = AddTorrent(torrent, true);
 				if (is(message)) Message(message); // Show any error text to the user
 			}
-			else if (choice == ID_TOOLS_ADD)     { Dialog(L"DIALOG_ADD", DialogAdd); }
-			else if (choice == ID_TOOLS_NEW)     { report(L"TODO make a new torrent"); }
-			else if (choice == ID_TOOLS_HELP)    { FileRun(PROGRAM_HELP); }
-			else if (choice == ID_TOOLS_ABOUT)   { Dialog(L"DIALOG_ABOUT", DialogAbout); }
-			else if (choice == ID_TOOLS_OPTIONS) { DialogOptions(); }
-			else if (choice == ID_TOOLS_EXIT)    { WindowExit(); } // Hide the window and stop libtorrent
+			else if (choice == IdentifyToolsAddMagnet)     { Dialog(L"DIALOG_ADD", DialogAdd); }
+			else if (choice == IdentifyToolsCreateTorrent) { report(L"TODO make a new torrent"); }
+			else if (choice == IdentifyToolsHelp)          { FileRun(PROGRAM_HELP); }
+			else if (choice == IdentifyToolsAbout)         { Dialog(L"DIALOG_ABOUT", DialogAbout); }
+			else if (choice == IdentifyToolsOptions)       { DialogOptions(); }
+			else if (choice == IdentifyToolsExit)          { WindowExit(); } // Hide the window and stop libtorrent
 		}
 
 	// Buttons
@@ -751,7 +751,7 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 		switch (LOWORD(wparam)) {
 		case IDOK:
 		{
-			CString magnet = TextDialog(dialog, IDC_EDIT); // Get the text the user typed
+			CString magnet = TextDialog(dialog, IdentifyEdit); // Get the text the user typed
 			EndDialog(dialog, 0); // Close the dialog
 			CString message = AddMagnet(magnet, true);
 			if (is(message)) Message(message); // Show any error text to the user
@@ -811,16 +811,16 @@ void DialogOptions() {
 // Associate this program with magnet and torrent and show the user a color label about it
 void AssociateUpdate(HWND dialog) {
 
-	App.option.associate = IsDlgButtonChecked(dialog, IDC_ASSOCIATE) ? true : false; // Copy the check to data
+	App.option.associate = IsDlgButtonChecked(dialog, IdentifyAssociate) ? true : false; // Copy the check to data
 	if (App.option.associate && !AssociateIs()) AssociateGet(); // Change the registry if necessary
 
-	CString before = TextDialog(dialog, IDC_LABEL); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
+	CString before = TextDialog(dialog, IdentifyLabel); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
 	CString now;
 	if (AssociateIs())             now = L"green";  // We have the associations
 	else if (App.option.associate) now = L"yellow"; // We tried to get them, but it didn't work
 	else                           now = L"red";    // The user has not told the program to get them
 
-	TextDialogSet(dialog, IDC_LABEL, now); // Set the text of the hidden label for paint to use below
+	TextDialogSet(dialog, IdentifyLabel, now); // Set the text of the hidden label for paint to use below
 	if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
 }
 
@@ -831,8 +831,8 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	switch (message) {
 	case WM_INITDIALOG:
 
-		TextDialogSet(dialog, IDC_FOLDER, App.option.folder); // Torrents folder path
-		CheckDlgButton(dialog, IDC_ASSOCIATE, App.option.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
+		TextDialogSet(dialog, IdentifyFolder, App.option.folder); // Torrents folder path
+		CheckDlgButton(dialog, IdentifyAssociate, App.option.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
 		AssociateUpdate(dialog);
 		return true; // Let the system place the focus
 
@@ -847,7 +847,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	case WM_PAINT:
 	{
 		// Compose the color label
-		CString code = TextDialog(dialog, IDC_LABEL);
+		CString code = TextDialog(dialog, IdentifyLabel);
 		Brush *brush;
 		CString message;
 		if (code == L"red") {
@@ -866,8 +866,8 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		// Calculate where in the dialog to paint
 		RECT r1, r2, r3;
 		GetWindowRect(dialog, &r1);
-		GetWindowRect(GetDlgItem(dialog, IDC_LABEL), &r2); // The message text dialog item has false visibility
-		GetClientRect(GetDlgItem(dialog, IDC_LABEL), &r3);
+		GetWindowRect(GetDlgItem(dialog, IdentifyLabel), &r2); // The message text dialog item has false visibility
+		GetClientRect(GetDlgItem(dialog, IdentifyLabel), &r3);
 		Size size;
 		size.x = r2.left - r1.left;
 		size.y = r2.top - r1.top;
@@ -889,15 +889,15 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 
 		// Browse
 		switch (LOWORD(wparam)) {
-		case IDC_BROWSE:
+		case IdentifyBrowse:
 		{
 			CString browse = DialogBrowse(L"Choose the folder where " + PROGRAM_NAME + L" will download files:"); // Show the dialog
-			if (is(browse)) TextDialogSet(dialog, IDC_FOLDER, browse); // If the user picked something, write it in the text field
+			if (is(browse)) TextDialogSet(dialog, IdentifyFolder, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
 		}
 		// The user checked or unchecked the associate checkbox
 		break;
-		case IDC_ASSOCIATE:
+		case IdentifyAssociate:
 
 			AssociateUpdate(dialog);
 		}
@@ -910,7 +910,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		switch (((LPNMHDR)(ULONG_PTR)lparam)->code) {
 		case PSN_KILLACTIVE:
 		{
-			CString folder = TextDialog(dialog, IDC_FOLDER);
+			CString folder = TextDialog(dialog, IdentifyFolder);
 			if (CheckFolder(folder)) {
 
 				SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
@@ -927,7 +927,7 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 		break;
 		case PSN_APPLY:
 
-			App.option.folder = TextDialog(dialog, IDC_FOLDER);
+			App.option.folder = TextDialog(dialog, IdentifyFolder);
 			SetWindowLong(dialog, DWL_MSGRESULT, PSNRET_NOERROR);
 			return true;
 		}
