@@ -21,7 +21,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	App.menu.tray    = MenuClip(menus, 0);
+	App.menu.taskbar = MenuClip(menus, 0);
 	App.menu.tools   = MenuClip(menus, 1);
 	App.menu.torrent = MenuClip(menus, 2);
 	App.menu.tracker = MenuClip(menus, 3);
@@ -364,8 +364,8 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
-	MenuSet(App.menu.tray, IdentifyTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-	UINT choice = MenuShow(App.menu.tray, true, NULL); // Wait here while the menu is up
+	MenuSet(App.menu.taskbar, IdentifyTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
+	UINT choice = MenuShow(App.menu.taskbar, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {
