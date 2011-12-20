@@ -403,6 +403,24 @@ void NotifyDoubleClick(HWND window) {
 void NotifyRightClick(HWND window) {
 	int row = ListMouse(window);
 	log(L"right click, row ", numerals(row));
+
+
+	App.list.torrents.window = WindowCreateList();
+	App.list.trackers.window = WindowCreateList();
+	App.list.peers.window    = WindowCreateList();
+	App.list.pieces.window   = WindowCreateList();
+	App.list.files.window    = WindowCreateList();
+
+
+	if (window == App.list.torrents.window) {
+	} else if (window == App.list.trackers.window) {
+	} else if (window == App.list.peers.window) {
+	} else if (window == App.list.pieces.window) {
+	} else if (window == App.list.files.window) {
+	}
+
+
+
 }
 void NotifyColumnClick(HWND window, int column) {
 	log(L"column click, number ", numerals(column));
