@@ -103,6 +103,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Exit",                       IdentifyToolsExit
     END
+    POPUP "Torrents"
+    BEGIN
+        MENUITEM "Add &magnet...",              IdentifyTorrentsAddMagnet
+        MENUITEM "&Create torrent...",          IdentifyTorrentsCreateTorrent
+    END
     POPUP "Torrent"
     BEGIN
         MENUITEM "&Open",                       IdentifyTorrentOpen
@@ -118,17 +123,26 @@ BEGIN
         MENUITEM "&Remove",                     IdentifyTorrentRemove
         MENUITEM "Remove and &Delete Data",     IdentifyTorrentRemoveAndDeleteData
     END
+    POPUP "Trackers"
+    BEGIN
+        MENUITEM "&Add Tracker...",             IdentifyTrackersAddTracker
+    END
     POPUP "Tracker"
     BEGIN
-        MENUITEM "&Add Tracker...",             IdentifyTrackerAddTracker
+        MENUITEM "&Remove",                     IdentifyTrackerRemove
+    END
+    POPUP "Peers"
+    BEGIN
+        MENUITEM "&Add Peer...",                IdentifyPeersAddPeer
     END
     POPUP "Peer"
     BEGIN
-        MENUITEM "&Add Peer...",                IdentifyPeerAddPeer
+        MENUITEM "&Block",                      IdentifyPeerBlock
     END
-    POPUP "Piece"
+    POPUP "Files"
     BEGIN
-        MENUITEM "&Properties...",              IdentifyPieceProperties
+        MENUITEM "&Tree",                       IdentifyFilesTree
+        MENUITEM "&List",                       IdentifyFilesList
     END
     POPUP "File"
     BEGIN

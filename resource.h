@@ -17,24 +17,29 @@
 #define IdentifyToolsAbout                     40008
 #define IdentifyToolsHelp                      40009
 #define IdentifyToolsExit                      40010
-#define IdentifyTorrentOpen                    40011
-#define IdentifyTorrentOpenContainingFolder    40012
-#define IdentifyTorrentCopyMagnetLink          40013
-#define IdentifyTorrentSaveTorrentAs           40014
-#define IdentifyTorrentStart                   40015
-#define IdentifyTorrentPause                   40016
-#define IdentifyTorrentStop                    40017
-#define IdentifyTorrentRemove                  40018
-#define IdentifyTorrentRemoveAndDeleteData     40019
-#define IdentifyTrackerAddTracker              40020
-#define IdentifyPeerAddPeer                    40021
-#define IdentifyPieceProperties                40022
-#define IdentifyFileOpen                       40023
-#define IdentifyFileOpenContainingFolder       40024
-#define IdentifyFileHighPriority               40025
-#define IdentifyFileNormalPriority             40026
-#define IdentifyFileLowPriority                40027
-#define IdentifyFileDontDownload               40028
+#define IdentifyTorrentsAddMagnet              40011
+#define IdentifyTorrentsCreateTorrent          40012
+#define IdentifyTorrentOpen                    40013
+#define IdentifyTorrentOpenContainingFolder    40014
+#define IdentifyTorrentCopyMagnetLink          40015
+#define IdentifyTorrentSaveTorrentAs           40016
+#define IdentifyTorrentStart                   40017
+#define IdentifyTorrentPause                   40018
+#define IdentifyTorrentStop                    40019
+#define IdentifyTorrentRemove                  40020
+#define IdentifyTorrentRemoveAndDeleteData     40021
+#define IdentifyTrackersAddTracker             40022
+#define IdentifyTrackerRemove                  40023
+#define IdentifyPeersAddPeer                   40024
+#define IdentifyPeerBlock                      40025
+#define IdentifyFilesTree                      40026
+#define IdentifyFilesList                      40027
+#define IdentifyFileOpen                       40028
+#define IdentifyFileOpenContainingFolder       40029
+#define IdentifyFileHighPriority               40030
+#define IdentifyFileNormalPriority             40031
+#define IdentifyFileLowPriority                40032
+#define IdentifyFileDontDownload               40033
 
 // Next default values for new objects
 // 

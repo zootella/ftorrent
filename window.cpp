@@ -21,13 +21,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 
 	// Load menus
 	HMENU menus = MenuLoad(L"CONTEXT_MENU");
-	App.menu.taskbar = MenuClip(menus, 0);
-	App.menu.tools   = MenuClip(menus, 1);
-	App.menu.torrent = MenuClip(menus, 2);
-	App.menu.tracker = MenuClip(menus, 3);
-	App.menu.peer    = MenuClip(menus, 4);
-	App.menu.piece   = MenuClip(menus, 5);
-	App.menu.file    = MenuClip(menus, 6);
+	App.menu.taskbar  = MenuClip(menus, 0);
+	App.menu.tools    = MenuClip(menus, 1);
+	App.menu.torrents = MenuClip(menus, 2);
+	App.menu.torrent  = MenuClip(menus, 3);
+	App.menu.trackers = MenuClip(menus, 4);
+	App.menu.tracker  = MenuClip(menus, 5);
+	App.menu.peers    = MenuClip(menus, 6);
+	App.menu.peer     = MenuClip(menus, 7);
+	App.menu.files    = MenuClip(menus, 8);
+	App.menu.file     = MenuClip(menus, 9);
 	if (!PROGRAM_TEST && !DeleteMenu(App.menu.tools, IdentifyToolsTest, 0)) error(L"deletemenu"); // Remove the test menu item
 
 	// Load cursors
@@ -161,7 +164,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	log(L"library close before");
 	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
 	log(L"library close after");
-//	FirewallRemove(PathRunningFile());
+	FirewallRemove(PathRunningFile());
 
 	// Return the value from the quit message
 	return (int)message.wParam;
@@ -407,11 +410,26 @@ void NotifyRightClick(HWND window) {
 
 
 
+
 	if (window == App.list.torrents.window) {
+
+		if (!row) MenuShow(App.menu.torrents);
+		else      MenuShow(App.menu.torrent);
+
 	} else if (window == App.list.trackers.window) {
+
+		if (!row) MenuShow(App.menu.trackers);
+		else      MenuShow(App.menu.tracker);
+
 	} else if (window == App.list.peers.window) {
-	} else if (window == App.list.pieces.window) {
+
+		if (!row) MenuShow(App.menu.peers);
+		else      MenuShow(App.menu.peer);
+
 	} else if (window == App.list.files.window) {
+
+		if (!row) MenuShow(App.menu.files);
+		else      MenuShow(App.menu.file);
 	}
 
 

@@ -57,10 +57,10 @@ public:
 class app_menu {
 public:
 
-	HMENU taskbar, tools, torrent, tracker, peer, piece, file; // Menus
+	HMENU taskbar, tools, torrents, torrent, trackers, tracker, peers, peer, files, file; // Menus
 
 	app_menu() {
-		taskbar = tools = torrent = tracker = peer = piece = file = NULL;
+		taskbar = tools = torrents = torrent = trackers = tracker = peers = peer = files = file = NULL;
 	}
 };
 

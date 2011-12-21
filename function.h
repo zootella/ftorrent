@@ -80,7 +80,7 @@ void CursorSet(HCURSOR cursor);
 HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
-UINT MenuShow(HMENU menu, bool taskbar, Size *size);
+UINT MenuShow(HMENU menu, bool taskbar = false, Size *size = NULL); // Has defaults
 void TipAdd(Size size, read r);
 void MouseCapture(HWND window = NULL); // Has defaults
 void MouseRelease(HWND window = NULL); // Has defaults
