@@ -2153,7 +2153,6 @@ Size CellSize(HWND window, int row, int column) {
 
 // Given cells, add or edit a row in the list view window
 void CellShow(HWND window, std::vector<Cell> &cells) {
-	log(L"cell show ", numerals((int)window, 16));
 
 	// Find each cell's current column index, picking out the one with special index 0
 	Cell *primary = NULL;                         // Point primary at the cell in column 0

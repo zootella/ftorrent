@@ -405,11 +405,6 @@ void NotifyRightClick(HWND window) {
 	log(L"right click, row ", numerals(row));
 
 
-	App.list.torrents.window = WindowCreateList();
-	App.list.trackers.window = WindowCreateList();
-	App.list.peers.window    = WindowCreateList();
-	App.list.pieces.window   = WindowCreateList();
-	App.list.files.window    = WindowCreateList();
 
 
 	if (window == App.list.torrents.window) {
