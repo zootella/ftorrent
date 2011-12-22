@@ -411,25 +411,37 @@ void NotifyRightClick(HWND window) {
 
 
 
-	if (window == App.list.torrents.window) {
+	if (window == App.list.torrents.window && !row) {
 
-		if (!row) MenuShow(App.menu.torrents);
-		else      MenuShow(App.menu.torrent);
+		int choice = (int)MenuShow(App.menu.torrents);
 
-	} else if (window == App.list.trackers.window) {
+	} else if (window == App.list.torrents.window && row) {
 
-		if (!row) MenuShow(App.menu.trackers);
-		else      MenuShow(App.menu.tracker);
+		MenuShow(App.menu.torrent);
 
-	} else if (window == App.list.peers.window) {
+	} else if (window == App.list.trackers.window && !row) {
 
-		if (!row) MenuShow(App.menu.peers);
-		else      MenuShow(App.menu.peer);
+		MenuShow(App.menu.trackers);
 
-	} else if (window == App.list.files.window) {
+	} else if (window == App.list.trackers.window && row) {
 
-		if (!row) MenuShow(App.menu.files);
-		else      MenuShow(App.menu.file);
+		MenuShow(App.menu.tracker);
+
+	} else if (window == App.list.peers.window && !row) {
+
+		MenuShow(App.menu.peers);
+
+	} else if (window == App.list.peers.window && row) {
+
+		MenuShow(App.menu.peer);
+
+	} else if (window == App.list.files.window && !row) {
+
+		MenuShow(App.menu.files);
+
+	} else if (window == App.list.files.window && row) {
+
+		MenuShow(App.menu.file);
 	}
 
 
