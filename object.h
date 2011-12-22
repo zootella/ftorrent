@@ -442,18 +442,42 @@ public:
 	// New
 	Torrent() {}
 
+
+
+
+	bool CanOpen();
+	void UseOpen();
+
+	bool CanOpenContainingFolder();
+	void UseOpenContainingFolder();
+
+	bool CanCopyMagnetLink();
+	void UseCopyMagnetLink();
+
+	bool CanSaveTorrentAs();
+	void UseSaveTorrentAs();
+
 	bool CanStart();
-	void Start();
-	bool CanStop();
-	void Stop();
+	void UseStart();
+
 	bool CanPause();
-	void Pause();
+	void UsePause();
+
 	bool CanResume();
-	void Resume();
+	void UseResume();
+
+	bool CanStop();
+	void UseStop();
+
 	bool CanRemove();
-	void Remove();
+	void UseRemove();
+
 	bool CanDelete();
-	void Delete();
+	void UseDelete();
+
+
+
+
 
 
 

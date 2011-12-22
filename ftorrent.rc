@@ -118,6 +118,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Start",                      IdentifyTorrentStart
         MENUITEM "&Pause",                      IdentifyTorrentPause
+        MENUITEM "R&esume",                     IdentifyTorrentResume
         MENUITEM "S&top",                       IdentifyTorrentStop
         MENUITEM SEPARATOR
         MENUITEM "&Remove",                     IdentifyTorrentRemove

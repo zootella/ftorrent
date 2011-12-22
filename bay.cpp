@@ -11,117 +11,38 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
-/*
-
-// Called when the user right clicks a torrent row
-// Displays the popup menu, waits for a response, and performs the command
-void MenuBot() {
-
-	// Look up the torrent behind the row that was clicked
-	Torrent *t = (Torrent *)ListMouse(App.list.torrents.window);
-	if (!t) return; // No row was clicked
-
-	// Load the popup menus and clip the torrent submenu
-	HMENU menus, menu;
-	ContextMenuLoad(2, &menus, &menu);
-
-	// DETERMINE IF THE GET AND PAUSE MENU ITEMS SHOULD BE GRAYED
-	bool get, pause;
-	get = pause = false;
-
-	// LOOP DOWN THE ROWS ON SELECTED BOT ITEMS
-	int row, rows;
-	rows = ListRows();
-	for (row = 0; row < rows; row++) { if (ListSelected(row)) { b = (botitem *)ListGet(row);
-
-		// IF A SELECTED BOT ITEM IS PENDING, ENABLE THE MENU ITEM
-		if (b->status == StatusPending) get = true;
-
-		// IF A SELECTED BOT ITEM HAS A WANT ITEM THAT ISN'T PAUSED, ENABLE THE MENU ITEM
-		if (b->IsGetting()) pause = true;
-	}}
-
-	// GRAY THE GET A PAUSE MENU ITEMS
-	if (!get)   ContextMenuSet(menu, MenuDownloadGet,   MFS_GRAYED, NULL);
-	if (!pause) ContextMenuSet(menu, MenuDownloadPause, MFS_GRAYED, NULL);
-
-	// FILE ON DISK
-	if (BotRunCheck(b)) {
-
-		ContextMenuSet(menu, MenuDownloadOpenSavedFile, MFS_DEFAULT, NULL);
-
-	// NO FILE
-	} else {
-
-		ContextMenuSet(menu, MenuDownloadOpen,                 MFS_DEFAULT, NULL);
-		ContextMenuSet(menu, MenuDownloadOpenSavedFile,        MFS_GRAYED,  NULL);
-		ContextMenuSet(menu, MenuDownloadOpenContainingFolder, MFS_GRAYED,  NULL);
-	}
-
-	// SHOW THE POPUP MENU AND WAIT HERE FOR THE USER TO CLICK ON ONE OF THE MENU CHOICES
-	UINT choice;
-	choice = ContextMenuShow(menus, menu);
-	if      (choice == MenuDownloadOpen)                 BotRun(b, 1); // URL
-	else if (choice == MenuDownloadOpenSavedFile)        BotRun(b, 2); // PATH
-	else if (choice == MenuDownloadOpenContainingFolder) BotRun(b, 3); // FOLDER
-	else if (choice == MenuDownloadCopy)                 Dialog("DIALOG_COPYBOT", DialogCopyBot);
-	else if (choice == MenuDownloadGetFirst)             BotPriority(1);  // GET FIRST
-	else if (choice == MenuDownloadGetLast)              BotPriority(-1); // GET LAST
-	else if (choice == MenuDownloadSetInactive)          BotPriority(0);  // SET INACTIVE
-	else if (choice == MenuDownloadReset)                BotDelete(1, 0); // RESET
-	else if (choice == MenuDownloadRemove)               BotDelete(2, 0); // REMOVE
-	else if (choice == MenuDownloadDelete)               Dialog("DIALOG_DELETE", DialogDelete);
-	else if (choice == MenuDownloadProperties)           Dialog("PROPERTIES_BOT", DialogBotProperties, (LPARAM)b);
-
-	// LOOP DOWN THE ROWS ON SELECTED BOT ITEMS
-	for (row = 0; row < rows; row++) { if (ListSelected(row)) { b = (botitem *)ListGet(row);
-
-		if      (choice == MenuDownloadGet)   b->Get();
-		else if (choice == MenuDownloadPause) b->Pause();
-	} }
-
-	// MAKE PAUSING OR RESETTING ONE ITEM ON THE LIST PRESS THE PAUSE BUTTON
-	if ((choice == MenuDownloadPause || choice == MenuDownloadReset) && !State.option.pause) OptionSetNumber("pause", &State.option.pause, 1);
-}
 
 
 
+bool Torrent::CanOpen() { return true; }
+void Torrent::UseOpen() { report(L"open"); }
 
+bool Torrent::CanOpenContainingFolder() { return true; }
+void Torrent::UseOpenContainingFolder() { report(L"open containg folder");}
 
-*/
+bool Torrent::CanCopyMagnetLink() { return true; }
+void Torrent::UseCopyMagnetLink() { report(L"copy magnet link");}
 
+bool Torrent::CanSaveTorrentAs() { return true; }
+void Torrent::UseSaveTorrentAs() { report(L"save torrent as");}
 
+bool Torrent::CanStart() { return true; }
+void Torrent::UseStart() { report(L"start");}
 
+bool Torrent::CanPause() { return true; }
+void Torrent::UsePause() { report(L"pause");}
 
+bool Torrent::CanResume() { return true; }
+void Torrent::UseResume() { report(L"resume");}
 
+bool Torrent::CanStop() { return true; }
+void Torrent::UseStop() { report(L"stop");}
 
+bool Torrent::CanRemove() { return true; }
+void Torrent::UseRemove() { report(L"remove");}
 
-
-
-
-
-
-
-
-
-
-bool Torrent::CanStart() { return false; }
-void Torrent::Start() {}
-
-bool Torrent::CanStop() { return false; }
-void Torrent::Stop() {}
-
-bool Torrent::CanPause() { return false; }
-void Torrent::Pause() {}
-
-bool Torrent::CanResume() { return false; }
-void Torrent::Resume() {}
-
-bool Torrent::CanRemove() { return false; }
-void Torrent::Remove() {}
-
-bool Torrent::CanDelete() { return false; }
-void Torrent::Delete() {}
+bool Torrent::CanDelete() { return true; }
+void Torrent::UseDelete() { report(L"delete");}
 
 
 
