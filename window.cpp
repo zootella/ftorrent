@@ -368,7 +368,7 @@ void MenuTaskbar() {
 
 	// Highlight and show the menu to the user
 	MenuSet(App.menu.taskbar, IdentifyTaskbarRestore, MFS_DEFAULT, HBMMENU_POPUP_RESTORE);
-	UINT choice = MenuShow(App.menu.taskbar, true, NULL); // Wait here while the menu is up
+	int choice = MenuShow(App.menu.taskbar, true, NULL); // Wait here while the menu is up
 
 	// Restore
 	switch (choice) {
@@ -410,38 +410,46 @@ void NotifyRightClick(HWND window) {
 
 
 
-
 	if (window == App.list.torrents.window && !row) {
 
-		int choice = (int)MenuShow(App.menu.torrents);
+		int choice = MenuShow(App.menu.torrents);
+		if      (choice == IdentifyTorrentsAddMagnet)     { Dialog(L"DIALOG_ADD",    DialogAdd);    }
+		else if (choice == IdentifyTorrentsCreateTorrent) { Dialog(L"DIALOG_CREATE", DialogCreate); }
 
 	} else if (window == App.list.torrents.window && row) {
 
-		MenuShow(App.menu.torrent);
+		MenuSet(App.menu.torrent, IdentifyTorrentStart, App.area.start.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+
+
+			// if the file or folder is done and there, have double 
+		MenuSet(App.menu.torrent, IdentifyTorrentStart, MFS_DEFAULT);
+
+
+		int choice = MenuShow(App.menu.torrent);
 
 	} else if (window == App.list.trackers.window && !row) {
 
-		MenuShow(App.menu.trackers);
+		int choice = MenuShow(App.menu.trackers);
 
 	} else if (window == App.list.trackers.window && row) {
 
-		MenuShow(App.menu.tracker);
+		int choice = MenuShow(App.menu.tracker);
 
 	} else if (window == App.list.peers.window && !row) {
 
-		MenuShow(App.menu.peers);
+		int choice = MenuShow(App.menu.peers);
 
 	} else if (window == App.list.peers.window && row) {
 
-		MenuShow(App.menu.peer);
+		int choice = MenuShow(App.menu.peer);
 
 	} else if (window == App.list.files.window && !row) {
 
-		MenuShow(App.menu.files);
+		int choice = MenuShow(App.menu.files);
 
 	} else if (window == App.list.files.window && row) {
 
-		MenuShow(App.menu.file);
+		int choice = MenuShow(App.menu.file);
 	}
 
 

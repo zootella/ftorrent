@@ -105,7 +105,7 @@ void MenuBot() {
 
 
 
-bool Torrent::CanStart() { return true; }
+bool Torrent::CanStart() { return false; }
 void Torrent::Start() {}
 
 bool Torrent::CanStop() { return false; }

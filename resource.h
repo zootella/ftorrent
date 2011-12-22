@@ -27,7 +27,7 @@
 #define IdentifyTorrentPause                   40018
 #define IdentifyTorrentStop                    40019
 #define IdentifyTorrentRemove                  40020
-#define IdentifyTorrentRemoveAndDeleteData     40021
+#define IdentifyTorrentDelete                  40021
 #define IdentifyTrackersAddTracker             40022
 #define IdentifyTrackerRemove                  40023
 #define IdentifyPeersAddPeer                   40024

@@ -79,8 +79,8 @@ HICON LoadIconResource(read name, int w, int h);
 void CursorSet(HCURSOR cursor);
 HMENU MenuLoad(read name);
 HMENU MenuClip(HMENU menus, int index);
-void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap);
-UINT MenuShow(HMENU menu, bool taskbar = false, Size *size = NULL); // Has defaults
+void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap = NULL); // Has defaults
+int MenuShow(HMENU menu, bool taskbar = false, Size *size = NULL); // Has defaults
 void TipAdd(Size size, read r);
 void MouseCapture(HWND window = NULL); // Has defaults
 void MouseRelease(HWND window = NULL); // Has defaults
@@ -316,6 +316,7 @@ void OptionSave();
 bool CheckFolder(read folder);
 void Message(read r);
 BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
+BOOL CALLBACK DialogCreate(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void DialogOptions();
 void AssociateUpdate(HWND dialog);
 BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM lparam);

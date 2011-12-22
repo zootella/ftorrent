@@ -467,7 +467,7 @@ HMENU MenuClip(HMENU menus, int index) {
 	return menu;
 }
 
-// Takes a menu, command, and the state to set
+// Takes a menu, command, the state to set or 0 to not set a state, and a bitmap image to set or null to not set one
 // Sets the menu item
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 
@@ -484,7 +484,7 @@ void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 // Takes size null to put the menu at the mouse pointer, or a size in client coordinates
 // Displays the context menu and waits for the user to make a choice
 // Returns the menu item identifier of the choice, or 0 if the user cancelled the menu or any error
-UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
+int MenuShow(HMENU menu, bool taskbar, Size *size) {
 
 	// Use the given size or mouse position
 	Size position;
@@ -500,7 +500,7 @@ UINT MenuShow(HMENU menu, bool taskbar, Size *size) {
 
 	// Show the context menu and hold execution here until the user chooses from the menu or cancels it
 	AreaPopUp();
-	UINT choice = TrackPopupMenu(
+	int choice = (int)TrackPopupMenu(
 		menu,            // Handle to the menu to display
 		TPM_NONOTIFY |   // Return the chosen menu item without sending messages to the main window
 		TPM_RETURNCMD |

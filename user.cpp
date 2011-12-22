@@ -633,7 +633,7 @@ void AreaDoCommand(Area *area) {
 			size.w = 0;
 
 			// Show the popup menu and wait here for the user to click on one of the menu choices
-			UINT choice = MenuShow(App.menu.tools, false, &size); // Wait here for the user to make a choice
+			int choice = MenuShow(App.menu.tools, false, &size); // Wait here for the user to make a choice
 			if      (choice == IdentifyToolsTest)          { Test(); }
 			else if (choice == IdentifyToolsOpenTorrent)   {
 
@@ -643,7 +643,7 @@ void AreaDoCommand(Area *area) {
 				if (is(message)) Message(message); // Show any error text to the user
 			}
 			else if (choice == IdentifyToolsAddMagnet)     { Dialog(L"DIALOG_ADD", DialogAdd); }
-			else if (choice == IdentifyToolsCreateTorrent) { report(L"TODO make a new torrent"); }
+			else if (choice == IdentifyToolsCreateTorrent) { Dialog(L"DIALOG_CREATE", DialogCreate); }
 			else if (choice == IdentifyToolsHelp)          { FileRun(PROGRAM_HELP); }
 			else if (choice == IdentifyToolsAbout)         { Dialog(L"DIALOG_ABOUT", DialogAbout); }
 			else if (choice == IdentifyToolsOptions)       { DialogOptions(); }
@@ -755,6 +755,36 @@ BOOL CALLBACK DialogAdd(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam)
 			EndDialog(dialog, 0); // Close the dialog
 			CString message = AddMagnet(magnet, true);
 			if (is(message)) Message(message); // Show any error text to the user
+			return true;
+		}
+		// The user clicked Cancel
+		break;
+		case IDCANCEL:
+			
+			EndDialog(dialog, 0); // Close the dialog
+			return true;
+		}
+	}
+	return false; // We didn't process the message
+}
+
+// A message from the create torrent box
+BOOL CALLBACK DialogCreate(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
+
+	// The dialog is about to be displayed
+	switch (message) {
+	case WM_INITDIALOG:
+
+		return true; // Let the system place the focus
+
+	// The message is a command
+	break;
+	case WM_COMMAND:
+
+		// The user clicked OK
+		switch (LOWORD(wparam)) {
+		case IDOK:
+		{
 			return true;
 		}
 		// The user clicked Cancel
