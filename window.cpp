@@ -418,14 +418,35 @@ void NotifyRightClick(HWND window) {
 
 	} else if (window == App.list.torrents.window && row) {
 
-		MenuSet(App.menu.torrent, IdentifyTorrentStart, App.area.start.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-
-
-			// if the file or folder is done and there, have double 
-		MenuSet(App.menu.torrent, IdentifyTorrentStart, MFS_DEFAULT);
-
+		MenuSet(App.menu.torrent, IdentifyTorrentOpen,                 App.area.open.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentOpenContainingFolder, App.area.openfolder.command  == CommandUnavailable ? MFS_DISABLED : MFS_DEFAULT); // Open folder is always the default
+		MenuSet(App.menu.torrent, IdentifyTorrentCopyMagnetLink,       App.area.copymagnet.command  == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentSaveTorrentAs,        App.area.savetorrent.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentStart,                App.area.start.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentPause,                App.area.pause.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentStop,                 App.area.stop.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentRemove,               App.area.remove.command      == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentDelete,               App.area.deletefiles.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 
 		int choice = MenuShow(App.menu.torrent);
+		int rows = ListRows(App.list.torrents.window);
+
+		if (choice == IdentifyTorrentOpen) {
+			for (int row = 0; row < rows; row++) {
+				if (ListSelected(window, row)) {
+					Torrent *torrent = (Torrent *)ListGet(window, row);
+					if (torrent) torrent->UseOpen();
+				}
+			}
+		} else if (choice == IdentifyTorrentOpenContainingFolder) {
+		} else if (choice == IdentifyTorrentCopyMagnetLink) {
+		} else if (choice == IdentifyTorrentSaveTorrentAs) {
+		} else if (choice == IdentifyTorrentStart) {
+		} else if (choice == IdentifyTorrentPause) {
+		} else if (choice == IdentifyTorrentStop) {
+		} else if (choice == IdentifyTorrentRemove) {
+		} else if (choice == IdentifyTorrentDelete) {
+		}
 
 	} else if (window == App.list.trackers.window && !row) {
 

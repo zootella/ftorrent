@@ -251,6 +251,14 @@ void AreaCreate() {
 	App.stage.seeding.size     = SizeText(&device, App.stage.seeding.title);
 	App.stage.missing.size     = SizeText(&device, App.stage.missing.title);
 
+	// Commands on the menu that don't have buttons
+	App.area.open.command        = CommandUnavailable;
+	App.area.openfolder.command  = CommandUnavailable;
+	App.area.copymagnet.command  = CommandUnavailable;
+	App.area.savetorrent.command = CommandUnavailable;
+	App.area.resume.command      = CommandUnavailable;
+	App.area.deletefiles.command = CommandUnavailable;
+
 	// Buttons
 	App.area.tools.command  = CommandMenu;
 	App.area.start.command  = CommandUnavailable;
@@ -305,11 +313,17 @@ void AreaPulse() {
 	// One or more rows are selected
 	if (ListSelectedRows(App.list.torrents.window)) {
 
-		// Set buttons available to begin
-		App.area.start.command  = CommandReady;
-		App.area.pause.command  = CommandReady;
-		App.area.stop.command   = CommandReady;
-		App.area.remove.command = CommandReady;
+		// Set commands available to begin
+		App.area.open.command        =
+		App.area.openfolder.command  =
+		App.area.copymagnet.command  =
+		App.area.savetorrent.command =
+		App.area.start.command       =
+		App.area.pause.command       =
+		App.area.resume.command      =
+		App.area.stop.command        =
+		App.area.remove.command      =
+		App.area.deletefiles.command = CommandReady;
 
 		// Loop for each selected row
 		int rows = ListRows(App.list.torrents.window);
@@ -318,21 +332,33 @@ void AreaPulse() {
 
 				// Any selected unavailable torrent disables the button
 				Torrent *torrent = (Torrent *)ListGet(App.list.torrents.window, row);
-				if (!torrent->CanStart())  App.area.start.command  = CommandUnavailable;
-				if (!torrent->CanPause())  App.area.pause.command  = CommandUnavailable;
-				if (!torrent->CanStop())   App.area.stop.command   = CommandUnavailable;
-				if (!torrent->CanRemove()) App.area.remove.command = CommandUnavailable;
+				if (!torrent->CanOpen())                 App.area.open.command        = CommandUnavailable;
+				if (!torrent->CanOpenContainingFolder()) App.area.openfolder.command  = CommandUnavailable;
+				if (!torrent->CanCopyMagnetLink())       App.area.copymagnet.command  = CommandUnavailable;
+				if (!torrent->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
+				if (!torrent->CanStart())                App.area.start.command       = CommandUnavailable;
+				if (!torrent->CanPause())                App.area.pause.command       = CommandUnavailable;
+				if (!torrent->CanResume())               App.area.resume.command      = CommandUnavailable;
+				if (!torrent->CanStop())                 App.area.stop.command        = CommandUnavailable;
+				if (!torrent->CanRemove())               App.area.remove.command      = CommandUnavailable;
+				if (!torrent->CanDelete())               App.area.deletefiles.command = CommandUnavailable;
 			}
 		}
 
 	// Nothing selected
 	} else {
 
-		// Set buttons unavailable
-		App.area.start.command  = CommandUnavailable;
-		App.area.pause.command  = CommandUnavailable;
-		App.area.stop.command   = CommandUnavailable;
-		App.area.remove.command = CommandUnavailable;
+		// Set commands unavailable
+		App.area.open.command        =
+		App.area.openfolder.command  =
+		App.area.copymagnet.command  =
+		App.area.savetorrent.command =
+		App.area.start.command       =
+		App.area.pause.command       =
+		App.area.resume.command      =
+		App.area.stop.command        =
+		App.area.remove.command      =
+		App.area.deletefiles.command = CommandUnavailable;
 	}
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
