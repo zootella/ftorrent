@@ -1181,18 +1181,21 @@ void DestroyIconSafely(HICON icon) {
 // Make a shortcut at path that runs target
 bool FileLink(read path, read target, read description) {
 
-	OleInitialize(NULL); // Use OLE
-	IShellLink *i1;
+	// Create a shell link ole object
+	IShellLink *i1; // The program called OleInitialize(NULL) on startup, so we don't have to call it here
 	HRESULT result = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID *)&i1);
 	if (SUCCEEDED(result)) {
 
+		// Specify the shortcut's path and description
 		i1->SetPath(target);
 		i1->SetDescription(description);
+
+		// Create a persist file ole object
 		IPersistFile *i2;
 		result = i1->QueryInterface(IID_IPersistFile, (LPVOID *)&i2);
-
 		if (SUCCEEDED(result)) {
 
+			// Make the shortcut on the disk
 			result = i2->Save(path, true);
 			i2->Release();
 		}
@@ -1321,8 +1324,7 @@ CString PathShell(int id) {
 CString DialogBrowse(read message) {
 
 	// Show the box
-	OleInitialize(NULL); // If not already
-	WCHAR name[MAX_PATH];
+	WCHAR name[MAX_PATH]; // The program called OleInitialize(NULL) on startup, so we don't have to call it here
 	lstrcpy(name, L"");
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
