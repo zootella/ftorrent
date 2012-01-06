@@ -421,6 +421,36 @@ public:
 
 
 
+// Target the user can drag and drop links and files onto
+class Target : public IDropTarget {
+public:
+
+	// Standard methods for ole objects
+	HRESULT __stdcall QueryInterface(REFIID id, void **object);
+	ULONG   __stdcall AddRef(void);
+	ULONG   __stdcall Release(void);
+
+	// Methods specific to a drop target
+	HRESULT __stdcall DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
+	HRESULT __stdcall DragOver(DWORD key, POINTL point, DWORD *effect);
+	HRESULT __stdcall DragLeave(void);
+	HRESULT __stdcall Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
+
+	// New and delete
+	Target(HWND window);
+	~Target();
+
+private:
+
+	// The reference count of this ole object, 0 when nobody wants it and it should be deleted
+	LONG references;
+};
+
+
+
+
+
+
 // Torrent
 class Torrent {
 public:
