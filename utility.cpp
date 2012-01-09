@@ -894,7 +894,8 @@ int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
 void InitializeSystem() {
 
 	// Initialize the COM library including OLE
-	if (!OleInitialize(NULL)) error(L"ole initialize");
+	HRESULT result = OleInitialize(NULL);
+	if (result != S_OK && result != S_FALSE) error(L"oleinitialize"); // False just means already initialized
 
 	// Initialize our use of the common controls
 	INITCOMMONCONTROLSEX info; // Oh yeah
@@ -1210,8 +1211,7 @@ CString TextGuid() {
 
 	// Get a new unique GUID from the system
 	GUID guid;
-	HRESULT result = CoCreateGuid(&guid);
-	if (result != S_OK) { error(L"cocreateguid"); return L""; }
+	if (CoCreateGuid(&guid) != S_OK) { error(L"cocreateguid"); return L""; }
 
 	// Convert the GUID into an OLE wide character string
 	WCHAR bay[MAX_PATH];

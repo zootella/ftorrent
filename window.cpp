@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	App.window.main = WindowCreate(name, PROGRAM_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, NULL, NULL);
 
 	// Make the main window a drop target so the user can drag links and files into it
-	if (!RegisterDragDrop(App.window.main, new Target(App.window.main))) error(L"registerdragdrop");
+	if (RegisterDragDrop(App.window.main, new Target(App.window.main)) != S_OK) error(L"registerdragdrop");
 
 	// Add Exit to the main window's system menu
 	HMENU menu = GetSystemMenu(App.window.main, false); // Get the menu for editing
