@@ -8,13 +8,6 @@ void Test() {
 }
 
 
-void DropPath(read r) {
-	log(L"drop path ", r);
-}
-
-void DropLink(read r) {
-	log(L"drop link ", r);
-}
 
 
 

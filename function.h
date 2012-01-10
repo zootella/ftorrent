@@ -333,8 +333,6 @@ void Test();
 bool PaintCustom(LPNMLVCUSTOMDRAW draw);
 
 
-void DropPath(read r);
-void DropLink(read r);
 
 
 

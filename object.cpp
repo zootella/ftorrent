@@ -35,9 +35,11 @@ HRESULT __stdcall Target::Drop(IDataObject *data, DWORD key, POINTL point, DWORD
 						// Add the path or link
 						if (is(value)) {
 							if (name == L"FileNameW") {
-								DropPath(value);
+								if (trails(value, L".torrent", Matching)) AddTorrent(value, false); // Drag in torrent file on the disk
+								//TODO drag in file or folder to make torrent
 							} else if (name == L"UniformResourceLocatorW") {
-								DropLink(value);
+								if (starts(value, L"magnet:", Matching)) AddMagnet(value, false); // Drag in magnet link on the web
+								//TODO drag in http link to torrent file on the web
 							}
 						}
 					}
