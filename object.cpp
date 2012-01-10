@@ -2,6 +2,56 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
+// The mouse dropped something from another program on our window
+HRESULT __stdcall Target::Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect) {
+
+	// Loop through the formats the given data object supports
+	IEnumFORMATETC *formats = NULL;
+	FORMATETC format;
+	ZeroMemory(&format, sizeof(format));
+	STGMEDIUM storage;
+	WCHAR bay[MAX_PATH];
+	CString name, value;
+	if (data->EnumFormatEtc(DATADIR_GET, &formats) == S_OK) { // Access the formats
+		while (formats->Next(1, &format, NULL) == S_OK) { // Loop for each format, getting them 1 at a time
+			if (GetClipboardFormatName(format.cfFormat, bay, MAX_PATH)) { // Get the text name of the format
+				name = bay;
+
+				// The format is one we're looking for
+				if (name == L"FileNameW" || name == L"UniformResourceLocatorW") {
+
+					// Get the storage data value
+					ZeroMemory(&storage, sizeof(storage));
+					storage.tymed = TYMED_HGLOBAL; // For storage medium type, specify we want a handle to global memory
+					if (data->GetData(&format, &storage) == S_OK) {
+
+						// Copy out the text
+						HGLOBAL g = storage.hGlobal;
+						WCHAR *w = (WCHAR *)GlobalLock(g); // Lock the global memory handle
+						if (w) value = w;
+						else   value = L"";
+						GlobalUnlock(g); // Unlock the global memory handle
+
+						// Add the path or link
+						if (is(value)) {
+							if (name == L"FileNameW") {
+								DropPath(value);
+							} else if (name == L"UniformResourceLocatorW") {
+								DropLink(value);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if (formats) formats->Release();
+
+	// Specify the drop as a copy and report success
+	*effect = DROPEFFECT_COPY;
+	return S_OK;
+}
+
 // Takes a window
 // Uses this size in client coordinates
 // Converts the size to screen coordinates

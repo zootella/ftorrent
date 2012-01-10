@@ -1,4 +1,50 @@
 
+// Target the user can drag and drop links and files onto
+class Target : public IDropTarget {
+public:
+
+	// Standard methods for ole objects
+	HRESULT __stdcall QueryInterface(REFIID id, void **object) { // Get pointers to the supported interface on this target object
+		if (id == IID_IDropTarget || id == IID_IUnknown) { // Yes, we support this interface
+			AddRef();       // Count another user
+			*object = this; // Point the given pointer at us
+			return S_OK;    // Report success
+		} else {                  // No, we don't support the requested interface
+			*object = NULL;       // Null the given pointer
+			return E_NOINTERFACE; // Interface not found
+		}
+	}
+	ULONG   __stdcall AddRef(void) { // Count that the interface of this object has one more external user
+		return InterlockedIncrement(&references);
+	}
+	ULONG   __stdcall Release(void) { // Count one fewer external user
+		LONG count = InterlockedDecrement(&references);
+		if (!count) delete this; // No external users of our interface
+		return count;
+	}
+
+	// Methods specific to a drop target
+	HRESULT __stdcall DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect) {
+		*effect = DROPEFFECT_COPY; // Make the mouse pointer a plus icon
+		return S_OK;
+	}
+	HRESULT __stdcall DragOver(DWORD key, POINTL point, DWORD *effect) {
+		*effect = DROPEFFECT_COPY;
+		return S_OK;
+	}
+	HRESULT __stdcall DragLeave(void) {
+		return S_OK;
+	}
+	HRESULT __stdcall Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
+
+	// New and delete
+	Target(HWND window) { references = 1; } // Count our own reference to this new object
+	~Target() {}
+
+	// The reference count of this ole object, 0 when nobody wants it and it should be deleted
+	LONG references;
+};
+
 // Get information about a single file, or list the contents of a folder
 class Find {
 public:
@@ -420,31 +466,6 @@ public:
 
 
 
-
-// Target the user can drag and drop links and files onto
-class Target : public IDropTarget {
-public:
-
-	// Standard methods for ole objects
-	HRESULT __stdcall QueryInterface(REFIID id, void **object);
-	ULONG   __stdcall AddRef(void);
-	ULONG   __stdcall Release(void);
-
-	// Methods specific to a drop target
-	HRESULT __stdcall DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
-	HRESULT __stdcall DragOver(DWORD key, POINTL point, DWORD *effect);
-	HRESULT __stdcall DragLeave(void);
-	HRESULT __stdcall Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
-
-	// New and delete
-	Target(HWND window);
-	~Target();
-
-private:
-
-	// The reference count of this ole object, 0 when nobody wants it and it should be deleted
-	LONG references;
-};
 
 
 
