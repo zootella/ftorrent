@@ -1785,6 +1785,76 @@ void SetupRemove() {
 	RegistryDelete(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + PROGRAM_NAME);
 }
 
+// Takes an ole data object the user is dragging over or has dropped into our window
+// Determines if we can do anything with what the user is bringing us without checking the disk or network
+// Returns false if not, or true and sorts and saves the incoming text if the pointers aren't null
+// linkmagnet   A magnet link dragged in from a web browser, we can add it
+// linkother    A web link dragged in from a web browser, we can download a torrent from it and add it
+// disktorrent  Path to a torrent file on a local disk or network share, we can open it and add it
+// diskother    Path to a file or folder on a local disk or network share, we can make a new torrent from it and seed it
+bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString *disktorrent, CString *diskother) {
+
+	// True once we find a link or path we can use
+	bool can = false;
+
+	// Loop through the formats the given data object supports
+	IEnumFORMATETC *formats = NULL;
+	FORMATETC format;
+	ZeroMemory(&format, sizeof(format));
+	STGMEDIUM storage;
+	WCHAR bay[MAX_PATH];
+	CString name, value;
+	if (data->EnumFormatEtc(DATADIR_GET, &formats) == S_OK) { // Access the formats
+		while (formats->Next(1, &format, NULL) == S_OK) { // Loop for each format, getting them 1 at a time
+			if (GetClipboardFormatName(format.cfFormat, bay, MAX_PATH)) { // Get the text name of the format
+				name = bay;
+
+				// The format is one we're looking for
+				if (name == L"FileNameW" || name == L"UniformResourceLocatorW") {
+
+					// Get the storage data value
+					ZeroMemory(&storage, sizeof(storage));
+					storage.tymed = TYMED_HGLOBAL; // For storage medium type, specify we want a handle to global memory
+					if (data->GetData(&format, &storage) == S_OK) {
+
+						// Copy out the text
+						HGLOBAL g = storage.hGlobal;
+						WCHAR *w = (WCHAR *)GlobalLock(g); // Lock the global memory handle
+						if (w) value = w;
+						else   value = L"";
+						GlobalUnlock(g); // Unlock the global memory handle
+
+						// Sort what we got
+						if (is(value)) {
+							if (name == L"FileNameW") {
+								if (trails(value, L".torrent", Matching)) {
+									if (disktorrent) *disktorrent = value;
+									can = true;
+								} else {
+									if (diskother) *diskother = value;
+									can = false; //TODO code drag in files and folders to make torrents and change this to true
+								}
+							} else if (name == L"UniformResourceLocatorW") {
+								if (starts(value, L"magnet:", Matching)) {
+									if (linkmagnet) *linkmagnet = value;
+									can = true;
+								} else {
+									if (linkother) *linkother = value;
+									can = false; //TODO code download torrents from the web and change this to true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if (formats) formats->Release();
+
+	// True if we found a path or link we can take
+	return can;
+}
+
 // Given access to the list of all columns behind window where some of them are shown, add title
 void ColumnListAdd(HWND window, std::vector<Column> &list, read title) {
 

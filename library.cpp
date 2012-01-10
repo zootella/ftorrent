@@ -257,6 +257,14 @@ void LibraryClose() {
 	}
 }
 
+//TODO
+CString CreateTorrent(read path, bool ask) {
+	return L"";
+}
+CString DownloadTorrent(read address, bool ask) {
+	return L"";
+}
+
 // The user clicked to add the torrent file at the given path
 // Returns error message text for the user, or blank on success or cancel
 CString AddTorrent(read torrent, bool ask) {

@@ -156,6 +156,7 @@ bool AssociateIs();
 void AssociateGet();
 void SetupAdd();
 void SetupRemove();
+bool CanDrop(IDataObject *data, CString *linkmanget = NULL, CString *linkother = NULL, CString *disktorrent = NULL, CString *diskother = NULL); // Has defaults
 void ColumnListAdd(HWND window, std::vector<Column> &list, read title);
 void ColumnListRemove(HWND window, std::vector<Column> &list, read title);
 int ColumnFindIndex(HWND window, read title);
@@ -280,6 +281,8 @@ bool LoadVector(read path, std::vector<char> &c);
 void LibraryStart();
 void LibraryStop();
 void LibraryClose();
+CString CreateTorrent(read path, bool ask);
+CString DownloadTorrent(read address, bool ask);
 CString AddTorrent(read torrent, bool ask);
 CString AddMagnet(read magnet, bool ask);
 void AddStore(hbig hash);

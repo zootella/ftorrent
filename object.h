@@ -14,27 +14,19 @@ public:
 			return E_NOINTERFACE; // Interface not found
 		}
 	}
-	ULONG   __stdcall AddRef(void) { // Count that the interface of this object has one more external user
+	ULONG __stdcall AddRef() { // Count that the interface of this object has one more external user
 		return InterlockedIncrement(&references);
 	}
-	ULONG   __stdcall Release(void) { // Count one fewer external user
+	ULONG __stdcall Release() { // Count one fewer external user
 		LONG count = InterlockedDecrement(&references);
 		if (!count) delete this; // No external users of our interface
 		return count;
 	}
 
 	// Methods specific to a drop target
-	HRESULT __stdcall DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect) {
-		*effect = DROPEFFECT_COPY; // Make the mouse pointer a plus icon
-		return S_OK;
-	}
-	HRESULT __stdcall DragOver(DWORD key, POINTL point, DWORD *effect) {
-		*effect = DROPEFFECT_COPY;
-		return S_OK;
-	}
-	HRESULT __stdcall DragLeave(void) {
-		return S_OK;
-	}
+	HRESULT __stdcall DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
+	HRESULT __stdcall DragOver(DWORD key, POINTL point, DWORD *effect);
+	HRESULT __stdcall DragLeave();
 	HRESULT __stdcall Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect);
 
 	// New and delete

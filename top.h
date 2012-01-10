@@ -136,6 +136,8 @@ public:
 	CString command; // Command line arguments the program was launched with
 	bool portable; // True if we're running beside the portable marker
 
+	DWORD drop; // Mouse pointer about to drop something on the main window
+
 	app_cycle() {
 		taskbar = NULL; // Nothing in the taskbar to start
 		pop = 0; // No popup boxes at the start
@@ -143,6 +145,7 @@ public:
 		expect = 0; // No torrent resume data messages expected yet
 		restored = false; // Have not yet restored torrents from the previous session
 		portable = false; // Have not seen the portable marker beside us yet
+		drop = DROPEFFECT_NONE; // Nothing dragged into the main window yet
 	}
 };
 

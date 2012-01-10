@@ -2,55 +2,44 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
+// The mouse dragged something into our window
+HRESULT __stdcall Target::DragEnter(IDataObject *data, DWORD key, POINTL point, DWORD *effect) {
+	*effect = App.cycle.drop = CanDrop(data) ? DROPEFFECT_COPY : DROPEFFECT_NONE; // Determine if we could take what the user has dragged over us
+	return S_OK;
+}
+
+// The mouse moved while holding down something over our window
+HRESULT __stdcall Target::DragOver(DWORD key, POINTL point, DWORD *effect) {
+	*effect = App.cycle.drop; // Set the effect we picked when we looked at the data object in drag enter
+	return S_OK;
+}
+
+// The mouse left after dragging something over our window
+HRESULT __stdcall Target::DragLeave() {
+	return S_OK;
+}
+
 // The mouse dropped something from another program on our window
 HRESULT __stdcall Target::Drop(IDataObject *data, DWORD key, POINTL point, DWORD *effect) {
 
-	// Loop through the formats the given data object supports
-	IEnumFORMATETC *formats = NULL;
-	FORMATETC format;
-	ZeroMemory(&format, sizeof(format));
-	STGMEDIUM storage;
-	WCHAR bay[MAX_PATH];
-	CString name, value;
-	if (data->EnumFormatEtc(DATADIR_GET, &formats) == S_OK) { // Access the formats
-		while (formats->Next(1, &format, NULL) == S_OK) { // Loop for each format, getting them 1 at a time
-			if (GetClipboardFormatName(format.cfFormat, bay, MAX_PATH)) { // Get the text name of the format
-				name = bay;
+	// Determine if we could take what the user is holding over us
+	CString linkmagnet, linkother, disktorrent, diskother;
+	if (CanDrop(data, &linkmagnet, &linkother, &disktorrent, &diskother)) { // We can take this
 
-				// The format is one we're looking for
-				if (name == L"FileNameW" || name == L"UniformResourceLocatorW") {
+		// Add it
+		if      (is(linkmagnet))  { AddMagnet(linkmagnet,      false); } // Drag in magnet link on the web
+		else if (is(linkother))   { DownloadTorrent(linkother, false); } // Download torrent file from the web (TODO)
+		else if (is(disktorrent)) { AddTorrent(disktorrent,    false); } // Drag in torrent file on the disk
+		else if (is(diskother))   { CreateTorrent(diskother,   false); } // Create torrent from file or folder on the disk (TODO)
 
-					// Get the storage data value
-					ZeroMemory(&storage, sizeof(storage));
-					storage.tymed = TYMED_HGLOBAL; // For storage medium type, specify we want a handle to global memory
-					if (data->GetData(&format, &storage) == S_OK) {
+		// Show the mouse pointer with a plus icon
+		*effect = DROPEFFECT_COPY;
 
-						// Copy out the text
-						HGLOBAL g = storage.hGlobal;
-						WCHAR *w = (WCHAR *)GlobalLock(g); // Lock the global memory handle
-						if (w) value = w;
-						else   value = L"";
-						GlobalUnlock(g); // Unlock the global memory handle
+	} else { // We can't accept what the user is about to drop on us
 
-						// Add the path or link
-						if (is(value)) {
-							if (name == L"FileNameW") {
-								if (trails(value, L".torrent", Matching)) AddTorrent(value, false); // Drag in torrent file on the disk
-								//TODO drag in file or folder to make torrent
-							} else if (name == L"UniformResourceLocatorW") {
-								if (starts(value, L"magnet:", Matching)) AddMagnet(value, false); // Drag in magnet link on the web
-								//TODO drag in http link to torrent file on the web
-							}
-						}
-					}
-				}
-			}
-		}
+		// Turn the mouse pointer into a negative icon
+		*effect = DROPEFFECT_NONE;
 	}
-	if (formats) formats->Release();
-
-	// Specify the drop as a copy and report success
-	*effect = DROPEFFECT_COPY;
 	return S_OK;
 }
 
