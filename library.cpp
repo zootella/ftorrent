@@ -229,7 +229,7 @@ void LibraryStop() {
 
 			// This torrent is initialized and not aborted and has filename and piece hash metadata
 			if (h.is_valid() && h.has_metadata()) {
-				
+
 				// Tell the torrent to generate resume data
 				h.save_resume_data(); // Returns immediately, we'll get the data later after libtorrent gives us an alert
 				App.cycle.expect++;   // Count that we expect one more torrent will give us resume data
@@ -263,6 +263,35 @@ CString CreateTorrent(read path, bool ask) {
 }
 CString DownloadTorrent(read address, bool ask) {
 	return L"";
+}
+
+// Remove the torrent with the given infohash from the program
+void RemoveTorrent(Torrent *t) {
+
+	// Copy identifying information from the torrent object to local variables before we disconnect and remove the object
+	hbig hash = t->handle.info_hash();
+	libtorrent::torrent_handle handle = t->handle;
+
+	// Delete this torrent's disk files from next to this running exe
+	DiskDeleteFile(PathTorrentMeta(hash));
+	DiskDeleteFile(PathTorrentStore(hash));
+	DiskDeleteFile(PathTorrentOption(hash));
+
+	// Remove this torrent's row in the list view control in the window
+	int row = ListFind(App.list.torrents.window, HashStart(hash));
+	if (row != -1) ListRemove(App.list.torrents.window, row);
+
+	// Remove this torrent object from our list of them, and delete this object
+	int index = -1;
+	for (int i = 0; i < (int)App.torrents.size(); i++) { // Loop through our list of torrents to find this one
+		Torrent *t = &(App.torrents[i]);                 // Point t at the Torrent that is in the list
+		if (hash == t->handle.info_hash()) index = i;    // Compare the 20 byte hash values
+	}
+	if (index == -1) log(L"removetorrent not found");
+	if (index != -1) App.torrents.erase(App.torrents.begin() + index); // Remove the object from the vector, call its destructor, and free its memory
+
+	// Remove this torrent from the current libtorrent session
+	LibraryRemoveTorrent(handle);
 }
 
 // The user clicked to add the torrent file at the given path
@@ -336,7 +365,7 @@ CString AddMagnet(read magnet, bool ask) {
 	AddData(handle, folder, name, trackers); // Make a torrent object in our list of them
 	AddTrackers(hash, trackers);             // Add trackers to the torrent object and libtorrent handle
 	AddRow(hash);                            // Make a row in the list view
-	AddOption(hash);                         // Save the torrent to "infohash.optn.db"
+	AddOption(hash);                         // Save torrent options like name and trackers to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -430,6 +459,22 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 	}
 }
 
+// Remove the given torrent handle from the current libtorrent session
+bool LibraryRemoveTorrent(libtorrent::torrent_handle handle) {
+	try {
+
+		// Remove the torrent handle
+		App.session->remove_torrent(handle);
+
+		return true;
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+	return false;
+}
+
 // Blink the selection of the torrent with the given hash in the list view to draw the users attention to it
 void Blink(hbig hash) {
 
@@ -441,7 +486,7 @@ Torrent *FindTorrent(hbig hash) {
 
 	// Loop through all the torrents loaded into the program and library
 	for (int i = 0; i < (int)App.torrents.size(); i++) {
-		Torrent *t = &(App.torrents[i]); // Point t at the Torrent that is copied into the list
+		Torrent *t = &(App.torrents[i]); // Point t at the Torrent that is in the list
 		if (hash == t->handle.info_hash()) return t; // Compare the 20 byte hash values
 	}
 
@@ -482,7 +527,7 @@ void AddRow(hbig hash) {
 void AddMeta(hbig hash, read torrent) {
 
 	if (same(torrent, PathTorrentMeta(hash), Matching)) return; // Don't copy a file onto itself
-	CopyFile(torrent, PathTorrentMeta(hash), true); // True to not overwrite
+	DiskCopyFile(torrent, PathTorrentMeta(hash)); // Won't overwrite
 }
 
 // Have the torrent with hash in the data list save "infohash.optn.db" next to this running exe

@@ -443,17 +443,17 @@ void NotifyRightClick(HWND window) {
 		int choice = MenuShow(App.menu.torrent);
 		int rows = ListRows(window); // Find out how many rows there are to be able to loop through them
 
-		// Call the corresponding method on the torrents behind each selected row
-		if      (choice == IdentifyTorrentOpen)                 { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseOpen();                 } } }
-		else if (choice == IdentifyTorrentOpenContainingFolder) { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseOpenContainingFolder(); } } }
-		else if (choice == IdentifyTorrentCopyMagnetLink)       { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseCopyMagnetLink();       } } }
-		else if (choice == IdentifyTorrentSaveTorrentAs)        { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseSaveTorrentAs();        } } }
-		else if (choice == IdentifyTorrentStart)                { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseStart();                } } }
-		else if (choice == IdentifyTorrentPause)                { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UsePause();                } } }
-		else if (choice == IdentifyTorrentResume)               { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseResume();                } } }
-		else if (choice == IdentifyTorrentStop)                 { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseStop();                 } } }
-		else if (choice == IdentifyTorrentRemove)               { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseRemove();               } } }
-		else if (choice == IdentifyTorrentDelete)               { for (int row = 0; row < rows; row++) { if (ListSelected(window, row)) { Torrent *torrent = (Torrent *)ListGet(window, row); if (torrent) torrent->UseDelete();               } } }
+		// Call the corresponding method on the torrents behind each selected row, loop up from the bottom to be able to delete rows without changing upcoming indices in the loop
+		if      (choice == IdentifyTorrentOpen)                 { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseOpen();                 } } }
+		else if (choice == IdentifyTorrentOpenContainingFolder) { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseOpenContainingFolder(); } } }
+		else if (choice == IdentifyTorrentCopyMagnetLink)       { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseCopyMagnetLink();       } } }
+		else if (choice == IdentifyTorrentSaveTorrentAs)        { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseSaveTorrentAs();        } } }
+		else if (choice == IdentifyTorrentStart)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseStart();                } } }
+		else if (choice == IdentifyTorrentPause)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UsePause();                } } }
+		else if (choice == IdentifyTorrentResume)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseResume();               } } }
+		else if (choice == IdentifyTorrentStop)                 { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseStop();                 } } }
+		else if (choice == IdentifyTorrentRemove)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseRemove();               } } }
+		else if (choice == IdentifyTorrentDelete)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = (Torrent *)ListGet(window, i); if (t) t->UseDelete();               } } }
 
 	} else if (window == App.list.trackers.window && !row) {
 

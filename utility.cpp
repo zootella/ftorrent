@@ -1855,6 +1855,20 @@ bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString
 	return can;
 }
 
+// Delete the file at path
+void DiskDeleteFile(read path) {
+
+	// Delete the file and check the result
+	int result = DeleteFile(path);
+	DWORD e = GetLastError();
+	if (!result && e != ERROR_FILE_NOT_FOUND) error(L"deletefile");
+}
+
+// Copy the file at source to the available path destination, will not overwrite
+void DiskCopyFile(read source, read destination) {
+	if (!CopyFile(source, destination, true)) error(L"copyfile"); // True to not overwrite
+}
+
 // Given access to the list of all columns behind window where some of them are shown, add title
 void ColumnListAdd(HWND window, std::vector<Column> &list, read title) {
 

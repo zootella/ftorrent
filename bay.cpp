@@ -14,35 +14,44 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
-bool Torrent::CanOpen() { return true; }
+bool Torrent::CanOpen() { return false; }
 void Torrent::UseOpen() { report(L"open"); }
 
-bool Torrent::CanOpenContainingFolder() { return true; }
-void Torrent::UseOpenContainingFolder() { report(L"open containg folder");}
+bool Torrent::CanOpenContainingFolder() { return false; }
+void Torrent::UseOpenContainingFolder() { report(L"open containg folder"); }
 
-bool Torrent::CanCopyMagnetLink() { return true; }
-void Torrent::UseCopyMagnetLink() { report(L"copy magnet link");}
+bool Torrent::CanCopyMagnetLink() { return false; }
+void Torrent::UseCopyMagnetLink() { report(L"copy magnet link"); }
 
-bool Torrent::CanSaveTorrentAs() { return true; }
-void Torrent::UseSaveTorrentAs() { report(L"save torrent as");}
+bool Torrent::CanSaveTorrentAs() { return false; }
+void Torrent::UseSaveTorrentAs() { report(L"save torrent as"); }
 
-bool Torrent::CanStart() { return true; }
-void Torrent::UseStart() { report(L"start");}
+bool Torrent::CanStart() { return false; }
+void Torrent::UseStart() { report(L"start"); }
 
-bool Torrent::CanPause() { return true; }
-void Torrent::UsePause() { report(L"pause");}
+bool Torrent::CanPause() { return false; }
+void Torrent::UsePause() { report(L"pause"); }
 
-bool Torrent::CanResume() { return true; }
-void Torrent::UseResume() { report(L"resume");}
+bool Torrent::CanResume() { return false; }
+void Torrent::UseResume() { report(L"resume"); }
 
-bool Torrent::CanStop() { return true; }
-void Torrent::UseStop() { report(L"stop");}
+bool Torrent::CanStop() { return false; }
+void Torrent::UseStop() { report(L"stop"); }
+
+
+
+
+
+
 
 bool Torrent::CanRemove() { return true; }
-void Torrent::UseRemove() { report(L"remove");}
+void Torrent::UseRemove() {
 
-bool Torrent::CanDelete() { return true; }
-void Torrent::UseDelete() { report(L"delete");}
+	RemoveTorrent(this);
+}
+
+bool Torrent::CanDelete() { return false; }
+void Torrent::UseDelete() { report(L"delete"); }
 
 
 
