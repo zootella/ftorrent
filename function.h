@@ -294,7 +294,7 @@ bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
 void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
 bool LibraryRemoveTorrent(libtorrent::torrent_handle handle, bool deletefiles);
 void Blink(hbig hash);
-Torrent *FindTorrentParameter(LPARAM p);
+Torrent *ListGetTorrent(int row);
 Torrent *FindTorrent(hbig hash);
 void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
 void AddRow(hbig hash);
@@ -341,7 +341,6 @@ void Test();
 bool PaintCustom(LPNMLVCUSTOMDRAW draw);
 
 
-Torrent *ListGetTorrent(int row);
 
 
 

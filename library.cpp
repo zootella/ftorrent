@@ -483,8 +483,12 @@ void Blink(hbig hash) {
 	//TODO
 }
 
-// Find the torrent with the given first 4 bytes of the infohash in our list, or null if not found
-Torrent *FindTorrentParameter(LPARAM p) {
+// Find the torrent object underneath the given row number in the torrents list view control, or null if not found
+Torrent *ListGetTorrent(int row) {
+
+	// Find the parameter under that row, the first 4 bytes of the torrent infohash
+	LPARAM p = ListGet(App.list.torrents.window, row);
+	if (!p) { log(L"listgettorrent parameter not found"); return NULL; }
 
 	// Loop through all the torrents loaded into the program and library
 	for (int i = 0; i < (int)App.torrents.size(); i++) {
@@ -493,6 +497,7 @@ Torrent *FindTorrentParameter(LPARAM p) {
 	}
 
 	// Not found
+	log(L"listgettorrent torrent not found");
 	return NULL;
 }
 
