@@ -539,7 +539,7 @@ public:
 
 	Cell &GetCell(read title);
 
-	DWORD Hash();
+	DWORD HashParameter();
 
 
 

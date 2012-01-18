@@ -82,7 +82,7 @@ Cell &Torrent::GetCell(read title) {
 	}
 
 	// Not found, make it
-	cells.push_back(Cell(Hash(), title));
+	cells.push_back(Cell(HashParameter(), title));
 	return cells[n]; // Size before is index of the last one we just added
 }
 
@@ -130,10 +130,12 @@ void Torrent::ComposeLocation() {
 
 
 
+
 // The first 4 bytes of the infohash in a DWORD
-DWORD Torrent::Hash() {
-	return HashStart(handle.info_hash());
+DWORD Torrent::HashParameter() {
+	return ClipHash(handle.info_hash());
 }
+
 
 
 

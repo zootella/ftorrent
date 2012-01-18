@@ -265,7 +265,7 @@ CString base16(sbig n);
 CString AddLeadingZeroes(CString s, int width);
 hbig ParseHash(read r);
 CString base16(hbig n);
-DWORD HashStart(hbig n);
+DWORD ClipHash(hbig n);
 std::string convertPtoS(const char *p);
 std::wstring convertRtoW(const wchar_t *r);
 CString convertRtoC(const wchar_t *r);
@@ -294,6 +294,7 @@ bool LibraryHasTracker(libtorrent::torrent_handle handle, read tracker);
 void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker);
 bool LibraryRemoveTorrent(libtorrent::torrent_handle handle);
 void Blink(hbig hash);
+Torrent *FindTorrentParameter(LPARAM p);
 Torrent *FindTorrent(hbig hash);
 void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
 void AddRow(hbig hash);
@@ -340,6 +341,7 @@ void Test();
 bool PaintCustom(LPNMLVCUSTOMDRAW draw);
 
 
+Torrent *ListGetTorrent(int row);
 
 
 

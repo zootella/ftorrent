@@ -47,7 +47,7 @@ CString base16(hbig n) {
 }
 
 // The first 4 bytes of the given 20 byte number as a DWORD
-DWORD HashStart(hbig n) {
+DWORD ClipHash(hbig n) {
 
 	return
 		(((DWORD)n[0]) << 24) |
@@ -278,14 +278,14 @@ void RemoveTorrent(Torrent *t) {
 	DiskDeleteFile(PathTorrentOption(hash));
 
 	// Remove this torrent's row in the list view control in the window
-	int row = ListFind(App.list.torrents.window, HashStart(hash));
+	int row = ListFind(App.list.torrents.window, ClipHash(hash));
 	if (row != -1) ListRemove(App.list.torrents.window, row);
 
 	// Remove this torrent object from our list of them, and delete this object
 	int index = -1;
 	for (int i = 0; i < (int)App.torrents.size(); i++) { // Loop through our list of torrents to find this one
-		Torrent *t = &(App.torrents[i]);                 // Point t at the Torrent that is in the list
-		if (hash == t->handle.info_hash()) index = i;    // Compare the 20 byte hash values
+		Torrent *u = &(App.torrents[i]);                 // Point t at the Torrent that is in the list
+		if (hash == u->handle.info_hash()) index = i;    // Compare the 20 byte hash values
 	}
 	if (index == -1) log(L"removetorrent not found");
 	if (index != -1) App.torrents.erase(App.torrents.begin() + index); // Remove the object from the vector, call its destructor, and free its memory
@@ -481,6 +481,19 @@ void Blink(hbig hash) {
 	//TODO
 }
 
+// Find the torrent with the given first 4 bytes of the infohash in our list, or null if not found
+Torrent *FindTorrentParameter(LPARAM p) {
+
+	// Loop through all the torrents loaded into the program and library
+	for (int i = 0; i < (int)App.torrents.size(); i++) {
+		Torrent *t = &(App.torrents[i]); // Point t at the Torrent that is in the list
+		if (p == ClipHash(t->handle.info_hash())) return t; // Compare the first 4 bytes of the 20 byte hash values
+	}
+
+	// Not found
+	return NULL;
+}
+
 // Find the torrent with the given infohash in our list, or null if not found
 Torrent *FindTorrent(hbig hash) {
 
@@ -490,7 +503,7 @@ Torrent *FindTorrent(hbig hash) {
 		if (hash == t->handle.info_hash()) return t; // Compare the 20 byte hash values
 	}
 
-	// Not found, you can add hash without creating a duplicate
+	// Not found
 	return NULL;
 }
 
@@ -648,7 +661,7 @@ bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trac
 	// See what we found
 	if (!foundhash || hash->is_all_zeros()) return false; // Hash cannot be zero
 	if (!foundname || isblank(*name))
-		*name = L"Untitled " + base16(HashStart(*hash)); // Name never blank
+		*name = L"Untitled " + base16(ClipHash(*hash)); // Name never blank
 	return true;
 }
 
@@ -661,7 +674,7 @@ bool ParseTorrent(read torrent, hbig *hash, CString *name, std::set<CString> *tr
 		*hash = info.info_hash();
 		if (hash->is_all_zeros()) return false; // Hash cannot be zero
 		*name = widenPtoC(info.name().c_str());
-		if (isblank(*name)) *name = L"Untitled " + base16(HashStart(*hash)); // Name never blank
+		if (isblank(*name)) *name = L"Untitled " + base16(ClipHash(*hash)); // Name never blank
 		for (int i = 0; i < (int)info.trackers().size(); i++)
 			trackers->insert(widenPtoC(info.trackers()[i].url.c_str()));
 		return true;
