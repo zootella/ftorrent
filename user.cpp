@@ -331,17 +331,19 @@ void AreaPulse() {
 			if (ListSelected(App.list.torrents.window, row)) {
 
 				// Any selected unavailable torrent disables the button
-				Torrent *torrent = (Torrent *)ListGet(App.list.torrents.window, row);
-				if (!torrent->CanOpen())                 App.area.open.command        = CommandUnavailable;
-				if (!torrent->CanOpenContainingFolder()) App.area.openfolder.command  = CommandUnavailable;
-				if (!torrent->CanCopyMagnetLink())       App.area.copymagnet.command  = CommandUnavailable;
-				if (!torrent->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
-				if (!torrent->CanStart())                App.area.start.command       = CommandUnavailable;
-				if (!torrent->CanPause())                App.area.pause.command       = CommandUnavailable;
-				if (!torrent->CanResume())               App.area.resume.command      = CommandUnavailable;
-				if (!torrent->CanStop())                 App.area.stop.command        = CommandUnavailable;
-				if (!torrent->CanRemove())               App.area.remove.command      = CommandUnavailable;
-				if (!torrent->CanDelete())               App.area.deletefiles.command = CommandUnavailable;
+				Torrent *t = ListGetTorrent(row);
+				if (t) {
+					if (!t->CanOpen())                 App.area.open.command        = CommandUnavailable;
+					if (!t->CanOpenContainingFolder()) App.area.openfolder.command  = CommandUnavailable;
+					if (!t->CanCopyMagnetLink())       App.area.copymagnet.command  = CommandUnavailable;
+					if (!t->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
+					if (!t->CanStart())                App.area.start.command       = CommandUnavailable;
+					if (!t->CanPause())                App.area.pause.command       = CommandUnavailable;
+					if (!t->CanResume())               App.area.resume.command      = CommandUnavailable;
+					if (!t->CanStop())                 App.area.stop.command        = CommandUnavailable;
+					if (!t->CanRemove())               App.area.remove.command      = CommandUnavailable;
+					if (!t->CanDelete())               App.area.deletefiles.command = CommandUnavailable;
+				}
 			}
 		}
 

@@ -47,7 +47,7 @@ CString base16(hbig n) {
 }
 
 // The first 4 bytes of the given 20 byte number as a DWORD
-DWORD ClipHash(hbig n) {
+LPARAM ClipHash(hbig n) {
 
 	return
 		(((DWORD)n[0]) << 24) |
@@ -265,8 +265,8 @@ CString DownloadTorrent(read address, bool ask) {
 	return L"";
 }
 
-// Remove the torrent with the given infohash from the program
-void RemoveTorrent(Torrent *t) {
+// Remove the torrent with the given infohash from the program, true to also delete the downloaded files
+void RemoveTorrent(Torrent *t, bool deletefiles) {
 
 	// Copy identifying information from the torrent object to local variables before we disconnect and remove the object
 	hbig hash = t->handle.info_hash();
@@ -291,7 +291,7 @@ void RemoveTorrent(Torrent *t) {
 	if (index != -1) App.torrents.erase(App.torrents.begin() + index); // Remove the object from the vector, call its destructor, and free its memory
 
 	// Remove this torrent from the current libtorrent session
-	LibraryRemoveTorrent(handle);
+	LibraryRemoveTorrent(handle, deletefiles);
 }
 
 // The user clicked to add the torrent file at the given path
@@ -459,12 +459,14 @@ void LibraryAddTracker(libtorrent::torrent_handle handle, read tracker) {
 	}
 }
 
-// Remove the given torrent handle from the current libtorrent session
-bool LibraryRemoveTorrent(libtorrent::torrent_handle handle) {
+// Remove the given torrent handle from the current libtorrent session, and optionally also delete all the saved files on the disk
+bool LibraryRemoveTorrent(libtorrent::torrent_handle handle, bool deletefiles) {
 	try {
 
-		// Remove the torrent handle
-		App.session->remove_torrent(handle);
+		// Pause, remove, and optionally delete the torrent
+		handle.pause();
+		if (deletefiles) App.session->remove_torrent(handle, libtorrent::session::delete_files);
+		else             App.session->remove_torrent(handle);
 
 		return true;
 	} catch (std::exception &e) {

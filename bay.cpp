@@ -45,13 +45,10 @@ void Torrent::UseStop() { report(L"stop"); }
 
 
 bool Torrent::CanRemove() { return true; }
-void Torrent::UseRemove() {
+void Torrent::UseRemove() { RemoveTorrent(this, false); }
 
-	RemoveTorrent(this);
-}
-
-bool Torrent::CanDelete() { return false; }
-void Torrent::UseDelete() { report(L"delete"); }
+bool Torrent::CanDelete() { return true; }
+void Torrent::UseDelete() { RemoveTorrent(this, true); }
 
 
 
@@ -132,7 +129,7 @@ void Torrent::ComposeLocation() {
 
 
 // The first 4 bytes of the infohash in a DWORD
-DWORD Torrent::HashParameter() {
+LPARAM Torrent::HashParameter() {
 	return ClipHash(handle.info_hash());
 }
 
