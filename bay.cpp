@@ -27,16 +27,34 @@ bool Torrent::CanSaveTorrentAs() { return false; }
 void Torrent::UseSaveTorrentAs() { report(L"save torrent as"); }
 
 bool Torrent::CanStart() { return false; }
-void Torrent::UseStart() { report(L"start"); }
+void Torrent::UseStart() {
+
+
+
+	/*
+	//use these, obviously
+	handle.pause();
+	handle.is_paused();
+	handle.resume();
+	*/
+
+
+
+
+
+}
 
 bool Torrent::CanPause() { return false; }
 void Torrent::UsePause() { report(L"pause"); }
 
+
+
+
 bool Torrent::CanResume() { return false; }
-void Torrent::UseResume() { report(L"resume"); }
+void Torrent::UseResume() { report(L"remove this one"); }
 
 bool Torrent::CanStop() { return false; }
-void Torrent::UseStop() { report(L"stop"); }
+void Torrent::UseStop() { report(L"remove this one"); }
 
 
 
