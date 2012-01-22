@@ -257,6 +257,51 @@ void LibraryClose() {
 	}
 }
 
+/*
+bool LibraryTorrentIsPaused(libtorrent::torrent_handle handle) {
+	try {
+
+		return handle.is_paused();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+
+	return true;
+}
+
+void LibraryTorrentPause(libtorrent::torrent_handle handle) {
+	try {
+
+		handle.pause();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+
+void LibraryTorrentResume(libtorrent::torrent_handle handle) {
+	try {
+
+		handle.resume();
+
+	} catch (std::exception &e) {
+		log(widenPtoC(e.what()));
+	} catch (...) {
+		log(L"exception");
+	}
+}
+*/
+
+
+
+
+
+
 //TODO
 CString CreateTorrent(read path, bool ask) {
 	return L"";

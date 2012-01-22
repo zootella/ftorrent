@@ -15,46 +15,64 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 bool Torrent::CanOpen() { return false; }
-void Torrent::UseOpen() { report(L"open"); }
-
-bool Torrent::CanOpenContainingFolder() { return false; }
-void Torrent::UseOpenContainingFolder() { report(L"open containg folder"); }
-
-bool Torrent::CanCopyMagnetLink() { return false; }
-void Torrent::UseCopyMagnetLink() { report(L"copy magnet link"); }
-
-bool Torrent::CanSaveTorrentAs() { return false; }
-void Torrent::UseSaveTorrentAs() { report(L"save torrent as"); }
-
-bool Torrent::CanStart() { return false; }
-void Torrent::UseStart() {
-
-
-
-	/*
-	//use these, obviously
-	handle.pause();
-	handle.is_paused();
-	handle.resume();
-	*/
-
-
-
-
-
+void Torrent::UseOpen() {
+	if (!CanOpen()) { log(L"cant open"); return; }
 }
 
-bool Torrent::CanPause() { return false; }
-void Torrent::UsePause() { report(L"pause"); }
+bool Torrent::CanOpenContainingFolder() { return false; }
+void Torrent::UseOpenContainingFolder() {
+	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
+}
+
+bool Torrent::CanCopyMagnetLink() { return false; }
+void Torrent::UseCopyMagnetLink() {
+	if (!CanCopyMagnetLink()) { log(L"cant copy magnet link"); return; }
+}
+
+bool Torrent::CanSaveTorrentAs() { return false; }
+void Torrent::UseSaveTorrentAs() {
+	if (!CanSaveTorrentAs()) { log(L"cant save torrent as"); return; }
+}
+
+
+
+
+
+
+
+bool Torrent::CanStart() {
+	return handle.is_paused();
+}
+void Torrent::UseStart() {
+	if (!CanStart()) { log(L"cant start"); return; }
+
+	handle.resume();
+}
+
+bool Torrent::CanPause() {
+	return !handle.is_paused();
+}
+void Torrent::UsePause() {
+	if (!CanPause()) { log(L"cant pause"); return; }
+
+	handle.pause();
+}
+
+
+
+
+
+
+
+
 
 
 
 
 bool Torrent::CanResume() { return false; }
-void Torrent::UseResume() { report(L"remove this one"); }
-
+void Torrent::UseResume() {}
 bool Torrent::CanStop() { return false; }
-void Torrent::UseStop() { report(L"remove this one"); }
+void Torrent::UseStop() {}
 
 
 
@@ -63,10 +81,18 @@ void Torrent::UseStop() { report(L"remove this one"); }
 
 
 bool Torrent::CanRemove() { return true; }
-void Torrent::UseRemove() { RemoveTorrent(this, false); }
+void Torrent::UseRemove() {
+	if (!CanRemove()) { log(L"cant remove"); return; }
+
+	RemoveTorrent(this, false);
+}
 
 bool Torrent::CanDelete() { return true; }
-void Torrent::UseDelete() { RemoveTorrent(this, true); }
+void Torrent::UseDelete() {
+	if (!CanDelete()) { log(L"cant delete"); return; }
+
+	RemoveTorrent(this, true);
+}
 
 
 
