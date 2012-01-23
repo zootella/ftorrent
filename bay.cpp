@@ -69,10 +69,6 @@ void Torrent::UsePause() {
 
 
 
-bool Torrent::CanResume() { return false; }
-void Torrent::UseResume() {}
-bool Torrent::CanStop() { return false; }
-void Torrent::UseStop() {}
 
 
 

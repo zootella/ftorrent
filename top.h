@@ -89,8 +89,8 @@ public:
 	Area *all; // The list of areas
 	Area *pressed; // The area the mouse pressed
 
-	Area open, openfolder, copymagnet, savetorrent, resume, deletefiles; // Commands on the menu that don't have a button
-	Area tools, start, pause, stop, remove; // Buttons
+	Area open, openfolder, copymagnet, savetorrent, deletefiles; // Commands on the menu that don't have a button
+	Area tools, start, pause, remove; // Buttons
 	Area bar, corner; // Sizing grips
 
 	Size list, tabs, info; // Child window control sizes
@@ -103,8 +103,7 @@ public:
 		all         = &tools; // Link areas into a list
 		tools.next  = &start;
 		start.next  = &pause;
-		pause.next  = &stop;
-		stop.next   = &remove;
+		pause.next  = &remove;
 		remove.next = &bar;
 		bar.next    = &corner;
 		corner.next = NULL;

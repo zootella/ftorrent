@@ -256,19 +256,16 @@ void AreaCreate() {
 	App.area.openfolder.command  = CommandUnavailable;
 	App.area.copymagnet.command  = CommandUnavailable;
 	App.area.savetorrent.command = CommandUnavailable;
-	App.area.resume.command      = CommandUnavailable;
 	App.area.deletefiles.command = CommandUnavailable;
 
 	// Buttons
 	App.area.tools.command  = CommandMenu;
 	App.area.start.command  = CommandUnavailable;
 	App.area.pause.command  = CommandUnavailable;
-	App.area.stop.command   = CommandUnavailable;
 	App.area.remove.command = CommandUnavailable;
 	App.area.tools.tip  = L"Tools";
 	App.area.start.tip  = L"Start";
 	App.area.pause.tip  = L"Pause";
-	App.area.stop.tip   = L"Stop";
 	App.area.remove.tip = L"Remove";
 	App.area.tools.dim   = NULL; // Tools is always available
 	App.area.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  30, 19); // Rectangular icon
@@ -279,9 +276,6 @@ void AreaCreate() {
 	App.area.pause.dim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
 	App.area.pause.hot   = LoadIconResource(L"BUTTON_PAUSE_HOT",  19, 19);
 	App.area.pause.icon  = LoadIconResource(L"BUTTON_PAUSE",      19, 19);
-	App.area.stop.dim    = LoadIconResource(L"BUTTON_STOP_DIM",   19, 19);
-	App.area.stop.hot    = LoadIconResource(L"BUTTON_STOP_HOT",   19, 19);
-	App.area.stop.icon   = LoadIconResource(L"BUTTON_STOP",       19, 19);
 	App.area.remove.dim  = LoadIconResource(L"BUTTON_REMOVE_DIM", 19, 19);
 	App.area.remove.hot  = LoadIconResource(L"BUTTON_REMOVE_HOT", 19, 19);
 	App.area.remove.icon = LoadIconResource(L"BUTTON_REMOVE",     19, 19);
@@ -320,8 +314,6 @@ void AreaPulse() {
 		App.area.savetorrent.command =
 		App.area.start.command       =
 		App.area.pause.command       =
-		App.area.resume.command      =
-		App.area.stop.command        =
 		App.area.remove.command      =
 		App.area.deletefiles.command = CommandReady;
 
@@ -339,8 +331,6 @@ void AreaPulse() {
 					if (!t->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
 					if (!t->CanStart())                App.area.start.command       = CommandUnavailable;
 					if (!t->CanPause())                App.area.pause.command       = CommandUnavailable;
-					if (!t->CanResume())               App.area.resume.command      = CommandUnavailable;
-					if (!t->CanStop())                 App.area.stop.command        = CommandUnavailable;
 					if (!t->CanRemove())               App.area.remove.command      = CommandUnavailable;
 					if (!t->CanDelete())               App.area.deletefiles.command = CommandUnavailable;
 				}
@@ -357,8 +347,6 @@ void AreaPulse() {
 		App.area.savetorrent.command =
 		App.area.start.command       =
 		App.area.pause.command       =
-		App.area.resume.command      =
-		App.area.stop.command        =
 		App.area.remove.command      =
 		App.area.deletefiles.command = CommandUnavailable;
 	}
@@ -568,13 +556,11 @@ void Layout(int move) {
 	App.area.tools.size  = button;
 	App.area.start.size  = button;
 	App.area.pause.size  = button;
-	App.area.stop.size   = button;
 	App.area.remove.size = button;
 	App.area.tools.size.w  = tools.w + 4;
 	App.area.start.size.x  = App.area.tools.size.w + (0 * button.w);
 	App.area.pause.size.x  = App.area.tools.size.w + (1 * button.w);
-	App.area.stop.size.x   = App.area.tools.size.w + (2 * button.w);
-	App.area.remove.size.x = App.area.tools.size.w + (3 * button.w);
+	App.area.remove.size.x = App.area.tools.size.w + (2 * button.w);
 
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
@@ -637,7 +623,6 @@ void Layout(int move) {
 		TipAdd(App.area.tools.size,  App.area.tools.tip);
 		TipAdd(App.area.start.size,  App.area.start.tip);
 		TipAdd(App.area.pause.size,  App.area.pause.tip);
-		TipAdd(App.area.stop.size,   App.area.stop.tip);
 		TipAdd(App.area.remove.size, App.area.remove.tip);
 	}
 

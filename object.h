@@ -506,12 +506,6 @@ public:
 	bool CanPause();
 	void UsePause();
 
-	bool CanResume();
-	void UseResume();
-
-	bool CanStop();
-	void UseStop();
-
 	bool CanRemove();
 	void UseRemove();
 

@@ -25,22 +25,20 @@
 #define IdentifyTorrentSaveTorrentAs           40016
 #define IdentifyTorrentStart                   40017
 #define IdentifyTorrentPause                   40018
-#define IdentifyTorrentResume                  40019
-#define IdentifyTorrentStop                    40010
-#define IdentifyTorrentRemove                  40021
-#define IdentifyTorrentDelete                  40022
-#define IdentifyTrackersAddTracker             40023
-#define IdentifyTrackerRemove                  40024
-#define IdentifyPeersAddPeer                   40025
-#define IdentifyPeerBlock                      40026
-#define IdentifyFilesTree                      40027
-#define IdentifyFilesList                      40028
-#define IdentifyFileOpen                       40029
-#define IdentifyFileOpenContainingFolder       40020
-#define IdentifyFileHighPriority               40031
-#define IdentifyFileNormalPriority             40032
-#define IdentifyFileLowPriority                40033
-#define IdentifyFileDontDownload               40034
+#define IdentifyTorrentRemove                  40019
+#define IdentifyTorrentDelete                  40010
+#define IdentifyTrackersAddTracker             40021
+#define IdentifyTrackerRemove                  40022
+#define IdentifyPeersAddPeer                   40023
+#define IdentifyPeerBlock                      40024
+#define IdentifyFilesTree                      40025
+#define IdentifyFilesList                      40026
+#define IdentifyFileOpen                       40027
+#define IdentifyFileOpenContainingFolder       40028
+#define IdentifyFileHighPriority               40029
+#define IdentifyFileNormalPriority             40020
+#define IdentifyFileLowPriority                40031
+#define IdentifyFileDontDownload               40032
 
 // Next default values for new objects
 // 

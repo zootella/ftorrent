@@ -65,9 +65,6 @@ BUTTON_REMOVE           ICON                    "button remove.ico"
 BUTTON_START_DIM        ICON                    "button start dim.ico"
 BUTTON_START_HOT        ICON                    "button start hot.ico"
 BUTTON_START            ICON                    "button start.ico"
-BUTTON_STOP_DIM         ICON                    "button stop dim.ico"
-BUTTON_STOP_HOT         ICON                    "button stop hot.ico"
-BUTTON_STOP             ICON                    "button stop.ico"
 BUTTON_TOOLS_HOT        ICON                    "button tools hot.ico"
 BUTTON_TOOLS            ICON                    "button tools.ico"
 CLEAR_ICON              ICON                    "clear.ico"
@@ -118,8 +115,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Start",                      IdentifyTorrentStart
         MENUITEM "&Pause",                      IdentifyTorrentPause
-        MENUITEM "R&esume",                     IdentifyTorrentResume
-        MENUITEM "S&top",                       IdentifyTorrentStop
         MENUITEM SEPARATOR
         MENUITEM "&Remove",                     IdentifyTorrentRemove
         MENUITEM "&Delete",                     IdentifyTorrentDelete

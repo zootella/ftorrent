@@ -319,18 +319,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\button stop dim.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\button stop hot.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\button stop.ico"
-				>
-			</File>
-			<File
 				RelativePath=".\button tools hot.ico"
 				>
 			</File>

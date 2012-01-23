@@ -428,7 +428,6 @@ void NotifyRightClick(HWND window) {
 		MenuSet(App.menu.torrent, IdentifyTorrentSaveTorrentAs,        App.area.savetorrent.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 		MenuSet(App.menu.torrent, IdentifyTorrentStart,                App.area.start.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 		MenuSet(App.menu.torrent, IdentifyTorrentPause,                App.area.pause.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentStop,                 App.area.stop.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 		MenuSet(App.menu.torrent, IdentifyTorrentRemove,               App.area.remove.command      == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 		MenuSet(App.menu.torrent, IdentifyTorrentDelete,               App.area.deletefiles.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 
@@ -450,8 +449,6 @@ void NotifyRightClick(HWND window) {
 		else if (choice == IdentifyTorrentSaveTorrentAs)        { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseSaveTorrentAs();        } } }
 		else if (choice == IdentifyTorrentStart)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseStart();                } } }
 		else if (choice == IdentifyTorrentPause)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UsePause();                } } }
-		else if (choice == IdentifyTorrentResume)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseResume();               } } }
-		else if (choice == IdentifyTorrentStop)                 { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseStop();                 } } }
 		else if (choice == IdentifyTorrentRemove)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseRemove();               } } }
 		else if (choice == IdentifyTorrentDelete)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseDelete();               } } }
 
