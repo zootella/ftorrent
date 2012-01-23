@@ -189,8 +189,16 @@ void Torrent::Save() {
 	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
 		l.push_back(narrowRtoS(*i));
 
+	// Compose text for the torrent's paused state
+	CString p = paused ? L"t" : L"f";
+
+	/*
+	log(L"saving p as ", p);
+	*/
+
 	// Make and fill the bencoded dictionary
 	libtorrent::entry::dictionary_type d;
+	d[narrowRtoS(L"paused")]   = narrowRtoS(p);
 	d[narrowRtoS(L"folder")]   = narrowRtoS(folder);
 	d[narrowRtoS(L"name")]     = narrowRtoS(name);
 	d[narrowRtoS(L"trackers")] = l;
@@ -206,9 +214,14 @@ bool Torrent::Load(hbig hash) {
 	libtorrent::entry d;
 	if (!LoadEntry(PathTorrentOption(hash), d)) return false;
 
-	// Load the folder path and name into this torrent
+	// Load the paused state, folder path, and name into this torrent
+	paused = widenStoC(d[narrowRtoS(L"paused")].string()) == CString(L"t");
 	folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Not found returns blank
 	name = widenStoC(d[narrowRtoS(L"name")].string());
+
+	/*
+	log(L"loaded paused ", paused ? L"true" : L"false");
+	*/
 
 	// Load in the list of trackers
 	trackers.clear();
