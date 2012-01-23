@@ -468,7 +468,6 @@ public:
 class Torrent {
 public:
 
-	bool fakepaused;
 
 
 	CString folder; //save folder, required
@@ -487,7 +486,6 @@ public:
 
 	// New
 	Torrent() {
-		fakepaused = false;
 	}
 
 

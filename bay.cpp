@@ -41,21 +41,12 @@ void Torrent::UseSaveTorrentAs() {
 
 
 bool Torrent::CanStart() {
-	/*
 	return handle.is_paused();
-	*/
-
-	return fakepaused;
 }
 void Torrent::UseStart() {
 	if (!CanStart()) { log(L"cant start"); return; }
 
-	/*
-	log(L"calling resume");
 	handle.resume();
-	*/
-
-	fakepaused = false;
 }
 
 bool Torrent::CanPause() {
@@ -64,12 +55,7 @@ bool Torrent::CanPause() {
 void Torrent::UsePause() {
 	if (!CanPause()) { log(L"cant pause"); return; }
 
-	/*
-	log(L"calling pause");
 	handle.pause();
-	*/
-
-	fakepaused = true;
 }
 
 
