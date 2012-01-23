@@ -469,6 +469,8 @@ class Torrent {
 public:
 
 
+	bool paused;
+
 
 	CString folder; //save folder, required
 	CString name; //name from the magnet link, blank if we've got the torrent file
@@ -486,6 +488,7 @@ public:
 
 	// New
 	Torrent() {
+		paused = false;
 	}
 
 

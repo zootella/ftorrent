@@ -41,11 +41,13 @@ void Torrent::UseSaveTorrentAs() {
 
 
 bool Torrent::CanStart() {
-	return handle.is_paused();
+	return paused;
 }
 void Torrent::UseStart() {
 	if (!CanStart()) { log(L"cant start"); return; }
 
+	paused = false;
+	handle.auto_managed(true);
 	handle.resume();
 }
 
@@ -55,6 +57,8 @@ bool Torrent::CanPause() {
 void Torrent::UsePause() {
 	if (!CanPause()) { log(L"cant pause"); return; }
 
+	paused = true;
+	handle.auto_managed(false); // Prevent libtorrent from automatically starting the torrent
 	handle.pause();
 }
 
