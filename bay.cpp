@@ -50,7 +50,7 @@ void Torrent::UseStart() {
 }
 
 bool Torrent::CanPause() {
-	return !handle.is_paused();
+	return !CanStart();
 }
 void Torrent::UsePause() {
 	if (!CanPause()) { log(L"cant pause"); return; }
