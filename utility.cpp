@@ -467,16 +467,16 @@ HMENU MenuClip(HMENU menus, int index) {
 	return menu;
 }
 
-// Takes a menu, command, the state to set or 0 to not set a state, and a bitmap image to set or null to not set one
+// Takes a menu, command, the state to set, and a bitmap image to set or null to not set one
 // Sets the menu item
 void MenuSet(HMENU menu, UINT command, UINT state, HBITMAP bitmap) {
 
 	MENUITEMINFO info;
 	ZeroMemory(&info, sizeof(info));
 	info.cbSize = sizeof(MENUITEMINFO);
-	info.fMask  = 0;
+	info.fMask  = MIIM_STATE;
+	info.fState = state;
 	if (bitmap) { info.fMask = info.fMask | MIIM_BITMAP; info.hbmpItem = bitmap; } // Set menu item info
-	if (state)  { info.fMask = info.fMask | MIIM_STATE;  info.fState   = state; }
 	if (!SetMenuItemInfo(menu, command, false, &info)) error(L"setmenuiteminfo");
 }
 

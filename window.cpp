@@ -410,9 +410,6 @@ void NotifyRightClick(HWND window) {
 	int row = ListMouse(window);
 	log(L"right click, row ", numerals(row));
 
-
-
-
 	if (window == App.list.torrents.window && !row) {
 
 		int choice = MenuShow(App.menu.torrents);
@@ -420,6 +417,9 @@ void NotifyRightClick(HWND window) {
 		else if (choice == IdentifyTorrentsCreateTorrent) { Dialog(L"DIALOG_CREATE", DialogCreate); }
 
 	} else if (window == App.list.torrents.window && row) {
+
+		// Set current area command states based on which rows are selected in the list view
+		AreaPulse(); // If the right click selected a row, a regular pluse might not have done this already
 
 		// Set menu items available or grayed based on area command states
 		MenuSet(App.menu.torrent, IdentifyTorrentOpen,                 App.area.open.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);

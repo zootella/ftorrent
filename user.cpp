@@ -302,7 +302,7 @@ void AreaPulse() {
 	}
 
 	// Set button command states
-	App.area.tools.command  = CommandMenu;
+	App.area.tools.command = CommandMenu;
 
 	// One or more rows are selected
 	if (ListSelectedRows(App.list.torrents.window)) {
@@ -665,6 +665,11 @@ void AreaDoCommand(Area *area) {
 
 	// Buttons
 	} else if (area->command == CommandReady || area->command == CommandSet) {
+
+		int rows = ListRows(App.list.torrents.window);
+		if      (area == &App.area.start)  { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(App.list.torrents.window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseStart();  } } }
+		else if (area == &App.area.pause)  { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(App.list.torrents.window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UsePause();  } } }
+		else if (area == &App.area.remove) { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(App.list.torrents.window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseRemove(); } } }
 
 	// Links
 	} else if (area->command == CommandLink) {
