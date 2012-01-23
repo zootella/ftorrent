@@ -468,6 +468,9 @@ public:
 class Torrent {
 public:
 
+	bool fakepaused;
+
+
 	CString folder; //save folder, required
 	CString name; //name from the magnet link, blank if we've got the torrent file
 	std::set<CString> trackers; //trackers from all sources
@@ -483,7 +486,9 @@ public:
 
 
 	// New
-	Torrent() {}
+	Torrent() {
+		fakepaused = false;
+	}
 
 
 
