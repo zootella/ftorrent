@@ -190,6 +190,11 @@ void LibraryStart() {
 		App.session->add_extension(&libtorrent::create_ut_pex_plugin);      // Peer exchange
 		App.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
 
+		// Set libtorrent settings
+		libtorrent::session_settings s; // Make a new libtorrent session settings object
+		s.stop_tracker_timeout = 2;     // Wait 2 seconds instead of 5 for trackers to respond to our goodbye when the program exits
+		App.session->set_settings(s);   // Apply the settings to libtorrent
+
 		// Start libtorrent services
 		App.session->start_dht();  // Distributed hash table for trackerless torrents
 		App.session->start_lsd();  // Local service discovery to find peers on the LAN
@@ -609,8 +614,15 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 	try {
 		libtorrent::add_torrent_params p; // Object to fill out
 
-		// Add paused or started
-		p.paused = paused;
+		// Add paused or not
+		p.override_resume_data = true; // Get paused and auto managed from add torrent params, not resume data
+		if (paused) {
+			p.paused = true;
+			p.auto_managed = false;
+		} else {
+			p.paused = false;
+			p.auto_managed = true;
+		}
 
 		// Set folder
 		p.save_path = boost::filesystem::path(narrowRtoS(folder));
@@ -641,8 +653,15 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 	try {
 		libtorrent::add_torrent_params p; // Object to fill out
 
-		// Add paused or started
-		p.paused = paused;
+		// Add paused or not
+		p.override_resume_data = true; // Get paused and auto managed from add torrent params, not resume data
+		if (paused) {
+			p.paused = true;
+			p.auto_managed = false;
+		} else {
+			p.paused = false;
+			p.auto_managed = true;
+		}
 
 		// Set folder
 		p.save_path = boost::filesystem::path(narrowRtoS(folder));
