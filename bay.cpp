@@ -39,56 +39,37 @@ void Torrent::UseSaveTorrentAs() {
 
 
 
-
-bool Torrent::CanStart() {
-	return paused;
-}
+// Start this torrent so it downloads and seeds
+bool Torrent::CanStart() { return paused; } // Use our flag rather than anything in the libtorrent handle
 void Torrent::UseStart() {
 	if (!CanStart()) { log(L"cant start"); return; }
 
-	paused = false;
-	handle.auto_managed(true);
-	handle.resume();
-	Save();
+	paused = false;            // Set this torrent object's flag
+	handle.auto_managed(true); // Let libtorrent start and stop this torrent given the others it has
+	handle.resume();           // Let libtorrent take the torrent online
+	Save();                    // Save the option file for this torrent, including the updated paused flag
 }
 
-bool Torrent::CanPause() {
-	return !CanStart();
-}
+// Pause this torrent so it doesn't use the internet or change
+bool Torrent::CanPause() { return !CanStart(); } // Opposite of start
 void Torrent::UsePause() {
 	if (!CanPause()) { log(L"cant pause"); return; }
 
-	paused = true;
+	paused = true;              // Our record of whether we're paused or not
 	handle.auto_managed(false); // Prevent libtorrent from automatically starting the torrent
-	handle.pause();
-	Save();
+	handle.pause();             // Have libtorrent take the torrent offline
+	Save();                     // Save the option file with the changed paused flag
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-bool Torrent::CanRemove() { return true; }
+// Remove this torrent from the program
+bool Torrent::CanRemove() { return true; } // A torrent can always be removed or deleted
 void Torrent::UseRemove() {
 	if (!CanRemove()) { log(L"cant remove"); return; }
 
 	RemoveTorrent(this, false);
 }
 
+// Remove this torrent from the program, and delete any files we downloaded for it
 bool Torrent::CanDelete() { return true; }
 void Torrent::UseDelete() {
 	if (!CanDelete()) { log(L"cant delete"); return; }
@@ -130,6 +111,37 @@ Cell &Torrent::GetCell(read title) {
 }
 
 
+
+
+
+
+
+
+// Define factory default columns in list view controls
+void DefaultColumns() {
+
+	App.list.trackers.factory += L"";
+	App.list.peers.factory    += L"";
+	App.list.pieces.factory   += L"";
+	App.list.files.factory    += L"";
+
+
+	App.list.torrents.factory += L"show=true,right=false,width=100,title=state;";
+
+	App.list.torrents.factory += L"show=true,right=false,width=150,title=Status;";
+	App.list.torrents.factory += L"show=true,right=false,width=170,title=Name;";
+	App.list.torrents.factory += L"show=true,right=true, width=200,title=Size;";
+	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
+	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
+
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=object paused;";
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=handle paused;";
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=is auto managed;";
+
+}
+
+
+
 void Torrent::Compose() {
 	ComposeStatus();
 	ComposeName();
@@ -138,17 +150,21 @@ void Torrent::Compose() {
 	ComposeLocation();
 
 
+	GetCell(L"object paused").text = paused ? L"true" : L"false";
+	GetCell(L"handle paused").text = handle.is_paused() ? L"true" : L"false";
+	GetCell(L"is auto managed").text = handle.is_auto_managed() ? L"true" : L"false";
 
+	Cell &state = GetCell(L"state");
 
-	Cell &c1 = GetCell(L"object paused");
-	c1.text = paused ? L"true" : L"false";
-
-	Cell &c2 = GetCell(L"handle paused");
-	c2.text = handle.is_paused() ? L"true" : L"false";
-
-	Cell &c3 = GetCell(L"is auto managed");
-	c3.text = handle.is_auto_managed() ? L"true" : L"false";
-
+	libtorrent::torrent_status::state_t s = handle.status().state;
+	if      (s == libtorrent::torrent_status::queued_for_checking)  GetCell(L"state").text = L"queued for checking";
+	else if (s == libtorrent::torrent_status::checking_files)       GetCell(L"state").text = L"checking files";
+	else if (s == libtorrent::torrent_status::downloading_metadata) GetCell(L"state").text = L"downloading metadata";
+	else if (s == libtorrent::torrent_status::downloading)          GetCell(L"state").text = L"downloading";
+	else if (s == libtorrent::torrent_status::finished)             GetCell(L"state").text = L"finished";
+	else if (s == libtorrent::torrent_status::seeding)              GetCell(L"state").text = L"seeding";
+	else if (s == libtorrent::torrent_status::allocating)           GetCell(L"state").text = L"allocating";
+	else if (s == libtorrent::torrent_status::checking_resume_data) GetCell(L"state").text = L"checking resume data";
 
 
 

@@ -2,25 +2,6 @@
 #include "include.h" // Include headers and definitions
 extern app App; // Access global object
 
-// Define factory default columns in list view controls
-void DefaultColumns() {
-
-	App.list.torrents.factory += L"show=true,right=false,width=150,title=Status;";
-	App.list.torrents.factory += L"show=true,right=false,width=170,title=Name;";
-	App.list.torrents.factory += L"show=true,right=true, width=200,title=Size;";
-	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
-	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
-
-	App.list.torrents.factory += L"show=true,right=false,width=120,title=object paused;";
-	App.list.torrents.factory += L"show=true,right=false,width=120,title=handle paused;";
-	App.list.torrents.factory += L"show=true,right=false,width=120,title=is auto managed;";
-
-	App.list.trackers.factory += L"";
-	App.list.peers.factory    += L"";
-	App.list.pieces.factory   += L"";
-	App.list.files.factory    += L"";
-}
-
 // Set up the program image list
 void StartIcon() {
 
