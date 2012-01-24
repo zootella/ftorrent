@@ -11,6 +11,10 @@ void DefaultColumns() {
 	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
 	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
 
+	App.list.torrents.factory += L"show=true,right=false,width=120,title=object paused;";
+	App.list.torrents.factory += L"show=true,right=false,width=120,title=handle paused;";
+	App.list.torrents.factory += L"show=true,right=false,width=120,title=is auto managed;";
+
 	App.list.trackers.factory += L"";
 	App.list.peers.factory    += L"";
 	App.list.pieces.factory   += L"";

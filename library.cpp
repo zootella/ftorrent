@@ -369,11 +369,11 @@ CString AddTorrent(read torrent, bool ask) {
 	if (!LibraryAddTorrent(&handle, folder, L"", torrent, false)) // Add not paused
 		return L"Cannot add this torrent. Check how you saved or downloaded it, and try again."; // libtorrent error
 
-	AddData(handle, folder, name, trackers); // Make a torrent object in our list of them
-	AddTrackers(hash, trackers);             // Add trackers to the torrent object and libtorrent handle
-	AddRow(hash);                            // Make a row in the list view
-	AddMeta(hash, torrent);                  // Copy the torrent file to "infohash.meta.db"
-	AddOption(hash);                         // Save torrent options like name and trackers to "infohash.optn.db"
+	AddData(handle, folder, name, trackers, false); // Make a torrent object in our list of them
+	AddTrackers(hash, trackers);                    // Add trackers to the torrent object and libtorrent handle
+	AddRow(hash);                                   // Make a row in the list view
+	AddMeta(hash, torrent);                         // Copy the torrent file to "infohash.meta.db"
+	AddOption(hash);                                // Save torrent options like name and trackers to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -407,10 +407,10 @@ CString AddMagnet(read magnet, bool ask) {
 	if (!LibraryAddMagnet(&handle, folder, L"", hash, name, false)) // Add not paused
 		return L"Cannot add this magnet link. Check the link and try again."; // libtorrent error
 
-	AddData(handle, folder, name, trackers); // Make a torrent object in our list of them
-	AddTrackers(hash, trackers);             // Add trackers to the torrent object and libtorrent handle
-	AddRow(hash);                            // Make a row in the list view
-	AddOption(hash);                         // Save torrent options like name and trackers to "infohash.optn.db"
+	AddData(handle, folder, name, trackers, false); // Make a torrent object in our list of them
+	AddTrackers(hash, trackers);                    // Add trackers to the torrent object and libtorrent handle
+	AddRow(hash);                                   // Make a row in the list view
+	AddOption(hash);                                // Save torrent options like name and trackers to "infohash.optn.db"
 	return L""; // Success
 }
 
@@ -445,10 +445,10 @@ void AddStore(hbig hash) {
 	}
 
 	// Add the torrent handle to the data list and window
-	AddData(handle, o.folder, o.name, o.trackers); // Make a torrent object in our list of them
-	AddTrackers(hash, o.trackers);                 // Add trackers to the torrent object and libtorrent handle
+	AddData(handle, o.folder, o.name, o.trackers, o.paused); // Make a torrent object in our list of them
+	AddTrackers(hash, o.trackers);                           // Add trackers to the torrent object and libtorrent handle
 	AddTrackers(hash, mtrackers);
-	AddRow(hash);                                  // Make a row in the list view
+	AddRow(hash);                                            // Make a row in the list view
 }
 
 // Add the given trackers in the add list to both the torrent in data and the torrent handle in libtorrent
@@ -560,7 +560,7 @@ Torrent *FindTorrent(hbig hash) {
 }
 
 // Copy the given information into a new torrent object in our data list of them
-void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers) {
+void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers, bool paused) {
 
 	// Never add a zero or duplicate hash
 	if (handle.info_hash().is_all_zeros() || FindTorrent(handle.info_hash())) return;
@@ -571,6 +571,7 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 	t.folder = folder;
 	t.name = name;
 	t.trackers = trackers;
+	t.paused = paused;
 
 	// Copy the local torrent t into a new one at the end of the program's list
 	App.torrents.push_back(t);

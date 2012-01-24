@@ -136,6 +136,21 @@ void Torrent::Compose() {
 	ComposeSize();
 	ComposeInfohash();
 	ComposeLocation();
+
+
+
+
+	Cell &c1 = GetCell(L"object paused");
+	c1.text = paused ? L"true" : L"false";
+
+	Cell &c2 = GetCell(L"handle paused");
+	c2.text = handle.is_paused() ? L"true" : L"false";
+
+	Cell &c3 = GetCell(L"is auto managed");
+	c3.text = handle.is_auto_managed() ? L"true" : L"false";
+
+
+
 }
 
 void Torrent::ComposeStatus() {
@@ -194,10 +209,6 @@ void Torrent::Save() {
 	// Compose text for the torrent's paused state
 	CString p = paused ? L"t" : L"f";
 
-
-	log(L"saving p as ", p);
-
-
 	// Make and fill the bencoded dictionary
 	libtorrent::entry::dictionary_type d;
 	d[narrowRtoS(L"paused")]   = narrowRtoS(p);
@@ -220,10 +231,6 @@ bool Torrent::Load(hbig hash) {
 	paused = widenStoC(d[narrowRtoS(L"paused")].string()) == CString(L"t");
 	folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Not found returns blank
 	name = widenStoC(d[narrowRtoS(L"name")].string());
-
-
-	log(L"loaded paused ", paused ? L"true" : L"false");
-
 
 	// Load in the list of trackers
 	trackers.clear();

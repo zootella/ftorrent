@@ -296,7 +296,7 @@ bool LibraryRemoveTorrent(libtorrent::torrent_handle handle, bool deletefiles);
 void Blink(hbig hash);
 Torrent *ListGetTorrent(int row);
 Torrent *FindTorrent(hbig hash);
-void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers);
+void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set<CString> trackers, bool paused);
 void AddRow(hbig hash);
 void AddMeta(hbig hash, read torrent);
 void AddOption(hbig hash);
