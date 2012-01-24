@@ -620,7 +620,7 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 			p.paused = true;
 			p.auto_managed = false;
 		} else {
-			p.paused = false;
+			p.paused = true; // Let libtorrent choose to start this torrent or another one
 			p.auto_managed = true;
 		}
 
@@ -659,7 +659,7 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 			p.paused = true;
 			p.auto_managed = false;
 		} else {
-			p.paused = false;
+			p.paused = true; // Let libtorrent choose to start this torrent or another one
 			p.auto_managed = true;
 		}
 
