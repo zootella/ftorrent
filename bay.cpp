@@ -49,6 +49,7 @@ void Torrent::UseStart() {
 	paused = false;
 	handle.auto_managed(true);
 	handle.resume();
+	Save();
 }
 
 bool Torrent::CanPause() {
@@ -60,6 +61,7 @@ void Torrent::UsePause() {
 	paused = true;
 	handle.auto_managed(false); // Prevent libtorrent from automatically starting the torrent
 	handle.pause();
+	Save();
 }
 
 
@@ -192,9 +194,9 @@ void Torrent::Save() {
 	// Compose text for the torrent's paused state
 	CString p = paused ? L"t" : L"f";
 
-	/*
+
 	log(L"saving p as ", p);
-	*/
+
 
 	// Make and fill the bencoded dictionary
 	libtorrent::entry::dictionary_type d;
@@ -219,9 +221,9 @@ bool Torrent::Load(hbig hash) {
 	folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Not found returns blank
 	name = widenStoC(d[narrowRtoS(L"name")].string());
 
-	/*
+
 	log(L"loaded paused ", paused ? L"true" : L"false");
-	*/
+
 
 	// Load in the list of trackers
 	trackers.clear();

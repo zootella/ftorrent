@@ -366,7 +366,7 @@ CString AddTorrent(read torrent, bool ask) {
 
 	// Add the torrent file to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddTorrent(&handle, folder, L"", torrent))
+	if (!LibraryAddTorrent(&handle, folder, L"", torrent, false)) // Add not paused
 		return L"Cannot add this torrent. Check how you saved or downloaded it, and try again."; // libtorrent error
 
 	AddData(handle, folder, name, trackers); // Make a torrent object in our list of them
@@ -404,7 +404,7 @@ CString AddMagnet(read magnet, bool ask) {
 
 	// Add the torrent to the libtorrent session
 	libtorrent::torrent_handle handle;
-	if (!LibraryAddMagnet(&handle, folder, L"", hash, name))
+	if (!LibraryAddMagnet(&handle, folder, L"", hash, name, false)) // Add not paused
 		return L"Cannot add this magnet link. Check the link and try again."; // libtorrent error
 
 	AddData(handle, folder, name, trackers); // Make a torrent object in our list of them
@@ -439,9 +439,9 @@ void AddStore(hbig hash) {
 	// Add to libtorrent
 	libtorrent::torrent_handle handle;
 	if (hastorrent) {
-		if (!LibraryAddTorrent(&handle, o.folder, PathTorrentStore(hash), PathTorrentMeta(hash))) return; // libtorrent error
+		if (!LibraryAddTorrent(&handle, o.folder, PathTorrentStore(hash), PathTorrentMeta(hash), o.paused)) return; // libtorrent error
 	} else {
-		if (!LibraryAddMagnet(&handle, o.folder, PathTorrentStore(hash), hash, o.name)) return;
+		if (!LibraryAddMagnet(&handle, o.folder, PathTorrentStore(hash), hash, o.name, o.paused)) return;
 	}
 
 	// Add the torrent handle to the data list and window
@@ -604,9 +604,12 @@ void AddOption(hbig hash) {
 }
 
 // Add a torrent to the libtorrent session from a torrent file on the disk
-bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent) {
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent, bool paused) {
 	try {
 		libtorrent::add_torrent_params p; // Object to fill out
+
+		// Add paused or started
+		p.paused = paused;
 
 		// Set folder
 		p.save_path = boost::filesystem::path(narrowRtoS(folder));
@@ -633,9 +636,12 @@ bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read sto
 }
 
 // Add a torrent to the libtorrent session from information parsed from a magnet link
-bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name) {
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name, bool paused) {
 	try {
 		libtorrent::add_torrent_params p; // Object to fill out
+
+		// Add paused or started
+		p.paused = paused;
 
 		// Set folder
 		p.save_path = boost::filesystem::path(narrowRtoS(folder));

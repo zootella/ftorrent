@@ -300,8 +300,8 @@ void AddData(libtorrent::torrent_handle handle, read folder, read name, std::set
 void AddRow(hbig hash);
 void AddMeta(hbig hash, read torrent);
 void AddOption(hbig hash);
-bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent);
-bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name);
+bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent, bool paused);
+bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name, bool paused);
 bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trackers);
 bool ParseTorrent(read torrent, hbig *hash, CString *name, std::set<CString> *trackers);
 void LibraryPulse();
