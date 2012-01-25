@@ -469,6 +469,7 @@ class Torrent {
 public:
 
 
+	CString Path();
 	bool paused;
 
 

@@ -13,51 +13,36 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
+CString Torrent::Path() {
+	return make(folder, L"\\", widenStoC(handle.name()));
+}
+
 
 
 
 bool Torrent::CanOpen() {
-	return false;
-
-
+	return Find(Path(), false).Found();
 }
 void Torrent::UseOpen() {
 	if (!CanOpen()) { log(L"cant open"); return; }
 
-
-
-
+	FileRun(Path());
 }
 
 bool Torrent::CanOpenContainingFolder() {
-	return false;
-
-
+	return Find(Path(), false).Found();
 }
 void Torrent::UseOpenContainingFolder() {
 	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
 
-
-
-	/*
-	//both of these work if the path is to a folder or a file
-
-	Find f1(path, false);
-	bool found = f1.Found());
-
-	FileRun(L"explorer.exe", make(L"/select, \"", path, L"\""));
-	*/
-
-	//so what is the path
-
-
-
-
-
-
-
-
+	FileRun(L"explorer.exe", make(L"/select, \"", Path(), L"\""));
 }
+
+
+
+
+
+
 
 bool Torrent::CanCopyMagnetLink() { return false; }
 void Torrent::UseCopyMagnetLink() {
@@ -161,6 +146,7 @@ void DefaultColumns() {
 	App.list.files.factory    += L"";
 
 
+	App.list.torrents.factory += L"show=true,right=false,width=100,title=command;";
 	App.list.torrents.factory += L"show=true,right=false,width=100,title=state;";
 
 	App.list.torrents.factory += L"show=true,right=false,width=150,title=Status;";
@@ -192,6 +178,7 @@ void Torrent::Compose() {
 	ComposeInfohash();
 	ComposeLocation();
 
+	GetCell(L"command").text = paused ? L"paused" : L"started";
 
 	GetCell(L"object paused").text = paused ? L"true" : L"false";
 	GetCell(L"handle paused").text = handle.is_paused() ? L"true" : L"false";
@@ -211,7 +198,7 @@ void Torrent::Compose() {
 
 
 	GetCell(L"folder").text = folder;
-	GetCell(L"path").text = make(folder, L"\\", widenStoC(handle.name()));
+	GetCell(L"path").text = Path();
 
 
 
