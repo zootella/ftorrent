@@ -106,7 +106,7 @@ int Greatest(int i1 = 0, int i2 = 0, int i3 = 0, int i4 = 0, int i5 = 0, int i6 
 void InitializeSystem();
 void KillTimerSafely(UINT_PTR timer, HWND window = NULL);
 void TimerSet(UINT_PTR timer, UINT time = 0, HWND window = NULL);
-void FileRun(read path, read parameters = L""); // Has defaults
+void FileRun(read path, read parameters = NULL); // Has defaults
 int Dialog(read resource, DLGPROC procedure = NULL, LPARAM lparam = 0); // Has defaults
 BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void AddTab(HWND window, int index, read title);

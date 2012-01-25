@@ -14,14 +14,49 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
-bool Torrent::CanOpen() { return false; }
+
+
+bool Torrent::CanOpen() {
+	return false;
+
+
+}
 void Torrent::UseOpen() {
 	if (!CanOpen()) { log(L"cant open"); return; }
+
+
+
+
 }
 
-bool Torrent::CanOpenContainingFolder() { return false; }
+bool Torrent::CanOpenContainingFolder() {
+	return false;
+
+
+}
 void Torrent::UseOpenContainingFolder() {
 	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
+
+
+
+	/*
+	//both of these work if the path is to a folder or a file
+
+	Find f1(path, false);
+	bool found = f1.Found());
+
+	FileRun(L"explorer.exe", make(L"/select, \"", path, L"\""));
+	*/
+
+	//so what is the path
+
+
+
+
+
+
+
+
 }
 
 bool Torrent::CanCopyMagnetLink() { return false; }
@@ -101,7 +136,7 @@ Cell &Torrent::GetCell(read title) {
 	// Look for it
 	int n = (int)cells.size(); // How many cells are in our list
 	for (int i = 0; i < n; i++) {
-		if (cells[i].title == CString(title))
+		if (cells[i].title == CString(title)) // Case sensitive, different cases are different
 			return cells[i]; // Found it
 	}
 
@@ -134,9 +169,17 @@ void DefaultColumns() {
 	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
 	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
 
+	/*
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=object paused;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=handle paused;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=is auto managed;";
+	*/
+
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=folder;";
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=path;";
+
+
+
 
 }
 
@@ -165,6 +208,11 @@ void Torrent::Compose() {
 	else if (s == libtorrent::torrent_status::seeding)              GetCell(L"state").text = L"seeding";
 	else if (s == libtorrent::torrent_status::allocating)           GetCell(L"state").text = L"allocating";
 	else if (s == libtorrent::torrent_status::checking_resume_data) GetCell(L"state").text = L"checking resume data";
+
+
+	GetCell(L"folder").text = folder;
+	GetCell(L"path").text = make(folder, L"\\", widenStoC(handle.name()));
+
 
 
 

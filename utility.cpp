@@ -921,7 +921,7 @@ void TimerSet(UINT_PTR timer, UINT time, HWND window) {
 	if (!SetTimer(window, timer, time, NULL)) error(L"settimer"); // Set the timer
 }
 
-// Takes a path to a file and parameters text or blank
+// Takes a path to a program and parameters, or a path to a document and null to double-click
 // Shell executes it
 void FileRun(read path, read parameters) {
 
@@ -929,12 +929,11 @@ void FileRun(read path, read parameters) {
 	ShellExecute(
 		App.window.main, // Handle to a window to get message boxes from this operation
 		NULL,            // Default run
-		path,            // File to run
-		parameters,      // Parameters ot pass to program
-		L"C:\\",         // Starting directory
+		path,            // Program file to run or document to open
+		parameters,      // Parameters ot pass to program, null if path is to a document to open
+		NULL,            // Use the current working directory
 		SW_SHOWNORMAL);  // Default show
 }
-
 
 // Takes a dialog box resource name and procedure function
 // Shows the dialog box
