@@ -388,6 +388,58 @@ public:
 	}
 };
 
+// A disk file that closes and deletes itself when the object goes out of scope
+class TemporaryFile {
+public:
+
+	CString path; // Path of file on the disk next to this running exe
+	HANDLE file;  // Handle to open disk file, null before created
+	DWORD size;   // Size in bytes of the disk file, how much data has been written to it
+	bool keep;    // True to keep the disk file, don't delete
+
+	DWORD tickcreated; // Tick count when we created the file, how old it is
+	DWORD tickwritten; // Tick count when we last added data to the file, how long we've been waiting
+
+	TemporaryFile() {
+
+		file = NULL;
+		size = 0;
+		keep = false;
+		tickcreated = tickwritten = 0;
+	}
+
+	bool Open();
+	bool Add(BYTE *b, int n);
+
+	~TemporaryFile() {
+
+		if (file) {
+			CloseHandle(file);
+			if (!keep) {
+				DeleteFile(path);
+			}
+		}
+	}
+};
+
+
+/*
+class InternetHandle {
+public:
+
+	HINTERNET handle;
+
+	InternetHandle() {
+		handle = NULL;
+	}
+
+	~InternetHandle() {
+		if (handle) InternetCloseHandle(handle);
+	}
+}
+*/
+
+
 
 
 

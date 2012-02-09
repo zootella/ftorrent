@@ -5,15 +5,53 @@ extern app App; // Access global object
 // Run a snippet of test code
 void Test() {
 
+	TemporaryFile file;
 
-	Memory m;
-	m.Allocate(5);
-	memcpy(m.block, "hello", 5);
-	m.Save(L"C:\\Documents\\saved.txt");
+	file.Open();
+	file.Add((BYTE *)"hello", 5);
+	file.Add((BYTE *)" you", 4);
+
+
+
 
 }
 
+
+
+
+bool TemporaryFile::Open() {
+
+	// Choose a new random path
+	path = make(PathRunningFolder(), L"\\", TextGuid(), L".dnld.db");
+
+	// Open the file, overwriting if necessary
+	file = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (!file || file == INVALID_HANDLE_VALUE) return false;
+
+	// Record the time when this happened
+	tickcreated = GetTickCount();
+	return true;
+}
+
+bool TemporaryFile::Add(BYTE *b, int n) {
+
+	// Write our data to the file
+	DWORD written = 0;
+	int result = WriteFile(file, b, n, &written, NULL);
+	if (!result || written != n) return false;
+
+	// Update our record of the file's total size, and when this happened
+	size += n;
+	tickwritten = GetTickCount();
+	return true;
+}
+
+
+
+
 /*
+
+//TODO update project to link to wininet, confirm this doesn't make the exe bigger
 
 // Given a http request handle and a header identifier, reads the number value of the header as i and returns true
 bool HeaderNumberRead(HINTERNET request, DWORD header, int *i) {
@@ -25,15 +63,27 @@ bool HeaderNumberRead(HINTERNET request, DWORD header, int *i) {
 	return true;
 }
 
-bool Download(CString url) {
+
+
+
+
+#define DOWNLOAD_BAY 4 * 1024 // 4 KB download bay
+
+
+// make an object that holds a temporary file that closes and deletes on exit, unless you call file.Keep()
+// also, it keeps track of how large it is, how much has been written to it
+
+
+bool Download(CString url, CString *path) {
+
+	//TODO do you need to replace %20 in the url with spaces and stuff like that?
 
 	// Initialize wininet
 	if (!App.internet) App.internet = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0); // Do once the first time this runs
 	if (!App.internet) return false;
-	//add INTERNET_FLAG_NO_CACHE_WRITE to not mess up the ie cache
 
 	// Request the URL
-	HINTERNET request = InternetOpenUrl(App.internet, url, NULL, 0, INTERNET_FLAG_EXISTING_CONNECT, 0);
+	HINTERNET request = InternetOpenUrl(App.internet, url, NULL, 0, INTERNET_FLAG_EXISTING_CONNECT | INTERNET_FLAG_NO_CACHE_WRITE, 0);
 	if (!request) return false;
 
 	// Read the response HTTP headers
@@ -42,39 +92,40 @@ bool Download(CString url) {
 	if (!HeaderNumberRead(request, HTTP_QUERY_CONTENT_LENGTH, &contentlength)) return false;
 
 	//TODO if status code is bad, or content length is 0 or too big, return false
+	//TODO you need to call InternetCloseHandle(request);
 
-	//TODO what happens when it's a script that's going to dynamically return something, and you don't know the content length?
-	//find a gulp way to do this also, like allocate 5mb or whatever and parse whatever you get as a torrent
-	//in this way though, confirm that the second call returns nothing
+	BYTE bay[DOWNLOAD_BAY];
 
-	// Allocate a block of memory to hold the whole file
-	LPBYTE memory = (LPBYTE)HeapAlloc(Handle.heap, 0, contentlength);
-	if (!memory) return false;
+	DownloadFile file;
+	if (!file.Open()) return false;
 
-	// Download the data
-	DWORD downloaded = 0;
-	int result = InternetReadFile(request, memory, contentlength, &downloaded);
-	if (!result || contentlength != downloaded) return false;
+	DWORD downloaded;
 
-	// Confirm that was all of it
-	BYTE bay[MAX_PATH];
-	DWORD beyond = 0;
-	result = InternetReadFile(request, bay, MAX_PATH, &beyond);
+	while (true) {
 
+		// Download the data
+		downloaded = 0;
+		int result = InternetReadFile(request, memory, DOWNLOAD_BAY, &downloaded);
+		if (!result) return false; // Error
+		if (!downloaded) break; // Done
 
+		// Add it to the file
+		if (!file.Add(bay, downloaded)) return false;
 
+		//TODO put in time limit and size limit
+		//TODO put in appplication list of downloads and cancel
+	}
 
-
-	InternetCloseHandle(request);
-
+	file.keep = true;
+	*path = file.path;
+	return true;
 }
 
 
-
-
-
-
 */
+
+
+
 
 
 
