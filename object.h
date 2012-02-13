@@ -422,22 +422,20 @@ public:
 	}
 };
 
-
-/*
+// Save an internet handle here to have this object close it when it goes out of scope
 class InternetHandle {
 public:
 
 	HINTERNET handle;
 
 	InternetHandle() {
-		handle = NULL;
+		handle = NULL; // No handle saved here yet
 	}
 
 	~InternetHandle() {
-		if (handle) InternetCloseHandle(handle);
+		if (handle) InternetCloseHandle(handle); // If we've got a handle, close it
 	}
-}
-*/
+};
 
 
 

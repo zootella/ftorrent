@@ -191,11 +191,14 @@ public:
 	libtorrent::session *session; // Session in libtorrent
 	std::vector<Torrent> torrents; // Torrents the program has in its list
 
+	HINTERNET internet; // Handle to wininet library, null before we use it
+
 
 	std::vector<Cell> cells1;
 	std::vector<Cell> cells2;
 
 	app() {
 		session = NULL;
+		internet = NULL;
 	}
 };
