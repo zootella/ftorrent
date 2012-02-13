@@ -35,6 +35,7 @@
 #include <atlstr.h>
 #include <shlobj.h>
 #include <netfw.h>
+#include <wininet.h>
 
 // Include program
 #include "resource.h"

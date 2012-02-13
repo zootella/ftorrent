@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib"
+				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-sgd.lib libboost_filesystem-vc90-mt-sgd.lib libboost_system-vc90-mt-sgd.lib libboost_thread-vc90-mt-sgd.lib libtorrent-debug.lib wininet.lib"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib"
+				AdditionalDependencies="comctl32.lib ssleay32.lib libeay32.lib libboost_date_time-vc90-mt-s.lib libboost_filesystem-vc90-mt-s.lib libboost_system-vc90-mt-s.lib libboost_thread-vc90-mt-s.lib libtorrent-release.lib wininet.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"

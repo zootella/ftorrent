@@ -12,6 +12,7 @@ void Test() {
 	file.Add((BYTE *)" you", 4);
 
 
+	HINTERNET internet;
 
 
 }

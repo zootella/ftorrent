@@ -185,6 +185,7 @@ libboost_filesystem-vc90-mt-sgd.lib
 libboost_system-vc90-mt-sgd.lib
 libboost_thread-vc90-mt-sgd.lib
 libtorrent-debug.lib
+wininet.lib
 
 Release
 comctl32.lib
@@ -195,6 +196,7 @@ libboost_filesystem-vc90-mt-s.lib
 libboost_system-vc90-mt-s.lib
 libboost_thread-vc90-mt-s.lib
 libtorrent-release.lib
+wininet.lib
 
 See the whole command line at C/C++, Command Line and Linker, Command Line
 
