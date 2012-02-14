@@ -4,11 +4,11 @@ extern app App; // Access global object
 
 
 
-
+// Create and open a new temporary file to fill with data
 bool TemporaryFile::Open() {
 
 	// Choose a new random path
-	path = make(PathRunningFolder(), L"\\", TextGuid(), L".dnld.db");
+	path = make(PathRunningFolder(), L"\\", TextGuid(), L".temporary.db");
 
 	// Open the file, overwriting if necessary
 	file = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -19,6 +19,7 @@ bool TemporaryFile::Open() {
 	return true;
 }
 
+// Add n bytes at b to the end of our open file
 bool TemporaryFile::Add(BYTE *b, int n) {
 
 	// Write our data to the file
@@ -32,6 +33,26 @@ bool TemporaryFile::Add(BYTE *b, int n) {
 	return true;
 }
 
+// Close and rename the file
+bool TemporaryFile::Keep() {
+
+
+	if (file) {
+		CloseHandle(file);
+		file = NULL;
+	}
+
+	keep = true;
+
+	CString source = path;
+	path = make(PathRunningFolder(), L"\\", TextGuid(), L".download.db");
+
+	if (!MoveFile(source, path)) return false;
+	return true;
+
+
+
+}
 
 
 
@@ -100,6 +121,10 @@ bool Download(CString url) {
 		// Add it to the file
 		if (!file.Add(bay, downloaded)) return false;
 	}
+
+	// Enforce the time and size limits
+	if (file.tickcreated + DOWNLOAD_TIME_LIMIT < GetTickCount()) return false;
+	if (file.size > DOWNLOAD_SIZE_LIMIT) return false;
 
 	// File downloaded, keep it
 	file.keep = true;

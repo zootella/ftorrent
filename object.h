@@ -393,9 +393,8 @@ class TemporaryFile {
 public:
 
 	CString path; // Path of file on the disk next to this running exe
-	HANDLE file;  // Handle to open disk file, null before created
+	HANDLE file;  // Handle to open disk file, null before created, null
 	DWORD size;   // Size in bytes of the disk file, how much data has been written to it
-	bool keep;    // True to keep the disk file, don't delete
 
 	DWORD tickcreated; // Tick count when we created the file, how old it is
 	DWORD tickwritten; // Tick count when we last added data to the file, how long we've been waiting
@@ -410,14 +409,14 @@ public:
 
 	bool Open();
 	bool Add(BYTE *b, int n);
+	bool Keep();
 
 	~TemporaryFile() {
 
+		// If the file is still open, close it and delete it
 		if (file) {
 			CloseHandle(file);
-			if (!keep) {
-				DeleteFile(path);
-			}
+			if (path != CString(L"")) DeleteFile(path);
 		}
 	}
 };
