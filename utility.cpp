@@ -893,6 +893,9 @@ int Greatest(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
 // Tell the system what libraries this new process will use
 void InitializeSystem() {
 
+	// Initialize the critical section we'll use for web downloads
+	InitializeCriticalSection(&App.web.section);
+
 	// Initialize the COM library including OLE
 	HRESULT result = OleInitialize(NULL);
 	if (result != S_OK && result != S_FALSE) error(L"oleinitialize"); // False just means already initialized
@@ -2299,4 +2302,101 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 		if (!ListView_SetItem(window, &info)) error(L"listview_setitem");
 		c->Same(); // Record that now display matches data
 	}
+}
+
+// Download url to a ".download.db" file next to this running exe, or give up if it's too big or too slow
+void WebDownload(CString url) {
+
+	// Initialize wininet
+	if (!App.web.wininet) App.web.wininet = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0); // Do once for the first web download each time the program runs
+	if (!App.web.wininet) { error(L"internetopen"); return; }
+
+	// Save the url where the thread can get it
+	EnterCriticalSection(&App.web.section);
+	App.web.url = url;
+	LeaveCriticalSection(&App.web.section);
+
+	// Have a thread run the webthread1 function to perform the download
+	BeginThread(WebThread1);
+}
+
+// Download the url the program wants us to
+void WebThread1() {
+
+	// Find out what to download
+	EnterCriticalSection(&App.web.section);
+	CString url = App.web.url; // Move the url from the global string to a local one
+	App.web.url = L"";
+	DWORD started = App.web.started = GetTickCount(); // Record when this most recent download started
+	LeaveCriticalSection(&App.web.section);
+
+	// Download the file from the web
+	if (isblank(url)) return; // Make sure we actually got a url
+	bool result = WebThread2(url, started); // Download the file and get the result
+
+	// Report our result
+	EnterCriticalSection(&App.web.section);
+	if (result) { // Only do something if it worked, because if it didn't, we can't control how quickly execution gets back here
+		App.web.finished = GetTickCount(); // Mark the finished time to prevent the "Cannot download file" message from showing
+		App.web.look = true; // Set the look flag so the program looks for new ".download.db" files to open
+	}
+	LeaveCriticalSection(&App.web.section);
+}
+
+// Download url before its too late after the given started time
+bool WebThread2(read url, DWORD started) {
+
+	// Request the URL
+	CString headers = L"";//TODO add the referrer header
+	WebHandle request;
+	request.handle = InternetOpenUrl(App.web.wininet, url, headers, 0, INTERNET_FLAG_EXISTING_CONNECT | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+	if (!request.handle) return false;
+
+	// Read the response HTTP headers
+	int statuscode, contentlength;
+	if (!WebHeaderNumberRead(request.handle, HTTP_QUERY_STATUS_CODE,    &statuscode))    return false;
+	if (!WebHeaderNumberRead(request.handle, HTTP_QUERY_CONTENT_LENGTH, &contentlength)) return false;
+
+	//TODO if status code is bad, or content length is 0 or too big, return false
+
+	// Create and open a new temporary file next to this running exe
+	WebFile file;
+	if (!file.Open()) return false;
+
+	// Download loop
+	BYTE bay[WEB_BAY_SIZE];
+	DWORD downloaded;
+	while (true) {
+
+		// Enforce the time and size limits
+		if (started + WEB_TIME_LIMIT < GetTickCount()) return false;
+		if (file.size > WEB_SIZE_LIMIT) return false;
+
+		// Download the data
+		downloaded = 0;
+		int result = InternetReadFile(request.handle, bay, WEB_BAY_SIZE, &downloaded);
+		if (!result) return false; // Error
+		if (!downloaded) break; // Done when internet read file returns without downloading anything
+
+		// Add it to the file
+		if (!file.Add(bay, downloaded)) return false;
+	}
+
+	// Enforce the time and size limits
+	if (started + WEB_TIME_LIMIT < GetTickCount()) return false;
+	if (file.size > WEB_SIZE_LIMIT) return false;
+
+	// File downloaded, keep it
+	file.Keep();
+	return true;
+}
+
+// Given a http request handle and a header identifier, reads the number value of the header as i and returns true
+bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i) {
+
+	DWORD d, size;
+	size = sizeof(d);
+	if (!HttpQueryInfo(request, header | HTTP_QUERY_FLAG_NUMBER, &d, &size, NULL)) return false;
+	*i = d;
+	return true;
 }

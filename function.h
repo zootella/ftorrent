@@ -196,6 +196,10 @@ int ListFind(HWND window, LPARAM p);
 Size CellSize(HWND window, int row, int column);
 void CellShow(HWND window, std::vector<Cell> &cells);
 void CellShowDo(HWND window, Cell *c, bool add);
+void WebDownload(CString url);
+void WebThread1();
+bool WebThread2(read url, DWORD started);
+bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i);
 
 // Wrap
 // start

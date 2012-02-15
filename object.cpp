@@ -178,3 +178,44 @@ void Device::BackgroundColor(COLORREF newcolor) {
 	COLORREF outcolor = SetBkColor(device, newcolor);
 	if (!replacebackgroundcolor) { replacebackgroundcolor = true; backgroundcolor = outcolor; }
 }
+
+// Create and open a new temporary file to fill with data
+bool WebFile::Open() {
+
+	// Choose a new random path for the open temporary file
+	path = make(PathRunningFolder(), L"\\", TextGuid(), L".temporary.db");
+
+	// Open the file, overwriting if necessary
+	file = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (!file || file == INVALID_HANDLE_VALUE) return false;
+	return true;
+}
+
+// Add n bytes at b to the end of our open file
+bool WebFile::Add(BYTE *b, int n) {
+
+	// Write our data to the file
+	DWORD written = 0;
+	int result = WriteFile(file, b, n, &written, NULL);
+	if (!result || written != n) return false;
+
+	// Update our record of the file's total size
+	size += n;
+	return true;
+}
+
+// Close and rename the file
+bool WebFile::Keep() {
+
+	// Close the file and null the handle so we don't delete it when this object goes out of scope
+	if (file) {
+		CloseHandle(file);
+		file = NULL;
+	}
+
+	// Compose a new random path for the finished download file
+	CString source = path;
+	path = make(PathRunningFolder(), L"\\", TextGuid(), L".download.db");
+	if (!MoveFile(source, path)) return false;
+	return true;
+}

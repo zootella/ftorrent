@@ -343,6 +343,7 @@ public:
 	}
 };
 
+/*
 // A block of memory that can save itself to disk, and frees and closes when the object goes out of scope
 class Memory {
 public:
@@ -387,51 +388,47 @@ public:
 		if (file) { CloseHandle(file); file = NULL; }
 	}
 };
+*/
 
-// A disk file that closes and deletes itself when the object goes out of scope
-class TemporaryFile {
+// A disk file for a web download that closes and deletes itself when the object goes out of scope
+class WebFile {
 public:
 
 	CString path; // Path of file on the disk next to this running exe
 	HANDLE file;  // Handle to open disk file, null before created, null
 	DWORD size;   // Size in bytes of the disk file, how much data has been written to it
 
-	DWORD tickcreated; // Tick count when we created the file, how old it is
-	DWORD tickwritten; // Tick count when we last added data to the file, how long we've been waiting
-
-	TemporaryFile() {
+	WebFile() {
 
 		file = NULL;
 		size = 0;
-		keep = false;
-		tickcreated = tickwritten = 0;
 	}
 
 	bool Open();
 	bool Add(BYTE *b, int n);
 	bool Keep();
 
-	~TemporaryFile() {
+	~WebFile() {
 
-		// If the file is still open, close it and delete it
+		// Delete the file if we didn't close it
 		if (file) {
 			CloseHandle(file);
-			if (path != CString(L"")) DeleteFile(path);
+			DeleteFile(path);
 		}
 	}
 };
 
-// Save an internet handle here to have this object close it when it goes out of scope
-class InternetHandle {
+// Save a wininet handle here to have this object close it when it goes out of scope
+class WebHandle {
 public:
 
 	HINTERNET handle;
 
-	InternetHandle() {
+	WebHandle() {
 		handle = NULL; // No handle saved here yet
 	}
 
-	~InternetHandle() {
+	~WebHandle() {
 		if (handle) InternetCloseHandle(handle); // If we've got a handle, close it
 	}
 };

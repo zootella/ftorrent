@@ -170,6 +170,25 @@ public:
 	}
 };
 
+class app_web {
+public:
+
+	HINTERNET wininet; // Handle to wininet library, null before we use it
+	CRITICAL_SECTION section; // Critical section for app variables the thread uses
+
+	// Only touch these variables inside the critical section
+	CString url;     // Address of most recent download
+	DWORD started;   // Tick count when the most recent download started, 0 before any
+	DWORD finished;  // Tick count when the most recent download finished successfully, 0 before any
+	bool look;       // True when a thread saved a new download file for the program to open
+
+	app_web() {
+		wininet = NULL;
+		started = finished = 0;
+		look = false;
+	}
+};
+
 class app {
 public:
 
@@ -187,11 +206,10 @@ public:
 	app_cycle cycle; // Start and close of the program
 	app_stage stage; // Current global download stage
 	app_option option; // Program options the user sets
+	app_web web; // Download files from the web
 
 	libtorrent::session *session; // Session in libtorrent
 	std::vector<Torrent> torrents; // Torrents the program has in its list
-
-	HINTERNET internet; // Handle to wininet library, null before we use it
 
 
 	std::vector<Cell> cells1;
@@ -199,6 +217,5 @@ public:
 
 	app() {
 		session = NULL;
-		internet = NULL;
 	}
 };

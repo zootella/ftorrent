@@ -42,3 +42,8 @@ typedef const wchar_t *read; // read is a pointer to wide characters and a null 
 // Text options
 enum direction {Forward,   Reverse};  // Default forward and the start, or reverse and the end
 enum matching  {Different, Matching}; // Default case sensitive, or case insensitive matching
+
+// Web download limits
+#define WEB_BAY_SIZE          1 * 1024 // 1 KB download bay, in bytes
+#define WEB_SIZE_LIMIT 4 * 1024 * 1024 // 4 MB download size limit, in bytes
+#define WEB_TIME_LIMIT        4 * 1000 // 4 second download time limit, in milliseconds
