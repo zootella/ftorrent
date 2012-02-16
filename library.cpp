@@ -312,6 +312,10 @@ CString CreateTorrent(read path, bool ask) {
 	return L"";
 }
 CString DownloadTorrent(read address, bool ask) {
+
+	//TODO the user could also be downloading a skin
+	WebDownload(address);
+
 	return L"";
 }
 

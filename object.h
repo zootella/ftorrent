@@ -343,53 +343,6 @@ public:
 	}
 };
 
-/*
-// A block of memory that can save itself to disk, and frees and closes when the object goes out of scope
-class Memory {
-public:
-
-	DWORD size;   // Size in bytes of the memory block and disk file
-	LPBYTE block; // Pointer to allocated memory, null before memory allocation
-	HANDLE file;  // Handle to open disk file, null before created
-
-	Memory() {
-
-		size = 0;
-		block = NULL;
-		file = NULL;
-	}
-
-	// Allocate s bytes of memory
-	bool Allocate(DWORD s) {
-
-		size = s;
-		block = (LPBYTE)malloc(size);
-		if (!block) return false;
-		return true;
-	}
-
-	// Save our memory to a new file at path on the disk
-	bool Save(read path) {
-
-		// Open the file, overwriting if necessary
-		file = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (!file || file == INVALID_HANDLE_VALUE) return false;
-
-		// Write our data to the file
-		DWORD written = 0;
-		int result = WriteFile(file, block, size, &written, NULL);
-		if (!result || written != size) return false;
-		return true;
-	}
-
-	~Memory() {
-
-		if (block) { free(block); block = NULL; }
-		if (file) { CloseHandle(file); file = NULL; }
-	}
-};
-*/
-
 // A disk file for a web download that closes and deletes itself when the object goes out of scope
 class WebFile {
 public:

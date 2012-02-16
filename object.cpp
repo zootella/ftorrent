@@ -28,9 +28,9 @@ HRESULT __stdcall Target::Drop(IDataObject *data, DWORD key, POINTL point, DWORD
 
 		// Add it
 		if      (is(linkmagnet))  { AddMagnet(linkmagnet,      false); } // Drag in magnet link on the web
-		else if (is(linkother))   { DownloadTorrent(linkother, false); } // Download torrent file from the web (TODO)
+		else if (is(linkother))   { DownloadTorrent(linkother, false); } // Download torrent file or skin from the web (TODO)
 		else if (is(disktorrent)) { AddTorrent(disktorrent,    false); } // Drag in torrent file on the disk
-		else if (is(diskother))   { CreateTorrent(diskother,   false); } // Create torrent from file or folder on the disk (TODO)
+		else if (is(diskother))   { CreateTorrent(diskother,   false); } // Create torrent from file or folder on the disk, or put on skin (TODO)
 
 		// Show the mouse pointer with a plus icon
 		*effect = DROPEFFECT_COPY;

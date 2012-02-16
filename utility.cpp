@@ -1791,9 +1791,9 @@ void SetupRemove() {
 // Determines if we can do anything with what the user is bringing us without checking the disk or network
 // Returns false if not, or true and sorts and saves the incoming text if the pointers aren't null
 // linkmagnet   A magnet link dragged in from a web browser, we can add it
-// linkother    A web link dragged in from a web browser, we can download a torrent from it and add it
+// linkother    A web link dragged in from a web browser, we can download a torrent from it and add it, or download a skin and put it on
 // disktorrent  Path to a torrent file on a local disk or network share, we can open it and add it
-// diskother    Path to a file or folder on a local disk or network share, we can make a new torrent from it and seed it
+// diskother    Path to a file or folder on a local disk or network share, we can make a new torrent from it and seed it, or put on a skin
 bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString *disktorrent, CString *diskother) {
 
 	// True once we find a link or path we can use
@@ -1812,7 +1812,7 @@ bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString
 				name = bay;
 
 				// The format is one we're looking for
-				if (name == L"FileNameW" || name == L"UniformResourceLocatorW") {
+				if (name == L"FileNameW" || name == L"UniformResourceLocator") {
 
 					// Get the storage data value
 					ZeroMemory(&storage, sizeof(storage));
@@ -1821,28 +1821,35 @@ bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString
 
 						// Copy out the text
 						HGLOBAL g = storage.hGlobal;
-						WCHAR *w = (WCHAR *)GlobalLock(g); // Lock the global memory handle
-						if (w) value = w;
-						else   value = L"";
+						LPVOID p = GlobalLock(g); // Lock the global memory handle
+						if (p) {
+							if (name == L"FileNameW") { // File name data is unicode, copy it
+								value = (WCHAR *)p;
+							} else if (name == L"UniformResourceLocator") { // URL data is ascii, widen it
+								value = widenPtoC((char *)p);
+							}
+						} else {
+							value = L"";
+						}
 						GlobalUnlock(g); // Unlock the global memory handle
 
 						// Sort what we got
 						if (is(value)) {
-							if (name == L"FileNameW") {
-								if (trails(value, L".torrent", Matching)) {
+							if (name == L"FileNameW") {                     // Disk path from Windows Explorer
+								if (trails(value, L".torrent", Matching)) { // Torrent file to add
 									if (disktorrent) *disktorrent = value;
 									can = true;
-								} else {
+								} else {                                    // Skin file to put on, or file or folder to create torrent
 									if (diskother) *diskother = value;
-									can = false; //TODO code drag in files and folders to make torrents and change this to true
+									can = false; //TODO
 								}
-							} else if (name == L"UniformResourceLocatorW") {
-								if (starts(value, L"magnet:", Matching)) {
+							} else if (name == L"UniformResourceLocator") { // Web link from a web browser
+								if (starts(value, L"magnet:", Matching)) {  // Magnet link to add
 									if (linkmagnet) *linkmagnet = value;
 									can = true;
-								} else {
+								} else {                                    // Web link like http or https to download and add torrent or put on skin
 									if (linkother) *linkother = value;
-									can = false; //TODO code download torrents from the web and change this to true
+									can = true;
 								}
 							}
 						}
@@ -2346,18 +2353,19 @@ void WebThread1() {
 // Download url before its too late after the given started time
 bool WebThread2(read url, DWORD started) {
 
-	// Request the URL
-	CString headers = L"";//TODO add the referrer header
+	// Request the URL, so far tests show you don't need to url encode or decode the text dragged in from the browser
+	CString headers = make(L"Referer: ", url, L"\r\n"); // Compose the referrer header, which must be mispelled
 	WebHandle request;
 	request.handle = InternetOpenUrl(App.web.wininet, url, headers, 0, INTERNET_FLAG_EXISTING_CONNECT | INTERNET_FLAG_NO_CACHE_WRITE, 0);
 	if (!request.handle) return false;
 
-	// Read the response HTTP headers
-	int statuscode, contentlength;
+	// Check the response HTTP headers the server sent us
+	int statuscode = -1;
+	int contentlength = -1;
 	if (!WebHeaderNumberRead(request.handle, HTTP_QUERY_STATUS_CODE,    &statuscode))    return false;
 	if (!WebHeaderNumberRead(request.handle, HTTP_QUERY_CONTENT_LENGTH, &contentlength)) return false;
-
-	//TODO if status code is bad, or content length is 0 or too big, return false
+	if (statuscode != 200) return false; // Status code not ok
+	if (contentlength < 1 || contentlength > WEB_SIZE_LIMIT) return false; // Content length too long or wrong
 
 	// Create and open a new temporary file next to this running exe
 	WebFile file;
@@ -2382,6 +2390,9 @@ bool WebThread2(read url, DWORD started) {
 		if (!file.Add(bay, downloaded)) return false;
 	}
 
+	// Make sure we downloaded some data
+	if (!file.size) return false;
+
 	// Enforce the time and size limits
 	if (started + WEB_TIME_LIMIT < GetTickCount()) return false;
 	if (file.size > WEB_SIZE_LIMIT) return false;
@@ -2396,7 +2407,7 @@ bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i) {
 
 	DWORD d, size;
 	size = sizeof(d);
-	if (!HttpQueryInfo(request, header | HTTP_QUERY_FLAG_NUMBER, &d, &size, NULL)) return false;
+	if (!HttpQueryInfo(request, header | HTTP_QUERY_FLAG_NUMBER, &d, &size, NULL)) return false; //TODO update for content lengths larger than a dword can hold
 	*i = d;
 	return true;
 }
