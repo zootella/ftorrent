@@ -191,9 +191,9 @@ void LibraryStart() {
 		App.session->add_extension(&libtorrent::create_smart_ban_plugin);   // Quickly block peers that send poison data
 
 		// Set libtorrent settings
-		libtorrent::session_settings s; // Make a new libtorrent session settings object
-		s.stop_tracker_timeout = 2;     // Wait 2 seconds instead of 5 for trackers to respond to our goodbye when the program exits
-		App.session->set_settings(s);   // Apply the settings to libtorrent
+		libtorrent::session_settings s;           // Make a new libtorrent session settings object
+		s.stop_tracker_timeout = EXIT_TIME_LIMIT; // Wait 2 seconds instead of 5 for trackers to respond to our goodbye when the program exits
+		App.session->set_settings(s);             // Apply the settings to libtorrent
 
 		// Start libtorrent services
 		App.session->start_dht();  // Distributed hash table for trackerless torrents

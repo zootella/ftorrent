@@ -164,10 +164,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	}
 
 	OptionSave(); // Save App.option varibles to optn.db for next time
-	log(L"library close before");
-	LibraryClose(); // Close libtorrent, this can be quick or take several seconds
-	log(L"library close after");
+	LibraryClose(); // Close libtorrent, this can be quick or take several seconds, but shouldn't exceed exit_time_limit
 	FirewallRemove(PathRunningFile());
+
+	// Log how long it took from when the user clicked exit to winmain returning and the process exiting
+	DWORD exittime = GetTickCount() - App.cycle.exit;
+	CString exitmessage = make(L"exited in ", InsertCommas(numerals(exittime)), L"ms");
+	if (exittime > (EXIT_TIME_LIMIT * 1000) + 500) exitmessage += CString(L", which is beyond the maximum time limit which should be possible!").MakeUpper();
+	log(exitmessage);
 
 	// Return the value from the quit message
 	return (int)message.wParam;
