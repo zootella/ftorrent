@@ -435,13 +435,6 @@ void NotifyRightClick(HWND window) {
 		MenuSet(App.menu.torrent, IdentifyTorrentRemove,               App.area.remove.command      == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 		MenuSet(App.menu.torrent, IdentifyTorrentDelete,               App.area.deletefiles.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 
-		// Gray out menu items that can't work on more than one torrent at a time
-		if (ListSelectedRows(window) > 1) {
-			MenuSet(App.menu.torrent, IdentifyTorrentOpen,                 MFS_DISABLED);
-			MenuSet(App.menu.torrent, IdentifyTorrentOpenContainingFolder, MFS_DISABLED);
-			MenuSet(App.menu.torrent, IdentifyTorrentSaveTorrentAs,        MFS_DISABLED);
-		}
-
 		// Show the context menu and get the user's choice
 		int choice = MenuShow(App.menu.torrent);
 		int rows = ListRows(window); // Find out how many rows there are to be able to loop through them

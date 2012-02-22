@@ -289,18 +289,36 @@ void AreaPulse() {
 	// Set button command states
 	App.area.tools.command = CommandMenu;
 
-	// One or more rows are selected
-	if (ListSelectedRows(App.list.torrents.window)) {
+	// Find out how many torrents are selected
+	int selectedrows = ListSelectedRows(App.list.torrents.window);
 
-		// Set commands available to begin
-		App.area.open.command        =
-		App.area.openfolder.command  =
-		App.area.copymagnet.command  =
-		App.area.savetorrent.command =
-		App.area.start.command       =
-		App.area.pause.command       =
-		App.area.remove.command      =
-		App.area.deletefiles.command = CommandReady;
+	// Nothing selected
+	if (!selectedrows) {
+
+		// All commands unavailable
+		App.area.open.command        = CommandUnavailable;
+		App.area.openfolder.command  = CommandUnavailable;
+		App.area.copymagnet.command  = CommandUnavailable;
+		App.area.savetorrent.command = CommandUnavailable;
+		App.area.start.command       = CommandUnavailable;
+		App.area.pause.command       = CommandUnavailable;
+		App.area.remove.command      = CommandUnavailable;
+		App.area.deletefiles.command = CommandUnavailable;
+
+	// One or more torrents are selected
+	} else {
+
+		// Commands where any selected torrent that can't do it makes the command for all of them unavailable
+		App.area.open.command        = CommandReady; // Start out available
+		App.area.openfolder.command  = CommandReady;
+		App.area.copymagnet.command  = CommandReady;
+		App.area.savetorrent.command = CommandReady;
+
+		// Commands where any selected torrent that can do it makes the command for all of them available
+		App.area.start.command       = CommandUnavailable; // Start out grayed
+		App.area.pause.command       = CommandUnavailable;
+		App.area.remove.command      = CommandUnavailable;
+		App.area.deletefiles.command = CommandUnavailable;
 
 		// Loop for each selected row
 		int rows = ListRows(App.list.torrents.window);
@@ -310,30 +328,28 @@ void AreaPulse() {
 				// Any selected unavailable torrent disables the button
 				Torrent *t = ListGetTorrent(row);
 				if (t) {
-					if (!t->CanOpen())                 App.area.open.command        = CommandUnavailable;
+
+					// Commands where any selected torrent that can't do it makes the command for all of them unavailable
+					if (!t->CanOpen())                 App.area.open.command        = CommandUnavailable; // One that can't grays the command
 					if (!t->CanOpenContainingFolder()) App.area.openfolder.command  = CommandUnavailable;
 					if (!t->CanCopyMagnetLink())       App.area.copymagnet.command  = CommandUnavailable;
 					if (!t->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
-					if (!t->CanStart())                App.area.start.command       = CommandUnavailable;
-					if (!t->CanPause())                App.area.pause.command       = CommandUnavailable;
-					if (!t->CanRemove())               App.area.remove.command      = CommandUnavailable;
-					if (!t->CanDelete())               App.area.deletefiles.command = CommandUnavailable;
+
+					// Commands where any selected torrent that can do it makes the command for all of them available
+					if (t->CanStart())                 App.area.start.command       = CommandReady; // One that can makes the command available
+					if (t->CanPause())                 App.area.pause.command       = CommandReady;
+					if (t->CanRemove())                App.area.remove.command      = CommandReady;
+					if (t->CanDelete())                App.area.deletefiles.command = CommandReady;
 				}
 			}
 		}
+	}
 
-	// Nothing selected
-	} else {
-
-		// Set commands unavailable
-		App.area.open.command        =
-		App.area.openfolder.command  =
-		App.area.copymagnet.command  =
-		App.area.savetorrent.command =
-		App.area.start.command       =
-		App.area.pause.command       =
-		App.area.remove.command      =
-		App.area.deletefiles.command = CommandUnavailable;
+	// If multiple torrents are selected, gray out commands that only make sense if a single torrent is selected
+	if (selectedrows > 1) {
+		App.area.open.command        = CommandUnavailable;
+		App.area.openfolder.command  = CommandUnavailable;
+		App.area.savetorrent.command = CommandUnavailable;
 	}
 
 	// Find what area the mouse is over, if it is inside the client area of the window, and if the primary button is up or down
