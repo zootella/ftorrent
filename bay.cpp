@@ -17,47 +17,49 @@ CString Torrent::Path() {
 	return make(folder, L"\\", widenStoC(handle.name()));
 }
 
-
-
-
-bool Torrent::CanOpen() {
-	return Find(Path(), false).Found();
+CString Torrent::MagnetLink() {
+	return L"";
 }
+
+
+
+
+
+// Open the folder of multiple files, open the single document file, or run the single program file that is this torrent's data on the disk
+bool Torrent::CanOpen() { return DiskFound(Path()); }
 void Torrent::UseOpen() {
 	if (!CanOpen()) { log(L"cant open"); return; }
 
 	FileRun(Path());
 }
 
-bool Torrent::CanOpenContainingFolder() {
-	return Find(Path(), false).Found();
-}
+// Open the folder that contains the can open disk object above, and select it
+bool Torrent::CanOpenContainingFolder() { return DiskFound(Path()); }
 void Torrent::UseOpenContainingFolder() {
 	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
 
 	FileRun(L"explorer.exe", make(L"/select, \"", Path(), L"\""));
 }
 
-
-
-
-
-
-
-bool Torrent::CanCopyMagnetLink() { return false; }
-void Torrent::UseCopyMagnetLink() {
+// Copy this torret's magnet link to the clipboard, letting the user get it out from the program to use it elsewhere
+bool Torrent::CanCopyMagnetLink() { return is(MagnetLink()); }
+void Torrent::UseCopyMagnetLink(CString *copy) {
 	if (!CanCopyMagnetLink()) { log(L"cant copy magnet link"); return; }
+
+	if (is(*copy)) copy += L"\r\n";
+
+	//TODO, this needs to work with multiple selection, so don't go to the clipboard here
 }
 
-bool Torrent::CanSaveTorrentAs() { return false; }
+// Save the torrent file, letting the user get it out from the program to use it elsewhere
+bool Torrent::CanSaveTorrentAs() { return DiskFound(PathTorrentMeta(handle.info_hash())); }
 void Torrent::UseSaveTorrentAs() {
 	if (!CanSaveTorrentAs()) { log(L"cant save torrent as"); return; }
+
+	CString destination = DialogSave(ReplaceSafe(ReplacePercent(widenStoC(handle.name())))); // Make the torrent name safe for a file name on the disk
+	if (isblank(destination)) return;                                                        // The user clicked cancel in the save as dialog box
+	DiskCopyFile(PathTorrentMeta(handle.info_hash()), destination, true);                    // Overwrite, the save as dialog box already warned the user
 }
-
-
-
-
-
 
 // Start this torrent so it downloads and seeds
 bool Torrent::CanStart() { return paused; } // Use our flag rather than anything in the libtorrent handle

@@ -602,7 +602,7 @@ void AddRow(hbig hash) {
 void AddMeta(hbig hash, read torrent) {
 
 	if (same(torrent, PathTorrentMeta(hash), Matching)) return; // Don't copy a file onto itself
-	DiskCopyFile(torrent, PathTorrentMeta(hash)); // Won't overwrite
+	DiskCopyFile(torrent, PathTorrentMeta(hash), false); // Don't overwrite
 }
 
 // Have the torrent with hash in the data list save "infohash.optn.db" next to this running exe

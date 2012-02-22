@@ -536,7 +536,7 @@ void StorePulse() {
 
 	// Add all the torrents from last time the program ran
 	std::set<hbig> hashes;
-	Find f(PathRunningFolder());
+	Find f(PathRunningFolder(), true);
 	while (f.Result()) { // Loop for each file in the folder this exe is running in
 		if (!f.Folder()) {
 			CString s = f.info.cFileName;

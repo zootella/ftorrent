@@ -47,7 +47,7 @@ public:
 	CString search;       // Query path
 
 	// Takes a path to a file or folder, and false to get information about it, or true to list its contents
-	Find(read path, bool list = true) {
+	Find(read path, bool list) {
 
 		// Set values to start the search
 		handle = INVALID_HANDLE_VALUE;

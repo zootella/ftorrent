@@ -1864,6 +1864,11 @@ bool CanDrop(IDataObject *data, CString *linkmagnet, CString *linkother, CString
 	return can;
 }
 
+// True if a file or folder is at path, making it unavailable
+bool DiskFound(read path) {
+	return Find(path, false).Found();
+}
+
 // Delete the file at path
 void DiskDeleteFile(read path) {
 
@@ -1873,9 +1878,9 @@ void DiskDeleteFile(read path) {
 	if (!result && e != ERROR_FILE_NOT_FOUND) error(L"deletefile");
 }
 
-// Copy the file at source to the available path destination, will not overwrite
-void DiskCopyFile(read source, read destination) {
-	if (!CopyFile(source, destination, true)) error(L"copyfile"); // True to not overwrite
+// Copy the file at source to the available path destination, true to overwrite
+void DiskCopyFile(read source, read destination, bool overwrite) {
+	if (!CopyFile(source, destination, !overwrite)) error(L"copyfile"); // Pass true to not overwrite
 }
 
 // Given access to the list of all columns behind window where some of them are shown, add title

@@ -471,3 +471,19 @@ CString ReplacePercent(read r) {
 	s = replace(s, L"%7E", L"~",  Matching);
 	return s;
 }
+
+// Replace characters not allowed in windows file names with acceptable ones
+CString ReplaceSafe(read r) {
+
+	CString s = r;
+	s = replace(s, L"\"", L"'"); // Turn double quotes into single ones
+	s = replace(s, L"\\", L"-"); // Turn other characters that aren't allowed into hyphens
+	s = replace(s,  L"/", L"-");
+	s = replace(s,  L":", L"-");
+	s = replace(s,  L"*", L"-");
+	s = replace(s,  L"?", L"-");
+	s = replace(s,  L"<", L"-");
+	s = replace(s,  L">", L"-");
+	s = replace(s,  L"|", L"-");
+	return s;
+}

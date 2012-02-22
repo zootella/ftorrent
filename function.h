@@ -45,6 +45,7 @@ CString InsertCommas(read r);
 CString SayTime(DWORD time);
 CString SayNow();
 CString ReplacePercent(read r);
+CString ReplaceSafe(read r);
 
 // Utility
 void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
@@ -157,8 +158,9 @@ void AssociateGet();
 void SetupAdd();
 void SetupRemove();
 bool CanDrop(IDataObject *data, CString *linkmanget = NULL, CString *linkother = NULL, CString *disktorrent = NULL, CString *diskother = NULL); // Has defaults
+bool DiskFound(read path);
 void DiskDeleteFile(read path);
-void DiskCopyFile(read source, read destination);
+void DiskCopyFile(read source, read destination, bool overwrite);
 void ColumnListAdd(HWND window, std::vector<Column> &list, read title);
 void ColumnListRemove(HWND window, std::vector<Column> &list, read title);
 int ColumnFindIndex(HWND window, read title);
