@@ -372,7 +372,7 @@ void TaskbarIconAdd() {
 	info.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP; // Mask for message, icon and tip
 	info.uCallbackMessage = MESSAGE_TASKBAR;                  // Program defined message identifier
 	info.hIcon            = App.cycle.taskbar;                // Icon handle
-	lstrcpy(info.szTip, PROGRAM_NAME);                        // 64 character buffer for tooltip text
+	copyr(info.szTip, sizeof(info.szTip) / sizeof(WCHAR), PROGRAM_NAME); // Buffer for tooltip text
 	if (!Shell_NotifyIcon(NIM_ADD, &info)) error(L"shell_notifyicon nim_add");
 }
 
@@ -868,7 +868,7 @@ HFONT FontName(read face, int points) {
 	info.lfClipPrecision  = CLIP_DEFAULT_PRECIS;          // Default clipping behavior
 	info.lfQuality        = DEFAULT_QUALITY;              // Don't force antialiasing
 	info.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // Only used if the font name is unavailable
-	lstrcpy(info.lfFaceName, face);                       // Font name
+	copyr(info.lfFaceName, sizeof(info.lfFaceName) / sizeof(WCHAR), face); // Font name
 	HFONT font = CreateFontIndirect(&info);
 	if (!font) error(L"createfontindirect logfont");
 	return font;
@@ -1217,7 +1217,7 @@ CString TextGuid() {
 
 	// Convert the GUID into an OLE wide character string
 	WCHAR bay[MAX_PATH];
-	lstrcpy(bay, L"");
+	copyr(bay, MAX_PATH, L"");
 	int characters = StringFromGUID2(
 		guid,          // GUID to convert
 		(LPOLESTR)bay, // Write text here
@@ -1291,7 +1291,7 @@ CString PathRunningFolder() {
 CString PathRunningFile() {
 
 	WCHAR bay[MAX_PATH];
-	lstrcpy(bay, L"");
+	copyr(bay, MAX_PATH, L"");
 	if (!GetModuleFileName(NULL, bay, MAX_PATH)) { error(L"getmodulefilename"); return L""; }
 	return bay;
 }
@@ -1302,7 +1302,7 @@ CString PathShell(int id) {
 	LPMALLOC memory;
 	LPITEMIDLIST list;
 	WCHAR bay[MAX_PATH]; // Text buffer to write in
-	lstrcpy(bay, L"");
+	copyr(bay, MAX_PATH, L"");
 	CString path;        // String to return with path or blank on error
 
 	if (!SHGetMalloc(&memory)) {
@@ -1327,7 +1327,7 @@ CString DialogBrowse(read message) {
 
 	// Show the box
 	WCHAR name[MAX_PATH]; // The program called OleInitialize(NULL) on startup, so we don't have to call it here
-	lstrcpy(name, L"");
+	copyr(name, MAX_PATH, L"");
 	BROWSEINFO info;
 	ZeroMemory(&info, sizeof(info));
 	info.hwndOwner      = App.window.main;          // Parent window for the dialog
@@ -1344,7 +1344,7 @@ CString DialogBrowse(read message) {
 
 	// Get the path of the folder the user chose
 	WCHAR bay[MAX_PATH];
-	lstrcpy(bay, L"");
+	copyr(bay, MAX_PATH, L"");
 	SHGetPathFromIDList(result, bay);
 	return bay;
 }
@@ -1357,7 +1357,7 @@ CString DialogOpen() {
 	read filter = L"Torrents (*.torrent)\0*.torrent\0\0"; // List ends with two wide terminators
 	read extension = L"torrent";
 	WCHAR path[MAX_PATH];
-	lstrcpy(path, L""); // Blank the buffer because the system reads initalization information there
+	copyr(path, MAX_PATH, L""); // Blank the buffer because the system reads initalization information there
 
 	// Show the user the dialog box
 	OPENFILENAME info;
@@ -1388,7 +1388,7 @@ CString DialogSave(read suggest) {
 	read filter = L"Torrents (*.torrent)\0*.torrent\0\0"; // List ends with two wide terminators
 	read extension = L"torrent";
 	WCHAR path[MAX_PATH];
-	lstrcpy(path, suggest);
+	copyr(path, MAX_PATH, suggest);
 
 	// Show the user the dialog box
 	OPENFILENAME info;
@@ -1565,7 +1565,7 @@ bool RegistryWrite(HKEY root, read path, read name, read value) {
 		0,
 		REG_SZ,                                // Variable type is a null-terminated string
 		(const BYTE *)value,                   // Address of the value data to load
-		(lstrlen(value) + 1) * sizeof(WCHAR)); // Size of the value data in bytes, add 1 to write the null terminator
+		(lengthr(value) + 1) * sizeof(WCHAR)); // Size of the value data in bytes, add 1 to write the null terminator
 	if (result != ERROR_SUCCESS) { error(result, L"regsetvalueex text"); return false; }
 	return true;
 }
@@ -1582,7 +1582,7 @@ bool RegistryDelete(HKEY base, read path) {
 	// Loop for each subkey, deleting them all
 	DWORD size;
 	WCHAR subkey[MAX_PATH];
-	lstrcpy(subkey, L"");
+	copyr(subkey, MAX_PATH, L"");
 	int result;
 	while (true) {
 
@@ -2092,7 +2092,7 @@ void ColumnSelect(HWND window, read title) {
 // The title text of the column with the given index, like "Status"
 CString ColumnTitleIndex(HWND window, int column) {
 	WCHAR bay[MAX_PATH]; // Destination buffer
-	lstrcpy(bay, L"");
+	copyr(bay, MAX_PATH, L"");
 
 	LVCOLUMN info;
 	ZeroMemory(&info, sizeof(info));
@@ -2316,6 +2316,80 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 	}
 }
 
+// A disk file for a web download that closes and deletes itself when the object goes out of scope
+class WebFile {
+public:
+
+	CString path; // Path of file on the disk next to this running exe
+	HANDLE file;  // Handle to open disk file, null before created, null
+	DWORD size;   // Size in bytes of the disk file, how much data has been written to it
+
+	WebFile() {
+
+		file = NULL;
+		size = 0;
+	}
+
+	// Create and open a new temporary file to fill with data
+	bool Open() {
+
+		// Choose a new random path for the open temporary file
+		path = make(PathRunningFolder(), L"\\", TextGuid(), L".temporary.db");
+
+		// Open the file, overwriting if necessary
+		file = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (!file || file == INVALID_HANDLE_VALUE) return false;
+		return true;
+	}
+
+	// Add n bytes at b to the end of our open file
+	bool Add(BYTE *b, int n) {
+
+		// Write our data to the file
+		DWORD written = 0;
+		int result = WriteFile(file, b, n, &written, NULL);
+		if (!result || written != n) return false;
+
+		// Update our record of the file's total size
+		size += n;
+		return true;
+	}
+
+	// Close and rename the file
+	bool Keep() {
+
+		// Close the file and null the handle so we don't delete it when this object goes out of scope
+		if (file) {
+			CloseHandle(file);
+			file = NULL;
+		}
+
+		// Compose a new random path for the finished download file
+		CString source = path;
+		path = make(PathRunningFolder(), L"\\", TextGuid(), L".download.db");
+		if (!MoveFile(source, path)) return false;
+		return true;
+	}
+
+	~WebFile() {
+
+		// Delete the file if we didn't close it
+		if (file) {
+			CloseHandle(file);
+			DeleteFile(path);
+		}
+	}
+};
+
+// Save a wininet handle here to have this object close it when it goes out of scope
+class WebHandle {
+public:
+
+	HINTERNET handle;
+	WebHandle() { handle = NULL; } // No handle saved here yet
+	~WebHandle() { if (handle) InternetCloseHandle(handle); } // If we've got a handle, close it
+};
+
 // Download url to a ".download.db" file next to this running exe, or give up if it's too big or too slow
 void WebDownload(CString url) {
 
@@ -2329,11 +2403,11 @@ void WebDownload(CString url) {
 	LeaveCriticalSection(&App.web.section);
 
 	// Have a thread run the webthread1 function to perform the download
-	BeginThread(WebThread1);
+	BeginThread(WebThread);
 }
 
 // Download the url the program wants us to
-void WebThread1() {
+void WebThread() {
 
 	// Find out what to download
 	EnterCriticalSection(&App.web.section);
@@ -2344,7 +2418,7 @@ void WebThread1() {
 
 	// Download the file from the web
 	if (isblank(url)) return; // Make sure we actually got a url
-	bool result = WebThread2(url, started); // Download the file and get the result
+	bool result = WebThreadDo(url, started); // Download the file and get the result
 
 	// Report our result
 	EnterCriticalSection(&App.web.section);
@@ -2356,7 +2430,7 @@ void WebThread1() {
 }
 
 // Download url before its too late after the given started time
-bool WebThread2(read url, DWORD started) {
+bool WebThreadDo(read url, DWORD started) {
 
 	// Request the URL, so far tests show you don't need to url encode or decode the text dragged in from the browser
 	CString headers = make(L"Referer: ", url, L"\r\n"); // Compose the referrer header, which must be mispelled

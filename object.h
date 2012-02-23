@@ -343,48 +343,6 @@ public:
 	}
 };
 
-// A disk file for a web download that closes and deletes itself when the object goes out of scope
-class WebFile {
-public:
-
-	CString path; // Path of file on the disk next to this running exe
-	HANDLE file;  // Handle to open disk file, null before created, null
-	DWORD size;   // Size in bytes of the disk file, how much data has been written to it
-
-	WebFile() {
-
-		file = NULL;
-		size = 0;
-	}
-
-	bool Open();
-	bool Add(BYTE *b, int n);
-	bool Keep();
-
-	~WebFile() {
-
-		// Delete the file if we didn't close it
-		if (file) {
-			CloseHandle(file);
-			DeleteFile(path);
-		}
-	}
-};
-
-// Save a wininet handle here to have this object close it when it goes out of scope
-class WebHandle {
-public:
-
-	HINTERNET handle;
-
-	WebHandle() {
-		handle = NULL; // No handle saved here yet
-	}
-
-	~WebHandle() {
-		if (handle) InternetCloseHandle(handle); // If we've got a handle, close it
-	}
-};
 
 
 
@@ -513,6 +471,7 @@ public:
 
 
 	CString Path();
+	CString MagnetLink();
 	bool paused;
 
 
@@ -545,7 +504,7 @@ public:
 	void UseOpenContainingFolder();
 
 	bool CanCopyMagnetLink();
-	void UseCopyMagnetLink();
+	void UseCopyMagnetLink(CString *copy);
 
 	bool CanSaveTorrentAs();
 	void UseSaveTorrentAs();

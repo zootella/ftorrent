@@ -18,37 +18,36 @@ CString Torrent::Path() {
 }
 
 CString Torrent::MagnetLink() {
-	return L"";
+	return L"(magnet link)";//TODO
 }
 
 
 
 
 
-// Open the folder of multiple files, open the single document file, or run the single program file that is this torrent's data on the disk
+// Open the folder of multiple files or single document file that is this torrent's data on the disk
 bool Torrent::CanOpen() { return DiskFound(Path()); }
 void Torrent::UseOpen() {
 	if (!CanOpen()) { log(L"cant open"); return; }
 
-	FileRun(Path());
+	FileRun(Path()); // Run the folder or file
 }
 
-// Open the folder that contains the can open disk object above, and select it
+// Open the folder that contains the folder of multiple files or single file that open above opens, and select it
 bool Torrent::CanOpenContainingFolder() { return DiskFound(Path()); }
 void Torrent::UseOpenContainingFolder() {
 	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
 
-	FileRun(L"explorer.exe", make(L"/select, \"", Path(), L"\""));
+	FileRun(L"explorer.exe", make(L"/select, \"", Path(), L"\"")); // Have windows explorer open the containing folder and select the given path
 }
 
 // Copy this torret's magnet link to the clipboard, letting the user get it out from the program to use it elsewhere
 bool Torrent::CanCopyMagnetLink() { return is(MagnetLink()); }
-void Torrent::UseCopyMagnetLink(CString *copy) {
+void Torrent::UseCopyMagnetLink(CString *copy) { // Takes access to a string to add our text to it
 	if (!CanCopyMagnetLink()) { log(L"cant copy magnet link"); return; }
 
-	if (is(*copy)) copy += L"\r\n";
-
-	//TODO, this needs to work with multiple selection, so don't go to the clipboard here
+	if (is(*copy)) *copy += L"\r\n"; // Separate multiple lines without putting a newline on the very start or end
+	*copy += MagnetLink();        // Add our magnet link to the given text
 }
 
 // Save the torrent file, letting the user get it out from the program to use it elsewhere

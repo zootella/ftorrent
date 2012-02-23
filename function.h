@@ -199,9 +199,25 @@ Size CellSize(HWND window, int row, int column);
 void CellShow(HWND window, std::vector<Cell> &cells);
 void CellShowDo(HWND window, Cell *c, bool add);
 void WebDownload(CString url);
-void WebThread1();
-bool WebThread2(read url, DWORD started);
+void WebThread();
+bool WebThreadDo(read url, DWORD started);
 bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i);
+
+void ClipboardCopy(read r);
+void ClipboardCopyAsciiText(read r);
+void ClipboardCopyUnicodeText(read r);
+
+CString ClipboardPaste();
+CString ClipboardPasteAsciiText();
+CString ClipboardPasteUnicodeText();
+
+
+
+
+
+
+
+
 
 // Wrap
 // start
@@ -282,6 +298,10 @@ std::wstring widenPtoW(const char *p);
 std::wstring widenStoW(std::string s);
 std::string narrowRtoS(const wchar_t *r);
 std::string narrowWtoS(std::wstring w);
+int lengthp(const char *p);
+int lengthr(const wchar_t *r);
+void copyp(char *destination, int capacity, const char *source);
+void copyr(wchar_t *destination, int capacity, const wchar_t *source);
 libtorrent::torrent_handle FindTorrentHandle(const char *id);
 bool SaveEntry(read path, const libtorrent::entry &e);
 bool LoadEntry(read path, libtorrent::entry &e);

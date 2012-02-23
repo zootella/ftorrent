@@ -12,10 +12,10 @@ int    4 byte  signed
 ubig   8 byte  unsigned
 sbig   8 byte  signed
 */
-CString numerals(DWORD n, int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");   _ultow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(int n,   int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");    _itow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(ubig n,  int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L""); _ui64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
-CString numerals(sbig n,  int base, int width) { WCHAR s[MAX_PATH]; lstrcpy(s, L"");  _i64tow_s(n, s, MAX_PATH, base); return AddLeadingZeroes(s, width); }
+CString numerals(DWORD n, int base, int width) { WCHAR bay[MAX_PATH]; copyr(bay, MAX_PATH, L"");   _ultow_s(n, bay, MAX_PATH, base); return AddLeadingZeroes(bay, width); }
+CString numerals(int n,   int base, int width) { WCHAR bay[MAX_PATH]; copyr(bay, MAX_PATH, L"");    _itow_s(n, bay, MAX_PATH, base); return AddLeadingZeroes(bay, width); }
+CString numerals(ubig n,  int base, int width) { WCHAR bay[MAX_PATH]; copyr(bay, MAX_PATH, L""); _ui64tow_s(n, bay, MAX_PATH, base); return AddLeadingZeroes(bay, width); }
+CString numerals(sbig n,  int base, int width) { WCHAR bay[MAX_PATH]; copyr(bay, MAX_PATH, L"");  _i64tow_s(n, bay, MAX_PATH, base); return AddLeadingZeroes(bay, width); }
 
 CString base16(DWORD n) { return numerals(n, 16,  8); } // 4 bytes written in 8 characters
 CString base16(int n)   { return numerals(n, 16,  8); }
@@ -86,6 +86,22 @@ std::string narrowWtoS(std::wstring w) {
 	std::string s;
 	libtorrent::wchar_utf8(w, s);
 	return s;
+}
+
+// Number of characters in the text, not including null terminator, like "abc\0" is 3
+int lengthp(const char *p) { return lstrlenA(p); }
+int lengthr(const wchar_t *r) { return lstrlenW(r); } // Use instead of lstrlen
+
+// Copy the narrow text and null terminator characters at source to the memory location destination that can hold capacity narrow charcters
+// For example, char bay[4]; copyp(bay, 4, "abc"); is just enough space and copies 4 bytes
+void copyp(char *destination, int capacity, const char *source) {
+	if (strcpy_s(destination, capacity, source)) error(L"strcpy_s");
+}
+
+// Copy the wide text and null terminator characters at source to the memory location destination that can hold capacity wide characters
+// For example, WCHAR bay[4]; copyr(bay, 4, L"abc"); is just enough space and copies 8 bytes
+void copyr(wchar_t *destination, int capacity, const wchar_t *source) { // Use instead of lstrcpy
+	if (wcscpy_s(destination, capacity, source)) error(L"wcscpy_s");
 }
 
 // Given the text of a torrent infohash, look up and return the libtorrent torrent handle
