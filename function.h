@@ -204,6 +204,9 @@ bool WebThreadDo(read url, DWORD started);
 bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i);
 void ClipboardCopy(read r);
 CString ClipboardPaste();
+CString UrlEncode(read r);
+CString UrlDecode(read r);
+CString WebCanonicalizeUrl(read r, bool encode);
 
 // Wrap
 // start

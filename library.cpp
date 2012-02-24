@@ -711,6 +711,15 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 	return false;
 }
 
+CString ComposeMagnet(hbig *hash, CString *name, std::set<CString> *trackers) {
+
+
+
+	//TODO url encode each part
+
+	return L"";
+}
+
 // Parse the infohash, name, and trackers from the given magnet link
 // Returns true with nonzero hash and nonblank name, or false
 bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trackers) {

@@ -145,8 +145,8 @@ int find(read r, read t, direction d, matching m) {
 			// Uppercase them if matching was requested
 			if (m == Matching) {
 
-				rchar = (WCHAR)CharUpper((LPWSTR)(ULONG_PTR)MAKELONG((WORD)rchar, 0));
-				tchar = (WCHAR)CharUpper((LPWSTR)(ULONG_PTR)MAKELONG((WORD)tchar, 0));
+				rchar = (WCHAR)CharUpper((WCHAR *)(ULONG_PTR)MAKELONG((WORD)rchar, 0));
+				tchar = (WCHAR)CharUpper((WCHAR *)(ULONG_PTR)MAKELONG((WORD)tchar, 0));
 			}
 
 			// Mismatch found, set false and break

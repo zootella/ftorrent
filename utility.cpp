@@ -90,14 +90,14 @@ CString TextWindow(HWND window) {
 	// If the window handle is null, return blank
 	if (!window) return L"";
 
-	// Find the required buffer size, in bytes
+	// Find the required buffer size, in characters
 	int size =
 		(int)SendMessage(window, WM_GETTEXTLENGTH, 0, 0) // The number of text characters
 		+ 1; // Add 1 to have space in the buffer for the null terminator
 
 	// Open a string
 	CString s;
-	LPWSTR buffer = s.GetBuffer(size);
+	WCHAR *buffer = s.GetBuffer(size);
 
 	// Write the window text into the buffer
 	GetWindowText( // Writes all the text and a null terminator
@@ -532,7 +532,7 @@ void TipAdd(Size size, read r) {
 	info.uId         = 0;                // Tool identifying number
 	info.rect        = size.Rectangle(); // Rectangle in the window of the tool
 	info.hinst       = NULL;             // Only used when text is loaded from a resource
-	info.lpszText    = (LPWSTR)r;        // Text
+	info.lpszText    = (WCHAR *)r;       // Text
 	info.lParam      = 0;                // No additional value assigned to tool
 	if (!SendMessage(App.window.tip, TTM_ADDTOOL, 0, (LPARAM)&info)) error(L"sendmessage ttm_addtool");
 }
@@ -995,13 +995,13 @@ void AddTab(HWND window, int index, read title) {
 	// Fill out the structure and send the message
 	TCITEM item;
 	ZeroMemory(&item, sizeof(item));
-	item.mask        = TCIF_TEXT;     // Parts set below
-	item.dwState     = 0;             // Ignored when inserting a new tab
-	item.dwStateMask = 0;             // Ignored when inserting a new tab
-	item.pszText     = (LPWSTR)title; // Text will only be read
-	item.cchTextMax  = 0;             // Only used when the structure is receiving information
-	item.iImage      = -1;            // No icon
-	item.lParam      = 0;             // No extra information
+	item.mask        = TCIF_TEXT;      // Parts set below
+	item.dwState     = 0;              // Ignored when inserting a new tab
+	item.dwStateMask = 0;              // Ignored when inserting a new tab
+	item.pszText     = (WCHAR *)title; // Text will only be read
+	item.cchTextMax  = 0;              // Only used when the structure is receiving information
+	item.iImage      = -1;             // No icon
+	item.lParam      = 0;              // No extra information
 	SendMessage(window, TCM_INSERTITEM, index, (LPARAM)&item);
 }
 
@@ -1531,7 +1531,7 @@ bool RegistryRead(HKEY root, read path, read name, CString *value) {
 
 	// Open a string
 	CString s;
-	LPWSTR buffer = s.GetBuffer(size / sizeof(WCHAR)); // How many characters we'll write, including the null terminator
+	WCHAR *buffer = s.GetBuffer(size / sizeof(WCHAR)); // How many characters we'll write, including the null terminator
 
 	// Read the binary data
 	result = RegQueryValueEx(
@@ -2051,7 +2051,7 @@ void ColumnAddIndexDo(HWND window, int column, read title, int width, bool right
 	info.mask    = LVCF_FMT | LVCF_IMAGE | LVCF_TEXT | LVCF_WIDTH;
 	info.fmt     = format;
 	info.iImage  = App.icon.clear;
-	info.pszText = (LPWSTR)title;
+	info.pszText = (WCHAR *)title;
 	info.cx      = width;
 	if (ListView_InsertColumn(window, column, &info) == -1) error(L"listview_insertcolumn");
 }
@@ -2294,7 +2294,7 @@ void CellShowDo(HWND window, Cell *c, bool add) { // True to insert c in column 
 
 	// Text
 	info.mask |= LVIF_TEXT;
-	info.pszText = (LPWSTR)(read)(c->text);
+	info.pszText = (WCHAR *)(read)(c->text);
 
 	// If specified, an icon
 	if (c->icon != -1) {
