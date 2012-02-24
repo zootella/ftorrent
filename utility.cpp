@@ -2490,3 +2490,62 @@ bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i) {
 	*i = d;
 	return true;
 }
+
+// Close our access to the clipboard when this object goes out of scope
+class Clipboard {
+public:
+
+	bool open; // True when this program has the clipboard open, and needs to close it
+	Clipboard() { open = false; }
+	~Clipboard() { Close(); }
+
+	bool Open() {
+		if (open) return true; // Already open
+		if (!OpenClipboard(App.window.main)) { error(L"closeclipboard"); return false; }
+		open = true; // Record we have the clipboard open
+		return true; // Success
+	}
+
+	bool Close() {
+		if (!open) return true; // Already closed
+		if (!CloseClipboard()) { error(L"closeclipboard"); return false; }
+		open = false; // Record we closed the clipboard
+		return true; // Success
+	}
+};
+
+// Copy the given text to the clipboard
+void ClipboardCopy(read r) {
+
+	int characters = lengthr(r) + 1; // Number of characters, including null terminator
+	int bytes = characters * sizeof(WCHAR); // Number of bytes the text and terminator take
+
+	HANDLE h = GlobalAlloc(GHND, bytes); // Allocate that much global memory
+	WCHAR *p = (WCHAR *)GlobalLock(h); // Lock the global memory object to get a pointer to it
+	copyr(p, characters, r); // Copy the text data, including the null terminator
+	GlobalUnlock(h);
+
+	Clipboard clipboard;
+	if (!clipboard.Open()) return; // Open the clipboard
+
+	EmptyClipboard(); // Clear the clipboard
+	SetClipboardData(CF_UNICODETEXT, h); // Place data on the clipboard
+}
+
+// Get the text on the clipboard, blank if none or error
+CString ClipboardPaste() {
+
+	if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return L""; // If the clipboard only has CF_TEXT, it will say yes and convert it to unicode for us
+
+	Clipboard clipboard;
+	if (!clipboard.Open()) return L""; // Open the clipboard
+
+	HANDLE h = GetClipboardData(CF_UNICODETEXT); // Get a handle to the text data there
+	if (!h) return L"";
+
+	WCHAR *w = (WCHAR *)GlobalLock(h); // Lock the global memory object to get a pointer to it
+	CString s = w; // Copy the text into a string
+	GlobalUnlock(h);
+
+	return s; // Return it
+}

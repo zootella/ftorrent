@@ -202,22 +202,8 @@ void WebDownload(CString url);
 void WebThread();
 bool WebThreadDo(read url, DWORD started);
 bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i);
-
 void ClipboardCopy(read r);
-void ClipboardCopyAsciiText(read r);
-void ClipboardCopyUnicodeText(read r);
-
 CString ClipboardPaste();
-CString ClipboardPasteAsciiText();
-CString ClipboardPasteUnicodeText();
-
-
-
-
-
-
-
-
 
 // Wrap
 // start
