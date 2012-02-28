@@ -14,8 +14,8 @@ class Memory {
 public:
 
 	void *block;
-	Memory() { block = NULL; }   // No memory block yet
-	~Memory() { Free(); }        // Free any memory this object contains when it goes out of scope
+	Memory() { block = NULL; } // No memory block yet
+	~Memory() { Free(); }      // Free any memory this object contains when it goes out of scope
 
 	bool Allocate(int bytes) {   // Returns false on error
 		if (block) return false; // Already have a block of memory
@@ -31,22 +31,20 @@ public:
 	}
 };
 
-// Decode percent sequences like "%20" into the characters they represent
+// URI encode the given text, decoding percent sequences like "%20" into the characters they represent
 // Correctly decodes international text, the three UTF-8 bytes "%E4%B8%80" become L"\u4e00" the chinese character for one
-// Decodes both "%20" and "+" into " " in case spaces got encoded into +s, +s would have gotten encoded into "%2B"
+// Decodes both "%20" and "+" into " " in case spaces got encoded into plusses, ok because "+" would have gotten encoded into "%2B"
 // On error, returns the given text unchanged
 CString PercentDecode(read r) {
 
-	std::string estring = narrowRtoS(r);
+	std::string estring = narrowRtoS(r); // Since r is percent encoded, it should only contain characters that take 1 byte and narrowing it won't change anything
 	const char *e = estring.c_str();
-
-//	char *e = (char *)(narrowRtoS(r).c_str()); // Since r is percent encoded, it should only contain characters that take 1 byte and narrowing it shouldn't change anything
-	int esize = lengthp(e);                    // Number of encoded characters
-	int eindex = 0;                            // The index of the encoded character we're on
+	int esize = lengthp(e);              // Number of encoded characters
+	int eindex = 0;                      // The index of the encoded character we're on
 
 	Memory memory;
 	if (!memory.Allocate(esize + 1)) return r; // Space for every character even if no "%xx" pairs get smaller, and a null terminator
-	byte *d = (byte *)memory.block;            // Pointer to write bytes in the memory block
+	byte *d = (byte *)memory.block;            // Pointer to write decoded bytes in the memory block
 
 	while (eindex < esize) { // Loop for each encoded character
 
@@ -90,18 +88,17 @@ CString PercentDecode(read r) {
 	return widenPtoC((char *)memory.block); // Convert the UTF-8 memory we composed into UTF-16, sets of 3 bytes will become 1 character
 }
 
-// Replace URI reserved characters with percent codes
-// Encodes every UTF-8 byte of the text except A-Z a-z 0-9 and ~!*()' to match encodeURIComponent() in javascript
-// Correctly encodes the chinese character for one L"\u4e00" into the three bytes it is in UTF-8 "%E4%B8%80"
+// URI encode the given text, replacing reserved characters with percent codes
+// Encodes every UTF-8 byte of the text except A-Z a-z 0-9 and ~!*()' to work like encodeURIComponent() in javascript
+// Encodes international characters, the chinese character for one L"\u4e00" becomes the three bytes it is in UTF-8 encoded "%E4%B8%80"
 // Optionally encodes " " to "+" instead of "%20", which is ok when encoding a part of the URI after the "?"
 CString PercentEncode(read r, bool plus) {
 
-	std::string dstring = narrowRtoS(r);
-
-	const char *d = dstring.c_str(); // Convert r in UTF-16, where every character takes 2 bytes, to s in UTF-8, where A takes 1 byte and hiragana letter no takes 3 bytes
-	int dbytes = lengthp(d);               // Number of bytes of UTF-8 text we have to encode
-	char bay[MAX_PATH];                    // Bay to compose text like "%20"
-	std::string e;                         // String for encoded text
+	std::string dstring = narrowRtoS(r); // Convert r in UTF-16, where every character takes 2 bytes, to dstring in UTF-8, where A takes 1 byte and hiragana letter no takes 3 bytes
+	const char *d = dstring.c_str();
+	int dbytes = lengthp(d);             // Number of bytes of UTF-8 text we have to encode
+	char bay[MAX_PATH];                  // Bay to compose the text of one encoded byte like "%20"
+	std::string e;                       // String for encoded text
 
 	for (int dindex = 0; dindex < dbytes; dindex++) { // Loop for each byte in the decoded text
 
@@ -118,7 +115,7 @@ CString PercentEncode(read r, bool plus) {
 
 		} else { // Reserved character or other byte, percent encode it
 
-			sprintf(bay, "%%%02X", d[dindex]);
+			sprintf(bay, "%%%02X", (unsigned char)(d[dindex]));
 			e += bay;
 		}
 	}
@@ -151,15 +148,6 @@ void TestEncode(read r) {
 void Test() {
 
 
-	/*
-	PercentDecode(L"a%42c");
-
-	PercentDecode(L"%41%42");
-	PercentDecode(L"%00");
-	PercentDecode(L"%ff");
-	*/
-
-	TestEncode(L"a:b");
 
 
 	TestEncode(L"hello");
@@ -168,6 +156,7 @@ void Test() {
 	TestEncode(L"\r\n");
 	TestEncode(L"hello+you");
 	TestEncode(L"\u4e00"); // should be %E4%B8%80
+	TestEncode(L"a:b");
 
 	Find f(L"C:\\Documents\\test", true);
 	while (f.Result()) {
