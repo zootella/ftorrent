@@ -3,205 +3,132 @@
 extern app App; // Access global object
 
 
-/*
-// Takes a pointer to memory and the number of bytes there
-// Describes the data using numbers and letters in base 16 encoding
-// Returns a string
-string tobase16(byte *p, DWORD bytes) {
-
-	// Use 0-9 and A-F, 16 different characters, to describe the data
-	text alphabet = _T("0123456789ABCDEF");
-
-	// Make a string and access its buffer directly
-	string s;
-	int characters = bytes * 2;               // Each byte will become two characters
-	TCHAR *sbuffer = s.GetBuffer(characters); // Make room for this number of bytes or wide characters, there is no null terminator
-	characters = 0;                           // Now begin counting how many characters we actually copy into the string
-
-	// Loop through the memory, encoding its bytes into pairs of letters and numbers
-	for (DWORD i = 0; i < bytes; i++) { // When the index moves beyond the memory, we are done
-
-		// Describe the 8 bits with two numerals or letters, and move i to the next byte
-		sbuffer[characters++] = alphabet[*(p + i) >> 4]; // Shift right 8 bits to read just the first part 1001----
-		sbuffer[characters++] = alphabet[*(p + i) & 15]; // Mask with 15 1111 to read just the second part ----1001
-	}
-
-	// Close the string of letters and numbers we generated from the data, and return it
-	s.ReleaseBuffer(characters); // Tell the string we copied in this many characters, now it sets the byte or wide null terminator itself
-	return s;
-}
-
-// Takes a pointer to memory, the number of bytes we can write there, and text to decode
-// Decodes the numbers and letters into data using base 16 encoding
-// Returns the number of bytes written, or pass null and 0 to get the size required
-DWORD frombase16(byte *p, DWORD bytes, text t) {
-
-	// Loop for each character in the text
-	DWORD tlength = lstrlen(t); // How many characters there are
-	TCHAR c;                    // The character we are on
-	DWORD i = 0;                // The index in bytes
-	byte code, b;               // Bytes to hold 4 bits and 8
-	for (DWORD tindex = 0; tindex < tlength; tindex++) {
-
-		// Get a character from the text, and convert it into its code
-		c = toupper(t[tindex]);                             // Accept uppercase and lowercase letters
-		if      (c >= '0' && c <= '9') code = c - '0';      // '0'  0 0000 through '9'  9 1001
-		else if (c >= 'A' && c <= 'F') code = c - 'A' + 10; // 'A' 10 1010 through 'F' 15 1111
-		else                           code = ~0;           // Skip this invalid character
-
-		// The character is valid
-		if (code != ~0) {
-
-			// This is the first character in a pair
-			if (tindex % 2 == 0) {
-
-				// Shift the 4 bytes it means into the high portion of the byte, like 1000----
-				b = code << 4;
-
-			// This is the second character in a pair
-			} else {
-
-				// Copy the 4 bits from the second character in the pair into the low portion of the byte, like ----1100
-				b |= code; // Use the bitwise or operator to assemble the entire byte, like 10001100
-
-				// Copy the byte into the memory, and move to the next byte
-				if (i < bytes) *(p + i) = b;
-				i++;
-			}
-		}
-	}
-
-	// Say how many bytes the text decodes into
-	return i;
-}
-*/
 
 
 
 
 
 
-//test to see a unicode character from the disk get turned into 2 bytes, then encoded
-
-
-CString PercentEncode(read r) {
-
-	std::string s = narrowRtoS(r); // Convert r in UTF-16, where every character takes 2 bytes, to s in UTF-8, where A takes 1 byte and hiragana letter no takes 3 bytes
-	const char *p = s.c_str();
-
-	int bytes = lengthp(p);
-	char bay[MAX_PATH];
-	std::string done;
-
-	for (int i = 0; i < bytes; i++) {
-		unsigned char c = p[i];
-
-		if ((c >= 'A' && c <= 'Z') ||
-			(c >= 'a' && c <= 'z') ||
-			(c >= '0' && c <= '9') ||
-			c == '~' || c == '!' || c == '*' || c == '(' || c == ')' || c == '\'') {
-
-			done += c;
-
-		} else {
-
-			sprintf(bay, "%%%02X", c);
-			done += bay;
-		}
-	}
-
-	return widenStoC(done);
-}
-
-
+// A block of memory that frees itself when the object goes out of scope
 class Memory {
 public:
 
 	void *block;
-	Memory() { block = NULL; }
-	~Memory() { Free(); }
+	Memory() { block = NULL; }   // No memory block yet
+	~Memory() { Free(); }        // Free any memory this object contains when it goes out of scope
 
-	bool Allocate(int bytes) {
-		if (block) return false;
+	bool Allocate(int bytes) {   // Returns false on error
+		if (block) return false; // Already have a block of memory
 		block = malloc(bytes);
 		if (!block) { log(L"malloc"); return false; }
 		return true;
 	}
 
 	void Free() {
-		if (!block) return;
+		if (!block) return; // No memory block to free
 		free(block);
-		block = NULL;
+		block = NULL;       // Record that we don't have a memory block any more
 	}
 };
 
-
-
-
-// returns original text on error
+// Decode percent sequences like "%20" into the characters they represent
+// Correctly decodes international text, the three UTF-8 bytes "%E4%B8%80" become L"\u4e00" the chinese character for one
+// Decodes both "%20" and "+" into " " in case spaces got encoded into +s, +s would have gotten encoded into "%2B"
+// On error, returns the given text unchanged
 CString PercentDecode(read r) {
 
-	//TODO have an option to replace plusses, also, i think you should do it beforehand, not after
+	std::string estring = narrowRtoS(r);
+	const char *e = estring.c_str();
 
-	std::string s = narrowRtoS(r); // The given text should be percent encoded, so it should only contain characters that take 1 byte
-	const char *p = s.c_str();
-	int bytes = lengthp(p);
+//	char *e = (char *)(narrowRtoS(r).c_str()); // Since r is percent encoded, it should only contain characters that take 1 byte and narrowing it shouldn't change anything
+	int esize = lengthp(e);                    // Number of encoded characters
+	int eindex = 0;                            // The index of the encoded character we're on
 
-	Memory m;
-	if (!m.Allocate(bytes + 1)) return r;
+	Memory memory;
+	if (!memory.Allocate(esize + 1)) return r; // Space for every character even if no "%xx" pairs get smaller, and a null terminator
+	byte *d = (byte *)memory.block;            // Pointer to write bytes in the memory block
 
-	unsigned char c1, c2, code1, code2, b;
+	while (eindex < esize) { // Loop for each encoded character
 
-	for (int i = 0; i < bytes; i++) {
-		unsigned char c = p[i];
+		if (e[eindex] == '%') { // We're on a percent character, the start of something like "%20"
 
-		if (c == '%') {
-			if (i + 3 > bytes) return r;
+			if (eindex + 3 > esize) return r;    // Make sure the given text is long enough to have the whole "%20"
+			byte pair1 = toupper(e[eindex + 1]); // Accept uppercase and lowercase letters
+			byte pair2 = toupper(e[eindex + 2]);
+			byte nibble1, nibble2, dbyte;
 
-			c1 = p[i + 1];
-			c2 = p[i + 2];
+			if      (pair1 >= '0' && pair1 <= '9') nibble1 = pair1 - '0';      // '0'  0 0000 through '9'  9 1001
+			else if (pair1 >= 'A' && pair1 <= 'F') nibble1 = pair1 - 'A' + 10; // 'A' 10 1010 through 'F' 15 1111
+			else                                   return r;
 
-			c1 = toupper(c1); // Accept uppercase and lowercase letters
-			c2 = toupper(c2);
+			if      (pair2 >= '0' && pair2 <= '9') nibble2 = pair2 - '0';
+			else if (pair2 >= 'A' && pair2 <= 'F') nibble2 = pair2 - 'A' + 10;
+			else                                   return r;
 
+			dbyte = nibble1 << 4; // Shift the 4 bytes it means into the high portion of the byte, like 1000----
+			dbyte |= nibble2;     // Copy the 4 bits from the second character in the pair into the low portion of the byte, like ----1100, and use the bitwise or operator to assemble the entire byte, like 10001100
+			
+			*d = dbyte;  // Copy the decoded byte to the decoded memory
+			d++;         // Move forward in the decoded memory past the 1 byte we just wrote
+			eindex += 3; // Move forward in the encoded text past the 3 characters we just encoded
 
-			if      (c1 >= '0' && c1 <= '9') code1 = c1 - '0';      // '0'  0 0000 through '9'  9 1001
-			else if (c1 >= 'A' && c1 <= 'F') code1 = c1 - 'A' + 10; // 'A' 10 1010 through 'F' 15 1111
-			else                             return r;
+		} else if (e[eindex] == '+') { // We're on a plus
 
-			if      (c2 >= '0' && c2 <= '9') code2 = c2 - '0';      // '0'  0 0000 through '9'  9 1001
-			else if (c2 >= 'A' && c2 <= 'F') code2 = c2 - 'A' + 10; // 'A' 10 1010 through 'F' 15 1111
-			else                             return r;
+			*d = ' '; // It was a space that got encoded into a plus
+			d++;
+			eindex++;
 
+		} else { // We're on an unreserved character like A or 7
 
-			// Shift the 4 bytes it means into the high portion of the byte, like 1000----
-			b = code1 << 4;
-
-
-			// Copy the 4 bits from the second character in the pair into the low portion of the byte, like ----1100
-			b |= code2; // Use the bitwise or operator to assemble the entire byte, like 10001100
-
-			// Copy the byte into the memory, and move to the next byte
-//			if (i < bytes) *(p + i) = b;
-			i += 2;
-
-
-		} else {
-
-
-
+			*d = e[eindex]; // Just copy it over
+			d++;
+			eindex++;
 		}
 	}
 
-
-
-
-
-
-
-
-	return L"";
+	*d = '\0';                              // Write a null terminator so we can look at the decoded memory as text
+	return widenPtoC((char *)memory.block); // Convert the UTF-8 memory we composed into UTF-16, sets of 3 bytes will become 1 character
 }
+
+// Replace URI reserved characters with percent codes
+// Encodes every UTF-8 byte of the text except A-Z a-z 0-9 and ~!*()' to match encodeURIComponent() in javascript
+// Correctly encodes the chinese character for one L"\u4e00" into the three bytes it is in UTF-8 "%E4%B8%80"
+// Optionally encodes " " to "+" instead of "%20", which is ok when encoding a part of the URI after the "?"
+CString PercentEncode(read r, bool plus) {
+
+	std::string dstring = narrowRtoS(r);
+
+	const char *d = dstring.c_str(); // Convert r in UTF-16, where every character takes 2 bytes, to s in UTF-8, where A takes 1 byte and hiragana letter no takes 3 bytes
+	int dbytes = lengthp(d);               // Number of bytes of UTF-8 text we have to encode
+	char bay[MAX_PATH];                    // Bay to compose text like "%20"
+	std::string e;                         // String for encoded text
+
+	for (int dindex = 0; dindex < dbytes; dindex++) { // Loop for each byte in the decoded text
+
+		if ((d[dindex] >= 'A' && d[dindex] <= 'Z') || // Unreserved character we don't have to encode, just copy it over
+			(d[dindex] >= 'a' && d[dindex] <= 'z') ||
+			(d[dindex] >= '0' && d[dindex] <= '9') ||
+			d[dindex] == '~' || d[dindex] == '!' || d[dindex] == '*' || d[dindex] == '(' || d[dindex] == ')' || d[dindex] == '\'') {
+
+			e += d[dindex];
+
+		} else if (plus && d[dindex] == ' ') { // Space, with the option to encode " " into "+", otherwise else below will turn it into "%20"
+
+			e += "+";
+
+		} else { // Reserved character or other byte, percent encode it
+
+			sprintf(bay, "%%%02X", d[dindex]);
+			e += bay;
+		}
+	}
+
+	return widenStoC(e);
+}
+
+
+
+
 
 
 
@@ -210,7 +137,7 @@ void TestEncode(read r) {
 	CString normal, encoded, decoded;
 
 	normal = r;
-	encoded = PercentEncode(normal);
+	encoded = PercentEncode(normal, true);
 	decoded = PercentDecode(encoded);
 
 	int i = 7;
@@ -224,15 +151,19 @@ void TestEncode(read r) {
 void Test() {
 
 
-	PercentDecode(L"%41");
+	/*
+	PercentDecode(L"a%42c");
+
 	PercentDecode(L"%41%42");
 	PercentDecode(L"%00");
 	PercentDecode(L"%ff");
+	*/
 
+	TestEncode(L"a:b");
 
-	/*
 
 	TestEncode(L"hello");
+	TestEncode(L"+ +");
 	TestEncode(L"hello you");
 	TestEncode(L"\r\n");
 	TestEncode(L"hello+you");
@@ -243,7 +174,6 @@ void Test() {
 
 		TestEncode(f.info.cFileName);
 	}
-	*/
 
 
 
