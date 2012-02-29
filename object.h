@@ -470,6 +470,7 @@ class Torrent {
 public:
 
 
+	CString Name();
 	CString Path();
 	CString MagnetLink();
 	bool paused;

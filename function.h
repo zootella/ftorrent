@@ -44,8 +44,9 @@ CString SayNumber(int number, read name);
 CString InsertCommas(read r);
 CString SayTime(DWORD time);
 CString SayNow();
-CString ReplacePercent(read r);
-CString ReplaceSafe(read r);
+CString UriDecode(read r);
+CString UriEncode(read r, bool plus = true); // Has defaults
+CString SafeFileName(read r);
 
 // Utility
 void error(read r1 = L"", read r2 = L"", read r3 = L"", read r4 = L"", read r5 = L"", read r6 = L"", read r7 = L"", read r8 = L"", read r9 = L""); // Has defaults
@@ -204,9 +205,9 @@ bool WebThreadDo(read url, DWORD started);
 bool WebHeaderNumberRead(HINTERNET request, DWORD header, int *i);
 void ClipboardCopy(read r);
 CString ClipboardPaste();
-CString UrlEncode(read r);
-CString UrlDecode(read r);
-CString WebCanonicalizeUrl(read r, bool encode);
+
+
+
 
 // Wrap
 // start
@@ -317,6 +318,7 @@ void AddMeta(hbig hash, read torrent);
 void AddOption(hbig hash);
 bool LibraryAddTorrent(libtorrent::torrent_handle *handle, read folder, read store, read torrent, bool paused);
 bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read store, hbig hash, read name, bool paused);
+CString ComposeMagnet(hbig hash, read name, std::set<CString> trackers);
 bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trackers);
 bool ParseTorrent(read torrent, hbig *hash, CString *name, std::set<CString> *trackers);
 void LibraryPulse();

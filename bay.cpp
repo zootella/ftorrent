@@ -10,15 +10,16 @@ bool PaintCustom(LPNMLVCUSTOMDRAW draw) {
 
 
 
-
-
+CString Torrent::Name() {
+	return widenStoC(handle.name()); //TODO you don't need to uri decode this, do you?
+}
 
 CString Torrent::Path() {
-	return make(folder, L"\\", widenStoC(handle.name()));
+	return make(folder, L"\\", Name());
 }
 
 CString Torrent::MagnetLink() {
-	return L"(magnet link)";//TODO
+	return ComposeMagnet(handle.info_hash(), Name(), trackers);
 }
 
 
@@ -55,9 +56,9 @@ bool Torrent::CanSaveTorrentAs() { return DiskFound(PathTorrentMeta(handle.info_
 void Torrent::UseSaveTorrentAs() {
 	if (!CanSaveTorrentAs()) { log(L"cant save torrent as"); return; }
 
-	CString destination = DialogSave(ReplaceSafe(ReplacePercent(widenStoC(handle.name())))); // Make the torrent name safe for a file name on the disk
-	if (isblank(destination)) return;                                                        // The user clicked cancel in the save as dialog box
-	DiskCopyFile(PathTorrentMeta(handle.info_hash()), destination, true);                    // Overwrite, the save as dialog box already warned the user
+	CString destination = DialogSave(SafeFileName(Name()));               // Make the torrent name safe for a file name on the disk
+	if (isblank(destination)) return;                                     // The user clicked cancel in the save as dialog box
+	DiskCopyFile(PathTorrentMeta(handle.info_hash()), destination, true); // Overwrite, the save as dialog box already warned the user
 }
 
 // Start this torrent so it downloads and seeds
@@ -213,14 +214,16 @@ void Torrent::ComposeStatus() {
 
 void Torrent::ComposeName() {
 	Cell &c = GetCell(L"Name");
-	c.text = widenStoC(handle.name());
+	c.text = Name();
 }
 
 void Torrent::ComposeSize() {
 	Cell &c = GetCell(L"Size");
 
 	sbig done = handle.status().total_done; // libtorrent::size_type and sbig are both __int64
-	sbig size = handle.get_torrent_info().total_size();
+
+	sbig size = 0;
+	if (handle.has_metadata()) size = handle.get_torrent_info().total_size();
 
 	c.text = make(InsertCommas(numerals(done)), L"/", InsertCommas(numerals(size)), L" bytes");
 }

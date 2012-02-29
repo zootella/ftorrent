@@ -711,13 +711,15 @@ bool LibraryAddMagnet(libtorrent::torrent_handle *handle, read folder, read stor
 	return false;
 }
 
-CString ComposeMagnet(hbig *hash, CString *name, std::set<CString> *trackers) {
+// Compose the given infohash, torrent name, and list of trackers into the text of a magnet link
+CString ComposeMagnet(hbig hash, read name, std::set<CString> trackers) {
 
-
-
-	//TODO url encode each part
-
-	return L"";
+	CString s = L"magnet:?";;
+	s += make(L"xt=urn:btih:", base16(hash));
+	if (is(name)) s += make(L"&dn=", UriEncode(name));
+	for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
+		s += make(L"&tr=", UriEncode(*i));
+	return s;
 }
 
 // Parse the infohash, name, and trackers from the given magnet link
@@ -755,13 +757,13 @@ bool ParseMagnet(read magnet, hbig *hash, CString *name, std::set<CString> *trac
 		// Download name, optional
 		} else if (same(b, L"dn", Matching)) {
 
-			*name = ReplacePercent(a);
+			*name = UriDecode(a);
 			foundname = true;
 
 		// Tracker, optional, 1 or several of these
 		} else if (same(b, L"tr", Matching)) {
 
-			trackers->insert(ReplacePercent(a));
+			trackers->insert(UriDecode(a));
 		}
 	}
 

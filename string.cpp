@@ -428,52 +428,124 @@ CString SayNow() {
 	return day + L" " + hour + L":" + minute + m + L" " + second + L"." + millisecond + L"s";
 }
 
-// Turn URI codes like "%20" and "+" into text to show the user
-CString ReplacePercent(read r) {
+// A block of memory that frees itself when the object goes out of scope
+class Memory {
+public:
 
-	CString s = replace(r, L"+", L" ");
+	void *block;
+	Memory() { block = NULL; } // No memory block yet
+	~Memory() { Free(); }      // Free any memory this object contains when it goes out of scope
 
-	s = replace(s, L"%20", L" ",  Matching); // Match case for hexidecimal digits
-	s = replace(s, L"%21", L"!",  Matching);
-	s = replace(s, L"%22", L"\"", Matching);
-	s = replace(s, L"%23", L"#",  Matching);
-	s = replace(s, L"%24", L"$",  Matching);
-	s = replace(s, L"%25", L"%",  Matching);
-	s = replace(s, L"%26", L"&",  Matching);
-	s = replace(s, L"%27", L"'",  Matching);
-	s = replace(s, L"%28", L"(",  Matching);
-	s = replace(s, L"%29", L")",  Matching);
-	s = replace(s, L"%2A", L"*",  Matching);
-	s = replace(s, L"%2B", L"+",  Matching);
-	s = replace(s, L"%2C", L",",  Matching);
-	s = replace(s, L"%2D", L"-",  Matching);
-	s = replace(s, L"%2E", L".",  Matching);
-	s = replace(s, L"%2F", L"/",  Matching);
+	bool Allocate(int bytes) {   // Returns false on error
+		if (block) return false; // Already have a block of memory
+		block = malloc(bytes);
+		if (!block) { log(L"malloc"); return false; }
+		return true;
+	}
 
-	s = replace(s, L"%3A", L":",  Matching);
-	s = replace(s, L"%3B", L";",  Matching);
-	s = replace(s, L"%3C", L"<",  Matching);
-	s = replace(s, L"%3D", L"=",  Matching);
-	s = replace(s, L"%3E", L">",  Matching);
-	s = replace(s, L"%3F", L"?",  Matching);
-	s = replace(s, L"%40", L"@",  Matching);
+	void Free() {
+		if (!block) return; // No memory block to free
+		free(block);
+		block = NULL;       // Record that we don't have a memory block any more
+	}
+};
 
-	s = replace(s, L"%5B", L"[",  Matching);
-	s = replace(s, L"%5C", L"\\", Matching);
-	s = replace(s, L"%5D", L"]",  Matching);
-	s = replace(s, L"%5E", L"^",  Matching);
-	s = replace(s, L"%5F", L"_",  Matching);
-	s = replace(s, L"%60", L"`",  Matching);
+// URI decode the given text, decoding percent sequences like "%20" into the characters they represent
+// Correctly decodes international text, the three UTF-8 bytes "%E4%B8%80" become L"\u4e00" the chinese character for one
+// Decodes both "%20" and "+" into " " in case spaces got encoded into plusses, ok because "+" would have gotten encoded into "%2B"
+// On error, returns the given text unchanged
+CString UriDecode(read r) {
 
-	s = replace(s, L"%7B", L"{",  Matching);
-	s = replace(s, L"%7C", L"|",  Matching);
-	s = replace(s, L"%7D", L"}",  Matching);
-	s = replace(s, L"%7E", L"~",  Matching);
-	return s;
+	std::string estring = narrowRtoS(r); // Since r is percent encoded, it should only contain characters that take 1 byte and narrowing it won't change anything
+	const char *e = estring.c_str();
+	int esize = lengthp(e);              // Number of encoded characters
+	int eindex = 0;                      // The index of the encoded character we're on
+
+	Memory memory;
+	if (!memory.Allocate(esize + 1)) return r; // Space for every character even if no "%xx" pairs get smaller, and a null terminator
+	byte *d = (byte *)memory.block;            // Pointer to write decoded bytes in the memory block
+
+	while (eindex < esize) { // Loop for each encoded character
+
+		if (e[eindex] == '%') { // We're on a percent character, the start of something like "%20"
+
+			if (eindex + 3 > esize) return r;    // Make sure the given text is long enough to have the whole "%20"
+			byte pair1 = toupper(e[eindex + 1]); // Accept uppercase and lowercase letters
+			byte pair2 = toupper(e[eindex + 2]);
+			byte nibble1, nibble2, dbyte;
+
+			if      (pair1 >= '0' && pair1 <= '9') nibble1 = pair1 - '0';      // '0'  0 0000 through '9'  9 1001
+			else if (pair1 >= 'A' && pair1 <= 'F') nibble1 = pair1 - 'A' + 10; // 'A' 10 1010 through 'F' 15 1111
+			else                                   return r;
+
+			if      (pair2 >= '0' && pair2 <= '9') nibble2 = pair2 - '0';
+			else if (pair2 >= 'A' && pair2 <= 'F') nibble2 = pair2 - 'A' + 10;
+			else                                   return r;
+
+			dbyte = nibble1 << 4; // Shift the 4 bytes it means into the high portion of the byte, like 1000----
+			dbyte |= nibble2;     // Copy the 4 bits from the second character in the pair into the low portion of the byte, like ----1100, and use the bitwise or operator to assemble the entire byte, like 10001100
+			
+			*d = dbyte;  // Copy the decoded byte to the decoded memory
+			d++;         // Move forward in the decoded memory past the 1 byte we just wrote
+			eindex += 3; // Move forward in the encoded text past the 3 characters we just encoded
+
+		} else if (e[eindex] == '+') { // We're on a plus
+
+			*d = ' '; // It was a space that got encoded into a plus
+			d++;
+			eindex++;
+
+		} else { // We're on an unreserved character like A or 7
+
+			*d = e[eindex]; // Just copy it over
+			d++;
+			eindex++;
+		}
+	}
+
+	*d = '\0';                              // Write a null terminator so we can look at the decoded memory as text
+	return widenPtoC((char *)memory.block); // Convert the UTF-8 memory we composed into UTF-16, sets of 3 bytes will become 1 character
+}
+
+// URI encode the given text, replacing reserved characters with percent codes
+// Works like encodeURIComponent() in javascript
+// Encodes every UTF-8 byte of the text except A-Z a-z 0-9 -_.~ and ~!*()'
+// Optionally encodes " " to "+" instead of "%20", which is ok when encoding a part of the URI after the "?", which is the entire magnet link
+// Encodes international characters, the chinese character for one L"\u4e00" becomes the three bytes it is in UTF-8 encoded "%E4%B8%80"
+CString UriEncode(read r, bool plus) {
+
+	std::string dstring = narrowRtoS(r); // Convert r in UTF-16, where every character takes 2 bytes, to dstring in UTF-8, where A takes 1 byte and hiragana letter no takes 3 bytes
+	const char *d = dstring.c_str();
+	int dbytes = lengthp(d);             // Number of bytes of UTF-8 text we have to encode
+	char bay[MAX_PATH];                  // Bay to compose the text of one encoded byte like "%20"
+	std::string e;                       // String for encoded text
+
+	for (int dindex = 0; dindex < dbytes; dindex++) { // Loop for each byte in the decoded text
+
+		if ((d[dindex] >= 'A' && d[dindex] <= 'Z') || // Unreserved character we don't have to encode, just copy it over
+			(d[dindex] >= 'a' && d[dindex] <= 'z') || // Letters and numbers
+			(d[dindex] >= '0' && d[dindex] <= '9') ||
+			d[dindex] == '-' || d[dindex] == '_' || d[dindex] == '.' || d[dindex] == '~' || // RFC 3986 unreserved characters
+			d[dindex] == '~' || d[dindex] == '!' || d[dindex] == '*' || d[dindex] == '(' || d[dindex] == ')' || d[dindex] == '\'') { // Characters encodeURIComponent allows
+
+			e += d[dindex];
+
+		} else if (plus && d[dindex] == ' ') { // Space, with the option to encode " " into "+", otherwise the code below will turn it into "%20"
+
+			e += "+";
+
+		} else { // Reserved character or other byte, percent encode it
+
+			sprintf(bay, "%%%02X", (unsigned char)(d[dindex]));
+			e += bay;
+		}
+	}
+
+	return widenStoC(e);
 }
 
 // Replace characters not allowed in windows file names with acceptable ones
-CString ReplaceSafe(read r) {
+CString SafeFileName(read r) {
 
 	CString s = r;
 	s = replace(s, L"\"", L"'"); // Turn double quotes into single ones
