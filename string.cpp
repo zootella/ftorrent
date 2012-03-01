@@ -526,7 +526,7 @@ CString UriEncode(read r, bool plus) {
 			(d[dindex] >= 'a' && d[dindex] <= 'z') || // Letters and numbers
 			(d[dindex] >= '0' && d[dindex] <= '9') ||
 			d[dindex] == '-' || d[dindex] == '_' || d[dindex] == '.' || d[dindex] == '~' || // RFC 3986 unreserved characters
-			d[dindex] == '~' || d[dindex] == '!' || d[dindex] == '*' || d[dindex] == '(' || d[dindex] == ')' || d[dindex] == '\'') { // Characters encodeURIComponent allows
+			d[dindex] == '~' || d[dindex] == '!' || d[dindex] == '*' || d[dindex] == '(' || d[dindex] == ')' || d[dindex] == '\'') { // Characters encodeURIComponent() allows
 
 			e += d[dindex];
 
