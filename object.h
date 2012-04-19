@@ -488,11 +488,15 @@ public:
 	libtorrent::torrent_handle handle;
 
 
+	bool metacheck, metasave;
 
 
 	// New
 	Torrent() {
 		paused = false;
+
+		metacheck = false; // true once we've checked to see if we should try to save metadata
+		metasave = false; // true once we've tried to save metadata once
 	}
 
 
@@ -531,7 +535,7 @@ public:
 	void Save();
 	bool Load(hbig hash);
 
-	void Edit();
+	void Pulse();
 
 	void Compose();
 

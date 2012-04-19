@@ -107,11 +107,39 @@ void Torrent::UseDelete() {
 
 
 // Edit the list view row to match the information in this torrent
-void Torrent::Edit() {
+void Torrent::Pulse() {
 
 	// Edit the row of cells in the list view control window
 	Compose();
 	CellShow(App.list.torrents.window, cells);
+
+
+	if (!metacheck) { // maybe
+		metacheck = true;
+
+		metasave = !handle.has_metadata();
+	}
+
+	if (metasave && handle.has_metadata()) {
+		metasave = false;
+
+		log(L"try to save metadata once here");
+
+
+
+
+
+
+
+	}
+
+
+
+
+
+
+
+
 }
 
 
@@ -166,6 +194,7 @@ void DefaultColumns() {
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=folder;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=path;";
 
+	App.list.torrents.factory += L"show=true,right=false,width=110,title=has metadata;";
 
 
 
@@ -202,6 +231,7 @@ void Torrent::Compose() {
 	GetCell(L"folder").text = folder;
 	GetCell(L"path").text = Path();
 
+	GetCell(L"has metadata").text = handle.has_metadata() ? L"yes" : L"no";
 
 
 

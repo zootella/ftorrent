@@ -580,7 +580,7 @@ void ListPulse() {
 
 
 	for (int i = 0; i < (int)App.torrents.size(); i++)
-		App.torrents[i].Edit();
+		App.torrents[i].Pulse();
 
 
 	App.list.refresh = false; // We filled any blank cells caused by newly added columns
