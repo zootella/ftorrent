@@ -114,17 +114,45 @@ void Torrent::Pulse() {
 	CellShow(App.list.torrents.window, cells);
 
 
-	if (!metacheck) { // maybe
-		metacheck = true;
+	if (!metacheck) {
+		metacheck = true; // do once
 
-		metasave = !handle.has_metadata();
+		metasave = !handle.has_metadata(); // true if this torrent doesn't have metadata, because it started from a magnet link instead of a torrent file
 	}
 
-	if (metasave && handle.has_metadata()) {
-		metasave = false;
+	if (metasave && handle.has_metadata()) { // this torrent didn't have metadata, but just got some from a peer
+		metasave = false; // do once
 
 		log(L"try to save metadata once here");
 
+		CString path = PathTorrentMeta(handle.info_hash());
+
+
+		//if path is occupied, stop trying to save something there
+
+
+		int size = handle.get_torrent_info().metadata_size(); // returns the raw info section of the torrent file, this looks like exactly what we need
+
+
+
+		boost::shared_array<char> a = handle.get_torrent_info().metadata();
+		char *b = &(a[0]);
+		libtorrent::entry e = libtorrent::bdecode(b, b + size);
+
+
+		// Copy the torrent's set of trackers into a libtorrent bencoded list
+		libtorrent::entry::list_type l;
+		for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
+			l.push_back(narrowRtoS(*i));
+
+		// Make and fill the bencoded dictionary
+		libtorrent::entry::dictionary_type d;
+		d[narrowRtoS(L"info")] = e;
+		d[narrowRtoS(L"announce-list")] = l;
+
+		// Save it to disk
+		bool result = SaveEntry(path, d);
+		if (result) log(L"saved it");
 
 
 
