@@ -113,61 +113,38 @@ void Torrent::Pulse() {
 	Compose();
 	CellShow(App.list.torrents.window, cells);
 
-
+	// Save a torrent file we just got from a peer
 	if (!metacheck) {
-		metacheck = true; // do once
 
-		metasave = !handle.has_metadata(); // true if this torrent doesn't have metadata, because it started from a magnet link instead of a torrent file
+		metacheck = true; // Do once
+		metasave = !handle.has_metadata(); // True if this torrent doesn't have metadata, because it started from a magnet link instead of a torrent file
 	}
+	if (metasave && handle.has_metadata()) { // This torrent didn't have metadata, but just got some from a peer
 
-	if (metasave && handle.has_metadata()) { // this torrent didn't have metadata, but just got some from a peer
-		metasave = false; // do once
-
-		log(L"try to save metadata once here");
-
+		metasave = false; // Do once
 		CString path = PathTorrentMeta(handle.info_hash());
+		if (!DiskFound(path)) { // Only do something if this torrent doesn't already have a torrent saved
 
+			// Get the size and data of the raw info section of the torrent file
+			int size = handle.get_torrent_info().metadata_size();
+			boost::shared_array<char> a = handle.get_torrent_info().metadata();
+			char *b = &(a[0]); //TODO there must be a more correct way to do this
+			libtorrent::entry e = libtorrent::bdecode(b, b + size); // Parse the data back into a bencoded dictionary
 
-		//if path is occupied, stop trying to save something there
+			// Copy the torrent's set of trackers into a libtorrent bencoded list
+			libtorrent::entry::list_type l;
+			for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
+				l.push_back(narrowRtoS(*i));
 
+			// Make and fill the bencoded dictionary to be the contents of a torrent file
+			libtorrent::entry::dictionary_type d;
+			d[narrowRtoS(L"info")] = e;
+			d[narrowRtoS(L"announce-list")] = l;
 
-		int size = handle.get_torrent_info().metadata_size(); // returns the raw info section of the torrent file, this looks like exactly what we need
-
-
-
-		boost::shared_array<char> a = handle.get_torrent_info().metadata();
-		char *b = &(a[0]);
-		libtorrent::entry e = libtorrent::bdecode(b, b + size);
-
-
-		// Copy the torrent's set of trackers into a libtorrent bencoded list
-		libtorrent::entry::list_type l;
-		for (std::set<CString>::const_iterator i = trackers.begin(); i != trackers.end(); i++)
-			l.push_back(narrowRtoS(*i));
-
-		// Make and fill the bencoded dictionary
-		libtorrent::entry::dictionary_type d;
-		d[narrowRtoS(L"info")] = e;
-		d[narrowRtoS(L"announce-list")] = l;
-
-		// Save it to disk
-		bool result = SaveEntry(path, d);
-		if (result) log(L"saved it");
-
-
-
-
-
-
+			// Save it to disk as the torrent's meta.db file
+			SaveEntry(path, d);
+		}
 	}
-
-
-
-
-
-
-
-
 }
 
 
