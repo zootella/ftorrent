@@ -180,7 +180,7 @@ void DefaultColumns() {
 	App.list.pieces.factory   += L"";
 	App.list.files.factory    += L"";
 
-
+	/*
 	App.list.torrents.factory += L"show=true,right=false,width=100,title=command;";
 	App.list.torrents.factory += L"show=true,right=false,width=100,title=state;";
 
@@ -190,24 +190,46 @@ void DefaultColumns() {
 	App.list.torrents.factory += L"show=true,right=false,width=220,title=Infohash;";
 	App.list.torrents.factory += L"show=true,right=false,width=150,title=Location;";
 
-	/*
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=object paused;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=handle paused;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=is auto managed;";
-	*/
 
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=folder;";
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=path;";
 
 	App.list.torrents.factory += L"show=true,right=false,width=110,title=has metadata;";
+	*/
 
 
-
+	App.list.torrents.factory += L"show=true,right=false,width=200,title=Name;";
+	App.list.torrents.factory += L"show=true,right=false,width=23,title=#;";
+	App.list.torrents.factory += L"show=true,right=false,width=60,title=Size;";
+	App.list.torrents.factory += L"show=true,right=false,width=54,title=Done;";
+	App.list.torrents.factory += L"show=true,right=false,width=100,title=Status;";
+	App.list.torrents.factory += L"show=true,right=false,width=16,title=Source;";
+	App.list.torrents.factory += L"show=true,right=false,width=60,title=Seeds;";
+	App.list.torrents.factory += L"show=true,right=false,width=60,title=Peers;";
+	App.list.torrents.factory += L"show=true,right=false,width=80,title=Down Speed;";
+	App.list.torrents.factory += L"show=true,right=false,width=80,title=Up Speed;";
+	App.list.torrents.factory += L"show=true,right=false,width=55,title=ETA;";
+	App.list.torrents.factory += L"show=true,right=false,width=80,title=Uploaded;";
+	App.list.torrents.factory += L"show=true,right=false,width=45,title=Ratio;";
+	App.list.torrents.factory += L"show=true,right=false,width=45,title=Avail.;";
+	App.list.torrents.factory += L"show=true,right=false,width=70,title=Label;";
+	App.list.torrents.factory += L"show=true,right=false,width=100,title=Added On;";
+	App.list.torrents.factory += L"show=true,right=false,width=100,title=Completed On;";
 }
 
 
 
 void Torrent::Compose() {
+
+
+
+
+
+
+
 	ComposeStatus();
 	ComposeName();
 	ComposeSize();
