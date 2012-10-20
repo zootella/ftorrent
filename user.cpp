@@ -330,10 +330,10 @@ void AreaPulse() {
 				if (t) {
 
 					// Commands where any selected torrent that can't do it makes the command for all of them unavailable
-					if (!t->CanOpen())                 App.area.open.command        = CommandUnavailable; // One that can't grays the command
-					if (!t->CanOpenContainingFolder()) App.area.openfolder.command  = CommandUnavailable;
-					if (!t->CanCopyMagnetLink())       App.area.copymagnet.command  = CommandUnavailable;
-					if (!t->CanSaveTorrentAs())        App.area.savetorrent.command = CommandUnavailable;
+					if (!t->CanOpen())           App.area.open.command        = CommandUnavailable; // One that can't grays the command
+					if (!t->CanShowInFolder())   App.area.openfolder.command  = CommandUnavailable;
+					if (!t->CanCopyMagnetLink()) App.area.copymagnet.command  = CommandUnavailable;
+					if (!t->CanSaveTorrentAs())  App.area.savetorrent.command = CommandUnavailable;
 
 					// Commands where any selected torrent that can do it makes the command for all of them available
 					if (t->CanStart())                 App.area.start.command       = CommandReady; // One that can makes the command available

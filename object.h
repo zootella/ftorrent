@@ -505,8 +505,8 @@ public:
 	bool CanOpen();
 	void UseOpen();
 
-	bool CanOpenContainingFolder();
-	void UseOpenContainingFolder();
+	bool CanShowInFolder();
+	void UseShowInFolder();
 
 	bool CanCopyMagnetLink();
 	void UseCopyMagnetLink(CString *copy);

@@ -20,7 +20,7 @@
 #define IdentifyTorrentsAddMagnet              40011
 #define IdentifyTorrentsCreateTorrent          40012
 #define IdentifyTorrentOpen                    40013
-#define IdentifyTorrentOpenContainingFolder    40014
+#define IdentifyTorrentShowInFolder            40014
 #define IdentifyTorrentCopyMagnetLink          40015
 #define IdentifyTorrentSaveTorrentAs           40016
 #define IdentifyTorrentStart                   40017
@@ -34,7 +34,7 @@
 #define IdentifyFilesTree                      40025
 #define IdentifyFilesList                      40026
 #define IdentifyFileOpen                       40027
-#define IdentifyFileOpenContainingFolder       40028
+#define IdentifyFileShowInFolder               40028
 #define IdentifyFileHighPriority               40029
 #define IdentifyFileNormalPriority             40020
 #define IdentifyFileLowPriority                40031

@@ -108,7 +108,7 @@ BEGIN
     POPUP "Torrent"
     BEGIN
         MENUITEM "&Open",                       IdentifyTorrentOpen
-        MENUITEM "Open Containing &Folder",     IdentifyTorrentOpenContainingFolder
+        MENUITEM "Show in &Folder",             IdentifyTorrentShowInFolder
         MENUITEM SEPARATOR
         MENUITEM "Copy &Magnet Link",           IdentifyTorrentCopyMagnetLink
         MENUITEM "Save Torrent &As...",         IdentifyTorrentSaveTorrentAs
@@ -143,7 +143,7 @@ BEGIN
     POPUP "File"
     BEGIN
         MENUITEM "&Open",                       IdentifyFileOpen
-        MENUITEM "Open Containing &Folder",     IdentifyFileOpenContainingFolder
+        MENUITEM "Show in &Folder",             IdentifyFileShowInFolder
         MENUITEM SEPARATOR
         MENUITEM "&High Priority",              IdentifyFileHighPriority
         MENUITEM "&Normal Priority",            IdentifyFileNormalPriority

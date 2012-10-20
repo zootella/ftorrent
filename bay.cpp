@@ -35,9 +35,9 @@ void Torrent::UseOpen() {
 }
 
 // Open the folder that contains the folder of multiple files or single file that open above opens, and select it
-bool Torrent::CanOpenContainingFolder() { return DiskFound(Path()); }
-void Torrent::UseOpenContainingFolder() {
-	if (!CanOpenContainingFolder()) { log(L"cant open containing folder"); return; }
+bool Torrent::CanShowInFolder() { return DiskFound(Path()); }
+void Torrent::UseShowInFolder() {
+	if (!CanShowInFolder()) { log(L"cant show in folder"); return; }
 
 	FileRun(L"explorer.exe", make(L"/select, \"", Path(), L"\"")); // Have windows explorer open the containing folder and select the given path
 }

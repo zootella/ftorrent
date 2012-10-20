@@ -426,27 +426,27 @@ void NotifyRightClick(HWND window) {
 		AreaPulse(); // If the right click selected a row, a regular pluse might not have done this already
 
 		// Set menu items available or grayed based on area command states
-		MenuSet(App.menu.torrent, IdentifyTorrentOpen,                 App.area.open.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentOpenContainingFolder, App.area.openfolder.command  == CommandUnavailable ? MFS_DISABLED : MFS_DEFAULT); // Open folder is always the default
-		MenuSet(App.menu.torrent, IdentifyTorrentCopyMagnetLink,       App.area.copymagnet.command  == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentSaveTorrentAs,        App.area.savetorrent.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentStart,                App.area.start.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentPause,                App.area.pause.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentRemove,               App.area.remove.command      == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
-		MenuSet(App.menu.torrent, IdentifyTorrentDelete,               App.area.deletefiles.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentOpen,           App.area.open.command        == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentShowInFolder,   App.area.openfolder.command  == CommandUnavailable ? MFS_DISABLED : MFS_DEFAULT); // Open folder is always the default
+		MenuSet(App.menu.torrent, IdentifyTorrentCopyMagnetLink, App.area.copymagnet.command  == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentSaveTorrentAs,  App.area.savetorrent.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentStart,          App.area.start.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentPause,          App.area.pause.command       == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentRemove,         App.area.remove.command      == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
+		MenuSet(App.menu.torrent, IdentifyTorrentDelete,         App.area.deletefiles.command == CommandUnavailable ? MFS_DISABLED : MFS_ENABLED);
 
 		// Show the context menu and get the user's choice
 		int choice = MenuShow(App.menu.torrent);
 		int rows = ListRows(window); // Find out how many rows there are to be able to loop through them
 
 		// Call the corresponding method on the torrents behind each selected row, loop up from the bottom to be able to delete rows without changing upcoming indices in the loop
-		if      (choice == IdentifyTorrentOpen)                 { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseOpen();                 } } }
-		else if (choice == IdentifyTorrentOpenContainingFolder) { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseOpenContainingFolder(); } } }
-		else if (choice == IdentifyTorrentSaveTorrentAs)        { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseSaveTorrentAs();        } } }
-		else if (choice == IdentifyTorrentStart)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseStart();                } } }
-		else if (choice == IdentifyTorrentPause)                { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UsePause();                } } }
-		else if (choice == IdentifyTorrentRemove)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseRemove();               } } }
-		else if (choice == IdentifyTorrentDelete)               { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseDelete();               } } }
+		if      (choice == IdentifyTorrentOpen)           { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseOpen();          } } }
+		else if (choice == IdentifyTorrentShowInFolder)   { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseShowInFolder();  } } }
+		else if (choice == IdentifyTorrentSaveTorrentAs)  { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseSaveTorrentAs(); } } }
+		else if (choice == IdentifyTorrentStart)          { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseStart();         } } }
+		else if (choice == IdentifyTorrentPause)          { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UsePause();         } } }
+		else if (choice == IdentifyTorrentRemove)         { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseRemove();        } } }
+		else if (choice == IdentifyTorrentDelete)         { for (int i = rows - 1; i >= 0; i--) { if (ListSelected(window, i)) { Torrent *t = ListGetTorrent(i); if (t) t->UseDelete();        } } }
 		else if (choice == IdentifyTorrentCopyMagnetLink) {
 
 			// Copy the selected magnet links to the clipboard
