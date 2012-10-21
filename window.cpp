@@ -136,7 +136,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	// Start the pulse timer
 	TimerSet(TIMER_PULSE, 300);
 
-	if (App.option.associate) AssociateGet();
 	FirewallAdd(PathRunningFile(), PROGRAM_NAME); // A hang on run bug may have been avoided by commenting this out
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent

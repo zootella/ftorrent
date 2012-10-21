@@ -860,14 +860,12 @@ void DialogOptions() {
 // Associate this program with magnet and torrent and show the user a color label about it
 void AssociateUpdate(HWND dialog) {
 
-	App.option.associate = IsDlgButtonChecked(dialog, IdentifyAssociate) ? true : false; // Copy the check to data
-	if (App.option.associate && !AssociateIs()) AssociateGet(); // Change the registry if necessary
-
 	CString before = TextDialog(dialog, IdentifyLabel); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
 	CString now;
 	if (AssociateIs())             now = L"green";  // We have the associations
 	else if (App.option.associate) now = L"yellow"; // We tried to get them, but it didn't work
 	else                           now = L"red";    // The user has not told the program to get them
+	EnableWindow(GetDlgItem(dialog, IdentifyAssociate), now == L"red"); // Enable the button with red text
 
 	TextDialogSet(dialog, IdentifyLabel, now); // Set the text of the hidden label for paint to use below
 	if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
@@ -881,7 +879,6 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 	case WM_INITDIALOG:
 
 		TextDialogSet(dialog, IdentifyFolder, App.option.folder); // Torrents folder path
-		CheckDlgButton(dialog, IdentifyAssociate, App.option.associate ? BST_CHECKED : BST_UNCHECKED); // Associate checkbox
 		AssociateUpdate(dialog);
 		return true; // Let the system place the focus
 
@@ -944,10 +941,11 @@ BOOL APIENTRY DialogOptionsPage1(HWND dialog, UINT message, UINT wparam, LPARAM 
 			if (is(browse)) TextDialogSet(dialog, IdentifyFolder, browse); // If the user picked something, write it in the text field
 			return true; // We handled the message
 		}
-		// The user checked or unchecked the associate checkbox
+		// The user pressed the associate button
 		break;
 		case IdentifyAssociate:
 
+			AssociateGet();
 			AssociateUpdate(dialog);
 		}
 

@@ -172,10 +172,9 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IdentifyFolder,7,20,291,14,ES_AUTOHSCROLL
     PUSHBUTTON      "&Browse...",IdentifyBrowse,303,20,50,14
-    CONTROL         "&Choose ftorrent to open torrent files and magnet links",IdentifyAssociate,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,189,10
+    PUSHBUTTON      "&Choose ftorrent to open torrent files and magnet links",IdentifyAssociate,7,62,195,14
     LTEXT           "Download files to this folder:",IDC_STATIC,7,7,92,8
-    LTEXT           "Label",IdentifyLabel,7,44,346,8,NOT WS_VISIBLE
+    LTEXT           "Label",IdentifyLabel,7,49,346,8,NOT WS_VISIBLE
 END
 
 OPTIONS_PAGE_2 DIALOGEX 0, 0, 360, 180
