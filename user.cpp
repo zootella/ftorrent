@@ -253,9 +253,9 @@ void AreaCreate() {
 	App.area.pause.tip  = L"Pause";
 	App.area.remove.tip = L"Remove";
 	App.area.tools.dim   = NULL; // Tools is always available
-	App.area.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  30, 19); // Rectangular icon
-	App.area.tools.icon  = LoadIconResource(L"BUTTON_TOOLS",      30, 19);
-	App.area.start.dim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19); // Custom size icons
+	App.area.tools.hot   = LoadIconResource(L"BUTTON_TOOLS_HOT",  19, 19); // Custom size icons
+	App.area.tools.icon  = LoadIconResource(L"BUTTON_TOOLS",      19, 19);
+	App.area.start.dim   = LoadIconResource(L"BUTTON_START_DIM",  19, 19);
 	App.area.start.hot   = LoadIconResource(L"BUTTON_START_HOT",  19, 19);
 	App.area.start.icon  = LoadIconResource(L"BUTTON_START",      19, 19);
 	App.area.pause.dim   = LoadIconResource(L"BUTTON_PAUSE_DIM",  19, 19);
@@ -558,10 +558,10 @@ void Layout(int move) {
 	App.area.start.size  = button;
 	App.area.pause.size  = button;
 	App.area.remove.size = button;
-	App.area.tools.size.w  = tools.w + 4;
-	App.area.start.size.x  = App.area.tools.size.w + (0 * button.w);
-	App.area.pause.size.x  = App.area.tools.size.w + (1 * button.w);
-	App.area.remove.size.x = App.area.tools.size.w + (2 * button.w);
+	App.area.tools.size.x  = 0 * button.w;
+	App.area.start.size.x  = 1 * button.w;
+	App.area.pause.size.x  = 2 * button.w;
+	App.area.remove.size.x = 3 * button.w;
 
 	// Bar
 	int min = title; // Compute the minimum and maximum bar y distances
