@@ -137,6 +137,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, PSTR command, int sho
 	TimerSet(TIMER_PULSE, 300);
 
 	FirewallAdd(PathRunningFile(), PROGRAM_NAME); // A hang on run bug may have been avoided by commenting this out
+	AssociateUpdate(NULL); // Check if we're the default torrent client
 	log(L"library start before");
 	LibraryStart(); // Start libtorrent
 	log(L"library start after");
@@ -210,6 +211,13 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wparam, LPARA
 		PaintWindow(&device);
 		return 0;
 	}
+	// The window lost or received the keyboard focus
+	break;
+	case WM_ACTIVATE:
+
+		// Check if we're the default torrent client
+		AssociateUpdate(NULL);
+
 	// A timer expired
 	break;
 	case WM_TIMER:

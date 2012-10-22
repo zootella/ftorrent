@@ -687,7 +687,7 @@ void OptionLoad() {
 	if (LoadEntry(PathOption(), d)) { // Loaded
 
 		App.option.folder = widenStoC(d[narrowRtoS(L"folder")].string()); // Path to download folder
-		App.option.associate = same(widenStoC(d[narrowRtoS(L"associate")].string()), L"t"); // True to associate magnet and torrent
+		App.option.associate = number(widenStoC(d[narrowRtoS(L"associate")].string())); // Day number when we last asked the user for the associations, 0 if ok to ask now
 
 		/*
 		//TODO persist column customizations
@@ -718,7 +718,7 @@ void OptionSave() {
 	libtorrent::entry::dictionary_type d;
 
 	d[narrowRtoS(L"folder")] = narrowRtoS(App.option.folder);
-	d[narrowRtoS(L"associate")] = App.option.associate ? narrowRtoS(L"t") : narrowRtoS(L"f");
+	d[narrowRtoS(L"associate")] = narrowRtoS(numerals(App.option.associate));
 
 	/*
 	//TODO update current lists to get widths before you save these
@@ -857,18 +857,27 @@ void DialogOptions() {
 	AreaPopDown();
 }
 
-// Associate this program with magnet and torrent and show the user a color label about it
+// Call periodically while the program runs, like when the window gains or loses focus
+// Takes the handle to the options dialog box, null if called from the main window
+// Checks the associations to encourage the user to have the program take them
 void AssociateUpdate(HWND dialog) {
 
-	CString before = TextDialog(dialog, IdentifyLabel); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
-	CString now;
-	if (AssociateIs())             now = L"green";  // We have the associations
-	else if (App.option.associate) now = L"yellow"; // We tried to get them, but it didn't work
-	else                           now = L"red";    // The user has not told the program to get them
-	EnableWindow(GetDlgItem(dialog, IdentifyAssociate), now == L"red"); // Enable the button with red text
+	bool have = AssociateIs(); // See if we have the associations right now
+	if (have) App.option.associate = 0; // If we do, we'll want to show the sign right away if we lose them
+	if (!App.option.unable && App.option.associate + 10 < DayNumber()) AssociateSign(); // It's been more than 10 days, show the associate sign
 
-	TextDialogSet(dialog, IdentifyLabel, now); // Set the text of the hidden label for paint to use below
-	if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
+	if (dialog) { // The options dialog box is open right now
+
+		CString before = TextDialog(dialog, IdentifyLabel); // "Label" when the dialog loads before we change it to "red", "yellow", or "green"
+		CString now;
+		if (have)                   now = L"green";  // We have the associations
+		else if (App.option.unable) now = L"yellow"; // We tried to get them, but it didn't work
+		else                        now = L"red";    // The user has not told the program to get them
+		EnableWindow(GetDlgItem(dialog, IdentifyAssociate), now == L"red"); // With red the button is enabled, with green and yellow it isn't
+
+		TextDialogSet(dialog, IdentifyLabel, now); // Set the text of the hidden label for paint to use below
+		if (before != L"Label" && before != now) InvalidateRect(dialog, NULL, true); // Repaint the dialog if the label changed
+	}
 }
 
 // A message from options page 1

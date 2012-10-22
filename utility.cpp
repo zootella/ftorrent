@@ -1751,7 +1751,7 @@ bool AssociateIs() {
 	return true;
 }
 
-// Register this running exe to open torrent files and magnet links
+// Register this running exe to open torrent files and magnet links, set a flag and tell the user if it doesn't work
 void AssociateGet() {
 
 	RegistryDelete(HKEY_CLASSES_ROOT, L".torrent");
@@ -1767,6 +1767,11 @@ void AssociateGet() {
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet",                                L"URL Protocol", L"");
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\DefaultIcon",                   L"",             PathTorrentIcon());
 	RegistryWrite(HKEY_CLASSES_ROOT, L"Magnet\\shell\\open\\command",          L"",             L"\"" + PathRunningFile() + "\" \"%1\"");
+
+	if (!AssociateIs()) { // It didn't work
+		App.option.unable = true; // Show the yellow warning in options and don't ask the user again this time the program runs
+		Message(L"Unable to register torrent and magnet. Run " + PROGRAM_NAME + L" as administrator, and try again."); // Tell the user it didn't work
+	}
 }
 
 // List this running exe in Add or Remove Programs

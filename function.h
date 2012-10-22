@@ -355,6 +355,9 @@ BOOL CALLBACK DialogAbout(HWND dialog, UINT message, WPARAM wparam, LPARAM lpara
 
 void Test();
 
+int DayNumber();
+void AssociateSign();
+
 bool PaintCustom(LPNMLVCUSTOMDRAW draw);
 
 

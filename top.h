@@ -163,10 +163,12 @@ class app_option {
 public:
 
 	CString folder; // Path to folder to save files
-	bool associate; // True to associate torrent and magnet
+	int associate;  // Day number when the user last refused to associate torrent and magnet, 0 ok to ask now
+	bool unable;    // True when the program tried to register the associations, and it didn't work
 
 	app_option() {
-		associate = true;
+		associate = 0;
+		unable = false;
 	}
 };
 
