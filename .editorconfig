@@ -1,0 +1,11 @@
+# Indicate that this is the root configuration file
+root = true
+
+# Intended format for all files, crlf is \r\n for Windows
+[*]
+indent_style = tab
+indent_size = 2
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = false
+insert_final_newline = true

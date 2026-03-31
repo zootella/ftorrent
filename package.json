@@ -1,0 +1,16 @@
+{
+  "name": "ftorrent",
+	"description": "The Future, according to 2003",
+	"license": "GPL-3.0-only",
+	"version": "0.1.0",
+	"type": "module",
+  "private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zootella/ftorrent.git"
+	},
+	"packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22"
+  }
+}
