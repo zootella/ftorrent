@@ -1,6 +1,6 @@
 # ============================================================================
 # .gitignore for pnpm monorepo
-# Workspaces: classic (Win32/VS), desktop (Tauri), plus Node/Python/Docker
+# Workspaces: classic (Win32/VS), desktop (Tauri), plus Node/Python/Go/Docker
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -143,7 +143,16 @@ docker-compose.override.yml
 .docker/
 
 # ----------------------------------------------------------------------------
-# Static Site Generators (Astro, VitePress, Docusaurus, Nextra, etc.)
+# Go
+# ----------------------------------------------------------------------------
+
+vendor/
+
+# Note: go.sum is committed — same rationale as Cargo.lock for binaries.
+# go.work.sum is also committed when using Go workspaces.
+
+# ----------------------------------------------------------------------------
+# Static Site Generators (Astro, VitePress, Docusaurus, Hugo, Nextra, etc.)
 # ----------------------------------------------------------------------------
 
 # Most SSG build output is already covered by dist/, build/, out/, .output/,
@@ -152,6 +161,11 @@ docker-compose.override.yml
 .astro/
 .vitepress/cache/
 .contentlayer/
+
+# Hugo
+public/
+resources/
+.hugo_build.lock
 
 # ----------------------------------------------------------------------------
 # Visual Studio / Win32 (classic workspace)
