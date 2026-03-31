@@ -1,0 +1,7 @@
+{
+	"name": "good",
+	"description": "IPv6 connection detector, Dockerized",
+	"homepage": "https://good.ftorrent.com/",
+	"private": true,
+	"version": "0.1.0"
+}

@@ -1,3 +1,6 @@
 packages:
-  - classic
   - desktop
+  - docs
+  - good
+  - open
+  - site

@@ -1,0 +1,19 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  desktop: {}
+
+  docs: {}
+
+  good: {}
+
+  open: {}
+
+  site: {}

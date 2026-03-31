@@ -1,0 +1,7 @@
+{
+	"name": "docs",
+	"description": "Documentation site for ftorrent",
+	"homepage": "https://docs.ftorrent.com/",
+	"private": true,
+	"version": "0.1.0"
+}

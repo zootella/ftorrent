@@ -1,0 +1,7 @@
+{
+	"name": "site",
+	"description": "Home page and website",
+	"homepage": "https://ftorrent.com/",
+	"private": true,
+	"version": "0.1.0"
+}
