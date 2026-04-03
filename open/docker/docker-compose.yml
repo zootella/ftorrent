@@ -1,0 +1,134 @@
+# Example Docker Compose file for Aquatic BitTorrent tracker
+#
+# This brings up three tracker containers: UDP, HTTP, and WebSocket.
+# Adjust ports, memory limits, and file paths to match your setup.
+#
+# Prerequisites:
+#   - Kernel tuning applied (see guide.md, "Server preparation")
+#   - seccomp-iouring.json in the same directory as this file
+#   - TOML config files in the same directory as this file
+#   - A reverse proxy (e.g., nginx) routing HTTPS traffic to the
+#     HTTP and WebSocket containers on localhost
+#
+# Usage:
+#   docker compose build
+#   docker compose up -d
+
+# Named network with IPv6 support. The UDP container publishes directly
+# to the internet (no reverse proxy), so Docker needs to create ip6tables
+# DNAT rules for IPv6 clients to reach it. Docker only creates those rules
+# if the container has an IPv6 address, which requires enable_ipv6 and an
+# IPv6 subnet on the network. Without this, IPv6 UDP packets are silently
+# dropped — no error, no log.
+#
+# The IPv6 subnet is ULA (private, fd00::/8) — it exists only so Docker
+# assigns addresses and creates DNAT rules. The specific subnets can be
+# changed as long as they don't conflict with other Docker networks or
+# host routes.
+networks:
+  tracker:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+        - subnet: fd00:cafe:2::/64
+
+services:
+
+  # UDP tracker (BEP 15) — the primary protocol for desktop BitTorrent clients.
+  # Uses mio/epoll, no io_uring, runs under Docker's default seccomp profile.
+  #
+  # Published on all interfaces — UDP bypasses the reverse proxy entirely.
+  # External port 443/udp maps to internal 8443 (above 1024, no caps needed).
+  # Port 443/udp blends with QUIC/HTTP/3 traffic, making it hard for
+  # restrictive firewalls to block without breaking modern web browsing.
+  aquatic-udp:
+    build:
+      context: .
+      dockerfile: Dockerfile.udp
+    networks:
+      - tracker
+    ports:
+      - "443:8443/udp"
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          pids: 64
+    restart: unless-stopped
+
+  # HTTP tracker (BEP 3) — for clients behind restrictive firewalls.
+  # Uses glommio/io_uring — requires custom seccomp profile and memlock ulimit.
+  #
+  # Published on localhost only — the reverse proxy (nginx) handles TLS
+  # and forwards /announce and /scrape requests to this container.
+  # Not directly reachable from the internet.
+  aquatic-http:
+    build:
+      context: .
+      dockerfile: Dockerfile.http
+    networks:
+      - tracker
+    ports:
+      - "127.0.0.1:8081:8081/tcp"
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=seccomp-iouring.json
+    ulimits:
+      memlock:
+        soft: 65536000
+        hard: 65536000
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          pids: 64
+    restart: unless-stopped
+
+  # WebSocket tracker — for WebTorrent browser clients and WebRTC signaling.
+  # Uses glommio/io_uring — requires custom seccomp profile and memlock ulimit.
+  #
+  # Published on localhost only — the reverse proxy (nginx) handles TLS
+  # and WebSocket upgrades, forwarding to this container.
+  # Not directly reachable from the internet.
+  aquatic-ws:
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    networks:
+      - tracker
+    ports:
+      - "127.0.0.1:8082:8082/tcp"
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=seccomp-iouring.json
+    ulimits:
+      memlock:
+        soft: 65536000
+        hard: 65536000
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          pids: 64
+    restart: unless-stopped

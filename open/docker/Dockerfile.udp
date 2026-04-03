@@ -1,0 +1,61 @@
+# Dockerfile for aquatic_udp — UDP BitTorrent tracker (BEP 15)
+#
+# Multi-stage build: compile from source in a Rust builder stage,
+# then copy the binary into a minimal Debian runtime image.
+#
+# This build uses mio/epoll (not io_uring), so it runs under Docker's
+# default seccomp profile with no modifications.
+#
+# Build:
+#   docker build -f Dockerfile.udp -t aquatic-udp .
+#
+# Run (example):
+#   docker run --rm -p 443:8443/udp aquatic-udp
+
+# ---------------------------------------------------------------------------
+# Stage 1: Build
+# ---------------------------------------------------------------------------
+# Pin Rust version for reproducible builds. Aquatic v0.9.0's metrics
+# dependency has a lifetime issue that newer Rust compilers (1.93+)
+# reject. See: https://github.com/rust-lang/rust/issues/141402
+FROM rust:1.85-bookworm AS builder
+
+# cmake is required by mimalloc. The rust:bookworm image (based on
+# buildpack-deps) already includes gcc, g++, and make.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone Aquatic at a specific version for reproducible builds
+ARG AQUATIC_VERSION=v0.9.0
+RUN git clone --depth 1 --branch ${AQUATIC_VERSION} \
+    https://github.com/greatest-ape/aquatic.git /build/aquatic
+
+WORKDIR /build/aquatic
+
+# Build aquatic_udp with default features (prometheus + mimalloc).
+# The io-uring feature is NOT in the default set, so UDP uses mio/epoll.
+RUN cargo build --release -p aquatic_udp
+
+# Generate the default config for reference
+RUN ./target/release/aquatic_udp -p > /build/aquatic-udp-default.toml
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+FROM debian:bookworm-slim
+
+# Copy the binary
+COPY --from=builder /build/aquatic/target/release/aquatic_udp /usr/local/bin/aquatic_udp
+
+# Copy the config file (provided at build context, not the generated default)
+COPY aquatic-udp.toml /etc/aquatic/config.toml
+
+# Run as nobody (UID 65534). The build stage runs as root, but the runtime
+# stage runs as nobody — matching the container hardening constraint.
+USER 65534:65534
+
+EXPOSE 8443/udp
+
+ENTRYPOINT ["aquatic_udp"]
+CMD ["-c", "/etc/aquatic/config.toml"]

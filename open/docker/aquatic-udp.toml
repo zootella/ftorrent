@@ -1,0 +1,67 @@
+# Aquatic UDP tracker configuration
+# See: https://github.com/greatest-ape/aquatic/tree/master/crates/udp
+#
+# Generated from aquatic_udp v0.9.0 defaults with modifications noted below.
+
+# Number of socket worker threads. 1 is sufficient for most deployments.
+# Set to 0 to auto-detect based on CPU count.
+socket_workers = 1
+
+# Changed from default "error" to "warn" for container log visibility.
+log_level = "warn"
+
+[network]
+# Listen on all interfaces, dual-stack. Binding to [::] with only_ipv6 = false
+# accepts both IPv4 and IPv6 connections on a single socket (IPv4 clients
+# appear as IPv4-mapped IPv6 addresses). Internal container port must be
+# above 1024 because the container runs as nobody with all capabilities
+# dropped (no NET_BIND_SERVICE). The external port (443/udp) is mapped
+# to this port via Docker DNAT.
+address = "[::]:8443"
+only_ipv6 = false
+
+# UDP socket receive buffer size in bytes. The kernel sysctl rmem_max must
+# be at least this large, or the OS will silently clamp it.
+socket_recv_buffer_size = 8000000
+
+[protocol]
+# Maximum torrents a client can scrape in a single request.
+max_scrape_torrents = 70
+
+# Maximum peers returned in an announce response.
+max_response_peers = 30
+
+# Seconds between announces that clients should respect.
+peer_announce_interval = 900
+
+[statistics]
+# Interval in seconds between statistics updates.
+interval = 5
+
+# Changed from default false — print stats to stdout for container log monitoring.
+print_to_stdout = true
+
+# Prometheus metrics endpoint for monitoring.
+# Changed from default false.
+run_prometheus_endpoint = true
+prometheus_endpoint_address = "0.0.0.0:9000"
+
+[cleaning]
+# How often to clean up expired torrents (seconds).
+torrent_cleaning_interval = 120
+
+# Max age of a connection token before it's invalidated (seconds).
+max_connection_age = 120
+
+# Max age of a peer entry before cleanup (seconds).
+# Should be somewhat larger than peer_announce_interval.
+max_peer_age = 1200
+
+[privileges]
+# We don't use Aquatic's built-in privilege dropping — the container
+# already runs as nobody (UID 65534). Leave this disabled.
+drop_privileges = false
+
+[access_list]
+# Open tracker: no access list filtering.
+mode = "off"

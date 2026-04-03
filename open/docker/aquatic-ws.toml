@@ -1,0 +1,57 @@
+# Aquatic WebSocket tracker configuration
+# See: https://github.com/greatest-ape/aquatic/tree/master/crates/ws
+#
+# Generated from aquatic_ws v0.9.0 defaults with modifications noted below.
+
+socket_workers = 1
+swarm_workers = 1
+
+log_level = "warn"
+
+[network]
+# Changed from default ":3000" to match our container port.
+# Listen on all IPv4 interfaces. When running behind a reverse proxy
+# (nginx) on the same Docker network, the proxy handles IPv4/IPv6
+# and TLS from the outside. WebSocket upgrades are forwarded to this
+# container over the internal Docker bridge, which is IPv4.
+address = "0.0.0.0:8082"
+only_ipv6 = false
+tcp_backlog = 1024
+
+# TLS is handled by the reverse proxy (nginx), not by Aquatic.
+enable_tls = false
+
+# WebSocket limits
+websocket_max_message_size = 65536
+websocket_max_frame_size = 16384
+
+# Changed from default false. Enable HTTP health checks so Docker
+# and reverse proxies can probe the container. Responds to GET /health
+# with 200 OK. Incompatible with Aquatic's built-in TLS (which we don't use).
+enable_http_health_checks = true
+
+[protocol]
+max_scrape_torrents = 255
+max_offers = 10
+# Aquatic's default for WebSocket is 120 seconds (shorter than UDP's 900).
+# WebSocket connections are persistent, so shorter intervals are appropriate.
+peer_announce_interval = 120
+
+[cleaning]
+torrent_cleaning_interval = 30
+max_peer_age = 180
+max_offer_age = 120
+connection_cleaning_interval = 30
+max_connection_idle = 180
+
+[privileges]
+drop_privileges = false
+
+[access_list]
+mode = "off"
+
+[metrics]
+# Changed from default false.
+run_prometheus_endpoint = true
+prometheus_endpoint_address = "0.0.0.0:9000"
+torrent_count_update_interval = 10

@@ -1,0 +1,54 @@
+# Aquatic HTTP tracker configuration
+# See: https://github.com/greatest-ape/aquatic/tree/master/crates/http
+#
+# Generated from aquatic_http v0.9.0 defaults with modifications noted below.
+
+socket_workers = 1
+swarm_workers = 1
+
+log_level = "warn"
+
+[network]
+# Changed from default ":3000" to match our container port.
+# Listen on all IPv4 interfaces. When running behind a reverse proxy
+# (nginx) on the same Docker network, the proxy handles IPv4/IPv6
+# from the outside and connects to this container over the internal
+# Docker bridge, which is IPv4.
+address = "0.0.0.0:8081"
+only_ipv6 = false
+tcp_backlog = 1024
+keep_alive = true
+
+# TLS is handled by the reverse proxy (nginx), not by Aquatic.
+enable_tls = false
+
+# Changed from default false. When running behind a reverse proxy,
+# trust X-Forwarded-For to get the client's real IP address.
+runs_behind_reverse_proxy = true
+reverse_proxy_ip_header_name = "X-Forwarded-For"
+reverse_proxy_ip_header_format = "last_address"
+
+[protocol]
+max_scrape_torrents = 100
+max_peers = 50
+# Aquatic's default for HTTP is 120 seconds (shorter than UDP's 900).
+# HTTP connections are persistent, so shorter intervals are appropriate.
+peer_announce_interval = 120
+
+[cleaning]
+torrent_cleaning_interval = 30
+connection_cleaning_interval = 60
+max_peer_age = 1800
+max_connection_idle = 180
+
+[privileges]
+drop_privileges = false
+
+[access_list]
+mode = "off"
+
+[metrics]
+# Changed from default false.
+run_prometheus_endpoint = true
+prometheus_endpoint_address = "0.0.0.0:9000"
+torrent_count_update_interval = 10

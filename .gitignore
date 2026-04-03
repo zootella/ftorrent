@@ -262,6 +262,9 @@ credentials/
 # Claude Code
 .claude/
 
+# Cross-project notes (shared between Claude instances, not for public repo)
+*.hide.md
+
 # Deployment platforms
 .vercel/
 .netlify/

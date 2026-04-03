@@ -1,0 +1,66 @@
+# Dockerfile for aquatic_http — HTTP BitTorrent tracker (BEP 3)
+#
+# Multi-stage build: compile from source in a Rust builder stage,
+# then copy the binary into a minimal Debian runtime image.
+#
+# aquatic_http uses glommio, which requires Linux io_uring (kernel 5.8+).
+# This container needs a custom seccomp profile that allows io_uring syscalls,
+# and a raised memlock ulimit for io_uring buffer registration.
+#
+# Build:
+#   docker build -f Dockerfile.http -t aquatic-http .
+#
+# Run (example — requires custom seccomp profile and memlock ulimit):
+#   docker run --rm -p 8081:8081 \
+#     --security-opt seccomp=seccomp-iouring.json \
+#     --ulimit memlock=65536000:65536000 \
+#     aquatic-http
+
+# ---------------------------------------------------------------------------
+# Stage 1: Build
+# ---------------------------------------------------------------------------
+# Pin Rust version for reproducible builds. Aquatic v0.9.0's metrics
+# dependency has a lifetime issue that newer Rust compilers (1.93+)
+# reject. See: https://github.com/rust-lang/rust/issues/141402
+FROM rust:1.85-bookworm AS builder
+
+# cmake is required by mimalloc. The rust:bookworm image (based on
+# buildpack-deps) already includes gcc, g++, and make.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone Aquatic at a specific version for reproducible builds
+ARG AQUATIC_VERSION=v0.9.0
+RUN git clone --depth 1 --branch ${AQUATIC_VERSION} \
+    https://github.com/greatest-ape/aquatic.git /build/aquatic
+
+WORKDIR /build/aquatic
+
+# Build aquatic_http with default features (prometheus + mimalloc).
+# glommio (io_uring) is a compile-time crate dependency, not a feature flag —
+# there is no way to build aquatic_http without it.
+RUN cargo build --release -p aquatic_http
+
+# Generate the default config for reference
+RUN ./target/release/aquatic_http -p > /build/aquatic-http-default.toml
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+FROM debian:bookworm-slim
+
+# Copy the binary
+COPY --from=builder /build/aquatic/target/release/aquatic_http /usr/local/bin/aquatic_http
+
+# Copy the config file (provided at build context, not the generated default)
+COPY aquatic-http.toml /etc/aquatic/config.toml
+
+# Run as nobody (UID 65534). The build stage runs as root, but the runtime
+# stage runs as nobody — matching the container hardening constraint.
+USER 65534:65534
+
+EXPOSE 8081/tcp
+
+ENTRYPOINT ["aquatic_http"]
+CMD ["-c", "/etc/aquatic/config.toml"]
