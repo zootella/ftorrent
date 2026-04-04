@@ -161,15 +161,142 @@ You can use any port you like. 6969 is the simplest choice and works well on ope
 
 **Publishing and visibility.** The UDP container is published on all interfaces (`0.0.0.0:443:8443/udp`) because UDP traffic goes directly from the internet to the container — there's no reverse proxy for UDP. The HTTP and WebSocket containers are published on **localhost only** (`127.0.0.1:8081:8081/tcp`, `127.0.0.1:8082:8082/tcp`) because they should only be reachable through the reverse proxy, not directly from the internet. This ensures all TCP traffic goes through TLS termination and nginx's routing logic.
 
+## The traffic path
+
+Before configuring anything, it helps to see the whole picture — how a packet travels from a BitTorrent client somewhere on the internet all the way down to the container that will respond to it. There are six layers between the wide-area network and the tracker process, and each one needs to be configured correctly or traffic gets dropped silently.
+
+```
+                     internet
+                        │
+                        │  TCP 80/443, UDP 443, SSH
+                        ▼
+              Layer 1: router / edge firewall
+                        │
+                        │  DNAT for IPv4, allow rules for IPv6
+                        ▼
+              Layer 2: Linux host firewall
+                        │
+                ┌───────┴───────┐
+                │               │
+          TCP 80/443        UDP 443
+                │               │
+                ▼               │   bypasses INPUT —
+          INPUT accept          │   PREROUTING DNAT →
+                │               │   FORWARD → container
+                ▼               │
+              nginx             │
+          (TLS termination,     │
+           path-based routing)  │
+                │               │
+       ┌────────┼────────┐      │
+       │        │        │      │
+       ▼        ▼        ▼      ▼
+   Layer 3: Docker daemon (userland-proxy: false, ipv6: true)
+   Layer 4: Docker network + DOCKER-USER rules
+                        │
+                        ▼
+              Layer 6: containers
+        (aquatic_udp, aquatic_http, aquatic_ws, homepage, stats)
+```
+
+**Layer 1: Router / edge firewall.** If the server is behind a router (common for home connections), the router needs to forward or allow the tracker's ports to reach the server. On a cloud instance with a direct public IP (EC2, DigitalOcean, Linode, Hetzner, etc.), this layer is the provider's firewall rules instead.
+
+**Layer 2: Linux host firewall.** On the server itself, iptables and ip6tables control which inbound packets reach host processes. nginx listens on ports 80 and 443 as a host process, so those ports need INPUT allow rules. UDP tracker traffic does not go through the host INPUT chain — it's handled entirely by Docker's PREROUTING DNAT, which runs before INPUT — so no UDP allow rule is needed.
+
+**Layer 3: Docker daemon config.** The daemon-level settings in `/etc/docker/daemon.json` that enable IPv6, tell Docker to manage ip6tables, and turn off the userland proxy so source IPs are preserved.
+
+**Layer 4: Docker network + DOCKER-USER rules.** The compose network with `enable_ipv6: true` and a pinned subnet, and the DOCKER-USER iptables rules that isolate containers from the outside while allowing intra-subnet communication for the stats dashboard.
+
+**Layer 5: nginx reverse proxy.** nginx terminates TLS, handles IPv4 and IPv6 dual-stack, and routes TCP traffic to the appropriate container on localhost by path (`/announce`, `/scrape`) and by WebSocket upgrade header. UDP traffic never touches nginx.
+
+**Layer 6: The containers.** Hardened, running as nobody, read-only filesystem, with the security constraints described earlier in this guide.
+
+The rest of the guide configures each layer in order. Layers 3, 4, and 6 are already covered above. This new section (Server preparation, expanded) covers layers 1 and 2, and a later section covers layer 5.
+
 ## Server preparation
 
 The configuration in this section lives outside the containers — it's applied to the host server by the administrator. These settings should be applied before the tracker starts.
+
+### Router / edge firewall (layer 1)
+
+If the server is on a home or office connection behind a router, the router needs to route external traffic to the server. If the server has a direct public IP (cloud VPS, bare metal hosting), skip this subsection — the provider's firewall or network security group handles this layer instead.
+
+**IPv4 port forwarding (DNAT).** For each of the tracker's public ports, add a DNAT rule forwarding from the router's WAN interface to the server's LAN address:
+
+| External port | Protocol | Purpose |
+|---|---|---|
+| 80 | TCP | HTTP (ACME challenges, redirect to HTTPS) |
+| 443 | TCP | HTTPS (HTTP tracker, WebSocket tracker, homepage) |
+| 443 | UDP | UDP tracker |
+| 22 (or your chosen port) | TCP | SSH access for administration |
+
+The exact configuration depends on the router. Consumer routers usually call this "port forwarding" in the admin interface. Enterprise routers and firewalls use "destination NAT" or similar terminology.
+
+**IPv6 inbound allow rules.** IPv6 does not use NAT — every device on the LAN has its own globally routable address. Instead of DNAT, the router firewall needs allow rules permitting inbound connections to the server's IPv6 address on the same ports:
+
+- TCP 80
+- TCP 443
+- UDP 443
+- SSH port
+
+On routers with dynamically changing prefixes, the allow rules can often be targeted by the server's stable interface identifier (the lower 64 bits of its IPv6 address) so the rules survive when the prefix rotates.
+
+### Host firewall (layer 2)
+
+On the server itself, iptables and ip6tables control which inbound packets reach processes running on the host. The goal is to allow only the ports that nginx and SSH listen on.
+
+**INPUT allow rules:**
+
+```bash
+# SSH
+iptables  -A INPUT -p tcp --dport 22 -j ACCEPT
+ip6tables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# HTTP and HTTPS (nginx)
+iptables  -A INPUT -p tcp --dport 80  -j ACCEPT
+iptables  -A INPUT -p tcp --dport 443 -j ACCEPT
+ip6tables -A INPUT -p tcp --dport 80  -j ACCEPT
+ip6tables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Established/related (responses to outbound connections)
+iptables  -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ip6tables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Loopback
+iptables  -A INPUT -i lo -j ACCEPT
+ip6tables -A INPUT -i lo -j ACCEPT
+
+# ICMPv6 neighbor discovery (required — IPv6 breaks without it)
+ip6tables -A INPUT -p icmpv6 -j ACCEPT
+```
+
+**Default policies:**
+
+```bash
+iptables  -P INPUT DROP
+ip6tables -P INPUT DROP
+iptables  -P FORWARD ACCEPT   # Docker manages the FORWARD chain
+ip6tables -P FORWARD ACCEPT
+iptables  -P OUTPUT ACCEPT
+ip6tables -P OUTPUT ACCEPT
+```
+
+**The UDP tracker does not need an INPUT rule.** This might be surprising, but it's correct. Docker's DNAT for published ports happens in the PREROUTING chain, which runs before INPUT. When a UDP packet arrives on port 443, Docker rewrites the destination to the container's internal address and the packet moves to the FORWARD chain (which Docker manages), never touching INPUT. INPUT only sees packets destined for host processes like nginx and sshd. Adding a UDP allow rule anyway is harmless — it just never matches.
+
+**ICMPv6 is required for IPv6 to work at all.** Unlike IPv4's ARP, IPv6 uses ICMPv6 for neighbor discovery and path MTU discovery. Blocking ICMPv6 breaks the entire IPv6 stack. This is a common mistake when people write strict firewall rules.
+
+Persist the rules with `iptables-persistent`:
+
+```bash
+sudo apt install iptables-persistent
+sudo netfilter-persistent save
+```
 
 ### Docker daemon configuration
 
 Most Docker installations are IPv4-only out of the box. Docker's default is `ipv6: false`, and most tutorials and existing setups don't change it. For the tracker to serve IPv6 clients — which the compose file's `enable_ipv6: true` network requires — the Docker daemon itself needs IPv6 enabled first.
 
-There's also a default Docker behavior that will silently break any BitTorrent tracker: the **userland proxy**. By default, Docker publishes ports through a userland proxy process that rewrites the source IP on every packet to the Docker bridge gateway address (e.g., `172.20.0.1`). The tracker container sees this gateway IP instead of the client's real IP. For a BitTorrent tracker that builds peer lists from source IPs, this is fatal — every peer appears to come from the same address, and the swarm is useless.
+There's also a default Docker behavior that will silently break any BitTorrent tracker: the **userland proxy**. By default, Docker publishes ports through a userland proxy process that rewrites the source IP on every packet to the Docker bridge gateway address (e.g., `172.30.0.1`). The tracker container sees this gateway IP instead of the client's real IP. For a BitTorrent tracker that builds peer lists from source IPs, this is fatal — every peer appears to come from the same address, and the swarm is useless.
 
 Both issues are fixed in `/etc/docker/daemon.json`:
 
@@ -177,7 +304,7 @@ Both issues are fixed in `/etc/docker/daemon.json`:
 {
   "ipv6": true,
   "ip6tables": true,
-  "fixed-cidr-v6": "fd00:1::/64",
+  "fixed-cidr-v6": "fd00:cafe:1::/64",
   "userland-proxy": false
 }
 ```
@@ -186,7 +313,7 @@ What each setting does:
 
 - **`ipv6`** — enables IPv6 on Docker's default bridge network. This is a prerequisite for IPv6 on any Docker compose network.
 - **`ip6tables`** — lets Docker manage ip6tables rules for IPv6 port publishing. Without this, Docker won't create the ip6tables DNAT rules that route IPv6 traffic to containers, and inbound IPv6 packets are silently dropped.
-- **`fixed-cidr-v6`** — assigns a ULA subnet to Docker's default bridge. The subnet `fd00:1::/64` is an example — any ULA address (`fd00::/8` range) works as long as it doesn't conflict with the compose network's subnet (which uses `fd00:cafe:2::/64` in our example). This subnet is internal plumbing for the default bridge; it doesn't appear in any client-facing configuration.
+- **`fixed-cidr-v6`** — assigns a ULA subnet to Docker's default bridge. The subnet `fd00:cafe:1::/64` is an example — any ULA address (`fd00::/8` range) works as long as it doesn't conflict with the compose network's subnet (which uses `fd00:cafe:2::/64` in our example). This subnet is internal plumbing for the default bridge; it doesn't appear in any client-facing configuration.
 - **`userland-proxy`** — setting this to `false` forces Docker to use kernel-level iptables/ip6tables DNAT for port publishing instead of the userland proxy. This preserves the original source IP on every packet, which is essential for a tracker that needs to see real client addresses.
 
 If you already have a `daemon.json` with other settings, merge these four fields into it rather than replacing the file.
@@ -498,6 +625,8 @@ The example `docker-compose.yml` brings all three containers together with the s
 **Prometheus metrics access.** The tracker configs enable Prometheus metrics on port 9000 inside each container, but the compose file does not publish this port to the host. This is intentional — metrics should not be exposed to the internet. To access metrics, either query from another container on the same Docker network (e.g., a stats dashboard container), or temporarily publish on localhost for debugging: `127.0.0.1:9001:9000/tcp` (binding to localhost only, not `0.0.0.0`).
 
 ```yaml
+name: ftorrent-open                  # Explicit project name
+
 networks:
   tracker:
     enable_ipv6: true
@@ -508,6 +637,7 @@ networks:
 
 services:
   aquatic-udp:
+    container_name: ftorrent-open-udp-1
     # ... build ...
     networks: [tracker]
     ports: ["443:8443/udp"]          # All interfaces — direct internet access
@@ -518,6 +648,7 @@ services:
     security_opt: [no-new-privileges:true]
 
   aquatic-http:
+    container_name: ftorrent-open-http-1
     # ... build ...
     networks: [tracker]
     ports: ["127.0.0.1:8081:8081"]   # Localhost only — nginx proxies to here
@@ -532,9 +663,14 @@ services:
       memlock: { soft: 65536000, hard: 65536000 }
 
   aquatic-ws:
+    container_name: ftorrent-open-ws-1
     # Same as HTTP, with 1g memory limit
     ports: ["127.0.0.1:8082:8082"]   # Localhost only — nginx proxies to here
 ```
+
+The service names (`aquatic-udp`, `aquatic-http`, `aquatic-ws`) describe what each container runs — the Aquatic binary for that protocol. Explicit `container_name:` entries give the running containers the names `ftorrent-open-udp-1`, `ftorrent-open-http-1`, `ftorrent-open-ws-1` that appear in `docker ps`. Without the explicit names, Docker Compose would auto-generate names from the project and service (`ftorrent-open-aquatic-udp-1`), which is correct but longer.
+
+Image names are auto-generated by Docker Compose from the project and service: `ftorrent-open-aquatic-udp`, `ftorrent-open-aquatic-http`, `ftorrent-open-aquatic-ws`. These only appear in `docker images` — they don't need to be cleaner than they are.
 
 Note how the UDP container publishes on all interfaces (direct internet access), while HTTP and WS publish on localhost only (reachable only through the reverse proxy). The UDP container uses Docker's default seccomp (no `seccomp=` line), while HTTP and WS specify the custom profile and the memlock ulimit.
 
@@ -547,10 +683,12 @@ You can build and test the containers on any machine with Docker installed — i
 From the `open/docker/` directory:
 
 ```bash
-docker build -f Dockerfile.udp  -t aquatic-udp  .
-docker build -f Dockerfile.http -t aquatic-http .
-docker build -f Dockerfile.ws   -t aquatic-ws   .
+docker build -f Dockerfile.udp  -t ftorrent-open-aquatic-udp  .
+docker build -f Dockerfile.http -t ftorrent-open-aquatic-http .
+docker build -f Dockerfile.ws   -t ftorrent-open-aquatic-ws   .
 ```
+
+These tag names match what `docker compose build` auto-generates from the project name (`ftorrent-open`) and the service name (`aquatic-udp`): `ftorrent-open` + `-` + `aquatic-udp` = `ftorrent-open-aquatic-udp`. Using the same names for manual and compose builds means `docker compose up -d` can reuse an image you already built manually, instead of rebuilding from scratch.
 
 Each build compiles Aquatic from source inside Docker, so the first build takes a few minutes (downloading the Rust toolchain, compiling dependencies). Subsequent builds with only config changes are fast — Docker caches the compilation layers.
 
@@ -561,7 +699,7 @@ The build produces an image for whatever architecture your Docker host runs. On 
 The UDP tracker uses mio/epoll and has no special requirements:
 
 ```bash
-docker run --rm -d --name test-udp -p 6969:8443/udp aquatic-udp
+docker run --rm -d --name test-udp -p 6969:8443/udp ftorrent-open-aquatic-udp
 docker logs test-udp
 ```
 
@@ -578,13 +716,13 @@ The HTTP and WebSocket trackers require the custom seccomp profile and the memlo
 docker run --rm -d --name test-http -p 8081:8081 \
   --security-opt seccomp=seccomp-iouring.json \
   --ulimit memlock=65536000:65536000 \
-  aquatic-http
+  ftorrent-open-aquatic-http
 
 # WebSocket tracker
 docker run --rm -d --name test-ws -p 8082:8082 \
   --security-opt seccomp=seccomp-iouring.json \
   --ulimit memlock=65536000:65536000 \
-  aquatic-ws
+  ftorrent-open-aquatic-ws
 ```
 
 **Without the seccomp profile,** these containers will crash immediately with glommio's io_uring probe error. This is the expected behavior with Docker's default profile, and the reason the custom profile exists.
@@ -747,10 +885,186 @@ curl -s --max-time 3 http://1.1.1.1 || echo "Blocked (good)"
 
 The stats dashboard scraping Prometheus is the positive test — if the dashboard shows live metrics from the tracker containers, intra-subnet communication is working. If the curl tests above timeout, outbound is blocked. Both conditions together confirm the isolation is correctly configured.
 
+## Reverse proxy (nginx)
+
+nginx is the final layer between the internet and the TCP containers. It listens on ports 80 and 443 on the host (both IPv4 and IPv6), terminates TLS, and routes each incoming TCP request to the right container over localhost. UDP traffic never touches nginx — it goes directly from Docker DNAT to the UDP container, as described in "The traffic path" above.
+
+Setting up nginx as a reverse proxy is well-documented ground and any Linux sysadmin or AI coding agent can handle the standard parts. This section focuses on the tracker-specific requirements: path-based routing, WebSocket upgrades, real client IPs, and dual-stack listening.
+
+### The four routing cases
+
+A single nginx server block on port 443 routes incoming requests to different containers based on what they ask for:
+
+| Request | Routed to | How it's matched |
+|---|---|---|
+| `GET /announce?...` or `GET /scrape?...` | HTTP tracker container (`127.0.0.1:8081`) | Path regex `~ ^/(announce\|scrape)` |
+| WebSocket upgrade | WebSocket tracker container (`127.0.0.1:8082`) | `Upgrade: websocket` header |
+| Anything else | Homepage/stats container (`127.0.0.1:8080`) | Default location |
+
+A second server block on port 80 serves only two purposes: certbot's HTTP-01 ACME challenges, and a `301` redirect to HTTPS for everything else.
+
+### WebSocket upgrade routing
+
+nginx routes by HTTP header using a `map` directive. This must live at the `http` block level, not inside `server` — nginx refuses to start if it's in the wrong scope. A typical pattern:
+
+```nginx
+map $http_upgrade $tracker_backend {
+    default      http://127.0.0.1:8080;   # Homepage
+    websocket    http://127.0.0.1:8082;   # WebSocket tracker
+}
+```
+
+The variable `$tracker_backend` resolves to the WebSocket container when the client sends `Upgrade: websocket`, and to the homepage container otherwise. The HTTP tracker is handled separately via a `location ~ ^/(announce|scrape)` block that takes precedence over the default.
+
+Inside the location block that proxies to the WebSocket container, two directives are required:
+
+```nginx
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+```
+
+**Both are necessary.** nginx defaults to HTTP/1.0 for upstream connections, which doesn't support `Upgrade`. Without `proxy_http_version 1.1`, WebSocket upgrades fail silently — the connection closes after the initial request.
+
+### Real client IPs
+
+The HTTP tracker needs to see real client IPs to build its peer list. Without help, it would see `127.0.0.1` (nginx's local address) for every client. nginx provides the real IP through the `X-Forwarded-For` header:
+
+```nginx
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header Host $host;
+```
+
+The Aquatic HTTP config reads this header:
+
+```toml
+runs_behind_reverse_proxy = true
+reverse_proxy_ip_header_name = "X-Forwarded-For"
+reverse_proxy_ip_header_format = "last_address"
+```
+
+`last_address` is the secure choice when nginx is the only proxy in the chain — nginx sets the header itself, so untrusted values from the client are ignored. If there were multiple proxies in front of nginx (a CDN, a load balancer), a different format would be needed.
+
+### IPv4 and IPv6 dual-stack
+
+nginx handles dual-stack with two `listen` lines in the same server block:
+
+```nginx
+listen 443 ssl;
+listen [::]:443 ssl;
+```
+
+That's it. nginx accepts IPv4 and IPv6 connections equivalently and proxies them to the same localhost backend. The TCP containers only bind IPv4 on the internal Docker bridge, which is fine — nginx terminates the client connection and initiates a new localhost connection, so the original IP version doesn't need to propagate to the backend. The real client IP (v4 or v6) still reaches the tracker through `X-Forwarded-For`.
+
+Do the same for port 80:
+
+```nginx
+listen 80;
+listen [::]:80;
+```
+
+### UDP does not go through nginx
+
+This deserves to be stated explicitly, because readers sometimes try to proxy UDP through nginx and get stuck. **nginx does not handle the UDP tracker traffic.** nginx is fundamentally an HTTP and TCP server. It has a `stream` module that can do raw TCP/UDP proxying, but it's not used here and doesn't need to be.
+
+UDP tracker traffic on port 443 goes directly from the internet to the UDP container via Docker's DNAT rule (defined in the compose file as `443:8443/udp`). With `userland-proxy: false` in the Docker daemon config, this is kernel-level ip6tables/iptables DNAT — nginx is entirely out of the picture for UDP.
+
+If a reader finds themselves writing `stream { ... }` blocks for the UDP tracker, something is wrong. The UDP path is handled entirely by Docker and the host's routing.
+
+### TLS via certbot
+
+TLS certificates are obtained and renewed by [certbot](https://certbot.eff.org/) using Let's Encrypt and the HTTP-01 challenge. On Debian/Ubuntu, the package is `certbot python3-certbot-nginx`. The `--nginx` plugin integrates with nginx directly — it reads the existing config, determines which domains are served, obtains certificates, and edits the config to reference them. Renewal happens automatically via a systemd timer installed by the package.
+
+One thing to know: certbot's HTTP-01 challenge temporarily places files under `/.well-known/acme-challenge/` on port 80 that must be reachable. The certbot nginx plugin handles this automatically during renewal — the administrator does not need to configure a permanent exception for ACME challenges.
+
+### Putting it together
+
+A minimal sketch (not a complete config — adapt to your needs):
+
+```nginx
+# Outside the server blocks, at the http level
+map $http_upgrade $tracker_backend {
+    default      http://127.0.0.1:8080;
+    websocket    http://127.0.0.1:8082;
+}
+
+# Port 80 — redirect everything except ACME challenges to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name open.ftorrent.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# Port 443 — the main server block
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name open.ftorrent.com;
+
+    # TLS — managed by certbot --nginx
+    ssl_certificate     /etc/letsencrypt/live/open.ftorrent.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/open.ftorrent.com/privkey.pem;
+
+    # HTTP tracker — /announce and /scrape
+    location ~ ^/(announce|scrape) {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
+    }
+
+    # Everything else — routed by Upgrade header via the map
+    location / {
+        proxy_pass $tracker_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+This is the shape of the configuration — real deployments will have additional directives (logging paths, SSL protocols, gzip, security headers) that are standard nginx practice and out of scope for this guide.
+
+### Verifying it works
+
+After nginx is configured, reloaded, and the containers are running:
+
+```bash
+# HTTP tracker — should return a bencoded response
+curl "https://open.ftorrent.com/announce?info_hash=01234567890123456789&peer_id=01234567890123456789&port=6881&uploaded=0&downloaded=0&left=100&compact=1"
+
+# WebSocket tracker — should return "Ok" (the health endpoint)
+curl https://open.ftorrent.com/health
+
+# Homepage — should return whatever the homepage container serves
+curl https://open.ftorrent.com/
+```
+
+A successful deployment returns a bencoded response from `/announce`, `"Ok"` from `/health`, and the homepage HTML from `/`. If any of these fail, check the nginx logs (`/var/log/nginx/error.log`), the container logs (`docker logs <container>`), and confirm that the backend ports in the `map` and `proxy_pass` directives match what the compose file publishes on localhost.
+
 ## What's next
 
-The sections above cover the architecture decisions, server preparation, container security model, the build and test cycle, and container outbound blocking. The following topics will be covered as deployment continues:
+The sections above cover the architecture decisions, the full traffic path from the internet to the containers, server preparation, container configuration, build and test, container outbound blocking, and the reverse proxy. That's the complete deployment path — a reader who followed the guide in order now has a running public tracker.
 
-1. **Reverse proxy configuration** — nginx routing for HTTP announces, WebSocket upgrades, and TLS termination
-2. **Production deployment** — deploying to a real server, verifying with real BitTorrent clients, and confirming the full security model works end to end
-3. **Monitoring** — Prometheus metrics from the tracker containers, dashboards, and alerting
+What's not in this guide (yet):
+
+1. **Stats dashboard** — how to build a container that scrapes Prometheus metrics from the three tracker containers and displays them. This is covered in [page.md](page.md) *(to be written)*.
+2. **Monitoring and alerting** — Prometheus retention, Grafana dashboards, alert rules for tracker health and abuse detection.
+3. **Operational notes** — logging, log rotation, updating Aquatic when a new version is released, handling DDoS attempts.
+
+The tracker works without any of these. They're refinements for operational maturity, not prerequisites for a running service.

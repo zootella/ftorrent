@@ -14,6 +14,12 @@
 #   docker compose build
 #   docker compose up -d
 
+# Explicit project name. Without this, Docker Compose derives the project
+# name from the directory, which produces container names that depend on
+# where the files live. Setting it here means the containers are always
+# named ftorrent-open-udp-1, ftorrent-open-http-1, etc.
+name: ftorrent-open
+
 # Named network with IPv6 support. The UDP container publishes directly
 # to the internet (no reverse proxy), so Docker needs to create ip6tables
 # DNAT rules for IPv6 clients to reach it. Docker only creates those rules
@@ -43,6 +49,7 @@ services:
   # Port 443/udp blends with QUIC/HTTP/3 traffic, making it hard for
   # restrictive firewalls to block without breaking modern web browsing.
   aquatic-udp:
+    container_name: ftorrent-open-udp-1
     build:
       context: .
       dockerfile: Dockerfile.udp
@@ -72,6 +79,7 @@ services:
   # and forwards /announce and /scrape requests to this container.
   # Not directly reachable from the internet.
   aquatic-http:
+    container_name: ftorrent-open-http-1
     build:
       context: .
       dockerfile: Dockerfile.http
@@ -106,6 +114,7 @@ services:
   # and WebSocket upgrades, forwarding to this container.
   # Not directly reachable from the internet.
   aquatic-ws:
+    container_name: ftorrent-open-ws-1
     build:
       context: .
       dockerfile: Dockerfile.ws
