@@ -622,12 +622,123 @@ Local testing does not confirm:
 
 These are verified during production deployment on a real Linux server.
 
+## Container outbound blocking
+
+The container hardening described above — nobody user, read-only filesystem, dropped capabilities, seccomp filtering — protects against what a compromised process can do inside its container. Outbound blocking protects against what it can reach outside.
+
+By default, Docker containers can make outbound connections to anywhere — the internet, the local network, the router, other devices. A compromised tracker container could exfiltrate data, scan the LAN, or call back to an attacker's command-and-control server. Outbound blocking closes this door.
+
+### How DOCKER-USER works
+
+Docker manages its own iptables chains for port publishing (DNAT rules that route inbound traffic to containers). These chains are rebuilt every time Docker starts or a container is created, so any rules you add to them get overwritten.
+
+The `DOCKER-USER` chain is the exception. Docker creates it but never modifies it — it's specifically designed for administrators to add persistent firewall rules that Docker won't overwrite. Traffic that enters a container via Docker's port publishing passes through `DOCKER-USER` before reaching the container.
+
+### The rules
+
+Three rules, applied to both iptables (IPv4) and ip6tables (IPv6). Order matters — they're evaluated top to bottom, and the first match wins.
+
+**Rule 1: Allow container-to-container traffic within the Docker network.**
+
+```bash
+iptables  -I DOCKER-USER -s 172.20.0.0/24 -d 172.20.0.0/24 -j RETURN
+ip6tables -I DOCKER-USER -s fd00:cafe:2::/64 -d fd00:cafe:2::/64 -j RETURN
+```
+
+This allows the containers in the tracker's compose project to communicate with each other. The stats dashboard needs to scrape Prometheus metrics from the three tracker containers over the internal Docker network. Without this rule, that traffic is blocked by the DROP rule below.
+
+`RETURN` means "stop processing DOCKER-USER and continue to Docker's own rules." It does not mean "allow unconditionally" — Docker's own chains still apply.
+
+**Rule 2: Allow responses to inbound connections.**
+
+```bash
+iptables  -I DOCKER-USER -s 172.20.0.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+ip6tables -I DOCKER-USER -s fd00:cafe:2::/64 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+```
+
+When an external client sends a packet to the tracker, the tracker needs to send a response back. The `ESTABLISHED,RELATED` conntrack state matches packets that are part of an existing connection — i.e., responses to traffic that someone else initiated. Without this rule, the tracker could receive requests but never respond.
+
+**Rule 3: Drop everything else.**
+
+```bash
+iptables  -A DOCKER-USER -s 172.20.0.0/24 -j DROP
+ip6tables -A DOCKER-USER -s fd00:cafe:2::/64 -j DROP
+```
+
+Any packet from the container subnet that isn't intra-subnet (rule 1) or a response to inbound traffic (rule 2) is dropped. This blocks all container-initiated outbound connections — to the internet, to the LAN, to the router, to other Docker networks. The container is in a network jail.
+
+Note the flag difference: rules 1 and 2 use `-I` (insert at the top), rule 3 uses `-A` (append at the bottom). This ensures the RETURN rules are evaluated before the DROP.
+
+### Why both iptables and ip6tables
+
+Most Docker firewall guides only show iptables rules. This works if all your traffic is IPv4, but our UDP tracker accepts IPv6 connections directly through Docker's ip6tables DNAT. If we only wrote IPv4 rules, a compromised container could make outbound IPv6 connections — the IPv4 jail would be locked, but the IPv6 door would be open.
+
+The rules are identical in logic, just applied to both address families. Every rule has an iptables line and an ip6tables line.
+
+### The security trade-off
+
+Before these rules, each container was completely isolated — it couldn't talk to anything, not even the container next door. After these rules, the containers within the same Docker network (the `tracker` network in the compose file) can reach each other.
+
+This means a compromised tracker container can now probe the other containers on the same network — for example, reaching the Prometheus endpoint on port 9000 of a neighboring container. This is the trade-off we accept in exchange for the stats dashboard being able to scrape metrics.
+
+The trade-off is acceptable because:
+
+- All containers in the group are at the same trust level — all internet-facing, all hardened identically
+- The walls to the outside are unchanged — the LAN, the internet, and other Docker networks remain unreachable
+- The blast radius expands from one container to five, but the prison walls are the same
+
+If you run other Docker compose projects on the same server (a game server, a web app, a database), those are on different Docker networks with different subnets. The tracker containers can't reach them — the intra-subnet RETURN rule only matches the tracker's subnet.
+
+### Making the rules persistent
+
+The iptables and ip6tables rules above take effect immediately but don't survive a reboot. There are several ways to persist them; the most common on Debian/Ubuntu is the `iptables-persistent` package:
+
+```bash
+sudo apt install iptables-persistent
+```
+
+During installation, it asks whether to save the current rules. Say yes. After that, the current rules are saved to `/etc/iptables/rules.v4` and `/etc/iptables/rules.v6` and restored at boot.
+
+If you add or change rules later, save them again:
+
+```bash
+sudo netfilter-persistent save
+```
+
+### Verifying the jail
+
+After applying the rules, verify that the jail works as intended:
+
+```bash
+# Verify the rules are in place and in the right order
+sudo iptables  -L DOCKER-USER -n -v
+sudo ip6tables -L DOCKER-USER -n -v
+
+# From inside a tracker container, try to reach the internet — should timeout
+docker exec <container> timeout 3 curl -s http://1.1.1.1 || echo "Blocked (good)"
+
+# From inside a tracker container, try to reach the LAN gateway — should timeout
+# (replace with your actual LAN gateway address)
+docker exec <container> timeout 3 curl -s http://192.168.1.1 || echo "Blocked (good)"
+```
+
+Note: the tracker containers are minimal Debian images without curl installed. To run these tests, you can temporarily start a test container on the same network:
+
+```bash
+# The network name is your compose project name + "_tracker"
+# (e.g., "docker_tracker" or "myproject_tracker"). Check with: docker network ls
+docker run --rm --network <project>_tracker -it debian:bookworm-slim bash
+# Inside the container:
+apt update && apt install -y curl
+curl -s --max-time 3 http://1.1.1.1 || echo "Blocked (good)"
+```
+
+The stats dashboard scraping Prometheus is the positive test — if the dashboard shows live metrics from the tracker containers, intra-subnet communication is working. If the curl tests above timeout, outbound is blocked. Both conditions together confirm the jail is correctly configured.
+
 ## What's next
 
-The sections above cover the architecture decisions, server preparation, container security model, and the build and test cycle. The following topics will be covered as deployment continues:
+The sections above cover the architecture decisions, server preparation, container security model, the build and test cycle, and container outbound blocking. The following topics will be covered as deployment continues:
 
-1. **Container outbound blocking** — the `DOCKER-USER` iptables and ip6tables rules that prevent containers from initiating outbound connections
-2. **Reverse proxy configuration** — nginx routing for HTTP announces, WebSocket upgrades, and TLS termination
-3. **IPv6 configuration** — dual-stack setup so both IPv4 and IPv6 clients can reach the tracker
-4. **Production deployment** — deploying to a real server, verifying with real BitTorrent clients, and confirming the full security model works end to end
-5. **Monitoring** — Prometheus metrics from the tracker containers, dashboards, and alerting
+1. **Reverse proxy configuration** — nginx routing for HTTP announces, WebSocket upgrades, and TLS termination
+2. **Production deployment** — deploying to a real server, verifying with real BitTorrent clients, and confirming the full security model works end to end
+3. **Monitoring** — Prometheus metrics from the tracker containers, dashboards, and alerting
