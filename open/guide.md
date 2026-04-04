@@ -1,5 +1,17 @@
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
+*Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
+*Created: 2026-Apr-03 | Last reviewed: 2026-Apr-04*
+
+| Component | Version |
+|---|---|
+| [Aquatic](https://github.com/greatest-ape/aquatic) | v0.9.0 |
+| Rust (pinned in Dockerfiles) | 1.85 |
+| Docker Engine | 29.x |
+| Docker Compose | V2 |
+| Linux kernel (minimum) | 5.8+ |
+| Docker default seccomp profile | [moby/profiles@main](https://github.com/moby/profiles/blob/main/seccomp/default.json) as of 2026-Apr-02 |
+
 ## Why run a public tracker?
 
 BitTorrent is the internet's most successful peer-to-peer protocol. It moves enormous volumes of data every day — Linux distributions, open datasets, game updates, public domain archives, creative commons media — without depending on any single server. The protocol is decentralized by design, but it relies on a few pieces of shared infrastructure to work. One of the most important is the **tracker**.
@@ -50,7 +62,7 @@ Aquatic's own documentation covers building from source and running on bare meta
 
 This is a meaningful addition for several reasons:
 
-- **Security isolation.** A tracker accepts raw packets from the entire internet. Containers provide namespace isolation, seccomp filtering, capability dropping, and network jailing that bare metal systemd hardening cannot match. We explain exactly what each layer defends against and why it matters.
+- **Security isolation.** A tracker accepts raw packets from the entire internet. Containers provide namespace isolation, seccomp filtering, capability dropping, and network isolation that bare metal systemd hardening cannot match. We explain exactly what each layer defends against and why it matters.
 - **Reproducibility.** The Dockerfiles in this guide build Aquatic from source in a multi-stage build. The result is a minimal, self-contained image that runs the same way on any Linux server with Docker installed. No Rust toolchain on the host, no dependency management, no version drift.
 - **io_uring in Docker.** Aquatic's HTTP and WebSocket trackers use the [glommio](https://github.com/DataDog/glommio) async runtime, which requires Linux io_uring with no fallback. Docker's default seccomp profile blocks io_uring syscalls. This guide provides a minimal custom seccomp profile that accommodates glommio while keeping the rest of the security filter intact — a specific, practical solution to a problem anyone containerizing Aquatic will hit.
 - **Kernel tuning for bridge networking.** Docker's bridge networking depends on the kernel's connection tracking (conntrack) system, whose defaults are sized for general-purpose servers. Under heavy tracker load, the defaults cause silent packet drops. This guide provides the sysctl settings to prevent that, with explanations of what each parameter does and why the recommended value was chosen.
@@ -121,9 +133,9 @@ Docker offers two relevant networking modes. **Bridge networking** (the default)
 
 Host networking is simpler and faster. Bridge networking is meaningfully more secure, for the same reason containers are more secure than bare metal: **network namespace isolation is what makes outbound blocking work.**
 
-With bridge networking, container traffic traverses the FORWARD chain in iptables, where `DOCKER-USER` rules can drop container-initiated outbound packets. The container is in a network jail — it can receive forwarded inbound connections and respond to them, but it cannot initiate connections to anything.
+With bridge networking, container traffic traverses the FORWARD chain in iptables, where `DOCKER-USER` rules can drop container-initiated outbound packets. The container is network-isolated — it can receive forwarded inbound connections and respond to them, but it cannot initiate connections to anything.
 
-With host networking, the container shares the host's network stack entirely. There is no FORWARD chain involvement, no way to distinguish container traffic from host traffic, and no network jail. A compromised container has the same network access as any host process.
+With host networking, the container shares the host's network stack entirely. There is no FORWARD chain involvement, no way to distinguish container traffic from host traffic, and no network isolation. A compromised container has the same network access as any host process.
 
 The performance cost of bridge networking — the ~10-20% packet traversal overhead and the conntrack table management — is real but solvable. The conntrack issue is handled by kernel tuning (next section). The packet traversal overhead, as established above, doesn't move the needle at realistic scale. This guide uses bridge networking.
 
@@ -479,7 +491,7 @@ The UDP container does not need this profile — it uses mio/epoll, which only u
 
 The example `docker-compose.yml` brings all three containers together with the security constraints and resource limits discussed above. A few elements beyond the hardening settings deserve explanation:
 
-**IPv6 network.** The compose file defines a named network with `enable_ipv6: true` and a ULA IPv6 subnet (`fd00:cafe:2::/64`). This is necessary for the UDP container specifically. The HTTP and WebSocket containers sit behind a reverse proxy that handles IPv6 on the outside, but the UDP container publishes directly to the internet — no reverse proxy. For IPv6 clients to reach it, Docker must create ip6tables DNAT rules, and Docker only creates those rules if the container has an IPv6 address on its Docker network. Without `enable_ipv6`, IPv6 UDP packets arrive at the host and are silently dropped — no error, no log, no indication anything is wrong. The IPv4 subnet is also pinned (`172.20.0.0/24`) so it's predictable if you add `DOCKER-USER` firewall rules that reference it by address.
+**IPv6 network.** The compose file defines a named network with `enable_ipv6: true` and a ULA IPv6 subnet (`fd00:cafe:2::/64`). This is necessary for the UDP container specifically. The HTTP and WebSocket containers sit behind a reverse proxy that handles IPv6 on the outside, but the UDP container publishes directly to the internet — no reverse proxy. For IPv6 clients to reach it, Docker must create ip6tables DNAT rules, and Docker only creates those rules if the container has an IPv6 address on its Docker network. Without `enable_ipv6`, IPv6 UDP packets arrive at the host and are silently dropped — no error, no log, no indication anything is wrong. The IPv4 subnet is also pinned (`172.30.0.0/24`) so it's predictable if you add `DOCKER-USER` firewall rules that reference it by address.
 
 **tmpfs at /tmp.** All three containers use `read_only: true` (immutable filesystem) and mount a `tmpfs` at `/tmp`. Aquatic does not appear to write temp files in normal operation, but glommio or the Rust runtime may need a writable temp directory under some conditions. The tmpfs mount costs nothing in memory unless something writes to it, and prevents a hard-to-diagnose read-only filesystem error if the application does write.
 
@@ -491,7 +503,7 @@ networks:
     enable_ipv6: true
     ipam:
       config:
-        - subnet: 172.20.0.0/24
+        - subnet: 172.30.0.0/24
         - subnet: fd00:cafe:2::/64
 
 services:
@@ -636,13 +648,13 @@ The `DOCKER-USER` chain is the exception. Docker creates it but never modifies i
 
 ### The rules
 
-Three rules, applied to both iptables (IPv4) and ip6tables (IPv6). Order matters — they're evaluated top to bottom, and the first match wins.
+Three rules, applied to both iptables (IPv4) and ip6tables (IPv6). Order matters — they're evaluated top to bottom, and the first match wins. All six commands use `-A` (append), so the order you run them is the order they appear in the chain.
 
 **Rule 1: Allow container-to-container traffic within the Docker network.**
 
 ```bash
-iptables  -I DOCKER-USER -s 172.20.0.0/24 -d 172.20.0.0/24 -j RETURN
-ip6tables -I DOCKER-USER -s fd00:cafe:2::/64 -d fd00:cafe:2::/64 -j RETURN
+iptables  -A DOCKER-USER -s 172.30.0.0/24 -d 172.30.0.0/24 -j RETURN
+ip6tables -A DOCKER-USER -s fd00:cafe:2::/64 -d fd00:cafe:2::/64 -j RETURN
 ```
 
 This allows the containers in the tracker's compose project to communicate with each other. The stats dashboard needs to scrape Prometheus metrics from the three tracker containers over the internal Docker network. Without this rule, that traffic is blocked by the DROP rule below.
@@ -652,8 +664,8 @@ This allows the containers in the tracker's compose project to communicate with 
 **Rule 2: Allow responses to inbound connections.**
 
 ```bash
-iptables  -I DOCKER-USER -s 172.20.0.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
-ip6tables -I DOCKER-USER -s fd00:cafe:2::/64 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+iptables  -A DOCKER-USER -s 172.30.0.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+ip6tables -A DOCKER-USER -s fd00:cafe:2::/64 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
 ```
 
 When an external client sends a packet to the tracker, the tracker needs to send a response back. The `ESTABLISHED,RELATED` conntrack state matches packets that are part of an existing connection — i.e., responses to traffic that someone else initiated. Without this rule, the tracker could receive requests but never respond.
@@ -661,17 +673,17 @@ When an external client sends a packet to the tracker, the tracker needs to send
 **Rule 3: Drop everything else.**
 
 ```bash
-iptables  -A DOCKER-USER -s 172.20.0.0/24 -j DROP
+iptables  -A DOCKER-USER -s 172.30.0.0/24 -j DROP
 ip6tables -A DOCKER-USER -s fd00:cafe:2::/64 -j DROP
 ```
 
-Any packet from the container subnet that isn't intra-subnet (rule 1) or a response to inbound traffic (rule 2) is dropped. This blocks all container-initiated outbound connections — to the internet, to the LAN, to the router, to other Docker networks. The container is in a network jail.
+Any packet from the container subnet that isn't intra-subnet (rule 1) or a response to inbound traffic (rule 2) is dropped. This blocks all container-initiated outbound connections — to the internet, to the LAN, to the router, to other Docker networks. The container is fully isolated.
 
-Note the flag difference: rules 1 and 2 use `-I` (insert at the top), rule 3 uses `-A` (append at the bottom). This ensures the RETURN rules are evaluated before the DROP.
+Note: `-A` appends rules after any existing rules in the DOCKER-USER chain. On a fresh Docker installation this works correctly — Docker starts the chain with a single RETURN-all rule, and our rules go before it. If you already have custom rules in DOCKER-USER, check the final order with `iptables -L DOCKER-USER -n -v` to make sure the rules are positioned correctly.
 
 ### Why both iptables and ip6tables
 
-Most Docker firewall guides only show iptables rules. This works if all your traffic is IPv4, but our UDP tracker accepts IPv6 connections directly through Docker's ip6tables DNAT. If we only wrote IPv4 rules, a compromised container could make outbound IPv6 connections — the IPv4 jail would be locked, but the IPv6 door would be open.
+Most Docker firewall guides only show iptables rules. This works if all your traffic is IPv4, but our UDP tracker accepts IPv6 connections directly through Docker's ip6tables DNAT. If we only wrote IPv4 rules, a compromised container could make outbound IPv6 connections — IPv4 outbound would be blocked, but IPv6 outbound would be wide open.
 
 The rules are identical in logic, just applied to both address families. Every rule has an iptables line and an ip6tables line.
 
@@ -705,9 +717,9 @@ If you add or change rules later, save them again:
 sudo netfilter-persistent save
 ```
 
-### Verifying the jail
+### Verifying the isolation
 
-After applying the rules, verify that the jail works as intended:
+After applying the rules, verify that the isolation works as intended:
 
 ```bash
 # Verify the rules are in place and in the right order
@@ -733,7 +745,7 @@ apt update && apt install -y curl
 curl -s --max-time 3 http://1.1.1.1 || echo "Blocked (good)"
 ```
 
-The stats dashboard scraping Prometheus is the positive test — if the dashboard shows live metrics from the tracker containers, intra-subnet communication is working. If the curl tests above timeout, outbound is blocked. Both conditions together confirm the jail is correctly configured.
+The stats dashboard scraping Prometheus is the positive test — if the dashboard shows live metrics from the tracker containers, intra-subnet communication is working. If the curl tests above timeout, outbound is blocked. Both conditions together confirm the isolation is correctly configured.
 
 ## What's next
 
