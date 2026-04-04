@@ -191,7 +191,7 @@ Note: if Docker was already running containers, they will be stopped and restart
 
 Bridge networking with conntrack works fine at low traffic. Under heavy load, the default kernel parameters create silent failures — packets vanish with no errors and no logs.
 
-All settings go in a file like `/etc/sysctl.d/90-tracker.conf` and are applied with `sysctl --system`. They persist across reboots.
+All settings go in a file like `/etc/sysctl.d/90-tracker.conf` and are applied with `sysctl --system`. They persist across reboots — with one caveat covered below.
 
 ### Connection tracking table
 
@@ -266,6 +266,25 @@ net.core.wmem_default = 1048576
 
 # NIC receive backlog
 net.core.netdev_max_backlog = 10000
+```
+
+### Pre-loading the conntrack module
+
+The `net.core.*` settings above take effect at boot and survive reboots without any extra steps. The `net.netfilter.nf_conntrack_*` settings do not — they are silently skipped.
+
+The reason: the `nf_conntrack` kernel module isn't loaded during early boot when systemd applies sysctl configs. The `net.netfilter.nf_conntrack.*` keys don't exist in `/proc/sys/` until the module is loaded, and `sysctl --system` silently skips keys that don't exist. Docker loads `nf_conntrack` later when it creates DNAT rules, but by then sysctl has already run.
+
+The fix is to pre-load the module before sysctl runs:
+
+```bash
+echo "nf_conntrack" | sudo tee /etc/modules-load.d/conntrack.conf
+```
+
+This tells systemd to load `nf_conntrack` during early boot, before sysctl configs are applied. After creating this file, the conntrack settings will survive reboots. You can verify after a reboot:
+
+```bash
+cat /proc/sys/net/netfilter/nf_conntrack_max
+# Should show 1048576, not the default 65536 or 262144
 ```
 
 ### Monitoring
@@ -558,7 +577,7 @@ docker run --rm -d --name test-ws -p 8082:8082 \
 
 **Without the seccomp profile,** these containers will crash immediately with glommio's io_uring probe error. This is the expected behavior with Docker's default profile, and the reason the custom profile exists.
 
-**On Docker Desktop (macOS/Windows),** you may see a warning in the logs about buffer registration:
+**You may see a warning** in the logs about buffer registration:
 
 ```
 glommio::sys::uring: Error: registering buffers in the poll ring. SkippingOs {
@@ -566,7 +585,7 @@ glommio::sys::uring: Error: registering buffers in the poll ring. SkippingOs {
 }
 ```
 
-This is a non-fatal warning — glommio continues without registered buffers, using a slightly less optimal I/O path. It happens when the memlock limit isn't fully effective in Docker Desktop's Linux VM. On a real Linux server with Docker Engine, this warning may or may not appear depending on your system's default memlock settings.
+This is a non-fatal warning — glommio continues without registered buffers, using a slightly less optimal I/O path. It can appear on Docker Desktop (macOS/Windows) and on Docker Engine on Linux, depending on the system's default memlock limits and how the container runtime enforces the ulimit. The tracker works correctly without registered buffers; the optimization is a small reduction in memory copies during I/O. If you want to eliminate the warning, try increasing the memlock ulimit in the compose file.
 
 ### Verify the trackers respond
 
