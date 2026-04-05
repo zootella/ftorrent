@@ -163,63 +163,51 @@ You can use any port you like. 6969 is the simplest choice and works well on ope
 
 ## The traffic path
 
-Before configuring anything, it helps to see the whole picture — how a packet travels from a BitTorrent client somewhere on the internet all the way down to the container that will respond to it. There are six layers between the wide-area network and the tracker process, and each one needs to be configured correctly or traffic gets dropped silently.
+Before configuring anything, it helps to see how a packet travels from a BitTorrent client on the internet down to the container that will respond to it. Each step in the path needs to be configured correctly, or traffic gets dropped silently.
 
 ```
                      internet
                         │
-                        │  TCP 80/443, UDP 443, SSH
                         ▼
-              Layer 1: router / edge firewall
+              router / edge firewall
                         │
-                        │  DNAT for IPv4, allow rules for IPv6
                         ▼
-              Layer 2: Linux host firewall
+              Linux host firewall
                         │
                 ┌───────┴───────┐
                 │               │
           TCP 80/443        UDP 443
                 │               │
-                ▼               │   bypasses INPUT —
-          INPUT accept          │   PREROUTING DNAT →
-                │               │   FORWARD → container
-                ▼               │
-              nginx             │
-          (TLS termination,     │
-           path-based routing)  │
+                ▼               ▼
+              nginx       Docker DNAT
+           (TLS, routing)  (kernel-level,
+                │          bypasses nginx)
                 │               │
-       ┌────────┼────────┐      │
-       │        │        │      │
-       ▼        ▼        ▼      ▼
-   Layer 3: Docker daemon (userland-proxy: false, ipv6: true)
-   Layer 4: Docker network + DOCKER-USER rules
-                        │
+                └───────┬───────┘
                         ▼
-              Layer 6: containers
-        (aquatic_udp, aquatic_http, aquatic_ws, homepage, stats)
+                  containers
+        (aquatic_udp, aquatic_http, aquatic_ws)
 ```
 
-**Layer 1: Router / edge firewall.** If the server is behind a router (common for home connections), the router needs to forward or allow the tracker's ports to reach the server. On a cloud instance with a direct public IP (EC2, DigitalOcean, Linode, Hetzner, etc.), this layer is the provider's firewall rules instead.
+The **router or edge firewall** is where a client's packet first reaches the deployment. Behind a home or office router, this means port-forwarding rules for IPv4 and allow rules for IPv6. On a cloud instance with a direct public IP, it's the provider's firewall or security group.
 
-**Layer 2: Linux host firewall.** On the server itself, iptables and ip6tables control which inbound packets reach host processes. nginx listens on ports 80 and 443 as a host process, so those ports need INPUT allow rules. UDP tracker traffic does not go through the host INPUT chain — it's handled entirely by Docker's PREROUTING DNAT, which runs before INPUT — so no UDP allow rule is needed.
+The **Linux host firewall** (iptables and ip6tables) controls which inbound packets reach processes on the host. nginx runs as a host process and listens on ports 80 and 443, so those need INPUT allow rules. UDP tracker traffic does not go through INPUT at all — Docker's DNAT handles it in PREROUTING, which runs before INPUT and sends the packet straight to the container.
 
-**Layer 3: Docker daemon config.** The daemon-level settings in `/etc/docker/daemon.json` that enable IPv6, tell Docker to manage ip6tables, and turn off the userland proxy so source IPs are preserved.
+**nginx** terminates TLS for HTTPS and WSS, handles IPv4 and IPv6 dual-stack, and routes TCP requests by path (`/announce`, `/scrape`) and by WebSocket upgrade header to the right container over localhost. UDP tracker traffic never touches nginx.
 
-**Layer 4: Docker network + DOCKER-USER rules.** The compose network with `enable_ipv6: true` and a pinned subnet, and the DOCKER-USER iptables rules that isolate containers from the outside while allowing intra-subnet communication for the stats dashboard.
+**Docker** sits underneath, providing the network namespace where the containers live. Two Docker layers matter: the daemon config (`/etc/docker/daemon.json` with `ipv6`, `ip6tables`, and `userland-proxy: false`) and the compose network (with `enable_ipv6: true`, pinned subnets, and DOCKER-USER firewall rules that isolate the containers from the outside).
 
-**Layer 5: nginx reverse proxy.** nginx terminates TLS, handles IPv4 and IPv6 dual-stack, and routes TCP traffic to the appropriate container on localhost by path (`/announce`, `/scrape`) and by WebSocket upgrade header. UDP traffic never touches nginx.
+The **containers** are the Aquatic binaries themselves, hardened as described later in the guide — running as nobody, read-only filesystem, all capabilities dropped, custom seccomp profile for io_uring.
 
-**Layer 6: The containers.** Hardened, running as nobody, read-only filesystem, with the security constraints described earlier in this guide.
-
-The rest of the guide configures each layer in order. Layers 3, 4, and 6 are already covered above. This new section (Server preparation, expanded) covers layers 1 and 2, and a later section covers layer 5.
+The rest of the guide configures each of these in order. Some are already covered above (the Docker daemon and network, the containers); others are covered in the sections that follow (host firewall, nginx).
 
 ## Server preparation
 
 The configuration in this section lives outside the containers — it's applied to the host server by the administrator. These settings should be applied before the tracker starts.
 
-### Router / edge firewall (layer 1)
+### Router / edge firewall
 
-If the server is on a home or office connection behind a router, the router needs to route external traffic to the server. If the server has a direct public IP (cloud VPS, bare metal hosting), skip this subsection — the provider's firewall or network security group handles this layer instead.
+If the server is on a home or office connection behind a router, the router needs to route external traffic to the server. If the server has a direct public IP (cloud VPS, bare metal hosting), skip this subsection — the provider's firewall or network security group handles this step instead.
 
 **IPv4 port forwarding (DNAT).** For each of the tracker's public ports, add a DNAT rule forwarding from the router's WAN interface to the server's LAN address:
 
@@ -241,7 +229,7 @@ The exact configuration depends on the router. Consumer routers usually call thi
 
 On routers with dynamically changing prefixes, the allow rules can often be targeted by the server's stable interface identifier (the lower 64 bits of its IPv6 address) so the rules survive when the prefix rotates.
 
-### Host firewall (layer 2)
+### Host firewall
 
 On the server itself, iptables and ip6tables control which inbound packets reach processes running on the host. The goal is to allow only the ports that nginx and SSH listen on.
 
@@ -629,6 +617,7 @@ name: ftorrent-open                  # Explicit project name
 
 networks:
   tracker:
+    name: ftorrent-open                # External Docker network name
     enable_ipv6: true
     ipam:
       config:
@@ -827,7 +816,7 @@ The rules are identical in logic, just applied to both address families. Every r
 
 ### The security trade-off
 
-Before these rules, each container was completely isolated — it couldn't talk to anything, not even the container next door. After these rules, the containers within the same Docker network (the `tracker` network in the compose file) can reach each other.
+Before these rules, each container was completely isolated — it couldn't talk to anything, not even the container next door. After these rules, the containers within the same Docker network (`ftorrent-open`) can reach each other.
 
 This means a compromised tracker container can now probe the other containers on the same network — for example, reaching the Prometheus endpoint on port 9000 of a neighboring container. This is the trade-off we accept in exchange for the stats dashboard being able to scrape metrics.
 
@@ -875,9 +864,9 @@ docker exec <container> timeout 3 curl -s http://192.168.1.1 || echo "Blocked (g
 Note: the tracker containers are minimal Debian images without curl installed. To run these tests, you can temporarily start a test container on the same network:
 
 ```bash
-# The network name is your compose project name + "_tracker"
-# (e.g., "docker_tracker" or "myproject_tracker"). Check with: docker network ls
-docker run --rm --network <project>_tracker -it debian:bookworm-slim bash
+# The network name is set explicitly in the compose file (ftorrent-open).
+# Verify with: docker network ls
+docker run --rm --network ftorrent-open -it debian:bookworm-slim bash
 # Inside the container:
 apt update && apt install -y curl
 curl -s --max-time 3 http://1.1.1.1 || echo "Blocked (good)"

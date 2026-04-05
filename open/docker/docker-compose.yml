@@ -31,8 +31,14 @@ name: ftorrent-open
 # assigns addresses and creates DNAT rules. The specific subnets can be
 # changed as long as they don't conflict with other Docker networks or
 # host routes.
+#
+# The `name: ftorrent-open` line gives the network an explicit external
+# name. Without it, Docker Compose would create a network called
+# "ftorrent-open_tracker" (project name + network key). The explicit name
+# is shorter and matches the deployment pattern for reference commands.
 networks:
   tracker:
+    name: ftorrent-open
     enable_ipv6: true
     ipam:
       config:
