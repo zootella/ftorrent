@@ -60,18 +60,33 @@ open/page/
 ```bash
 pnpm install     # from the monorepo root, installs all workspaces
 cd open/page
-pnpm run dev     # starts Vite dev server with hot reload
-pnpm run build   # produces dist/ for deployment
-pnpm run preview # serves the built dist/ locally for testing
+pnpm dev     # starts Vite dev server with hot reload
+pnpm build   # produces dist/ for deployment
+pnpm preview # serves the built dist/ locally for testing
 ```
 
 ## Deployment
 
-The build output (`dist/`) is rsynced to the server where nginx serves it as static files. A `deploy.hide.sh` script (gitignored) handles the rsync with server-specific SSH details. The pattern:
+The build output (`dist/`) is rsynced to the server where nginx serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
 
 ```bash
-pnpm run build
-./deploy.hide.sh
+#!/bin/bash
+rsync -avz --delete dist/ youruser@yourserver:/opt/open.ftorrent.com/static/ -e "ssh -p 22"
 ```
 
-The deployed files land at `/opt/open.ftorrent.com/static/` on the server. nginx serves them for any request to `open.ftorrent.com` that isn't a tracker announce, scrape, or WebSocket upgrade.
+Replace `youruser`, `yourserver`, the path, and the SSH port with your own. Make it executable with `chmod +x upload.hide.sh`.
+
+Then build and deploy in one step:
+
+```bash
+pnpm upload
+```
+
+Or separately:
+
+```bash
+pnpm build
+./upload.hide.sh
+```
+
+The deployed files land in the static directory on the server. nginx serves them for any request to your tracker domain that isn't a tracker announce, scrape, or WebSocket upgrade.
