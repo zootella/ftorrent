@@ -57,7 +57,7 @@ const prometheusEndpoints = [
 // ring.json is an object with a "minutes" array of 1,440 slots. Each slot
 // is either null (the gauge didn't run that minute) or an object with:
 //   day     — day number (Math.floor(Date.now() / 86_400_000))
-//   served  — cumulative counter snapshot: { udp_v4, udp_v6, http_v4, http_v6, ws_v4, ws_v6 }
+//   served  — cumulative counter snapshot: { udp4, udp6, http4, http6, ws4, ws6 }
 //
 // Slot 0 is 00:00 UTC, slot 1439 is 23:59 UTC.
 //
@@ -177,7 +177,7 @@ function extractByType(metrics, type) {
 }
 
 // Scrape all three Prometheus endpoints. Returns cumulative counters as
-// a flat object: { udp_v4, udp_v6, http_v4, http_v6, ws_v4, ws_v6 }
+// a flat object: { udp4, udp6, http4, http6, ws4, ws6 }
 // All six keys are always present, defaulting to 0.
 async function scrapePrometheus() {
 	const result = {}

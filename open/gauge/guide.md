@@ -7,20 +7,47 @@
 |---|---|
 | Node | 22+ |
 
-The gauge is a long-running Node.js process that produces the data behind the [open.ftorrent.com](https://open.ftorrent.com/) dashboard. It runs a cycle every minute: scrapes Prometheus metrics from the three Aquatic tracker containers, reads container memory statistics, computes dashboard data, and writes `page.json`. nginx serves `page.json` as a static file, and the Vue frontend reads it to display the dashboard.
+## What this is and where it fits
 
-The gauge has no HTTP server and no listening ports. It only writes files. In the Docker deployment, it runs as a hardened container on the `ftorrent-open` network (cafe 2), which gives it access to the Aquatic containers' Prometheus endpoints over internal Docker DNS.
+The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../guide.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/guide.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
 
-## How it works
+The gauge is a Node.js script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — `page.json` — that nginx serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
 
-Every 60 seconds, the gauge:
+## Why it's built this way
 
-1. Builds a data object with the current timestamp (and later, Prometheus metrics and memory stats)
-2. Writes the object as JSON to `page.json.tmp`
-3. Renames `page.json.tmp` to `page.json` (atomic — readers never see a half-written file)
-4. Logs the timestamp to stdout
+**Why a separate container?** The gauge needs access to Prometheus endpoints (inside the Docker network) and cgroup files (on the host). The frontend is static files served by nginx — it can't make those requests. Putting the data-gathering in a container keeps it inside the security boundary (same hardening as the trackers: nobody user, read-only filesystem, all capabilities dropped) while giving it network access to the things it needs to read.
 
-The atomic write pattern (write to temp file, then rename) is important. Without it, nginx could serve a partially-written `page.json` to a visitor during the brief moment the file is being overwritten. POSIX `rename()` is atomic — the file switches from old to new in a single operation.
+**Why write a file instead of serving an API?** A JSON file served by nginx is the simplest possible data path. No application server in the request path, no ports to expose, no process that can be crashed by a malformed HTTP request. The gauge writes, nginx serves, the frontend reads. Each piece can fail independently — if the gauge crashes, nginx keeps serving the last good `page.json` until the gauge restarts.
+
+**Why clock-aligned scheduling?** The gauge fires once just after the top of each UTC minute, not on a fixed interval. A 60-second `setInterval` drifts over time and can skip or double-fire at minute boundaries, which would create false gaps in the ring buffer. Clock alignment means exactly one tick per calendar minute.
+
+## The ring buffer
+
+The gauge maintains a private file `ring.json` with 1,440 slots — one per minute of the day. Each slot records the day number and the current cumulative Prometheus counter values at that moment. This ring is the gauge's memory: it knows what the counters were at any minute in the last 24 hours.
+
+To compute "served in the last 24 hours," the gauge finds the oldest valid slot and subtracts its counters from the current values. One subtraction, not a sum across 1,440 slots. Gaps in the ring (the gauge was down for an hour) don't affect the math — the two endpoints are still valid, and the subtraction gives the total traffic between them.
+
+If a Prometheus counter dropped (a tracker container restarted and the counter reset to zero), the gauge reports 0 for that metric rather than a negative or fabricated number. Every number in `page.json` is the proven growth between two ring snapshots. The gauge never reports a raw Prometheus counter.
+
+Downtime is counted by walking the ring and checking for missing or stale slots. A slot is expected to have today's day number (or yesterday's, for slots on the far side of midnight). Any gap is a missed minute.
+
+## What page.json contains
+
+```json
+{
+	"minute": 600,
+	"memory": { "udp": 5083136, "http": 27623424, "ws": 33914880 },
+	"served": { "udp4": 12345, "udp6": 67, "http4": 890, "http6": 12, "ws4": 34, "ws6": 5 },
+	"downtime": 0
+}
+```
+
+- **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
+- **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
+- **served** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses. WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
+- **downtime** — minutes in the last 24 hours where the gauge didn't run
+
+All fields are always present. All numbers are 0 or positive.
 
 ## Project structure
 
@@ -36,152 +63,39 @@ open/gauge/
 
 ## Development
 
-For local development, the gauge writes `page.json` directly to the page workspace's `public/` directory. This means you can run the gauge and the Vite dev server side by side — the gauge updates the data, and the page shows it.
-
-From the monorepo root:
+Run the gauge and the Vite dev server side by side. The gauge writes `page.json` to the page workspace's `public/` directory (controlled by `GAUGE_DIR`, defaults to `../page`), and the dev server picks it up.
 
 ```bash
-pnpm install
+# Terminal 1
+cd open/gauge && pnpm start
+
+# Terminal 2
+cd open/page && pnpm dev
 ```
 
-In one terminal:
-
-```bash
-cd open/gauge
-pnpm start            # runs the gauge, writes page.json every 60 seconds
-```
-
-In another terminal:
-
-```bash
-cd open/page
-pnpm dev              # serves the page, reads page.json
-```
-
-The gauge writes to `open/page/public/page.json` by default. This path is controlled by the `GAUGE_DIR` environment variable — locally it defaults to `../page`, so `public/page.json` lands in the right place for the Vite dev server. In the Docker deployment, `GAUGE_DIR` is set to `/gauge` in the compose file.
-
-Locally, `page.json` will show `"memory": {}` because the cgroup filesystem (`/sys/fs/cgroup`) isn't available on macOS or in Docker Desktop's VM the way it is on a real Linux host. This is expected — container memory stats only populate when the gauge runs on the server with the `/host-cgroup` bind mount. The `downtime` field will start at 1439 (only one minute ticked so far) and decrease by one each minute the gauge runs.
-
-The gauge also creates `ring.json` in the `GAUGE_DIR` directory — locally that's `open/page/ring.json`, sitting alongside the `public/` folder. This is the gauge's private working state (a ring buffer tracking which minutes it has run). It's gitignored and should not be committed or deployed. On the server, `ring.json` lives at `/opt/open.ftorrent.com/data/ring.json` via the bind mount, separate from the page's static files.
+Locally, memory and served counts will be 0 (no cgroups or Prometheus endpoints on macOS). Downtime starts at 1439 and decreases each minute. The gauge also creates `ring.json` in `open/page/` — this is gitignored and should not be committed.
 
 ## Deployment
 
-In production, the gauge runs as a Docker container on the `ftorrent-open` network (cafe 2) alongside the Aquatic tracker containers.
+The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../guide.md)). Copy the source to the server as `/opt/open.ftorrent.com/node-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
 
-### Copying the source to the server
-
-The gauge source needs to be on the server in the build context directory next to `docker-compose.yml`. Copy the contents of `open/gauge/` (Dockerfile, package.json, and src/) to the server:
-
-```
-/opt/open.ftorrent.com/
-├── docker-compose.yml
-├── node-gauge/
-│   ├── Dockerfile
-│   ├── package.json
-│   └── src/
-│       └── gauge.js
-```
-
-The compose service entry references `build: ./node-gauge`, which matches this layout.
-
-### Building the image
-
-From the `/opt/open.ftorrent.com/` directory on the server:
-
-```bash
-docker compose build node-gauge
-```
-
-Or build it directly from the `node-gauge/` directory:
-
-```bash
-cd node-gauge
-docker build -t ftorrent-open-node-gauge .
-```
-
-The Dockerfile uses `node:22-slim` as the base image, copies the source code, installs production dependencies, and runs as nobody (UID 65534). No build step — the JavaScript runs directly.
-
-### Adding the service to docker-compose.yml
-
-Add the service entry from `compose-service.yml` to the `services:` section of your existing `docker-compose.yml`, alongside the Aquatic tracker services. The key settings:
-
-```yaml
-node-gauge:
-  container_name: ftorrent-open-gauge-1
-  build: ./node-gauge
-  user: "65534:65534"
-  read_only: true
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
-  environment:
-    - GAUGE_DIR=/gauge
-  volumes:
-    - /opt/open.ftorrent.com/static:/static:ro
-    - /opt/open.ftorrent.com/data:/gauge
-    - /sys/fs/cgroup:/host-cgroup:ro
-  deploy:
-    resources:
-      limits:
-        memory: 128m
-        pids: 32
-  restart: unless-stopped
-```
-
-The service doesn't need a `ports:` entry — it has no HTTP server and no listening ports. It doesn't need `networks:` either — with the compose network key set to `default`, it joins the `ftorrent-open` network automatically.
-
-### Bind mounts
-
-The gauge container has three bind mounts:
-
-| Host path | Container path | Mode | Purpose |
-|---|---|---|---|
-| `/opt/open.ftorrent.com/static` | `/static` | read-only | Can't modify the frontend |
-| `/opt/open.ftorrent.com/data` | `/gauge` | read-write | Writes `page.json` and `ring.json` |
-| `/sys/fs/cgroup` | `/host-cgroup` | read-only | Reads container memory stats |
-
-**The `/gauge` mount has a specific internal layout:**
-
-```
-/gauge/                          → /opt/open.ftorrent.com/data/
-├── public/
-│   └── page.json                → served by nginx at /page.json
-│   └── page.json.tmp            → atomic write temp file, briefly exists during writes
-└── ring.json                    → private gauge state, never served
-```
-
-nginx is configured to serve files from `/opt/open.ftorrent.com/data/public/` at `https://open.ftorrent.com/page.json`. Files outside `public/` (like `ring.json`) are never served — they're the gauge's private working state.
-
-### Verifying the deployment
-
-After `docker compose up -d`:
-
-```bash
-# Check the container is running
-docker ps | grep gauge
-
-# Check the logs — should show a timestamp every 60 seconds
-docker logs -f ftorrent-open-gauge-1
-
-# Check page.json is being written
-cat /opt/open.ftorrent.com/data/public/page.json
-
-# Check page.json is served by nginx
-curl https://open.ftorrent.com/page.json
-```
-
-### Creating the data directory
-
-Before the first run, the data directory needs to exist on the host with the right ownership. The gauge runs as nobody (UID 65534), so the `data/` directory must be writable by that user:
+Before the first run, create the data directory with the right ownership:
 
 ```bash
 sudo mkdir -p /opt/open.ftorrent.com/data/public
 sudo chown -R 65534:65534 /opt/open.ftorrent.com/data
 ```
 
-The `static/` directory is already created and owned by the deploy user (rsynced from the Mac). The gauge can read it but not write to it.
+After `docker compose up -d`, verify with:
 
-## Security separation
+```bash
+curl https://open.ftorrent.com/page.json
+```
 
-The read-only mount of `/static` means the gauge process cannot modify the frontend files (HTML, JS, CSS) that the browser executes. If the gauge is compromised, the worst outcome is wrong numbers on the dashboard — not injected scripts. The frontend code can only be changed by rsyncing from the development machine.
+The `minute` field should match the current UTC minute. Memory fields should be non-zero. Served fields start at 0 and grow as the ring fills over the first 24 hours.
 
-The same container hardening applies as for the Aquatic containers: nobody user, read-only root filesystem, all capabilities dropped, no-new-privileges, memory and PID limits, and no outbound network access (except intra-subnet for Prometheus scraping via the DOCKER-USER rules).
+## Security
+
+The gauge container runs on the `ftorrent-open` network (cafe 2) with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach the LAN or internet.
+
+The frontend static files are mounted read-only at `/static`. A compromised gauge can write wrong numbers to `page.json` but cannot inject scripts into the HTML, JS, or CSS that the browser executes. The frontend can only be changed by rsyncing from the development machine.
