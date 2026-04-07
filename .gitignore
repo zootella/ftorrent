@@ -267,6 +267,9 @@ credentials/
 *.hide.sh
 *.hide.*
 
+# Gauge working state (written during local development)
+ring.json
+
 # Deployment platforms
 .vercel/
 .netlify/
