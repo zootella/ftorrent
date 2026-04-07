@@ -49,6 +49,20 @@ Downtime is counted by walking the ring and checking for missing or stale slots.
 
 All fields are always present. All numbers are 0 or positive.
 
+## What the memory numbers mean
+
+Every Docker container runs inside a Linux **cgroup** (control group) — a kernel subsystem that tracks and limits resources per process group. The kernel maintains a file called `memory.current` for each cgroup: the number of bytes of physical RAM assigned to that group right now. Not a sample, not an average, not what the application thinks it allocated — the kernel's own live count of every physical page assigned to the container. The binary loaded into memory, the heap, thread stacks, io_uring buffers, shared libraries, allocator overhead, everything. The container can't hide memory usage and can't undercount it. This is the most honest number available on a Linux system.
+
+Docker exposes cgroup files through the host filesystem at `/sys/fs/cgroup`. The gauge mounts this path read-only and reads `memory.current` from each Aquatic container once per minute. That raw byte count is what appears in the memory column on the dashboard.
+
+**What's in the number.** Each tracker's memory has a fixed component and a variable component. The fixed part is the Rust binary, the runtime's pre-allocated buffers, and — for the HTTP and WebSocket trackers — io_uring's registered memory (allocated at startup by the glommio async runtime, regardless of traffic). The variable part is the **peer table**: a hash map of IP:port entries keyed by torrent info hash. Every announce from a BitTorrent client adds or updates an entry. Each entry is small — roughly 18 to 50 bytes depending on IPv4 vs IPv6 and hash map overhead — but there can be millions. Aquatic periodically evicts expired peers (controlled by `max_peer_age` in the TOML config), so memory stabilizes at a level proportional to concurrent active peers, not total announces ever served.
+
+At idle with near-zero traffic, the three containers use roughly 5 MB (UDP), 27 MB (HTTP), and 34 MB (WebSocket). The HTTP and WS numbers are higher because of the fixed io_uring buffers, not because they're doing more work.
+
+**How far does modest hardware go.** Consider a server with 16 GB of physical RAM — a used enterprise small form factor desktop, the kind that sells for around $50 on eBay (or around $500 new). It runs a handful of services: a reverse proxy, a few web applications, monitoring, the usual. The UDP tracker gets a 2 GB memory ceiling in the compose file. After subtracting the ~5 MB fixed overhead, roughly 1,995 MB is available for the peer table. At a conservative 50 bytes per peer entry, that's approximately **40 million concurrent peers**.
+
+This is peer-to-peer architecture doing what it does best. The tracker's job is small: answer "who else has this?" with a hash map lookup and a UDP response. Microseconds of work per request, a few tens of bytes of state per peer. The expensive part — actually moving the data — happens between the peers themselves, distributed across the network. The coordination service at the center stays tiny because the architecture was designed to keep it that way. One modest server can be a meaningful piece of global infrastructure, because the infrastructure was built so that modest servers are enough.
+
 ## Project structure
 
 ```
