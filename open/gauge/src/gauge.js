@@ -45,9 +45,9 @@ const targets = [
 // resolve via Docker's internal DNS on the ftorrent-open network.
 // Locally these won't resolve, so scraping is skipped gracefully.
 const prometheusEndpoints = [
-	{ key: 'udp',  url: 'http://ftorrent-open-udp-1:9000/metrics' },
-	{ key: 'http', url: 'http://ftorrent-open-http-1:9000/metrics' },
-	{ key: 'ws',   url: 'http://ftorrent-open-ws-1:9000/metrics' },
+	{ key: 'udp',  url: 'http://ftorrent-open-udp-1:9000/metrics', type: 'announce' },
+	{ key: 'http', url: 'http://ftorrent-open-http-1:9000/metrics', type: 'announce' },
+	{ key: 'ws',   url: 'http://ftorrent-open-ws-1:9000/metrics',  type: 'offer' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -55,18 +55,28 @@ const prometheusEndpoints = [
 // ---------------------------------------------------------------------------
 
 // ring.json is an object with a "minutes" array of 1,440 slots. Each slot
-// is either null (the gauge didn't run that minute) or { day } where day
-// is the day number (Math.floor(Date.now() / 86_400_000)). Slot 0 is
-// 00:00 UTC, slot 1439 is 23:59 UTC. The outer object leaves room for
-// future fields alongside the ring.
+// is either null (the gauge didn't run that minute) or an object with:
+//   day     — day number (Math.floor(Date.now() / 86_400_000))
+//   served  — cumulative counter snapshot: { udp_v4, udp_v6, http_v4, http_v6, ws_v4, ws_v6 }
+//
+// Slot 0 is 00:00 UTC, slot 1439 is 23:59 UTC.
 //
 // To count downtime: slots at or before the current minute should have
 // today's day number. Slots after the current minute should have
 // yesterday's day number. Anything else (null or older) is a missed minute.
+//
+// To get 24-hour served totals: subtract the oldest valid slot's counters
+// from the current slot's counters. Since Prometheus counters are cumulative,
+// one subtraction per metric gives the exact total for the period between
+// those two snapshots. If a container restarted (current < oldest), the
+// counter reset — use the current value as-is for that metric.
 
 const MINUTES_PER_DAY = 1440
 const MS_PER_DAY = 86_400_000
 const MS_PER_MINUTE = 60_000
+
+// The six counter keys stored in each ring slot
+const SERVED_KEYS = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
 
 function currentDay() {
 	return Math.floor(Date.now() / MS_PER_DAY)
@@ -100,19 +110,51 @@ function countDowntime(minutes, day, minute) {
 	return downtime
 }
 
+// To get "served in the last 24 hours": find the oldest valid slot in
+// the ring (the one closest to 24 hours ago) and subtract its counters
+// from the current counters. The ring may have gaps — that's fine, we
+// just need any two valid points to subtract.
+//
+// A slot is "valid" (within the last 24 hours) if its day number matches
+// what we'd expect for its position relative to the current minute:
+// slots at or before the current minute should be today, slots after
+// should be yesterday. Anything older is stale.
+//
+// If no valid oldest slot exists (fresh start, or long outage), we can't
+// compute a delta — return 0 for everything.
+function computeServed24h(currentServed, minutes, day, minute) {
+	// Walk from the farthest point back toward the current minute,
+	// return the first (oldest) valid slot we find
+	let oldest = null
+	for (let offset = MINUTES_PER_DAY - 1; offset >= 1; offset--) {
+		const i = (minute - offset + MINUTES_PER_DAY) % MINUTES_PER_DAY
+		const slot = minutes[i]
+		if (!slot) continue
+		const expectedDay = (i <= minute) ? day : day - 1
+		if (slot.day === expectedDay) { oldest = slot; break }
+	}
+
+	// Every number in page.json must be the growth between two ring
+	// slots — we never report a raw Prometheus counter. If there's no
+	// oldest slot, or the counter dropped (container restarted), report 0.
+	const result = {}
+	for (const key of SERVED_KEYS) {
+		const current = currentServed[key] || 0
+		const old = oldest?.served?.[key] || 0
+		result[key] = (oldest && current >= old) ? current - old : 0
+	}
+	return result
+}
+
 // ---------------------------------------------------------------------------
 // Prometheus scraping
 // ---------------------------------------------------------------------------
 
 // Parse Prometheus text format into a flat object of metric values.
-// Each line like: aquatic_responses_total{type="announce",ip_version="4",...} 123
-// becomes an entry keyed by the full line prefix: metric name + sorted labels.
-// We only extract what we need below, so this is intentionally simple.
 function parsePrometheus(text) {
 	const metrics = {}
 	for (const line of text.split('\n')) {
 		if (line.startsWith('#') || line.trim() === '') continue
-		// Split "name{labels} value" or "name value"
 		const match = line.match(/^(\S+)\s+(\S+)$/)
 		if (match) {
 			metrics[match[1]] = parseFloat(match[2])
@@ -121,36 +163,34 @@ function parsePrometheus(text) {
 	return metrics
 }
 
-// Extract counts by ip_version from parsed metrics for a given metric name
-// and type label. Returns { v4: number, v6: number } or {} if not found.
+// Extract counts by ip_version for a given response type.
+// Returns { v4: number, v6: number }, always both keys present.
 function extractByType(metrics, type) {
-	const result = {}
+	let v4 = 0, v6 = 0
 	for (const [key, value] of Object.entries(metrics)) {
 		if (!key.includes('aquatic_responses_total')) continue
 		if (!key.includes(`type="${type}"`)) continue
-		if (key.includes('ip_version="4"')) result.v4 = value
-		if (key.includes('ip_version="6"')) result.v6 = value
+		if (key.includes('ip_version="4"')) v4 = value
+		if (key.includes('ip_version="6"')) v6 = value
 	}
-	return result
+	return { v4, v6 }
 }
 
-// Scrape all three Prometheus endpoints and return counts per protocol.
-// UDP and HTTP count announce responses (a client asked about a torrent).
-// WS counts offer responses (the tracker relayed a WebRTC offer, helping
-// two peers establish a direct connection).
+// Scrape all three Prometheus endpoints. Returns cumulative counters as
+// a flat object: { udp_v4, udp_v6, http_v4, http_v6, ws_v4, ws_v6 }
+// All six keys are always present, defaulting to 0.
 async function scrapePrometheus() {
 	const result = {}
-	for (const { key, url } of prometheusEndpoints) {
+	for (const key of SERVED_KEYS) result[key] = 0
+
+	for (const { key, url, type } of prometheusEndpoints) {
 		try {
 			const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
 			const text = await response.text()
 			const metrics = parsePrometheus(text)
-			// WS counts offers (introductions brokered), others count announces
-			const type = (key === 'ws') ? 'offer' : 'announce'
 			const counts = extractByType(metrics, type)
-			if (Object.keys(counts).length > 0) {
-				result[key] = counts
-			}
+			result[`${key}4`] = counts.v4
+			result[`${key}6`] = counts.v6
 		} catch {
 			// Endpoint unreachable (local development or container down)
 		}
@@ -162,8 +202,9 @@ async function scrapePrometheus() {
 // Memory reading
 // ---------------------------------------------------------------------------
 
+// Returns { udp, http, ws } with memory in bytes, all keys always present.
 async function readTrackerMemory() {
-	const result = {}
+	const result = { udp: 0, http: 0, ws: 0 }
 	try {
 		const entries = await readdir(cgroupSlice)
 		for (const entry of entries) {
@@ -208,14 +249,15 @@ async function tick() {
 	const day = currentDay()
 	const minute = currentMinute()
 
-	// Update the ring
+	// Update the ring with current cumulative counters
 	const ring = await loadRing()
-	ring.minutes[minute] = { day }
+	ring.minutes[minute] = { day, served }
 	await writeAtomic(ringPath, JSON.stringify(ring) + '\n')
 
-	// Build page.json
+	// Build page.json — all fields always present
 	const downtime = countDowntime(ring.minutes, day, minute)
-	const page = { minute, memory, served, downtime }
+	const served24h = computeServed24h(served, ring.minutes, day, minute)
+	const page = { minute, memory, served: served24h, downtime }
 	await writeAtomic(
 		join(publicDir, 'page.json'),
 		JSON.stringify(page, null, '\t') + '\n'
