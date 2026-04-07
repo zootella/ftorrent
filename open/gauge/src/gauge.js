@@ -69,7 +69,7 @@ const prometheusEndpoints = [
 // from the current slot's counters. Since Prometheus counters are cumulative,
 // one subtraction per metric gives the exact total for the period between
 // those two snapshots. If a container restarted (current < oldest), the
-// counter reset — use the current value as-is for that metric.
+// counter reset — report 0 rather than fabricating a number.
 
 const MINUTES_PER_DAY = 1440
 const MS_PER_DAY = 86_400_000
