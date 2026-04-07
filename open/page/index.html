@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌎</text></svg>">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>open.ftorrent.com</title>
-	</head>
-	<body>
-		<div id="app"></div>
-		<script type="module" src="/src/main.js"></script>
-	</body>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌎</text></svg>">
+<title>open.ftorrent.com</title>
+
+<link rel="preload" href="/page.json" as="fetch" crossorigin><!-- Tell the browser to start fetching page.json now, while it downloads and parses the JS bundle. By the time Vue mounts and the app calls fetch('/page.json'), the response is already in the browser cache. This avoids a sequential roundtrip: load HTML → load JS → fetch data. Instead: load HTML → load JS + fetch data in parallel → mount with data ready. -->
+
+</head>
+<body>
+
+<div id="app"></div>
+<script type="module" src="/src/main.js"></script>
+
+</body>
 </html>

@@ -1,0 +1,28 @@
+# Compose service entry for the gauge container.
+# Add this to the services: section of docker-compose.yml alongside the
+# Aquatic tracker services.
+
+  node-gauge:
+    container_name: ftorrent-open-gauge-1
+    build: ./node-gauge
+    user: "65534:65534"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - GAUGE_DIR=/gauge
+    volumes:
+      # Frontend files — read-only so a compromised gauge can't inject scripts
+      - /opt/open.ftorrent.com/static:/static:ro
+      # Gauge working directory — writes page.json (public) and ring.json (private)
+      - /opt/open.ftorrent.com/data:/gauge
+      # Host cgroup stats — reads container memory usage
+      - /sys/fs/cgroup:/host-cgroup:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          pids: 32
+    restart: unless-stopped
