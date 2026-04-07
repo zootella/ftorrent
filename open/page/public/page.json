@@ -1,0 +1,17 @@
+{
+	"minute": 659,
+	"memory": {
+		"udp": 0,
+		"http": 0,
+		"ws": 0
+	},
+	"served": {
+		"udp4": 0,
+		"udp6": 0,
+		"http4": 0,
+		"http6": 0,
+		"ws4": 0,
+		"ws6": 0
+	},
+	"downtime": 1439
+}
