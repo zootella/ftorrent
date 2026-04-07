@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@font-face {
+	font-family: 'Jura';
+	font-style: normal;
+	font-weight: 300 700;
+	font-display: swap;
+	src: url('/fonts/jura-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Monaspace Krypton';
+	font-style: normal;
+	font-weight: 100 900;
+	src: url('/fonts/monaspace-krypton.woff2') format('woff2');
+}
+
+:root {
+	--text: #333;
+	--bg: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text: #ccc;
+		--bg: #111;
+	}
+}
+
+body {
+	font-family: Verdana, sans-serif;
+	color: var(--text);
+	background: var(--bg);
+}
+
+h1, h2, h3 {
+	font-family: 'Jura', sans-serif;
+}
+
+h1 {
+	font-size: 3rem;
+	font-weight: 300;
+}
+
+h2 {
+	font-size: 2rem;
+	font-weight: 300;
+}
+
+h3 {
+	font-size: 1.5rem;
+	font-weight: 300;
+}
+
+code, pre {
+	font-family: 'Monaspace Krypton', monospace;
+}
