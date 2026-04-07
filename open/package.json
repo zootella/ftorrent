@@ -1,7 +1,0 @@
-{
-	"name": "open",
-	"description": "BitTorrent and WebTorrent trackers, Dockerized",
-	"homepage": "https://open.ftorrent.com/",
-	"private": true,
-	"version": "0.1.0"
-}

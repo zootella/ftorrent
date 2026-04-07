@@ -1,6 +1,21 @@
+
 packages:
-  - desktop
-  - docs
-  - good
-  - open
+
+	# Note our rule is: If it's got a package.json, we make it a workspace
+	# Pure Docker 🐳, pure win32 🖥️, just notes 📒? those are just folders
+
+  # ftorrent.com — project homepage, download links, overview
   - site
+
+  # docs.ftorrent.com — documentation site (Docusaurus, Hugo, or similar)
+  - docs
+
+  # open.ftorrent.com — public BitTorrent, WebTorrent, and WebRTC tracker
+  - open/page    # Vue+Vite frontend, built on Mac, rsynced to server, served by nginx
+  - open/gauge   # Node.js gauge, runs in Docker, scrapes Prometheus, writes page.json
+
+  # good.ftorrent.com — IPv4/IPv6 connectivity diagnostic tool
+  - good
+
+  # Desktop BitTorrent and WebTorrent client (Tauri) for Mac, Windows, and Linux
+  - desktop

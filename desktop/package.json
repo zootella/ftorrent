@@ -1,7 +1,8 @@
 {
 	"name": "desktop",
-	"description": "Desktop BitTorrent client built with Tauri",
+	"description": "Next generation desktop BitTorrent and WebTorrent client, built with Tauri",
 	"homepage": "https://ftorrent.com/",
 	"private": true,
-	"version": "0.1.0"
+	"version": "0.1.0",
+	"type": "module"
 }

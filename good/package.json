@@ -1,7 +1,8 @@
 {
 	"name": "good",
-	"description": "IPv6 connection detector, Dockerized",
+	"description": "IPv4/IPv6 connectivity diagnostic tool, good.ftorrent.com",
 	"homepage": "https://good.ftorrent.com/",
 	"private": true,
-	"version": "0.1.0"
+	"version": "0.1.0",
+	"type": "module"
 }

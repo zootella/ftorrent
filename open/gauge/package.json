@@ -1,0 +1,11 @@
+{
+	"name": "open-gauge",
+	"description": "Statistics and diagnostics server behind open.ftorrent.com page",
+	"homepage": "https://open.ftorrent.com/",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"start": "node src/gauge.js"
+	}
+}
