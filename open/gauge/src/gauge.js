@@ -15,8 +15,6 @@ import { join } from 'node:path'
 const gaugeDir = process.env.GAUGE_DIR || '../page'
 const publicDir = join(gaugeDir, 'public')
 
-const INTERVAL_MS = 60_000
-
 function buildPage() {
 	return {
 		schema_version: 1,
@@ -44,6 +42,19 @@ async function tick() {
 	console.log(`page.json written at ${time}`)
 }
 
-// Run immediately on start, then every minute
+// Schedule ticks aligned to the clock — fire once just after the top
+// of each minute. This ensures exactly one tick per calendar minute
+// with no drift, no missed minutes, and no double-fires.
+function scheduleNextTick() {
+	const now = Date.now()
+	const nextMinute = Math.ceil(now / 60_000) * 60_000
+	const delay = nextMinute - now + 100 // 100ms past the boundary
+	setTimeout(async () => {
+		await tick()
+		scheduleNextTick()
+	}, delay)
+}
+
+// Run immediately on start, then aligned to each minute boundary
 await tick()
-setInterval(tick, INTERVAL_MS)
+scheduleNextTick()
