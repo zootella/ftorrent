@@ -60,6 +60,8 @@ pnpm dev              # serves the page, reads page.json
 
 The gauge writes to `open/page/public/page.json` by default. This path is controlled by the `GAUGE_DIR` environment variable — locally it defaults to `../page`, so `public/page.json` lands in the right place for the Vite dev server. In the Docker deployment, `GAUGE_DIR` is set to `/gauge` in the compose file.
 
+Locally, `page.json` will show `"containers": []` because the cgroup filesystem (`/sys/fs/cgroup`) isn't available on macOS or in Docker Desktop's VM the way it is on a real Linux host. This is expected — container memory stats only populate when the gauge runs on the server with the `/host-cgroup` bind mount.
+
 ## Deployment
 
 In production, the gauge runs as a Docker container on the `ftorrent-open` network (cafe 2) alongside the Aquatic tracker containers.
