@@ -41,6 +41,15 @@ const targets = [
 	{ key: 'ws',   ceiling: 1 * 1024 * 1024 * 1024 },   // 1 GB
 ]
 
+// Prometheus endpoints for the three Aquatic containers. These hostnames
+// resolve via Docker's internal DNS on the ftorrent-open network.
+// Locally these won't resolve, so scraping is skipped gracefully.
+const prometheusEndpoints = [
+	{ key: 'udp',  url: 'http://ftorrent-open-udp-1:9000/metrics' },
+	{ key: 'http', url: 'http://ftorrent-open-http-1:9000/metrics' },
+	{ key: 'ws',   url: 'http://ftorrent-open-ws-1:9000/metrics' },
+]
+
 // ---------------------------------------------------------------------------
 // Ring buffer — 1,440 slots, one per minute of the day
 // ---------------------------------------------------------------------------
@@ -92,6 +101,64 @@ function countDowntime(minutes, day, minute) {
 }
 
 // ---------------------------------------------------------------------------
+// Prometheus scraping
+// ---------------------------------------------------------------------------
+
+// Parse Prometheus text format into a flat object of metric values.
+// Each line like: aquatic_responses_total{type="announce",ip_version="4",...} 123
+// becomes an entry keyed by the full line prefix: metric name + sorted labels.
+// We only extract what we need below, so this is intentionally simple.
+function parsePrometheus(text) {
+	const metrics = {}
+	for (const line of text.split('\n')) {
+		if (line.startsWith('#') || line.trim() === '') continue
+		// Split "name{labels} value" or "name value"
+		const match = line.match(/^(\S+)\s+(\S+)$/)
+		if (match) {
+			metrics[match[1]] = parseFloat(match[2])
+		}
+	}
+	return metrics
+}
+
+// Extract counts by ip_version from parsed metrics for a given metric name
+// and type label. Returns { v4: number, v6: number } or {} if not found.
+function extractByType(metrics, type) {
+	const result = {}
+	for (const [key, value] of Object.entries(metrics)) {
+		if (!key.includes('aquatic_responses_total')) continue
+		if (!key.includes(`type="${type}"`)) continue
+		if (key.includes('ip_version="4"')) result.v4 = value
+		if (key.includes('ip_version="6"')) result.v6 = value
+	}
+	return result
+}
+
+// Scrape all three Prometheus endpoints and return counts per protocol.
+// UDP and HTTP count announce responses (a client asked about a torrent).
+// WS counts offer responses (the tracker relayed a WebRTC offer, helping
+// two peers establish a direct connection).
+async function scrapePrometheus() {
+	const result = {}
+	for (const { key, url } of prometheusEndpoints) {
+		try {
+			const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+			const text = await response.text()
+			const metrics = parsePrometheus(text)
+			// WS counts offers (introductions brokered), others count announces
+			const type = (key === 'ws') ? 'offer' : 'announce'
+			const counts = extractByType(metrics, type)
+			if (Object.keys(counts).length > 0) {
+				result[key] = counts
+			}
+		} catch {
+			// Endpoint unreachable (local development or container down)
+		}
+	}
+	return result
+}
+
+// ---------------------------------------------------------------------------
 // Memory reading
 // ---------------------------------------------------------------------------
 
@@ -137,6 +204,7 @@ async function writeAtomic(path, data) {
 
 async function tick() {
 	const memory = await readTrackerMemory()
+	const served = await scrapePrometheus()
 	const day = currentDay()
 	const minute = currentMinute()
 
@@ -147,7 +215,7 @@ async function tick() {
 
 	// Build page.json
 	const downtime = countDowntime(ring.minutes, day, minute)
-	const page = { minute, memory, downtime }
+	const page = { minute, memory, served, downtime }
 	await writeAtomic(
 		join(publicDir, 'page.json'),
 		JSON.stringify(page, null, '\t') + '\n'
