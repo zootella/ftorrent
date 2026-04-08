@@ -41,7 +41,7 @@ After scaffolding, we cleaned up:
 - **Merged** `package.json` — combined the scaffolder's `dependencies` and `devDependencies` with our workspace metadata (`name: "open-page"`, `description`, `homepage`, `version: "0.1.0"`)
 - **Removed** `engines` field from `package.json` — the monorepo root already requires Node 22+, which satisfies Vite 8's minimum
 
-The result is six files:
+The result:
 
 ```
 open/page/
@@ -50,9 +50,14 @@ open/page/
 ├── vite.config.js     Vite + Vue plugin configuration
 ├── src/
 │   ├── main.js        Creates and mounts the Vue app
-│   └── App.vue        The dashboard component
+│   ├── style.css      Tailwind import, @font-face declarations, base styles
+│   ├── App.vue        Root component
+│   └── components/
+│       ├── Card.vue       Page layout, announce URLs, copy buttons
+│       └── LcdPanel.vue   Calculator-style stats display
 └── public/
-    └── favicon.ico    Site icon (served as-is, not processed by Vite)
+    ├── page.json      Gauge data (written by the gauge container)
+    └── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
 ```
 
 ## Development

@@ -15,14 +15,23 @@
 	src: url('/fonts/monaspace-krypton.woff2') format('woff2');
 }
 
+@font-face {
+	font-family: 'Monaspace Radon';
+	font-style: normal;
+	font-weight: 100 900;
+	src: url('/fonts/monaspace-radon.woff2') format('woff2');
+}
+
 :root {
 	--text: #333;
+	--text-muted: #888;
 	--bg: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
 		--text: #ccc;
+		--text-muted: #ccc;
 		--bg: #111;
 	}
 }

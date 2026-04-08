@@ -1,22 +1,76 @@
 <script setup>
-import { inject } from 'vue'
+import { inject, ref } from 'vue'
 import LcdPanel from './LcdPanel.vue'
 
 const page = inject('page')
+
+const urls = [
+	'udp://open.ftorrent.com:443/announce',
+	'https://open.ftorrent.com/announce',
+	'wss://open.ftorrent.com',
+]
+
+const copied = ref(null)
+
+async function copy(url) {
+	await navigator.clipboard.writeText(url)
+	copied.value = url
+	setTimeout(() => { copied.value = null }, 1500)
+}
 </script>
 
 <template>
 	<div>
 		<h1>open.ftorrent.com</h1>
 
-		<LcdPanel />
+		<div class="announce-urls">
+			<div v-for="url in urls" :key="url" class="announce-row" @click="copy(url)">
+				<span>{{ url }}</span>
+				<span class="copy-link">{{ copied === url ? 'copied' : 'copy' }}</span>
+			</div>
+		</div>
 
-		<p>The gauge is a Node.js script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — page.json — that nginx serves as a static file. The Vue frontend fetches page.json and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.</p>
-
-		<p>A JSON file served by nginx is the simplest possible data path. No application server in the request path, no ports to expose, no process that can be crashed by a malformed HTTP request. The gauge writes, nginx serves, the frontend reads. Each piece can fail independently — if the gauge crashes, nginx keeps serving the last good page.json until the gauge restarts.</p>
-
-		<p>The gauge fires once just after the top of each UTC minute, not on a fixed interval. A 60-second setInterval drifts over time and can skip or double-fire at minute boundaries, which would create false gaps in the ring buffer. Clock alignment means exactly one tick per calendar minute.</p>
+		<LcdPanel class="m-6" />
 
 		<pre>{{ JSON.stringify(page, null, '\t') }}</pre>
 	</div>
 </template>
+
+<style scoped>
+h1 {
+	text-align: center;
+}
+
+.announce-urls {
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font-family: 'Monaspace Radon', monospace;
+	font-size: 1.3rem;
+	font-weight: 300;
+	color: var(--text-muted);
+	padding: 1rem;
+	text-align: center;
+	margin: 0.5rem 1.5rem;
+}
+
+.announce-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	cursor: pointer;
+}
+
+.announce-row:hover {
+	font-weight: 700;
+}
+
+.copy-link {
+	font-family: 'Jura', sans-serif;
+	font-size: 1rem;
+	font-weight: 700;
+	color: #aaa;
+	text-decoration: underline;
+	margin-left: 1rem;
+}
+</style>
