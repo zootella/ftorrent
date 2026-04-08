@@ -3,12 +3,14 @@ import { inject } from 'vue'
 
 const page = inject('page')
 
+const SEP = ' ' // digit group separator: ' ' for space, '\u2009' for thin space
+
 function fmt(n) {
-	return n.toLocaleString('en-US').replace(/,/g, ' ')
+	return n.toLocaleString('en-US').replace(/,/g, SEP)
 }
 
 function mb(bytes) {
-	return Math.round(bytes / 1048576)
+	return fmt(Math.ceil(bytes / 1048576)) + SEP + 'MB'
 }
 </script>
 
@@ -27,7 +29,7 @@ function mb(bytes) {
 			<div></div>
 			<div class="lcd-label">UDP announce</div>
 			<div></div>
-			<div class="lcd-right">{{ mb(page.memory.udp) }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.udp) }}</div>
 
 			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
 			<div></div>
@@ -35,7 +37,7 @@ function mb(bytes) {
 			<div></div>
 			<div class="lcd-label">HTTP announce</div>
 			<div></div>
-			<div class="lcd-right">{{ mb(page.memory.http) }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.http) }}</div>
 
 			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
 			<div></div>
@@ -43,10 +45,34 @@ function mb(bytes) {
 			<div></div>
 			<div class="lcd-label">WebRTC offer</div>
 			<div></div>
-			<div class="lcd-right">{{ mb(page.memory.ws) }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
 
-			<div class="lcd-right lcd-downtime-value">{{ fmt(page.downtime) }}</div>
+			<div class="lcd-right lcd-downtime-value">{{ fmt(page.downtime) }} minutes</div>
 			<div class="lcd-label lcd-downtime-label">Downtime past 24 hours</div>
+		</div>
+
+		<div class="lcd-narrow">
+
+			<div class="lcd-label">Downtime past 24 hours</div>
+			<div>{{ fmt(page.downtime) }} minutes</div>
+
+			<div class="lcd-label">UDP announce IPv4/IPv6</div>
+			<div>{{ fmt(page.served.udp4) }}</div>
+			<div>{{ fmt(page.served.udp6) }}</div>
+
+			<div class="lcd-label">HTTP announce IPv4/IPv6</div>
+			<div>{{ fmt(page.served.http4) }}</div>
+			<div>{{ fmt(page.served.http6) }}</div>
+
+			<div class="lcd-label">WebRTC offer IPv4/IPv6</div>
+			<div>{{ fmt(page.served.ws4) }}</div>
+			<div>{{ fmt(page.served.ws6) }}</div>
+
+			<div class="lcd-label">Memory in use UDP/HTTP/WS</div>
+			<div>{{ mb(page.memory.udp) }}</div>
+			<div>{{ mb(page.memory.http) }}</div>
+			<div>{{ mb(page.memory.ws) }}</div>
+
 		</div>
 	</div>
 </template>
@@ -97,5 +123,24 @@ function mb(bytes) {
 
 .lcd-downtime-label {
 	grid-column: 5 / 8;
+}
+
+.lcd-narrow {
+	display: none;
+	text-align: right;
+}
+
+.lcd-narrow .lcd-label {
+	text-align: right;
+}
+
+@media (max-width: 1024px) {
+	.lcd-grid {
+		display: none;
+	}
+
+	.lcd-narrow {
+		display: block;
+	}
 }
 </style>
