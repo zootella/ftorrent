@@ -54,6 +54,9 @@ async function copy() {
 	margin-left: 1rem;
 	white-space: nowrap;
 	text-shadow: none;
+	display: inline-block;
+	min-width: 4ch;
+	text-align: center;
 }
 
 .url-copied {
