@@ -1,6 +1,6 @@
 <script setup>
 import { inject, ref } from 'vue'
-import LcdPanel from './LcdPanel.vue'
+import Panel from './Panel.vue'
 
 const page = inject('page')
 
@@ -30,7 +30,7 @@ async function copy(url) {
 			</div>
 		</div>
 
-		<LcdPanel class="m-6" />
+		<Panel class="m-6" />
 
 		<pre>{{ JSON.stringify(page, null, '\t') }}</pre>
 	</div>

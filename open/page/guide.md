@@ -54,7 +54,7 @@ open/page/
 │   ├── App.vue        Root component
 │   └── components/
 │       ├── Card.vue       Page layout, announce URLs, copy buttons
-│       ├── LcdPanel.vue   Calculator-style stats display
+│       ├── Panel.vue      Calculator-style stats display
 │       └── Space.vue      Three.js globe banner
 ├── public/
 │   ├── page.json      Gauge data (written by the gauge container)
