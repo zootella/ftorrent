@@ -66,4 +66,13 @@ h1 {
 	color: var(--text-muted);
 	text-decoration: underline;
 }
+
+@media (max-width: 480px) {
+	h1 {
+		margin: 2rem 0.5rem;
+	}
+	.announce-urls {
+		margin: 2rem 0.5rem;
+	}
+}
 </style>

@@ -11,14 +11,14 @@ const copied = ref(false)
 async function copy() {
 	await navigator.clipboard.writeText(props.href)
 	copied.value = true
-	setTimeout(() => { copied.value = false }, 1500)
+	setTimeout(() => { copied.value = false }, 350)
 }
 </script>
 
 <template>
 	<div class="url-row" @click="copy">
 		<span class="url-text">{{ href }}</span>
-		<span class="url-copy">{{ copied ? 'copied' : 'copy' }}</span>
+		<span class="url-copy" :class="{ 'url-copied': copied }">{{ copied ? '✔' : 'copy' }}</span>
 	</div>
 </template>
 
@@ -54,5 +54,18 @@ async function copy() {
 	margin-left: 1rem;
 	white-space: nowrap;
 	text-shadow: none;
+}
+
+.url-copied {
+	text-decoration: none;
+}
+
+@media (max-width: 480px) {
+	.url-row {
+		font-size: 1rem;
+	}
+	.url-copy {
+		font-size: 1rem;
+	}
 }
 </style>

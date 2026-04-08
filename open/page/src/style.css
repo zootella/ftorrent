@@ -52,13 +52,6 @@ h1 {
 	font-weight: 300;
 }
 
-/* Tablet / phone landscape */
-@media (max-width: 1024px) {
-	html {
-		font-size: 16px;
-	}
-}
-
 /* Phone portrait */
 @media (max-width: 480px) {
 	html {

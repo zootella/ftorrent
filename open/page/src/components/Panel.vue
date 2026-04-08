@@ -18,43 +18,28 @@ function mb(bytes) {
 	<div class="lcd-panel">
 		<div class="lcd-grid">
 			<div class="lcd-label lcd-right">IPv4</div>
-			<div></div>
 			<div class="lcd-label lcd-right">IPv6</div>
-			<div></div>
 			<div class="lcd-label">Past 24 hours</div>
-			<div></div>
 			<div class="lcd-label lcd-right">Memory in use</div>
 
 			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
-			<div></div>
 			<div class="lcd-right">{{ fmt(page.served.udp6) }}</div>
-			<div></div>
 			<div class="lcd-label">UDP announce</div>
-			<div></div>
 			<div class="lcd-right">{{ mb(page.memory.udp) }}</div>
 
 			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
-			<div></div>
 			<div class="lcd-right">{{ fmt(page.served.http6) }}</div>
-			<div></div>
 			<div class="lcd-label">HTTP announce</div>
-			<div></div>
 			<div class="lcd-right">{{ mb(page.memory.http) }}</div>
 
 			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
-			<div></div>
 			<div class="lcd-right">{{ fmt(page.served.ws6) }}</div>
-			<div></div>
 			<div class="lcd-label">WebRTC offer</div>
-			<div></div>
 			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div></div>
 			<div class="lcd-right">{{ fmt(page.downtime) }} minutes</div>
-			<div></div>
 			<div class="lcd-label">Downtime</div>
-			<div></div>
 			<div></div>
 		</div>
 

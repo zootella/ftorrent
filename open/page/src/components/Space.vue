@@ -47,7 +47,7 @@ onMounted(() => {
 	globe = new THREE.Mesh(geometry, material)
 	globe.position.set(0, globeY, 0)
 
-	// Axis straight up (no tilt for now)
+	// Tilt axis 17° to show equatorial/southern latitudes
 	globe.rotation.x = -17 * Math.PI / 180
 
 	// Set rotation based on current UTC time
