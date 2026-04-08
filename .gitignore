@@ -162,6 +162,9 @@ vendor/
 .vitepress/cache/
 .contentlayer/
 
+# Earth textures (large JPEGs, deploy separately)
+open/page/public/textures/
+
 # Hugo
 resources/
 .hugo_build.lock

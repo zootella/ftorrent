@@ -1,11 +1,11 @@
 
 <script setup>
 
-import Card from './components/Card.vue'
+import Space from './components/Space.vue'
 
 </script>
 <template>
 
-<Card />
+<Space />
 
 </template>
