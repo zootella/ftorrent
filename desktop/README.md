@@ -1,5 +1,5 @@
 
-_ftorrent/desktop_
+_ftorrent/desktop/README.md_
 
 # Desktop Client
 

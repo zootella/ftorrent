@@ -1,6 +1,6 @@
 
-_ftorrent/good_
+_ftorrent/good/README.md [good.ftorrent.com](https://good.ftorrent.com)_
 
-# IPv6 Connection Checker
+# Public IPv6 Connection Checker
 
 TODO

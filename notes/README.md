@@ -1,5 +1,5 @@
 
-_ftorrent/notes_
+_ftorrent/notes/README.md_
 
 # Notes and Scraps
 

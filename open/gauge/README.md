@@ -1,10 +1,11 @@
 
-_ftorrent/open/gauge_
+_ftorrent/open/gauge/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
-# Server Statistics
+# Public Tracker Dashboard Back End
 
-*Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
-*Created: 2026-Apr-07 | Last reviewed: 2026-Apr-07*
+> <sub>Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6</sub>
+> <sub>Created: 2026-Apr-07</sub>
+> <sub>Last reviewed: 2026-Apr-07</sub>
 
 | Component | Version |
 |---|---|

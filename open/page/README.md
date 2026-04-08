@@ -1,7 +1,7 @@
 
-_ftorrent/open/page_
+_ftorrent/open/page/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
-# Static Dashboard
+# Public Tracker Dashboard Front End
 
 *Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
 *Created: 2026-Apr-06 | Last reviewed: 2026-Apr-06*
