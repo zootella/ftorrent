@@ -3,13 +3,15 @@ _ftorrent/open/gauge/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 # Public Tracker Dashboard Back End
 
-> <sub>Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6</sub>
-> <sub>Created: 2026-Apr-07</sub>
-> <sub>Last reviewed: 2026-Apr-07</sub>
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
+>
+> Created: 2026-Apr-07
+>
+> Last reviewed: 2026-Apr-07
 
 | Component | Version |
 |---|---|
-| Node | 22+ |
+| Node | 22 |
 
 ## What this is and where it fits
 
