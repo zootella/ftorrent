@@ -161,7 +161,7 @@ const quote = quotes[day % quotes.length]
 
 <style scoped>
 .quote {
-	max-width: 40rem;
+	max-width: 50rem;
 	margin: 2rem auto;
 	padding: 0 2rem;
 	box-sizing: border-box;
