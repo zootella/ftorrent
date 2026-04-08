@@ -1,17 +1,17 @@
 {
 	"minute": 659,
 	"memory": {
-		"udp": 0,
-		"http": 0,
-		"ws": 0
+		"udp": 5083136,
+		"http": 27623424,
+		"ws": 33914880
 	},
 	"served": {
-		"udp4": 0,
-		"udp6": 0,
-		"http4": 0,
-		"http6": 0,
-		"ws4": 0,
-		"ws6": 0
+		"udp4": 1234567,
+		"udp6": 1234,
+		"http4": 123456,
+		"http6": 123,
+		"ws4": 1234,
+		"ws6": 12
 	},
-	"downtime": 1439
+	"downtime": 0
 }

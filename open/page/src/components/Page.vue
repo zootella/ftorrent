@@ -33,8 +33,6 @@ async function copy(url) {
 	</div>
 
 	<Panel style="margin: 2rem" />
-
-	<pre>{{ JSON.stringify(page, null, '\t') }}</pre>
 </template>
 
 <style scoped>

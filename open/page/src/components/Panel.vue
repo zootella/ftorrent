@@ -1,11 +1,14 @@
 <script setup>
-const downtime = '0 minutes'
-const udp4 = 1234567, udp6 = 1234, udpMem = 56
-const http4 = 123456, http6 = 123, httpMem = 12
-const ws4 = 1234, ws6 = 12, wsMem = 5
+import { inject } from 'vue'
+
+const page = inject('page')
 
 function fmt(n) {
 	return n.toLocaleString('en-US').replace(/,/g, ' ')
+}
+
+function mb(bytes) {
+	return Math.round(bytes / 1048576)
 }
 </script>
 
@@ -18,31 +21,31 @@ function fmt(n) {
 			<div></div>
 			<div class="lcd-label lcd-right lcd-mem-header">Memory in use</div>
 
-			<div class="lcd-right">{{ fmt(udp4) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
 			<div></div>
-			<div class="lcd-right">{{ fmt(udp6) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.udp6) }}</div>
 			<div></div>
 			<div class="lcd-label">UDP announce</div>
 			<div></div>
-			<div class="lcd-right">{{ udpMem }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.udp) }} MB</div>
 
-			<div class="lcd-right">{{ fmt(http4) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
 			<div></div>
-			<div class="lcd-right">{{ fmt(http6) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.http6) }}</div>
 			<div></div>
 			<div class="lcd-label">HTTP announce</div>
 			<div></div>
-			<div class="lcd-right">{{ httpMem }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.http) }} MB</div>
 
-			<div class="lcd-right">{{ fmt(ws4) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
 			<div></div>
-			<div class="lcd-right">{{ fmt(ws6) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.ws6) }}</div>
 			<div></div>
 			<div class="lcd-label">WebRTC offer</div>
 			<div></div>
-			<div class="lcd-right">{{ wsMem }} MB</div>
+			<div class="lcd-right">{{ mb(page.memory.ws) }} MB</div>
 
-			<div class="lcd-right lcd-downtime-value">{{ fmt(downtime) }}</div>
+			<div class="lcd-right lcd-downtime-value">{{ fmt(page.downtime) }}</div>
 			<div class="lcd-label lcd-downtime-label">Downtime past 24 hours</div>
 		</div>
 	</div>
