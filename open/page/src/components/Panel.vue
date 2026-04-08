@@ -21,7 +21,9 @@ function mb(bytes) {
 			<div></div>
 			<div class="lcd-label lcd-right">IPv6</div>
 			<div></div>
-			<div class="lcd-label lcd-right lcd-mem-header">Memory in use</div>
+			<div class="lcd-label">Past 24 hours</div>
+			<div></div>
+			<div class="lcd-label lcd-right">Memory in use</div>
 
 			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
 			<div></div>
@@ -47,32 +49,55 @@ function mb(bytes) {
 			<div></div>
 			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
 
-			<div class="lcd-right lcd-downtime-value">{{ fmt(page.downtime) }} minutes</div>
-			<div class="lcd-label lcd-downtime-label">Downtime past 24 hours</div>
+			<div></div>
+			<div></div>
+			<div class="lcd-right">{{ fmt(page.downtime) }} minutes</div>
+			<div></div>
+			<div class="lcd-label">Downtime</div>
+			<div></div>
+			<div></div>
 		</div>
 
 		<div class="lcd-narrow">
+			<div class="lcd-label lcd-right">Past 24 hours</div>
+			<div></div>
 
-			<div class="lcd-label">Downtime past 24 hours</div>
-			<div>{{ fmt(page.downtime) }} minutes</div>
+			<div class="lcd-right">{{ fmt(page.downtime) }} minutes</div>
+			<div class="lcd-label">Downtime</div>
 
-			<div class="lcd-label">UDP announce IPv4/IPv6</div>
-			<div>{{ fmt(page.served.udp4) }}</div>
-			<div>{{ fmt(page.served.udp6) }}</div>
+			<div class="lcd-label lcd-right">UDP announce</div>
+			<div></div>
 
-			<div class="lcd-label">HTTP announce IPv4/IPv6</div>
-			<div>{{ fmt(page.served.http4) }}</div>
-			<div>{{ fmt(page.served.http6) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
+			<div class="lcd-label">IPv4</div>
+			<div class="lcd-right">{{ fmt(page.served.udp6) }}</div>
+			<div class="lcd-label">IPv6</div>
 
-			<div class="lcd-label">WebRTC offer IPv4/IPv6</div>
-			<div>{{ fmt(page.served.ws4) }}</div>
-			<div>{{ fmt(page.served.ws6) }}</div>
+			<div class="lcd-label lcd-right">HTTP announce</div>
+			<div></div>
 
-			<div class="lcd-label">Memory in use UDP/HTTP/WS</div>
-			<div>{{ mb(page.memory.udp) }}</div>
-			<div>{{ mb(page.memory.http) }}</div>
-			<div>{{ mb(page.memory.ws) }}</div>
+			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
+			<div class="lcd-label">IPv4</div>
+			<div class="lcd-right">{{ fmt(page.served.http6) }}</div>
+			<div class="lcd-label">IPv6</div>
 
+			<div class="lcd-label lcd-right">WebRTC offer</div>
+			<div></div>
+
+			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
+			<div class="lcd-label">IPv4</div>
+			<div class="lcd-right">{{ fmt(page.served.ws6) }}</div>
+			<div class="lcd-label">IPv6</div>
+
+			<div class="lcd-label lcd-right">Memory in use</div>
+			<div></div>
+
+			<div class="lcd-right">{{ mb(page.memory.udp) }}</div>
+			<div class="lcd-label">UDP</div>
+			<div class="lcd-right">{{ mb(page.memory.http) }}</div>
+			<div class="lcd-label">HTTP</div>
+			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
+			<div class="lcd-label">WS</div>
 		</div>
 	</div>
 </template>
@@ -96,7 +121,7 @@ function mb(bytes) {
 	display: inline-grid;
 	align-items: baseline;
 	margin: 0 auto;
-	grid-template-columns: auto 2rem auto 0.8rem auto 7rem auto;
+	grid-template-columns: auto 2rem auto 0.8rem auto 2rem auto;
 	row-gap: 0.25rem;
 }
 
@@ -113,26 +138,14 @@ function mb(bytes) {
 	text-align: right;
 }
 
-.lcd-mem-header {
-	grid-column: 5 / 8;
-}
-
-.lcd-downtime-value {
-	grid-column: 1 / 4;
-}
-
-.lcd-downtime-label {
-	grid-column: 5 / 8;
-}
 
 .lcd-narrow {
 	display: none;
-	text-align: right;
+	grid-template-columns: auto auto;
+	align-items: baseline;
+	gap: 0.25rem 1rem;
 }
 
-.lcd-narrow .lcd-label {
-	text-align: right;
-}
 
 @media (max-width: 1024px) {
 	.lcd-grid {
@@ -140,7 +153,7 @@ function mb(bytes) {
 	}
 
 	.lcd-narrow {
-		display: block;
+		display: inline-grid;
 	}
 }
 </style>

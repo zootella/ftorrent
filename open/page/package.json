@@ -10,7 +10,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"local": "vite",
-		"upload": "vite build && ./upload.hide.sh"
+		"upload": "vite build && rm -f dist/page.json && ./upload.hide.sh"
 	},
 	"dependencies": {
 		"three": "^0.183.2",

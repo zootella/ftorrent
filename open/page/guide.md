@@ -52,10 +52,7 @@ open/page/
 │   ├── main.js        Creates and mounts the Vue app
 │   ├── style.css      Tailwind import, @font-face declarations, base styles
 │   ├── App.vue        Root component
-│   └── components/
-│       ├── Card.vue       Page layout, announce URLs, copy buttons
-│       ├── Panel.vue      Calculator-style stats display
-│       └── Space.vue      Three.js globe banner
+│   └── components/    Vue components (Page, Panel, Space, Quote, Url)
 ├── public/
 │   ├── page.json      Gauge data (written by the gauge container)
 │   ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)

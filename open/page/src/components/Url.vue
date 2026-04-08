@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 const props = defineProps({
 	href: String,
+	color: String,
 })
 
 const copied = ref(false)
@@ -31,11 +32,12 @@ async function copy() {
 	font-family: 'Monaspace Radon', monospace;
 	font-size: 1.3rem;
 	font-weight: 300;
-	color: var(--text-muted);
+	color: var(--text);
 }
 
 .url-row:hover {
-	font-weight: 700;
+	color: v-bind(color);
+	text-shadow: 0 0 2px v-bind(color);
 }
 
 .url-text {
@@ -47,9 +49,10 @@ async function copy() {
 	font-family: 'Jura', sans-serif;
 	font-size: 1rem;
 	font-weight: 700;
-	color: #aaa;
+	color: var(--text-muted);
 	text-decoration: underline;
 	margin-left: 1rem;
 	white-space: nowrap;
+	text-shadow: none;
 }
 </style>
