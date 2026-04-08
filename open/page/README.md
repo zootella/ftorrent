@@ -3,14 +3,13 @@ _ftorrent/open/page/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 # Public Tracker Dashboard Front End
 
-*Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
-*Created: 2026-Apr-06 | Last reviewed: 2026-Apr-06*
-
-| Component | Version |
-|---|---|
-| [Vue](https://vuejs.org/) | 3.5 |
-| [Vite](https://vite.dev/) | 8.0 |
-| Node (build-time only) | 22+ |
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
+> <br>Created: 2026-Apr
+> <br>Last reviewed: 2026-Apr
+> <br>[Vue](https://vuejs.org/): 3.5
+> <br>[Vite](https://vite.dev/): 8.0
+> <br>Node: 22
+> <br>[Three.js](https://threejs.org/): 0.183
 
 The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application. It shows statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) by reading a `page.json` file that the gauge container generates every minute. The page is built on a development machine and deployed as static files served by nginx — no application server in the request path.
 

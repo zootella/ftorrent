@@ -3,17 +3,17 @@ _ftorrent/open/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
-*Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
-*Created: 2026-Apr-03 | Last reviewed: 2026-Apr-04*
-
-| Component | Version |
-|---|---|
-| [Aquatic](https://github.com/greatest-ape/aquatic) | v0.9.0 |
-| Rust (pinned in Dockerfiles) | 1.85 |
-| Docker Engine | 29.x |
-| Docker Compose | V2 |
-| Linux kernel (minimum) | 5.8+ |
-| Docker default seccomp profile | [moby/profiles@main](https://github.com/moby/profiles/blob/main/seccomp/default.json) as of 2026-Apr-02 |
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
+> <br>Created: 2026-Apr
+> <br>Last reviewed: 2026-Apr
+> <br>[Aquatic](https://github.com/greatest-ape/aquatic): v0.9.0
+> <br>Rust: 1.85
+> <br>Docker Engine: 29
+> <br>Docker Compose: V2
+> <br>Linux kernel: 5.8
+> <br>Docker moby [Seccomp profile](https://github.com/moby/profiles/blob/main/seccomp/default.json)
+> from commit [5bb2d1a 2025-May-28](https://github.com/moby/profiles/blob/fa50b7287199d1c781284d1a34d1395a62e57f1e/seccomp/default.json)
+> copied 2026-Apr-3
 
 ## Why run a public tracker?
 

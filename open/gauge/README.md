@@ -4,8 +4,8 @@ _ftorrent/open/gauge/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 # Public Tracker Dashboard Back End
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
-> <br>Created: 2026-Apr-07
-> <br>Last reviewed: 2026-Apr-07
+> <br>Created: 2026-Apr
+> <br>Last reviewed: 2026-Apr
 > <br>Node: 22
 
 ## What this is and where it fits
