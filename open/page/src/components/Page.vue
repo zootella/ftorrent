@@ -58,7 +58,7 @@ h1 {
 	text-align: center;
 	margin: 2rem;
 	font-family: 'Jura', sans-serif;
-	font-weight: 700;
+	font-weight: var(--muted-weight);
 	font-size: 1rem;
 }
 

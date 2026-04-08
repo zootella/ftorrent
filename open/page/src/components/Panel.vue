@@ -121,8 +121,8 @@ function mb(bytes) {
 	display: inline-grid;
 	align-items: baseline;
 	margin: 0 auto;
-	grid-template-columns: auto 2rem auto 0.8rem auto 2rem auto;
-	row-gap: 0.25rem;
+	grid-template-columns: auto auto auto auto;
+	gap: 0.25rem 2rem;
 }
 
 .lcd-label {
@@ -132,6 +132,7 @@ function mb(bytes) {
 	font-weight: 700;
 	text-shadow: none;
 	text-align: left;
+	white-space: nowrap;
 }
 
 .lcd-right {

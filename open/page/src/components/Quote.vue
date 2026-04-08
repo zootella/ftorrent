@@ -163,12 +163,14 @@ const quote = quotes[day % quotes.length]
 .quote {
 	max-width: 40rem;
 	margin: 2rem auto;
+	padding: 0 2rem;
+	box-sizing: border-box;
 	text-align: center;
 }
 
 .quote-title {
 	font-family: 'Jura', sans-serif;
-	font-weight: 700;
+	font-weight: var(--muted-weight);
 	font-size: 1rem;
 	color: var(--text-muted);
 	margin-bottom: 1.0rem;
@@ -184,7 +186,7 @@ blockquote {
 
 .attribution {
 	font-family: 'Jura', sans-serif;
-	font-weight: 700;
+	font-weight: var(--muted-weight);
 	font-size: 1rem;
 	color: var(--text-muted);
 	margin-top: 1.0rem;

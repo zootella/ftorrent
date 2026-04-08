@@ -48,7 +48,7 @@ async function copy() {
 .url-copy {
 	font-family: 'Jura', sans-serif;
 	font-size: 1rem;
-	font-weight: 700;
+	font-weight: var(--muted-weight);
 	color: var(--text-muted);
 	text-decoration: underline;
 	margin-left: 1rem;

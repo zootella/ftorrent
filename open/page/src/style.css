@@ -25,6 +25,7 @@
 :root {
 	--text: #333;
 	--text-muted: #888;
+	--muted-weight: 500;
 	--bg: #fff;
 }
 
@@ -49,6 +50,20 @@ h1, h2, h3 {
 h1 {
 	font-size: 3rem;
 	font-weight: 300;
+}
+
+/* Tablet / phone landscape */
+@media (max-width: 1024px) {
+	html {
+		font-size: 16px;
+	}
+}
+
+/* Phone portrait */
+@media (max-width: 480px) {
+	html {
+		font-size: 14px;
+	}
 }
 
 h2 {
