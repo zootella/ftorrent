@@ -8,7 +8,7 @@ const TICK_MS = 1000 // how often the globe updates rotation
 const TIME_SCALE = 1 // 1 = real time, 10 = 10x faster, etc.
 
 const container = ref(null)
-let renderer, scene, camera, globe
+let renderer, scene, camera, globe, tickInterval
 const startTime = Date.now()
 const startHours = new Date().getUTCHours() + new Date().getUTCMinutes() / 60 + new Date().getUTCSeconds() / 3600
 
@@ -16,23 +16,24 @@ onMounted(() => {
 	scene = new THREE.Scene()
 	scene.background = new THREE.Color(0x000000)
 
+	const el = container.value
 	const FOV = 10
 	const GLOBE_RADIUS = 1
-	const aspect = window.innerWidth / window.innerHeight
+	const aspect = el.clientWidth / el.clientHeight
 	const halfFovRad = THREE.MathUtils.degToRad(FOV / 2)
 
-	// Position camera so globe width matches viewport width
+	// Position camera so globe width matches container width
 	const CAMERA_Z = GLOBE_RADIUS / (Math.tan(halfFovRad) * aspect) * 0.5
 	camera = new THREE.PerspectiveCamera(FOV, aspect, 0.1, 100)
 	camera.position.set(0, 0, CAMERA_Z)
 
-	// Position globe so its top touches the top-center of the viewport
+	// Position globe so its top touches the top-center of the container
 	const visibleHalfHeight = CAMERA_Z * Math.tan(halfFovRad)
 	const GAP = 0.025
 	const globeY = visibleHalfHeight - GLOBE_RADIUS - GAP
 
 	renderer = new THREE.WebGLRenderer({ antialias: true })
-	renderer.setSize(window.innerWidth, window.innerHeight)
+	renderer.setSize(el.clientWidth, el.clientHeight)
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 	container.value.appendChild(renderer.domElement)
 
@@ -82,8 +83,8 @@ onMounted(() => {
 		canvas.addEventListener('pointerleave', () => { isDragging = false })
 	}
 
-	// Update rotation once per minute
-	setInterval(() => {
+	// Update rotation periodically
+	tickInterval = setInterval(() => {
 		updateRotation()
 		render()
 	}, TICK_MS)
@@ -108,9 +109,10 @@ function render() {
 }
 
 function onResize() {
+	const el = container.value
 	const FOV = 10
 	const GLOBE_RADIUS = 1
-	const aspect = window.innerWidth / window.innerHeight
+	const aspect = el.clientWidth / el.clientHeight
 	const halfFovRad = THREE.MathUtils.degToRad(FOV / 2)
 	const z = GLOBE_RADIUS / (Math.tan(halfFovRad) * aspect) * 0.5
 	camera.aspect = aspect
@@ -120,11 +122,12 @@ function onResize() {
 	const visibleHalfHeight = z * Math.tan(halfFovRad)
 	globe.position.y = visibleHalfHeight - GLOBE_RADIUS - 0.025
 
-	renderer.setSize(window.innerWidth, window.innerHeight)
+	renderer.setSize(el.clientWidth, el.clientHeight)
 	render()
 }
 
 onUnmounted(() => {
+	clearInterval(tickInterval)
 	window.removeEventListener('resize', onResize)
 	renderer?.dispose()
 })
@@ -136,8 +139,8 @@ onUnmounted(() => {
 
 <style scoped>
 .space {
-	width: 100vw;
-	height: 100vh;
+	width: 100%;
+	height: 100%;
 	overflow: hidden;
 }
 </style>

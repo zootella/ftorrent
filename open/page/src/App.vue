@@ -1,11 +1,11 @@
 
 <script setup>
 
-import Space from './components/Space.vue'
+import Page from './components/Page.vue'
 
 </script>
 <template>
 
-<Space />
+<Page />
 
 </template>
