@@ -1,2 +1,6 @@
 
-# ftorrent/notes
+_ftorrent/notes_
+
+# Notes and Scraps
+
+TODO

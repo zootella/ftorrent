@@ -1,4 +1,7 @@
-# The open.ftorrent.com gauge
+
+_ftorrent/open/gauge_
+
+# Server Statistics
 
 *Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
 *Created: 2026-Apr-07 | Last reviewed: 2026-Apr-07*

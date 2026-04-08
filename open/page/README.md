@@ -1,4 +1,7 @@
-# Building the open.ftorrent.com dashboard
+
+_ftorrent/open/page_
+
+# Static Dashboard
 
 *Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6*
 *Created: 2026-Apr-06 | Last reviewed: 2026-Apr-06*
