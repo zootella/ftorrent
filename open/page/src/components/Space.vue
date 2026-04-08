@@ -2,8 +2,15 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
 
+const DRAG_ENABLED = false
+const TEST_HOUR = null // set to 0-24 to override, null for live UTC
+const TICK_MS = 1000 // how often the globe updates rotation
+const TIME_SCALE = 1 // 1 = real time, 10 = 10x faster, etc.
+
 const container = ref(null)
 let renderer, scene, camera, globe
+const startTime = Date.now()
+const startHours = new Date().getUTCHours() + new Date().getUTCMinutes() / 60 + new Date().getUTCSeconds() / 3600
 
 onMounted(() => {
 	scene = new THREE.Scene()
@@ -31,7 +38,7 @@ onMounted(() => {
 
 	// Globe
 	const geometry = new THREE.SphereGeometry(1, 64, 64)
-	const texture = new THREE.TextureLoader().load('/textures/earth-8k-q80.jpg', () => {
+	const texture = new THREE.TextureLoader().load('/images/april.jpg', () => {
 		render()
 	})
 	texture.colorSpace = THREE.SRGBColorSpace
@@ -55,33 +62,45 @@ onMounted(() => {
 	const ambient = new THREE.AmbientLight(0xffffff, 0.3)
 	scene.add(ambient)
 
-	// Drag to rotate globe manually
-	let isDragging = false
-	let lastX = 0
-	const canvas = renderer.domElement
-	canvas.addEventListener('pointerdown', (e) => {
-		isDragging = true
-		lastX = e.clientX
-	})
-	canvas.addEventListener('pointermove', (e) => {
-		if (!isDragging) return
-		const dx = e.clientX - lastX
-		globe.rotation.y += dx * 0.005
-		lastX = e.clientX
+	// Drag to rotate globe manually (for testing)
+	if (DRAG_ENABLED) {
+		let isDragging = false
+		let lastX = 0
+		const canvas = renderer.domElement
+		canvas.addEventListener('pointerdown', (e) => {
+			isDragging = true
+			lastX = e.clientX
+		})
+		canvas.addEventListener('pointermove', (e) => {
+			if (!isDragging) return
+			const dx = e.clientX - lastX
+			globe.rotation.y += dx * 0.005
+			lastX = e.clientX
+			render()
+		})
+		canvas.addEventListener('pointerup', () => { isDragging = false })
+		canvas.addEventListener('pointerleave', () => { isDragging = false })
+	}
+
+	// Update rotation once per minute
+	setInterval(() => {
+		updateRotation()
 		render()
-	})
-	canvas.addEventListener('pointerup', () => { isDragging = false })
-	canvas.addEventListener('pointerleave', () => { isDragging = false })
+	}, TICK_MS)
 
 	window.addEventListener('resize', onResize)
 })
 
 function updateRotation() {
 	if (!globe) return
-	const now = new Date()
-	const hours = now.getUTCHours() + now.getUTCMinutes() / 60
-	// Full rotation (2π) per 24 hours
-	globe.rotation.y = (hours / 24) * Math.PI * 2
+	let hours
+	if (TEST_HOUR !== null) {
+		hours = TEST_HOUR
+	} else {
+		const elapsed = (Date.now() - startTime) / 3600000 // real hours elapsed
+		hours = startHours + elapsed * TIME_SCALE
+	}
+	globe.rotation.y = Math.PI / 2 + (hours / 24) * Math.PI * 2
 }
 
 function render() {

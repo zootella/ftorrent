@@ -54,11 +54,29 @@ open/page/
 │   ├── App.vue        Root component
 │   └── components/
 │       ├── Card.vue       Page layout, announce URLs, copy buttons
-│       └── LcdPanel.vue   Calculator-style stats display
-└── public/
-    ├── page.json      Gauge data (written by the gauge container)
-    └── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
+│       ├── LcdPanel.vue   Calculator-style stats display
+│       └── Space.vue      Three.js globe banner
+├── public/
+│   ├── page.json      Gauge data (written by the gauge container)
+│   ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
+│   └── images/
+│       └── april.jpg  Earth day texture (8K, see below)
+└── earth.hide.md      Research notes on the globe component (gitignored)
 ```
+
+## Earth texture
+
+The globe banner uses a NASA Blue Marble: Next Generation satellite composite — the April dataset, cloudless, with ocean bathymetry. The original is public domain (US government work, no restrictions).
+
+**Source:** [NASA Visible Earth — Blue Marble: Next Generation](https://visibleearth.nasa.gov/collection/1484/blue-marble) — downloaded the April `world.topo.bathy.200404.3x21600x10800.jpg` (21,600 x 10,800 pixels, ~27 MB).
+
+**Downscaled** to 8,192 x 4,096 (power of two for WebGL) at JPEG quality 80 using ImageMagick:
+
+```bash
+magick world.topo.bathy.200404.3x21600x10800.jpg -resize 8192x4096! -quality 80 april.jpg
+```
+
+The result is 3.2 MB — sharp on retina displays at the ISS-arc zoom level, well within WebGL texture size limits on all modern GPUs.
 
 ## Development
 
@@ -69,6 +87,20 @@ pnpm dev     # starts Vite dev server with hot reload
 pnpm build   # produces dist/ for deployment
 pnpm preview # serves the built dist/ locally for testing
 ```
+
+**page.json in dev vs production.** The Vue app fetches `/page.json` on load for tracker statistics. The same URL resolves to different files depending on the environment:
+
+```
+Development (pnpm dev)
+  Browser fetches    http://localhost:5173/page.json
+  Vite serves from   open/page/public/page.json        ← placeholder with zeroes, committed to repo
+
+Production (server)
+  Browser fetches    https://open.ftorrent.com/page.json
+  nginx serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
+```
+
+The built `dist/page.json` from `pnpm build` is never used in production — nginx serves the gauge's live copy from the shared data volume instead.
 
 ## Deployment
 
