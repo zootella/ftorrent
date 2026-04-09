@@ -1,4 +1,4 @@
-import { readFile, readdir, writeFile, rename } from 'node:fs/promises'
+import { readFile, readdir, writeFile, rename, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
 // ---------------------------------------------------------------------------
@@ -16,6 +16,13 @@ import { join } from 'node:path'
 const gaugeDir = process.env.GAUGE_DIR || '../page'
 const publicDir = join(gaugeDir, 'public')
 const ringPath = join(gaugeDir, 'ring.json')
+
+// The internet reachability probe file. A cron job on the host pings an
+// external IP every minute and touches this file on success. The gauge
+// checks its mtime — if it's stale, the server can't reach the internet
+// and this minute doesn't count as up. See probe.sh and the README.
+const probePath = join(gaugeDir, 'probe')
+const PROBE_MAX_AGE_MS = 90_000 // 90 seconds — absorbs jitter between cron and gauge
 
 // Where container cgroup files live. In Docker, /sys/fs/cgroup is mounted
 // at /host-cgroup (read-only). Locally this path won't exist, so memory
@@ -240,10 +247,29 @@ async function writeAtomic(path, data) {
 }
 
 // ---------------------------------------------------------------------------
+// Probe check
+// ---------------------------------------------------------------------------
+
+// Returns true if the probe file was touched within the last 90 seconds.
+// Returns false if the file doesn't exist or is stale (local dev, or ISP down).
+async function probeIsFresh() {
+	try {
+		const { mtimeMs } = await stat(probePath)
+		return (Date.now() - mtimeMs) < PROBE_MAX_AGE_MS
+	} catch {
+		return false
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Tick — runs once per minute
 // ---------------------------------------------------------------------------
 
 async function tick() {
+	// If the server can't reach the internet, skip this tick entirely.
+	// No ring slot is written, so countDowntime counts this minute as down.
+	if (!await probeIsFresh()) return
+
 	const memory = await readTrackerMemory()
 	const served = await scrapePrometheus()
 	const day = currentDay()
