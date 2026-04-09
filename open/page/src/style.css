@@ -43,6 +43,15 @@ body {
 	background: var(--bg);
 }
 
+@media (max-width: 480px) {
+	html, body {
+		background: #000;
+	}
+	#app {
+		background: var(--bg);
+	}
+}
+
 h1, h2, h3 {
 	font-family: 'Jura', sans-serif;
 }

@@ -57,6 +57,7 @@ h1 {
 .footer {
 	text-align: center;
 	margin: 2rem;
+	padding-bottom: 2rem;
 	font-family: 'Jura', sans-serif;
 	font-weight: var(--muted-weight);
 	font-size: 1rem;
