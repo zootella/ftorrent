@@ -22,6 +22,9 @@
 <meta property="og:image:height" content="600" /><!-- note lots of chatter about how 630 is actually more correct -->
 <meta name="twitter:card" content="summary_large_image" /><!-- show a large image card, not a small thumbnail -->
 
+<!-- Set the Safari/mobile browser chrome (status bar, rounded-corner gutters) to match the infinite blackness of space; only affects browser UI, not page content or light/dark mode styles -->
+<meta name="theme-color" content="#000">
+
 <link rel="preload" href="/page.json" as="fetch" crossorigin><!-- Tell the browser to start fetching page.json now, while it downloads and parses the JS bundle. By the time Vue mounts and the app calls fetch('/page.json'), the response is already in the browser cache. This avoids a sequential roundtrip: load HTML → load JS → fetch data. Instead: load HTML → load JS + fetch data in parallel → mount with data ready. -->
 
 </head>
