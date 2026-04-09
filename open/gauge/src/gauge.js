@@ -16,6 +16,7 @@ import { join } from 'node:path'
 const gaugeDir = process.env.GAUGE_DIR || '../page'
 const publicDir = join(gaugeDir, 'public')
 const ringPath = join(gaugeDir, 'ring.json')
+const daysPath = join(gaugeDir, 'days.json')
 
 // The internet reachability probe file. A cron job on the host pings an
 // external IP every minute and touches this file on success. The gauge
@@ -115,6 +116,81 @@ function countDowntime(minutes, day, minute) {
 		}
 	}
 	return downtime
+}
+
+// ---------------------------------------------------------------------------
+// Days — 90-day uptime history
+// ---------------------------------------------------------------------------
+
+// days.json is a sparse object keyed by day number. Values are up-minutes
+// (0–1440). Only days when the gauge actually ran have entries. Missing
+// keys mean the server was fully down that day — no process was running
+// to write a record, and absence of evidence is treated as downtime.
+
+const HISTORY_DAYS = 90
+
+async function loadDays() {
+	try {
+		return JSON.parse(await readFile(daysPath, 'utf8'))
+	} catch {
+		return {}
+	}
+}
+
+// Finalize completed days: scan the ring for day numbers that are in the
+// past and not yet recorded in days.json. Count up-minutes for each and
+// write the entry. This runs before the ring slot is written, so stale
+// slots from past days haven't been overwritten yet.
+async function finalizeCompletedDays(minutes, day, days) {
+	// Collect distinct past day numbers from the ring
+	const pastDays = new Set()
+	for (const slot of minutes) {
+		if (slot && slot.day < day) pastDays.add(slot.day)
+	}
+
+	let changed = false
+	for (const d of pastDays) {
+		if (d in days) continue // already finalized
+		let up = 0
+		for (const slot of minutes) {
+			if (slot && slot.day === d) up++
+		}
+		days[d] = up
+		changed = true
+	}
+
+	if (changed) {
+		// Trim days older than 90 days ago
+		const cutoff = day - HISTORY_DAYS
+		for (const key of Object.keys(days)) {
+			if (parseInt(key) < cutoff) delete days[key]
+		}
+		await writeAtomic(daysPath, JSON.stringify(days, null, '\t') + '\n')
+	}
+}
+
+// Build the 90-day history string for page.json. 90 comma-separated
+// downtime-minute values: first is 89 days ago, last is today.
+// Completed days come from days.json (missing = 1440 downtime).
+// Today is live: (minutes elapsed) - (up-minutes in ring so far).
+function buildHistory(minutes, day, minute, days) {
+	const values = []
+
+	// 89 completed days, oldest first
+	for (let i = HISTORY_DAYS - 1; i >= 1; i--) {
+		const d = day - i
+		const up = days[d] ?? 0
+		values.push(MINUTES_PER_DAY - up)
+	}
+
+	// Today: live count from the ring
+	let upToday = 0
+	for (const slot of minutes) {
+		if (slot && slot.day === day) upToday++
+	}
+	values.push((minute + 1) - upToday)
+
+	return values.join(',')
 }
 
 // To get "served in the last 24 hours": find the oldest valid slot in
@@ -275,15 +351,21 @@ async function tick() {
 	const day = currentDay()
 	const minute = currentMinute()
 
-	// Update the ring with current cumulative counters
+	// Finalize any completed days before writing to the ring,
+	// so stale slots from past days haven't been overwritten yet
 	const ring = await loadRing()
+	const days = await loadDays()
+	await finalizeCompletedDays(ring.minutes, day, days)
+
+	// Update the ring with current cumulative counters
 	ring.minutes[minute] = { day, served }
 	await writeAtomic(ringPath, JSON.stringify(ring) + '\n')
 
 	// Build page.json — all fields always present
 	const downtime = countDowntime(ring.minutes, day, minute)
+	const history = buildHistory(ring.minutes, day, minute, days)
 	const served24h = computeServed24h(served, ring.minutes, day, minute)
-	const page = { minute, memory, served: served24h, downtime }
+	const page = { day, minute, memory, served: served24h, downtime, history }
 	await writeAtomic(
 		join(publicDir, 'page.json'),
 		JSON.stringify(page, null, '\t') + '\n'
