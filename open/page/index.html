@@ -6,7 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌎</text></svg>">
+
 <title>open.ftorrent.com</title>
+
+<!-- static open graph protocol card to look great on all the messengers and socials -->
+<meta property="og:title" content="open.ftorrent.com" />
+<meta property="og:url" content="https://open.ftorrent.com" />
+<meta property="og:type" content="website" />
+
+<meta property="og:image" content="https://open.ftorrent.com/images/open.ftorrent.com.jpg" /><!-- crawlers need absolute URL -->
+<meta property="og:image:alt" content="open.ftorrent.com over the Earth from space" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="600" /><!-- note lots of chatter about how 630 is actually more correct -->
+<meta name="twitter:card" content="summary_large_image" /><!-- show a large image card, not a small thumbnail -->
+
+<meta name="description" content="BitTorrent and WebTorrent tracker and WebRTC signaling server for the open web." />
+<meta property="og:description" content="BitTorrent and WebTorrent tracker and WebRTC signaling server for the open web." />
 
 <link rel="preload" href="/page.json" as="fetch" crossorigin><!-- Tell the browser to start fetching page.json now, while it downloads and parses the JS bundle. By the time Vue mounts and the app calls fetch('/page.json'), the response is already in the browser cache. This avoids a sequential roundtrip: load HTML → load JS → fetch data. Instead: load HTML → load JS + fetch data in parallel → mount with data ready. -->
 
