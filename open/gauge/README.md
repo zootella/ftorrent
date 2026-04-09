@@ -30,7 +30,33 @@ To compute "served in the last 24 hours," the gauge finds the oldest valid slot 
 
 If a Prometheus counter dropped (a tracker container restarted and the counter reset to zero), the gauge reports 0 for that metric rather than a negative or fabricated number. Every number in `page.json` is the proven growth between two ring snapshots. The gauge never reports a raw Prometheus counter.
 
-Downtime is counted by walking the ring and checking for missing or stale slots. A slot is expected to have today's day number (or yesterday's, for slots on the far side of midnight). Any gap is a missed minute.
+Downtime is counted by walking the ring and checking each slot against two conditions: the slot must exist with the expected day number (today for slots at or before the current minute, yesterday for slots after), and the internet reachability probe must have been fresh when the slot was written. A minute is only "up" if both conditions were met — the gauge ran and the server could reach the internet. See the probe section below.
+
+## Internet reachability probe
+
+The gauge tracks whether it ran each minute, but that alone doesn't prove the server was reachable from the internet. The gauge could be ticking along happily while the ISP is down and no BitTorrent client can reach the tracker. To report honest downtime, the gauge needs an external signal: was the server actually online?
+
+A cron job on the host handles this. Every minute, `probe.sh` pings either `1.1.1.1` (Cloudflare) or `8.8.8.8` (Google), chosen randomly to avoid depending on a single provider. If the ping succeeds, it touches a file. If it fails — the ISP is down, the upstream router is unreachable, the server lost connectivity — the file's modification time goes stale. One ping, one touch, no output, no logs.
+
+The gauge reads this file's mtime each tick. If the mtime is within the last 90 seconds (not 60 — the extra 30 seconds absorbs scheduling jitter between cron and the gauge's clock-aligned tick), the server had internet connectivity during this minute. That minute counts as "up." If the file doesn't exist or is stale, the minute counts as down regardless of whether the gauge itself ran.
+
+**Why this runs on the host, not in the container.** The gauge container is firewalled — the DOCKER-USER chain blocks all outbound traffic from the tracker network to the internet. This is a deliberate security constraint documented in the [Aquatic guide](../guide.md). Punching a hole for the gauge to make outbound pings would weaken that guarantee. Running the probe on the bare-metal host avoids any firewall changes. The host already has unrestricted outbound, and the result is shared with the gauge through the existing bind mount — the probe writes to `/opt/open.ftorrent.com/data/probe` on the host, and the gauge sees it at `/gauge/probe`.
+
+**Why ping an external IP, not curl our own domain.** An earlier design had the probe curl `https://open.ftorrent.com/page.json` from the host, which would test more of the stack (DNS, nginx, TLS). The problem is hairpin NAT: many consumer routers successfully route requests from the LAN to the WAN IP back to the server, even when the ISP link is down. The probe would report "up" when the server was unreachable from the actual internet. Pinging an external IP tests real internet connectivity — if the ISP is down, the ping fails.
+
+**What is cron.** Cron is the standard Linux job scheduler. It runs in the background on every Linux system (and macOS) and executes commands on a schedule you define. Each line in the crontab (cron table) specifies when to run and what to run. The format is five time fields followed by a command:
+
+```
+# ┌───────────── minute (0-59)
+# │ ┌─────────── hour (0-23)
+# │ │ ┌───────── day of month (1-31)
+# │ │ │ ┌─────── month (1-12)
+# │ │ │ │ ┌───── day of week (0-7, 0 and 7 are Sunday)
+# │ │ │ │ │
+# * * * * * command
+```
+
+Five asterisks (`* * * * *`) means "every minute of every hour of every day." That's the schedule for the probe — it runs once per minute, matching the gauge's own tick rate. Note there's no `60` or `60000` anywhere — cron's language is declarative ("run at every minute that matches") not interval-based ("run every N milliseconds"). You describe *when*, not *how often*.
 
 ## What page.json contains
 
@@ -46,7 +72,7 @@ Downtime is counted by walking the ring and checking for missing or stale slots.
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
 - **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
 - **served** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses. WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
-- **downtime** — minutes in the last 24 hours where the gauge didn't run
+- **downtime** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
 
 All fields are always present. All numbers are 0 or positive.
 
@@ -71,7 +97,8 @@ open/gauge/
 ├── Dockerfile             Container image definition
 ├── compose-service.yml    Compose service entry (add to your docker-compose.yml)
 ├── package.json           Workspace metadata and start script
-├── guide.md               This document
+├── probe.sh               Internet reachability probe (runs on host via cron)
+├── README.md              This document
 └── src/
     └── gauge.js           The gauge script
 ```
@@ -94,11 +121,47 @@ Locally, memory and served counts will be 0 (no cgroups or Prometheus endpoints 
 
 The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../guide.md)). Copy the source to the server as `/opt/open.ftorrent.com/node-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
 
-Before the first run, create the data directory with the right ownership:
+Before the first run, create the data directory with the right ownership and install the reachability probe:
 
 ```bash
 sudo mkdir -p /opt/open.ftorrent.com/data/public
 sudo chown -R 65534:65534 /opt/open.ftorrent.com/data
+```
+
+Install the internet reachability probe. Copy `probe.sh` to the server and make it executable:
+
+```bash
+sudo cp probe.sh /opt/open.ftorrent.com/probe.sh
+sudo chmod +x /opt/open.ftorrent.com/probe.sh
+```
+
+Add a cron entry for root. This appends to the existing crontab without overwriting anything:
+
+```bash
+sudo sh -c '(crontab -l 2>/dev/null; echo "# ftorrent open tracker — internet reachability probe (every minute)"; echo "* * * * * /opt/open.ftorrent.com/probe.sh") | crontab -'
+```
+
+Wait about 60 seconds, then verify the probe file exists and is being touched:
+
+```bash
+stat /opt/open.ftorrent.com/data/probe
+# Should show a modification time within the last 90 seconds
+```
+
+Verify the gauge container can see it through the bind mount:
+
+```bash
+docker exec ftorrent-open-gauge-1 stat /gauge/probe
+# Same modification time
+```
+
+Verify the crontab entry:
+
+```bash
+sudo crontab -l
+# Should include:
+# # ftorrent open tracker — internet reachability probe (every minute)
+# * * * * * /opt/open.ftorrent.com/probe.sh
 ```
 
 After `docker compose up -d`, verify with:
