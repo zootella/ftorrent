@@ -106,7 +106,7 @@ const barDown = computed(() => {
 			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div class="lcd-right">{{ fmt(page.downtime) }} minutes</div>
+			<div class="lcd-right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="lcd-label">Downtime</div>
 			<div></div>
 
@@ -137,7 +137,7 @@ const barDown = computed(() => {
 			<div class="lcd-label lcd-right">Past 24 hours</div>
 			<div></div>
 
-			<div class="lcd-right">{{ fmt(page.downtime) }} minutes</div>
+			<div class="lcd-right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="lcd-label">Downtime</div>
 
 			<div class="lcd-label lcd-right">UDP announce</div>
