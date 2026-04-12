@@ -3,7 +3,9 @@ import { inject, computed, ref, watch, onMounted, onUnmounted } from 'vue'
 
 const page = inject('page')
 
-const SEP = ' ' // digit group separator: ' ' for space, '\u2009' for thin space
+const SEP = '\u00A0' // digit group separator: non-breaking space so numbers never wrap
+
+const SECTION_MARKER = '─' // visual indicator before each section header in narrow tally
 
 function fmt(n) {
 	return n.toLocaleString('en-US').replace(/,/g, SEP)
@@ -185,38 +187,38 @@ onUnmounted(() => {
 		</div>
 
 		<div class="tally-narrow">
-			<div class="label right">Past 24 hours</div>
-			<div></div>
+			<div class="label right">{{ SECTION_MARKER }}</div>
+			<div class="label">Past 24hr</div>
 
 			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 
-			<div class="label right">UDP announce</div>
-			<div></div>
+			<div class="label right">{{ SECTION_MARKER }}</div>
+			<div class="label">UDP</div>
 
 			<div class="right">{{ fmt(page.served.udp4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.udp6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">HTTP announce</div>
-			<div></div>
+			<div class="label right">{{ SECTION_MARKER }}</div>
+			<div class="label">HTTP</div>
 
 			<div class="right">{{ fmt(page.served.http4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.http6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">WebRTC offer</div>
-			<div></div>
+			<div class="label right">{{ SECTION_MARKER }}</div>
+			<div class="label">WebRTC</div>
 
 			<div class="right">{{ fmt(page.served.ws4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.ws6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">Memory in use</div>
-			<div></div>
+			<div class="label right">{{ SECTION_MARKER }}</div>
+			<div class="label">Memory</div>
 
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 			<div class="label">UDP</div>
@@ -347,13 +349,13 @@ onUnmounted(() => {
 .calendar-narrow {
 	display: none;
 	flex-direction: column;
-	align-items: center;
+	align-items: flex-start;
 	gap: 0.25rem;
 }
 
 .cells {
 	display: grid;
-	grid-template-columns: repeat(10, 20px);
+	grid-template-columns: repeat(15, 20px);
 	grid-auto-rows: 20px;
 	gap: 2px;
 }
@@ -384,6 +386,10 @@ onUnmounted(() => {
 
 	.calendar-narrow {
 		display: flex;
+	}
+
+	.well {
+		padding: 1rem;
 	}
 }
 </style>
