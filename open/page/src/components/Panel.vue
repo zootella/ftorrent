@@ -1,5 +1,5 @@
 <script setup>
-import { inject, computed, ref } from 'vue'
+import { inject, computed, ref, watch, onMounted, onUnmounted } from 'vue'
 
 const page = inject('page')
 
@@ -80,51 +80,102 @@ const barDown = computed(() => {
 	const down = history.value[i]
 	return `${down} minutes downtime`
 })
+
+// Animation frame loop — idempotent start/stop, not refcounted (one feature at a time).
+// frameTime updates reactively while running, stays still otherwise — so no Vue work happens
+// when nothing is animating, and the browser auto-pauses rAF when the tab is hidden.
+const frameTime = ref(0)
+let frameHandle = null
+
+function frameTick(t) {
+	frameTime.value = t
+	frameHandle = requestAnimationFrame(frameTick)
+}
+
+function startFrames() {
+	if (frameHandle !== null) return
+	frameHandle = requestAnimationFrame(frameTick)
+}
+
+function stopFrames() {
+	if (frameHandle === null) return
+	cancelAnimationFrame(frameHandle)
+	frameHandle = null
+}
+
+// Clock — UTC HH:MM with a 1Hz blinking colon. Re-derived from Date.now() each frame
+// so the visible state always snaps to wall clock and no drift can accumulate. Vue skips
+// DOM updates when ref values don't change, so the hour/minute spans only repaint when
+// they actually change, and the colon only twice a second.
+const clockHour = ref('00')
+const clockMinute = ref('00')
+const colonOn = ref(true)
+
+function updateClock() {
+	const now = Date.now()
+	const d = new Date(now)
+	clockHour.value = String(d.getUTCHours()).padStart(2, '0')
+	clockMinute.value = String(d.getUTCMinutes()).padStart(2, '0')
+	colonOn.value = now % 1000 < 500
+}
+
+updateClock()
+watch(frameTime, updateClock)
+
+onMounted(() => {
+	startFrames()
+})
+
+onUnmounted(() => {
+	stopFrames()
+})
 </script>
 
 <template>
-	<div class="lcd-panel">
-		<div class="lcd-grid">
-			<div class="lcd-label lcd-right">IPv4</div>
-			<div class="lcd-label lcd-right">IPv6</div>
-			<div class="lcd-label">Past 24 hours</div>
-			<div class="lcd-label lcd-right">Memory in use</div>
+	<div class="well">
+		<div class="clock">UTC {{ clockHour }}<span :class="{ off: !colonOn }">:</span>{{ clockMinute }}</div>
 
-			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
-			<div class="lcd-right">{{ fmt(page.served.udp6) }}</div>
-			<div class="lcd-label">UDP announce</div>
-			<div class="lcd-right">{{ mb(page.memory.udp) }}</div>
+		<div class="tally-wide">
+			<div class="label right">IPv4</div>
+			<div class="label right">IPv6</div>
+			<div class="label">Past 24 hours</div>
+			<div class="label right">Memory in use</div>
 
-			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
-			<div class="lcd-right">{{ fmt(page.served.http6) }}</div>
-			<div class="lcd-label">HTTP announce</div>
-			<div class="lcd-right">{{ mb(page.memory.http) }}</div>
+			<div class="right">{{ fmt(page.served.udp4) }}</div>
+			<div class="right">{{ fmt(page.served.udp6) }}</div>
+			<div class="label">UDP announce</div>
+			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
-			<div class="lcd-right">{{ fmt(page.served.ws6) }}</div>
-			<div class="lcd-label">WebRTC offer</div>
-			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
+			<div class="right">{{ fmt(page.served.http4) }}</div>
+			<div class="right">{{ fmt(page.served.http6) }}</div>
+			<div class="label">HTTP announce</div>
+			<div class="right">{{ mb(page.memory.http) }}</div>
+
+			<div class="right">{{ fmt(page.served.ws4) }}</div>
+			<div class="right">{{ fmt(page.served.ws6) }}</div>
+			<div class="label">WebRTC offer</div>
+			<div class="right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div class="lcd-right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
-			<div class="lcd-label">Downtime</div>
+			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="label">Downtime</div>
 			<div></div>
 
 		</div>
 
-		<div class="history-row">
-			<div class="history-bars" @mouseleave="hoveredBar = null">
+		<div class="calendar-wide">
+			<div class="bars" @mouseleave="hoveredBar = null">
 				<div
 					v-for="(down, i) in history"
 					:key="i"
-					class="history-bar-slot"
+					class="bar-slot"
 					@mouseenter="hoveredBar = i"
 				>
-					<div class="history-bar" :style="{ height: barHeight(down) + '%' }"></div>
+					<div class="bar" :style="{ height: barHeight(down) + '%' }"></div>
 				</div>
 			</div>
-			<div class="history-label">
-				<div v-if="hoveredBar === null" class="history-label-default">
+			<div class="legend">
+				<div v-if="hoveredBar === null" class="legend-default">
 					<span>{{ history.length }} days ago</span>
 					<span>{{ uptimePercent }}% uptime</span>
 					<span>Today</span>
@@ -133,52 +184,71 @@ const barDown = computed(() => {
 			</div>
 		</div>
 
-		<div class="lcd-narrow">
-			<div class="lcd-label lcd-right">Past 24 hours</div>
+		<div class="tally-narrow">
+			<div class="label right">Past 24 hours</div>
 			<div></div>
 
-			<div class="lcd-right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
-			<div class="lcd-label">Downtime</div>
+			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="label">Downtime</div>
 
-			<div class="lcd-label lcd-right">UDP announce</div>
+			<div class="label right">UDP announce</div>
 			<div></div>
 
-			<div class="lcd-right">{{ fmt(page.served.udp4) }}</div>
-			<div class="lcd-label">IPv4</div>
-			<div class="lcd-right">{{ fmt(page.served.udp6) }}</div>
-			<div class="lcd-label">IPv6</div>
+			<div class="right">{{ fmt(page.served.udp4) }}</div>
+			<div class="label">IPv4</div>
+			<div class="right">{{ fmt(page.served.udp6) }}</div>
+			<div class="label">IPv6</div>
 
-			<div class="lcd-label lcd-right">HTTP announce</div>
+			<div class="label right">HTTP announce</div>
 			<div></div>
 
-			<div class="lcd-right">{{ fmt(page.served.http4) }}</div>
-			<div class="lcd-label">IPv4</div>
-			<div class="lcd-right">{{ fmt(page.served.http6) }}</div>
-			<div class="lcd-label">IPv6</div>
+			<div class="right">{{ fmt(page.served.http4) }}</div>
+			<div class="label">IPv4</div>
+			<div class="right">{{ fmt(page.served.http6) }}</div>
+			<div class="label">IPv6</div>
 
-			<div class="lcd-label lcd-right">WebRTC offer</div>
+			<div class="label right">WebRTC offer</div>
 			<div></div>
 
-			<div class="lcd-right">{{ fmt(page.served.ws4) }}</div>
-			<div class="lcd-label">IPv4</div>
-			<div class="lcd-right">{{ fmt(page.served.ws6) }}</div>
-			<div class="lcd-label">IPv6</div>
+			<div class="right">{{ fmt(page.served.ws4) }}</div>
+			<div class="label">IPv4</div>
+			<div class="right">{{ fmt(page.served.ws6) }}</div>
+			<div class="label">IPv6</div>
 
-			<div class="lcd-label lcd-right">Memory in use</div>
+			<div class="label right">Memory in use</div>
 			<div></div>
 
-			<div class="lcd-right">{{ mb(page.memory.udp) }}</div>
-			<div class="lcd-label">UDP</div>
-			<div class="lcd-right">{{ mb(page.memory.http) }}</div>
-			<div class="lcd-label">HTTP</div>
-			<div class="lcd-right">{{ mb(page.memory.ws) }}</div>
-			<div class="lcd-label">WS</div>
+			<div class="right">{{ mb(page.memory.udp) }}</div>
+			<div class="label">UDP</div>
+			<div class="right">{{ mb(page.memory.http) }}</div>
+			<div class="label">HTTP</div>
+			<div class="right">{{ mb(page.memory.ws) }}</div>
+			<div class="label">WS</div>
+		</div>
+
+		<div class="calendar-narrow">
+			<div class="legend">{{ hoveredBar === null ? '90 days' : barDate }}</div>
+			<div class="cells" @mouseleave="hoveredBar = null">
+				<div
+					v-for="(down, i) in history"
+					:key="i"
+					class="cell"
+					:class="{ imperfect: down > 0 }"
+					@mouseenter="hoveredBar = i"
+				></div>
+			</div>
+			<div class="legend">{{ hoveredBar === null ? uptimePercent + '% uptime' : barDown }}</div>
 		</div>
 	</div>
 </template>
 
 <style scoped>
-.lcd-panel {
+.well {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.5rem;
+	width: max-content;
 	background: #D5D6C8;
 	border: 1px solid #BCBDAF;
 	border-radius: 6px;
@@ -188,19 +258,26 @@ const barDown = computed(() => {
 	font-family: 'Monaspace Krypton', monospace;
 	font-size: 1.6rem;
 	font-weight: 400;
-	padding: 1rem;
+	padding: 1rem 3rem;
 	text-align: center;
 }
 
-.lcd-grid {
-	display: inline-grid;
+.clock {
+	align-self: flex-end;
+}
+
+.clock .off {
+	opacity: 0;
+}
+
+.tally-wide {
+	display: grid;
 	align-items: baseline;
-	margin: 0 auto;
 	grid-template-columns: auto auto auto auto;
 	gap: 0.25rem 2rem;
 }
 
-.lcd-label {
+.label {
 	color: #9B9C90;
 	font-family: 'Jura', sans-serif;
 	font-size: 1.4rem;
@@ -210,34 +287,27 @@ const barDown = computed(() => {
 	white-space: nowrap;
 }
 
-.lcd-right {
+.right {
 	text-align: right;
 }
 
 
-.lcd-narrow {
+.tally-narrow {
 	display: none;
-	grid-template-columns: auto auto;
 	align-items: baseline;
+	grid-template-columns: auto auto;
 	gap: 0.25rem 1rem;
 }
 
 
-.history-row {
-	margin-top: 1.5rem;
-	max-width: fit-content;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.history-bars {
+.bars {
 	display: flex;
 	align-items: flex-end;
 	height: 3.5rem;
 	gap: 2px;
 }
 
-.history-bar-slot {
+.bar-slot {
 	width: 6px;
 	flex-shrink: 0;
 	height: 100%;
@@ -245,46 +315,75 @@ const barDown = computed(() => {
 	align-items: flex-end;
 }
 
-.history-bar {
+.bar {
 	width: 100%;
 	background: #353531;
 	box-shadow: 2px 2px 0 #C8C9BC;
 	border-radius: 1px;
 }
 
-.history-label {
+.legend {
 	font-size: 1.6rem;
 	text-align: left;
 	margin-top: 0.25rem;
 }
 
-.history-label-default {
+.legend-default {
 	display: flex;
 }
 
-.history-label-default > span {
+.legend-default > span {
 	flex: 1;
 }
 
-.history-label-default > span:nth-child(2) {
+.legend-default > span:nth-child(2) {
 	text-align: center;
 }
 
-.history-label-default > span:nth-child(3) {
+.legend-default > span:nth-child(3) {
 	text-align: right;
 }
 
+.calendar-narrow {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.cells {
+	display: grid;
+	grid-template-columns: repeat(10, 20px);
+	grid-auto-rows: 20px;
+	gap: 2px;
+}
+
+.cell {
+	background: #353531;
+	box-shadow: 2px 2px 0 #C8C9BC;
+	border-radius: 1px;
+}
+
+.cell.imperfect {
+	background: transparent;
+	box-shadow: none;
+}
+
 @media (max-width: 1024px) {
-	.lcd-grid {
+	.tally-wide {
 		display: none;
 	}
 
-	.history-row {
+	.calendar-wide {
 		display: none; /* 90-day bars are desktop only */
 	}
 
-	.lcd-narrow {
-		display: inline-grid;
+	.tally-narrow {
+		display: grid;
+	}
+
+	.calendar-narrow {
+		display: flex;
 	}
 }
 </style>

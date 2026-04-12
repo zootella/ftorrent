@@ -16,10 +16,11 @@ import Quote from './Quote.vue'
 		<Url href="wss://open.ftorrent.com" color="#D4006A" />
 	</div>
 
-	<Panel style="margin: 2rem" />
-
-	<div class="sticker">
-		<img src="/images/inside.png" alt="ftorrent sticker" />
+	<div class="stack">
+		<Panel />
+		<div class="sticker">
+			<img src="/images/inside.png" alt="ftorrent sticker" />
+		</div>
 	</div>
 
 	<Quote />
@@ -39,10 +40,13 @@ h1 {
 	margin: 2rem;
 }
 
-.sticker {
+.stack {
 	display: flex;
-	justify-content: flex-end;
-	margin: 2rem;
+	flex-direction: column;
+	align-items: flex-end;
+	width: max-content;
+	margin: 2rem auto;
+	gap: 2rem;
 }
 
 .sticker img {
