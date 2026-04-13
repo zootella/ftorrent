@@ -1,23 +1,34 @@
 <script setup>
+
+// Time unit constants — milliseconds. Multiply for readable durations: 10 * time_minute, etc.
+const time_second = 1000
+const time_minute = 60 * time_second
+const time_hour   = 60 * time_minute
+const time_day    = 24 * time_hour
+
+// Byte size constants — bytes. Divide for readable units: bytes / size_mb, etc.
+const size_kb = 1024
+const size_mb = size_kb * size_kb
+
+const month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 import { inject, computed, reactive, ref, onMounted, onUnmounted } from 'vue'
 
 const page = inject('page')
 
-const SEP = '\u00A0' // digit group separator: non-breaking space so numbers never wrap
+const nbsp = '\u00A0' // non-breaking space (same as &nbsp;); used as digit group separator so numbers never wrap
 
-const SECTION_MARKER = '┐' // visual indicator before each section header in narrow tally
+const burst_quantity = 1_000     // counters with rate at or below this animate in discrete bursts
+const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop visibly
+const drum_duration  = time_second / 2  // colon-blink half-period; also our beat tempo
+const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
 
-const BURST = 1_000     // counters with rate at or below this animate in discrete bursts
-const BEAT  = 2_000_000 // sweet-spot rate: ones blur, tens still pop visibly
-const DRUM  = 500       // ms — colon-blink half-period; also our beat tempo
-const RESET = 600_000   // ms — 10 minutes; how often counters snap back to the recorded total
-
-function fmt(n) {
-	return n.toLocaleString('en-US').replace(/,/g, SEP)
+function group(n) {
+	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
 }
 
 function mb(bytes) {
-	return fmt(Math.ceil(bytes / 1048576)) + SEP + 'MB'
+	return group(Math.ceil(bytes / size_mb)) + nbsp + 'MB'
 }
 
 // Parse the history string into an array of downtime minutes
@@ -26,34 +37,33 @@ const history = computed(() => {
 	return page.history.split(',').map(Number)
 })
 
-const BAR_FULL = 100  // 0 minutes downtime
-const BAR_ONE  = 87   // 1 minute downtime
-const BAR_MIN  = 3    // full day downtime
+const bar_all  = 100  // 0 minutes downtime
+const bar_one  = 87   // 1 minute downtime
+const bar_none = 3    // full day downtime
 
 function barHeight(downMinutes) {
-	if (downMinutes <= 0) return BAR_FULL
-	if (downMinutes >= 1440) return BAR_MIN
-	return BAR_ONE - (downMinutes - 1) / (1440 - 1) * (BAR_ONE - BAR_MIN)
+	const minutesPerDay = time_day / time_minute
+	if (downMinutes <= 0) return bar_all
+	if (downMinutes >= minutesPerDay) return bar_none
+	return bar_one - (downMinutes - 1) / (minutesPerDay - 1) * (bar_one - bar_none)
 }
 
 // Format a day number as "2026 Apr 07"
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
 function dayToDate(dayNumber) {
-	const d = new Date(dayNumber * 86_400_000)
+	const d = new Date(dayNumber * time_day)
 	const year = d.getUTCFullYear()
-	const month = MONTHS[d.getUTCMonth()]
+	const month = month_names[d.getUTCMonth()]
 	return `${year} ${month} ${String(d.getUTCDate()).padStart(2, '0')}`
 }
 
 // Launch day — days before this show "Before launch" instead of downtime.
 // Remove this after the 90-day window passes launch day entirely.
-const LAUNCH_DAY = 20551 // 2026 Apr 08
+const launch_day = 20551 // 2026 Apr 08
 
 // Index in the history array where launch day falls
 function launchIndex() {
 	const firstDay = page.day - (history.value.length - 1)
-	return Math.max(0, LAUNCH_DAY - firstDay)
+	return Math.max(0, launch_day - firstDay)
 }
 
 // 90-day uptime percentage — only counts from launch day onward
@@ -63,7 +73,7 @@ const uptimePercent = computed(() => {
 	const postLaunch = bars.slice(li + 1) // exclude launch day (partial data)
 	if (postLaunch.length === 0) return (0).toFixed(3)
 	// All but the last are complete days; the last is today's partial day
-	const totalMinutes = (postLaunch.length - 1) * 1440 + (page.minute + 1)
+	const totalMinutes = (postLaunch.length - 1) * (time_day / time_minute) + (page.minute + 1)
 	const totalDown = postLaunch.reduce((sum, d) => sum + d, 0)
 	const pct = ((totalMinutes - totalDown) / totalMinutes) * 100
 	return (Math.floor(pct * 1000) / 1000).toFixed(3)
@@ -93,10 +103,10 @@ const barDown = computed(() => {
 // before mount and never changes during the navigation, so we snapshot the
 // six served counts once here and use them as both the initial display value
 // and the reset target.
-const COUNT_KEYS = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
-const RECORDED = Object.fromEntries(COUNT_KEYS.map(k => [k, page.served[k]]))
-const RATES = Object.fromEntries(COUNT_KEYS.map(k => [k, RECORDED[k] / 86_400_000])) // events per ms
-const served = reactive({ ...RECORDED })
+const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
+const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
+const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
+const served = reactive({ ...recorded })
 
 // Poisson sample: Knuth's algorithm for small λ, normal approximation
 // (Box-Muller) for λ ≥ 20. Returns a non-negative integer.
@@ -146,16 +156,16 @@ const clockHour = ref('00')
 const clockMinute = ref('00')
 const colonOn = ref(true)
 
-// Drumbeat — every DRUM ms, the colon flips and the high-rate counters
-// (recorded > BEAT) take a Poisson-distributed step. Mid-rate counters
-// (BURST < recorded ≤ BEAT) tick every frame instead, because at those
+// Drumbeat — every drum_duration ms, the colon flips and the high-rate counters
+// (recorded > beat_quantity) take a Poisson-distributed step. Mid-rate counters
+// (burst_quantity < recorded ≤ beat_quantity) tick every frame instead, because at those
 // rates a drumbeat-cadence step would arrive as a visible chunk; per-frame
 // steps let each event pop up as it conceptually arrives. Low-rate counters
-// (recorded ≤ BURST) don't animate at all — at that scale, a single
+// (recorded ≤ burst_quantity) don't animate at all — at that scale, a single
 // simulated event would be a visible jump on a counter the viewer might
 // otherwise read as a precise figure, so we just show the recorded value.
 // lastBeat is the most recent drumbeat number we've acted on; lastFrameNow
-// is the previous frame's wall time; mountedAt anchors the RESET window.
+// is the previous frame's wall time; mountedAt anchors the reset_duration window.
 let lastBeat = null
 let lastFrameNow = null
 let mountedAt = null
@@ -166,26 +176,26 @@ function updateClock() {
 	clockHour.value = String(d.getUTCHours()).padStart(2, '0')
 	clockMinute.value = String(d.getUTCMinutes()).padStart(2, '0')
 
-	const beat = Math.floor(now / DRUM)
+	const beat = Math.floor(now / drum_duration)
 	colonOn.value = beat % 2 === 0
 
 	if (lastBeat !== null && beat !== lastBeat && mountedAt !== null) {
-		if (now - mountedAt >= RESET) {
+		if (now - mountedAt >= reset_duration) {
 			// Snap back to the recorded total and re-anchor both growth clocks
 			// so the per-frame block below adds nothing on this frame and
-			// counters resume cleanly from RECORDED.
+			// counters resume cleanly from recorded.
 			mountedAt = now
 			lastFrameNow = now
-			for (const k of COUNT_KEYS) served[k] = RECORDED[k]
+			for (const k of count_keys) served[k] = recorded[k]
 		} else {
 			// Multiply by beats elapsed so a thawed tab adds the events that
 			// would have arrived during the hide, not just one beat's worth.
 			// Sum of N independent Poisson(λ) is Poisson(N·λ), so this is
 			// statistically identical to having ticked N separate beats.
 			const beatsSince = beat - lastBeat
-			for (const k of COUNT_KEYS) {
-				if (RECORDED[k] > BEAT) {
-					const arrived = poissonSample(RATES[k] * DRUM * beatsSince)
+			for (const k of count_keys) {
+				if (recorded[k] > beat_quantity) {
+					const arrived = poissonSample(rates[k] * drum_duration * beatsSince)
 					if (arrived > 0) served[k] += arrived
 				}
 			}
@@ -195,9 +205,9 @@ function updateClock() {
 
 	if (lastFrameNow !== null) {
 		const dt = now - lastFrameNow
-		for (const k of COUNT_KEYS) {
-			if (RECORDED[k] > BURST && RECORDED[k] <= BEAT) {
-				const arrived = poissonSample(RATES[k] * dt)
+		for (const k of count_keys) {
+			if (recorded[k] > burst_quantity && recorded[k] <= beat_quantity) {
+				const arrived = poissonSample(rates[k] * dt)
 				if (arrived > 0) served[k] += arrived
 			}
 		}
@@ -227,23 +237,23 @@ onUnmounted(() => {
 			<div class="label">Past 24 hours</div>
 			<div class="label right">Memory in use</div>
 
-			<div class="right">{{ fmt(served.udp4) }}</div>
-			<div class="right">{{ fmt(served.udp6) }}</div>
+			<div class="right">{{ group(served.udp4) }}</div>
+			<div class="right">{{ group(served.udp6) }}</div>
 			<div class="label">UDP announce</div>
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="right">{{ fmt(served.http4) }}</div>
-			<div class="right">{{ fmt(served.http6) }}</div>
+			<div class="right">{{ group(served.http4) }}</div>
+			<div class="right">{{ group(served.http6) }}</div>
 			<div class="label">HTTP announce</div>
 			<div class="right">{{ mb(page.memory.http) }}</div>
 
-			<div class="right">{{ fmt(served.ws4) }}</div>
-			<div class="right">{{ fmt(served.ws6) }}</div>
+			<div class="right">{{ group(served.ws4) }}</div>
+			<div class="right">{{ group(served.ws6) }}</div>
 			<div class="label">WebRTC offer</div>
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 			<div></div>
 
@@ -272,37 +282,37 @@ onUnmounted(() => {
 
 		<div class="tally-narrow">
 			<div class="label right">Past 24 hours</div>
-			<div class="label">{{ SECTION_MARKER }}</div>
+			<div class="label">┐</div>
 
-			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 
 			<div class="label right">UDP announce</div>
-			<div class="label">{{ SECTION_MARKER }}</div>
+			<div class="label">┐</div>
 
-			<div class="right">{{ fmt(served.udp4) }}</div>
+			<div class="right">{{ group(served.udp4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(served.udp6) }}</div>
+			<div class="right">{{ group(served.udp6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">HTTP announce</div>
-			<div class="label">{{ SECTION_MARKER }}</div>
+			<div class="label">┐</div>
 
-			<div class="right">{{ fmt(served.http4) }}</div>
+			<div class="right">{{ group(served.http4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(served.http6) }}</div>
+			<div class="right">{{ group(served.http6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">WebRTC offer</div>
-			<div class="label">{{ SECTION_MARKER }}</div>
+			<div class="label">┐</div>
 
-			<div class="right">{{ fmt(served.ws4) }}</div>
+			<div class="right">{{ group(served.ws4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(served.ws6) }}</div>
+			<div class="right">{{ group(served.ws6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">Memory in use</div>
-			<div class="label">{{ SECTION_MARKER }}</div>
+			<div class="label">┐</div>
 
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 			<div class="label">UDP</div>
