@@ -1,11 +1,16 @@
 <script setup>
-import { inject, computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { inject, computed, reactive, ref, onMounted, onUnmounted } from 'vue'
 
 const page = inject('page')
 
 const SEP = '\u00A0' // digit group separator: non-breaking space so numbers never wrap
 
 const SECTION_MARKER = '┐' // visual indicator before each section header in narrow tally
+
+const BURST = 1_000     // counters with rate at or below this animate in discrete bursts
+const BEAT  = 2_000_000 // sweet-spot rate: ones blur, tens still pop visibly
+const DRUM  = 500       // ms — colon-blink half-period; also our beat tempo
+const RESET = 600_000   // ms — 10 minutes; how often counters snap back to the recorded total
 
 function fmt(n) {
 	return n.toLocaleString('en-US').replace(/,/g, SEP)
@@ -83,14 +88,42 @@ const barDown = computed(() => {
 	return `${down} minutes downtime`
 })
 
+// Simulated counts — recorded 24h totals from page.json grow upward in
+// real time so the dashboard feels alive. page.json is fetched in main.js
+// before mount and never changes during the navigation, so we snapshot the
+// six served counts once here and use them as both the initial display value
+// and the reset target.
+const COUNT_KEYS = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
+const RECORDED = Object.fromEntries(COUNT_KEYS.map(k => [k, page.served[k]]))
+const RATES = Object.fromEntries(COUNT_KEYS.map(k => [k, RECORDED[k] / 86_400_000])) // events per ms
+const served = reactive({ ...RECORDED })
+
+// Poisson sample: Knuth's algorithm for small λ, normal approximation
+// (Box-Muller) for λ ≥ 20. Returns a non-negative integer.
+function poissonSample(lambda) {
+	if (lambda === 0) return 0
+	if (lambda < 20) {
+		const L = Math.exp(-lambda)
+		let k = 0
+		let p = 1
+		do {
+			k++
+			p *= Math.random()
+		} while (p > L)
+		return k - 1
+	}
+	const u1 = Math.random()
+	const u2 = Math.random()
+	const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+	return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * gaussian))
+}
+
 // Animation frame loop — idempotent start/stop, not refcounted (one feature at a time).
-// frameTime updates reactively while running, stays still otherwise — so no Vue work happens
-// when nothing is animating, and the browser auto-pauses rAF when the tab is hidden.
-const frameTime = ref(0)
+// rAF is auto-paused by the browser when the tab is hidden, so we do zero work then.
 let frameHandle = null
 
-function frameTick(t) {
-	frameTime.value = t
+function frameTick() {
+	updateClock()
 	frameHandle = requestAnimationFrame(frameTick)
 }
 
@@ -113,18 +146,69 @@ const clockHour = ref('00')
 const clockMinute = ref('00')
 const colonOn = ref(true)
 
+// Drumbeat — every DRUM ms, the colon flips and the high-rate counters
+// (recorded > BEAT) take a Poisson-distributed step. Mid-rate counters
+// (BURST < recorded ≤ BEAT) tick every frame instead, because at those
+// rates a drumbeat-cadence step would arrive as a visible chunk; per-frame
+// steps let each event pop up as it conceptually arrives. Low-rate counters
+// (recorded ≤ BURST) don't animate at all — at that scale, a single
+// simulated event would be a visible jump on a counter the viewer might
+// otherwise read as a precise figure, so we just show the recorded value.
+// lastBeat is the most recent drumbeat number we've acted on; lastFrameNow
+// is the previous frame's wall time; mountedAt anchors the RESET window.
+let lastBeat = null
+let lastFrameNow = null
+let mountedAt = null
+
 function updateClock() {
 	const now = Date.now()
 	const d = new Date(now)
 	clockHour.value = String(d.getUTCHours()).padStart(2, '0')
 	clockMinute.value = String(d.getUTCMinutes()).padStart(2, '0')
-	colonOn.value = now % 1000 < 500
+
+	const beat = Math.floor(now / DRUM)
+	colonOn.value = beat % 2 === 0
+
+	if (lastBeat !== null && beat !== lastBeat && mountedAt !== null) {
+		if (now - mountedAt >= RESET) {
+			// Snap back to the recorded total and re-anchor both growth clocks
+			// so the per-frame block below adds nothing on this frame and
+			// counters resume cleanly from RECORDED.
+			mountedAt = now
+			lastFrameNow = now
+			for (const k of COUNT_KEYS) served[k] = RECORDED[k]
+		} else {
+			// Multiply by beats elapsed so a thawed tab adds the events that
+			// would have arrived during the hide, not just one beat's worth.
+			// Sum of N independent Poisson(λ) is Poisson(N·λ), so this is
+			// statistically identical to having ticked N separate beats.
+			const beatsSince = beat - lastBeat
+			for (const k of COUNT_KEYS) {
+				if (RECORDED[k] > BEAT) {
+					const arrived = poissonSample(RATES[k] * DRUM * beatsSince)
+					if (arrived > 0) served[k] += arrived
+				}
+			}
+		}
+	}
+	lastBeat = beat
+
+	if (lastFrameNow !== null) {
+		const dt = now - lastFrameNow
+		for (const k of COUNT_KEYS) {
+			if (RECORDED[k] > BURST && RECORDED[k] <= BEAT) {
+				const arrived = poissonSample(RATES[k] * dt)
+				if (arrived > 0) served[k] += arrived
+			}
+		}
+	}
+	lastFrameNow = now
 }
 
 updateClock()
-watch(frameTime, updateClock)
 
 onMounted(() => {
+	mountedAt = Date.now()
 	startFrames()
 })
 
@@ -143,18 +227,18 @@ onUnmounted(() => {
 			<div class="label">Past 24 hours</div>
 			<div class="label right">Memory in use</div>
 
-			<div class="right">{{ fmt(page.served.udp4) }}</div>
-			<div class="right">{{ fmt(page.served.udp6) }}</div>
+			<div class="right">{{ fmt(served.udp4) }}</div>
+			<div class="right">{{ fmt(served.udp6) }}</div>
 			<div class="label">UDP announce</div>
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="right">{{ fmt(page.served.http4) }}</div>
-			<div class="right">{{ fmt(page.served.http6) }}</div>
+			<div class="right">{{ fmt(served.http4) }}</div>
+			<div class="right">{{ fmt(served.http6) }}</div>
 			<div class="label">HTTP announce</div>
 			<div class="right">{{ mb(page.memory.http) }}</div>
 
-			<div class="right">{{ fmt(page.served.ws4) }}</div>
-			<div class="right">{{ fmt(page.served.ws6) }}</div>
+			<div class="right">{{ fmt(served.ws4) }}</div>
+			<div class="right">{{ fmt(served.ws6) }}</div>
 			<div class="label">WebRTC offer</div>
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
@@ -196,25 +280,25 @@ onUnmounted(() => {
 			<div class="label right">UDP announce</div>
 			<div class="label">{{ SECTION_MARKER }}</div>
 
-			<div class="right">{{ fmt(page.served.udp4) }}</div>
+			<div class="right">{{ fmt(served.udp4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(page.served.udp6) }}</div>
+			<div class="right">{{ fmt(served.udp6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">HTTP announce</div>
 			<div class="label">{{ SECTION_MARKER }}</div>
 
-			<div class="right">{{ fmt(page.served.http4) }}</div>
+			<div class="right">{{ fmt(served.http4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(page.served.http6) }}</div>
+			<div class="right">{{ fmt(served.http6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">WebRTC offer</div>
 			<div class="label">{{ SECTION_MARKER }}</div>
 
-			<div class="right">{{ fmt(page.served.ws4) }}</div>
+			<div class="right">{{ fmt(served.ws4) }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ fmt(page.served.ws6) }}</div>
+			<div class="right">{{ fmt(served.ws6) }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">Memory in use</div>
