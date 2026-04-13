@@ -5,7 +5,7 @@ const page = inject('page')
 
 const SEP = '\u00A0' // digit group separator: non-breaking space so numbers never wrap
 
-const SECTION_MARKER = '─' // visual indicator before each section header in narrow tally
+const SECTION_MARKER = '┐' // visual indicator before each section header in narrow tally
 
 function fmt(n) {
 	return n.toLocaleString('en-US').replace(/,/g, SEP)
@@ -187,38 +187,38 @@ onUnmounted(() => {
 		</div>
 
 		<div class="tally-narrow">
-			<div class="label right">{{ SECTION_MARKER }}</div>
-			<div class="label">Past 24hr</div>
+			<div class="label right">Past 24 hours</div>
+			<div class="label">{{ SECTION_MARKER }}</div>
 
 			<div class="right">{{ fmt(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 
-			<div class="label right">{{ SECTION_MARKER }}</div>
-			<div class="label">UDP</div>
+			<div class="label right">UDP announce</div>
+			<div class="label">{{ SECTION_MARKER }}</div>
 
 			<div class="right">{{ fmt(page.served.udp4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.udp6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">{{ SECTION_MARKER }}</div>
-			<div class="label">HTTP</div>
+			<div class="label right">HTTP announce</div>
+			<div class="label">{{ SECTION_MARKER }}</div>
 
 			<div class="right">{{ fmt(page.served.http4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.http6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">{{ SECTION_MARKER }}</div>
-			<div class="label">WebRTC</div>
+			<div class="label right">WebRTC offer</div>
+			<div class="label">{{ SECTION_MARKER }}</div>
 
 			<div class="right">{{ fmt(page.served.ws4) }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ fmt(page.served.ws6) }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">{{ SECTION_MARKER }}</div>
-			<div class="label">Memory</div>
+			<div class="label right">Memory in use</div>
+			<div class="label">{{ SECTION_MARKER }}</div>
 
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 			<div class="label">UDP</div>

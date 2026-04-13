@@ -58,24 +58,24 @@ open/page/
 ├── public/
 │   ├── page.json      Gauge data (written by the gauge container)
 │   ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
-│   └── images/
-│       └── april.jpg  Earth day texture (8K, see below)
+│   ├── images/        Page images (sticker, social card)
+│   └── earth/         Twelve monthly Earth textures (jan.jpg–dec.jpg, 8K, see below)
 └── earth.hide.md      Research notes on the globe component (gitignored)
 ```
 
 ## Earth texture
 
-The globe banner uses a NASA Blue Marble: Next Generation satellite composite — the April dataset, cloudless, with ocean bathymetry. The original is public domain (US government work, no restrictions).
+The globe banner uses NASA Blue Marble: Next Generation satellite composites — one per month, cloudless, with ocean bathymetry. The originals are public domain (US government work, no restrictions).
 
-**Source:** [NASA Visible Earth — Blue Marble: Next Generation](https://visibleearth.nasa.gov/collection/1484/blue-marble) — downloaded the April `world.topo.bathy.200404.3x21600x10800.jpg` (21,600 x 10,800 pixels, ~27 MB).
+**Source:** [NASA Earth Observatory — Blue Marble: Next Generation, Base Map with Topography and Bathymetry](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/) — downloaded all twelve monthly `world.topo.bathy.2004MM.3x21600x10800.jpg` composites (each 21,600 x 10,800 pixels, ~27 MB).
 
-**Downscaled** to 8,192 x 4,096 (power of two for WebGL) at JPEG quality 80 using ImageMagick:
+**Downscaled** each to 8,192 x 4,096 (power of two for WebGL) at JPEG quality 80 using ImageMagick — for example, April:
 
 ```bash
-magick world.topo.bathy.200404.3x21600x10800.jpg -resize 8192x4096! -quality 80 april.jpg
+magick world.topo.bathy.200404.3x21600x10800.jpg -resize 8192x4096! -quality 80 apr.jpg
 ```
 
-The result is 3.2 MB — sharp on retina displays at the ISS-arc zoom level, well within WebGL texture size limits on all modern GPUs.
+The same command was run for every month, writing `jan.jpg` through `dec.jpg` into `public/earth/`. Each result is around 3 MB — sharp on retina displays at the ISS-arc zoom level, well within WebGL texture size limits on all modern GPUs.
 
 ## Development
 
