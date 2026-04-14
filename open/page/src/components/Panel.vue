@@ -98,18 +98,16 @@ const barDown = computed(() => {
 	return `${down} minutes downtime`
 })
 
-// Simulated counts — recorded 24h totals from page.json grow upward in
-// real time so the dashboard feels alive. page.json is fetched in main.js
-// before mount and never changes during the navigation, so we snapshot the
-// six served counts once here and use them as both the initial display value
-// and the reset target.
+// page.json is snapshotted once, before mount, and never changes during the
+// navigation. recorded is the initial display value and the reset target;
+// served is the live, animated copy.
 const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
 const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
 const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
 const served = reactive({ ...recorded })
 
-// Poisson sample: Knuth's algorithm for small λ, normal approximation
-// (Box-Muller) for λ ≥ 20. Returns a non-negative integer.
+// Knuth for λ < 20, Box-Muller normal approximation for λ ≥ 20.
+// Returns a non-negative integer.
 function poissonSample(lambda) {
 	if (lambda === 0) return 0
 	if (lambda < 20) {
@@ -128,8 +126,7 @@ function poissonSample(lambda) {
 	return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * gaussian))
 }
 
-// Animation frame loop — idempotent start/stop, not refcounted (one feature at a time).
-// rAF is auto-paused by the browser when the tab is hidden, so we do zero work then.
+// Idempotent start/stop. rAF auto-pauses when the tab is hidden.
 let frameHandle = null
 
 function frameTick() {
@@ -148,24 +145,19 @@ function stopFrames() {
 	frameHandle = null
 }
 
-// Clock — UTC HH:MM with a 1Hz blinking colon. Re-derived from Date.now() each frame
-// so the visible state always snaps to wall clock and no drift can accumulate. Vue skips
-// DOM updates when ref values don't change, so the hour/minute spans only repaint when
-// they actually change, and the colon only twice a second.
+// UTC HH:MM, 1Hz blinking colon. Re-derived from Date.now() each frame so the
+// visible state snaps to wall clock and no drift accumulates.
 const clockHour = ref('00')
 const clockMinute = ref('00')
 const colonOn = ref(true)
 
-// Drumbeat — every drum_duration ms, the colon flips and the high-rate counters
-// (recorded > beat_quantity) take a Poisson-distributed step. Mid-rate counters
-// (burst_quantity < recorded ≤ beat_quantity) tick every frame instead, because at those
-// rates a drumbeat-cadence step would arrive as a visible chunk; per-frame
-// steps let each event pop up as it conceptually arrives. Low-rate counters
-// (recorded ≤ burst_quantity) don't animate at all — at that scale, a single
-// simulated event would be a visible jump on a counter the viewer might
-// otherwise read as a precise figure, so we just show the recorded value.
-// lastBeat is the most recent drumbeat number we've acted on; lastFrameNow
-// is the previous frame's wall time; mountedAt anchors the reset_duration window.
+// Three brackets by recorded:
+//   recorded ≤ burst_quantity         → not animated
+//   burst_quantity < recorded ≤ beat  → per-frame Poisson step
+//   recorded > beat_quantity          → Poisson step once per drumbeat
+// lastBeat: most recent drumbeat number acted on.
+// lastFrameNow: previous frame's wall time, for per-frame dt.
+// mountedAt: anchor for the reset_duration window.
 let lastBeat = null
 let lastFrameNow = null
 let mountedAt = null
@@ -181,17 +173,15 @@ function updateClock() {
 
 	if (lastBeat !== null && beat !== lastBeat && mountedAt !== null) {
 		if (now - mountedAt >= reset_duration) {
-			// Snap back to the recorded total and re-anchor both growth clocks
-			// so the per-frame block below adds nothing on this frame and
-			// counters resume cleanly from recorded.
+			// Snap back to recorded and re-anchor both clocks so the per-frame
+			// block below adds nothing this frame.
 			mountedAt = now
 			lastFrameNow = now
 			for (const k of count_keys) served[k] = recorded[k]
 		} else {
-			// Multiply by beats elapsed so a thawed tab adds the events that
-			// would have arrived during the hide, not just one beat's worth.
-			// Sum of N independent Poisson(λ) is Poisson(N·λ), so this is
-			// statistically identical to having ticked N separate beats.
+			// beatsSince > 1 means the tab was hidden across several beats.
+			// Sum of N independent Poisson(λ) is Poisson(N·λ), so one draw
+			// covers the whole gap.
 			const beatsSince = beat - lastBeat
 			for (const k of count_keys) {
 				if (recorded[k] > beat_quantity) {

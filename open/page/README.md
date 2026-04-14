@@ -13,6 +13,56 @@ _ftorrent/open/page/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application. It shows statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) by reading a `page.json` file that the gauge container generates every minute. The page is built on a development machine and deployed as static files served by nginx — no application server in the request path.
 
+## Development
+
+```bash
+pnpm install     # from the monorepo root, installs all workspaces
+cd open/page
+pnpm dev     # starts Vite dev server with hot reload
+pnpm build   # produces dist/ for deployment
+pnpm preview # serves the built dist/ locally for testing
+```
+
+**page.json in dev vs production.** The Vue app fetches `/page.json` on load for tracker statistics. The same URL resolves to different files depending on the environment:
+
+```
+Development (pnpm dev)
+  Browser fetches    http://localhost:5173/page.json
+  Vite serves from   open/page/public/page.json        ← placeholder with zeroes, committed to repo
+
+Production (server)
+  Browser fetches    https://open.ftorrent.com/page.json
+  nginx serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
+```
+
+The built `dist/page.json` from `pnpm build` is never used in production — nginx serves the gauge's live copy from the shared data volume instead.
+
+## Deployment
+
+The build output (`dist/`) is rsynced to the server where nginx serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
+
+```bash
+#!/bin/bash
+rsync -avz --delete dist/ youruser@yourserver:/opt/open.ftorrent.com/static/ -e "ssh -p 22"
+```
+
+Replace `youruser`, `yourserver`, the path, and the SSH port with your own. Make it executable with `chmod +x upload.hide.sh`.
+
+Then build and deploy in one step:
+
+```bash
+pnpm upload
+```
+
+Or separately:
+
+```bash
+pnpm build
+./upload.hide.sh
+```
+
+The deployed files land in the static directory on the server. nginx serves them for any request to your tracker domain that isn't a tracker announce, scrape, or WebSocket upgrade.
+
 ## Scaffolding
 
 The project was scaffolded from the monorepo's `open/` directory using Vue's official scaffolder:
@@ -63,7 +113,31 @@ open/page/
 └── earth.hide.md      Research notes on the globe component (gitignored)
 ```
 
-## Earth texture
+## Typography
+
+Three typefaces do all the work on the page. [Jura](https://fonts.google.com/specimen/Jura) sets the headings and the labels, and two faces from GitHub Next's [Monaspace](https://monaspace.githubnext.com/) superfamily handle the monospaced runs.
+
+Jura was designed by Daniel Johnson with the Cyreal foundry, and it sits in what its designer calls "the [Eurostile](https://en.wikipedia.org/wiki/Eurostile) vein" — that family of geometric, superellipse-based sans-serifs whose rounded-rectangle letterforms have, since the 1960s, been the house style for instrument panels, airport signage, and the consoles of cinematic spacecraft. The shapes read as technical and confident without feeling cold. Jura's particular origin makes it a nice fit here: Johnson started from a [Kayah Li](https://en.wikipedia.org/wiki/Kayah_Li_alphabet) script he was drawing for FreeFont, noticed the same strokes and curves would build a Roman alphabet, and grew the family outward from there. The published family covers Latin, Cyrillic, Greek, and Kayah Li from a shared set of shapes, which is exactly the spirit you want on a page about open infrastructure for a global network — a typeface that was literally drawn to speak in more than one script.
+
+Monaspace Radon is a hand-drawn-feeling monospace, and we use it for the announce URLs. It's legible and a little informal, so a string like `udp://open.ftorrent.com:443/announce` reads as something you're invited to copy rather than as stern configuration boilerplate. Monaspace Krypton is sharper and more mechanical, and we use it for the LCD values on the panel, meaning every number that ticks over as the page runs. It sits cleanly under the panel's LCD color treatment and drop shadow, and its even rhythm keeps the digits from jostling as they change.
+
+The fonts are self-hosted. We committed the three WOFF2 files to `public/fonts/` (`jura-latin.woff2`, `monaspace-krypton.woff2`, and `monaspace-radon.woff2`) and registered each one with an `@font-face` block in `src/style.css`:
+
+```css
+@font-face {
+	font-family: 'Jura';
+	font-style: normal;
+	font-weight: 300 700;
+	font-display: swap;
+	src: url('/fonts/jura-latin.woff2') format('woff2');
+}
+```
+
+All three faces are variable, so the `font-weight: 300 700` range covers every weight the page uses from a single file. The `font-display: swap` line tells the browser to render with a fallback immediately and swap the web font in when it arrives, so there's no flash of invisible text while the download is in flight. Vite copies everything under `public/` verbatim into the build output, which means `/fonts/...` resolves the same way in development (served by Vite) and in production (served by nginx), and the browser only fetches each font when a rule actually uses it.
+
+All three faces are released under the [SIL Open Font License 1.1](https://openfontlicense.org/), which means they're free to embed, bundle, and self-host, commercial or otherwise, with no attribution required on the rendered page. Self-hosting the WOFF2 files rather than linking to Google Fonts or a CDN keeps the page fully served from `open.ftorrent.com` with no third-party requests.
+
+## Earth
 
 The globe banner uses NASA Blue Marble: Next Generation satellite composites — one per month, cloudless, with ocean bathymetry. The originals are public domain (US government work, no restrictions).
 
@@ -77,9 +151,11 @@ magick world.topo.bathy.200404.3x21600x10800.jpg -resize 8192x4096! -quality 80 
 
 The same command was run for every month, writing `jan.jpg` through `dec.jpg` into `public/earth/`. Each result is around 3 MB — sharp on retina displays at the ISS-arc zoom level, well within WebGL texture size limits on all modern GPUs.
 
-The vibe we're after is the orrery in the rotunda of a natural history museum, not Google Earth. You can't grab the globe and spin it. There's no zoom, no pin, no tooltip. It turns at its own pace — one full rotation per day, the same as the real Earth — and if you want to see the other side, you wait. The texture swaps each month, so winter months show snow reaching further south and summer months show more green vegetation in the temperate bands. None of this is interactive in the modern web sense; it's something to look at, the way you'd look at a globe in a quiet room. A page about a service that runs on its own, doing its thing, deserves a centerpiece that does the same.
+What we're after is the view astronauts call the *overview effect* — the real Earth, seen from far enough away to take it in whole. Not Google Earth. You can't grab the globe and spin it. There's no zoom, no pin, no tooltip. It turns at its own pace — one full rotation per day, the same as the real Earth — and if you want to see the other side, you wait twelve hours. The texture swaps each month, so winter months show snow reaching further south and summer months show more green vegetation in the temperate bands; if you want to see the Sahara in January, you wait until January.
 
-## Simulating live activity
+The lighting makes the same point. The sun sits directly behind the viewer's head, which means the point at the center of the globe is wherever it's solar noon *right now*. A visitor in the western hemisphere who wants to see Asia in daylight doesn't click and drag — they come back in half a day, or they book a flight. The Earth has weight and rigidity: wait twelve hours, wait six months, travel thousands of miles. That's the opposite of the immediate gratification of a spinnable virtual globe, and it's the right centerpiece for a page about a service that runs on its own, at its own pace, doing its thing.
+
+## Numeric Rate Animation
 
 The six counters on the panel — UDP/HTTP/WebRTC over IPv4 and IPv6 — show 24-hour totals that the gauge container records once a minute and writes to `page.json`. We could just print those numbers and let them sit there. Instead we let them grow, in real time, as the page is open. The viewer sees activity that *looks* live. It isn't — it's a fresh draw each frame from the same statistical distribution the real traffic obeys — and we'd rather be honest about that here than pretend otherwise. The reason we bother: a static number reads as *recorded*, while a number that ticks reads as *running*. The tracker is in fact running; we're matching the visual to the truth, just by a different route than streaming live counts to every visitor.
 
@@ -120,53 +196,3 @@ The animation runs on `requestAnimationFrame`, the browser's render-synchronized
 When a hidden tab is brought back to the foreground, we don't want to pretend nothing happened — that would visibly stall the counters for a moment. So on the first beat after thaw, we count how many drumbeats *should* have elapsed during the hide and draw a single Poisson(λ = *r · drum · beats_elapsed*) sample to cover the whole gap. This is statistically identical to having ticked each beat separately: the sum of N independent Poisson(λ) random variables is itself Poisson(N·λ). One draw, no loop, mathematically honest.
 
 Vue's DOM diffing handles the rest. The clock's hour and minute spans only update when those `ref`s actually change — so the hour repaints once an hour, the minute once a minute, and only the colon and counters repaint continuously. The result is a page that feels alive but costs almost nothing to run.
-
-## Development
-
-```bash
-pnpm install     # from the monorepo root, installs all workspaces
-cd open/page
-pnpm dev     # starts Vite dev server with hot reload
-pnpm build   # produces dist/ for deployment
-pnpm preview # serves the built dist/ locally for testing
-```
-
-**page.json in dev vs production.** The Vue app fetches `/page.json` on load for tracker statistics. The same URL resolves to different files depending on the environment:
-
-```
-Development (pnpm dev)
-  Browser fetches    http://localhost:5173/page.json
-  Vite serves from   open/page/public/page.json        ← placeholder with zeroes, committed to repo
-
-Production (server)
-  Browser fetches    https://open.ftorrent.com/page.json
-  nginx serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
-```
-
-The built `dist/page.json` from `pnpm build` is never used in production — nginx serves the gauge's live copy from the shared data volume instead.
-
-## Deployment
-
-The build output (`dist/`) is rsynced to the server where nginx serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
-
-```bash
-#!/bin/bash
-rsync -avz --delete dist/ youruser@yourserver:/opt/open.ftorrent.com/static/ -e "ssh -p 22"
-```
-
-Replace `youruser`, `yourserver`, the path, and the SSH port with your own. Make it executable with `chmod +x upload.hide.sh`.
-
-Then build and deploy in one step:
-
-```bash
-pnpm upload
-```
-
-Or separately:
-
-```bash
-pnpm build
-./upload.hide.sh
-```
-
-The deployed files land in the static directory on the server. nginx serves them for any request to your tracker domain that isn't a tracker announce, scrape, or WebSocket upgrade.

@@ -27,6 +27,7 @@ import Quote from './Quote.vue'
 
 	<div class="footer">
 		<a href="https://ftorrent.com">www.ftorrent.com</a>
+		<a href="https://github.com/zootella/ftorrent/tree/master/open">we ♥{{ '\uFE0E' }} open source</a><!-- U+FE0E after the heart is Variation Selector-15: "render the previous glyph as text, not emoji." Without it, mobile browsers upgrade ♥ to a red color emoji. -->
 	</div>
 </template>
 
@@ -59,7 +60,9 @@ h1 {
 }
 
 .footer {
-	text-align: center;
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
 	margin: 2rem;
 	padding-bottom: 2rem;
 	font-family: 'Jura', sans-serif;

@@ -4,5 +4,8 @@
 	"homepage": "https://ftorrent.com/",
 	"private": true,
 	"version": "0.1.0",
-	"type": "module"
+	"type": "module",
+	"scripts": {
+		"upload": "./upload.hide.sh"
+	}
 }
