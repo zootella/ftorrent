@@ -1,6 +1,8 @@
 
 _ftorrent/open/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
+![open.ftorrent.com above Earth](https://open.ftorrent.com/images/open.ftorrent.com.jpg)
+
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
