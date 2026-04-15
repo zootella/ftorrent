@@ -1,9 +1,9 @@
 
 _ftorrent/open/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
-_Three guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), and the [dashboard front end](page/README.md)._
-
 ![open.ftorrent.com above Earth](https://open.ftorrent.com/images/open.ftorrent.com.jpg)
+
+_Three guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), and the [dashboard front end](page/README.md)._
 
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
@@ -1057,10 +1057,10 @@ A successful deployment returns a bencoded response from `/announce`, `"Ok"` fro
 
 The sections above cover the full deployment path — architecture, traffic path, server preparation, container configuration, build and test, outbound blocking, and the reverse proxy. A reader who followed the guide in order now has a running public tracker.
 
-The deployment at [open.ftorrent.com](https://open.ftorrent.com/) adds one more thing on top: a small dashboard that shows what the tracker is doing. It's split into two pieces, each documented in its own guide alongside this one.
+The deployment at [open.ftorrent.com](https://open.ftorrent.com/) adds one more thing on top: a dashboard status page that shows what the tracker is doing. Each minute, a back end Node container writes [page.json](https://open.ftorrent.com/page.json) which a front end Vue page displays and animates.
 
-**[Back end — the gauge](gauge/README.md).** A Node.js container that runs next to the trackers. Once a minute it scrapes each tracker's Prometheus endpoint, reads memory usage from cgroup files, and writes a single `page.json` file that nginx serves as a static file. It has no HTTP server and no listening ports — it only writes files. The guide explains the ring buffer that computes 24-hour totals from a single subtraction, the internet reachability probe that separates "the server was down" from "the internet was down," and how modest hardware supports tens of millions of concurrent peers.
+[The 'gauge' back end](gauge/README.md). 📟 A Node.js container that runs next to the trackers. Once a minute it scrapes each tracker's Prometheus endpoint, reads memory usage from cgroup files, and writes a single `page.json` file that nginx serves as a static file. It has no HTTP server and no listening ports — it only writes files. The guide explains the ring buffer that computes 24-hour totals from a single subtraction, the internet reachability probe that separates "the server was down" from "the internet was down," and how modest hardware supports tens of millions of concurrent peers.
 
-**[Front end — the page](page/README.md).** A Vue + Vite single-page application built on a development machine and rsynced to the server as static files. It fetches `page.json` and renders the dashboard: a slowly turning Earth, announce URLs, and six counters whose digits tick in real time from a Poisson process matched to each tracker's recorded rate. The guide covers the scaffolding choices, typography and self-hosted fonts, the NASA Blue Marble textures, and the math behind the animated counters.
+[The 'page' front end](page/README.md). 🌎 A Vue + Vite single-page application. It fetches `page.json` and renders the dashboard: a slowly turning Earth, announce URLs, and six counters whose digits tick in real time from a Poisson process matched to each tracker's recorded rate. The guide covers the scaffolding choices, typography and self-hosted fonts, the NASA Blue Marble textures, and the math behind the rate animation.
 
 Neither piece is required to run a tracker. The three Aquatic containers from the sections above serve BitTorrent and WebTorrent clients on their own. The dashboard exists because a public service is easier to trust when you can see it running, and because the deployment was a good chance to write down how to build one.
