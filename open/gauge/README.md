@@ -1,6 +1,8 @@
 
 _ftorrent/open/gauge/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
+_Three guides cover this deployment: [dockerizing Aquatic and configuring the Linux server](../README.md), the **dashboard back end** (this guide), and the [dashboard front end](../page/README.md)._
+
 # Public Tracker Dashboard Back End
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
