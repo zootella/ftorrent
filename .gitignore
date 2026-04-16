@@ -281,6 +281,9 @@ temp/
 *.bak
 *.orig
 
+# Framework evaluation scratch area (docs.ftorrent.com SSG bake-off)
+docs-roundup/
+
 # Lock files — pnpm-lock.yaml SHOULD be committed
 # package-lock.json and yarn.lock should not exist in a pnpm monorepo
 package-lock.json
