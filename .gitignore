@@ -152,19 +152,11 @@ vendor/
 # go.work.sum is also committed when using Go workspaces.
 
 # ----------------------------------------------------------------------------
-# Static Site Generators (Astro, VitePress, Docusaurus, Hugo, Nextra, etc.)
+# VitePress (docs.ftorrent.com)
 # ----------------------------------------------------------------------------
 
-# Most SSG build output is already covered by dist/, build/, out/, .output/,
-# .next/, .cache/ above. These catch framework-specific extras:
-.docusaurus/
-.astro/
+# Most build output is already covered by dist/, .cache/ above.
 **/.vitepress/cache/
-.contentlayer/
-
-# Hugo
-resources/
-.hugo_build.lock
 
 # ----------------------------------------------------------------------------
 # Visual Studio / Win32 (classic workspace)
@@ -281,8 +273,6 @@ temp/
 *.bak
 *.orig
 
-# Framework evaluation scratch area (docs.ftorrent.com SSG bake-off)
-docs-roundup/
 
 # Lock files — pnpm-lock.yaml SHOULD be committed
 # package-lock.json and yarn.lock should not exist in a pnpm monorepo

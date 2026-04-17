@@ -8,7 +8,7 @@ _ftorrent/README.md [ftorrent.com](https://ftorrent.com)_
 Workspaces and folders:
 - **classic** (Win32) Rasterbar libtorrent in a Petzold-style Windows native EXE
 - **desktop** (Tauri) Desktop BitTorrent client
-- **docs** (TBD) Documentation site _[docs.ftorrent.com](https://docs.ftorrent.com/)_
+- **docs** (VitePress) Documentation site _[docs.ftorrent.com](https://docs.ftorrent.com/)_
 - **good** (Node, Docker) IPv4/IPv6 connectivity diagnostic tool _[good.ftorrent.com](https://good.ftorrent.com/)_
 - **notes** Notes and scraps
 - **open** BitTorrent, WebTorrent, and WebRTC trackers _[open.ftorrent.com](https://open.ftorrent.com/)_

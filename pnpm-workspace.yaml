@@ -7,7 +7,7 @@ packages:
   # ftorrent.com — project homepage, download links, overview
   - site
 
-  # docs.ftorrent.com — documentation site (Docusaurus, Hugo, or similar)
+  # docs.ftorrent.com — VitePress documentation site
   - docs
 
   # open.ftorrent.com — public BitTorrent, WebTorrent, and WebRTC tracker
