@@ -60,10 +60,12 @@ function dayToDate(dayNumber) {
 // Remove this after the 90-day window passes launch day entirely.
 const launch_day = 20551 // 2026 Apr 08
 
-// Index in the history array where launch day falls
+// Index in the history array where launch day falls, or -1 if launch
+// is before the window entirely (all 90 days are post-launch)
 function launchIndex() {
 	const firstDay = page.day - (history.value.length - 1)
-	return Math.max(0, launch_day - firstDay)
+	if (launch_day < firstDay) return -1
+	return launch_day - firstDay
 }
 
 // 90-day uptime percentage — only counts from launch day onward
@@ -71,7 +73,7 @@ const uptimePercent = computed(() => {
 	const bars = history.value
 	const li = launchIndex()
 	const postLaunch = bars.slice(li + 1) // exclude launch day (partial data)
-	if (postLaunch.length === 0) return (0).toFixed(3)
+	if (postLaunch.length === 0) return ''
 	// All but the last are complete days; the last is today's partial day
 	const totalMinutes = (postLaunch.length - 1) * (time_day / time_minute) + (page.minute + 1)
 	const totalDown = postLaunch.reduce((sum, d) => sum + d, 0)
@@ -263,7 +265,7 @@ onUnmounted(() => {
 			<div class="legend">
 				<div v-if="hoveredBar === null" class="legend-default">
 					<span>{{ history.length }} days ago</span>
-					<span>{{ uptimePercent }}% uptime</span>
+					<span>{{ uptimePercent ? uptimePercent + '% uptime' : '' }}</span>
 					<span>Today</span>
 				</div>
 				<div v-else>{{ barDate }} - {{ barDown }}</div>
@@ -323,7 +325,7 @@ onUnmounted(() => {
 					@mouseenter="hoveredBar = i"
 				></div>
 			</div>
-			<div class="legend">{{ hoveredBar === null ? uptimePercent + '% uptime' : barDown }}</div>
+			<div class="legend">{{ hoveredBar === null ? (uptimePercent ? uptimePercent + '% uptime' : nbsp) : barDown }}</div>
 		</div>
 	</div>
 </template>
