@@ -43,6 +43,7 @@ async function copy() {
 .url-text {
 	overflow-wrap: break-word;
 	word-break: break-all;
+	font-variant-ligatures: none;
 }
 
 .url-copy {

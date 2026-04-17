@@ -38,7 +38,30 @@ Downtime is counted by walking the ring and checking each slot against two condi
 
 The gauge tracks whether it ran each minute, but that alone doesn't prove the server was reachable from the internet. The gauge could be ticking along happily while the ISP is down and no BitTorrent client can reach the tracker. To report honest downtime, the gauge needs an external signal: was the server actually online?
 
-A cron job on the host handles this. Every minute, `probe.sh` pings either `1.1.1.1` (Cloudflare) or `8.8.8.8` (Google), chosen randomly to avoid depending on a single provider. If the ping succeeds, it touches a file. If it fails — the ISP is down, the upstream router is unreachable, the server lost connectivity — the file's modification time goes stale. One ping, one touch, no output, no logs.
+A cron job on the host handles this. Every minute, `probe.sh` pings one of four targets — Cloudflare and Google, each on both IPv4 and IPv6:
+
+| Target | Address |
+|---|---|
+| Cloudflare IPv4 | `1.1.1.1` |
+| Google IPv4 | `8.8.8.8` |
+| Cloudflare IPv6 | `2606:4700:4700::1111` |
+| Google IPv6 | `2001:4860:4860::8888` |
+
+Each run randomly picks one, spreading the load across providers and protocols — the tracker serves both IPv4 and IPv6 clients, so probing both catches single-stack outages that a v4-only probe would miss. Over time each target gets roughly one ping every four minutes.
+
+If the first ping fails — a dropped packet, a brief routing hiccup, a provider edge momentarily busy — the probe retries once against a backup target that is always the other provider AND the other protocol. The backup index is found by XOR 3, which maps each of the four targets to its diagonal opposite in the 2×2 grid of (provider × protocol):
+
+```
+Index   Target            XOR 3   Backup
+0       Cloudflare v4     3       Google v6
+1       Google v4         2       Cloudflare v6
+2       Cloudflare v6     1       Google v4
+3       Google v6         0       Cloudflare v4
+```
+
+This maximizes independence between the two attempts: different provider, different protocol, different network path. To register as down, both pings must fail within the same minute — that's a real outage, not a fluke. Each ping has a 5-second timeout; worst case (two timeouts) is 10 seconds, well within the 60-second cron interval.
+
+If either ping succeeds, the probe touches a file. If both fail, the file's modification time goes stale. One or two pings, one touch, no output, no logs.
 
 The gauge reads this file's mtime each tick. If the mtime is within the last 90 seconds (not 60 — the extra 30 seconds absorbs scheduling jitter between cron and the gauge's clock-aligned tick), the server had internet connectivity during this minute. That minute counts as "up." If the file doesn't exist or is stale, the minute counts as down regardless of whether the gauge itself ran.
 
@@ -64,17 +87,21 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 
 ```json
 {
+	"day": 20559,
 	"minute": 600,
 	"memory": { "udp": 5083136, "http": 27623424, "ws": 33914880 },
 	"served": { "udp4": 12345, "udp6": 67, "http4": 890, "http6": 12, "ws4": 34, "ws6": 5 },
-	"downtime": 0
+	"downtime": 0,
+	"history": "0,0,0,3,1440,1440,0,0,...,0,0"
 }
 ```
 
+- **day** — current UTC day number (`Math.floor(Date.now() / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
 - **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
 - **served** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses. WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
 - **downtime** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
+- **history** — 90 comma-separated downtime-minute values, one per day. First value is 89 days ago, last value is today. `0` means fully up (zero downtime minutes), `1440` means fully down (the entire day). The frontend draws this as the 90-day uptime bar chart and computes the uptime percentage from it.
 
 All fields are always present. All numbers are 0 or positive.
 
