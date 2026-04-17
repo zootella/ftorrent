@@ -38,7 +38,7 @@ const history = computed(() => {
 })
 
 const bar_all  = 100  // 0 minutes downtime
-const bar_one  = 87   // 1 minute downtime
+const bar_one  = 92   // 1 minute downtime
 const bar_none = 3    // full day downtime
 
 function barHeight(downMinutes) {
