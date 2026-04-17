@@ -8,7 +8,7 @@
 	"scripts": {
 		"local": "vitepress dev docs",
 		"build": "vitepress build docs",
-		"upload": "TODO",
+		"upload": "vitepress build docs && ./upload.hide.sh",
 		"docs:dev": "vitepress dev docs",
 		"docs:build": "vitepress build docs",
 		"docs:preview": "vitepress preview docs"

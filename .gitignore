@@ -159,7 +159,7 @@ vendor/
 # .next/, .cache/ above. These catch framework-specific extras:
 .docusaurus/
 .astro/
-.vitepress/cache/
+**/.vitepress/cache/
 .contentlayer/
 
 # Hugo
