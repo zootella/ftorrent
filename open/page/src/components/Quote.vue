@@ -714,7 +714,7 @@ https://en.wikipedia.org/wiki/Richard_Stallman
 Attributed, c. 2000s
 0.6731985666352218
 
-Free software is a matter of liberty, not price. To understand the concept, you should think of free as in free speech, not as in free beer.
+"Free software" is a matter of liberty, not price. To understand the concept, you should think of "free" as in "free speech", not as in "free beer."
 Richard Stallman
 https://en.wikipedia.org/wiki/Richard_Stallman
 Free Software, Free Society, 2002
@@ -936,7 +936,7 @@ https://en.wikipedia.org/wiki/Ubuntu_philosophy
 Nguni Bantu proverb (umntu ngumtu ngabantu)
 0.8025133682435994
 
-It is not, I think therefore I am. It says rather: I am human because I belong. I participate. I share.
+It is not, "I think therefore I am." It says rather: "I am human because I belong. I participate. I share."
 Desmond Tutu
 https://en.wikipedia.org/wiki/Desmond_Tutu
 No Future Without Forgiveness, 1999
