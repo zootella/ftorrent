@@ -156,21 +156,35 @@ function makeRandom() {//if you add more quotes, here's how to make new random s
 function formatQuote(s) {
 	return s
 		.replace(/\s*--\s*/g, ' \u2014 ') // -- → em-dash, space-padded so the monospaced glyph isn't crowded
-		.replace(/(^|[\s\u2014(\[{])"/g, '$1\u2018') // opening " → curly open single (demoted so it nests inside the outer double quotes)
+		.replace(/(^|[\s\u2014\u2026(\[{])"/g, '$1\u2018') // opening " → curly open single (demoted so it nests inside the outer double quotes)
 		.replace(/"/g, '\u2019') // remaining " → curly close single
-		.replace(/(^|[\s\u2014(\[{])'/g, '$1\u2018') // opening ' → curly open single
+		.replace(/(^|[\s\u2014\u2026(\[{])'/g, '$1\u2018') // opening ' → curly open single
 		.replace(/'/g, '\u2019') // remaining ' → curly close single, also the apostrophe glyph
+		.replace(/\u2026/g, '...') // normalize Unicode ellipsis to three literal periods (wider in the monospace font)
 }
-// The opener set above (start-of-string, whitespace, em-dash, ( [ { ) is
-// what flags a " or ' as an opening quote rather than a closing one. When
-// adding quotes, eyeball the render; if you see two close-style glyphs
+function formatContext(s) {// byline version — " stays as a curly double because the byline isn't nested inside outer quote marks
+	return s
+		.replace(/\s*--\s*/g, ' \u2014 ')
+		.replace(/(^|[\s\u2014\u2026(\[{])"/g, '$1\u201C') // opening " → curly open double
+		.replace(/"/g, '\u201D') // remaining " → curly close double
+		.replace(/(^|[\s\u2014\u2026(\[{])'/g, '$1\u2018') // opening ' → curly open single
+		.replace(/'/g, '\u2019') // remaining ' → curly close single, also the apostrophe glyph
+		.replace(/\u2026/g, '...') // normalize Unicode ellipsis to three literal periods
+}
+// The opener set above (start-of-string, whitespace, em-dash, Unicode ellipsis,
+// ( [ { ) is what flags a " or ' as an opening quote rather than a closing one.
+// When adding quotes, eyeball the render; if you see two close-style glyphs
 // ('' or '') where an open/close pair belongs, the character before the
 // quote isn't in the opener set. Likely offenders:
-//   - ellipsis with no trailing space:       ...'yes'
-//   - colon or semicolon with no space:      said:"yes"
-//   - triple-nested quotation                (we only have two levels of glyphs)
-// Easiest fix: add a space in the source. Otherwise widen the opener set
-// to include the offending character.
+//   - three-period ellipsis with no trailing space:  ...'yes'
+//   - colon or semicolon with no space:              said:"yes"
+//   - triple-nested quotation                        (we only have two levels of glyphs)
+// Easiest fix: add a space in the source. Adding "." to the opener set would
+// mishandle closing-quote-after-period in normal dialogue ("Wait." she said.).
+// Ellipsis convention: write three ASCII periods ("...") in source, not the
+// Unicode "…" glyph. The monospaced font needs three separate periods to get
+// the correct wide appearance on screen. If a Unicode ellipsis slips in, it's
+// normalized to "..." at the end of both format functions.
 
 const quoteList = quoteBlock
 	.trim()
@@ -181,7 +195,7 @@ const quoteList = quoteBlock
 			text: formatQuote(lines[0]),
 			author: lines[1],
 			url: lines[2],
-			context: formatQuote(lines[3]),
+			context: formatContext(lines[3]),
 			order: parseFloat(lines[4]),  // scatters same-author runs across the calendar without scattering them in the source
 		}
 	})

@@ -143,7 +143,7 @@ Andrew Hamilton
 https://en.wikipedia.org/wiki/Andrew_Hamilton_(lawyer)
 Closing argument, Crown v. Zenger, 1735
 
-Nature and the laws of our country have given us a right — the liberty — both of exposing and opposing arbitrary power, in these parts of the world at least, by speaking and writing truth.
+Nature and the laws of our country have given us a right--the liberty--both of exposing and opposing arbitrary power, in these parts of the world at least, by speaking and writing truth.
 Andrew Hamilton
 https://en.wikipedia.org/wiki/Andrew_Hamilton_(lawyer)
 Closing argument, Crown v. Zenger, 1735
@@ -253,7 +253,7 @@ Thomas Aquinas
 https://en.wikipedia.org/wiki/Thomas_Aquinas
 Commentary on Aristotle's Metaphysics, c. 1270
 
-The study of truth requires a considerable effort — which is why few are willing to undertake it out of love of knowledge — despite the fact that God has implanted a natural appetite for such knowledge in the minds of men.
+The study of truth requires a considerable effort--which is why few are willing to undertake it out of love of knowledge--despite the fact that God has implanted a natural appetite for such knowledge in the minds of men.
 Thomas Aquinas
 https://en.wikipedia.org/wiki/Thomas_Aquinas
 Summa Contra Gentiles, c. 1260
@@ -293,7 +293,7 @@ Confucius
 https://en.wikipedia.org/wiki/Confucius
 The Analects, 2.15, c. 5th century BC
 
-When you know a thing, to recognize that you know it; and when you do not, to know that you do not know — that is knowledge.
+When you know a thing, to recognize that you know it; and when you do not, to know that you do not know--that is knowledge.
 Confucius
 https://en.wikipedia.org/wiki/Confucius
 The Analects, 2.17, c. 5th century BC
@@ -310,7 +310,6 @@ Tao Te Ching, Chapter 81, c. 6th century BC
 
 To us all towns are one, all men our kin.
 Kaniyan Poongundran
-https://en.wikipedia.org/wiki/Kaniyan_Poongundran (broken link)
 https://en.wikipedia.org/wiki/Purananuru
 Purananuru, Poem 192, c. 2nd century BC
 
@@ -327,7 +326,7 @@ Proverbs 27:17
 All the believers were together and had everything in common. They sold property and possessions to give to anyone who had need.
 Luke
 https://en.wikipedia.org/wiki/Acts_of_the_Apostles
-Acts 2:44–45
+Acts 2:44-45
 
 Freedom is something that dies unless it's used.
 Hunter S. Thompson
@@ -339,7 +338,7 @@ Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
 Fear and Loathing in Las Vegas, 1971
 
-There was a fantastic universal sense that whatever we were doing was right, that we were winning. And that, I think, was the handle — that sense of inevitable victory over the forces of Old and Evil. Not in any mean or military sense; we didn't need that. Our energy would simply prevail.
+There was a fantastic universal sense that whatever we were doing was right, that we were winning. And that, I think, was the handle--that sense of inevitable victory over the forces of Old and Evil. Not in any mean or military sense; we didn't need that. Our energy would simply prevail.
 Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
 Fear and Loathing in Las Vegas, 1971
@@ -424,7 +423,7 @@ Aldous Huxley
 https://en.wikipedia.org/wiki/Aldous_Huxley
 Complete Essays, Vol. II: "Note on Dogma," 1927
 
-Words can be like X-rays if you use them properly — they'll go through anything. You read and you're pierced.
+Words can be like X-rays if you use them properly--they'll go through anything. You read and you're pierced.
 Aldous Huxley
 https://en.wikipedia.org/wiki/Aldous_Huxley
 Brave New World, 1932
@@ -574,7 +573,7 @@ Lawrence Lessig
 https://en.wikipedia.org/wiki/Lawrence_Lessig
 The Future of Ideas, 2001
 
-A free culture is not a culture without property, just as a free market is not a market in which everything is free. The opposite of a free culture is a permission culture — a culture in which creators get to create only with the permission of the powerful, or of creators from the past.
+A free culture is not a culture without property, just as a free market is not a market in which everything is free. The opposite of a free culture is a permission culture--a culture in which creators get to create only with the permission of the powerful, or of creators from the past.
 Lawrence Lessig
 https://en.wikipedia.org/wiki/Lawrence_Lessig
 Free Culture, 2004
@@ -656,7 +655,7 @@ The Fountainhead, 1943
 
 His Majesty's gracious Subjects shall hereafter have a right freely to write, as well as to print, without any previously obtained licence.
 Kingdom of Sweden
-https://en.wikipedia.org/wiki/Freedom_of_the_Press_Act_(Sweden)
+https://en.wikipedia.org/wiki/Swedish_Freedom_of_the_Press_Act
 Freedom of the Press Act, 1766
 
 That the freedom of the press is one of the greatest bulwarks of liberty, and can never be restrained but by despotic governments.
@@ -701,7 +700,8 @@ Attributed, c. 1960s
 
 Societies have always been shaped more by the nature of the media by which men communicate than by the content of the communication.
 Marshall McLuhan
-https://en.wikipedia.org/wiki/Marshall_McL
+https://en.wikipedia.org/wiki/Marshall_McLuhan
+The Medium is the Massage, 1967
 
 There is absolutely no inevitability as long as there is a willingness to contemplate what is happening.
 Marshall McLuhan
@@ -803,9 +803,9 @@ Edward Blyden
 https://en.wikipedia.org/wiki/Edward_Wilmot_Blyden
 African Life and Customs, 1908
 
-Vague, but exciting.
+Vague but exciting...
 Mike Sendall
-https://en.wikipedia.org/wiki/Mike_Sendall
+https://en.wikiquote.org/wiki/Mike_Sendall
 Handwritten note on Tim Berners-Lee's "Information Management: A Proposal," March 1989
 
 The original idea of the web was that it should be a collaborative space where you can communicate through sharing information.
@@ -881,7 +881,7 @@ Attributed, c. 1960s
 Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has.
 Margaret Mead
 https://en.wikipedia.org/wiki/Margaret_Mead
-Attributed, c. 1960s–1970s
+Attributed, c. 1960s-1970s
 
 We are caught in an inescapable network of mutuality, tied in a single garment of destiny. Whatever affects one directly, affects all indirectly.
 Martin Luther King Jr.
@@ -916,7 +916,7 @@ Pirkei Avot 2:4 (Mishnah), c. 1st century BC
 It is not incumbent upon you to finish the task, but neither are you free to absolve yourself from it.
 Rabbi Tarfon
 https://en.wikipedia.org/wiki/Rabbi_Tarfon
-Pirkei Avot 2:16 (Mishnah), c. 1st–2nd century AD
+Pirkei Avot 2:16 (Mishnah), c. 1st-2nd century AD
 
 Cities have the capability of providing something for everybody, only because, and only when, they are created by everybody.
 Jane Jacobs
