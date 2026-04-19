@@ -73,11 +73,15 @@ const prometheusEndpoints = [
 // today's day number. Slots after the current minute should have
 // yesterday's day number. Anything else (null or older) is a missed minute.
 //
-// To get 24-hour served totals: subtract the oldest valid slot's counters
-// from the current slot's counters. Since Prometheus counters are cumulative,
-// one subtraction per metric gives the exact total for the period between
-// those two snapshots. If a container restarted (current < oldest), the
-// counter reset — report 0 rather than fabricating a number.
+// To get 24-hour served totals: walk backward from the current slot N,
+// extending a candidate oldest slot P back one step at a time as long as
+// each older slot's counters are all ≤ the current P's counters. A
+// counter that's higher at an older slot than at the current P is the
+// reset signature of a container restart between them — stop there, so
+// P stays in the same era as N. Report N − P per metric. If no older
+// slot qualified (first tick after a restart, or a freshly wiped ring),
+// P stays equal to N and N − P is zero. Every reported number is proven
+// growth between two different ring slots.
 
 const MINUTES_PER_DAY = 1440
 const MS_PER_DAY = 86_400_000
@@ -193,38 +197,37 @@ function buildHistory(minutes, day, minute, days) {
 	return values.join(',')
 }
 
-// To get "served in the last 24 hours": find the oldest valid slot in
-// the ring (the one closest to 24 hours ago) and subtract its counters
-// from the current counters. The ring may have gaps — that's fine, we
-// just need any two valid points to subtract.
-//
-// A slot is "valid" (within the last 24 hours) if its day number matches
-// what we'd expect for its position relative to the current minute:
-// slots at or before the current minute should be today, slots after
-// should be yesterday. Anything older is stale.
-//
-// If no valid oldest slot exists (fresh start, or long outage), we can't
-// compute a delta — return 0 for everything.
+// Walk backward from the current minute, extending a candidate oldest
+// slot P back one step at a time as long as each older slot's counters
+// are all ≤ the current P's counters. A counter higher at an older
+// slot than at the current P is the reset signature of a container
+// restart between them — we stop there, keeping P in the same era as
+// the current scrape. A slot is only considered if its stored day
+// number matches what we'd expect at that index: slots at or before
+// the current minute should hold today, slots after should hold
+// yesterday; anything else is stale.
 function computeServed24h(currentServed, minutes, day, minute) {
-	// Walk from the farthest point back toward the current minute,
-	// return the first (oldest) valid slot we find
-	let oldest = null
-	for (let offset = MINUTES_PER_DAY - 1; offset >= 1; offset--) {
+	// P starts with the current scrape so the loop can uniformly compare
+	// older slots against it. If no older slot extends P, the final
+	// subtraction yields zero for every key.
+	let P = { served: currentServed }
+	for (let offset = 1; offset < MINUTES_PER_DAY; offset++) {
 		const i = (minute - offset + MINUTES_PER_DAY) % MINUTES_PER_DAY
 		const slot = minutes[i]
 		if (!slot) continue
 		const expectedDay = (i <= minute) ? day : day - 1
-		if (slot.day === expectedDay) { oldest = slot; break }
+		if (slot.day !== expectedDay) continue
+
+		const isReset = SERVED_KEYS.some(k =>
+			(slot.served[k] || 0) > (P.served[k] || 0)
+		)
+		if (isReset) break
+		P = slot
 	}
 
-	// Every number in page.json must be the growth between two ring
-	// slots — we never report a raw Prometheus counter. If there's no
-	// oldest slot, or the counter dropped (container restarted), report 0.
 	const result = {}
 	for (const key of SERVED_KEYS) {
-		const current = currentServed[key] || 0
-		const old = oldest?.served?.[key] || 0
-		result[key] = (oldest && current >= old) ? current - old : 0
+		result[key] = (currentServed[key] || 0) - (P.served[key] || 0)
 	}
 	return result
 }
