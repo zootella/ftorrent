@@ -4,11 +4,11 @@ import * as THREE from 'three'
 
 const DRAG_ENABLED = false
 const TEST_HOUR = null // set to 0-24 to override, null for live UTC
-const TICK_MS = 1000 // how often the globe updates rotation
+const TARGET_FPS = 10 // rotation is sub-pixel per frame at real-time speed; this rate is about pushing refresh cadence above the ~1 Hz range where ticks read as flicker
 const TIME_SCALE = 1 // 1 = real time, 10 = 10x faster, etc.
 
 const container = ref(null)
-let renderer, scene, camera, globe, tickInterval
+let renderer, scene, camera, globe, rafId
 const startTime = Date.now()
 const startHours = new Date().getUTCHours() + new Date().getUTCMinutes() / 60 + new Date().getUTCSeconds() / 3600
 
@@ -88,11 +88,18 @@ onMounted(() => {
 		canvas.addEventListener('pointerleave', () => { isDragging = false })
 	}
 
-	// Update rotation periodically
-	tickInterval = setInterval(() => {
-		updateRotation()
-		render()
-	}, TICK_MS)
+	// rAF loop, throttled to TARGET_FPS
+	const FRAME_MS = 1000 / TARGET_FPS
+	let lastRender = 0
+	function tick(now) {
+		if (now - lastRender >= FRAME_MS) {
+			updateRotation()
+			render()
+			lastRender = now
+		}
+		rafId = requestAnimationFrame(tick)
+	}
+	rafId = requestAnimationFrame(tick)
 
 	window.addEventListener('resize', onResize)
 })
@@ -132,9 +139,12 @@ function onResize() {
 }
 
 onUnmounted(() => {
-	clearInterval(tickInterval)
+	cancelAnimationFrame(rafId)
 	window.removeEventListener('resize', onResize)
-	renderer?.dispose()
+	globe?.geometry.dispose()       // sphere vertex/index buffers
+	globe?.material.map?.dispose()  // earth texture (GPU-side image)
+	globe?.material.dispose()       // shader program + uniforms
+	renderer?.dispose()             // WebGL context + render targets
 })
 </script>
 
