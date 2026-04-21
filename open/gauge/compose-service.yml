@@ -14,8 +14,6 @@
     environment:
       - GAUGE_DIR=/gauge
     volumes:
-      # Frontend files — read-only so a compromised gauge can't inject scripts
-      - /opt/open.ftorrent.com/static:/static:ro
       # Gauge working directory — writes page.json (public) and ring.json (private)
       - /opt/open.ftorrent.com/data:/gauge
       # Host cgroup stats — reads container memory usage

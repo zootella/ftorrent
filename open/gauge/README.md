@@ -205,4 +205,4 @@ The `minute` field should match the current UTC minute. Memory fields should be 
 
 The gauge container runs on the `ftorrent-open` network (cafe 2) with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach the LAN or internet.
 
-The frontend static files are mounted read-only at `/static`. A compromised gauge can write wrong numbers to `page.json` but cannot inject scripts into the HTML, JS, or CSS that the browser executes. The frontend can only be changed by rsyncing from the development machine.
+A compromised gauge can write wrong numbers to `page.json`. It cannot inject scripts into the HTML, JS, or CSS the browser executes — the frontend bundle sits in a separate host directory that nginx serves directly.
