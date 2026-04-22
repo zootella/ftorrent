@@ -11,9 +11,11 @@ _Three guides cover this deployment: [dockerizing Aquatic and configuring the Li
 > <br>[Vue](https://vuejs.org/): 3.5
 > <br>[Vite](https://vite.dev/): 8.0
 > <br>Node: 22
-> <br>[Three.js](https://threejs.org/): 0.183
+> <br>[three.js](https://threejs.org/): 0.183
 
-The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application. It shows statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) by reading a `page.json` file that the gauge container generates every minute. The page is built on a development machine and deployed as static files served by nginx — no application server in the request path.
+The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application that renders `page.json` — a small file the gauge container writes once a minute with uptime and performance statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) — as a panel of numbers. The page is built on a development machine and deployed as static files served by nginx, so at request time nothing runs on the server except nginx handing back pre-rendered HTML, JS, and the JSON. It's the service's public face — a quick check that the trackers are running, and a read of what they're doing.
+
+Three visual elements give the page its character. First, a view of the Earth from space uses NASA's public-domain [Blue Marble](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/) composites rendered on a sphere with [three.js](https://threejs.org/), without borders or labels; the globe turns at Earth's actual rate of one rotation per day, and the texture swaps each month so the season on screen is the season right now — what we're after is the view astronauts call the *overview effect*. Second, the counters — UDP, HTTP, and WebRTC on IPv4 and IPv6 — arrive from `page.json` as 24-hour totals and then advance from there in a *numeric rate animation*: each increment is computed from a Poisson process at the real traffic's average rate, so the digits move the way the server is responding to actual requests. The starting values are real; the pulse is simulated, and resets every 10 minutes. And third, a quote of the day, rotated deterministically so every visitor on a given day sees the same one. Drawn from a curated research pull, quotes span from antiquity to the present on themes of free expression, shared knowledge, open networks, and the interconnection of humanity — drawn from philosophers, inventors, activists, scientists, legal texts, and sacred traditions across every inhabited continent.
 
 ## Development
 

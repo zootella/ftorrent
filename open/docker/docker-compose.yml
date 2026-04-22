@@ -4,7 +4,7 @@
 # Adjust ports, memory limits, and file paths to match your setup.
 #
 # Prerequisites:
-#   - Kernel tuning applied (see guide.md, "Server preparation")
+#   - Kernel tuning applied (see ../README.md, "Server preparation")
 #   - seccomp-iouring.json in the same directory as this file
 #   - TOML config files in the same directory as this file
 #   - A reverse proxy (e.g., nginx) routing HTTPS traffic to the

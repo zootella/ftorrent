@@ -12,7 +12,7 @@ _Three guides cover this deployment: [dockerizing Aquatic and configuring the Li
 
 ## What this is and where it fits
 
-The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../guide.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/guide.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
+The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../README.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/README.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
 
 The gauge is a Node.js script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — `page.json` — that nginx serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
 
@@ -65,7 +65,7 @@ If either ping succeeds, the probe touches a file. If both fail, the file's modi
 
 The gauge reads this file's mtime each tick. If the mtime is within the last 90 seconds (not 60 — the extra 30 seconds absorbs scheduling jitter between cron and the gauge's clock-aligned tick), the server had internet connectivity during this minute. That minute counts as "up." If the file doesn't exist or is stale, the minute counts as down regardless of whether the gauge itself ran.
 
-**Why this runs on the host, not in the container.** The gauge container is firewalled — the DOCKER-USER chain blocks all outbound traffic from the tracker network to the internet. This is a deliberate security constraint documented in the [Aquatic guide](../guide.md). Punching a hole for the gauge to make outbound pings would weaken that guarantee. Running the probe on the bare-metal host avoids any firewall changes. The host already has unrestricted outbound, and the result is shared with the gauge through the existing bind mount — the probe writes to `/opt/open.ftorrent.com/data/probe` on the host, and the gauge sees it at `/gauge/probe`.
+**Why this runs on the host, not in the container.** The gauge container is firewalled — the DOCKER-USER chain blocks all outbound traffic from the tracker network to the internet. This is a deliberate security constraint documented in the [Aquatic guide](../README.md). Punching a hole for the gauge to make outbound pings would weaken that guarantee. Running the probe on the bare-metal host avoids any firewall changes. The host already has unrestricted outbound, and the result is shared with the gauge through the existing bind mount — the probe writes to `/opt/open.ftorrent.com/data/probe` on the host, and the gauge sees it at `/gauge/probe`.
 
 **Why ping an external IP, not curl our own domain.** An earlier design had the probe curl `https://open.ftorrent.com/page.json` from the host, which would test more of the stack (DNS, nginx, TLS). The problem is hairpin NAT: many consumer routers successfully route requests from the LAN to the WAN IP back to the server, even when the ISP link is down. The probe would report "up" when the server was unreachable from the actual internet. Pinging an external IP tests real internet connectivity — if the ISP is down, the ping fails.
 
@@ -148,7 +148,7 @@ Locally, memory and served counts will be 0 (no cgroups or Prometheus endpoints 
 
 ## Deployment
 
-The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../guide.md)). Copy the source to the server as `/opt/open.ftorrent.com/node-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
+The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../README.md)). Copy the source to the server as `/opt/open.ftorrent.com/node-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
 
 Before the first run, create the data directory with the right ownership and install the reachability probe:
 

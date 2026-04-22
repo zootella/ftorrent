@@ -782,7 +782,16 @@ The `DOCKER-USER` chain is the exception. Docker creates it but never modifies i
 
 ### The rules
 
-Three rules, applied to both iptables (IPv4) and ip6tables (IPv6). Order matters — they're evaluated top to bottom, and the first match wins. All six commands use `-A` (append), so the order you run them is the order they appear in the chain.
+Three rules, applied to both iptables (IPv4) and ip6tables (IPv6). Order matters — they're evaluated top to bottom, and the first match wins. We flush `DOCKER-USER` first so our rules land in a known order, append the three rules, then re-add Docker's default catch-all `RETURN` at the end so traffic from other Docker networks passes through unchanged.
+
+**Start with a clean chain.**
+
+```bash
+iptables  -F DOCKER-USER
+ip6tables -F DOCKER-USER
+```
+
+This removes any existing rules in `DOCKER-USER`, including the single catch-all `RETURN` that Docker seeds on a fresh install. The next four blocks rebuild the chain from scratch.
 
 **Rule 1: Allow container-to-container traffic within the Docker network.**
 
@@ -813,7 +822,16 @@ ip6tables -A DOCKER-USER -s fd00:cafe:2::/64 -j DROP
 
 Any packet from the container subnet that isn't intra-subnet (rule 1) or a response to inbound traffic (rule 2) is dropped. This blocks all container-initiated outbound connections — to the internet, to the LAN, to the router, to other Docker networks. The container is fully isolated.
 
-Note: `-A` appends rules after any existing rules in the DOCKER-USER chain. On a fresh Docker installation this works correctly — Docker starts the chain with a single RETURN-all rule, and our rules go before it. If you already have custom rules in DOCKER-USER, check the final order with `iptables -L DOCKER-USER -n -v` to make sure the rules are positioned correctly.
+**Restore Docker's default for other traffic.**
+
+```bash
+iptables  -A DOCKER-USER -j RETURN
+ip6tables -A DOCKER-USER -j RETURN
+```
+
+Traffic that didn't match rules 1–3 — inbound packets destined for the tracker containers, or traffic from other Docker networks you might add later — falls through to this `RETURN`, which sends processing back to Docker's other chains. The behavior is equivalent to falling off the end of the chain, but stating it explicitly mirrors what Docker seeds `DOCKER-USER` with and makes the chain self-documenting when you read it with `iptables -L DOCKER-USER -n -v`.
+
+Note: flushing `DOCKER-USER` replaces anything you had in it. On a fresh Docker install that's only the default catch-all `RETURN`, which we re-add at the end — lossless. If you already have custom rules in `DOCKER-USER` you want to keep, skip the flush and insert our three rules at the top of the chain with `iptables -I DOCKER-USER 1` for rule 1, `-I DOCKER-USER 2` for rule 2, and `-I DOCKER-USER 3` for rule 3, then confirm the final order with `iptables -L DOCKER-USER -n -v`.
 
 ### Why both iptables and ip6tables
 
