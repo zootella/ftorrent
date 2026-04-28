@@ -1121,6 +1121,126 @@ Jane Jacobs
 https://en.wikipedia.org/wiki/Jane_Jacobs
 Vital Little Plans, c. 1960s
 0.4027554835884124
+
+The whole Internet could be rearchitected by Napster-like technology.
+Andy Grove
+https://en.wikipedia.org/wiki/Andy_Grove
+Attributed, c. 2000
+0.8512675811406336
+
+Technology will always win. You can delay technology by legal interference, but technology will flow around legal barriers.
+Andy Grove
+https://en.wikipedia.org/wiki/Andy_Grove
+TIME, December 1997
+0.6426322200555717
+
+The recent furor over peer-to-peer file sharing using Napster masks a deeper revolution. It's not just some little market segment, but the new shape of the computer industry as a whole.
+Tim O'Reilly
+https://en.wikipedia.org/wiki/Tim_O%27Reilly
+O'Reilly press release for Peer-to-Peer, 2001
+0.8009524471840546
+
+Institutions will try to preserve the problem to which they are the solution.
+Clay Shirky
+https://en.wikipedia.org/wiki/Clay_Shirky
+Attributed, c. 2010 (named "The Shirky Principle" by Kevin Kelly)
+0.8761122318888863
+
+When we change the way we communicate, we change society.
+Clay Shirky
+https://en.wikipedia.org/wiki/Clay_Shirky
+Here Comes Everybody, 2008
+0.9712634939879814
+
+The toothpaste is already out of the tube.
+Gene Kan
+https://en.wikipedia.org/wiki/Gnutella
+Senate Judiciary Committee testimony, 2001
+0.02208054265275672
+
+Governments are good at cutting off the heads of centrally controlled networks like Napster, but pure P2P networks like Gnutella and Tor seem to be holding their own.
+Satoshi Nakamoto
+https://en.wikipedia.org/wiki/Satoshi_Nakamoto
+P2P Foundation forum, February 11, 2009
+0.7959713736102499
+
+Every post and every day rolls in upon us independence like a torrent.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+Letter to James Warren, May 20, 1776
+0.28821361708580095
+
+Let every sluice of knowledge be opened and set a-flowing.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+A Dissertation on the Canon and Feudal Law, October 21, 1765
+0.3297189577146832
+
+Liberty cannot be preserved without a general knowledge among the people.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+A Dissertation on the Canon and Feudal Law, September 30, 1765
+0.9862852170587189
+
+The jaws of power are always open to devour, and her arm is always stretched out, if possible, to destroy the freedom of thinking, speaking, and writing.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+A Dissertation on the Canon and Feudal Law, September 30, 1765
+0.5701559943067134
+
+Let us dare to read, think, speak, and write.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+A Dissertation on the Canon and Feudal Law, October 21, 1765
+0.64695009395604
+
+The preservation of the means of knowledge among the lowest ranks is of more importance to the public than all the property of all the rich men in the country.
+John Adams
+https://en.wikipedia.org/wiki/John_Adams
+A Dissertation on the Canon and Feudal Law, 1765
+0.20602877480176762
+
+For what is a man, what has he got? / If not himself, then he has naught / To say the things he truly feels / And not the words of one who kneels / The record shows I took the blows / And did it my way
+Paul Anka (performed by Frank Sinatra)
+https://en.wikipedia.org/wiki/My_Way
+My Way, 1969
+0.7313173671704486
+
+Interdependent people combine their own efforts with the efforts of others to achieve their greatest success.
+Stephen Covey
+https://en.wikipedia.org/wiki/Stephen_Covey
+The 7 Habits of Highly Effective People, 1989
+0.4204401152750794
+
+Life is, by nature, highly interdependent. To try to achieve maximum effectiveness through independence is like trying to play tennis with a golf club--the tool is not suited to the reality.
+Stephen Covey
+https://en.wikipedia.org/wiki/Stephen_Covey
+The 7 Habits of Highly Effective People, 1989
+0.9059325687023951
+
+The Abundance Mentality flows out of a deep inner sense of personal worth and security. It is the paradigm that there is plenty out there and enough to spare for everybody.
+Stephen Covey
+https://en.wikipedia.org/wiki/Stephen_Covey
+The 7 Habits of Highly Effective People, 1989
+0.04634063288570911
+
+Disruptive technologies bring to a market a very different value proposition than had been available previously. Generally, disruptive technologies underperform established products in mainstream markets. But they have other features that a few fringe customers value. Products based on disruptive technologies are typically cheaper, simpler, smaller, and frequently more convenient to use.
+Clayton Christensen
+https://en.wikipedia.org/wiki/Clayton_Christensen
+The Innovator's Dilemma, 1997
+0.35338229080698624
+
+The very decision-making and resource-allocation processes that are key to the success of established companies are the very processes that reject disruptive technologies.
+Clayton Christensen
+https://en.wikipedia.org/wiki/Clayton_Christensen
+The Innovator's Dilemma, 1997
+0.7116418388968081
+
+Disruptive technologies typically enable new markets to emerge.
+Clayton Christensen
+https://en.wikipedia.org/wiki/Clayton_Christensen
+The Innovator's Dilemma, 1997
+0.8621628932945525
 `
 
 function makeRandom() {//if you add more quotes, here's how to make new random sorting orders for them
@@ -1215,6 +1335,7 @@ blockquote {
 	font-weight: 300;
 	line-height: 1.4;
 	color: var(--text);
+	text-wrap: balance;
 }
 
 .attribution {
@@ -1223,6 +1344,7 @@ blockquote {
 	font-size: 1rem;
 	color: var(--text-muted);
 	margin-top: 1.0rem;
+	text-wrap: balance;
 }
 
 .attribution a {
