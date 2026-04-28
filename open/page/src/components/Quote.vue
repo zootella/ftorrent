@@ -1241,15 +1241,100 @@ Clayton Christensen
 https://en.wikipedia.org/wiki/Clayton_Christensen
 The Innovator's Dilemma, 1997
 0.8621628932945525
+
+Code is law. In this realm, code is the most significant form of law, and it is up to lawyers, policymakers, and especially citizens to decide what values that code embodies.
+Lawrence Lessig
+https://en.wikipedia.org/wiki/Lawrence_Lessig
+Code and Other Laws of Cyberspace, 1999
+0.9135913532105605
+
+That code can create a place of freedom--as the original architecture of the Net did--or a place of exquisitely oppressive control.
+Lawrence Lessig
+https://en.wikipedia.org/wiki/Lawrence_Lessig
+Code and Other Laws of Cyberspace, 1999
+0.4727375811449458
+
+The future is already here--it's just not very evenly distributed.
+William Gibson
+https://en.wikipedia.org/wiki/William_Gibson
+NPR interview, 1993
+0.26240298518455174
+
+The street finds its own uses for things.
+William Gibson
+https://en.wikipedia.org/wiki/William_Gibson
+Burning Chrome, 1986
+0.044759345198423284
+
+Cyberspace. A consensual hallucination experienced daily by billions of legitimate operators, in every nation, by children being taught mathematical concepts. A graphic representation of data abstracted from the banks of every computer in the human system. Unthinkable complexity. Lines of light ranged in the nonspace of the mind, clusters and constellations of data. Like city lights, receding.
+William Gibson
+https://en.wikipedia.org/wiki/William_Gibson
+Neuromancer, 1984
+0.5637517150702993
+
+When you want to know how things really work, study them when they're coming apart.
+William Gibson
+https://en.wikipedia.org/wiki/William_Gibson
+Zero History, 2010
+0.041813936156327225
+
+There's only four things we do better than anyone else: music, movies, microcode (software), high-speed pizza delivery.
+Neal Stephenson
+https://en.wikipedia.org/wiki/Neal_Stephenson
+Snow Crash, 1992
+0.6262089014119939
+
+"Conformity or rebellion?" "Neither one. Both ways are simple-minded--they are only for people who cannot cope with contradiction and ambiguity."
+Neal Stephenson
+https://en.wikipedia.org/wiki/Neal_Stephenson
+Nell in The Diamond Age, 1995
+0.3669780560486492
+
+"But if we're online, the whole world is local."
+Neal Stephenson
+https://en.wikipedia.org/wiki/Neal_Stephenson
+Randy Waterhouse in Cryptonomicon, 1999
+0.7407033874177141
+
+Privacy is necessary for an open society in the electronic age. Privacy is not secrecy.
+Eric Hughes
+https://en.wikipedia.org/wiki/Eric_Hughes_(cypherpunk)
+A Cypherpunk's Manifesto, March 9, 1993
+0.16974359369175918
+
+Cypherpunks write code. We know that someone has to write software to defend privacy, and since we can't get privacy unless we all do, we're going to write it.
+Eric Hughes
+https://en.wikipedia.org/wiki/Eric_Hughes_(cypherpunk)
+A Cypherpunk's Manifesto, March 9, 1993
+0.3433981261070377
+
+We know that software can't be destroyed and that a widely dispersed system can't be shut down.
+Eric Hughes
+https://en.wikipedia.org/wiki/Eric_Hughes_(cypherpunk)
+A Cypherpunk's Manifesto, March 9, 1993
+0.017678482974516574
+
+A specter is haunting the modern world, the specter of crypto anarchy.
+Timothy C. May
+https://en.wikipedia.org/wiki/Timothy_C._May
+The Crypto Anarchist Manifesto, 1988
+0.37571717504122226
+
+Just as the technology of printing altered and reduced the power of medieval guilds and the social power structure, so too will cryptologic methods fundamentally alter the nature of corporations and of government interference in economic transactions.
+Timothy C. May
+https://en.wikipedia.org/wiki/Timothy_C._May
+The Crypto Anarchist Manifesto, 1988
+0.2516547719443373
 `
 
-function makeRandom() {//if you add more quotes, here's how to make new random sorting orders for them
+function makeRandom(n) {//if you add more quotes, here's how to make new random sorting orders for them
 	let s = '\n'
-	for (let i = 0; i < 50; i++) {
+	for (let i = 0; i < n; i++) {
 		s += `${Math.random()}\n`
 	}
 	console.log(s)
 }
+makeRandom(0)
 
 function formatQuote(s) {
 	return s
