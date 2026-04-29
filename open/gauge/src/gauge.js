@@ -90,12 +90,12 @@ const MS_PER_MINUTE = 60_000
 // The six counter keys stored in each ring slot
 const SERVED_KEYS = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
 
-function currentDay() {
-	return Math.floor(Date.now() / MS_PER_DAY)
+function currentDay(now) {
+	return Math.floor(now / MS_PER_DAY)
 }
 
-function currentMinute() {
-	return Math.floor((Date.now() % MS_PER_DAY) / MS_PER_MINUTE)
+function currentMinute(now) {
+	return Math.floor((now % MS_PER_DAY) / MS_PER_MINUTE)
 }
 
 async function loadRing() {
@@ -132,6 +132,12 @@ function countDowntime(minutes, day, minute) {
 // to write a record, and absence of evidence is treated as downtime.
 
 const HISTORY_DAYS = 90
+
+// Launch day — days before this are excluded from uptime stats. The page
+// shows them as "Before launch" and "Launch day" in the bar chart, and
+// excludes the launch day itself from the percentage as partial data.
+// Remove this once the 90-day window has fully passed launch day.
+const LAUNCH_DAY = 20551 // 2026 Apr 08
 
 async function loadDays() {
 	try {
@@ -173,10 +179,11 @@ async function finalizeCompletedDays(minutes, day, days) {
 	}
 }
 
-// Build the 90-day history string for page.json. 90 comma-separated
-// downtime-minute values: first is 89 days ago, last is today.
-// Completed days come from days.json (missing = 1440 downtime).
-// Today is live: (minutes elapsed) - (up-minutes in ring so far).
+// Build the 90-day history of per-day downtime minutes. Index 0 is 89 days
+// ago, last entry is today. Completed days come from days.json (missing =
+// 1440 downtime). Today is live: (minutes elapsed) - (up-minutes in ring).
+// Returns an array; the caller joins to a string for page.json and reuses
+// the array to compute uptime.
 function buildHistory(minutes, day, minute, days) {
 	const values = []
 
@@ -194,7 +201,48 @@ function buildHistory(minutes, day, minute, days) {
 	}
 	values.push((minute + 1) - upToday)
 
-	return values.join(',')
+	return values
+}
+
+// Mirrors Panel.vue's uptimePercent: percentage of post-launch minutes
+// that were up. The launch day itself is excluded as partial data; today
+// contributes only the elapsed minutes so far. Returns null when the
+// window has no post-launch days yet (launch is today or in the future).
+function computeUptime(historyValues, day, minute) {
+	const firstDay = day - (historyValues.length - 1)
+	const launchIndex = LAUNCH_DAY < firstDay ? -1 : LAUNCH_DAY - firstDay
+	const postLaunch = historyValues.slice(launchIndex + 1)
+	if (postLaunch.length === 0) return null
+	const totalMinutes = (postLaunch.length - 1) * MINUTES_PER_DAY + (minute + 1)
+	const totalDown = postLaunch.reduce((sum, d) => sum + d, 0)
+	return ((totalMinutes - totalDown) / totalMinutes) * 100
+}
+
+// Diff the immediately prior ring slot against the current scrape to get
+// per-minute served counts. Returns zeros when the prior slot is missing,
+// stale (wrong day for its index — e.g. server was down through that
+// minute), or shows a reset signature (any key higher in the prior slot
+// than now, meaning Aquatic restarted between them). Same conservative
+// stance as computeServed24h: never report more than a real same-era diff.
+function computeServed1m(currentServed, minutes, day, minute) {
+	const result = {}
+	for (const key of SERVED_KEYS) result[key] = 0
+
+	const i = (minute - 1 + MINUTES_PER_DAY) % MINUTES_PER_DAY
+	const slot = minutes[i]
+	if (!slot) return result
+	const expectedDay = (i <= minute) ? day : day - 1
+	if (slot.day !== expectedDay) return result
+
+	const isReset = SERVED_KEYS.some(k =>
+		(slot.served[k] || 0) > (currentServed[k] || 0)
+	)
+	if (isReset) return result
+
+	for (const key of SERVED_KEYS) {
+		result[key] = (currentServed[key] || 0) - (slot.served[key] || 0)
+	}
+	return result
 }
 
 // Walk backward from the current minute, extending a candidate oldest
@@ -331,10 +379,10 @@ async function writeAtomic(path, data) {
 
 // Returns true if the probe file was touched within the last 90 seconds.
 // Returns false if the file doesn't exist or is stale (local dev, or ISP down).
-async function probeIsFresh() {
+async function probeIsFresh(now) {
 	try {
 		const { mtimeMs } = await stat(probePath)
-		return (Date.now() - mtimeMs) < PROBE_MAX_AGE_MS
+		return (now - mtimeMs) < PROBE_MAX_AGE_MS
 	} catch {
 		return false
 	}
@@ -345,14 +393,20 @@ async function probeIsFresh() {
 // ---------------------------------------------------------------------------
 
 async function tick() {
+	// Capture one clock reading and pass it everywhere downstream so
+	// every derived value (probe freshness, day, minute) sees the same
+	// instant. This rules out a sub-millisecond straddle of the day or
+	// minute boundary producing inconsistent numbers within a tick.
+	const now = Date.now()
+
 	// If the server can't reach the internet, skip this tick entirely.
 	// No ring slot is written, so countDowntime counts this minute as down.
-	if (!await probeIsFresh()) return
+	if (!await probeIsFresh(now)) return
 
 	const memory = await readTrackerMemory()
 	const served = await scrapePrometheus()
-	const day = currentDay()
-	const minute = currentMinute()
+	const day = currentDay(now)
+	const minute = currentMinute(now)
 
 	// Finalize any completed days before writing to the ring,
 	// so stale slots from past days haven't been overwritten yet
@@ -366,9 +420,17 @@ async function tick() {
 
 	// Build page.json — all fields always present
 	const downtime = countDowntime(ring.minutes, day, minute)
-	const history = buildHistory(ring.minutes, day, minute, days)
+	const historyValues = buildHistory(ring.minutes, day, minute, days)
+	const history = historyValues.join(',')
+	const uptime = computeUptime(historyValues, day, minute)
 	const served24h = computeServed24h(served, ring.minutes, day, minute)
-	const page = { day, minute, memory, served: served24h, downtime, history }
+	const served1m = computeServed1m(served, ring.minutes, day, minute)
+	const page = {
+		title: 'open.ftorrent.com live tracker performance record, fresh each minute',
+		image: 'https://open.ftorrent.com/images/open.ftorrent.com.jpg',
+		epoch: now,
+		day, minute, memory, served: served24h, served1minute: served1m, downtime, uptime90days: uptime, history,
+	}
 	await writeAtomic(
 		join(publicDir, 'page.json'),
 		JSON.stringify(page, null, '\t') + '\n'
