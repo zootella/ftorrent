@@ -23,9 +23,18 @@ const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop v
 const drum_duration  = time_second / 2  // colon-blink half-period; also our beat tempo
 const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
 
-const coolDownHttp4 = true // when true, the HTTP IPv4 cell alternates between cool0 and cool1 with the drumbeat
-const cool0 = 'cool down'
-const cool1 = 'cool down'
+// Per-key cool-down: read from page.coolDown. Older page.json files without this property
+// default each key to false (no cool-down). When true, that cell shows coolDownText instead
+// of an animated counter, and the per-frame and per-beat Poisson updates skip it.
+const coolDown = {
+	udp4:  page.coolDown?.udp4  ?? false,
+	udp6:  page.coolDown?.udp6  ?? false,
+	http4: page.coolDown?.http4 ?? false,
+	http6: page.coolDown?.http6 ?? false,
+	ws4:   page.coolDown?.ws4   ?? false,
+	ws6:   page.coolDown?.ws6   ?? false,
+}
+const coolDownText = 'cool down'
 
 function group(n) {
 	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
@@ -42,7 +51,7 @@ const history = computed(() => {
 })
 
 const bar_all  = 100  // 0 minutes downtime
-const bar_one  = 92   // 1 minute downtime
+const bar_one  = 97   // 1 minute downtime
 const bar_none = 3    // full day downtime
 
 function barHeight(downMinutes) {
@@ -112,11 +121,11 @@ const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
 const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
 const served = reactive({ ...recorded })
 
-// Alternates with the existing 500ms drumbeat (the same one driving the clock colon).
-const http4Display = computed(() => {
-	if (coolDownHttp4) return colonOn.value ? cool0 : cool1
-	return group(served.http4)
-})
+// Render one of the six counter cells: either the cool-down message or the formatted live count.
+function cell(key) {
+	if (coolDown[key]) return coolDownText  // cooled cells show a static string, no number
+	return group(served[key])               // live cells show the animated count, comma-grouped
+}
 
 // Knuth for λ < 20, Box-Muller normal approximation for λ ≥ 20.
 // Returns a non-negative integer.
@@ -196,6 +205,7 @@ function updateClock() {
 			// covers the whole gap.
 			const beatsSince = beat - lastBeat
 			for (const k of count_keys) {
+				if (coolDown[k]) continue
 				if (recorded[k] > beat_quantity) {
 					const arrived = poissonSample(rates[k] * drum_duration * beatsSince)
 					if (arrived > 0) served[k] += arrived
@@ -208,6 +218,7 @@ function updateClock() {
 	if (lastFrameNow !== null) {
 		const dt = now - lastFrameNow
 		for (const k of count_keys) {
+			if (coolDown[k]) continue
 			if (recorded[k] > burst_quantity && recorded[k] <= beat_quantity) {
 				const arrived = poissonSample(rates[k] * dt)
 				if (arrived > 0) served[k] += arrived
@@ -239,18 +250,18 @@ onUnmounted(() => {
 			<div class="label">Past 24 hours</div>
 			<div class="label right">Memory in use</div>
 
-			<div class="right">{{ group(served.udp4) }}</div>
-			<div class="right">{{ group(served.udp6) }}</div>
+			<div class="right">{{ cell('udp4') }}</div>
+			<div class="right">{{ cell('udp6') }}</div>
 			<div class="label">UDP announce</div>
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="right">{{ http4Display }}</div>
-			<div class="right">{{ group(served.http6) }}</div>
+			<div class="right">{{ cell('http4') }}</div>
+			<div class="right">{{ cell('http6') }}</div>
 			<div class="label">HTTP announce</div>
 			<div class="right">{{ mb(page.memory.http) }}</div>
 
-			<div class="right">{{ group(served.ws4) }}</div>
-			<div class="right">{{ group(served.ws6) }}</div>
+			<div class="right">{{ cell('ws4') }}</div>
+			<div class="right">{{ cell('ws6') }}</div>
 			<div class="label">WebRTC offer</div>
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
@@ -292,25 +303,25 @@ onUnmounted(() => {
 			<div class="label right">UDP announce</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(served.udp4) }}</div>
+			<div class="right">{{ cell('udp4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ group(served.udp6) }}</div>
+			<div class="right">{{ cell('udp6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">HTTP announce</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ http4Display }}</div>
+			<div class="right">{{ cell('http4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ group(served.http6) }}</div>
+			<div class="right">{{ cell('http6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">WebRTC offer</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(served.ws4) }}</div>
+			<div class="right">{{ cell('ws4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ group(served.ws6) }}</div>
+			<div class="right">{{ cell('ws6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">Memory in use</div>
