@@ -24,8 +24,8 @@ const drum_duration  = time_second / 2  // colon-blink half-period; also our bea
 const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
 
 const coolDownHttp4 = true // when true, the HTTP IPv4 cell alternates between cool0 and cool1 with the drumbeat
-const cool0 = 'cool'
-const cool1 = 'down'
+const cool0 = 'cool down'
+const cool1 = 'cool down'
 
 function group(n) {
 	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
