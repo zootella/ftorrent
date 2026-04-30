@@ -23,6 +23,10 @@ const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop v
 const drum_duration  = time_second / 2  // colon-blink half-period; also our beat tempo
 const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
 
+const coolDownHttp4 = true // when true, the HTTP IPv4 cell alternates between cool0 and cool1 with the drumbeat
+const cool0 = 'cool'
+const cool1 = 'down'
+
 function group(n) {
 	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
 }
@@ -107,6 +111,12 @@ const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
 const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
 const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
 const served = reactive({ ...recorded })
+
+// Alternates with the existing 500ms drumbeat (the same one driving the clock colon).
+const http4Display = computed(() => {
+	if (coolDownHttp4) return colonOn.value ? cool0 : cool1
+	return group(served.http4)
+})
 
 // Knuth for λ < 20, Box-Muller normal approximation for λ ≥ 20.
 // Returns a non-negative integer.
@@ -234,7 +244,7 @@ onUnmounted(() => {
 			<div class="label">UDP announce</div>
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="right">{{ group(served.http4) }}</div>
+			<div class="right">{{ http4Display }}</div>
 			<div class="right">{{ group(served.http6) }}</div>
 			<div class="label">HTTP announce</div>
 			<div class="right">{{ mb(page.memory.http) }}</div>
@@ -290,7 +300,7 @@ onUnmounted(() => {
 			<div class="label right">HTTP announce</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(served.http4) }}</div>
+			<div class="right">{{ http4Display }}</div>
 			<div class="label">IPv4</div>
 			<div class="right">{{ group(served.http6) }}</div>
 			<div class="label">IPv6</div>
