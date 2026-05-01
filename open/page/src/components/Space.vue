@@ -37,12 +37,13 @@ onMounted(() => {
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 	container.value.appendChild(renderer.domElement)
 
-	// Globe — texture chosen by the browser's local month at load time.
+	// Globe — texture chosen by the current UTC month at load time, matching
+	// the rest of the page (clock, day number, launch day are all UTC).
 	// The URL is built at runtime from a string, so Vite has no compile-time
 	// reference to any of the twelve files: only the chosen month is fetched,
 	// and nothing in /earth/ is preloaded, prefetched, or bundled.
 	const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-	const monthName = MONTHS[new Date().getMonth()]
+	const monthName = MONTHS[new Date().getUTCMonth()]
 	const geometry = new THREE.SphereGeometry(1, 64, 64)
 	const texture = new THREE.TextureLoader().load(`/earth/${monthName}.jpg`, () => {
 		render()

@@ -61,26 +61,30 @@ const prometheusEndpoints = [
 ]
 
 // ---------------------------------------------------------------------------
-// Cool-down breakers
+// Cool-down circuit breakers
 // ---------------------------------------------------------------------------
 
 // If a service reaches this many requests in 24 hours, we turn it off for 24 hours to cool it down
-const udpBreaker = 1_500_000_000 // 1.5 billion for small efficient UDP
-const httpBreaker = 250_000_000 // 250 million for https and websocket, which have encryption and packets in a stream
-const wsBreaker = 250_000_000
+const udpBreaker  = 200_000_000
+const httpBreaker = 100_000_000
+const wsBreaker = httpBreaker
 
 // How long a tripped service stays cooled. After this many ms have passed
 // since the trip, the wall clock crosses the cell's startOn timestamp and
 // the service may run again — release is implicit, no separate release code.
 const COOL_DURATION = 24 * 60 * 60 * 1000
 
-// The three services and their per-IP-version cells. A service trips when
-// the sum of served24h across its two cells exceeds its breaker; both cells
-// then cool together.
-const SERVICES = [
-	{ cells: ['udp4',  'udp6'],  breaker: udpBreaker  },
-	{ cells: ['http4', 'http6'], breaker: httpBreaker },
-	{ cells: ['ws4',   'ws6'],   breaker: wsBreaker   },
+// Each of the six cells is checked independently against its protocol's
+// breaker. A single cell exceeding only cools that cell — its IP-version
+// sibling keeps running. This nudges clients toward IPv6 and toward UDP
+// when one face of a service is the bottleneck.
+const CELLS = [
+	{ key: 'udp4',  breaker: udpBreaker  },
+	{ key: 'udp6',  breaker: udpBreaker  },
+	{ key: 'http4', breaker: httpBreaker },
+	{ key: 'http6', breaker: httpBreaker },
+	{ key: 'ws4',   breaker: wsBreaker   },
+	{ key: 'ws6',   breaker: wsBreaker   },
 ]
 
 // ---------------------------------------------------------------------------
@@ -316,8 +320,9 @@ function computeServed24h(currentServed, minutes, day, minute) {
 //
 // State changes happen here in two ways:
 //   tripped:  the gauge sets startOn[cell] = now + COOL_DURATION when the
-//             rolling 24-hour served sum for the cell's service exceeds its
-//             breaker. Both cells of the service trip together.
+//             cell's own rolling 24-hour served exceeds its breaker. Cells
+//             are evaluated independently, so e.g. http4 can cool while
+//             http6 keeps running — clients on v6 stay served.
 //   released: implicit — the wall clock simply crosses startOn[cell].
 //
 // The host's breaker script reads breaker.json, computes desired state per
@@ -349,17 +354,16 @@ async function loadBreaker() {
 	}
 }
 
-// Trip any service whose 24-hour served sum exceeds its breaker. A service
-// already cooling (now < startOn for either of its cells) is left alone, so
-// the trip moment isn't bumped forward minute after minute while traffic
-// remains over threshold — the original release time is sacred.
+// Trip any cell whose 24-hour served exceeds its breaker. A cell already
+// cooling (now < startOn[cell]) is left alone, so the trip moment isn't
+// bumped forward minute after minute while traffic remains over threshold
+// — the original release time is sacred. Each cell is evaluated on its
+// own, so http4 can be cooling while http6 keeps serving.
 function tickBreaker(startOn, served24h, now) {
-	for (const s of SERVICES) {
-		if (now < startOn[s.cells[0]]) continue
-		const sum = s.cells.reduce((a, k) => a + served24h[k], 0)
-		if (sum > s.breaker) {
-			const releaseAt = now + COOL_DURATION
-			for (const k of s.cells) startOn[k] = releaseAt
+	for (const c of CELLS) {
+		if (now < startOn[c.key]) continue
+		if (served24h[c.key] > c.breaker) {
+			startOn[c.key] = now + COOL_DURATION
 		}
 	}
 }
@@ -519,10 +523,10 @@ async function tick() {
 	const served24h = computeServed24h(served, ring.minutes, day, minute)
 	const served1m = computeServed1m(served, ring.minutes, day, minute)
 
-	// Trip any service whose 24-hour served sum has crossed its breaker, then
-	// write breaker.json (whether or not its content changed — the host's
-	// path unit relies on the per-minute heartbeat). Build the per-cell
-	// coolDown booleans for page.json from the same in-memory state.
+	// Trip any cell whose 24-hour served has crossed its breaker, then write
+	// breaker.json (whether or not its content changed — the host's path
+	// unit relies on the per-minute heartbeat). Build the per-cell coolDown
+	// booleans for page.json from the same in-memory state.
 	tickBreaker(breaker.startOn, served24h, now)
 	await writeAtomic(breakerPath, JSON.stringify(breaker, null, '\t') + '\n')
 	const coolDown = expandCoolDown(breaker.startOn, now)
