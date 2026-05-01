@@ -13,10 +13,12 @@ import { join } from 'node:path'
 // Inside this directory:
 //   public/page.json  — the public output, served by nginx
 //   ring.json         — private working state, never served
+//   breaker.json      — private cool-down state, read by the host's breaker script
 const gaugeDir = process.env.GAUGE_DIR || '../page'
 const publicDir = join(gaugeDir, 'public')
 const ringPath = join(gaugeDir, 'ring.json')
 const daysPath = join(gaugeDir, 'days.json')
+const breakerPath = join(gaugeDir, 'breaker.json')
 
 // The internet reachability probe file. A cron job on the host pings an
 // external IP every minute and touches this file on success. The gauge
@@ -56,6 +58,29 @@ const prometheusEndpoints = [
 	{ key: 'udp',  url: 'http://ftorrent-open-udp-1:9000/metrics', type: 'announce' },
 	{ key: 'http', url: 'http://ftorrent-open-http-1:9000/metrics', type: 'announce' },
 	{ key: 'ws',   url: 'http://ftorrent-open-ws-1:9000/metrics',  type: 'offer' },
+]
+
+// ---------------------------------------------------------------------------
+// Cool-down breakers
+// ---------------------------------------------------------------------------
+
+// If a service reaches this many requests in 24 hours, we turn it off for 24 hours to cool it down
+const udpBreaker = 1_500_000_000 // 1.5 billion for small efficient UDP
+const httpBreaker = 250_000_000 // 250 million for https and websocket, which have encryption and packets in a stream
+const wsBreaker = 250_000_000
+
+// How long a tripped service stays cooled. After this many ms have passed
+// since the trip, the wall clock crosses the cell's startOn timestamp and
+// the service may run again — release is implicit, no separate release code.
+const COOL_DURATION = 24 * 60 * 60 * 1000
+
+// The three services and their per-IP-version cells. A service trips when
+// the sum of served24h across its two cells exceeds its breaker; both cells
+// then cool together.
+const SERVICES = [
+	{ cells: ['udp4',  'udp6'],  breaker: udpBreaker  },
+	{ cells: ['http4', 'http6'], breaker: httpBreaker },
+	{ cells: ['ws4',   'ws6'],   breaker: wsBreaker   },
 ]
 
 // ---------------------------------------------------------------------------
@@ -281,6 +306,73 @@ function computeServed24h(currentServed, minutes, day, minute) {
 }
 
 // ---------------------------------------------------------------------------
+// Cool-down state — when each cell may run again
+// ---------------------------------------------------------------------------
+
+// breaker.json holds an epoch-ms timestamp per cell under "startOn". If
+// now > startOn[cell], the cell should be running. If now < startOn[cell],
+// it should be paused. 0 means "no order to be off has ever been issued"
+// (a release that expired in 1970, always in the past).
+//
+// State changes happen here in two ways:
+//   tripped:  the gauge sets startOn[cell] = now + COOL_DURATION when the
+//             rolling 24-hour served sum for the cell's service exceeds its
+//             breaker. Both cells of the service trip together.
+//   released: implicit — the wall clock simply crosses startOn[cell].
+//
+// The host's breaker script reads breaker.json, computes desired state per
+// cell against the current wall clock, and reconciles nginx + iptables. We
+// rewrite breaker.json each tick (whether or not it changed) so the host's
+// path-unit reconciles against the fresh wall clock every minute.
+
+function freshStartOn() {
+	const result = {}
+	for (const k of SERVED_KEYS) result[k] = 0
+	return result
+}
+
+async function loadBreaker() {
+	try {
+		const data = JSON.parse(await readFile(breakerPath, 'utf8'))
+		if (typeof data.startOn !== 'object' || data.startOn === null) {
+			data.startOn = freshStartOn()
+		} else {
+			// Defensive: ensure every cell has a numeric value so downstream
+			// comparisons (now < startOn[cell]) always make sense.
+			for (const k of SERVED_KEYS) {
+				if (typeof data.startOn[k] !== 'number') data.startOn[k] = 0
+			}
+		}
+		return data
+	} catch {
+		return { startOn: freshStartOn() }
+	}
+}
+
+// Trip any service whose 24-hour served sum exceeds its breaker. A service
+// already cooling (now < startOn for either of its cells) is left alone, so
+// the trip moment isn't bumped forward minute after minute while traffic
+// remains over threshold — the original release time is sacred.
+function tickBreaker(startOn, served24h, now) {
+	for (const s of SERVICES) {
+		if (now < startOn[s.cells[0]]) continue
+		const sum = s.cells.reduce((a, k) => a + served24h[k], 0)
+		if (sum > s.breaker) {
+			const releaseAt = now + COOL_DURATION
+			for (const k of s.cells) startOn[k] = releaseAt
+		}
+	}
+}
+
+// Per-cell booleans for page.json's display. coolDown[cell] is true when
+// startOn[cell] is in the future, meaning the cell is currently paused.
+function expandCoolDown(startOn, now) {
+	const result = {}
+	for (const k of SERVED_KEYS) result[k] = startOn[k] > now
+	return result
+}
+
+// ---------------------------------------------------------------------------
 // Prometheus scraping
 // ---------------------------------------------------------------------------
 
@@ -412,6 +504,7 @@ async function tick() {
 	// so stale slots from past days haven't been overwritten yet
 	const ring = await loadRing()
 	const days = await loadDays()
+	const breaker = await loadBreaker()
 	await finalizeCompletedDays(ring.minutes, day, days)
 
 	// Update the ring with current cumulative counters
@@ -425,11 +518,21 @@ async function tick() {
 	const uptime = computeUptime(historyValues, day, minute)
 	const served24h = computeServed24h(served, ring.minutes, day, minute)
 	const served1m = computeServed1m(served, ring.minutes, day, minute)
+
+	// Trip any service whose 24-hour served sum has crossed its breaker, then
+	// write breaker.json (whether or not its content changed — the host's
+	// path unit relies on the per-minute heartbeat). Build the per-cell
+	// coolDown booleans for page.json from the same in-memory state.
+	tickBreaker(breaker.startOn, served24h, now)
+	await writeAtomic(breakerPath, JSON.stringify(breaker, null, '\t') + '\n')
+	const coolDown = expandCoolDown(breaker.startOn, now)
+
 	const page = {
 		title: 'open.ftorrent.com live tracker performance record, fresh each minute',
 		image: 'https://open.ftorrent.com/images/open.ftorrent.com.jpg',
 		epoch: now,
-		day, minute, memory, served: served24h, served1minute: served1m, downtime, uptime90days: uptime, history,
+		when: new Date(now).toISOString(),
+		day, minute, memory, coolDown, served: served24h, served1minute: served1m, downtime, uptime90days: uptime, history,
 	}
 	await writeAtomic(
 		join(publicDir, 'page.json'),
