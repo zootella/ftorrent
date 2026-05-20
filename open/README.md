@@ -491,19 +491,23 @@ Docker's cgroup limits cap the resources each container can consume. These are c
 
 **Memory.** Aquatic holds all tracker state in memory — every peer address, every torrent hash, every connection record. The amount of memory a tracker needs scales directly with the number of peers it serves. A rough estimate is 50-100 bytes per peer entry. At one million peers, that's 50-100 MB. At 25 million peers (opentrackr scale), that's 1.25-2.5 GB.
 
-The UDP tracker carries the vast majority of traffic — roughly 80-90% of announces come over UDP, since it's the default protocol for desktop BitTorrent clients. The HTTP and WebSocket trackers serve a much smaller fraction of total peers.
+The UDP tracker carries the vast majority of traffic — roughly 80-90% of announces come over UDP, since it's the default protocol for desktop BitTorrent clients. The HTTP and WebSocket trackers serve a much smaller fraction of total peers today, though the WebSocket tracker also handles WebRTC signaling for browser-based peers, an emerging use case.
 
 The memlock ulimit for the HTTP and WebSocket containers (65 MB for io_uring buffer registration) counts against the container's memory limit. This is a fixed overhead, not a scaling parameter.
 
 These limits are ceilings, not reservations. Linux does not set aside the memory when the container starts — the container uses what it needs, growing from a few megabytes with zero peers toward the limit as traffic increases. Unused ceiling costs nothing. The kernel uses free physical memory as page cache (filesystem cache for disk reads), and reclaims it instantly and silently when an application needs it. There is no degradation threshold, no swap thrashing — just a smooth, linear tradeoff between page cache and application memory.
 
-On a server with 16 GB of RAM running other services alongside the tracker (game servers, static web hosting, file serving), dedicating 3.5 GB in total ceilings to the three tracker containers is comfortable. The actual memory used at low traffic will be a fraction of that. The recommended limits give the tracker room to grow to top-tier scale without hitting a memory ceiling:
+Each tracker gets a generous ~2 GiB ceiling — enough headroom for any single protocol to grow to opentrackr scale on its own. Uniform sizing means none of the three becomes the bottleneck if the protocol mix shifts; UDP dominates today, but WebTorrent and WebRTC signaling could change that.
 
-| Container | Memory limit | Rationale |
+One small wrinkle in the exact values: the gauge container identifies each tracker by reading its cgroup `memory.max`, which means the three ceilings must be distinct. The compose file sets them at `2001m`, `2002m`, `2003m` — three values one mebibyte apart, each unique enough for the gauge to match. The 1 MiB offset is an identifier, not a meaningful resource difference. See the [gauge README](gauge/README.md) for how this matching works.
+
+On a server with 16 GB of RAM running other services alongside the tracker (game servers, static web hosting, file serving), dedicating ~6 GiB in total ceilings to the three tracker containers is comfortable. The actual memory used at low traffic will be a fraction of that:
+
+| Container | Memory limit | Role |
 |---|---|---|
-| aquatic_udp | 2 GB | Carries ~80-90% of traditional BitTorrent traffic; needs room for millions of peer entries |
-| aquatic_http | 512 MB | Less traffic than UDP; 65 MB used by memlock, rest for tracker state |
-| aquatic_ws | 1 GB | WebTorrent is growing and the tracker also serves as general WebRTC signaling infrastructure, but browser-based peer-to-peer is much smaller than desktop BitTorrent today; 65 MB used by memlock |
+| aquatic_udp | 2001 MiB | The workhorse — desktop BitTorrent clients over UDP |
+| aquatic_http | 2002 MiB | BitTorrent over HTTP for clients behind restrictive firewalls; 65 MB used by memlock |
+| aquatic_ws | 2003 MiB | WebTorrent peers and WebRTC signaling for browser-based clients; 65 MB used by memlock |
 
 **CPU and PIDs.** These can start with modest limits and be adjusted based on monitoring. Aquatic uses a small, fixed number of threads — typically one socket worker and one swarm worker per binary, plus a few housekeeping threads. A PID limit of 64 per container provides headroom beyond what Aquatic needs while still capping runaway process creation.
 
@@ -511,9 +515,9 @@ On a server with 16 GB of RAM running other services alongside the tracker (game
 
 | Container | Protocol | Internal Port | External Port | Runtime | Seccomp | Memory |
 |---|---|---|---|---|---|---|
-| aquatic_udp | UDP | 8443 | 443/udp | mio/epoll | Docker default | 2 GB |
-| aquatic_http | HTTP | 8081 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 512 MB |
-| aquatic_ws | WebSocket | 8082 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 1 GB |
+| aquatic_udp | UDP | 8443 | 443/udp | mio/epoll | Docker default | 2001 MiB |
+| aquatic_http | HTTP | 8081 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 2002 MiB |
+| aquatic_ws | WebSocket | 8082 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 2003 MiB |
 
 ## Building the containers
 
@@ -581,6 +585,30 @@ Additional WebSocket-specific changes:
 Additional UDP-specific changes:
 
 - **Statistics printed to stdout** (`print_to_stdout = true`). This makes tracker stats visible in `docker logs`, which is useful for monitoring without Prometheus.
+
+**Announce intervals and peer lifecycle.** Two TOML settings deserve their own discussion because our values differ deliberately from Aquatic's upstream defaults: `peer_announce_interval` (how often the tracker tells clients to call back) and `max_peer_age` (how long the tracker keeps a peer entry in memory after that peer's most recent announce). Aquatic v0.9.0 ships these defaults:
+
+| Tracker | Aquatic default `peer_announce_interval` | Aquatic default `max_peer_age` |
+|---|---|---|
+| UDP | 900s (15 min) | 1200s (20 min) |
+| HTTP | 120s (2 min) | 1800s (30 min) |
+| WS | 120s (2 min) | 180s (3 min) |
+
+A 2-minute announce interval for HTTP is well outside the BitTorrent ecosystem norm. [opentracker](https://github.com/geolink/opentracker/blob/master/OpenTracker/tracker.h.example) — the C tracker that has powered most of the large public-tracker landscape for over a decade — defaults to 1800s (30 min), with operators commonly raising it further to save bandwidth. The [WebTorrent project's JavaScript tracker](https://github.com/webtorrent/bittorrent-tracker) defaults to 600s (10 min). Across the field, 15 to 60 minutes is the strong consensus for both HTTP and UDP. Aquatic's 2-minute HTTP default looks like a development-era value that was never raised before release — no comment in the upstream source justifies it.
+
+The WebSocket tracker is a separate case. WebTorrent peers are browser tabs and WebRTC sessions, which are far more fragile than desktop BitTorrent peer state. A peer that goes silent for 2 minutes is genuinely likely gone (tab closed, device slept, NAT binding expired), not just between announces. Aquatic's 120s WS default matches WebTorrent's expectations and is the right value to keep.
+
+For `max_peer_age`, the conservative norm is 2× the announce interval — a peer that misses one announce due to a network blip or client restart gets a grace period before being evicted. Tighter ratios (1.5×) also work; below 1× is dangerous because it evicts active peers between their scheduled announces.
+
+Our values:
+
+| Tracker | `peer_announce_interval` | `max_peer_age` | Reasoning |
+|---|---|---|---|
+| UDP | 1800s (30 min) | 3600s (60 min) | Matches opentracker; 2× max_peer_age |
+| HTTP | 1800s (30 min) | 3600s (60 min) | Matches opentracker; 2× max_peer_age |
+| WS | 120s (2 min) | 240s (4 min) | Keeps Aquatic default for WS; 2× max_peer_age |
+
+The net effect is that our HTTP tracker generates ~15× less announce traffic than Aquatic's defaults would produce, and our UDP tracker generates ~2× less. Both clients and tracker pay less in CPU, bandwidth, and (for HTTP) TLS handshake overhead, with no loss in peer-discovery quality at the timescales BitTorrent peers actually operate on.
 
 **A note on config field names.** Aquatic uses `deny_unknown_fields` in its config parser — if a field name is wrong, the binary will refuse to start and print a clear error message naming the invalid field. This is useful: if you modify the config and make a typo, you'll know immediately at container startup rather than getting silent misbehavior.
 
@@ -660,7 +688,7 @@ services:
 
   aquatic-ws:
     container_name: ftorrent-open-ws-1
-    # Same as HTTP, with 1g memory limit
+    # Same as HTTP, with 2003m memory limit
     ports: ["127.0.0.1:8082:8082"]   # Localhost only — nginx proxies to here
 ```
 

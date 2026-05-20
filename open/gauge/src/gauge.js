@@ -44,11 +44,12 @@ const cgroupSlice = join(cgroupDir, 'system.slice')
 // names. We chose not to mount the Docker socket (too much privilege) or
 // pass IDs as environment variables (they change on every restart).
 // Matching by ceiling works because the limits are intentionally different
-// and documented in the guide.
+// and documented in the guide. All three trackers get the same generous
+// ~2 GiB ceiling for tracker state; the 1 MiB offsets are pure identifier.
 const targets = [
-	{ key: 'udp',  ceiling: 2 * 1024 * 1024 * 1024 },  // 2 GB
-	{ key: 'http', ceiling: 512 * 1024 * 1024 },        // 512 MB
-	{ key: 'ws',   ceiling: 1 * 1024 * 1024 * 1024 },   // 1 GB
+	{ key: 'udp',  ceiling: 2001 * 1024 * 1024 },  // 2001 MiB
+	{ key: 'http', ceiling: 2002 * 1024 * 1024 },  // 2002 MiB
+	{ key: 'ws',   ceiling: 2003 * 1024 * 1024 },  // 2003 MiB
 ]
 
 // Prometheus endpoints for the three Aquatic containers. These hostnames

@@ -74,7 +74,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2g
+          memory: 2001m
           pids: 64
     restart: unless-stopped
 
@@ -109,7 +109,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 2002m
           pids: 64
     restart: unless-stopped
 
@@ -144,6 +144,6 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 2003m
           pids: 64
     restart: unless-stopped

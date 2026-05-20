@@ -31,14 +31,19 @@ reverse_proxy_ip_header_format = "last_address"
 [protocol]
 max_scrape_torrents = 100
 max_peers = 50
-# Aquatic's default for HTTP is 120 seconds (shorter than UDP's 900).
-# HTTP connections are persistent, so shorter intervals are appropriate.
-peer_announce_interval = 120
+# Seconds between announces that clients should respect.
+# Changed from Aquatic default 120 to 1800 to match opentracker's 30-minute
+# norm. The 2-minute Aquatic default is well outside the BitTorrent ecosystem
+# norm — see the guide section "Announce intervals and peer lifecycle".
+peer_announce_interval = 1800
 
 [cleaning]
 torrent_cleaning_interval = 30
 connection_cleaning_interval = 60
-max_peer_age = 1800
+# Max age of a peer entry before cleanup (seconds).
+# Changed from Aquatic default 1800 to 3600 (2× peer_announce_interval),
+# the conservative norm — one missed announce of grace before eviction.
+max_peer_age = 3600
 max_connection_idle = 180
 
 [privileges]

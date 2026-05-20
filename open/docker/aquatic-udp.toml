@@ -32,7 +32,9 @@ max_scrape_torrents = 70
 max_response_peers = 30
 
 # Seconds between announces that clients should respect.
-peer_announce_interval = 900
+# Changed from Aquatic default 900 to 1800 to match opentracker's 30-minute
+# norm — see the guide section "Announce intervals and peer lifecycle".
+peer_announce_interval = 1800
 
 [statistics]
 # Interval in seconds between statistics updates.
@@ -54,8 +56,9 @@ torrent_cleaning_interval = 120
 max_connection_age = 120
 
 # Max age of a peer entry before cleanup (seconds).
-# Should be somewhat larger than peer_announce_interval.
-max_peer_age = 1200
+# Changed from Aquatic default 1200 to 3600 (2× peer_announce_interval),
+# the conservative norm — one missed announce of grace before eviction.
+max_peer_age = 3600
 
 [privileges]
 # We don't use Aquatic's built-in privilege dropping — the container

@@ -33,13 +33,19 @@ enable_http_health_checks = true
 [protocol]
 max_scrape_torrents = 255
 max_offers = 10
-# Aquatic's default for WebSocket is 120 seconds (shorter than UDP's 900).
-# WebSocket connections are persistent, so shorter intervals are appropriate.
+# Seconds between announces that clients should respect.
+# Aquatic default 120 kept — WebTorrent peers are browser tabs and WebRTC
+# sessions, more fragile than desktop BitTorrent peer state, so a peer
+# silent for 2 minutes is genuinely likely gone. This matches WebTorrent's
+# own expectations. See "Announce intervals and peer lifecycle".
 peer_announce_interval = 120
 
 [cleaning]
 torrent_cleaning_interval = 30
-max_peer_age = 180
+# Max age of a peer entry before cleanup (seconds).
+# Changed from Aquatic default 180 to 240 (2× peer_announce_interval),
+# the conservative norm — one missed announce of grace before eviction.
+max_peer_age = 240
 max_offer_age = 120
 connection_cleaning_interval = 30
 max_connection_idle = 180
