@@ -46,8 +46,8 @@ function mb(bytes) {
 
 // Parse the 90-day downtime string into an array of per-day downtime minutes
 const history = computed(() => {
-	if (!page.downtimeLast90Days) return []
-	return page.downtimeLast90Days.split(',').map(Number)
+	if (!page.downtimeDays) return []
+	return page.downtimeDays.split(',').map(Number)
 })
 
 const bar_all  = 100  // 0 minutes downtime
@@ -266,7 +266,7 @@ onUnmounted(() => {
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div class="right">{{ group(page.downtimeLastDay) }}{{ page.downtimeLastDay ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 			<div></div>
 
@@ -297,7 +297,7 @@ onUnmounted(() => {
 			<div class="label right">Past 24 hours</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(page.downtimeLastDay) }}{{ page.downtimeLastDay ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 
 			<div class="label right">UDP announce</div>

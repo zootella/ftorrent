@@ -548,8 +548,8 @@ async function tick() {
 		servedMinute: served1m,
 		servedSecond: servedSec,
 		uptimePercent:      uptime,
-		downtimeLastDay:    downtime,
-		downtimeLast90Days: history,
+		downtimeDay:  downtime,
+		downtimeDays: history,
 	}
 	await writeAtomic(
 		join(publicDir, 'page.json'),
