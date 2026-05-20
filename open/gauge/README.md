@@ -87,21 +87,29 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 
 ```json
 {
-	"day": 20559,
-	"minute": 600,
-	"memory": { "udp": 5083136, "http": 27623424, "ws": 33914880 },
-	"served": { "udp4": 12345, "udp6": 67, "http4": 890, "http6": 12, "ws4": 34, "ws6": 5 },
-	"downtime": 0,
-	"history": "0,0,0,3,1440,1440,0,0,...,0,0"
+	"day": 20593,
+	"minute": 568,
+	"memory": { "udp": 129449984, "http": 62971904, "ws": 31092736 },
+	"coolDown": { "udp4": false, "udp6": false, "http4": false, "http6": false, "ws4": false, "ws6": false },
+	"servedDay":    { "udp4": 3594247, "udp6": 454780, "http4": 3628188, "http6": 744186, "ws4": 0, "ws6": 0 },
+	"servedMinute": { "udp4":   43567, "udp6":  10291, "http4":   46195, "http6":  16119, "ws4": 0, "ws6": 0 },
+	"servedSecond": { "udp4":      41, "udp6":      5, "http4":      41, "http6":      8, "ws4": 0, "ws6": 0 },
+	"downtimeLastDay": 1,
+	"downtimeLast90Days": "0,0,0,3,1440,1440,0,0,...,0,0"
 }
 ```
 
 - **day** — current UTC day number (`Math.floor(Date.now() / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
 - **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
-- **served** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses. WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
-- **downtime** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
-- **history** — 90 comma-separated downtime-minute values, one per day. First value is 89 days ago, last value is today. `0` means fully up (zero downtime minutes), `1440` means fully down (the entire day). The frontend draws this as the 90-day uptime bar chart and computes the uptime percentage from it.
+- **coolDown** — six booleans, one per service (`udp4`, `udp6`, `http4`, `http6`, `ws4`, `ws6`). `true` means that service is currently paused; the [circuit breaker](../breaker/README.md) translates these into 503s at the reverse proxy and DROP rules in iptables.
+- **servedDay** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses; WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
+- **servedMinute** — same six keys, for the most recent one-minute window. Useful for live-rate displays that need a recent number rather than a 24-hour total.
+- **servedSecond** — `Math.floor(servedDay / 86_400)` per service: the per-second average rate as a whole number, written here once so every consumer reads the same value. Integer because a fractional request-per-second isn't a meaningful unit, and at typical traffic the numbers are large enough that floor's bias is invisible.
+- **downtimeLastDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
+- **downtimeLast90Days** — 90 comma-separated downtime-minute values, one per day. First value is 89 days ago, last value is today. `0` means fully up (zero downtime minutes), `1440` means fully down (the entire day). The frontend draws this as the 90-day uptime bar chart and computes the uptime percentage from it.
+
+The file also carries a few metadata fields for social-media previews and human inspection: **title** (a human-readable description), **image** (the Open Graph card URL), **epoch** (the same instant as `day` and `minute`, in epoch milliseconds), **when** (the same instant as an ISO-8601 UTC string), and **uptimePercent** (a pre-computed 90-day percentage matching what the frontend derives from `downtimeLast90Days`).
 
 All fields are always present. All numbers are 0 or positive.
 

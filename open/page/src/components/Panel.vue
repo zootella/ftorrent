@@ -44,10 +44,10 @@ function mb(bytes) {
 	return group(Math.ceil(bytes / size_mb)) + nbsp + 'MB'
 }
 
-// Parse the history string into an array of downtime minutes
+// Parse the 90-day downtime string into an array of per-day downtime minutes
 const history = computed(() => {
-	if (!page.history) return []
-	return page.history.split(',').map(Number)
+	if (!page.downtimeLast90Days) return []
+	return page.downtimeLast90Days.split(',').map(Number)
 })
 
 const bar_all  = 100  // 0 minutes downtime
@@ -117,7 +117,7 @@ const barDown = computed(() => {
 // navigation. recorded is the initial display value and the reset target;
 // served is the live, animated copy.
 const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
-const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
+const recorded = Object.fromEntries(count_keys.map(k => [k, page.servedDay[k]]))
 const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
 const served = reactive({ ...recorded })
 
@@ -266,7 +266,7 @@ onUnmounted(() => {
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
-			<div class="right">{{ group(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtimeLastDay) }}{{ page.downtimeLastDay ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 			<div></div>
 
@@ -297,7 +297,7 @@ onUnmounted(() => {
 			<div class="label right">Past 24 hours</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(page.downtime) }}{{ page.downtime ? ' minutes' : '' }}</div>
+			<div class="right">{{ group(page.downtimeLastDay) }}{{ page.downtimeLastDay ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 
 			<div class="label right">UDP announce</div>

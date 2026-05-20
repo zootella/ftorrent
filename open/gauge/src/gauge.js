@@ -112,6 +112,7 @@ const SERVICES = [
 // growth between two different ring slots.
 
 const MINUTES_PER_DAY = 1440
+const SECONDS_PER_DAY = 86_400
 const MS_PER_DAY = 86_400_000
 const MS_PER_MINUTE = 60_000
 
@@ -531,12 +532,24 @@ async function tick() {
 	await writeAtomic(breakerPath, JSON.stringify(breaker, null, '\t') + '\n')
 	const coolDown = expandCoolDown(breaker.startOn, now)
 
+	// Per-second rate from the 24-hour total, rounded down to an integer.
+	// servedSecond[k] === Math.floor(servedDay[k] / SECONDS_PER_DAY). Whole
+	// requests-per-second is a cleaner read than a fractional rate, and the
+	// numbers are big enough that integer precision is fine.
+	const servedSec = Object.fromEntries(SERVED_KEYS.map(k => [k, Math.floor(served24h[k] / SECONDS_PER_DAY)]))
+
 	const page = {
 		title: 'open.ftorrent.com live tracker performance record, fresh each minute',
 		image: 'https://open.ftorrent.com/images/open.ftorrent.com.jpg',
 		epoch: now,
 		when: new Date(now).toISOString(),
-		day, minute, memory, coolDown, served: served24h, served1minute: served1m, downtime, uptime90days: uptime, history,
+		day, minute, memory, coolDown,
+		servedDay:    served24h,
+		servedMinute: served1m,
+		servedSecond: servedSec,
+		uptimePercent:      uptime,
+		downtimeLastDay:    downtime,
+		downtimeLast90Days: history,
 	}
 	await writeAtomic(
 		join(publicDir, 'page.json'),
