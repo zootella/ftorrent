@@ -3,7 +3,7 @@ _ftorrent/open/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 ![open.ftorrent.com above Earth](https://open.ftorrent.com/images/open.ftorrent.com.jpg)
 
-_Three guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), and the [dashboard front end](page/README.md)._
+_Four guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), the [circuit breaker](breaker/README.md), and the [dashboard front end](page/README.md)._
 
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
@@ -1099,14 +1099,12 @@ curl https://open.ftorrent.com/
 
 A successful deployment returns a bencoded response from `/announce`, `"Ok"` from `/health`, and the homepage HTML from `/`. If any of these fail, check the nginx logs (`/var/log/nginx/error.log`), the container logs (`docker logs <container>`), and confirm that the backend ports in the `map` and `proxy_pass` directives match what the compose file publishes on localhost.
 
-## What's next
+## User Experience: Tracker, Gauge, Breaker, and Page
 
-The sections above cover the full deployment path — architecture, traffic path, server preparation, container configuration, build and test, outbound blocking, and the reverse proxy. A reader who followed the guide in order now has a running public tracker.
+A tracker that's pleasant to use and pleasant to operate is more than the Aquatic containers and the kernel work that gets them answering BitTorrent and WebTorrent clients. The deployment at [open.ftorrent.com](https://open.ftorrent.com/) fills out the rest with three more components, each with its own guide:
 
-The deployment at [open.ftorrent.com](https://open.ftorrent.com/) adds one more thing on top: a dashboard status page that shows what the tracker is doing. Each minute, a back end Node container writes [page.json](https://open.ftorrent.com/page.json) which a front end Vue page displays and animates.
+[The 'gauge' back end](gauge/README.md). 📟 A Node.js container that runs next to the trackers. Once a minute it scrapes each tracker's Prometheus endpoint, reads memory usage from cgroup files, and writes a single `page.json` file that the reverse proxy serves as a static file. It has no HTTP server and no listening ports — it only writes files. The guide explains the ring buffer that computes 24-hour totals from a single subtraction, the internet reachability probe that separates "the server was down" from "the internet was down," and how modest hardware supports tens of millions of concurrent peers.
 
-[The 'gauge' back end](gauge/README.md). 📟 A Node.js container that runs next to the trackers. Once a minute it scrapes each tracker's Prometheus endpoint, reads memory usage from cgroup files, and writes a single `page.json` file that nginx serves as a static file. It has no HTTP server and no listening ports — it only writes files. The guide explains the ring buffer that computes 24-hour totals from a single subtraction, the internet reachability probe that separates "the server was down" from "the internet was down," and how modest hardware supports tens of millions of concurrent peers.
+[The 'breaker' circuit breaker](breaker/README.md). 🛑 A Python reconciler that runs on the host, watching `breaker.json` for the gauge's pause-this-service decisions. The tracker has six services in total — three protocols (UDP, HTTP, WebSocket) multiplied by two IP versions (v4, v6) — and the breaker meters each one independently. When any service crosses its 24-hour threshold, the breaker rejects HTTP and WebSocket requests with fast `503`s at the reverse proxy and drops UDP packets in iptables `raw PREROUTING` before conntrack even sees them. The guide explains the per-service independence that nudges clients toward IPv6 and toward UDP under load, the systemd path-unit heartbeat pattern, why the script is wholly self-comparing, and the `Retry-After: 86400` choice that prevents synchronized retry hammers at the published return time.
 
-[The 'page' front end](page/README.md). 🌎 A Vue + Vite single-page application. It fetches `page.json` and renders the dashboard: a slowly turning Earth, announce URLs, and six counters whose digits tick in real time from a Poisson process matched to each tracker's recorded rate. The guide covers the scaffolding choices, typography and self-hosted fonts, the NASA Blue Marble textures, and the math behind the rate animation.
-
-Neither piece is required to run a tracker. The three Aquatic containers from the sections above serve BitTorrent and WebTorrent clients on their own. The dashboard exists because a public service is easier to trust when you can see it running, and because the deployment was a good chance to write down how to build one.
+[The 'page' front end](page/README.md). 🌎 A Vue + Vite single-page application. It fetches `page.json` and renders the dashboard: a rotating Earth, announce URLs, and six counters whose digits tick in real time from a Poisson process matched to each tracker's recorded rate. The guide covers the scaffolding choices, typography and self-hosted fonts, the NASA Blue Marble textures, and the math behind the rate animation.

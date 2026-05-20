@@ -1,0 +1,12 @@
+# /etc/systemd/system/breaker.service
+# Oneshot reconciler invoked by breaker.path on each gauge rewrite of
+# /opt/open.ftorrent.com/data/breaker.json.
+
+[Unit]
+Description=Apply gauge cool-down decisions to nginx + iptables
+Documentation=file:/usr/local/bin/breaker.py
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/breaker.py
+TimeoutStartSec=30

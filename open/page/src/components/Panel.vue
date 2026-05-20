@@ -23,8 +23,8 @@ const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop v
 const drum_duration  = time_second / 2  // colon-blink half-period; also our beat tempo
 const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
 
-// Per-key cool-down: read from page.coolDown. Older page.json files without this property
-// default each key to false (no cool-down). When true, that cell shows coolDownText instead
+// Per-service cool-down: read from page.coolDown. Older page.json files without this property
+// default each key to false (no cool-down). When true, that service shows coolDownText instead
 // of an animated counter, and the per-frame and per-beat Poisson updates skip it.
 const coolDown = {
 	udp4:  page.coolDown?.udp4  ?? false,
@@ -121,10 +121,10 @@ const recorded = Object.fromEntries(count_keys.map(k => [k, page.served[k]]))
 const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
 const served = reactive({ ...recorded })
 
-// Render one of the six counter cells: either the cool-down message or the formatted live count.
-function cell(key) {
-	if (coolDown[key]) return coolDownText  // cooled cells show a static string, no number
-	return group(served[key])               // live cells show the animated count, comma-grouped
+// Render one of the six counter services: either the cool-down message or the formatted live count.
+function service(key) {
+	if (coolDown[key]) return coolDownText  // cooled services show a static string, no number
+	return group(served[key])               // live services show the animated count, comma-grouped
 }
 
 // Knuth for λ < 20, Box-Muller normal approximation for λ ≥ 20.
@@ -250,18 +250,18 @@ onUnmounted(() => {
 			<div class="label">Past 24 hours</div>
 			<div class="label right">Memory in use</div>
 
-			<div class="right">{{ cell('udp4') }}</div>
-			<div class="right">{{ cell('udp6') }}</div>
+			<div class="right">{{ service('udp4') }}</div>
+			<div class="right">{{ service('udp6') }}</div>
 			<div class="label">UDP announce</div>
 			<div class="right">{{ mb(page.memory.udp) }}</div>
 
-			<div class="right">{{ cell('http4') }}</div>
-			<div class="right">{{ cell('http6') }}</div>
+			<div class="right">{{ service('http4') }}</div>
+			<div class="right">{{ service('http6') }}</div>
 			<div class="label">HTTP announce</div>
 			<div class="right">{{ mb(page.memory.http) }}</div>
 
-			<div class="right">{{ cell('ws4') }}</div>
-			<div class="right">{{ cell('ws6') }}</div>
+			<div class="right">{{ service('ws4') }}</div>
+			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">WebRTC offer</div>
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
@@ -303,25 +303,25 @@ onUnmounted(() => {
 			<div class="label right">UDP announce</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ cell('udp4') }}</div>
+			<div class="right">{{ service('udp4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ cell('udp6') }}</div>
+			<div class="right">{{ service('udp6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">HTTP announce</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ cell('http4') }}</div>
+			<div class="right">{{ service('http4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ cell('http6') }}</div>
+			<div class="right">{{ service('http6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">WebRTC offer</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ cell('ws4') }}</div>
+			<div class="right">{{ service('ws4') }}</div>
 			<div class="label">IPv4</div>
-			<div class="right">{{ cell('ws6') }}</div>
+			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">IPv6</div>
 
 			<div class="label right">Memory in use</div>
