@@ -49,7 +49,7 @@ pnpm add -D vue
 
 ## Deployment
 
-The build output (`docs/.vitepress/dist/`) is rsynced to the server where nginx serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
+The build output (`docs/.vitepress/dist/`) is rsynced to the server where the reverse proxy serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
 
 ```bash
 #!/bin/bash
@@ -71,4 +71,4 @@ pnpm build
 ./upload.hide.sh
 ```
 
-The deployed files land in the static directory on the server. nginx serves them as the docs.ftorrent.com site.
+The deployed files land in the static directory on the server. The reverse proxy serves them as the docs.ftorrent.com site.

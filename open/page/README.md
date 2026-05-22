@@ -13,7 +13,7 @@ _Four guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 > <br>Node: 22
 > <br>[three.js](https://threejs.org/): 0.183
 
-The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application that renders `page.json` — a small file the gauge container writes once a minute with uptime and performance statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) — as a panel of numbers. The page is built on a development machine and deployed as static files served by nginx, so at request time nothing runs on the server except nginx handing back pre-rendered HTML, JS, and the JSON. It's the service's public face — a quick check that the trackers are running, and a read of what they're doing.
+The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application that renders `page.json` — a small file the gauge container writes once a minute with uptime and performance statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) — as a panel of numbers. The page is built on a development machine and deployed as static files served by the reverse proxy on the host, so at request time nothing runs on the server except the proxy handing back pre-rendered HTML, JS, and the JSON. It's the service's public face — a quick check that the trackers are running, and a read of what they're doing.
 
 Three visual elements give the page its character. First, a view of the Earth from space uses NASA's public-domain [Blue Marble](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/) composites rendered on a sphere with [three.js](https://threejs.org/), without borders or labels; the globe turns at Earth's actual rate of one rotation per day, and the texture swaps each month so the season on screen is the season right now — what we're after is the view astronauts call the *overview effect*. Second, the counters — UDP, HTTP, and WebRTC on IPv4 and IPv6 — arrive from `page.json` as 24-hour totals and then advance from there in a *numeric rate animation*: each increment is computed from a Poisson process at the real traffic's average rate, so the digits move the way the server is responding to actual requests. The starting values are real; the pulse is simulated, and resets every 10 minutes. And third, a quote of the day, rotated deterministically so every visitor on a given day sees the same one. Drawn from a curated research pull, quotes span from antiquity to the present on themes of free expression, shared knowledge, open networks, and the interconnection of humanity — drawn from philosophers, inventors, activists, scientists, legal texts, and sacred traditions across every inhabited continent.
 
@@ -36,14 +36,14 @@ Development (pnpm dev)
 
 Production (server)
   Browser fetches    https://open.ftorrent.com/page.json
-  nginx serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
+  Proxy serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
 ```
 
-The built `dist/page.json` from `pnpm build` is never used in production — nginx serves the gauge's live copy from the shared data volume instead.
+The built `dist/page.json` from `pnpm build` is never used in production — the reverse proxy serves the gauge's live copy from the shared data volume instead.
 
 ## Deployment
 
-The build output (`dist/`) is rsynced to the server where nginx serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
+The build output (`dist/`) is rsynced to the server where the reverse proxy serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
 
 ```bash
 #!/bin/bash
@@ -65,7 +65,7 @@ pnpm build
 ./upload.hide.sh
 ```
 
-The deployed files land in the static directory on the server. nginx serves them for any request to your tracker domain that isn't a tracker announce, scrape, or WebSocket upgrade.
+The deployed files land in the static directory on the server. The reverse proxy serves them for any request to your tracker domain that isn't routed elsewhere — `/announce`, `/scrape`, `/page.json`, or a WebSocket upgrade.
 
 ## Scaffolding
 
@@ -137,7 +137,7 @@ The fonts are self-hosted. We committed the three WOFF2 files to `public/fonts/`
 }
 ```
 
-All three faces are variable, so the `font-weight: 300 700` range covers every weight the page uses from a single file. The `font-display: swap` line tells the browser to render with a fallback immediately and swap the web font in when it arrives, so there's no flash of invisible text while the download is in flight. Vite copies everything under `public/` verbatim into the build output, which means `/fonts/...` resolves the same way in development (served by Vite) and in production (served by nginx), and the browser only fetches each font when a rule actually uses it.
+All three faces are variable, so the `font-weight: 300 700` range covers every weight the page uses from a single file. The `font-display: swap` line tells the browser to render with a fallback immediately and swap the web font in when it arrives, so there's no flash of invisible text while the download is in flight. Vite copies everything under `public/` verbatim into the build output, which means `/fonts/...` resolves the same way in development (served by Vite) and in production (served by the reverse proxy), and the browser only fetches each font when a rule actually uses it.
 
 All three faces are released under the [SIL Open Font License 1.1](https://openfontlicense.org/), which means they're free to embed, bundle, and self-host, commercial or otherwise, with no attribution required on the rendered page. Self-hosting the WOFF2 files rather than linking to Google Fonts or a CDN keeps the page fully served from `open.ftorrent.com` with no third-party requests.
 
@@ -203,7 +203,7 @@ Vue's DOM diffing handles the rest. The clock's hour and minute spans only updat
 
 ## Quote of the Day
 
-The quote at the bottom of the page changes once a day, and every visitor anywhere in the world sees the same one. The natural way to arrange this would be a "today's quote" row in a database, queried per page load — but the dashboard is static files behind nginx, with no application server and no shared mutable state at request time. We need a way to pick today's quote without anyone asking anyone.
+The quote at the bottom of the page changes once a day, and every visitor anywhere in the world sees the same one. The natural way to arrange this would be a "today's quote" row in a database, queried per page load — but the dashboard is static files behind the reverse proxy, with no application server and no shared mutable state at request time. We need a way to pick today's quote without anyone asking anyone.
 
 The basic idea is to derive an index from the date. The Unix epoch in milliseconds divided by 86,400,000 gives the UTC day number — a small integer that's the same for every visitor between midnight and midnight UTC — and modulo the quote list length, that's the slot to use. But plain sequential indexing through the source order would mean three Václav Havel quotes in a row, three Tim Berners-Lee quotes after, and a viewer who came back daily would notice the clustering. We want the day-to-day order to feel scrambled while staying perfectly reproducible.
 

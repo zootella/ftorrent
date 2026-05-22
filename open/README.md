@@ -164,9 +164,9 @@ You can use any port you like. 6969 is the simplest choice and works well on ope
 
 **Internal container ports.** The containers listen on unprivileged ports above 1024 (8443 for UDP, 8081 for HTTP, 8082 for WS) because they run as nobody with all Linux capabilities dropped — binding to ports below 1024 would require `CAP_NET_BIND_SERVICE`, which we deliberately don't grant. Docker's port mapping translates between the external port (443) and the internal port (8443). The internal port numbers don't matter to clients; only the external ports appear in announce URLs.
 
-**TCP port sharing.** The HTTP tracker, WebSocket tracker, and homepage all share external port 443/tcp through a reverse proxy (nginx). nginx terminates TLS and routes requests based on their content: paths starting with `/announce` or `/scrape` go to the HTTP tracker, requests with a WebSocket `Upgrade` header go to the WebSocket tracker, and everything else goes to the homepage. This means a single domain and port serves all three services — clients don't need to know about the internal routing.
+**TCP port sharing.** The HTTP tracker, WebSocket tracker, and homepage all share external port 443/tcp through a reverse proxy. The reverse proxy terminates TLS and routes requests based on their content: paths starting with `/announce` or `/scrape` go to the HTTP tracker, requests with a WebSocket `Upgrade` header go to the WebSocket tracker, and everything else goes to the homepage. This means a single domain and port serves all three services — clients don't need to know about the internal routing.
 
-**Publishing and visibility.** The UDP container is published on all interfaces (`0.0.0.0:443:8443/udp`) because UDP traffic goes directly from the internet to the container — there's no reverse proxy for UDP. The HTTP and WebSocket containers are published on **localhost only** (`127.0.0.1:8081:8081/tcp`, `127.0.0.1:8082:8082/tcp`) because they should only be reachable through the reverse proxy, not directly from the internet. This ensures all TCP traffic goes through TLS termination and nginx's routing logic.
+**Publishing and visibility.** The UDP container is published on all interfaces (`0.0.0.0:443:8443/udp`) because UDP traffic goes directly from the internet to the container — there's no reverse proxy for UDP. The HTTP and WebSocket containers are published on **localhost only** (`127.0.0.1:8081:8081/tcp`, `127.0.0.1:8082:8082/tcp`) because they should only be reachable through the reverse proxy, not directly from the internet. This ensures all TCP traffic goes through TLS termination and the proxy's routing logic.
 
 ## The traffic path
 
@@ -186,9 +186,9 @@ Before configuring anything, it helps to see how a packet travels from a BitTorr
           TCP 80/443        UDP 443
                 │               │
                 ▼               ▼
-              nginx       Docker DNAT
-           (TLS, routing)  (kernel-level,
-                │          bypasses nginx)
+        reverse proxy     Docker DNAT
+        (TLS, routing)    (kernel-level,
+                │          bypasses proxy)
                 │               │
                 └───────┬───────┘
                         ▼
@@ -198,15 +198,15 @@ Before configuring anything, it helps to see how a packet travels from a BitTorr
 
 The **router or edge firewall** is where a client's packet first reaches the deployment. Behind a home or office router, this means port-forwarding rules for IPv4 and allow rules for IPv6. On a cloud instance with a direct public IP, it's the provider's firewall or security group.
 
-The **Linux host firewall** (iptables and ip6tables) controls which inbound packets reach processes on the host. nginx runs as a host process and listens on ports 80 and 443, so those need INPUT allow rules. UDP tracker traffic does not go through INPUT at all — Docker's DNAT handles it in PREROUTING, which runs before INPUT and sends the packet straight to the container.
+The **Linux host firewall** (iptables and ip6tables) controls which inbound packets reach processes on the host. The reverse proxy runs as a host process and listens on ports 80 and 443, so those need INPUT allow rules. UDP tracker traffic does not go through INPUT at all — Docker's DNAT handles it in PREROUTING, which runs before INPUT and sends the packet straight to the container.
 
-**nginx** terminates TLS for HTTPS and WSS, handles IPv4 and IPv6 dual-stack, and routes TCP requests by path (`/announce`, `/scrape`) and by WebSocket upgrade header to the right container over localhost. UDP tracker traffic never touches nginx.
+**The reverse proxy** terminates TLS for HTTPS and WSS, handles IPv4 and IPv6 dual-stack, and routes TCP requests by path (`/announce`, `/scrape`) and by WebSocket upgrade header to the right container over localhost. UDP tracker traffic never touches the reverse proxy.
 
 **Docker** sits underneath, providing the network namespace where the containers live. Two Docker layers matter: the daemon config (`/etc/docker/daemon.json` with `ipv6`, `ip6tables`, and `userland-proxy: false`) and the compose network (with `enable_ipv6: true`, pinned subnets, and DOCKER-USER firewall rules that isolate the containers from the outside).
 
 The **containers** are the Aquatic binaries themselves, hardened as described later in the guide — running as nobody, read-only filesystem, all capabilities dropped, custom seccomp profile for io_uring.
 
-The rest of the guide configures each of these in order. Some are already covered above (the Docker daemon and network, the containers); others are covered in the sections that follow (host firewall, nginx).
+The rest of the guide configures each of these in order. Some are already covered above (the Docker daemon and network, the containers); others are covered in the sections that follow (host firewall, reverse proxy).
 
 ## Server preparation
 
@@ -238,7 +238,7 @@ On routers with dynamically changing prefixes, the allow rules can often be targ
 
 ### Host firewall
 
-On the server itself, iptables and ip6tables control which inbound packets reach processes running on the host. The goal is to allow only the ports that nginx and SSH listen on.
+On the server itself, iptables and ip6tables control which inbound packets reach processes running on the host. The goal is to allow only the ports that the reverse proxy and SSH listen on.
 
 **INPUT allow rules:**
 
@@ -247,7 +247,7 @@ On the server itself, iptables and ip6tables control which inbound packets reach
 iptables  -A INPUT -p tcp --dport 22 -j ACCEPT
 ip6tables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-# HTTP and HTTPS (nginx)
+# HTTP and HTTPS (reverse proxy)
 iptables  -A INPUT -p tcp --dport 80  -j ACCEPT
 iptables  -A INPUT -p tcp --dport 443 -j ACCEPT
 ip6tables -A INPUT -p tcp --dport 80  -j ACCEPT
@@ -276,7 +276,7 @@ iptables  -P OUTPUT ACCEPT
 ip6tables -P OUTPUT ACCEPT
 ```
 
-**The UDP tracker does not need an INPUT rule.** This might be surprising, but it's correct. Docker's DNAT for published ports happens in the PREROUTING chain, which runs before INPUT. When a UDP packet arrives on port 443, Docker rewrites the destination to the container's internal address and the packet moves to the FORWARD chain (which Docker manages), never touching INPUT. INPUT only sees packets destined for host processes like nginx and sshd. Adding a UDP allow rule anyway is harmless — it just never matches.
+**The UDP tracker does not need an INPUT rule.** This might be surprising, but it's correct. Docker's DNAT for published ports happens in the PREROUTING chain, which runs before INPUT. When a UDP packet arrives on port 443, Docker rewrites the destination to the container's internal address and the packet moves to the FORWARD chain (which Docker manages), never touching INPUT. INPUT only sees packets destined for host processes like the reverse proxy and sshd. Adding a UDP allow rule anyway is harmless — it just never matches.
 
 **ICMPv6 is required for IPv6 to work at all.** Unlike IPv4's ARP, IPv6 uses ICMPv6 for neighbor discovery and path MTU discovery. Blocking ICMPv6 breaks the entire IPv6 stack. This is a common mistake when people write strict firewall rules.
 
@@ -516,8 +516,8 @@ On a server with 16 GB of RAM running other services alongside the tracker (game
 | Container | Protocol | Internal Port | External Port | Runtime | Seccomp | Memory |
 |---|---|---|---|---|---|---|
 | aquatic_udp | UDP | 8443 | 443/udp | mio/epoll | Docker default | 2001 MiB |
-| aquatic_http | HTTP | 8081 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 2002 MiB |
-| aquatic_ws | WebSocket | 8082 | 443/tcp (via nginx) | glommio/io_uring | Custom (+ 3 syscalls) | 2003 MiB |
+| aquatic_http | HTTP | 8081 | 443/tcp (via reverse proxy) | glommio/io_uring | Custom (+ 3 syscalls) | 2002 MiB |
+| aquatic_ws | WebSocket | 8082 | 443/tcp (via reverse proxy) | glommio/io_uring | Custom (+ 3 syscalls) | 2003 MiB |
 
 ## Building the containers
 
@@ -576,7 +576,7 @@ The key modifications across all three configs:
 
 Additional HTTP-specific changes:
 
-- **Reverse proxy mode enabled** (`runs_behind_reverse_proxy = true`). The HTTP tracker sits behind nginx, which handles TLS and forwards requests. Aquatic needs to read the client's real IP from the `X-Forwarded-For` header rather than seeing nginx's internal IP.
+- **Reverse proxy mode enabled** (`runs_behind_reverse_proxy = true`). The HTTP tracker sits behind the reverse proxy, which handles TLS and forwards requests. Aquatic needs to read the client's real IP from the `X-Forwarded-For` header rather than seeing the proxy's internal IP.
 
 Additional WebSocket-specific changes:
 
@@ -675,7 +675,7 @@ services:
     container_name: ftorrent-open-http-1
     # ... build ...
     networks: [tracker]
-    ports: ["127.0.0.1:8081:8081"]   # Localhost only — nginx proxies to here
+    ports: ["127.0.0.1:8081:8081"]   # Localhost only — the reverse proxy connects here
     user: "65534:65534"
     read_only: true
     tmpfs: [/tmp]
@@ -689,7 +689,7 @@ services:
   aquatic-ws:
     container_name: ftorrent-open-ws-1
     # Same as HTTP, with 2003m memory limit
-    ports: ["127.0.0.1:8082:8082"]   # Localhost only — nginx proxies to here
+    ports: ["127.0.0.1:8082:8082"]   # Localhost only — the reverse proxy connects here
 ```
 
 The service names (`aquatic-udp`, `aquatic-http`, `aquatic-ws`) describe what each container runs — the Aquatic binary for that protocol. Explicit `container_name:` entries give the running containers the names `ftorrent-open-udp-1`, `ftorrent-open-http-1`, `ftorrent-open-ws-1` that appear in `docker ps`. Without the explicit names, Docker Compose would auto-generate names from the project and service (`ftorrent-open-aquatic-udp-1`), which is correct but longer.
@@ -927,46 +927,55 @@ curl -s --max-time 3 http://1.1.1.1 || echo "Blocked (good)"
 
 The stats dashboard scraping Prometheus is the positive test — if the dashboard shows live metrics from the tracker containers, intra-subnet communication is working. If the curl tests above timeout, outbound is blocked. Both conditions together confirm the isolation is correctly configured.
 
-## Reverse proxy (nginx)
+## Reverse proxy
 
-nginx is the final layer between the internet and the TCP containers. It listens on ports 80 and 443 on the host (both IPv4 and IPv6), terminates TLS, and routes each incoming TCP request to the right container over localhost. UDP traffic never touches nginx — it goes directly from Docker DNAT to the UDP container, as described in "The traffic path" above.
+The reverse proxy is the final layer between the internet and the TCP containers. It listens on ports 80 and 443 on the host (both IPv4 and IPv6), terminates TLS, and routes each incoming TCP request to the right container over localhost. UDP traffic never touches the reverse proxy — it goes directly from Docker DNAT to the UDP container, as described in "The traffic path" above.
+
+This section walks through **nginx** with **certbot** for TLS as one worked example. The deployment at [open.ftorrent.com](https://open.ftorrent.com/) currently runs a different stack — HAProxy in front of Caddy, with lego for certificates — for reasons specific to how the cool-down breaker pushes per-minute updates. The [circuit breaker guide](breaker/README.md) walks through both implementations side by side. The role of this layer (TLS termination, path-based routing, WebSocket handling, real-client-IP forwarding, dual-stack listening) is the same either way; substitute equivalent directives in whichever proxy you prefer.
 
 Setting up nginx as a reverse proxy is well-documented ground and any Linux sysadmin or AI coding agent can handle the standard parts. This section focuses on the tracker-specific requirements: path-based routing, WebSocket upgrades, real client IPs, and dual-stack listening.
 
 ### The four routing cases
 
-A single nginx server block on port 443 routes incoming requests to different containers based on what they ask for:
+A single nginx server block on port 443 routes incoming requests by content:
 
 | Request | Routed to | How it's matched |
 |---|---|---|
 | `GET /announce?...` or `GET /scrape?...` | HTTP tracker container (`127.0.0.1:8081`) | Path regex `~ ^/(announce\|scrape)` |
-| WebSocket upgrade | WebSocket tracker container (`127.0.0.1:8082`) | `Upgrade: websocket` header |
-| Anything else | Homepage/stats container (`127.0.0.1:8080`) | Default location |
+| `GET /page.json` | Gauge's data directory on disk | `location = /page.json` with `alias` |
+| WebSocket upgrade | WebSocket tracker container (`127.0.0.1:8082`) | `Upgrade: websocket` header, matched inside `location /` |
+| Anything else | Static dashboard from `/opt/open.ftorrent.com/static` | `try_files` fallback in `location /` |
 
 A second server block on port 80 serves only two purposes: certbot's HTTP-01 ACME challenges, and a `301` redirect to HTTPS for everything else.
 
 ### WebSocket upgrade routing
 
-nginx routes by HTTP header using a `map` directive. This must live at the `http` block level, not inside `server` — nginx refuses to start if it's in the wrong scope. A typical pattern:
+nginx routes WebSocket upgrades inline inside the catch-all `location /`: an `if` block tests the upgrade header and proxies to the WS container; everything else falls through to static-file serving. A small helper `map` directive at the `http` block level computes the right `Connection` header for upgraded versus non-upgraded requests:
 
 ```nginx
-map $http_upgrade $tracker_backend {
-    default      http://127.0.0.1:8080;   # Homepage
-    websocket    http://127.0.0.1:8082;   # WebSocket tracker
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
 }
 ```
 
-The variable `$tracker_backend` resolves to the WebSocket container when the client sends `Upgrade: websocket`, and to the homepage container otherwise. The HTTP tracker is handled separately via a `location ~ ^/(announce|scrape)` block that takes precedence over the default.
+This must live in the `http` block, not inside `server` — nginx refuses to start if it's in the wrong scope. `$connection_upgrade` resolves to `upgrade` when the client sent `Upgrade: websocket` and to `close` otherwise — which is exactly what the `Connection` header on the proxied request should say in each case.
 
-Inside the location block that proxies to the WebSocket container, two directives are required:
+Inside `location /`, three proxy directives plus the upgrade-check `if` block handle the routing:
 
 ```nginx
 proxy_http_version 1.1;
 proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection "upgrade";
+proxy_set_header Connection $connection_upgrade;
+
+if ($http_upgrade = "websocket") {
+    proxy_pass http://127.0.0.1:8082;
+    break;
+}
+try_files $uri $uri/ =404;
 ```
 
-**Both are necessary.** nginx defaults to HTTP/1.0 for upstream connections, which doesn't support `Upgrade`. Without `proxy_http_version 1.1`, WebSocket upgrades fail silently — the connection closes after the initial request.
+**All three proxy directives are necessary.** nginx defaults to HTTP/1.0 for upstream connections, which doesn't support `Upgrade`. Without `proxy_http_version 1.1`, WebSocket upgrades fail silently — the connection closes after the initial request. Non-WebSocket requests fall through the `if` and reach `try_files`, which serves the static dashboard from disk.
 
 ### Real client IPs
 
@@ -1027,9 +1036,9 @@ A minimal sketch (not a complete config — adapt to your needs):
 
 ```nginx
 # Outside the server blocks, at the http level
-map $http_upgrade $tracker_backend {
-    default      http://127.0.0.1:8080;
-    websocket    http://127.0.0.1:8082;
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
 }
 
 # Port 80 — redirect everything except ACME challenges to HTTPS
@@ -1057,6 +1066,10 @@ server {
     ssl_certificate     /etc/letsencrypt/live/open.ftorrent.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/open.ftorrent.com/privkey.pem;
 
+    # Static dashboard served from disk
+    root /opt/open.ftorrent.com/static;
+    index index.html;
+
     # HTTP tracker — /announce and /scrape
     location ~ ^/(announce|scrape) {
         proxy_pass http://127.0.0.1:8081;
@@ -1066,16 +1079,26 @@ server {
         proxy_set_header Host $host;
     }
 
-    # Everything else — routed by Upgrade header via the map
+    # Gauge's per-minute JSON, served from its writable data directory
+    location = /page.json {
+        alias /opt/open.ftorrent.com/data/public/page.json;
+    }
+
+    # WebSocket upgrades to the WS tracker; everything else static from disk
     location / {
-        proxy_pass $tracker_backend;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+
+        if ($http_upgrade = "websocket") {
+            proxy_pass http://127.0.0.1:8082;
+            break;
+        }
+        try_files $uri $uri/ =404;
     }
 }
 ```
@@ -1093,11 +1116,11 @@ curl "https://open.ftorrent.com/announce?info_hash=01234567890123456789&peer_id=
 # WebSocket tracker — should return "Ok" (the health endpoint)
 curl https://open.ftorrent.com/health
 
-# Homepage — should return whatever the homepage container serves
+# Dashboard — should return the static index.html from disk
 curl https://open.ftorrent.com/
 ```
 
-A successful deployment returns a bencoded response from `/announce`, `"Ok"` from `/health`, and the homepage HTML from `/`. If any of these fail, check the nginx logs (`/var/log/nginx/error.log`), the container logs (`docker logs <container>`), and confirm that the backend ports in the `map` and `proxy_pass` directives match what the compose file publishes on localhost.
+A successful deployment returns a bencoded response from `/announce`, `"Ok"` from `/health`, and the dashboard HTML from `/`. If any of these fail, check the nginx logs (`/var/log/nginx/error.log`), the container logs (`docker logs <container>`), and confirm that the backend ports in the `proxy_pass` directives match what the compose file publishes on localhost.
 
 ## User Experience: Tracker, Gauge, Breaker, and Page
 

@@ -11,14 +11,14 @@ log_level = "warn"
 [network]
 # Changed from default ":3000" to match our container port.
 # Listen on all IPv4 interfaces. When running behind a reverse proxy
-# (nginx) on the same Docker network, the proxy handles IPv4/IPv6
-# and TLS from the outside. WebSocket upgrades are forwarded to this
-# container over the internal Docker bridge, which is IPv4.
+# on the host, the proxy handles IPv4/IPv6 and TLS from the outside.
+# WebSocket upgrades are forwarded to this container over the internal
+# Docker bridge, which is IPv4.
 address = "0.0.0.0:8082"
 only_ipv6 = false
 tcp_backlog = 1024
 
-# TLS is handled by the reverse proxy (nginx), not by Aquatic.
+# TLS is handled by the reverse proxy, not by Aquatic.
 enable_tls = false
 
 # WebSocket limits

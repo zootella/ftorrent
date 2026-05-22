@@ -11,7 +11,7 @@ import { join } from 'node:path'
 // place for the Vite dev server.
 //
 // Inside this directory:
-//   public/page.json  — the public output, served by nginx
+//   public/page.json  — the public output, served by the reverse proxy
 //   ring.json         — private working state, never served
 //   breaker.json      — private cool-down state, read by the host's breaker script
 const gaugeDir = process.env.GAUGE_DIR || '../page'
@@ -326,7 +326,7 @@ function computeServed24h(currentServed, minutes, day, minute) {
 //   released: implicit — the wall clock simply crosses startOn[service].
 //
 // The host's breaker script reads breaker.json, computes desired state per
-// service against the current wall clock, and reconciles nginx + iptables.
+// service against the current wall clock, and reconciles the reverse proxy + iptables.
 // We rewrite breaker.json each tick (whether or not it changed) so the
 // host's path-unit reconciles against the fresh wall clock every minute.
 

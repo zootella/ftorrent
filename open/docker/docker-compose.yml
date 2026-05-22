@@ -7,8 +7,9 @@
 #   - Kernel tuning applied (see ../README.md, "Server preparation")
 #   - seccomp-iouring.json in the same directory as this file
 #   - TOML config files in the same directory as this file
-#   - A reverse proxy (e.g., nginx) routing HTTPS traffic to the
-#     HTTP and WebSocket containers on localhost
+#   - A reverse proxy routing HTTPS traffic to the HTTP and
+#     WebSocket containers on localhost (nginx, HAProxy + Caddy,
+#     or equivalent — see ../README.md)
 #
 # Usage:
 #   docker compose build
@@ -81,7 +82,7 @@ services:
   # HTTP tracker (BEP 3) — for clients behind restrictive firewalls.
   # Uses glommio/io_uring — requires custom seccomp profile and memlock ulimit.
   #
-  # Published on localhost only — the reverse proxy (nginx) handles TLS
+  # Published on localhost only — the reverse proxy handles TLS
   # and forwards /announce and /scrape requests to this container.
   # Not directly reachable from the internet.
   aquatic-http:
@@ -116,7 +117,7 @@ services:
   # WebSocket tracker — for WebTorrent browser clients and WebRTC signaling.
   # Uses glommio/io_uring — requires custom seccomp profile and memlock ulimit.
   #
-  # Published on localhost only — the reverse proxy (nginx) handles TLS
+  # Published on localhost only — the reverse proxy handles TLS
   # and WebSocket upgrades, forwarding to this container.
   # Not directly reachable from the internet.
   aquatic-ws:

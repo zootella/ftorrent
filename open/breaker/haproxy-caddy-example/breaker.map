@@ -1,0 +1,7 @@
+# /etc/haproxy/maps/breaker.map — circuit-breaker state, one row per service
+udp4 on
+udp6 on
+http4 on
+http6 on
+ws4 on
+ws6 on

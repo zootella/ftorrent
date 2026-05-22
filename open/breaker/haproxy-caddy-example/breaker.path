@@ -1,0 +1,15 @@
+# /etc/systemd/system/breaker.path
+# Watches /opt/open.ftorrent.com/data/breaker.json for the gauge's per-minute
+# rewrite. Each rewrite (even unchanged content) triggers breaker.service for
+# a wall-clock-aware reconcile of HAProxy + iptables.
+
+[Unit]
+Description=Watch breaker.json for circuit-breaker reconciles
+Documentation=file:/usr/local/bin/breaker.py
+
+[Path]
+PathChanged=/opt/open.ftorrent.com/data/breaker.json
+Unit=breaker.service
+
+[Install]
+WantedBy=multi-user.target
