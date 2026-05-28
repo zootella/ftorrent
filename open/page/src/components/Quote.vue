@@ -1105,6 +1105,41 @@ Just as the technology of printing altered and reduced the power of medieval gui
 Timothy C. May
 https://en.wikipedia.org/wiki/Timothy_C._May
 The Crypto Anarchist Manifesto, 1988
+
+Any sufficiently advanced technology is indistinguishable from magic.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+Profiles of the Future, 1962 (revised 1973)
+
+The only way of discovering the limits of the possible is to venture a little way past them into the impossible.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+Profiles of the Future, 1962
+
+When a distinguished but elderly scientist states that something is possible, he is almost certainly right. When he states that something is impossible, he is very probably wrong.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+Profiles of the Future, 1962
+
+Information is not knowledge, knowledge is not wisdom, and wisdom is not foresight. Each grows out of the other, and we need them all.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+Letter to the editor, Science, January 19, 1968
+
+A faith that cannot survive collision with the truth is not worth many regrets.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+The Exploration of Space, 1951
+
+Trying to predict the future is a discouraging and hazardous occupation. ... if by some miracle a prophet could describe the future exactly as it was going to take place, his predictions would sound so absurd, so far-fetched, that everybody would laugh him to scorn.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+BBC Horizon, "The Knowledge Explosion," September 21, 1964
+
+The only thing we can be sure of about the future is that it will be absolutely fantastic. ... Only if what I tell you appears absolutely unbelievable have we any chance of visualizing the future as it really will happen.
+Arthur C. Clarke
+https://en.wikipedia.org/wiki/Arthur_C._Clarke
+BBC Horizon, "The Knowledge Explosion," September 21, 1964
 `
 
 function formatQuote(s) {
