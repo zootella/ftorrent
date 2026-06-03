@@ -5,16 +5,16 @@ _Four guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 # Public Tracker Dashboard Back End
 
-> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.8
 > <br>Created: 2026-Apr
-> <br>Last reviewed: 2026-Apr
-> <br>Node: 22
+> <br>Last reviewed: 2026-Jun
+> <br>Python: 3.12
 
 ## What this is and where it fits
 
 The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../README.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/README.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
 
-The gauge is a Node.js script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — `page.json` — that the reverse proxy serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
+The gauge is a Python script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — `page.json` — that the reverse proxy serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
 
 ## Why it's built this way
 
@@ -22,7 +22,7 @@ The gauge is a Node.js script that runs in its own Docker container alongside th
 
 **Why write a file instead of serving an API?** A JSON file served by the reverse proxy is the simplest possible data path. No application server in the request path, no ports to expose, no process that can be crashed by a malformed HTTP request. The gauge writes, the reverse proxy serves, the frontend reads. Each piece can fail independently — if the gauge crashes, the reverse proxy keeps serving the last good `page.json` until the gauge restarts.
 
-**Why clock-aligned scheduling?** The gauge fires once just after the top of each UTC minute, not on a fixed interval. A 60-second `setInterval` drifts over time and can skip or double-fire at minute boundaries, which would create false gaps in the ring buffer. Clock alignment means exactly one tick per calendar minute.
+**Why clock-aligned scheduling?** The gauge fires once just after the top of each UTC minute, not on a fixed interval. A fixed 60-second sleep between ticks drifts over time and can skip or double-fire at minute boundaries, which would create false gaps in the ring buffer. Clock alignment means exactly one tick per calendar minute.
 
 ## The ring buffer
 
@@ -38,7 +38,7 @@ Downtime is counted by walking the ring and checking each slot against two condi
 
 The gauge tracks whether it ran each minute, but that alone doesn't prove the server was reachable from the internet. The gauge could be ticking along happily while the ISP is down and no BitTorrent client can reach the tracker. To report honest downtime, the gauge needs an external signal: was the server actually online?
 
-A cron job on the host handles this. Every minute, `probe.sh` pings one of four targets — Cloudflare and Google, each on both IPv4 and IPv6:
+A cron job on the host handles this. Every minute, `probe.py` pings one of four targets — Cloudflare and Google, each on both IPv4 and IPv6:
 
 | Target | Address |
 |---|---|
@@ -99,13 +99,13 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 }
 ```
 
-- **day** — current UTC day number (`Math.floor(Date.now() / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
+- **day** — current UTC day number (`floor(epoch / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
 - **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
 - **coolDown** — six booleans, one per service (`udp4`, `udp6`, `http4`, `http6`, `ws4`, `ws6`). `true` means that service is currently paused; the [circuit breaker](../breaker/README.md) translates these into 503s at the reverse proxy and DROP rules in iptables.
 - **servedDay** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses; WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
 - **servedMinute** — same six keys, for the most recent one-minute window. Useful for live-rate displays that need a recent number rather than a 24-hour total.
-- **servedSecond** — `Math.floor(servedDay / 86_400)` per service: the per-second average rate as a whole number, written here once so every consumer reads the same value. Integer because a fractional request-per-second isn't a meaningful unit, and at typical traffic the numbers are large enough that floor's bias is invisible.
+- **servedSecond** — `floor(servedDay / 86_400)` per service: the per-second average rate as a whole number, written here once so every consumer reads the same value. Integer because a fractional request-per-second isn't a meaningful unit, and at typical traffic the numbers are large enough that floor's bias is invisible.
 - **downtimeDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
 - **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Normally 90 entries (the 90-day window we show on the dashboard), though the array can be shorter while the gauge is still accumulating history. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart and computes the uptime percentage from it.
 
@@ -133,30 +133,34 @@ This is peer-to-peer architecture doing what it does best. The tracker's job is 
 open/gauge/
 ├── Dockerfile             Container image definition
 ├── compose-service.yml    Compose service entry (add to your docker-compose.yml)
-├── package.json           Workspace metadata and start script
-├── probe.sh               Internet reachability probe (runs on host via cron)
+├── probe.py               Internet reachability probe (runs on host via cron)
 ├── README.md              This document
 └── src/
-    └── gauge.js           The gauge script
+    └── gauge.py           The gauge script
 ```
 
 ## Development
 
 Run the gauge and the Vite dev server side by side. The gauge writes `page.json` to the page workspace's `public/` directory (controlled by `GAUGE_DIR`, defaults to `../page`), and the dev server picks it up.
 
-```bash
-# Terminal 1
-cd open/gauge && pnpm start
+Locally there's no host cron touching the probe, and the gauge only ticks when the probe is fresh — so without it `tick()` treats every minute as offline and writes nothing. Stand in for the cron job with a third terminal that keeps the marker under 90 seconds old.
 
-# Terminal 2
+```bash
+# Terminal 1 — the gauge
+cd open/gauge && python src/gauge.py
+
+# Terminal 2 — the Vite dev server
 cd open/page && pnpm dev
+
+# Terminal 3 — stand in for the host's probe cron
+cd open/gauge && while true; do touch ../page/probe; sleep 30; done
 ```
 
 Locally, memory and served counts will be 0 (no cgroups or Prometheus endpoints on macOS). Downtime starts at 1439 and decreases each minute. The gauge also creates `ring.json` in `open/page/` — this is gitignored and should not be committed.
 
 ## Deployment
 
-The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../README.md)). Copy the source to the server as `/opt/open.ftorrent.com/node-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
+The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../README.md)). Copy the source to the server as `/opt/open.ftorrent.com/python-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
 
 Before the first run, create the data directory with the right ownership and install the reachability probe:
 
@@ -165,17 +169,17 @@ sudo mkdir -p /opt/open.ftorrent.com/data/public
 sudo chown -R 65534:65534 /opt/open.ftorrent.com/data
 ```
 
-Install the internet reachability probe. Copy `probe.sh` to the server and make it executable:
+Install the internet reachability probe. It's a stdlib-only Python script — no virtualenv or pip install, it runs under the host's system `python3`. Copy `probe.py` to the server and make it executable (the shebang lets cron run it directly):
 
 ```bash
-sudo cp probe.sh /opt/open.ftorrent.com/probe.sh
-sudo chmod +x /opt/open.ftorrent.com/probe.sh
+sudo cp probe.py /opt/open.ftorrent.com/probe.py
+sudo chmod +x /opt/open.ftorrent.com/probe.py
 ```
 
 Add a cron entry for root. This appends to the existing crontab without overwriting anything:
 
 ```bash
-sudo sh -c '(crontab -l 2>/dev/null; echo "# ftorrent open tracker — internet reachability probe (every minute)"; echo "* * * * * /opt/open.ftorrent.com/probe.sh") | crontab -'
+sudo sh -c '(crontab -l 2>/dev/null; echo "# ftorrent open tracker — internet reachability probe (every minute)"; echo "* * * * * /opt/open.ftorrent.com/probe.py") | crontab -'
 ```
 
 Wait about 60 seconds, then verify the probe file exists and is being touched:
@@ -198,7 +202,7 @@ Verify the crontab entry:
 sudo crontab -l
 # Should include:
 # # ftorrent open tracker — internet reachability probe (every minute)
-# * * * * * /opt/open.ftorrent.com/probe.sh
+# * * * * * /opt/open.ftorrent.com/probe.py
 ```
 
 After `docker compose up -d`, verify with:

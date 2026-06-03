@@ -376,27 +376,22 @@ The next gauge tick preserves the timestamp (the gauge never bumps an existing `
 
 ## Tuning thresholds
 
-The trip thresholds live in the gauge, not the breaker — see [`open/gauge/src/gauge.js`](../gauge/src/gauge.js):
+The trip thresholds live in the gauge, not the breaker — see [`open/gauge/src/gauge.py`](../gauge/src/gauge.py):
 
-```js
-const serviceBreaker = 150_000_000  // 24h served, applied to each of the six services independently
+```python
+SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
 
-const SERVICES = [
-	{ key: 'udp4',  breaker: serviceBreaker },
-	{ key: 'udp6',  breaker: serviceBreaker },
-	{ key: 'http4', breaker: serviceBreaker },
-	{ key: 'http6', breaker: serviceBreaker },
-	{ key: 'ws4',   breaker: serviceBreaker },
-	{ key: 'ws6',   breaker: serviceBreaker },
-]
+SERVICE_BREAKER = 150_000_000  # 24h served, applied to each of the six services independently
+
+SERVICE_BREAKERS = {key: SERVICE_BREAKER for key in SERVED_KEYS}
 ```
 
-All six services currently share a single threshold value. The `SERVICES` array's per-row `breaker` field is the seam where you could split them later — give UDP a higher number than HTTP, say, or tighten one IP version that's the bottleneck.
+All six services currently share a single threshold value. The `SERVICE_BREAKERS` dict is the seam where you could split them later — give UDP a higher number than HTTP, say, or tighten one IP version that's the bottleneck.
 
-The shipped value is deliberately tuned low so trips are observable in normal operation. Raise it once you've watched a few real trips and have a sense of your hardware's actual ceilings. The 24-hour cool-down duration is also in `gauge.js`:
+The shipped value is deliberately tuned low so trips are observable in normal operation. Raise it once you've watched a few real trips and have a sense of your hardware's actual ceilings. The 24-hour cool-down duration is also in `gauge.py`:
 
-```js
-const COOL_DURATION = 24 * 60 * 60 * 1000
+```python
+COOL_DURATION = 24 * 60 * 60 * 1000
 ```
 
 Changes to either take effect on the next gauge tick.

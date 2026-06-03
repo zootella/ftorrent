@@ -12,7 +12,7 @@ packages:
 
   # open.ftorrent.com — public BitTorrent, WebTorrent, and WebRTC tracker
   - open/page    # Vue+Vite frontend, built on Mac, rsynced to server, served by the reverse proxy
-  - open/gauge   # Node.js gauge, runs in Docker, scrapes Prometheus, writes page.json
+  # open/gauge is pure Python in Docker (no package.json) — per the rule above, just a folder, not a workspace
 
   # good.ftorrent.com — IPv4/IPv6 connectivity diagnostic tool
   - good

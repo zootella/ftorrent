@@ -1,0 +1,6 @@
+# Keep local build artifacts out of the image build context. Git ignores
+# these too (see the repo root .gitignore), but .gitignore doesn't apply to
+# the Docker build context — so they're listed again here.
+__pycache__/
+*.pyc
+.DS_Store

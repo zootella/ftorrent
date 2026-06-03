@@ -2,9 +2,9 @@
 # Add this to the services: section of docker-compose.yml alongside the
 # Aquatic tracker services.
 
-  node-gauge:
+  python-gauge:
     container_name: ftorrent-open-gauge-1
-    build: ./node-gauge
+    build: ./python-gauge
     user: "65534:65534"
     read_only: true
     cap_drop:

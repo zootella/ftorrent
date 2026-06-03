@@ -21,8 +21,6 @@ importers:
 
   good: {}
 
-  open/gauge: {}
-
   open/page:
     dependencies:
       three:
