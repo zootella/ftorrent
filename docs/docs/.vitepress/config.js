@@ -7,11 +7,23 @@ export default defineConfig({
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
-			{ text: 'Home', link: '/' },
-			{ text: 'Examples', link: '/markdown-examples' }
+			{ text: 'Home', link: '/' }
 		],
 
 		sidebar: [
+			{
+				text: 'Project',
+				items: [
+					{ text: 'Roadmap in Reverse', link: '/roadmap-in-reverse' },
+					{ text: 'Tracker Load', link: '/tracker-load' }
+				]
+			},
+			{
+				text: 'Guides',
+				items: [
+					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' }
+				]
+			},
 			{
 				text: 'Examples',
 				items: [
@@ -22,7 +34,7 @@ export default defineConfig({
 		],
 
 		socialLinks: [
-			{ icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+			{ icon: 'github', link: 'https://github.com/zootella/ftorrent' }
 		]
 	}
 })

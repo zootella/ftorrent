@@ -5,21 +5,21 @@ layout: home
 hero:
   name: "ftorrent"
   text: "docs.ftorrent.com"
-  tagline: My great project tagline
+  tagline: Born on the open web. Building for what's possible now.
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Roadmap in Reverse
+      link: /roadmap-in-reverse
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: View on GitHub
+      link: https://github.com/zootella/ftorrent
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Roadmap in Reverse
+    details: A rear-view-mirror roadmap — the road behind ftorrent, as a growing record of epics already completed.
+    link: /roadmap-in-reverse
+  - title: Tracker Load
+    details: Notes on tracker load.
+    link: /tracker-load
 ---
 
