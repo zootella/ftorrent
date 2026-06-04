@@ -6,6 +6,8 @@ export default defineConfig({
 	description: "docs.ftorrent.com",
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
+		outline: { level: [2, 3] },
+
 		nav: [
 			{ text: 'Home', link: '/' }
 		],
