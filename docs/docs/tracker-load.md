@@ -5,7 +5,7 @@ description: What a public BitTorrent and WebTorrent tracker actually costs to r
 
 # Tracker Load
 
-Measured 2026-Jun-4, [open.ftorrent.com](https://open.ftorrent.com/) served **77 million** requests, moved **10.1 Mbit/s** inbound and **18.5 Mbit/s** outbound, ran at a 1-minute load average of **1.50** across its 28 hardware threads (~95% idle), held its entire working set in **0.96 GB** of RAM, kept a connection-tracking table peaking at **92,950** entries, drew **40 watts** at the wall, and dropped zero packets. What follows is where each number comes from.
+Measured 2026-Jun-4, [open.ftorrent.com](https://open.ftorrent.com/) served **77 million** requests, moved **10.1 Mbit/s** inbound and **18.5 Mbit/s** outbound, ran at a 1-minute load average of **1.50** across its 28 hardware threads (~95% idle), held its entire working set in **0.96 GB** of RAM, kept a connection-tracking table peaking at **92,950** entries, dropped zero packets, and drew only **40 watts** at the wall. What follows is where each number comes from.
 
 A public tracker's job sounds heavy — answer the entire internet's question, "who else has this?" — but the work per request is tiny, and the bill at the end of the day is astonishingly small. This is a measured account of what one real deployment costs while serving it.
 
