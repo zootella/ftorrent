@@ -5,7 +5,7 @@ description: What a public BitTorrent and WebTorrent tracker actually costs to r
 
 # Tracker Load
 
-Measured 2026-Jun-4, the [open.ftorrent.com](https://open.ftorrent.com/) deployment served **77 million** requests, moving **10.1 Mbit/s** inbound and **18.5 Mbit/s** outbound, running at a 1-minute load average of **1.50** across its 28 hardware threads (~95% idle), holding its entire working set in **0.96 GB** of RAM, keeping a connection-tracking table peaking at **92,950** entries, drawing **40 watts** at the wall, and dropping zero packets. What follows is where each number comes from.
+Measured 2026-Jun-4, [open.ftorrent.com](https://open.ftorrent.com/) served **77 million** requests, moved **10.1 Mbit/s** inbound and **18.5 Mbit/s** outbound, ran at a 1-minute load average of **1.50** across its 28 hardware threads (~95% idle), held its entire working set in **0.96 GB** of RAM, kept a connection-tracking table peaking at **92,950** entries, drew **40 watts** at the wall, and dropped zero packets. What follows is where each number comes from.
 
 A public tracker's job sounds heavy — answer the entire internet's question, "who else has this?" — but the work per request is tiny, and the bill at the end of the day is astonishingly small. This is a measured account of what one real deployment costs while serving it.
 
@@ -94,16 +94,3 @@ The processor is an **Intel Core i7-14700** (Raptor Lake Refresh): 20 cores and 
 The network card is a dual-port 10-Gigabit **Intel X550-T2**. Its value to a tracker isn't the 10-gigabit wire speed — the load above uses a few percent of a single gigabit — but its queues: up to 28 receive and 28 transmit hardware queues per port with [Receive Side Scaling](https://www.intel.com/content/www/us/en/support/articles/000006703/ethernet-products.html), which hashes incoming connections across the queues so packet processing spreads over all 20 cores instead of piling onto one. That is what keeps the softirq load distributed in the CPU figures above; a single-queue card would funnel every interrupt onto one core and cap throughput there.
 
 It bears repeating that this is comfortable headroom, not a requirement. The measured load barely touches the machine, and a far more modest one would carry it without strain — the capable hardware buys years of growth, not a higher bar to entry.
-
-## Back of the envelope: Scaling to everyone on Earth ✉️ 🌏
-
-To close, a projection — arithmetic scaled from the measured numbers above, not a measurement. Raise the load until the tracker answers one request a day for every person alive: all **8,250,000,000** of us. What each part would then carry:
-
-- **Requests:** **8.25 billion** a day — one for every person on Earth — in the same 75/25 UDP/HTTPS mix.
-- **Bandwidth:** **21 terabytes** out and **12** in — **33 terabytes** a day.
-- **Processor:** still a handful of the 28 threads; its costliest job, the TLS handshake, comes to **452 million** a day after the observed 78% session reuse, which hardware crypto absorbs in a few cores.
-- **Power:** **1.9 to 2.9 kilowatt-hours** a day — a couple of times today's draw. (An estimate, riding on the processor.)
-- **Memory:** **103 gigabytes** of peer-table state, held at once.
-- **Connection tracking:** **9.9 million** concurrent flows.
-
-There's a quiet wonder in the arithmetic: the whole world, introduced to one another, still from one modest machine — the center of a planet-spanning network stays small because peer-to-peer was designed to keep it that way.
