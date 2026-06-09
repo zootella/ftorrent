@@ -253,10 +253,11 @@ credentials/
 # Claude Code
 .claude/
 
-# Cross-project notes and deployment scripts (not for public repo)
-*.hide.md
-*.hide.sh
+# Cross-project notes and deployment scripts (not for public repo).
+# *.hide.* covers any file with a .hide. segment (upload.hide.sh, notes.hide.md).
+# hide/ is a private scratch dir alongside the workspaces — never tracked.
 *.hide.*
+hide/
 
 # Gauge working state (written during local development)
 ring.json
