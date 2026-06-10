@@ -3,7 +3,7 @@ _ftorrent/open/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
 ![open.ftorrent.com above Earth](https://open.ftorrent.com/images/open.ftorrent.com.jpg)
 
-_Four guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), the [circuit breaker](breaker/README.md), and the [dashboard front end](page/README.md)._
+_Five guides cover this deployment: **dockerizing Aquatic and configuring the Linux server** (this guide), the [dashboard back end](gauge/README.md), the [circuit breaker](breaker/README.md), the [dashboard front end](page/README.md), and the [DHT bootstrap node](dht/README.md)._
 
 # Running Aquatic in Docker: A Complete Guide to Public BitTorrent and WebTorrent Trackers
 
@@ -61,7 +61,7 @@ A public tracker that wants to serve every kind of BitTorrent client — desktop
 
 **Rust.** Aquatic is written in Rust, which provides memory safety guarantees that matter for internet-facing software accepting raw packets from untrusted sources. This doesn't eliminate all security concerns — kernel vulnerabilities, logic bugs, and configuration mistakes are still possible — but it removes entire classes of memory corruption vulnerabilities (buffer overflows, use-after-free, double-free) that have historically been the most common and dangerous attack vectors in network services written in C.
 
-For more about Aquatic, see the [project README](https://github.com/greatest-ape/aquatic/blob/master/README.md) and the individual crate documentation for [aquatic_udp](https://github.com/greatest-ape/aquatic/tree/master/crates/udp), [aquatic_http](https://github.com/greatest-ape/aquatic/tree/master/crates/http), and [aquatic_ws](https://github.com/greatest-ape/aquatic/tree/master/crates/ws).
+For how Aquatic was chosen against the other trackers we evaluated, see [Software Selections](https://docs.ftorrent.com/software-selections#bittorrent-tracker). For more about Aquatic itself, see the [project README](https://github.com/greatest-ape/aquatic/blob/master/README.md) and the individual crate documentation for [aquatic_udp](https://github.com/greatest-ape/aquatic/tree/master/crates/udp), [aquatic_http](https://github.com/greatest-ape/aquatic/tree/master/crates/http), and [aquatic_ws](https://github.com/greatest-ape/aquatic/tree/master/crates/ws).
 
 ## What this guide adds
 

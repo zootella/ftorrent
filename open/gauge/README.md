@@ -1,7 +1,7 @@
 
 _ftorrent/open/gauge/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
-_Four guides cover this deployment: [dockerizing Aquatic and configuring the Linux server](../README.md), the **dashboard back end** (this guide), the [circuit breaker](../breaker/README.md), and the [dashboard front end](../page/README.md)._
+_Five guides cover this deployment: [dockerizing Aquatic and configuring the Linux server](../README.md), the **dashboard back end** (this guide), the [circuit breaker](../breaker/README.md), the [dashboard front end](../page/README.md), and the [DHT bootstrap node](../dht/README.md)._
 
 # Public Tracker Dashboard Back End
 

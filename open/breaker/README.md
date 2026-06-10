@@ -1,7 +1,7 @@
 
 _ftorrent/open/breaker/README.md [open.ftorrent.com](https://open.ftorrent.com)_
 
-_Four guides cover this deployment: [dockerizing Aquatic and configuring the Linux server](../README.md), the [dashboard back end](../gauge/README.md), the **circuit breaker** (this guide), and the [dashboard front end](../page/README.md)._
+_Five guides cover this deployment: [dockerizing Aquatic and configuring the Linux server](../README.md), the [dashboard back end](../gauge/README.md), the **circuit breaker** (this guide), the [dashboard front end](../page/README.md), and the [DHT bootstrap node](../dht/README.md)._
 
 # Public Tracker Circuit Breaker
 
@@ -27,7 +27,7 @@ The deployment at [open.ftorrent.com](https://open.ftorrent.com/) runs on port 4
 
 The first version of this deployment used [nginx](https://nginx.org/) for everything — TLS termination, reverse-proxying to the tracker containers, static hosting of the dashboard, plus the breaker's HTTP/WS gating — with [certbot](https://certbot.eff.org/) for certificate issuance and renewal. nginx is a fine general-purpose web server and the configuration is documented well enough that anyone with similar infrastructure can copy it.
 
-After a while we migrated to a stack better matched to the breaker's update pattern. [HAProxy](https://www.haproxy.org/) exposes a **runtime admin socket** that the breaker can push per-service toggles to on the live process, no config reload — the right shape for state that changes minute-by-minute. HAProxy doesn't do static-file hosting, so we paired it with [Caddy](https://caddyserver.com/) for the dashboard, and replaced certbot with [lego](https://go-acme.github.io/lego/) as a lighter ACME client. HAProxy now terminates TLS, gates per-service via the breaker, and routes tracker traffic (`/announce`, `/scrape`, WebSocket upgrades) directly to the Aquatic containers; Caddy is the catch-all that handles the dashboard's static files and the `/page.json` alias. The breaker's HTTP/WS gating, which used to live in the nginx site config, now lives in a HAProxy runtime **map** that the breaker rewrites and pushes to the live process without a reload.
+After a while we migrated to a stack better matched to the breaker's update pattern. [HAProxy](https://www.haproxy.org/) exposes a **runtime admin socket** that the breaker can push per-service toggles to on the live process, no config reload — the right shape for state that changes minute-by-minute. HAProxy doesn't do static-file hosting, so we paired it with [Caddy](https://caddyserver.com/) for the dashboard, and replaced certbot with [lego](https://go-acme.github.io/lego/) as a lighter ACME client. HAProxy now terminates TLS, gates per-service via the breaker, and routes tracker traffic (`/announce`, `/scrape`, WebSocket upgrades) directly to the Aquatic containers; Caddy is the catch-all that handles the dashboard's static files and the `/page.json` alias. The breaker's HTTP/WS gating, which used to live in the nginx site config, now lives in a HAProxy runtime **map** that the breaker rewrites and pushes to the live process without a reload. (For why this stack was chosen — and why the original nginx + certbot also cleared the bar — see [Software Selections](https://docs.ftorrent.com/software-selections#web-stack).)
 
 Both implementations are working real deployments. The repository keeps both as example sets:
 

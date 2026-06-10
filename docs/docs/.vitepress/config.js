@@ -27,6 +27,7 @@ export default defineConfig({
 			{
 				text: 'Essays and Guides',
 				items: [
+					{ text: 'Software Selections', link: '/software-selections' },
 					{ text: 'Tracker Load', link: '/tracker-load' },
 					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' }
 				]
@@ -37,7 +38,8 @@ export default defineConfig({
 					{ text: 'Dockerizing Aquatic', link: 'https://github.com/zootella/ftorrent/blob/master/open/README.md' },
 					{ text: 'Tracker Page', link: 'https://github.com/zootella/ftorrent/blob/master/open/page/README.md' },
 					{ text: 'Tracker Gauge', link: 'https://github.com/zootella/ftorrent/blob/master/open/gauge/README.md' },
-					{ text: 'Tracker Circuit Breaker', link: 'https://github.com/zootella/ftorrent/blob/master/open/breaker/README.md' }
+					{ text: 'Tracker Circuit Breaker', link: 'https://github.com/zootella/ftorrent/blob/master/open/breaker/README.md' },
+					{ text: 'DHT Bootstrap Node', link: 'https://github.com/zootella/ftorrent/blob/master/open/dht/README.md' }
 				]
 			},
 			{
