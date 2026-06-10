@@ -8,22 +8,19 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.8
 > <br>Created: 2026-Jun
 > <br>Last reviewed: 2026-Jun
-> <br>[qBittorrent](https://www.qbittorrent.org/): nox (version pending deployment)
-> <br>[libtorrent](https://www.libtorrent.org/): 2.x (mainline DHT)
+> <br>[qBittorrent-nox](https://www.qbittorrent.org/): from `debian:bookworm-slim` (apt)
+> <br>Engine: [libtorrent-rasterbar](https://www.libtorrent.org/) (the mainline DHT)
+> <br>DHT port: 51420/udp
 > <br>Docker Engine: 29
 > <br>Docker Compose: V2
 
-> **Draft.** The concept and rationale below are settled. The deployment specifics — exact package version, listen port, and the outbound firewall posture — are being finalized against the running node at `dht.ftorrent.com` and will be filled in here as they're confirmed.
+This node runs alongside the [Aquatic tracker](../README.md) on the same server, but it is a separate service answering a separate need. Three files in this directory deploy it: [`Dockerfile`](Dockerfile) (a minimal `debian:bookworm-slim` image with `qbittorrent-nox` from apt), [`qBittorrent.conf`](qBittorrent.conf) (the pure-DHT configuration), and [`compose-service.yml`](compose-service.yml) (the service entry to add to the open deployment's `docker-compose.yml`).
 
 ## What a DHT bootstrap node is
 
-The [Aquatic tracker](../README.md) this repository deploys answers one question: "who else has this?" A BitTorrent client presents an info hash, and the tracker hands back a list of peers. That's one way clients find each other. The **distributed hash table (DHT)** is another, and it's the one that works when there's no tracker at all.
+The [Aquatic tracker](../README.md) answers one question: "who else has this?" A client presents an info hash and the tracker returns a list of peers. The **distributed hash table (DHT)** answers the same question without a server, by spreading peer-discovery information across millions of participating clients. It is the mechanism behind trackerless magnet links: any client can look up "who has info hash X?" by querying its way through the table ([BEP 5](https://www.bittorrent.org/beps/bep_0005.html), a [Kademlia](https://en.wikipedia.org/wiki/Kademlia) network).
 
-The DHT ([BEP 5](https://www.bittorrent.org/beps/bep_0005.html), a [Kademlia](https://en.wikipedia.org/wiki/Kademlia) network) spreads peer-discovery information across millions of participating clients instead of concentrating it on a server. Any client can look up "who has info hash X?" by querying its way through the table, and any client can announce "I have X." No central coordinator. This is the mechanism that makes trackerless magnet links work.
-
-But the DHT has a chicken-and-egg problem of its own. A client starting fresh — newly installed, no saved state — knows the protocol but doesn't know a single node to talk to. To join the table, it has to contact *some* node already in it. That first contact is **bootstrapping**, and the nodes that serve it are **bootstrap nodes**.
-
-The whole BitTorrent network leans on a small handful of them, hardcoded into client source code:
+The DHT has a cold-start problem. A fresh client knows the protocol but knows no nodes, so to join the table it must first contact *some* node already in it. That first contact is **bootstrapping**, and the whole network leans on a short list of well-known nodes hardcoded into client source:
 
 | Bootstrap node | Operated by |
 |---|---|
@@ -32,68 +29,161 @@ The whole BitTorrent network leans on a small handful of them, hardcoded into cl
 | `dht.transmissionbt.com:6881` | the Transmission project |
 | `dht.libtorrent.org:25401` | Arvid Norberg (libtorrent's author) |
 
-There is nothing protocol-special about these. They are ordinary DHT nodes that happen to have high uptime, well-populated routing tables, and stable domain names — and whose hostnames ended up in client source code. They answer the same `find_node` queries any DHT node answers. A new client sends `find_node` for an ID near its own, gets back a handful of nearby nodes, queries those, and within a few round trips has a populated routing table and is a full participant. The bootstrap node's job is done in the first second and the client never needs it again until the next cold start.
-
-`dht.ftorrent.com` adds one more independent entry point to that short list — another well-connected, stable node any client can bootstrap from, run as public infrastructure alongside the tracker.
+There is nothing protocol-special about these. They are ordinary DHT nodes with high uptime, well-populated routing tables, and stable hostnames. `dht.ftorrent.com` adds one more independent entry point to that list — another well-connected node anyone can bootstrap from, run as public infrastructure and controlled by no single client project.
 
 ## A bootstrap node is not a tracker
 
-This is the distinction that matters most, because the two services look similar from a distance and are easy to conflate.
-
-A **tracker** speaks the BitTorrent tracker protocol — HTTP or UDP announce/scrape ([BEP 3](https://www.bittorrent.org/beps/bep_0003.html), [BEP 15](https://www.bittorrent.org/beps/bep_0015.html)). It is a server. Clients ask it about a specific info hash and it answers from its own peer list.
-
-A **DHT bootstrap node** speaks the Kademlia KRPC protocol — the DHT's own query language, carried over UDP. It is a peer. It doesn't hold a master list of anything; it holds a routing table of *other nodes*, and it helps a newcomer find its place in a network that no one owns.
-
-They solve adjacent problems — both are about peers finding each other — but they are different protocols doing different work, and one cannot stand in for the other. Our deployment runs both, side by side, on the same infrastructure: the Aquatic trackers at `open.ftorrent.com`, and the DHT node at `dht.ftorrent.com`.
-
-A reasonable question is why not bootstrap the DHT *through* a tracker — announce a well-known info hash and get back DHT-capable peers. It would work. But the DHT was designed in part to make trackers unnecessary, so bootstrapping it through a tracker would invert the dependency the design was meant to remove. A dedicated bootstrap node keeps the two systems independent, which is the point of having two systems.
+The two services look similar and are easy to conflate, so the distinction is worth stating. A **tracker** speaks the BitTorrent tracker protocol (HTTP or UDP announce/scrape); it is a server with a peer list. A **DHT bootstrap node** speaks the Kademlia KRPC protocol over UDP; it is a *peer* that holds a routing table of other nodes and helps a newcomer find its place in a network no one owns. They solve adjacent problems with different protocols, and neither substitutes for the other. Our deployment runs both: the Aquatic trackers at `open.ftorrent.com`, and this node at `dht.ftorrent.com`.
 
 ## Why qBittorrent-nox
 
-A bootstrap node is just a long-running, well-connected mainline DHT node, so the software question is really: which client gives us a correct, well-maintained DHT implementation that runs headless and stays up?
+A bootstrap node is just a long-running, well-connected mainline DHT node, so the real question is which software gives a correct DHT implementation that runs headless, stays up for years, and lets us *see* that it's healthy.
 
-[qBittorrent-nox](https://www.qbittorrent.org/) is the "no X" (no graphical interface) build of qBittorrent — the same client, made to run on a server. It's a strong fit here:
+[qBittorrent-nox](https://www.qbittorrent.org/) — the headless build of qBittorrent — wins on that last point. Its Web API returns the node's health as a single JSON object from one request: routing-table size, connection status, and transfer counters together. For a node whose entire job is to be a reachable, well-connected DHT participant, "how many nodes are in your routing table?" *is* the health check, and qBittorrent answers it in one call with no custom code. The network-facing code underneath is [libtorrent-rasterbar](https://www.libtorrent.org/), the most mature mainline-DHT implementation in the ecosystem — the right thing to have on the one part of this that faces the open internet. The full comparison against the alternatives (transmission-daemon, mldht, the DHT libraries) is in [Software Selections](https://docs.ftorrent.com/software-selections#mainline-dht-node).
 
-- **It's libtorrent underneath.** qBittorrent is a front end over [Rasterbar libtorrent](https://www.libtorrent.org/), the most battle-tested BitTorrent engine in existence and the reference implementation of the mainline DHT. The DHT behavior we're exposing is libtorrent's — the same code that runs `dht.libtorrent.org`, decades of refinement, correct by default.
-- **It's packaged and maintained.** qBittorrent-nox ships as a Debian/Ubuntu package with an active upstream and a security-conscious maintainer community. That matters for an internet-facing service we intend to keep running for years — updates arrive through the normal package channel rather than a from-source build pipeline we'd own.
-- **It's headless by design.** The `-nox` build expects to run as a daemon, configured by file and managed through a Web UI we don't need to expose. No display, no desktop dependencies.
-- **It's a known-good network citizen.** DHT, PEX, uTP, encryption, IPv6 — all on, all standard, all the things that make a node useful to the swarm rather than a dead end.
+We use it as a **pure DHT citizen**: no torrents are ever added, nothing downloads or seeds, PeX and Local Service Discovery are off. It exists only to participate in the mainline DHT and report its health.
 
-The trade-off is that qBittorrent-nox is a *full client*, and we want only its DHT participation — not downloading, not seeding, not tracker announces. The deployment configures it down to that role (covered below). A purpose-built bootstrap daemon like libtorrent's own [`dht-bootstrap`](https://github.com/arvidn/dht-bootstrap) is the other end of the spectrum — minimal, single-purpose — and is a reasonable alternative; we chose qBittorrent-nox for the maintenance story and the libtorrent DHT it carries. See [Software Selections](https://docs.ftorrent.com/software-selections#mainline-dht-node) on docs.ftorrent.com for how this fits the rest of the stack.
+## Bootstrapping and persistence
 
-## The security model is different from the trackers
+A fair question: if a fresh DHT node knows no other nodes, how does *ours* get in — and does it start over on every restart? Two mechanisms answer it, and both are already handled, not something we configure.
 
-The [Aquatic guide](../README.md) hardens the tracker containers to a specific shape: run as nobody, read-only filesystem, all capabilities dropped, no-new-privileges, and — critically — **no outbound network at all**. The `DOCKER-USER` rules let the tracker containers respond to inbound packets but never initiate a connection. A tracker only ever answers questions, so that posture costs it nothing and closes off exfiltration and lateral movement entirely.
+**Cold start.** On its very first run, with an empty routing table, the node bootstraps the way any client does. libtorrent ships with default bootstrap nodes built in — `dht.libtorrent.org:25401`, `router.bittorrent.com:6881`, `router.utorrent.com:6881` — and contacts them to enter the DHT. The list is part of the engine; there is nothing for us to supply. This is the quiet irony of running a bootstrap node: it bootstraps off the existing public ones to *become* one itself, and every node in the table above was, once, seeded by the others. It is also why the [outbound exception](#the-outbound-exception) is load-bearing — with no outbound UDP, the node can't reach those servers and never enters the network at all.
 
-**A DHT node cannot run under that exact rule, and understanding why is the heart of this deployment.**
+**Warm restart.** This is where a DHT node parts ways with a tracker. A tracker keeps its peer lists in memory and discards them on restart; clients simply re-announce and refill it within minutes, so a tracker persists nothing of its own. A DHT node is the reverse: its value *is* its routing table and its stable node ID, and it would be a poor citizen to forget them and re-hammer the public bootstrap servers on every restart. So libtorrent does what every good DHT implementation does — it saves its routing table (the known-good nodes and the node ID) on shutdown and reloads it on startup. That state lives in the writable `/config` volume, so a restart rejoins the DHT warm and immediately, right where it left off. The first launch is the only true cold start; every restart after it is a warm one.
 
-A DHT node is a *participant*, not just a responder. To do its job it must reach out: it sends `find_node` and `ping` queries to other nodes to build and refresh its routing table, it re-announces itself, and it follows the table outward as it changes. A node that can only answer inbound packets and never send its own queries would never populate a routing table in the first place — it would be a bootstrap node with nothing to bootstrap anyone into. Outbound UDP to the DHT is the service.
+## The image
 
-So the container keeps every hardening layer the trackers use **except** the blanket outbound block — and in its place puts a *narrowed* outbound policy: the node may send the DHT traffic it needs (UDP, to the wider internet, for the DHT) while still being denied the kinds of outbound that would signal compromise. The exact rule set — which protocols and ports are permitted outbound, and how tightly the rest is closed — is being finalized against the running node and will be documented here. The principle is fixed even while the specifics settle: **a DHT node is allowed to talk; the hardening makes sure it can only talk DHT.**
+There are three ways to get qBittorrent-nox into a container: build from Debian's package, use the project's official image, or use a community image like linuxserver.io. We build from `debian:bookworm-slim` with `qbittorrent-nox` from `apt`, for three reasons:
 
-Everything else carries over from the tracker model unchanged:
+- **It matches the rest of the deployment.** The Aquatic containers and the gauge all run on `debian:bookworm-slim` / Debian Python — one Debian, one libc to reason about. The official qBittorrent image is Alpine (musl), and a different base for one service buys nothing here.
+- **It runs cleanly as nobody under read-only.** We control the Dockerfile, so we set `USER 65534` and point every writable path at a mount, exactly like the trackers. The official and community images expect to manage their own user (PUID/PGID, s6 init) and resist a fixed `65534` + read-only root — the off-the-shelf convenience fights our hardening rather than helping it.
+- **Provenance through the distribution.** Debian's security team vets the package for inclusion and backports fixes, which is the same provenance argument that favors the rest of the stack. (qBittorrent's own CI image, built from source with an SBOM, is a fine alternative on provenance grounds; it just doesn't fit the base and hardening as cleanly.)
 
-| Constraint | Setting | Carries over? |
+Because qBittorrent rewrites its own config and persists DHT state, the read-only root filesystem is paired with a writable `/config` bind mount and a `/tmp` tmpfs. The Dockerfile sets `HOME` and the `XDG_*` paths so that config and state land in `/config` and caches in `/tmp` — nothing else on the filesystem is ever written.
+
+## Configuration
+
+The pure-DHT configuration lives in [`qBittorrent.conf`](qBittorrent.conf). qBittorrent rewrites this file with `QSettings`, which strips comments, so the file itself carries no annotations — here is what each setting does and why:
+
+| Setting | Value | Why |
 |---|---|---|
-| Non-root user | `user: "65534:65534"` | Yes |
-| Read-only filesystem | `read_only: true` | Yes (with a writable volume for DHT state — see below) |
-| No capabilities | `cap_drop: [ALL]` | Yes |
-| No privilege escalation | `security_opt: [no-new-privileges:true]` | Yes |
-| Outbound network | `DOCKER-USER` rules | **Narrowed, not blocked** — DHT participation requires it |
+| `Session\Port` | `51420` | The DHT's UDP listen port. libtorrent runs a v4 and a v6 instance on the same number, so one port is dual-stack. |
+| `Session\DHTEnabled` | `true` | The whole point — participate in the mainline DHT. |
+| `Session\PeXEnabled` | `false` | Peer exchange is a torrent-swarm feature; off, since there are no torrents. |
+| `Session\LSDEnabled` | `false` | Local Service Discovery announces on the LAN; irrelevant to a public DHT node. |
+| `Session\AddTorrentStopped` | `true` | Belt-and-suspenders: were a torrent ever added, it would not start. |
+| `Session\DefaultSavePath` | `/tmp` | Points the (unused) save path at the ephemeral tmpfs rather than the config volume. |
+| `WebUI\Enabled` | `true` | The Web API is the health surface (next section). |
+| `WebUI\Address` / `WebUI\Port` | `*` / `8080` | Listen on all interfaces *inside the container* — reachable on the Docker network, never published to the host. |
+| `WebUI\AuthSubnetWhitelistEnabled` | `true` | Let the scraper read the API without credentials… |
+| `WebUI\AuthSubnetWhitelist` | `172.30.0.5/32, fd00:cafe:2::5/128` | …but only from the scraper's single address, not the whole subnet — see below. |
+| `WebUI\HostHeaderValidation`, `WebUI\CSRFProtection` | `false` | Relaxed for a frictionless internal API call; safe *only* because the whitelist is one trusted host and the Web UI is never published. |
 
-One more difference from the trackers: a useful bootstrap node benefits from **persisting its routing table** across restarts, the way every desktop client saves its DHT state to disk. A node that reloads a warm routing table on restart is immediately useful again; one that starts cold has to rebuild from the other public bootstrap nodes first. That means a small writable volume for DHT state, rather than the trackers' fully ephemeral filesystem.
+**Why a single host, not the subnet.** qBittorrent's subnet whitelist grants *unauthenticated access to the entire Web API* — not just the read-only health endpoint — to every address it covers. The ftorrent-open subnet holds the internet-facing Aquatic containers, and this is the one container with an outbound-UDP exception; a compromised tracker should not be able to drive this node's API (add a torrent, flip on transfers, change the save path) with no credentials. So the whitelist is scoped to the scraper's single pinned address (`172.30.0.5` / `fd00:cafe:2::5`) rather than the `/24` + `/64`. Set it to wherever your scraper actually runs, and pin that container's address to match — the same way this node's address is pinned for the outbound rule.
+
+Rate limits are intentionally not set: with zero torrents there is no transfer to limit.
+
+## Hardening
+
+Every constraint from the [tracker model](../README.md) carries over unchanged — same user, same read-only root, same dropped capabilities — with one writable mount for state and one deliberate exception to the outbound block:
+
+| Constraint | Setting |
+|---|---|
+| Non-root user | `user: "65534:65534"` (nobody) |
+| Read-only filesystem | `read_only: true`, with a writable `/config` volume and a `/tmp` tmpfs |
+| No capabilities | `cap_drop: [ALL]` |
+| No privilege escalation | `security_opt: [no-new-privileges:true]` |
+| Resource ceilings | `memory: 512m`, `pids: 128` |
+
+### The outbound exception
+
+This is the one place a DHT node cannot match the trackers, and it is the heart of the deployment. The Aquatic containers block **all** outbound traffic with `DOCKER-USER` rules — a tracker only ever answers, so it never needs to initiate a connection. A DHT node is different: it is a *participant*. To populate and refresh its routing table — and to cold-start by querying the public bootstrap nodes — it must **send** queries outward, as new UDP flows. A node that could only reply would never build a routing table, and the "300+ nodes" health check below would never pass.
+
+So the DHT container needs a **narrowed outbound policy** rather than the trackers' blanket block: permit its outbound UDP to the internet (the DHT traffic), while still denying outbound TCP and any reach into the LAN — the kinds of connection a compromised process would use to exfiltrate data or call home. The principle holds even though this container is allowed to talk: **it can only talk DHT.**
+
+> **Deployment note:** the surrounding infrastructure already opens the *inbound* path (51420/udp on both families, straight to the host's `INPUT` and on to the container) and the intra-subnet route the scraper uses. A per-flow conntrack timeout is already attached to udp/51420 as part of the host's table-fill defense, so the same tuning the [Aquatic guide](../README.md) applies to UDP covers this port too. The *outbound* UDP exception for this container — written against its pinned address `172.30.0.6` / `fd00:cafe:2::6` — is the one firewall rule the DHT node adds beyond what the trackers need; it must be in place, or the routing table stays empty.
+
+### The Web UI password
+
+The whitelist above lets the scraper read the API without a password, and the Web UI port is never published to the internet. But the same intra-subnet rule that lets the scraper reach the port also lets any *sibling* container reach it, and a non-whitelisted sibling falls back to password auth. Debian bookworm ships qBittorrent 4.5.x — which predates the random-temporary-password change in 4.6.1 — so its Web UI defaults to the well-known `admin` / `adminadmin`. A compromised sibling on the open network could log in with that default and drive the node's full API, then lean on its outbound-UDP exception.
+
+So set a strong Web UI password before the node goes into service. The Web UI here is headless and unpublished — port 8080 is never exposed, so there's no browser to log into without tunnelling to the container through the host. Two paths suit that; either works:
+
+- **Pre-write it (no default-password window).** qBittorrent stores the password as a PBKDF2 hash under `WebUI\Password_PBKDF2`. Generate that hash for your password and add the line to the seeded `qBittorrent.conf` *before first start*, so the node never boots with `admin` / `adminadmin` live — there's no window at all. The most secure option.
+- **Set it through the API after start.** From the whitelisted scraper, POST your password to `/api/v2/app/setPreferences` (the `web_ui_password` field); qBittorrent hashes and persists it. No hash to generate, at the cost of a brief default-password window between first start and the POST — during which the Web UI is still reachable only by on-subnet containers, never the internet.
+
+Either way the password is per-operator and never lives in this public repository, and the scraper keeps working throughout because it authenticates by *being* the whitelisted address, not by the password.
+
+## The health surface
+
+The Web API is how the node's health reaches the dashboard. The [gauge](../gauge/README.md) — the same scraper that meters the Aquatic trackers — polls the node once a minute and folds the result into the open.ftorrent.com dashboard's `page.json` as a `dht` block, shown there as a `DHT nodes` figure. `dht.ftorrent.com` itself is just the bootstrap node's DNS name and serves no web page of its own; a dedicated status page, if ever wanted, would be separate work. The relevant call is:
+
+```
+GET http://ftorrent-open-dht-1:8080/api/v2/transfer/info
+```
+
+which returns, among other fields:
+
+```json
+{
+  "connection_status": "connected",
+  "dht_nodes": 386,
+  "dl_info_speed": 0,
+  "up_info_speed": 0
+}
+```
+
+`dht_nodes` is the routing-table size — the one number that proves the node is a real participant rather than just a listening socket. The scraper reaches the Web UI port over internal Docker DNS (allowed by the same intra-subnet `DOCKER-USER` rule the [gauge](../gauge/README.md) uses to scrape the Aquatic Prometheus endpoints), authenticating automatically because its address is the one host on the whitelist. The port is never published to the host, so nothing on the internet can reach it.
 
 ## Deployment
 
-> This section will be filled in from the running `dht.ftorrent.com` node. The shape it will take, matching the other guides in this set:
->
-> - **DNS and port.** `dht.ftorrent.com` resolves to the server's dual-stack address; the node listens on a single UDP port for KRPC. (Bootstrap nodes commonly use 6881 or a high port like libtorrent's 25401; the deployed value goes here.)
-> - **The container.** A minimal image running `qbittorrent-nox`, configured to DHT-only: DHT and Local Service Discovery on, downloading/seeding and tracker announces off, Web UI bound to localhost (or off) and never exposed to the internet.
-> - **Configuration.** The `qBittorrent.conf` settings that reduce the client to a pure DHT participant, with each non-default change commented — same convention as the Aquatic TOML configs.
-> - **Hardening.** The full constraint table above as compose settings, plus the narrowed `DOCKER-USER` outbound policy that permits DHT traffic and denies the rest.
-> - **State volume.** The writable mount for the persisted routing table, owned by `65534:65534`.
-> - **Verifying it works.** Bootstrapping a fresh client against `dht.ftorrent.com` and watching its routing table populate, the way the other guides each end with a concrete "confirm it's really working" check.
+The node assumes the [Aquatic guide](../README.md)'s Docker daemon, network, and kernel tuning are already in place, plus the inbound firewall path for 51420/udp and the outbound exception described above.
+
+1. **Copy this directory to the server** next to the `docker-compose.yml` (the same way the gauge's source is deployed), so the compose `build: ./dht` context resolves.
+
+2. **Create the config directory** and give it to the container's user:
+
+   ```bash
+   sudo mkdir -p /opt/open.ftorrent.com/dht-config/qBittorrent
+   sudo chown -R 65534:65534 /opt/open.ftorrent.com/dht-config
+   ```
+
+3. **Seed the configuration** — place [`qBittorrent.conf`](qBittorrent.conf) where qBittorrent reads it inside the `/config` volume (`XDG_CONFIG_HOME=/config`, so the path is `/config/qBittorrent/`):
+
+   ```bash
+   sudo install -o 65534 -g 65534 qBittorrent.conf \
+     /opt/open.ftorrent.com/dht-config/qBittorrent/qBittorrent.conf
+   ```
+
+4. **Add the service** — copy the block from [`compose-service.yml`](compose-service.yml) into the `services:` section of the open deployment's `docker-compose.yml`, then build and bring it up:
+
+   ```bash
+   docker compose up -d --build qbittorrent-dht
+   ```
+
+5. **Set a strong Web UI password** — bookworm's qBittorrent defaults to the well-known `admin` / `adminadmin`; see [The Web UI password](#the-web-ui-password) above. The scraper keeps working via the whitelist regardless.
+
+## Verifying it works
+
+A healthy libtorrent node fills its IPv4 routing table fast — expect **300+ nodes within a few minutes** of startup. The simplest check is the dashboard, which proves the whole path at once (node → gauge scrape → `page.json`) and needs nothing installed:
+
+```bash
+curl https://open.ftorrent.com/page.json
+# the "dht" block: { "nodes": 386, "status": "connected", "uptimeMinutes": ... }
+```
+
+To read the node's API directly, go through the gauge — it's the container the whitelist trusts, and like every image here it's `-slim` with no `curl`, so use its Python:
+
+```bash
+docker exec ftorrent-open-gauge-1 python3 -c \
+  'import urllib.request; print(urllib.request.urlopen("http://ftorrent-open-dht-1:8080/api/v2/transfer/info").read().decode())'
+# -> {"connection_status":"connected","dht_nodes":386,...}
+```
+
+A `dht_nodes` count climbing into the hundreds, with `connection_status: "connected"`, confirms the node is participating — both the inbound path and the outbound exception are working. If the count stays at or near zero, the outbound rule is the first thing to check.
+
+**IPv6 will be sparser and slower to fill.** The IPv6 DHT is a much smaller network, so the v6 routing table stays thinner and lookups take more hops. That is expected, not a fault — the node is a good citizen on both families; it is simply lonelier on v6.
 
 ## Using it
 
-Once it's running, `dht.ftorrent.com` is usable by anyone the same way the existing public bootstrap nodes are — add it to a client's bootstrap list, or include it as a DHT node hint. It is one more independent entry point into the mainline DHT, not controlled by any single client project. That independence is the contribution: more bootstrap diversity makes the DHT's cold-start path more resilient for everyone, the same way another public DNS resolver makes name resolution more resilient. It serves the network.
+Once it's running, `dht.ftorrent.com` is usable the way the existing public bootstrap nodes are: add it to a client's bootstrap list or include it as a DHT node hint. It is one more independent entry point into the mainline DHT, owned by no single client project. That independence is the contribution — more bootstrap diversity makes the DHT's cold-start path more resilient for everyone, the same way another public DNS resolver makes name resolution more resilient. It serves the network.

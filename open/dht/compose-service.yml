@@ -1,0 +1,57 @@
+# Compose service entry for the DHT bootstrap node.
+# Add this to the services: section of the open docker-compose.yml, alongside
+# the Aquatic tracker services, so it joins the same `tracker` (ftorrent-open)
+# network — that's how the dashboard scraper reaches its Web API.
+#
+# Build context is this dht/ directory, copied to the server next to the
+# docker-compose.yml the same way the gauge's source is. The writable state
+# lives in a SEPARATE directory (see the volume below), not in the build
+# context. The one-time config-seeding step is in README.md.
+
+  qbittorrent-dht:
+    container_name: ftorrent-open-dht-1
+    build: ./dht
+    networks:
+      # Join the same network as the Aquatic services, but with a PINNED
+      # address. This node needs one firewall rule the trackers don't —
+      # outbound UDP, to bootstrap and refresh its DHT routing table — and that
+      # rule must target this container specifically (not the trackers sharing
+      # the subnet). A floating IP can't be targeted reliably, so we fix it.
+      tracker:
+        ipv4_address: 172.30.0.6
+        ipv6_address: fd00:cafe:2::6
+    # Publish only the DHT UDP port, on all interfaces. One port carries
+    # dual-stack DHT (libtorrent runs a v4 and a v6 instance on it); the
+    # enable_ipv6 network plus ip6tables handle the IPv6 DNAT, exactly as for
+    # the aquatic-udp service. The Web UI / API port (8080) is deliberately NOT
+    # published, so it is reachable only from inside the ftorrent-open network.
+    ports:
+      - "51420:51420/udp"
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=UTC
+    volumes:
+      # Persistent config + DHT state, in a directory SEPARATE from the build
+      # context (./dht), so the source files never land in the writable state
+      # volume and nothing gets chowned to nobody by accident. Seed
+      # qBittorrent.conf into it before first start; it also holds the libtorrent
+      # DHT/session state, so the routing table reloads warm on restart.
+      # Must be writable by UID 65534:
+      #   sudo chown -R 65534:65534 /opt/open.ftorrent.com/dht-config
+      - /opt/open.ftorrent.com/dht-config:/config
+    # qBittorrent flushes state on shutdown; with zero torrents it exits
+    # promptly, so a minute of grace is ample.
+    stop_grace_period: 1m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          pids: 128
+    restart: unless-stopped

@@ -266,6 +266,11 @@ onUnmounted(() => {
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 
 			<div></div>
+			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
+			<div class="label">DHT nodes</div>
+			<div></div>
+
+			<div></div>
 			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
 			<div class="label">Downtime</div>
 			<div></div>
@@ -323,6 +328,12 @@ onUnmounted(() => {
 			<div class="label">IPv4</div>
 			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">IPv6</div>
+
+			<div class="label right">dht.ftorrent.com</div>
+			<div class="label">┐</div>
+
+			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
+			<div class="label">DHT nodes</div>
 
 			<div class="label right">Memory in use</div>
 			<div class="label">┐</div>

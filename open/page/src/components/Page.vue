@@ -14,6 +14,7 @@ import Quote from './Quote.vue'
 		<Url href="udp://open.ftorrent.com:443/announce" color="#00A89D" />
 		<Url href="https://open.ftorrent.com/announce" color="#F55D00" />
 		<Url href="wss://open.ftorrent.com" color="#D4006A" />
+		<Url href="dht.ftorrent.com:51420" color="#1E6FF5" />
 	</div>
 
 	<div class="stack">

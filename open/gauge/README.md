@@ -95,7 +95,8 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 	"servedMinute": { "udp4":   43567, "udp6":  10291, "http4":   46195, "http6":  16119, "ws4": 0, "ws6": 0 },
 	"servedSecond": { "udp4":      41, "udp6":      5, "http4":      41, "http6":      8, "ws4": 0, "ws6": 0 },
 	"downtimeDay": 1,
-	"downtimeDays": "0,0,0,3,1440,1440,0,0,...,0,0"
+	"downtimeDays": "0,0,0,3,1440,1440,0,0,...,0,0",
+	"dht": { "nodes": 452, "status": "connected", "uptimeMinutes": 1234 }
 }
 ```
 
@@ -108,10 +109,11 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 - **servedSecond** — `floor(servedDay / 86_400)` per service: the per-second average rate as a whole number, written here once so every consumer reads the same value. Integer because a fractional request-per-second isn't a meaningful unit, and at typical traffic the numbers are large enough that floor's bias is invisible.
 - **downtimeDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
 - **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Normally 90 entries (the 90-day window we show on the dashboard), though the array can be shorter while the gauge is still accumulating history. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart and computes the uptime percentage from it.
+- **dht** — the DHT bootstrap node's health, scraped from its Web API in one GET (`172.30.0.5` → `ftorrent-open-dht-1:8080/api/v2/transfer/info`): `nodes` (the libtorrent routing-table size), `status` (qBittorrent's `connection_status`, one of `connected` / `firewalled` / `disconnected`), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred to low thousands of nodes, holding roughly steady. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
 
 The file also carries a few metadata fields for social-media previews and human inspection: **title** (a human-readable description), **image** (the Open Graph card URL), **epoch** (the same instant as `day` and `minute`, in epoch milliseconds), **when** (the same instant as an ISO-8601 UTC string), and **uptimePercent** (a pre-computed 90-day percentage matching what the frontend derives from `downtimeDays`).
 
-All fields are always present. All numbers are 0 or positive integers, except `uptimePercent`, which is a float between 0 and 100.
+All fields are always present. All numeric values are 0 or positive integers, except `uptimePercent`, which is a float between 0 and 100.
 
 ## What the memory numbers mean
 

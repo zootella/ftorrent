@@ -447,6 +447,56 @@ def scrape_prometheus():
 
 
 # ---------------------------------------------------------------------------
+# DHT bootstrap node
+# ---------------------------------------------------------------------------
+
+# The DHT node (qBittorrent-nox) exposes its health on its Web API: one GET
+# returns the routing-table size and connection state. The hostname resolves
+# via Docker's internal DNS on the ftorrent-open network, and the node's WebUI
+# whitelist trusts this scraper's address, so no credentials are needed.
+# Locally it won't resolve, so the scrape is skipped gracefully.
+DHT_ENDPOINT = "http://ftorrent-open-dht-1:8080/api/v2/transfer/info"
+
+
+# Scrape the DHT node's Web API. Returns (nodes, status): routing-table size as
+# an int and qBittorrent's connection_status string. On any failure
+# (unreachable, bad JSON, missing fields) returns (0, "disconnected"), so the
+# tick never crashes and page.json always carries the keys.
+def scrape_dht():
+	try:
+		with urllib.request.urlopen(DHT_ENDPOINT, timeout=5) as response:
+			data = json.loads(response.read().decode("utf-8"))
+	except (urllib.error.URLError, OSError, json.JSONDecodeError):
+		return 0, "disconnected"
+	if not isinstance(data, dict):
+		return 0, "disconnected"
+	nodes = data.get("dht_nodes", 0)
+	status = data.get("connection_status", "disconnected")
+	return (
+		int(nodes) if _is_number(nodes) else 0,
+		status if isinstance(status, str) else "disconnected",
+	)
+
+
+# How many minutes the node has been continuously in the DHT — a true count of
+# accumulated uninterrupted minutes, held in memory rather than on disk. "In
+# the DHT" means a non-empty routing table (nodes > 0). The count resets to 0
+# whenever the node drops out (0 nodes / unreachable), and also whenever the
+# gauge itself restarts, since either is a break in uninterrupted observation.
+_dht_session_start = None  # epoch ms the current session began, or None
+
+
+def dht_uptime(nodes, now):
+	global _dht_session_start
+	if nodes > 0:
+		if _dht_session_start is None:
+			_dht_session_start = now
+	else:
+		_dht_session_start = None
+	return 0 if _dht_session_start is None else (now - _dht_session_start) // MS_PER_MINUTE
+
+
+# ---------------------------------------------------------------------------
 # Memory reading
 # ---------------------------------------------------------------------------
 
@@ -532,6 +582,8 @@ def tick():
 
 	memory = read_tracker_memory()
 	served = scrape_prometheus()
+	dht_nodes, dht_status = scrape_dht()
+	dht_uptime_minutes = dht_uptime(dht_nodes, now)
 	day = current_day(now)
 	minute = current_minute(now)
 
@@ -583,6 +635,11 @@ def tick():
 		"uptimePercent": uptime,
 		"downtimeDay": downtime,
 		"downtimeDays": history,
+		"dht": {
+			"nodes": dht_nodes,
+			"status": dht_status,
+			"uptimeMinutes": dht_uptime_minutes,
+		},
 	}
 	write_atomic(PUBLIC_DIR / "page.json", json.dumps(page, indent="\t") + "\n")
 
