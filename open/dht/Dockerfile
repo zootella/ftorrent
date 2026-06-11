@@ -42,7 +42,7 @@ ENV HOME=/config \
 EXPOSE 51420/udp
 EXPOSE 8080/tcp
 
-# --confirm-legal-notice avoids the interactive first-run prompt; the seeded
-# qBittorrent.conf also records acceptance, so this is belt-and-suspenders.
+# No CMD: the seeded qBittorrent.conf's [LegalNotice] Accepted=true records
+# acceptance non-interactively. Don't add --confirm-legal-notice — bookworm's
+# qbittorrent-nox rejects it as an unknown flag and the container crash-loops.
 ENTRYPOINT ["qbittorrent-nox"]
-CMD ["--confirm-legal-notice"]

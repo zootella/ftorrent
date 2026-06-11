@@ -46,6 +46,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Decentralized Infrastructure', link: '/decentralized-infrastructure' },
 					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' },
+					{ text: 'How the DHT Works', link: '/how-the-dht-works' },
 					{ text: 'Desktop Client Planning', link: '/desktop-client-planning' }
 				]
 			},
