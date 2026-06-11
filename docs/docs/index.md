@@ -22,7 +22,7 @@ features:
     details: Notes on tracker load.
     link: /tracker-load
   - title: Software Selections
-    details: How each piece of software we run and ship was chosen — fitness, provenance, and governance.
+    details: The software we run and ship, and how we chose it — fitness, provenance, and governance.
     link: /software-selections
 ---
 

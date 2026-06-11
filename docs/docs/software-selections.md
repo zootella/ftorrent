@@ -1,6 +1,6 @@
 ---
 title: Software Selections
-description: The software ftorrent depends on, and how each piece was chosen.
+description: The software ftorrent depends on, and how we chose it.
 ---
 
 # Software Selections
