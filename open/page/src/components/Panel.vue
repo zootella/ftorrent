@@ -329,7 +329,7 @@ onUnmounted(() => {
 			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">DHT</div>
+			<div class="label right">Mainline DHT</div>
 			<div class="label">┐</div>
 
 			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
