@@ -53,11 +53,11 @@ A fair question: if a fresh DHT node knows no other nodes, how does *ours* get i
 
 ## The image
 
-There are three ways to get qBittorrent-nox into a container: build from Debian's package, use the project's official image, or use a community image like linuxserver.io. We build from `debian:bookworm-slim` with `qbittorrent-nox` from `apt`, for three reasons:
+There are three ways to get qBittorrent-nox into a container: build from Debian's package, use the project's official image, or use a community image like linuxserver.io. We build from [`debian:bookworm-slim`](https://hub.docker.com/_/debian) with `qbittorrent-nox` from `apt`, for three reasons:
 
 - **It matches the rest of the deployment.** The Aquatic containers and the gauge all run on `debian:bookworm-slim` / Debian Python — one Debian, one libc to reason about. The official qBittorrent image is Alpine (musl), and a different base for one service buys nothing here.
 - **It runs cleanly as nobody under read-only.** We control the Dockerfile, so we set `USER 65534` and point every writable path at a mount, exactly like the trackers. The official and community images expect to manage their own user (PUID/PGID, s6 init) and resist a fixed `65534` + read-only root — the off-the-shelf convenience fights our hardening rather than helping it.
-- **Provenance through the distribution.** Debian's security team vets the package for inclusion and backports fixes, which is the same provenance argument that favors the rest of the stack. (qBittorrent's own CI image, built from source with an SBOM, is a fine alternative on provenance grounds; it just doesn't fit the base and hardening as cleanly.)
+- **Provenance through the distribution.** Debian's security team vets the package for inclusion and backports fixes — the same provenance argument that favors the rest of the stack. And because it's a distribution package, a reader can review exactly what we install on Debian's own pages: the [package entry](https://packages.debian.org/bookworm/qbittorrent-nox) for version, source, maintainer, and changelog, and the [package tracker](https://tracker.debian.org/pkg/qbittorrent) for upload and security history. (qBittorrent's own CI image, built from source with an SBOM, is a fine alternative on provenance grounds; it just doesn't fit the base and hardening as cleanly.)
 
 Because qBittorrent rewrites its own config and persists DHT state, the read-only root filesystem is paired with a writable `/config` bind mount and a `/tmp` tmpfs. The Dockerfile sets `HOME` and the `XDG_*` paths so that config and state land in `/config` and caches in `/tmp` — nothing else on the filesystem is ever written.
 
@@ -82,6 +82,31 @@ The pure-DHT configuration lives in [`qBittorrent.conf`](qBittorrent.conf). qBit
 **Why a single host, not the subnet.** qBittorrent's subnet whitelist grants *unauthenticated access to the entire Web API* — not just the read-only health endpoint — to every address it covers. The ftorrent-open subnet holds the internet-facing Aquatic containers, and this is the one container with an outbound-UDP exception; a compromised tracker should not be able to drive this node's API (add a torrent, flip on transfers, change the save path) with no credentials. So the whitelist is scoped to the scraper's single pinned address (`172.30.0.5` / `fd00:cafe:2::5`) rather than the `/24` + `/64`. Set it to wherever your scraper actually runs, and pin that container's address to match — the same way this node's address is pinned for the outbound rule.
 
 Rate limits are intentionally not set: with zero torrents there is no transfer to limit.
+
+### Choosing the port
+
+```
+    0  ┐ well-known — privileged (needs CAP_NET_BIND_SERVICE)
+ 1023  ┘
+ 1024  ┐ registered
+ 6881  ┤    mainline BitTorrent
+ 6969  ┤    tracker announce
+49151  ┘
+49152  ┐ dynamic / ephemeral — blends into background traffic
+51413  ┤    Transmission (a fingerprint — avoid)
+51420  ┤  ← our choice
+65535  ┘ 0xffff
+```
+
+The DHT listens on UDP **51420**, and the number is chosen against three considerations.
+
+**It must be ≥ 1024.** The container runs as `nobody` with all capabilities dropped, so it cannot bind a privileged port — anything below 1024 would require `CAP_NET_BIND_SERVICE`, which we don't grant.
+
+**Blend into the noise.** IANA divides the port space into three bands: well-known (**0–1023**), registered (**1024–49151**), and dynamic/ephemeral (**49152–65535**). The dynamic band is the one the operating system draws from for temporary outbound connections, so a long-lived listener up there looks like ordinary background traffic to a firewall or ISP, and no registered service can collide with it. A high port in that range is the quiet choice.
+
+**Don't be a fingerprint.** A few BitTorrent ports are so well known that they identify the software on sight and get profiled or blocked on restrictive networks: **6881** (the original mainline BitTorrent client), **6969** (the conventional tracker-announce port), and **51413** (hardcoded by [Transmission](https://transmissionbt.com/), now effectively a Transmission fingerprint). They all work — each one just announces what it is.
+
+So the recipe is an arbitrary, forgettable number in **49152–65535** that isn't already associated with anything. **51420** fits: high enough to blend in, sitting right next to Transmission's **51413** so it reads as mundane without actually colliding with that fingerprint, and easy to remember — and the hundreds are a wink to Elon 🌿. As with the example domain, this is the concrete value the guide uses — substitute your own and the same reasoning applies: keep it above 1024, ideally in the dynamic range, and clear of the well-known defaults.
 
 ## Hardening
 
