@@ -27,6 +27,7 @@ export default defineConfig({
 			{
 				text: 'Essays and Guides',
 				items: [
+					{ text: 'Open Infrastructure for the Decentralized Web', link: '/decentralized-infrastructure' },
 					{ text: 'Software Selections', link: '/software-selections' },
 					{ text: 'Tracker Load', link: '/tracker-load' },
 					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' }
