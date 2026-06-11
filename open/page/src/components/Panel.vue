@@ -329,11 +329,11 @@ onUnmounted(() => {
 			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">dht.ftorrent.com</div>
+			<div class="label right">DHT</div>
 			<div class="label">┐</div>
 
 			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
-			<div class="label">DHT nodes</div>
+			<div class="label">nodes</div>
 
 			<div class="label right">Memory in use</div>
 			<div class="label">┐</div>
