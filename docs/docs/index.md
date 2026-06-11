@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "ftorrent"
   text: "docs.ftorrent.com"
-  tagline: Born on the open web. Building for what's possible now.
+  tagline: Next-generation decentralized software suite.
   actions:
     - theme: brand
       text: Roadmap in Reverse
@@ -21,5 +21,8 @@ features:
   - title: Tracker Load
     details: Notes on tracker load.
     link: /tracker-load
+  - title: Software Selections
+    details: How each piece of software we run and ship was chosen — fitness, provenance, and governance.
+    link: /software-selections
 ---
 

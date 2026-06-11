@@ -27,10 +27,8 @@ export default defineConfig({
 			{
 				text: 'Essays and Guides',
 				items: [
-					{ text: 'Open Infrastructure for the Decentralized Web', link: '/decentralized-infrastructure' },
 					{ text: 'Software Selections', link: '/software-selections' },
-					{ text: 'Tracker Load', link: '/tracker-load' },
-					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' }
+					{ text: 'Tracker Load', link: '/tracker-load' }
 				]
 			},
 			{
@@ -44,13 +42,15 @@ export default defineConfig({
 				]
 			},
 			{
-				text: 'Notes and Planning',
+				text: 'Notes and Planning (TODO)',
 				items: [
+					{ text: 'Decentralized Infrastructure', link: '/decentralized-infrastructure' },
+					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' },
 					{ text: 'Desktop Client Planning', link: '/desktop-client-planning' }
 				]
 			},
 			{
-				text: 'Examples',
+				text: 'Examples (TODO)',
 				items: [
 					{ text: 'Markdown Examples', link: '/markdown-examples' },
 					{ text: 'Runtime API Examples', link: '/api-examples' }
