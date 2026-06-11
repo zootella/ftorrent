@@ -212,3 +212,16 @@ A `dht_nodes` count climbing into the hundreds, with `connection_status: "connec
 ## Using it
 
 Once it's running, `dht.ftorrent.com` is usable the way the existing public bootstrap nodes are: add it to a client's bootstrap list or include it as a DHT node hint. It is one more independent entry point into the mainline DHT, owned by no single client project. That independence is the contribution — more bootstrap diversity makes the DHT's cold-start path more resilient for everyone, the same way another public DNS resolver makes name resolution more resilient. It serves the network.
+
+### Write it as `host:port`, with no scheme
+
+The address is `dht.ftorrent.com:51420` — a bare host and port, *not* a URL, and deliberately so. This is the formatting counterpart of the [tracker-vs-node distinction](#a-bootstrap-node-is-not-a-tracker) above, and it trips people up because the trackers right beside it on the dashboard *do* carry a scheme:
+
+```
+udp://open.ftorrent.com:443/announce     ← UDP tracker
+https://open.ftorrent.com/announce       ← HTTP tracker
+wss://open.ftorrent.com                  ← WebTorrent (WebSocket) tracker
+dht.ftorrent.com:51420                   ← DHT bootstrap node (no scheme)
+```
+
+A tracker announce URL carries a scheme — `udp://`, `https://`, `wss://` — because a client reads the protocol to speak *from* that scheme; there are several tracker protocols and it has to know which one. A DHT bootstrap node has no scheme because there is only one DHT wire protocol (Kademlia KRPC over UDP, [BEP 5](http://www.bittorrent.org/beps/bep_0005.html)), so there is nothing to disambiguate — and accordingly **no `dht://` scheme exists**. BEP 5 specifies nodes as plain host-and-port pairs (`nodes = [["<host>", <port>], ...]`), and every public bootstrap node is written the same way — `router.bittorrent.com:6881`, `dht.transmissionbt.com:6881`, `dht.libtorrent.org:25401`. So a client's "DHT bootstrap nodes" config field and a `.torrent`'s `nodes` list both want the bare `host:port`; prefixing it with `dht://` (or anything else) is non-standard and won't parse. If you ever see someone "fix" the address by adding a scheme, this is why not to.

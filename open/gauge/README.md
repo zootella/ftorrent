@@ -14,7 +14,7 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../README.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/README.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
 
-The gauge is a Python script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers, reads their memory usage from cgroup files, and writes a single JSON file — `page.json` — that the reverse proxy serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
+The gauge is a Python script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers and health from the DHT node, reads all four containers' memory usage from cgroup files, and writes a single JSON file — `page.json` — that the reverse proxy serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
 
 ## Why it's built this way
 
@@ -89,7 +89,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 {
 	"day": 20593,
 	"minute": 568,
-	"memory": { "udp": 129449984, "http": 62971904, "ws": 31092736 },
+	"memory": { "udp": 129449984, "http": 62971904, "ws": 31092736, "dht": 50049024 },
 	"coolDown": { "udp4": false, "udp6": false, "http4": false, "http6": false, "ws4": false, "ws6": false },
 	"servedDay":    { "udp4": 3594247, "udp6": 454780, "http4": 3628188, "http6": 744186, "ws4": 0, "ws6": 0 },
 	"servedMinute": { "udp4":   43567, "udp6":  10291, "http4":   46195, "http6":  16119, "ws4": 0, "ws6": 0 },
@@ -102,7 +102,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 
 - **day** — current UTC day number (`floor(epoch / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
-- **memory** — current memory usage in bytes per Aquatic container, identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
+- **memory** — current memory usage in bytes per container — the three Aquatic trackers and the DHT node — identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
 - **coolDown** — six booleans, one per service (`udp4`, `udp6`, `http4`, `http6`, `ws4`, `ws6`). `true` means that service is currently paused; the [circuit breaker](../breaker/README.md) translates these into 503s at the reverse proxy and DROP rules in iptables.
 - **servedDay** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses; WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
 - **servedMinute** — same six keys, for the most recent one-minute window. Useful for live-rate displays that need a recent number rather than a 24-hour total.
@@ -119,7 +119,7 @@ All fields are always present. All numeric values are 0 or positive integers, ex
 
 Every Docker container runs inside a Linux **cgroup** (control group) — a kernel subsystem that tracks and limits resources per process group. The kernel maintains a file called `memory.current` for each cgroup: the number of bytes of physical RAM assigned to that group right now. Not a sample, not an average, not what the application thinks it allocated — the kernel's own live count of every physical page assigned to the container. The binary loaded into memory, the heap, thread stacks, io_uring buffers, shared libraries, allocator overhead, everything. The container can't hide memory usage and can't undercount it. This is the most honest number available on a Linux system.
 
-Docker exposes cgroup files through the host filesystem at `/sys/fs/cgroup`. The gauge mounts this path read-only and reads `memory.current` from each Aquatic container once per minute. That raw byte count is what appears in the memory column on the dashboard.
+Docker exposes cgroup files through the host filesystem at `/sys/fs/cgroup`. The gauge mounts this path read-only and reads `memory.current` from each tracker container and the DHT node once per minute. That raw byte count is what appears in the memory column on the dashboard.
 
 **What's in the number.** Each tracker's memory has a fixed component and a variable component. The fixed part is the Rust binary, the runtime's pre-allocated buffers, and — for the HTTP and WebSocket trackers — io_uring's registered memory (allocated at startup by the glommio async runtime, regardless of traffic). The variable part is the **peer table**: a hash map of IP:port entries keyed by torrent info hash. Every announce from a BitTorrent client adds or updates an entry. Each entry is small — roughly 18 to 50 bytes depending on IPv4 vs IPv6 and hash map overhead — but there can be millions. Aquatic periodically evicts expired peers (controlled by `max_peer_age` in the TOML config), so memory stabilizes at a level proportional to concurrent active peers, not total announces ever served.
 

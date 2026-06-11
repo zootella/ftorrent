@@ -268,7 +268,7 @@ onUnmounted(() => {
 			<div></div>
 			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
 			<div class="label">DHT nodes</div>
-			<div></div>
+			<div class="right">{{ mb(page.memory.dht ?? 0) }}</div>
 
 			<div></div>
 			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
@@ -344,6 +344,8 @@ onUnmounted(() => {
 			<div class="label">HTTP</div>
 			<div class="right">{{ mb(page.memory.ws) }}</div>
 			<div class="label">WS</div>
+			<div class="right">{{ mb(page.memory.dht ?? 0) }}</div>
+			<div class="label">DHT</div>
 		</div>
 
 		<div class="calendar-narrow">

@@ -2,11 +2,12 @@
 """The open.ftorrent.com gauge.
 
 A long-running, single-purpose process. Once at the top of each UTC minute it
-scrapes Prometheus metrics from the three Aquatic tracker containers, reads
-their memory from cgroup files, and writes page.json — the data file the Vue
-frontend renders. It also maintains private working state (the ring buffer,
-the 90-day history, and the circuit-breaker cool-down file). No HTTP server,
-no listening ports; it only writes files.
+scrapes Prometheus metrics from the three Aquatic tracker containers and health
+from the DHT node, reads all four containers' memory from cgroup files, and
+writes page.json — the data file the Vue frontend renders. It also maintains
+private working state (the ring buffer, the 90-day history, and the
+circuit-breaker cool-down file). No HTTP server, no listening ports; it only
+writes files.
 
 It stays resident but holds almost nothing between ticks: ring, days, and
 breaker state are reloaded from disk every minute. Standard library only.
@@ -58,21 +59,23 @@ CGROUP_SLICE = CGROUP_DIR / "system.slice"
 # Container identification
 # ---------------------------------------------------------------------------
 
-# We identify the three Aquatic containers by their memory ceiling (memory.max
-# from cgroup), which is deliberately unique per container.
+# We identify the four containers by their memory ceiling (memory.max from
+# cgroup), which is deliberately unique per container.
 #
 # This is a concession: the cgroup tree only exposes container IDs, not names.
 # We chose not to mount the Docker socket (too much privilege) or pass IDs as
 # environment variables (they change on every restart). Matching by ceiling
 # works because the limits are intentionally different and documented in the
-# guide. All three trackers get the same generous ~2 GiB ceiling for tracker
-# state; the 1 MiB offsets are pure identifier.
+# guide. The three Aquatic trackers get the same generous ~2 GiB ceiling for
+# tracker state, told apart by 1 MiB offsets; the DHT node (qBittorrent, not
+# Aquatic) sits far below at 512 MiB, so its ceiling is unique on its own.
 #
 # Each entry is (key, ceiling-in-bytes).
 MEMORY_TARGETS = [
 	("udp", 2001 * 1024 * 1024),   # 2001 MiB
 	("http", 2002 * 1024 * 1024),  # 2002 MiB
 	("ws", 2003 * 1024 * 1024),    # 2003 MiB
+	("dht", 512 * 1024 * 1024),    # 512 MiB — DHT node, well clear of the trackers
 ]
 
 # Prometheus endpoints for the three Aquatic containers. These hostnames
@@ -500,9 +503,9 @@ def dht_uptime(nodes, now):
 # Memory reading
 # ---------------------------------------------------------------------------
 
-# Returns {udp, http, ws} with memory in bytes, all keys always present.
-def read_tracker_memory():
-	result = {"udp": 0, "http": 0, "ws": 0}
+# Returns {udp, http, ws, dht} with memory in bytes, all keys always present.
+def read_container_memory():
+	result = {"udp": 0, "http": 0, "ws": 0, "dht": 0}
 	try:
 		entries = os.listdir(CGROUP_SLICE)
 	except OSError:
@@ -580,7 +583,7 @@ def tick():
 	if not probe_is_fresh(now):
 		return
 
-	memory = read_tracker_memory()
+	memory = read_container_memory()
 	served = scrape_prometheus()
 	dht_nodes, dht_status = scrape_dht()
 	dht_uptime_minutes = dht_uptime(dht_nodes, now)
