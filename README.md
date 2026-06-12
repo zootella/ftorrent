@@ -17,4 +17,3 @@ Workspaces and folders:
 - ䷼ **good** (Node, Docker) IPv4/IPv6 connectivity diagnostic tool _[good.ftorrent.com](https://good.ftorrent.com/)_
 - ䷺ **desktop** ([Tauri](https://tauri.app/), [libtorrent-rasterbar](https://www.libtorrent.org/)) Desktop BitTorrent client
 - ䷣ **classic** ([Win32](https://learn.microsoft.com/en-us/windows/win32/api/)) Rasterbar libtorrent in a Petzold-style Windows native EXE
-- **notes** Notes and scraps (deprecating)
