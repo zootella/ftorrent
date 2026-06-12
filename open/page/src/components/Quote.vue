@@ -1140,6 +1140,21 @@ The only thing we can be sure of about the future is that it will be absolutely 
 Arthur C. Clarke
 https://en.wikipedia.org/wiki/Arthur_C._Clarke
 BBC Horizon, "The Knowledge Explosion," September 21, 1964
+
+In many cases within the digital context, control over platforms, infrastructure, data and computing power does not rest with States, but with major economic and technological actors. These entities effectively set the conditions for access, determine the rules of visibility and shape the very possibilities for participation. When such power is concentrated in the hands of a few, it tends to become opaque and evade public oversight, increasing the risk of distorted forms of development that give rise to new dependencies, exclusions, manipulations and inequalities.
+Pope Leo XIV
+https://en.wikipedia.org/wiki/Magnifica_humanitas
+Magnifica Humanitas, May 25, 2026
+
+Start your own currency / Make your own stamp / Protect your language / Declare independence / Don't let them do that to you / Go to the top of your highest mountain / And raise your flag (Higher, higher)
+Björk
+https://en.wikipedia.org/wiki/Declare_Independence
+Declare Independence, 2007
+
+If I have seen further, it is by standing on the shoulders of giants.
+Isaac Newton
+https://en.wikipedia.org/wiki/Isaac_Newton
+Letter to Robert Hooke, February 5, 1675
 `
 
 function formatQuote(s) {
