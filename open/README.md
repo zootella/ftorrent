@@ -61,7 +61,7 @@ A public tracker that wants to serve every kind of BitTorrent client — desktop
 
 **Rust.** Aquatic is written in Rust, which provides memory safety guarantees that matter for internet-facing software accepting raw packets from untrusted sources. This doesn't eliminate all security concerns — kernel vulnerabilities, logic bugs, and configuration mistakes are still possible — but it removes entire classes of memory corruption vulnerabilities (buffer overflows, use-after-free, double-free) that have historically been the most common and dangerous attack vectors in network services written in C.
 
-For how Aquatic was chosen against the other trackers we evaluated, see [Software Selections](https://docs.ftorrent.com/software-selections#bittorrent-tracker). For more about Aquatic itself, see the [project README](https://github.com/greatest-ape/aquatic/blob/master/README.md) and the individual crate documentation for [aquatic_udp](https://github.com/greatest-ape/aquatic/tree/master/crates/udp), [aquatic_http](https://github.com/greatest-ape/aquatic/tree/master/crates/http), and [aquatic_ws](https://github.com/greatest-ape/aquatic/tree/master/crates/ws).
+For how Aquatic was chosen against the other trackers we evaluated, see [Software Selections](https://docs.ftorrent.com/software-selections.html#bittorrent-tracker). For more about Aquatic itself, see the [project README](https://github.com/greatest-ape/aquatic/blob/master/README.md) and the individual crate documentation for [aquatic_udp](https://github.com/greatest-ape/aquatic/tree/master/crates/udp), [aquatic_http](https://github.com/greatest-ape/aquatic/tree/master/crates/http), and [aquatic_ws](https://github.com/greatest-ape/aquatic/tree/master/crates/ws).
 
 ## What this guide adds
 
