@@ -21,9 +21,10 @@ and nods to the market leader, without the Greek and Latin ambiguity around _µ_
 We make our residency in the `.com` TLD, the foundational namespace of the web,
 resonant with the turn-of-the-millennium energy of the dot-com bubble.
 So what does the _f_ stand for?
-Fast, or Free?
-Frictionless? Fearless?
-Or perhaps _Formula One_, or Fuji 🗻.
+Something practical: Fast. Free.
+Or more poetic: the virtues Frictionless; Fearless.
+A storied name like _Formula One_, or Fuji 🗻.
+Or foundational: Frontier. Firmament.
 We leave it unspecified.
 
 ## 2012-Oct-22: Native Windows client

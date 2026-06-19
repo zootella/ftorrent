@@ -6,6 +6,15 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"upload": "./upload.hide.sh"
+		"local": "nuxt dev",
+		"dev": "nuxt dev",
+		"build": "nuxt generate",
+		"preview": "nuxt preview",
+		"upload": "nuxt generate && ./upload.hide.sh",
+		"postinstall": "nuxt prepare"
+	},
+	"dependencies": {
+		"nuxt": "^4.4.8",
+		"vue": "^3.5.38"
 	}
 }
