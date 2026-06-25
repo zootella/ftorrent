@@ -13,7 +13,7 @@
 # Run (example — requires custom seccomp profile and memlock ulimit):
 #   docker run --rm -p 8082:8082 \
 #     --security-opt seccomp=seccomp-iouring.json \
-#     --ulimit memlock=65536000:65536000 \
+#     --ulimit memlock=-1:-1 \
 #     aquatic-ws
 
 # ---------------------------------------------------------------------------

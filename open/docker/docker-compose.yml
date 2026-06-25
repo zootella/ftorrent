@@ -104,9 +104,12 @@ services:
       - no-new-privileges:true
       - seccomp=seccomp-iouring.json
     ulimits:
+      # -1 = unlimited locked memory: glommio grows the io_uring ring under
+      # load, and a fixed ceiling it outgrows crashes the worker. The cgroup
+      # memory limit still bounds total RAM. See README, "io_uring".
       memlock:
-        soft: 65536000
-        hard: 65536000
+        soft: -1
+        hard: -1
     deploy:
       resources:
         limits:
@@ -139,9 +142,12 @@ services:
       - no-new-privileges:true
       - seccomp=seccomp-iouring.json
     ulimits:
+      # -1 = unlimited locked memory: glommio grows the io_uring ring under
+      # load, and a fixed ceiling it outgrows crashes the worker. The cgroup
+      # memory limit still bounds total RAM. See README, "io_uring".
       memlock:
-        soft: 65536000
-        hard: 65536000
+        soft: -1
+        hard: -1
     deploy:
       resources:
         limits:

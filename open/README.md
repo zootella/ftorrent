@@ -335,8 +335,14 @@ Docker's DNAT rewrites the destination address on every inbound packet. The kern
 # Maximum conntrack entries. Default is 65536-262144.
 # A busy tracker has hundreds of thousands of unique clients.
 # Each entry uses ~300 bytes of kernel memory.
-# 1 million entries ≈ 300 MB.
-net.netfilter.nf_conntrack_max = 1048576
+# 2 million entries ≈ 600 MB.
+net.netfilter.nf_conntrack_max = 2097152
+
+# Hash buckets for the table. The kernel default is small relative to the
+# raised max above, which would leave long hash chains (a high load factor)
+# walked on every packet's lookup. Keeping buckets at ~1/4 of max holds the
+# kernel's normal 4:1 ratio and short chains.
+net.netfilter.nf_conntrack_buckets = 524288
 ```
 
 ### Connection tracking timeouts
@@ -352,6 +358,21 @@ net.netfilter.nf_conntrack_udp_timeout_stream = 15
 # Timeout for one-way UDP flows. Default: 30 seconds.
 net.netfilter.nf_conntrack_udp_timeout = 10
 ```
+
+TCP flows need the same treatment. A completed HTTPS announce leaves a conntrack entry in `TIME_WAIT` for 120 seconds by default — the same accumulation of millions of dead entries from millisecond exchanges, on the HTTPS side, scaling with the HTTPS announce rate. And the `established` default is 432000 seconds (5 days), a landmine if any announce connection ever lingers: a single slow client or kept-alive socket can hold an entry for the better part of a week.
+
+```
+# Timeout for closed TCP connections in TIME_WAIT. Default: 120 seconds.
+# A completed HTTPS announce holds this entry for 2 minutes otherwise.
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
+
+# Timeout for established TCP connections. Default: 432000 seconds (5 days).
+# Tracker connections are short; bound this so a lingering flow can't hold
+# an entry for days (~2 hours here). Tune to your reverse proxy's keep-alive policy.
+net.netfilter.nf_conntrack_tcp_timeout_established = 7440
+```
+
+These timeouts are global — they apply to *every* UDP and TCP flow on the box, not just tracker traffic. On a dedicated tracker box that is exactly what you want. On a box that also runs other services, the surgical alternative is a per-flow conntrack policy — an `iptables raw/PREROUTING` rule with `CT --timeout`, scoped to just the tracker's ports — which shortens only tracker flows and leaves everything else at the safe kernel defaults.
 
 ### UDP socket buffers
 
@@ -388,9 +409,12 @@ net.core.netdev_max_backlog = 10000
 # Kernel tuning for BitTorrent tracker behind Docker bridge networking.
 
 # Conntrack table size and timeouts
-net.netfilter.nf_conntrack_max = 1048576
+net.netfilter.nf_conntrack_max = 2097152
+net.netfilter.nf_conntrack_buckets = 524288
 net.netfilter.nf_conntrack_udp_timeout = 10
 net.netfilter.nf_conntrack_udp_timeout_stream = 15
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
+net.netfilter.nf_conntrack_tcp_timeout_established = 7440
 
 # UDP socket buffers
 net.core.rmem_max = 26214400
@@ -418,7 +442,20 @@ This tells systemd to load `nf_conntrack` during early boot, before sysctl confi
 
 ```bash
 cat /proc/sys/net/netfilter/nf_conntrack_max
-# Should show 1048576, not the default 65536 or 262144
+# Should show 2097152, not the default 65536 or 262144
+```
+
+One key needs an extra check: `nf_conntrack_buckets`. Unlike the others, setting it resizes a live hash table, and some kernels treat the sysctl as read-only. After applying, confirm it took:
+
+```bash
+sysctl net.netfilter.nf_conntrack_buckets
+# Should show 524288
+```
+
+If it still reads the default, set the hash size through the module parameter instead — the pre-load above applies it at boot:
+
+```bash
+echo "options nf_conntrack hashsize=524288" | sudo tee /etc/modprobe.d/nf_conntrack.conf
 ```
 
 ### Monitoring
@@ -476,13 +513,13 @@ Docker's default seccomp profile blocks the `io_uring_setup`, `io_uring_enter`, 
 
 The UDP container is deliberately built without io_uring. It uses mio/epoll, which works under Docker's default seccomp profile with no changes. Since the UDP tracker is the most exposed service (raw UDP from the internet, no TLS, no HTTP layer), it gets the smallest possible kernel attack surface.
 
-The HTTP and WebSocket containers also need a raised memlock ulimit for io_uring buffer registration:
+The HTTP and WebSocket containers also need a raised memlock (locked-memory) ulimit. glommio registers io_uring buffers in locked memory — and, importantly, it *grows* the io_uring ring as load rises, registering more locked memory as it does. A fixed ceiling that's comfortable at startup can therefore be exceeded mid-flight under sustained traffic: the kernel rejects the expansion (`registering buffers in the main ring. Cannot allocate memory`) and the glommio worker exits, which can put the container into a restart loop. The fix is to not impose a ceiling the ring can outgrow — set memlock to unlimited (`-1`). It is *locked* memory, but the container's cgroup memory limit still bounds total RAM, so unlimited removes the wall the ring keeps hitting rather than letting memory run away. This is the standard configuration for io_uring/glommio applications.
 
 ```yaml
 ulimits:
   memlock:
-    soft: 65536000
-    hard: 65536000
+    soft: -1
+    hard: -1
 ```
 
 ### Resource limits
@@ -493,7 +530,7 @@ Docker's cgroup limits cap the resources each container can consume. These are c
 
 The UDP tracker carries the vast majority of traffic — roughly 80-90% of announces come over UDP, since it's the default protocol for desktop BitTorrent clients. The HTTP and WebSocket trackers serve a much smaller fraction of total peers today, though the WebSocket tracker also handles WebRTC signaling for browser-based peers, an emerging use case.
 
-The memlock ulimit for the HTTP and WebSocket containers (65 MB for io_uring buffer registration) counts against the container's memory limit. This is a fixed overhead, not a scaling parameter.
+The io_uring registered buffers for the HTTP and WebSocket containers count against the container's memory limit. glommio sizes the io_uring ring at startup and grows it under load, so this is a baseline of a few tens of MiB that climbs modestly with traffic — which is why the memlock ulimit is unlimited rather than a fixed number (a fixed ceiling the ring outgrows crashes the worker; see above).
 
 These limits are ceilings, not reservations. Linux does not set aside the memory when the container starts — the container uses what it needs, growing from a few megabytes with zero peers toward the limit as traffic increases. Unused ceiling costs nothing. The kernel uses free physical memory as page cache (filesystem cache for disk reads), and reclaims it instantly and silently when an application needs it. There is no degradation threshold, no swap thrashing — just a smooth, linear tradeoff between page cache and application memory.
 
@@ -506,8 +543,8 @@ On a server with 16 GB of RAM running other services alongside the tracker (game
 | Container | Memory limit | Role |
 |---|---|---|
 | aquatic_udp | 2001 MiB | The workhorse — desktop BitTorrent clients over UDP |
-| aquatic_http | 2002 MiB | BitTorrent over HTTP for clients behind restrictive firewalls; 65 MB used by memlock |
-| aquatic_ws | 2003 MiB | WebTorrent peers and WebRTC signaling for browser-based clients; 65 MB used by memlock |
+| aquatic_http | 2002 MiB | BitTorrent over HTTP for clients behind restrictive firewalls; io_uring registered buffers set the baseline |
+| aquatic_ws | 2003 MiB | WebTorrent peers and WebRTC signaling for browser-based clients; io_uring registered buffers set the baseline |
 
 **CPU and PIDs.** These can start with modest limits and be adjusted based on monitoring. Aquatic uses a small, fixed number of threads — typically one socket worker and one swarm worker per binary, plus a few housekeeping threads. A PID limit of 64 per container provides headroom beyond what Aquatic needs while still capping runaway process creation.
 
@@ -684,7 +721,7 @@ services:
       - no-new-privileges:true
       - seccomp=seccomp-iouring.json
     ulimits:
-      memlock: { soft: 65536000, hard: 65536000 }
+      memlock: { soft: -1, hard: -1 }
 
   aquatic-ws:
     container_name: ftorrent-open-ws-1
@@ -739,13 +776,13 @@ The HTTP and WebSocket trackers require the custom seccomp profile and the memlo
 # HTTP tracker
 docker run --rm -d --name test-http -p 8081:8081 \
   --security-opt seccomp=seccomp-iouring.json \
-  --ulimit memlock=65536000:65536000 \
+  --ulimit memlock=-1:-1 \
   ftorrent-open-aquatic-http
 
 # WebSocket tracker
 docker run --rm -d --name test-ws -p 8082:8082 \
   --security-opt seccomp=seccomp-iouring.json \
-  --ulimit memlock=65536000:65536000 \
+  --ulimit memlock=-1:-1 \
   ftorrent-open-aquatic-ws
 ```
 
@@ -759,7 +796,7 @@ glommio::sys::uring: Error: registering buffers in the poll ring. SkippingOs {
 }
 ```
 
-This is a non-fatal warning — glommio continues without registered buffers, using a slightly less optimal I/O path. It can appear on Docker Desktop (macOS/Windows) and on Docker Engine on Linux, depending on the system's default memlock limits and how the container runtime enforces the ulimit. The tracker works correctly without registered buffers; the optimization is a small reduction in memory copies during I/O. If you want to eliminate the warning, try increasing the memlock ulimit in the compose file.
+At startup and low load this is a non-fatal warning — glommio skips the *poll* ring's registered buffers and continues on a slightly less optimal I/O path. It can appear on Docker Desktop (macOS/Windows) and on Docker Engine on Linux, depending on the system's default memlock limits and how the container runtime enforces the ulimit, and a quick local test won't push enough traffic for it to matter. Under sustained production load the same shortage bites harder: glommio grows the *main* ring and the expansion registration fails outright, exiting the worker (see the io_uring section above). That's why the test commands above use `-1` and the io_uring section recommends unlimited in the compose file — a fixed ceiling that's fine in a brief local test can fail once real traffic grows the ring.
 
 ### Verify the trackers respond
 
@@ -1103,7 +1140,9 @@ server {
 }
 ```
 
-This is the shape of the configuration — real deployments will have additional directives (logging paths, SSL protocols, gzip, security headers) that are standard nginx practice and out of scope for this guide.
+This is the shape of the configuration — real deployments will have additional directives (SSL protocols, gzip, security headers) that are standard nginx practice and out of scope for this guide.
+
+One operational note that *is* tracker-specific, though: access logging. The reverse proxy sees every HTTPS and WebSocket announce (UDP bypasses it entirely) — millions to hundreds of millions of requests a day, depending on your announce interval — and a proxy that writes one access-log line per request fills the disk with gigabytes of logs daily, faster than anything else the tracker does. Suppress access logging for the announce and scrape happy path (in nginx, `access_log off;` inside those `location` blocks; other proxies have an equivalent), and keep logging on only for errors and the paths you actually want to watch.
 
 ### Verifying it works
 
