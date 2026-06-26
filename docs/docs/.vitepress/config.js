@@ -28,7 +28,8 @@ export default defineConfig({
 				text: 'Essays and Guides',
 				items: [
 					{ text: 'Software Selections', link: '/software-selections' },
-					{ text: 'Tracker Load', link: '/tracker-load' }
+					{ text: 'Tracker Load', link: '/tracker-load' },
+					{ text: 'Tuning for Load', link: '/tuning-for-load' }
 				]
 			},
 			{

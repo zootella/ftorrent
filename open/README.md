@@ -325,7 +325,7 @@ Note: if Docker was already running containers, they will be stopped and restart
 
 Bridge networking with conntrack works fine at low traffic. Under heavy load, the default kernel parameters create silent failures — packets vanish with no errors and no logs.
 
-All settings go in a file like `/etc/sysctl.d/90-tracker.conf` and are applied with `sysctl --system`. They persist across reboots — with one caveat covered below.
+All settings go in a single file — [`90-tracker.conf`](90-tracker.conf) in this repository, installed to `/etc/sysctl.d/` — and applied with `sudo sysctl --system`. They persist across reboots, with one caveat covered below. The sections that follow explain each setting; the complete file is linked at the end.
 
 ### Connection tracking table
 
@@ -347,32 +347,21 @@ net.netfilter.nf_conntrack_buckets = 524288
 
 ### Connection tracking timeouts
 
-Conntrack entries persist for a timeout period after the last packet. The defaults are designed for long-lived connections, not tracker request-reply exchanges that complete in milliseconds.
+Conntrack entries persist for a timeout period after the last packet, and the kernel's defaults are sized for long-lived connections — not a tracker's millisecond exchanges.
+
+TCP is the one to tighten. A completed HTTPS announce leaves an entry in `TIME_WAIT` for 120 seconds by default, and a tracker's rapid announce churn makes those closed-connection entries the table's biggest single occupant — so cutting `TIME_WAIT` to 30s shrinks that pool to a quarter. The `established` default is worse: 432000 seconds (5 days), so any announce connection that goes silent without closing squats a slot for the better part of a week. Bounding it to ~2 hours clears such zombies far sooner.
 
 ```
-# Timeout for UDP streams (bidirectional). Default: 120 seconds.
-# A tracker request-reply completes in milliseconds. 15 seconds is generous.
-# Reducing this from 120s to 15s cuts steady-state table size by ~8x.
-net.netfilter.nf_conntrack_udp_timeout_stream = 15
-
-# Timeout for one-way UDP flows. Default: 30 seconds.
-net.netfilter.nf_conntrack_udp_timeout = 10
-```
-
-TCP flows need the same treatment. A completed HTTPS announce leaves a conntrack entry in `TIME_WAIT` for 120 seconds by default — the same accumulation of millions of dead entries from millisecond exchanges, on the HTTPS side, scaling with the HTTPS announce rate. And the `established` default is 432000 seconds (5 days), a landmine if any announce connection ever lingers: a single slow client or kept-alive socket can hold an entry for the better part of a week.
-
-```
-# Timeout for closed TCP connections in TIME_WAIT. Default: 120 seconds.
-# A completed HTTPS announce holds this entry for 2 minutes otherwise.
 net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
-
-# Timeout for established TCP connections. Default: 432000 seconds (5 days).
-# Tracker connections are short; bound this so a lingering flow can't hold
-# an entry for days (~2 hours here). Tune to your reverse proxy's keep-alive policy.
 net.netfilter.nf_conntrack_tcp_timeout_established = 7440
 ```
 
-These timeouts are global — they apply to *every* UDP and TCP flow on the box, not just tracker traffic. On a dedicated tracker box that is exactly what you want. On a box that also runs other services, the surgical alternative is a per-flow conntrack policy — an `iptables raw/PREROUTING` rule with `CT --timeout`, scoped to just the tracker's ports — which shortens only tracker flows and leaves everything else at the safe kernel defaults.
+UDP is handled differently. Rather than shorten every UDP flow on the box, leave a conservative global window — `udp_timeout` at the kernel default (30s), and `udp_timeout_stream` a little longer than its 120s default (180s) so a quiet-but-still-live flow isn't dropped early — and let the generously-sized table above absorb the residency. The tracker's own announce ports get tightened far harder with a *per-flow* conntrack policy (an `iptables raw/PREROUTING` rule with `CT --timeout`, scoped to just those ports), which keeps aggressive timeouts on tracker traffic without disturbing any other UDP service on the box.
+
+```
+net.netfilter.nf_conntrack_udp_timeout = 30
+net.netfilter.nf_conntrack_udp_timeout_stream = 180
+```
 
 ### UDP socket buffers
 
@@ -402,29 +391,9 @@ When the NIC receives packets faster than the kernel can process them in softirq
 net.core.netdev_max_backlog = 10000
 ```
 
-### The complete sysctl block
+### The complete sysctl file
 
-```
-# /etc/sysctl.d/90-tracker.conf
-# Kernel tuning for BitTorrent tracker behind Docker bridge networking.
-
-# Conntrack table size and timeouts
-net.netfilter.nf_conntrack_max = 2097152
-net.netfilter.nf_conntrack_buckets = 524288
-net.netfilter.nf_conntrack_udp_timeout = 10
-net.netfilter.nf_conntrack_udp_timeout_stream = 15
-net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
-net.netfilter.nf_conntrack_tcp_timeout_established = 7440
-
-# UDP socket buffers
-net.core.rmem_max = 26214400
-net.core.wmem_max = 26214400
-net.core.rmem_default = 1048576
-net.core.wmem_default = 1048576
-
-# NIC receive backlog
-net.core.netdev_max_backlog = 10000
-```
+Everything above — plus the `fq_codel` default qdisc and IP forwarding (which Docker enables at runtime, pinned here so they survive a restart) — ships as a ready-to-use, fully commented file in this repository: [`90-tracker.conf`](90-tracker.conf). Copy it into `/etc/sysctl.d/` and apply with `sudo sysctl --system`.
 
 ### Pre-loading the conntrack module
 
