@@ -114,6 +114,10 @@ magnet link maker and inspector
 good.ftorrent.com client for connection nat cone cgnat ipv6 status checker
 torrent maker
 
+>webtorrent reach, and an apex demo
+joining browser WebTorrent swarms over WebRTC is already core below — the hybrid `libtorrent webtorrent=on` engine puts desktop and browser peers in one swarm, not two separate networks. flagged here only as a forward thread, not a new requirement.
+the apex (ftorrent.com) may also *demonstrate* WebTorrent in the browser itself, as one of several fragment-payload features alongside the magnet landing page and the magnet analyzer/editor (see roadmap-in-reverse). the prior art is Wormhole (wormhole.app) by Feross — WebTorrent's own creator: browser file-sharing over WebTorrent, the AES-GCM key carried in the URL `#fragment` so the server never sees it, files pulled from WebTorrent peers and a 24-hour backup super-seeder at once. the native desktop client and an apex browser demo would meet in the same WebTorrent swarm — the same span, native and browser alike.
+
 ## Stack
 
 This is a desktop BitTorrent client that participates fully in both traditional BitTorrent swarms (TCP/uTP) and browser-based WebTorrent swarms (WebRTC). The architecture is Tauri + Vue on the frontend, with a Python sidecar wrapping libtorrent on the backend.
