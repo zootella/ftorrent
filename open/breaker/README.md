@@ -379,19 +379,22 @@ The next gauge tick preserves the timestamp (the gauge never bumps an existing `
 The trip thresholds live in the gauge, not the breaker — see [`open/gauge/src/gauge.py`](../gauge/src/gauge.py):
 
 ```python
-SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
-
-SERVICE_BREAKER = 150_000_000  # 24h served, applied to each of the six services independently
-
-SERVICE_BREAKERS = {key: SERVICE_BREAKER for key in SERVED_KEYS}
+SERVICE_BREAKERS = {
+	"udp4": 500_000_000,
+	"udp6": 500_000_000,
+	"http4": 50_000_000,
+	"http6": 50_000_000,
+	"ws4": 50_000_000,
+	"ws6": 50_000_000,
+}
 ```
 
-All six services currently share a single threshold value. The `SERVICE_BREAKERS` dict is the seam where you could split them later — give UDP a higher number than HTTP, say, or tighten one IP version that's the bottleneck.
+Each service is metered against its own value, and the asymmetry is deliberate. A UDP announce costs one to two orders of magnitude less than an HTTPS announce, because only the TCP services spend the TLS handshake budget — the resource that actually limits scale on modest hardware (see "Two example implementations" above). So UDP, the service that can't threaten the binding resource, gets a ceiling ten times higher than HTTP's rather than tripping first while costing almost nothing.
 
-The shipped value is deliberately tuned low so trips are observable in normal operation. Raise it once you've watched a few real trips and have a sense of your hardware's actual ceilings. The 24-hour cool-down duration is also in `gauge.py`:
+Tune the values to your hardware once you've watched a few real trips and have a sense of your own ceilings. The 24-hour cool-down duration is also in `gauge.py`:
 
 ```python
 COOL_DURATION = 24 * 60 * 60 * 1000
 ```
 
-Changes to either take effect on the next gauge tick.
+Changes to either take effect when the gauge container is rebuilt and restarted.

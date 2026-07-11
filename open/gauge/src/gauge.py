@@ -93,9 +93,9 @@ PROMETHEUS_ENDPOINTS = [
 # Cool-down circuit breakers
 # ---------------------------------------------------------------------------
 
-# If a service reaches this many requests in 24 hours, we turn it off for 24
-# hours to cool it down.
-SERVICE_BREAKER = 150_000_000
+# If a service reaches its threshold of requests served in 24 hours, we turn
+# it off for 24 hours to cool it down. The per-service thresholds are in
+# SERVICE_BREAKERS below.
 
 # How long a tripped service stays cooled. After this many ms have passed since
 # the trip, the wall clock crosses the service's startOn timestamp and the
@@ -137,9 +137,17 @@ MS_PER_MINUTE = 60_000
 # — nudging clients toward IPv6 and toward UDP under load.
 SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
 
-# Per-service breaker thresholds. All six share one limit today, but keeping a
-# dict (rather than a single constant) leaves room to tune them individually.
-SERVICE_BREAKERS = {key: SERVICE_BREAKER for key in SERVED_KEYS}
+# Per-service breaker thresholds. UDP's ceiling is ten times the TCP
+# services' because a UDP announce costs far less to serve: only HTTP and WS
+# spend the TLS handshake budget, the resource that actually limits scale.
+SERVICE_BREAKERS = {
+	"udp4": 500_000_000,
+	"udp6": 500_000_000,
+	"http4": 50_000_000,
+	"http6": 50_000_000,
+	"ws4": 50_000_000,
+	"ws6": 50_000_000,
+}
 
 # ---------------------------------------------------------------------------
 # Days — 90-day uptime history
