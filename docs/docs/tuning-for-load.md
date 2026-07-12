@@ -62,6 +62,31 @@ One footgun is specific to these keys. The `nf_conntrack` module isn't loaded ea
 echo nf_conntrack | sudo tee /etc/modules-load.d/conntrack.conf
 ```
 
+## The socket layer's TIME_WAIT cap
+
+The conntrack chapter trimmed TIME_WAIT's *flow entry* — netfilter's memory that a closed connection existed. The socket layer keeps a TIME_WAIT of its own, one layer down, with the same failure shape and its own ceiling.
+
+When the server closes a TCP connection first — and a busy HTTPS service closing idle keep-alive connections does this thousands of times a second — the kernel holds the socket in **TIME_WAIT** for 60 seconds (a compile-time constant) so a straggler packet from the old connection can't be mistaken for part of a new one on the same address-and-port pair. `net.ipv4.tcp_max_tw_buckets` caps how many sockets may wait like this at once. At the cap the kernel doesn't queue, slow down, or say anything to the application: each further close just destroys the socket instantly, skipping the protection TIME_WAIT exists to provide. There's no single **Linux kernel default** — it's computed at boot from the RAM-scaled TCP hash table, landing at **65,536** on a 16 GB **Ubuntu Server 24.04** box. **OpenWrt** has no position on this one, for the same reason it doesn't raise socket buffers: a router forwards, it doesn't terminate, so it never accumulates TIME_WAIT at all. We run **1,048,576**.
+
+This is one wall you can catch red-handed, because saturation has an unmistakable signature. A healthy TIME_WAIT set *floats* — its size wanders with traffic. A saturated one reads exactly the sysctl's value, continuously:
+
+```bash
+# A timewait count sitting *exactly* at tcp_max_tw_buckets, around the
+# clock, is a set pinned to its cap — not a busy coincidence
+ss -s
+
+# And every increment here is one close that skipped its protection
+nstat -az TcpExtTCPTimeWaitOverflow
+```
+
+Measured here before the fix: `timewait 65536` around the clock — never a socket more — and **5.7 billion** overflows accumulated over ten days, 400–740 million a day, which is to say essentially every close the server made. Nothing else on the box hinted at it. Raised, the set climbed past 350,000 within the first minute, settling toward its natural ~500,000 at this churn — and the overflow rate went to exactly zero.
+
+```
+net.ipv4.tcp_max_tw_buckets = 1048576
+```
+
+The memory story is the conntrack chapter's again: each TIME_WAIT socket is a small on-demand slab object, ~256 bytes, gone 60 seconds later — about 130 MB floating at this churn, bounded near 256 MiB if the raised cap ever filled. And the distinction between the two TIME_WAITs bears spelling out, because they're easy to conflate: `nf_conntrack_tcp_timeout_time_wait` trims how long netfilter's *flow entry* lingers after the close; `tcp_max_tw_buckets` caps the socket layer's *own set*. Tuning one does nothing for the other.
+
 ## The receive path: socket buffers and the backlog queue
 
 Before the application ever sees a packet, the kernel has to hold it somewhere, and two queues sit on that path. When the NIC hands a packet up, it lands first in a **per-CPU backlog queue** while the kernel's softirq routine catches up; once routed to a socket, it waits in that socket's **receive buffer** until the application reads it. Both are fixed-size, and both drop silently when full.
@@ -81,6 +106,65 @@ net.core.netdev_max_backlog = 10000
 ```
 
 A 25 MiB ceiling and a 10,000-deep backlog. One subtlety: raising the ceiling only helps if the application actually requests the larger buffer — `rmem_max` is a limit on what a socket _may_ ask for, and a socket gets what it asks for, up to that. So this pairs with the app asking: our UDP tracker requests an 8 MB receive buffer, which the kernel now grants instead of clamping to 208 KB. Raise the ceiling without the app asking, or the reverse, and nothing changes. This memory, too, is the kernel's, charged per socket as packets actually queue — a 25 MiB ceiling doesn't reserve 25 MiB, it caps what one socket may hold during a burst, and most sit far below it.
+
+## The NIC receive ring
+
+The section above followed a packet from the NIC up through the backlog queue to a socket buffer. One layer sits below all of that, in the hardware itself, and it hosts the only truly unrecoverable drop on the whole path.
+
+Before the kernel touches a packet, the NIC places it — by direct memory access, no CPU involved — into a **receive descriptor ring**: a per-queue circle of slots the driver hands to the hardware, each slot pointing at a buffer that can hold one incoming packet. The kernel drains filled slots in softirq and reposts them empty. A microburst that outruns the reposting — even for tens of microseconds — leaves the NIC holding a packet with no free slot, and the hardware discards it. The kernel never saw the packet. No socket counter, no backlog column, no log line above can record it, because nothing above the NIC was ever involved. The only witness is the NIC's own statistics, read with `ethtool -S` — the counter is `rx_no_dma_resources` on Intel's ixgbe driver; other drivers use other names. (No OpenWrt column for this one — it isn't a sysctl at all, which is rather the point: this layer hides below the file every other section of this guide writes to.)
+
+The way the ring fills defeats intuition, and it's worth getting right before sizing it. There is no steady water level. Slots turn over in microseconds, so at a tracker's ordinary rate — tens of thousands of packets a second spread across a multi-queue NIC's many queues — the instantaneous occupancy of any one ring is zero or one slot. The ring runs at ~0% essentially always; then a burst takes one queue's ring to 100% for a flash, and every drop happens inside such a flash. Measured here at the driver default of **512** slots per queue: a few hundred to a few thousand hardware drops a day at ordinary load, 99% of minutes at zero — rising roughly sixfold when UDP announce volume tripled over a weekend, to about 0.0005% of four billion packets a day. Harmless even at the risen level, and trending with growth.
+
+Sizing is about time, not capacity. A deeper ring buys the kernel longer to come back from a stall: against a worst-case burst concentrated on one queue, 512 slots absorb roughly 340 microseconds of drain stall, and **4,096** — where we run — absorbs about 2.7 milliseconds, comfortably past the scheduling transients that cause stalls. A burst that outruns 4,096 slots isn't a burst anymore; it's sustained arrival faster than drain, which no ring depth fixes. And unlike conntrack's pay-for-what's-live table, ring memory is **preallocated and held**: about 2 KB per slot, idle or saturated, so deepening 512 → 4,096 takes each queue from ~1 MB to ~8 MB — times every queue on the card, which lands a modern many-queue NIC in the low hundreds of megabytes, held around the clock (and the hardware maximum, 32,768 slots per queue, would be eight times that again). That's why you size to the burst class you actually see, not to what the card will take.
+
+The live change is one command, with one operational surprise (`enp1s0` here is whatever predictable name your interface has):
+
+```bash
+ethtool -G enp1s0 rx 4096
+```
+
+Applying it **reinitializes the receive path** — we measured a carrier flap that dropped the box's DHCPv4 lease for about 30 seconds before the ISP re-leased the same address to the same MAC. Plan for a brief WAN pause, not an invisible change.
+
+And `ethtool -G` doesn't survive a reboot — which brings up a trap nastier than the setting itself. On a systemd-networkd system, the native persistence is a `.link` file. But **udev applies only the first matching `.link` file**: a custom one doesn't merge with the stock `99-default.link`, it replaces it entirely — including `NamePolicy`, the setting that gives NICs their predictable names at boot. Write a minimal `.link` with just a match and `RxBufferSize`, and on the next boot the port comes up as `eth0` — and everything keyed to the predictable name (the `.network` file, firewall rules, monitoring) silently fails. On a headless box, that's a machine that boots and never comes back onto the network. The working shape replicates the stock file's policy lines verbatim and adds the one new setting:
+
+```
+# /etc/systemd/network/10-tracker-nic.link
+[Match]
+PermanentMACAddress=aa:bb:cc:dd:ee:ff
+
+[Link]
+NamePolicy=keep kernel database onboard slot path
+AlternativeNamesPolicy=database onboard slot path
+MACAddressPolicy=persistent
+RxBufferSize=4096
+```
+
+Match on the permanent MAC — `ethtool -P` prints it — so the file follows the physical port rather than a name that might change. And before trusting a boot to it, one command proves both halves with no reboot: `ID_NET_LINK_FILE` must name your custom file (it matched), and `ID_NET_NAME` must show the predictable name (the name policy survived). Both right, or stop and fix:
+
+```bash
+udevadm test-builtin net_setup_link /sys/class/net/enp1s0 2>&1 | grep -E "ID_NET_LINK_FILE=|ID_NET_NAME="
+```
+
+## The softirq budget, and the counter that cries wolf
+
+The receive-path section sent you to `/proc/net/softnet_stat` to check the second column for drops. Sit with that file on any busy box and the **third** column — `time_squeeze` — will climb while you watch, and it looks alarming. This section exists mostly so you don't tune a healthy machine — and because this one setting is the clearest window in the whole file into how Linux actually runs the network stack.
+
+Start with what happens when a packet arrives. The NIC writes it into the receive ring and raises an interrupt. The interrupt handler does almost nothing — acknowledges the hardware, masks further interrupts from that queue, and schedules the real work. That work runs moments later in **softirq** context on the same core: a kernel loop pulls packets off the ring and carries each one up the entire stack — ethernet, IP, conntrack and Docker's DNAT, UDP, into a socket's receive buffer — then returns to the ring for the next. Nearly everything this guide has described happens inside that loop. It *is* the network stack, executing.
+
+A loop like that, holding a CPU during a flood, would happily hold it forever — so the kernel gives it a quantum, exactly the way the scheduler gives a process a timeslice. One softirq pass may process `netdev_budget` packets (**Linux default 300**) or run for `netdev_budget_usecs` (**default 2,000 µs**), whichever comes first; then it must stop — even with packets still queued — hand the CPU back, and let the leftover work resume in the next pass, often on `ksoftirqd`, a kernel thread that runs at normal priority precisely so user programs can compete with it. That forced stop with work remaining is one tick of `time_squeeze`. A squeeze is a **yield, not a drop**: nothing is lost, only deferred — and since arrival doesn't pause while the loop is away, this setting and the NIC ring above are siblings: the budget decides how often the kernel steps away from the conveyor belt, and the ring decides how much can pile up while it's away.
+
+So what does raising the budget cost, if not memory? Nothing is *consumed* at all — it's a ceiling, not an allocation. A pass that finds 40 packets queued processes 40 and exits, identical down to the instruction under either ceiling; the setting only exists, behaviorally, in the moments when more packets than the budget are waiting on one core. When it does engage, the currency is the **worst-case latency of everything else on that core**: during a burst, the packet loop may now hold the CPU for up to 8 ms before yielding instead of 2, and a user-space thread waiting for that particular core waits accordingly longer. The total work is conserved either way — every packet gets processed, in fewer long turns or more short turns — and fewer turns is marginally *cheaper*, since each yield-and-resume pays a little overhead. The processor runs as hot as the traffic makes it, not as hot as the sysctl allows.
+
+Which explains why the kernel default is low. 300 packets and 2,000 µs are tuned for the general-purpose machine — the laptop, the desktop, the app server — where a human or a latency-sensitive process lives on the other side of that core, and packet processing should never make the machine feel sticky. The default optimizes for the responsiveness of everything that *isn't* networking. A box whose job is packets can afford longer turns — and with a multi-queue NIC spreading receive queues across the many cores of any modern processor, an occasional 8 ms hold on one of them is unmeasurable.
+
+Measured here: drops read **zero across 10.3 days** at tens of millions of requests a day, while `time_squeeze` ticked along at ~1,500 a day — the budget engaging about once a minute, harmlessly. We doubled it anyway, free insurance:
+
+```
+net.core.netdev_budget = 600
+net.core.netdev_budget_usecs = 8000
+```
+
+But the order of operations is the teaching point: **check the drops column before touching anything**. A climbing `time_squeeze` beside zero drops is a busy box doing normal bookkeeping, not a wall.
 
 ## Docker's bridge: keep NAT in the kernel
 
@@ -127,4 +211,4 @@ With TLS terminated, kept alive, and multiplexed at the proxy, the tracker behin
 
 ## Where these settings live
 
-The kernel settings here ship as a ready-to-use, fully commented file, [`open/90-tracker.conf`](https://github.com/zootella/ftorrent/blob/master/open/90-tracker.conf) — drop it in `/etc/sysctl.d/` and apply with `sudo sysctl --system`. The Docker daemon, seccomp, and reverse-proxy pieces, in deployment context, are in the [Aquatic guide](https://github.com/zootella/ftorrent/blob/master/open/README.md). And [Tracker Load](/tracker-load) measures what all of this actually costs in production: 77 million requests in a day, zero dropped packets, under 40 watts.
+The kernel settings here ship as a ready-to-use, fully commented file, [`open/90-tracker.conf`](https://github.com/zootella/ftorrent/blob/master/open/90-tracker.conf) — drop it in `/etc/sysctl.d/` and apply with `sudo sysctl --system`. The one exception is the NIC receive ring, which is not a sysctl at all: `ethtool -G` for a one-off, a `.link` file for persistence, as its section shows. The Docker daemon, seccomp, and reverse-proxy pieces, in deployment context, are in the [Aquatic guide](https://github.com/zootella/ftorrent/blob/master/open/README.md). And [Tracker Load](/tracker-load) measures what all of this actually costs in production: 77 million requests in a day, zero dropped packets, under 40 watts.

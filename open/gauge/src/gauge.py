@@ -137,16 +137,27 @@ MS_PER_MINUTE = 60_000
 # — nudging clients toward IPv6 and toward UDP under load.
 SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
 
-# Per-service breaker thresholds. UDP's ceiling is ten times the TCP
-# services' because a UDP announce costs far less to serve: only HTTP and WS
-# spend the TLS handshake budget, the resource that actually limits scale.
+# Per-service breaker thresholds, set from measured capacity. On this
+# deployment a UDP announce costs ~1 CPU core plus ~23 Mbps of response
+# bandwidth per billion announces per day — nearly free, and bandwidth-bound
+# long before it is CPU-bound. An HTTPS announce costs ~150-170x as much,
+# dominated by TLS handshakes and per-connection overhead — the resource
+# that actually limits scale on modest hardware; WS rides the same TLS
+# budget, so all four TCP cells share one ceiling. Against budgets of ~70%
+# of CPU and ~300 Mbps of transmit, HTTPS fills the box at ~140-150M
+# announces a day and UDP at ~13B: the TCP ceiling sits at ~0.6x that fill
+# point, and UDP's at ~3x its current daily pace, an order of magnitude
+# under its fill. Within each protocol, v4 and v6 get the same full value
+# on purpose — v6 carries a small fraction of the traffic, so under real
+# load a v4 cell trips first while its v6 sibling keeps serving, nudging
+# clients toward IPv6.
 SERVICE_BREAKERS = {
-	"udp4": 500_000_000,
-	"udp6": 500_000_000,
-	"http4": 50_000_000,
-	"http6": 50_000_000,
-	"ws4": 50_000_000,
-	"ws6": 50_000_000,
+	"udp4": 1_500_000_000,
+	"udp6": 1_500_000_000,
+	"http4": 80_000_000,
+	"http6": 80_000_000,
+	"ws4": 80_000_000,
+	"ws6": 80_000_000,
 }
 
 # ---------------------------------------------------------------------------

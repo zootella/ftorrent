@@ -120,16 +120,33 @@ services:
   # WebSocket tracker — for WebTorrent browser clients and WebRTC signaling.
   # Uses glommio/io_uring — requires custom seccomp profile and memlock ulimit.
   #
-  # Published on localhost only — the reverse proxy handles TLS
-  # and WebSocket upgrades, forwarding to this container.
-  # Not directly reachable from the internet.
+  # Not directly reachable from the internet — the reverse proxy handles TLS
+  # and WebSocket upgrades, forwarding to this container. Unlike the HTTP
+  # tracker, the proxy must reach this container over BOTH IP families:
+  # aquatic_ws has no X-Forwarded-For support and classifies each peer's
+  # family from the accepted TCP socket, so the proxy dials IPv4 for IPv4
+  # clients and IPv6 for IPv6 clients (family-preserving proxying). The IPv4
+  # dial uses the localhost publish below, same as the HTTP tracker. The
+  # IPv6 dial goes directly to the container's pinned ULA address
+  # ([fd00:cafe:2::82]:8082) — a loopback publish won't do for IPv6: with
+  # the userland proxy disabled, published ports aren't reachable via ::1,
+  # and upstream notes that receiving both families over loopback is
+  # unsupported anyway. The pinned address is private (ULA, never routed),
+  # unreachable from outside the host, and stable for the proxy config to
+  # reference. This example pins only this one container, and picks a high
+  # address on purpose: Docker's dynamic allocator hands out low addresses
+  # (::2, ::3, ...) first, so a high pin can't collide with one already
+  # dynamically assigned. A deployment whose firewall rules target
+  # containers by address may pin every container in the project instead —
+  # then any free addresses work, since nothing is dynamic.
   aquatic-ws:
     container_name: ftorrent-open-ws-1
     build:
       context: .
       dockerfile: Dockerfile.ws
     networks:
-      - tracker
+      tracker:
+        ipv6_address: fd00:cafe:2::82
     ports:
       - "127.0.0.1:8082:8082/tcp"
     user: "65534:65534"

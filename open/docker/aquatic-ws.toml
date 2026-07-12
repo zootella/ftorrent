@@ -9,12 +9,16 @@ swarm_workers = 1
 log_level = "warn"
 
 [network]
-# Changed from default ":3000" to match our container port.
-# Listen on all IPv4 interfaces. When running behind a reverse proxy
-# on the host, the proxy handles IPv4/IPv6 and TLS from the outside.
-# WebSocket upgrades are forwarded to this container over the internal
-# Docker bridge, which is IPv4.
-address = "0.0.0.0:8082"
+# Changed from default ":3000" to match our container port. Bind [::] with
+# only_ipv6 = false to listen dual-stack — one socket accepting both IPv4
+# and IPv6, the same pattern the UDP tracker uses. Dual-stack matters here
+# even behind a reverse proxy: aquatic_ws has no X-Forwarded-For support
+# (unlike aquatic_http), so it classifies each peer's address and family
+# from the accepted TCP socket itself. For per-family statistics to be
+# correct, the proxy must dial this container over IPv4 for IPv4 clients
+# and over IPv6 for IPv6 clients — family-preserving proxying, upstream's
+# supported model — and this socket must accept both families.
+address = "[::]:8082"
 only_ipv6 = false
 tcp_backlog = 1024
 

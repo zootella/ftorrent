@@ -128,17 +128,17 @@ The gauge rewrites `breaker.json` every minute even when the timestamps don't ch
 
 This section is framework-agnostic. The reverse-proxy layer in front of the trackers must satisfy the list below regardless of which software implements it. The two example directories show two ways to satisfy this list. A reader using a different reverse proxy entirely — say Caddy for everything, or Envoy, or HAProxy with embedded Lua — can read this section as a checklist and adapt their existing config.
 
-**1. Terminate TLS on port 443.** Public clients connect over HTTPS. The server terminates the encrypted connection so the tracker containers serve plaintext HTTP behind the proxy on internal localhost ports. Certificate issuance and renewal is automated (certbot, lego, or any other ACME client).
+**1. Terminate TLS on port 443.** Public clients connect over HTTPS. The server terminates the encrypted connection so the tracker containers serve plaintext HTTP behind the proxy on internal ports unreachable from the internet. Certificate issuance and renewal is automated (certbot, lego, or any other ACME client).
 
 **2. Route HTTP requests by path.** Requests to `/announce` and `/scrape` go to the HTTP tracker container (default `127.0.0.1:8081`). Requests to `/page.json` serve the gauge's output file aliased from `/opt/open.ftorrent.com/data/public/page.json`. Everything else not handled by another route falls through to static-file serving.
 
-**3. Route WebSocket upgrades.** Connections that include an `Upgrade: websocket` header go to the WebSocket tracker container (default `127.0.0.1:8082`).
+**3. Route WebSocket upgrades, preserving the client's IP family.** Connections that include an `Upgrade: websocket` header go to the WebSocket tracker container — IPv4 clients dialed to `127.0.0.1:8082`, IPv6 clients to the container's pinned IPv6 address (`[fd00:cafe:2::82]:8082` in the Aquatic guide's example compose). The split matters because aquatic_ws has no `X-Forwarded-For` support and classifies each peer's IP family from the accepted TCP socket, so a proxy that dials every client over IPv4 silently counts every WebSocket peer as `ws4` — see the [Aquatic guide](../README.md)'s reverse proxy section. The v4-versus-v6 discrimination this needs is the same one requirement 6 provides for gating.
 
 **4. Serve the dashboard as static files.** The Vue front end's compiled output lives at `/opt/open.ftorrent.com/static`. Non-API, non-WS requests serve files from there.
 
 **5. Read four per-service toggles for HTTP/WS gating.** The proxy needs to be able to read four runtime toggles — `http4`, `http6`, `ws4`, `ws6` — each `on` or `off`. When a toggle is `off`, requests to that service return `503 Service Unavailable` with `Retry-After: 86400`, before the request reaches the tracker. The toggles must be updatable from outside the proxy without a full config reload, so the breaker can flip them every minute without restarting anything. The two example implementations show two natural ways to satisfy this: nginx variables set from an `include`-d file (reloaded with `nginx -s reload`), or a HAProxy map file refreshable via the runtime admin socket.
 
-**6. Discriminate v4 from v6 per connection.** The proxy must know whether a given connection arrived over IPv4 or IPv6 so the right of the four toggles applies. Different proxies express this differently — in nginx, the value of `$server_addr` (with or without a colon); in HAProxy, an ACL against the source address family using `src 0.0.0.0/0` versus `src ::/0` (an IPv4 client only matches the IPv4 prefix, a native IPv6 client only the IPv6 prefix, even though both prefixes are "all addresses" inside their own family).
+**6. Discriminate v4 from v6 per connection.** The proxy must know whether a given connection arrived over IPv4 or IPv6 — the per-family gating and the WebSocket family-preserving dial both depend on it. Different proxies express this differently, and the obvious-looking way in HAProxy is wrong. In nginx, test `$server_addr` for a colon. In HAProxy, the intuitive pair — `acl is_v4 src 0.0.0.0/0` versus `acl is_v6 src ::/0` — does **not** work: HAProxy compares across address families by converting IPv4 sources to their v4-mapped form (`::ffff:a.b.c.d`) and widens `/0` patterns across families, so each of those "catch-alls" matches **both** families (verified empirically on HAProxy 2.8.16 in July 2026). The one precise classifier is the v4-mapped /96 range — `acl is_v4 src ::ffff:0:0/96` — which IPv4 clients land inside after conversion and native IPv6 sources cannot; IPv6 conditions are written as its negation, `!is_v4`.
 
 **7. The `Retry-After: 86400` choice is structural.** Always 24 hours, regardless of the actual remaining cool-down. If the header said "retry in N seconds" where N is the real remaining time, every client receiving a 503 in the same minute would schedule its retry for the same moment — the exact second when the service unpauses. That's a synchronized retry hammer at the worst possible time. A uniform 24-hour value sidesteps this. Clients distribute their retries across the day by their own backoff logic; the header still tells well-behaved clients "this is a paused service, not a permanently broken one" — useful semantic signal — without coordinating their return.
 
@@ -204,15 +204,20 @@ ws4 on
 ws6 on
 ```
 
-The `https` frontend defines reusable ACLs — route detection, family detection, per-service map lookups — and then expresses the four 503 returns by ANDing one ACL from each group. The map lookup uses HAProxy's `map(...)` converter: the input is the literal service key, passed through the converter against `breaker.map`, matched if the looked-up value equals `"off"`:
+The `https` frontend defines reusable ACLs — route detection, family detection, per-service map lookups — and then expresses the four 503 returns by ANDing one ACL from each group. Family detection is the part to pause on: an earlier revision of this config used the intuitive `src 0.0.0.0/0` / `src ::/0` pair, which silently matches both families (requirement 6 above explains the mechanism) — family-blind gating that sat dormant here until the WebSocket family-split work of July 2026 forced an empirical test. The map lookup uses HAProxy's `map(...)` converter: the input is the literal service key, passed through the converter against `breaker.map`, matched if the looked-up value equals `"off"`:
 
 ```haproxy
 acl is_open hdr_dom(host) -i open.ftorrent.com
 acl is_announce_or_scrape path_beg /announce /scrape
 acl is_websocket hdr(Upgrade) -i websocket
 
-acl is_v4 src 0.0.0.0/0
-acl is_v6 src ::/0
+# Client family. HAProxy compares across address families by mapping
+# IPv4 into IPv6 (::ffff:a.b.c.d), and widens /0 patterns across
+# families — so bare `src 0.0.0.0/0` and `src ::/0` each match BOTH
+# families. The v4-mapped /96 range is the one precise test: IPv4
+# clients land inside it, native IPv6 clients cannot. IPv6 conditions
+# are its negation, `!is_v4`.
+acl is_v4 src ::ffff:0:0/96
 
 acl breaker_http4_off str(http4),map(/etc/haproxy/maps/breaker.map) -m str off
 acl breaker_http6_off str(http6),map(/etc/haproxy/maps/breaker.map) -m str off
@@ -220,17 +225,18 @@ acl breaker_ws4_off   str(ws4),map(/etc/haproxy/maps/breaker.map) -m str off
 acl breaker_ws6_off   str(ws6),map(/etc/haproxy/maps/breaker.map) -m str off
 
 http-request return status 503 hdr "Retry-After" "86400" if is_open is_announce_or_scrape is_v4 breaker_http4_off
-http-request return status 503 hdr "Retry-After" "86400" if is_open is_announce_or_scrape is_v6 breaker_http6_off
+http-request return status 503 hdr "Retry-After" "86400" if is_open is_announce_or_scrape !is_v4 breaker_http6_off
 http-request return status 503 hdr "Retry-After" "86400" if is_open is_websocket is_v4 breaker_ws4_off
-http-request return status 503 hdr "Retry-After" "86400" if is_open is_websocket is_v6 breaker_ws6_off
+http-request return status 503 hdr "Retry-After" "86400" if is_open is_websocket !is_v4 breaker_ws6_off
 ```
 
 `http-request return` (HAProxy 2.4+) is the synchronous reply path — it produces a complete response without touching any backend, which is exactly the semantics we want for a 503 from a paused service.
 
-Beyond the gate, the same frontend routes tracker traffic directly to the Aquatic backends; anything else falls through to Caddy as the default:
+Beyond the gate, the same frontend routes tracker traffic directly to the Aquatic backends; anything else falls through to Caddy as the default. WebSocket upgrades pick their backend by client family — the family-preserving dial aquatic_ws needs (requirement 3):
 
 ```haproxy
 use_backend aquatic_http if is_open is_announce_or_scrape
+use_backend aquatic_ws6  if is_open is_websocket !is_v4
 use_backend aquatic_ws   if is_open is_websocket
 default_backend caddy
 
@@ -242,11 +248,21 @@ backend aquatic_http
     server http1 127.0.0.1:8081
 
 backend aquatic_ws
+    # IPv4 clients' WebSocket upgrades — the localhost publish.
     server ws1 127.0.0.1:8082
+
+backend aquatic_ws6
+    # IPv6 clients' WebSocket upgrades — the ws container's pinned IPv6
+    # address, matching the Aquatic guide's compose file. A loopback
+    # publish can't carry this leg: with the userland proxy disabled,
+    # published ports aren't reachable over ::1.
+    server ws1 [fd00:cafe:2::82]:8082
 
 backend caddy
     server caddy /run/caddy/caddy.sock
 ```
+
+One address note: the `aquatic_ws6` dial matches the [Aquatic guide](../README.md)'s example compose, which pins only the ws container and deliberately picks a high address (`fd00:cafe:2::82`) that Docker's dynamic allocator — handing out low addresses first — can't collide with. If you followed the guide, the block above works as written. The deployed open.ftorrent.com server does it differently: it pins *every* container in the compose project low in the subnet (`::2` udp, `::3` ws, `::4` http, and so on, with matching IPv4 fourth octets) because its firewall rules target containers by address, so its real dial is `[fd00:cafe:2::3]:8082` — the one value in these excerpts adapted from the live config. Either way, dial whatever your ws container's pinned address actually is.
 
 The `h1-case-adjust-bogus-server` directive activates three header-case mappings declared in `global`, restoring the original casing on outgoing forwarding headers:
 
@@ -380,16 +396,16 @@ The trip thresholds live in the gauge, not the breaker — see [`open/gauge/src/
 
 ```python
 SERVICE_BREAKERS = {
-	"udp4": 500_000_000,
-	"udp6": 500_000_000,
-	"http4": 50_000_000,
-	"http6": 50_000_000,
-	"ws4": 50_000_000,
-	"ws6": 50_000_000,
+	"udp4": 1_500_000_000,
+	"udp6": 1_500_000_000,
+	"http4": 80_000_000,
+	"http6": 80_000_000,
+	"ws4": 80_000_000,
+	"ws6": 80_000_000,
 }
 ```
 
-Each service is metered against its own value, and the asymmetry is deliberate. A UDP announce costs one to two orders of magnitude less than an HTTPS announce, because only the TCP services spend the TLS handshake budget — the resource that actually limits scale on modest hardware (see "Two example implementations" above). So UDP, the service that can't threaten the binding resource, gets a ceiling ten times higher than HTTP's rather than tripping first while costing almost nothing.
+Each service is metered against its own value, and the values are — as of July 2026 — measured rather than estimated. The asymmetry is per protocol, and it's large: a UDP announce costs roughly 150–170× less than an HTTPS announce on this deployment, because only the TCP services spend the TLS handshake budget — the resource that actually limits scale on modest hardware (see "Two example implementations" above). WS rides the same TLS budget as HTTPS, so all four TCP cells share one ceiling. Priced out against the box's CPU and bandwidth budgets, HTTPS fills this hardware at ~140–150M announces a day, while UDP would take ~13 billion, bounded by the network line rather than the CPU. The TCP ceiling sits at about 0.6× that fill point; UDP's sits at about 3× its current daily pace, still an order of magnitude below its fill — the service that can't threaten the binding resource never trips first. Within each protocol, v4 and v6 get the same full value on purpose: v6 carries a small fraction of the traffic, so under real load a v4 cell reaches its ceiling first while its v6 sibling keeps serving — and the tracker's answer to congestion becomes a nudge toward IPv6.
 
 Tune the values to your hardware once you've watched a few real trips and have a sense of your own ceilings. The 24-hour cool-down duration is also in `gauge.py`:
 

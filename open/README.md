@@ -166,7 +166,7 @@ You can use any port you like. 6969 is the simplest choice and works well on ope
 
 **TCP port sharing.** The HTTP tracker, WebSocket tracker, and homepage all share external port 443/tcp through a reverse proxy. The reverse proxy terminates TLS and routes requests based on their content: paths starting with `/announce` or `/scrape` go to the HTTP tracker, requests with a WebSocket `Upgrade` header go to the WebSocket tracker, and everything else goes to the homepage. This means a single domain and port serves all three services — clients don't need to know about the internal routing.
 
-**Publishing and visibility.** The UDP container is published on all interfaces (`0.0.0.0:443:8443/udp`) because UDP traffic goes directly from the internet to the container — there's no reverse proxy for UDP. The HTTP and WebSocket containers are published on **localhost only** (`127.0.0.1:8081:8081/tcp`, `127.0.0.1:8082:8082/tcp`) because they should only be reachable through the reverse proxy, not directly from the internet. This ensures all TCP traffic goes through TLS termination and the proxy's routing logic.
+**Publishing and visibility.** The UDP container is published on all interfaces (`0.0.0.0:443:8443/udp`) because UDP traffic goes directly from the internet to the container — there's no reverse proxy for UDP. The HTTP and WebSocket containers are reachable only through the reverse proxy, never directly from the internet, so all TCP traffic goes through TLS termination and the proxy's routing logic. The HTTP container is published on **localhost only** (`127.0.0.1:8081:8081/tcp`). The WebSocket container is published on localhost for IPv4 (`127.0.0.1:8082:8082/tcp`) and additionally carries a **pinned IPv6 address** on the Docker network (`fd00:cafe:2::82`) that the proxy dials directly for IPv6 clients — the WebSocket tracker is the one service where the proxy must preserve the client's IP family on the backend dial, explained in the reverse proxy section below.
 
 ## The traffic path
 
@@ -200,7 +200,7 @@ The **router or edge firewall** is where a client's packet first reaches the dep
 
 The **Linux host firewall** (iptables and ip6tables) controls which inbound packets reach processes on the host. The reverse proxy runs as a host process and listens on ports 80 and 443, so those need INPUT allow rules. UDP tracker traffic does not go through INPUT at all — Docker's DNAT handles it in PREROUTING, which runs before INPUT and sends the packet straight to the container.
 
-**The reverse proxy** terminates TLS for HTTPS and WSS, handles IPv4 and IPv6 dual-stack, and routes TCP requests by path (`/announce`, `/scrape`) and by WebSocket upgrade header to the right container over localhost. UDP tracker traffic never touches the reverse proxy.
+**The reverse proxy** terminates TLS for HTTPS and WSS, handles IPv4 and IPv6 dual-stack, and routes TCP requests by path (`/announce`, `/scrape`) and by WebSocket upgrade header to the right container — over localhost for the HTTP tracker, and over a family-matched dial for the WebSocket tracker (explained in the reverse proxy section). UDP tracker traffic never touches the reverse proxy.
 
 **Docker** sits underneath, providing the network namespace where the containers live. Two Docker layers matter: the daemon config (`/etc/docker/daemon.json` with `ipv6`, `ip6tables`, and `userland-proxy: false`) and the compose network (with `enable_ipv6: true`, pinned subnets, and DOCKER-USER firewall rules that isolate the containers from the outside).
 
@@ -391,9 +391,34 @@ When the NIC receives packets faster than the kernel can process them in softirq
 net.core.netdev_max_backlog = 10000
 ```
 
+### Softirq drain budget
+
+Each softirq pass may process at most `netdev_budget` packets, or run for `netdev_budget_usecs` microseconds, before yielding the CPU back to everything else. Yields are counted as `time_squeeze` in `/proc/net/softnet_stat`, and they're normal on a busy box — a yield is not a drop; the work is deferred to the next pass, not lost. Doubling the budget lets each pass drain longer during bursts, and it's free headroom: these are scheduler limits, not memory structures.
+
+```
+# Packets (default 300) and microseconds (default 2000) one softirq
+# pass may spend before yielding. A "squeeze" is a yield, not a drop.
+# Doubled-plus so bursts drain in fewer passes. No memory cost.
+net.core.netdev_budget = 600
+net.core.netdev_budget_usecs = 8000
+```
+
+### TCP TIME_WAIT cap
+
+Not to be confused with the conntrack TIME_WAIT *timeout* above — this is the socket layer's own TIME_WAIT set. When the server closes a connection first, the kernel holds the socket in TIME_WAIT for 60 seconds (a compile-time constant) so a late packet can't corrupt a new connection reusing the same address and port. `tcp_max_tw_buckets` caps how many sockets may wait at once — and at the default (65,536 on a 16 GB box, computed at boot), a tracker's announce churn pins the set to the cap permanently, so every further close skips the protection, silently. The signature is unmistakable: `ss -s` shows the `timewait` count sitting *exactly* at the cap around the clock, and `nstat -az TcpExtTCPTimeWaitOverflow` climbs with essentially every close.
+
+```
+# Host-wide cap on sockets in TIME_WAIT (60s each). The ~65,536 default
+# is pinned permanently by announce churn; raised 16x so the set floats
+# free (~500k at high churn ≈ 130 MB; ~256 MiB bounded worst case).
+net.ipv4.tcp_max_tw_buckets = 1048576
+```
+
 ### The complete sysctl file
 
 Everything above — plus the `fq_codel` default qdisc and IP forwarding (which Docker enables at runtime, pinned here so they survive a restart) — ships as a ready-to-use, fully commented file in this repository: [`90-tracker.conf`](90-tracker.conf). Copy it into `/etc/sysctl.d/` and apply with `sudo sysctl --system`.
+
+For the mechanism-by-mechanism story behind these settings — what each kernel structure is, how load finds it, and what the numbers cost — see [Tuning for Load](https://docs.ftorrent.com/tuning-for-load.html). It also covers one tuning point that lives outside sysctl entirely: the NIC's receive descriptor ring, deepened with `ethtool -G` and persisted through a systemd `.link` file (with a rename trap worth reading about before touching it).
 
 ### Pre-loading the conntrack module
 
@@ -442,8 +467,21 @@ conntrack -S
 # UDP socket buffer drops — look for RcvbufErrors, SndbufErrors
 cat /proc/net/snmp | grep Udp:
 
-# Softirq drops per CPU — second column should be 0
+# Softirq drops per CPU — second column should be 0. (A climbing THIRD
+# column, time_squeeze, is normal: a yield, not a drop.)
 cat /proc/net/softnet_stat
+
+# TIME_WAIT saturation — a timewait count sitting exactly at
+# tcp_max_tw_buckets means every close is skipping TIME_WAIT's
+# protection; the overflow counter confirms it
+ss -s
+nstat -az TcpExtTCPTimeWaitOverflow
+
+# NIC hardware drops — packets discarded before the kernel ever saw
+# them; counter names vary by driver (rx_no_dma_resources on Intel
+# ixgbe), and enp1s0 is whatever name your interface has. Deepening
+# the RX ring is covered in Tuning for Load.
+ethtool -S enp1s0 | grep -iE "no_dma|missed|rx_drop"
 
 # Kernel log — when the conntrack table overflows, the kernel logs:
 #   "nf_conntrack: table full, dropping packet"
@@ -587,6 +625,7 @@ Additional HTTP-specific changes:
 Additional WebSocket-specific changes:
 
 - **HTTP health checks enabled** (`enable_http_health_checks = true`). This makes the container respond to `GET /health` with `200 OK`, which Docker and reverse proxies can use to verify the container is alive. This is incompatible with Aquatic's built-in TLS, but we don't use it — TLS is handled by the reverse proxy.
+- **Dual-stack listen** (`address = "[::]:8082"` with `only_ipv6 = false`) — the same single-socket dual-stack bind the UDP tracker uses, needed here for a different reason. aquatic_ws has no reverse-proxy header support — no `runs_behind_reverse_proxy`, no `X-Forwarded-For` option, unlike aquatic_http — so it takes each peer's address and family from the accepted TCP socket itself. Upstream's supported model behind a proxy is **family-preserving proxying**: IPv4 clients proxied over IPv4, IPv6 clients over IPv6. This bind lets one socket accept both families; the family-matched dial is the reverse proxy's job (covered in the reverse proxy section). Nothing functional depends on it — the WebSocket tracker relays WebRTC offers over the open socket and never needs a peer's address — but per-family statistics do: behind an IPv4-only dial, every WebSocket peer silently counts as IPv4.
 
 Additional UDP-specific changes:
 
@@ -694,15 +733,17 @@ services:
 
   aquatic-ws:
     container_name: ftorrent-open-ws-1
-    # Same as HTTP, with 2003m memory limit
-    ports: ["127.0.0.1:8082:8082"]   # Localhost only — the reverse proxy connects here
+    # Same as HTTP, with 2003m memory limit, plus a pinned IPv6 address
+    networks:
+      tracker: { ipv6_address: "fd00:cafe:2::82" }  # The proxy dials this for IPv6 clients
+    ports: ["127.0.0.1:8082:8082"]   # The proxy dials this for IPv4 clients
 ```
 
 The service names (`aquatic-udp`, `aquatic-http`, `aquatic-ws`) describe what each container runs — the Aquatic binary for that protocol. Explicit `container_name:` entries give the running containers the names `ftorrent-open-udp-1`, `ftorrent-open-http-1`, `ftorrent-open-ws-1` that appear in `docker ps`. Without the explicit names, Docker Compose would auto-generate names from the project and service (`ftorrent-open-aquatic-udp-1`), which is correct but longer.
 
 Image names are auto-generated by Docker Compose from the project and service: `ftorrent-open-aquatic-udp`, `ftorrent-open-aquatic-http`, `ftorrent-open-aquatic-ws`. These only appear in `docker images` — they don't need to be cleaner than they are.
 
-Note how the UDP container publishes on all interfaces (direct internet access), while HTTP and WS publish on localhost only (reachable only through the reverse proxy). The UDP container uses Docker's default seccomp (no `seccomp=` line), while HTTP and WS specify the custom profile and the memlock ulimit.
+Note how the UDP container publishes on all interfaces (direct internet access), while HTTP and WS publish on localhost only (reachable only through the reverse proxy). The WS container additionally pins an IPv6 address on the Docker network — aquatic_ws classifies each peer by the family of the proxy's dial, so the proxy needs an IPv6 path to it (see the reverse proxy section). The UDP container uses Docker's default seccomp (no `seccomp=` line), while HTTP and WS specify the custom profile and the memlock ulimit.
 
 ## Building and testing locally
 
@@ -949,7 +990,7 @@ A single nginx server block on port 443 routes incoming requests by content:
 |---|---|---|
 | `GET /announce?...` or `GET /scrape?...` | HTTP tracker container (`127.0.0.1:8081`) | Path regex `~ ^/(announce\|scrape)` |
 | `GET /page.json` | Gauge's data directory on disk | `location = /page.json` with `alias` |
-| WebSocket upgrade | WebSocket tracker container (`127.0.0.1:8082`) | `Upgrade: websocket` header, matched inside `location /` |
+| WebSocket upgrade | WebSocket tracker container, family-matched dial (`127.0.0.1:8082` for IPv4 clients, `[fd00:cafe:2::82]:8082` for IPv6) | `Upgrade: websocket` header, matched inside `location /` |
 | Anything else | Static dashboard from `/opt/open.ftorrent.com/static` | `try_files` fallback in `location /` |
 
 A second server block on port 80 serves only two purposes: certbot's HTTP-01 ACME challenges, and a `301` redirect to HTTPS for everything else.
@@ -967,6 +1008,17 @@ map $http_upgrade $connection_upgrade {
 
 This must live in the `http` block, not inside `server` — nginx refuses to start if it's in the wrong scope. `$connection_upgrade` resolves to `upgrade` when the client sent `Upgrade: websocket` and to `close` otherwise — which is exactly what the `Connection` header on the proxied request should say in each case.
 
+A second `map`, also at the `http` level, picks the WebSocket backend by the client's IP family — the family-preserving dial explained in the dual-stack section below. `$server_addr` is the local address the client connected to, so it contains a colon exactly when the client arrived over IPv6:
+
+```nginx
+map $server_addr $ws_upstream {
+    "~:"    "[fd00:cafe:2::82]:8082";
+    default "127.0.0.1:8082";
+}
+```
+
+One assumption to know about: the colon test relies on the paired `listen` directives shown in the dual-stack section below — separate IPv4 and IPv6 sockets, which is nginx's default behavior on Linux. A single dual-stack listener (`listen [::]:443 ipv6only=off` with no IPv4 line) would hand IPv4 clients a v4-mapped address like `::ffff:203.0.113.9` — colons included — and misroute them to the IPv6 dial.
+
 Inside `location /`, three proxy directives plus the upgrade-check `if` block handle the routing:
 
 ```nginx
@@ -975,7 +1027,7 @@ proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection $connection_upgrade;
 
 if ($http_upgrade = "websocket") {
-    proxy_pass http://127.0.0.1:8082;
+    proxy_pass http://$ws_upstream;
     break;
 }
 try_files $uri $uri/ =404;
@@ -1004,6 +1056,8 @@ reverse_proxy_ip_header_format = "last_address"
 
 `last_address` is the secure choice when nginx is the only proxy in the chain — nginx sets the header itself, so untrusted values from the client are ignored. If there were multiple proxies in front of nginx (a CDN, a load balancer), a different format would be needed.
 
+All of this header machinery serves the HTTP tracker only. The WebSocket tracker cannot read `X-Forwarded-For` at all — what it can and can't learn about its clients is the subject of the next section.
+
 ### IPv4 and IPv6 dual-stack
 
 nginx handles dual-stack with two `listen` lines in the same server block:
@@ -1013,7 +1067,13 @@ listen 443 ssl;
 listen [::]:443 ssl;
 ```
 
-That's it. nginx accepts IPv4 and IPv6 connections equivalently and proxies them to the same localhost backend. The TCP containers only bind IPv4 on the internal Docker bridge, which is fine — nginx terminates the client connection and initiates a new localhost connection, so the original IP version doesn't need to propagate to the backend. The real client IP (v4 or v6) still reaches the tracker through `X-Forwarded-For`.
+That's it — for accepting clients. What family the *backend dial* uses is a separate question, and the two TCP trackers answer it differently.
+
+For the **HTTP tracker**, dialing every request to the same IPv4 localhost backend is fine. nginx terminates the client connection and initiates a new localhost connection, and the real client IP — v4 or v6 — reaches the tracker through `X-Forwarded-For` regardless of the dial's family.
+
+The **WebSocket tracker** has no `X-Forwarded-For` support, so the only thing it can learn about a client is what the accepted TCP socket tells it — and behind a proxy, that socket is the proxy's dial. Upstream's supported model is **family-preserving proxying**: dial IPv4 for IPv4 clients and IPv6 for IPv6 clients, so the client's address *family* survives the hop even though the address itself is lost. Skip this and nothing visibly breaks — announces are answered and browser peers form swarms normally, because WebRTC signaling relays offers over the open socket and never needs a peer's address — but every WebSocket peer is recorded with the dial's family: per-family statistics silently collapse into one column, and any per-IP limits inside the tracker would see all traffic as a single client. The failure is invisible everywhere except the numbers.
+
+So the WebSocket dial branches on the client's family, as shown in the upgrade-routing section above: IPv4 clients to `127.0.0.1:8082`, IPv6 clients to the WS container's pinned ULA address, `[fd00:cafe:2::82]:8082` (pinned in the compose file). Why not `[::1]`? Two reasons: with the userland proxy disabled, Docker's published ports aren't reachable over the IPv6 loopback, and upstream cautions that receiving both families over loopback is unsupported anyway. The direct dial to the container's own address sidesteps both. To verify the wiring end to end, make a WebSocket announce over a forced-IPv6 connection and confirm it lands in the tracker's IPv6 metrics rather than IPv4.
 
 Do the same for port 80:
 
@@ -1021,6 +1081,10 @@ Do the same for port 80:
 listen 80;
 listen [::]:80;
 ```
+
+### The upstream improvement: X-Forwarded-For support in aquatic_ws
+
+Family-preserving proxying is the model aquatic_ws supports today, and it's all the statistics need — but it's worth naming what it doesn't do: the address each WebSocket peer is recorded with remains the proxy's, because there's nowhere for the real one to arrive. The natural longer-term improvement lives upstream, in Aquatic itself: aquatic_ws reading the client's real address from a forwarded header behind a trusted reverse proxy — the `runs_behind_reverse_proxy` and `reverse_proxy_ip_header_name` options that aquatic_http already ships. Browsers require `wss://`, and operators answer that with a TLS-terminating proxy, so essentially every public WebSocket tracker deployment would benefit. [Aquatic](https://github.com/greatest-ape/aquatic) is a clean, well-organized Rust codebase, and aquatic_http's existing implementation is a ready template — a nicely self-contained contribution for anyone who'd like to improve WebTorrent infrastructure for every operator at once.
 
 ### UDP does not go through nginx
 
@@ -1045,6 +1109,12 @@ A minimal sketch (not a complete config — adapt to your needs):
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
+}
+
+# WebSocket backend by client IP family — the family-preserving dial
+map $server_addr $ws_upstream {
+    "~:"    "[fd00:cafe:2::82]:8082";
+    default "127.0.0.1:8082";
 }
 
 # Port 80 — redirect everything except ACME challenges to HTTPS
@@ -1101,7 +1171,7 @@ server {
         proxy_set_header Connection $connection_upgrade;
 
         if ($http_upgrade = "websocket") {
-            proxy_pass http://127.0.0.1:8082;
+            proxy_pass http://$ws_upstream;
             break;
         }
         try_files $uri $uri/ =404;
