@@ -51,7 +51,7 @@ Just as important as how little is that the work is **spread, with no single-cor
 
 At this load the CPU package reports about **4.8 W** (Intel RAPL). The whole system, measured at the wall on the UPS the server is the sole load on, draws **36–40 watts, usually 39 or 40**. The CPU is only ~4.8 W of that; the remaining ~35 W is the rest of the platform — memory, NVMe storage, the dual-10GbE NIC's PHYs, fans, and power-supply conversion loss.
 
-That is the headline of the whole report: a complete public tracker — processor, memory, a dual-port 10-gigabit NIC, storage, the entire Linux stack — answering 77 million requests a day on **less than a 60-watt incandescent light bulb**. 💡
+That is the headline of the whole report: a complete public tracker — processor, memory, storage, the entire Linux stack — answering millions of requests a day on the glow of an incandescent reading lamp. 💡
 
 ### Memory
 
