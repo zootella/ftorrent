@@ -451,13 +451,28 @@ def extract_by_type(metrics, response_type):
 # Scrape all three Prometheus endpoints. Returns cumulative counters as a flat
 # dict: {udp4, udp6, http4, http6, ws4, ws6}, all six keys always present,
 # defaulting to 0.
+#
+# MAX_SCRAPE_BYTES caps how much we read from any scrape response: these
+# endpoints return a few KB of metrics or a small JSON blob, so reading
+# unbounded would only ever help a broken or hostile peer balloon the gauge's
+# memory. 4 MiB is generous headroom that still bounds the read.
+MAX_SCRAPE_BYTES = 4 * 1024 * 1024
+
+
 def scrape_prometheus():
 	result = {key: 0 for key in SERVED_KEYS}
 
 	for key, url, response_type in PROMETHEUS_ENDPOINTS:
 		try:
-			with urllib.request.urlopen(url, timeout=5) as response:
-				text = response.read().decode("utf-8")
+			# Explicit Connection: close — though urllib already forces this
+			# header unconditionally (AbstractHTTPHandler.do_open), so it changes
+			# nothing on the wire and is kept only to make the intent legible.
+			# These scrapes have always been one clean open-and-close. If a peer
+			# accumulates CLOSE-WAIT from them it is ignoring our FIN and failing
+			# to reap its own sockets — an upstream bug the client cannot fix.
+			req = urllib.request.Request(url, headers={"Connection": "close"})
+			with urllib.request.urlopen(req, timeout=5) as response:
+				text = response.read(MAX_SCRAPE_BYTES).decode("utf-8")
 		except (urllib.error.URLError, OSError):
 			# Endpoint unreachable (local development or container down)
 			continue
@@ -486,8 +501,11 @@ DHT_ENDPOINT = "http://ftorrent-open-dht-1:8080/api/v2/transfer/info"
 # tick never crashes and page.json always carries the keys.
 def scrape_dht():
 	try:
-		with urllib.request.urlopen(DHT_ENDPOINT, timeout=5) as response:
-			data = json.loads(response.read().decode("utf-8"))
+		# Explicit Connection: close (see scrape_prometheus) — urllib already
+		# forces it, so this is legibility, not a fix.
+		req = urllib.request.Request(DHT_ENDPOINT, headers={"Connection": "close"})
+		with urllib.request.urlopen(req, timeout=5) as response:
+			data = json.loads(response.read(MAX_SCRAPE_BYTES).decode("utf-8"))
 	except (urllib.error.URLError, OSError, json.JSONDecodeError):
 		return 0, "disconnected"
 	if not isinstance(data, dict):
