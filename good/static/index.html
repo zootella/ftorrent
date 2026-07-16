@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>good.ftorrent.com</title>
+	<style>
+		body { font-family: ui-monospace, monospace; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.6; }
+		h1 { font-weight: 600; }
+		.addr { font-size: 1.1rem; }
+		.verdict { margin-top: 1.5rem; font-weight: 600; }
+		.muted { color: #888; }
+	</style>
+</head>
+<body>
+	<h1>good</h1>
+	<p>The public addresses the internet sees you on:</p>
+	<div class="addr">IPv4: <span id="v4" class="muted">checking…</span></div>
+	<div class="addr">IPv6: <span id="v6" class="muted">checking…</span></div>
+	<div class="verdict" id="verdict"></div>
+
+	<script>
+		// One probe per address family, against the public ip reflection API. The family forcing is DNS, not code: ip4.ftorrent.com carries only an A record, so its fetch can only travel over IPv4; ip6.ftorrent.com carries only AAAA, forcing IPv6. A response holds the public address the server saw the request arrive from; a failure means that family doesn't work end to end from here.
+		async function probe(family) {
+			try {
+				const r = await fetch(`https://ip${family}.ftorrent.com/?format=json`, { cache: 'no-store' });
+				if (!r.ok) return null;
+				const d = await r.json();
+				return d.ip || null;
+			} catch {
+				return null;
+			}
+		}
+		// Values that arrived over the network land in textContent, never innerHTML.
+		function show(id, address) {
+			const span = document.getElementById(id);
+			span.textContent = address || 'not reachable';
+			if (address) span.classList.remove('muted');
+		}
+		// Both probes run in parallel, and the pair of outcomes is the verdict: two answers is dual-stack, one answer tells you which family you have, none means something is blocking both.
+		(async () => {
+			const [v4, v6] = await Promise.all([probe('4'), probe('6')]);
+			show('v4', v4);
+			show('v6', v6);
+			let verdict;
+			if (v4 && v6) verdict = 'You have dual-stack — both IPv4 and IPv6.';
+			else if (v4) verdict = 'You have IPv4 only.';
+			else if (v6) verdict = 'You have IPv6 only.';
+			else verdict = 'Neither family reached us — something is blocking the connection.';
+			document.getElementById('verdict').textContent = verdict;
+		})();
+	</script>
+</body>
+</html>

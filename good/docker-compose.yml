@@ -1,0 +1,90 @@
+name: ftorrent-good
+
+services:
+  # The ip reflector — the public what's-my-IP API behind ip/ip4/ip6.ftorrent.com, built from ./go-ip. A single static Go binary on scratch: no shell, no OS, nothing in the image but the executable.
+  go-ip:
+    build: ./go-ip
+    container_name: ftorrent-good-ip-1
+    networks:
+      default:
+        ipv4_address: 172.30.3.2
+        ipv6_address: fd00:cafe:5::2
+    ports:
+      - "127.0.0.1:8100:8100"
+    user: "65534:65534"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: '0.25'
+          pids: 32
+    restart: unless-stopped
+
+  # coturn — the STUN server behind stun.ftorrent.com: plain binding over UDP 3478 only (stun-only — no TURN, no TCP, no TLS, so no certificate custody). Upstream image with our config mounted read-only; the read_only rootfs gets a tmpfs for the pidfile.
+  coturn:
+    image: coturn/coturn
+    container_name: ftorrent-good-coturn-1
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    networks:
+      default:
+        ipv4_address: 172.30.3.3
+        ipv6_address: fd00:cafe:5::3
+    ports:
+      - "3478:3478/udp"
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /var/tmp
+    cap_drop:
+      - ALL
+    # turnserver ships a cap_net_bind_service file capability; with cap_drop: ALL the empty bounding set makes the kernel refuse to exec it (EPERM). Add just that one capability back so the exec is honored — coturn still can't bind low ports, and its own port is above 1024.
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /opt/good.ftorrent.com/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          pids: 64
+    restart: unless-stopped
+
+  # pion — the WebRTC ICE peer (a full-feature piece, not part of the MVP). The slot is defined here so its network addressing stays fixed, but the peer is deferred: ./pion holds only a Dockerfile until the Go source lands, so it is never brought up — start the live services by name: docker compose up -d go-ip coturn. Its inbound port 49152/udp and its egress door arrive with it.
+  pion:
+    build: ./pion
+    container_name: ftorrent-good-pion-1
+    networks:
+      default:
+        ipv4_address: 172.30.3.4
+        ipv6_address: fd00:cafe:5::4
+    ports:
+      - "49152:49152/udp"
+    user: "65534:65534"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          pids: 32
+    restart: unless-stopped
+
+# The stack's own dual-stack network; each service holds a fixed address on both families.
+networks:
+  default:
+    name: ftorrent-good
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.30.3.0/24
+        - subnet: fd00:cafe:5::/64
