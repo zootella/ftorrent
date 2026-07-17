@@ -137,27 +137,30 @@ MS_PER_MINUTE = 60_000
 # — nudging clients toward IPv6 and toward UDP under load.
 SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
 
-# Per-service breaker thresholds, set from measured capacity. On this
-# deployment a UDP announce costs ~1 CPU core plus ~23 Mbps of response
-# bandwidth per billion announces per day — nearly free, and bandwidth-bound
-# long before it is CPU-bound. An HTTPS announce costs ~150-170x as much,
-# dominated by TLS handshakes and per-connection overhead — the resource
-# that actually limits scale on modest hardware; WS rides the same TLS
-# budget, so all four TCP cells share one ceiling. Against budgets of ~70%
-# of CPU and ~300 Mbps of transmit, HTTPS fills the box at ~140-150M
-# announces a day and UDP at ~13B: the TCP ceiling sits at ~0.6x that fill
-# point, and UDP's at ~3x its current daily pace, an order of magnitude
-# under its fill. Within each protocol, v4 and v6 get the same full value
-# on purpose — v6 carries a small fraction of the traffic, so under real
-# load a v4 cell trips first while its v6 sibling keeps serving, nudging
-# clients toward IPv6.
+# Per-service breaker thresholds, in announces per day, measured rather
+# than estimated. The per-announce costs are wildly asymmetric: a UDP
+# announce is cheap — a little kernel work and an in-process reply — while
+# an HTTPS announce is dominated by the TLS handshake, the resource that
+# actually limits scale on modest hardware. WS rides that same TLS budget,
+# so all four TCP cells share one ceiling. The values below were sized
+# against a reference server — a modest colocated box of around 28 cores —
+# so that if every protocol ran at its ceiling at once, the machine would
+# sit at roughly half its CPU, with bandwidth, connection tracking, and
+# connection churn all comfortably below that: headroom by design, not a
+# cliff. Within each protocol v4 and v6 carry the same value on purpose —
+# v6 is a small fraction of the traffic, so under real load the v4 cell
+# trips first while its v6 sibling keeps serving, a gentle nudge toward
+# IPv6. Tune to your own hardware once you've watched a few real trips. The
+# numbers live in this dict and nowhere else — no derivation is copied into
+# prose, here or in the guide — so retuning is a one-line change with
+# nothing to keep in sync.
 SERVICE_BREAKERS = {
-	"udp4": 1_500_000_000,
-	"udp6": 1_500_000_000,
-	"http4": 80_000_000,
-	"http6": 80_000_000,
-	"ws4": 80_000_000,
-	"ws6": 80_000_000,
+	"udp4": 600_000_000,
+	"udp6": 600_000_000,
+	"http4": 200_000_000,
+	"http6": 200_000_000,
+	"ws4": 200_000_000,
+	"ws6": 200_000_000,
 }
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.7
 > <br>Created: 2026-May
-> <br>Last reviewed: 2026-May
+> <br>Last reviewed: 2026-Jul
 
 ## What this is and why it exists
 
@@ -331,6 +331,72 @@ DROP, not REJECT — REJECT for UDP would emit ICMP unreachables back to every d
 
 The UDP half of the breaker is identical between the two example implementations. The only difference is which lines of `breaker.py` carry it (it's the same function in both).
 
+## Dropping cleartext announces on port 80
+
+The breaker's gating on `:443` and the UDP drops above both shed *our own* overload — legitimate traffic, paused when a service exceeds its capacity. Port 80 has a related but separate edge behavior, not driven by the breaker at all, that shares the same goal: keeping the tracker from spending anything on traffic it should never serve.
+
+The tracker is published on three transports only — UDP, HTTPS, and WebSocket over TLS — and deliberately offers no plain-HTTP tracker. Cleartext HTTP serves neither thing a client might want from it: it is no more private than UDP and less efficient than either alternative, so a client that needs a secure channel should announce over HTTPS and one that doesn't should announce over UDP. HTTP sits in the middle, worse at both, and we don't run it.
+
+Even so, a steady trickle of clients announce to a cleartext `http://open.ftorrent.com/announce` — almost always because a stale public tracker list carries the wrong scheme for a tracker that only ever spoke HTTPS. The correct, standards-compliant response is a `301` redirect to the `https://` URL, and any client that read it would reconnect on the right port. These clients don't read it. They ignore the redirect the same way they ignore the breaker's `Retry-After: 86400`, and re-announce to port 80 immediately, indefinitely.
+
+This is worth internalizing if you run your own fork, because you will meet it too: doing the correct thing to web standards accomplishes nothing when the client never looks at the response. Worse, a valid `301` is actively counterproductive — a well-formed redirect reads to such a client as "the tracker is alive," which is the signal that keeps it coming back. The only thing that gets it to stop is the absence of an answer. Drop the connection with no response, and two things follow: the client's own dead-tracker backoff eventually retires the URL, and the stale lists carrying the wrong `http://` entry demote or remove it as "down" — the right outcome for a URL that was never correct.
+
+So on port 80 we drop `/announce` and `/scrape` outright, with no reply, while leaving the ordinary port-80-to-HTTPS redirect in place for real browser traffic — someone who types the bare domain still lands on the site. In HAProxy, in the `:80` frontend:
+
+```haproxy
+frontend http
+    bind :80,:::80
+
+    # ACME HTTP-01 challenges must reach whatever issues your certificates,
+    # so route that path to your ACME client's listener before anything else.
+    use_backend acme_challenge if { path_beg /.well-known/acme-challenge/ }
+
+    # Cleartext announces and scrapes: drop the connection with no reply.
+    # These clients ignore a redirect and re-announce regardless, so only the
+    # absence of a response makes them back off. The set-log-level line is
+    # load-bearing: a silently-dropped session is deny-class, which
+    # dontlog-normal does not suppress, so without it every drop writes a log
+    # line.
+    http-request set-log-level silent if { path_beg /announce /scrape }
+    http-request silent-drop if { path_beg /announce /scrape }
+
+    # Everyone else → https. The `unless` keeps the ACME path out of the
+    # redirect: HAProxy evaluates http-request rules before use_backend
+    # selection, so without it this rule fires first and the challenge never
+    # reaches the backend above.
+    http-request redirect scheme https code 301 unless { path_beg /.well-known/acme-challenge/ }
+```
+
+`silent-drop` makes HAProxy's side of the connection vanish without sending the client anything to parse, and leaves no `TIME_WAIT` behind on the server. This is the form running in production; dropping these requests cut the cleartext arrival rate steeply within minutes and held it there.
+
+The nginx equivalent is `return 444` — nginx's non-standard code for "close the connection and send no response." A regex `location` outranks the `/` prefix, so the tracker paths match and drop before the redirect is reached:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name open.ftorrent.com;
+
+    # ACME HTTP-01 challenges, served locally and never redirected.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Cleartext announces and scrapes: 444 closes with no response — nginx's
+    # equivalent of a silent drop.
+    location ~ ^/(announce|scrape) {
+        return 444;
+    }
+
+    # Everyone else → https.
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+```
+
+We run the HAProxy form in production, so its behavior is the measured one; `return 444` is the direct nginx analog, shown here for readers on that stack.
+
 ## Deployment
 
 The breaker sits on top of the rest of the stack. It assumes the [Aquatic guide](../README.md) (tracker containers, kernel tuning), the [gauge](../gauge/README.md) (writing `breaker.json` to the bind-mounted data directory), the [page front-end](../page/README.md) (static files at `/opt/open.ftorrent.com/static/`), and your chosen reverse-proxy stack are all in place.
@@ -392,25 +458,6 @@ The next gauge tick preserves the timestamp (the gauge never bumps an existing `
 
 ## Tuning thresholds
 
-The trip thresholds live in the gauge, not the breaker — see [`open/gauge/src/gauge.py`](../gauge/src/gauge.py):
+The trip thresholds live in the gauge, not the breaker: one measured announces-per-day ceiling per service, in the `SERVICE_BREAKERS` dict in [`open/gauge/src/gauge.py`](../gauge/src/gauge.py), with a comment above it that explains how the values were chosen. The reasoning, in short: the per-protocol costs are wildly asymmetric — a UDP announce is cheap, while an HTTPS announce is dominated by the TLS handshake, the resource that actually limits scale on modest hardware (see "Two example implementations" above), and WebSocket rides that same TLS budget, so all four TCP cells share one ceiling. The values are sized to leave real CPU headroom even in the worst case where every protocol sits at its ceiling at once. And within each protocol, v4 and v6 carry the same value on purpose: v6 is a small fraction of the traffic, so under real load a v4 cell trips first while its v6 sibling keeps serving — the tracker's answer to congestion becomes a nudge toward IPv6.
 
-```python
-SERVICE_BREAKERS = {
-	"udp4": 1_500_000_000,
-	"udp6": 1_500_000_000,
-	"http4": 80_000_000,
-	"http6": 80_000_000,
-	"ws4": 80_000_000,
-	"ws6": 80_000_000,
-}
-```
-
-Each service is metered against its own value, and the values are — as of July 2026 — measured rather than estimated. The asymmetry is per protocol, and it's large: a UDP announce costs roughly 150–170× less than an HTTPS announce on this deployment, because only the TCP services spend the TLS handshake budget — the resource that actually limits scale on modest hardware (see "Two example implementations" above). WS rides the same TLS budget as HTTPS, so all four TCP cells share one ceiling. Priced out against the box's CPU and bandwidth budgets, HTTPS fills this hardware at ~140–150M announces a day, while UDP would take ~13 billion, bounded by the network line rather than the CPU. The TCP ceiling sits at about 0.6× that fill point; UDP's sits at about 3× its current daily pace, still an order of magnitude below its fill — the service that can't threaten the binding resource never trips first. Within each protocol, v4 and v6 get the same full value on purpose: v6 carries a small fraction of the traffic, so under real load a v4 cell reaches its ceiling first while its v6 sibling keeps serving — and the tracker's answer to congestion becomes a nudge toward IPv6.
-
-Tune the values to your hardware once you've watched a few real trips and have a sense of your own ceilings. The 24-hour cool-down duration is also in `gauge.py`:
-
-```python
-COOL_DURATION = 24 * 60 * 60 * 1000
-```
-
-Changes to either take effect when the gauge container is rebuilt and restarted.
+Read the actual numbers in the code — they live only there, so they can be retuned without any prose to keep in sync — and tune them to your own hardware once you've watched a few real trips and have a sense of your own ceilings. The cool-down duration, how long a tripped service stays paused, is another constant in the same file (`COOL_DURATION`, 24 hours). Changes to either take effect when the gauge container is rebuilt and restarted.
