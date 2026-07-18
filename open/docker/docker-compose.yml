@@ -110,6 +110,12 @@ services:
       memlock:
         soft: -1
         hard: -1
+      # File-descriptor ceiling. This container accepts a TCP connection per
+      # client, each an open descriptor; the default ~1024 soft limit is
+      # exhausted under real load. See README, "Resource limits".
+      nofile:
+        soft: 400400
+        hard: 400400
     deploy:
       resources:
         limits:
@@ -165,6 +171,12 @@ services:
       memlock:
         soft: -1
         hard: -1
+      # File-descriptor ceiling. This container accepts a TCP connection per
+      # client, each an open descriptor; the default ~1024 soft limit is
+      # exhausted under real load. See README, "Resource limits".
+      nofile:
+        soft: 400400
+        hard: 400400
     deploy:
       resources:
         limits:

@@ -555,6 +555,19 @@ On a server with 16 GB of RAM running other services alongside the tracker (game
 
 **CPU and PIDs.** These can start with modest limits and be adjusted based on monitoring. Aquatic uses a small, fixed number of threads — typically one socket worker and one swarm worker per binary, plus a few housekeeping threads. A PID limit of 64 per container provides headroom beyond what Aquatic needs while still capping runaway process creation.
 
+**File descriptors.** Every open socket costs the container a file descriptor, and a tracker that accepts a connection per client goes through them quickly. Unlike the memory and PID ceilings above — cgroup limits — this one is a per-process `ulimit` (an rlimit), and its default is the trap: a container inherits a soft limit of around 1024 open files, comfortable in a quick test and nowhere near enough under real load. We learned this the direct way, watching the HTTP tracker climb to roughly 1009 of 1024 descriptors and stall. The failure is worth describing because it doesn't look like what it is: a process that can't open another descriptor simply stops accepting connections, so the service goes *quiet* rather than busy — it reads as idle, not overloaded, which is the opposite of where you'd first think to look.
+
+The fix is to raise the ceiling far above anything steady state needs. We set `nofile` to 400400 on the HTTP and WebSocket containers — the two that terminate TCP connections. The UDP tracker needs nothing here: it serves every client from a single socket, so its descriptor count doesn't grow with traffic. As with the other limits, the number is a ceiling sized to expected peak concurrency, not a target — a busy public deployment wants generous headroom, a modest one can set far less. The `nofile` ulimit sits beside `memlock` in the compose file's `ulimits:` block:
+
+```yaml
+ulimits:
+  nofile:
+    soft: 400400
+    hard: 400400
+```
+
+None of this is specific to a tracker. Any container fronting a high-connection workload — a reverse proxy, a game backend, a TCP-based resolver — meets the same 1024-descriptor wall and raises the same ceiling to clear it.
+
 ### Container summary
 
 | Container | Protocol | Internal Port | External Port | Runtime | Seccomp | Memory |
