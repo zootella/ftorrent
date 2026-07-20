@@ -7,7 +7,7 @@ _ftorrent/good/README.md [good.ftorrent.com](https://good.ftorrent.com)_
 > <br>Created: 2026-Jul
 > <br>Last reviewed: 2026-Jul
 > <br>Go: 1.24
-> <br>coturn: the [coturn/coturn](https://hub.docker.com/r/coturn/coturn) image (STUN)
+> <br>coturn: [coturn/coturn](https://hub.docker.com/r/coturn/coturn) 4.14.0 (STUN)
 > <br>Docker Engine: 29
 > <br>Docker Compose: V2
 

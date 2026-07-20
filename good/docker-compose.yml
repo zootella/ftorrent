@@ -27,7 +27,7 @@ services:
 
   # coturn — the STUN server behind stun.ftorrent.com: plain binding over UDP 3478 only (stun-only — no TURN, no TCP, no TLS, so no certificate custody). Upstream image with our config mounted read-only; the read_only rootfs gets a tmpfs for the pidfile.
   coturn:
-    image: coturn/coturn
+    image: coturn/coturn:4.14.0
     container_name: ftorrent-good-coturn-1
     command: ["-c", "/etc/coturn/turnserver.conf"]
     networks:
@@ -42,17 +42,18 @@ services:
       - /var/tmp
     cap_drop:
       - ALL
-    # turnserver ships a cap_net_bind_service file capability; with cap_drop: ALL the empty bounding set makes the kernel refuse to exec it (EPERM). Add just that one capability back so the exec is honored — coturn still can't bind low ports, and its own port is above 1024.
+    # The coturn binary carries cap_net_bind_service as a file capability. Under cap_drop: ALL the bounding set is empty, and the kernel refuses to exec a binary whose file capabilities aren't in the bounding set (EPERM, exit 126) — so the container won't start at all unless we add it back. coturn doesn't need it to run: it binds 3478, above the privileged range. What limits exposure here is Docker's port publishing, not the capability set.
     cap_add:
       - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     volumes:
-      - /opt/good.ftorrent.com/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
     deploy:
       resources:
         limits:
           memory: 128m
+          cpus: '0.50'
           pids: 64
     restart: unless-stopped
 
