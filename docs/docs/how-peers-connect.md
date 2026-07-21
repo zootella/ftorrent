@@ -27,19 +27,19 @@ Three separate things stand between two ordinary machines. They're often blurred
 
 ### Address scarcity, and the two internets
 
-IPv4 has about 4.3 billion addresses, which stopped being enough around 2011 when the regional registries began running dry. The response was to stop giving every device its own address. Your household gets one public IPv4 address, your router hands out private ones internally, and everything inside shares the single public one going out. That's NAT, described below, and it is a direct consequence of the shortage.
+IPv4 has about 4.3 billion addresses, and around 2011 the regional registries began running dry. The response was to stop giving every device its own: your household gets one public IPv4 address, your router hands out private ones inside, and everything shares the single public one going out. That is NAT, and it is a direct consequence of the shortage.
 
-IPv6 fixes the shortage completely — the address space is large enough that every device on Earth can hold a globally routable address with room left over that's hard to describe meaningfully. On a well-configured IPv6 network there is no address translation at all. Your machine's address is its real address, the one the rest of the internet would use, and it knows what that address is without asking anyone.
+IPv6 ends the shortage outright. The space is large enough to give every device on Earth a globally routable address with room to spare. On a working IPv6 network there is no translation at all. Your machine's address is its real address, the one the rest of the internet would use, and it knows it without asking anyone. That dissolves half the problem this essay is about. The whole business of discovering *what your address is* goes away, and only *can a packet reach it* remains.
 
-That changes the peer-to-peer problem qualitatively rather than incrementally. Most of the machinery in this essay exists to work out *what your address actually is* and *whether packets sent to it will arrive*. On IPv6 the first question answers itself, and only the second remains.
+That is the promise, and it was never a gamble. IPv6 has been the settled plan for a generation. It was published in 1998 as the standard that would replace IPv4 everywhere and became a full Internet Standard in 2017. The software caught up long ago. Pages, browsers, client applications, and operating systems all ship dual-stack, and frequent updates keep them current. And still, most connections run on IPv4. Three separate things stand in the way.
 
-The catch is that IPv6 is partial, and more partial than the headline numbers suggest. [Google publishes a running measurement](https://www.google.com/intl/en/ipv6/statistics.html) of the share of its users arriving over IPv6 — a long climb, with enormous variation between countries and between networks inside one country, and mobile carriers often far ahead of fixed-line ISPs. But two things pull the *useful* figure well below the headline.
+First, **you do not decide whether you get IPv6**. Your software is ready, but the address you actually receive comes from the parts you do not own: your internet provider, the router you rent from them, the network behind it. Those change on the provider's schedule, not yours, and no update you install touches them. Google's [running measurement](https://www.google.com/intl/en/ipv6/statistics.html) of IPv6 among its users shows the result: a long, uneven climb, with wide gaps between countries and between the networks inside one.
 
-The first is arithmetic. A direct connection needs IPv6 at *both* ends, so the share of connections that can go v6-to-v6 is the per-peer share squared. Even odds per peer — half the world on IPv6 — is a one-in-four chance for any given pair. Per-connection availability always trails per-peer adoption, and at today's levels it trails badly.
+Second, the adoption which _does_ exist is **mostly on mobile** networks, and a phone is exactly where its owner does not choose what runs. The platform vendor's app store does. So the IPv6 that is winning is winning on the devices least able to run open peer-to-peer software at all, and the kind that would help, on machines their owners command, is rarer still.
 
-The second cuts deeper, and it's about who controls the machine. Most IPv6 adoption rides on mobile networks — and a phone is precisely where its owner is *not* free to run what they like. The platform vendor, through the app store, decides what may be installed; that a person holds that authority on a traditional PC is a historical accident of computers arriving before they were networked, when there was simply no one else to hold it. So the address family that's winning is winning mostly on the devices least able to run open peer-to-peer software at all. The IPv6 that would actually help is IPv6 on machines their owners command, and that population is much smaller than the global percentage. One proxy for it: on 2026-07-20, the peers announcing to [open.ftorrent.com](https://open.ftorrent.com)'s UDP tracker — desktop BitTorrent clients, mostly user-controlled machines — arrived over IPv6 just 15.6% of the time. Squared, that's a 2.4% chance a random pair of them could have met over IPv6 at all.
+And third, having IPv6 yourself is only half of it. A connection is only possible when IPv6 is at **both ends**, so the reachable share is the per-peer share, squared. Even odds per peer computes down to one pair in four. So per-connection availability will always trail per-peer adoption.
 
-IPv6 was published in 1998 as the standard that would replace IPv4 everywhere, and became a full Internet Standard in 2017. Twenty-eight years on, it is still, as working peer-to-peer infrastructure, more a hope for the future than a fact of the present — which is a reason to support it, not to wave it off. Every dual-stack service makes the road a little more real against the day it finally carries us. Until then a peer-to-peer application can't assume IPv6 and can't ignore it: it handles both, and treats having IPv6 as good news rather than as the ground beneath its feet.
+Put the three together and what remains is sadly only a sliver. We're 28 years into IPv6's certain future, and the software has been ready for most of that time. On the day of this writing in July 2026, we sampled UDP traffic to [open.ftorrent.com](https://open.ftorrent.com) and measured 15.6% of peers reached the tracker over IPv6. Squared, only 2.4% of them could meet over IPv6 at all.
 
 ### What the router does
 
@@ -84,11 +84,11 @@ These names get used interchangeably in casual writing and they are not intercha
 
 **WebRTC** is the umbrella: a [W3C browser API](https://www.w3.org/TR/webrtc/) plus a set of IETF protocols, wrapping all of the above with **DTLS** for key exchange and **SCTP** for reliable ordered data channels. Its data channels give you TCP's semantics over UDP, which is the shape nearly all modern peer-to-peer transport has converged on — [QUIC](https://datatracker.ietf.org/doc/html/rfc9000) and BitTorrent's µTP arrived at the same answer independently, because middleboxes handle UDP better than they handle TCP.
 
-**Signaling** is the gap. Two peers must exchange SDP and candidates *before* any direct connection exists, and the specifications say to do it and pointedly decline to say how. This is the one piece with no standard, and the rest of this essay is largely about what people did instead.
+**Signaling** is the gap, and the server that fills it is the **rendezvous server** (commonly called a *signaling server*). Two peers must exchange SDP and candidates *before* any direct connection exists, and the specifications say to do it and pointedly decline to say how. So the rendezvous server is the one piece in this whole picture with a name but no standard: every other term here answers to an RFC, and it answers to none. The rest of this essay is largely about what people ran in its place.
 
 ## BitTorrent's parallel answer
 
-Everything above is the web's approach. It's worth setting beside an older one that solved the same problem before any of that machinery existed.
+Everything above is the web's approach. Set it beside an older one that solved the same problem before any of that machinery existed.
 
 BitTorrent has been connecting peers directly since 2001, which means it predates nearly all of that machinery — STUN arrived in 2003, ICE in 2010, WebRTC around 2011. Facing the same NATs and the same hostile middleboxes with none of those tools yet invented, it grew its own set of answers:
 
@@ -157,45 +157,122 @@ A simpler cousin: services that tell you the IPv4 or IPv6 address your web reque
 
 These answer a narrower question than STUN does. An HTTP reflector reports an address; STUN reports an address *and a port*, and the port is the part hole punching needs. They also observe different paths — one a TCP connection, the other a UDP flow — so when the two disagree, something is carrying one path and not the other.
 
-### Signaling
+### Rendezvous servers
 
-No comparable public utility exists. The sections below cover what people use instead.
+No public rendezvous server is offered the way STUN is. The sections below cover what people use instead.
 
 ### Relay
 
 Commercial, almost entirely. Twilio, Cloudflare, and Xirsys sell TURN, and some open-source projects run small relays for their own users. Nobody offers general-purpose relay to the public for free, and the per-byte cost structure explains why nobody sensibly could.
 
+## The page-to-page exchange
+
+The rendezvous server is the one entry on that list with no public utility to point to, and the specifications' silence makes it sound larger than it is. Here it is in the concrete: two browser pages, with everything else already in place.
+
+By this point every WebRTC piece is in hand. STUN has told each page its public address and port. ICE stands ready to test candidate paths and, once it has somewhere to aim, to punch through NAT on its own. SDP describes the session and DTLS will encrypt it. The only thing missing is that page A holds all of this about *itself* and nothing about page B, and B the reverse. Signaling closes that gap — and it closes it by moving *information*, not by firing a "start now" pulse. Give each side the other's details and ICE begins its connectivity checks unprompted; the mutual checks are the hole punch, and there is no clock tick to coordinate.
+
+Two kinds of object cross. The first is the **session description**, the SDP, which one page generates with `createOffer()` and the other responds to with `createAnswer()`. It's a small object — `{ type: "offer", sdp: "…" }` — whose `sdp` string, trimmed to the lines that carry weight, reads:
+
+```
+v=0
+m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+a=ice-ufrag:F7g3
+a=ice-pwd:x9cLk2m8Qz0v4Rt7Bn1w
+a=fingerprint:sha-256 9B:2C:1A:…:E4
+a=setup:actpass
+```
+
+The `m=` line says what's being negotiated — here, a data channel. The three below it do the real work. `ice-ufrag` and `ice-pwd` are a fresh random username and password; every ICE connectivity check the two peers later fire at each other carries them, so each side can tell a genuine check from its partner apart from a stray or forged packet. `fingerprint` is a hash of this page's self-signed certificate: after ICE finds a working path, the peers run a DTLS handshake across it and each verifies the certificate it is handed hashes to the fingerprint that arrived here. That is what lets a connection over a wide-open, untrusted path still be private — the trust is bootstrapped through signaling once, and then the data never touches a server again.
+
+The second kind of object is the **ICE candidate**, one per address the page might be reachable at, emitted as ICE discovers them:
+
+```
+{
+  candidate: "candidate:842163049 1 udp 1677729535 203.0.113.7 54321 typ srflx raddr 192.168.1.7 rport 54321",
+  sdpMLineIndex: 0
+}
+```
+
+Reading the string: transport `udp`, then `203.0.113.7 54321`, the address and port a peer should try, then `typ srflx` — server-reflexive, the public mapping a STUN server reported, with `raddr`/`rport` noting the private address behind it. One page usually emits several: a `host` candidate for its local interface, an `srflx` for the STUN-seen public one, a `relay` if it has TURN.
+
+On the wire the whole conversation is short, and then it's spent:
+
+```
+page A                 rendezvous server               page B
+  │── {sdp: offer} ───────►│───────── {sdp: offer} ──────►│
+  │◄──────── {sdp: answer} │◄──────── {sdp: answer} ──────│
+  │── {candidate} ────────►│───────── {candidate} ───────►│
+  │◄──────── {candidate} ──│◄──────── {candidate} ────────│
+       (a few kilobytes, then the rendezvous server has nothing left to do)
+  │◄═══════════ direct, DTLS-encrypted data channel ═════►│
+```
+
+Each page's half is the shape every WebRTC guide teaches:
+
+```javascript
+const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.ftorrent.com:3478' }] })
+
+// As ICE finds candidates, send each to the other peer.
+pc.onicecandidate = ({ candidate }) => candidate && signaling.send({ candidate })
+
+// Apply whatever the other peer sends back.
+signaling.onmessage = async ({ sdp, candidate }) => {
+  if (sdp)            await pc.setRemoteDescription(sdp)     // their offer or answer
+  else if (candidate) await pc.addIceCandidate(candidate)   // one of their addresses
+}
+
+// The caller opens the channel and offers; the answerer instead calls createAnswer() on receiving the offer.
+pc.createDataChannel('data')
+await pc.setLocalDescription(await pc.createOffer())
+signaling.send({ sdp: pc.localDescription })
+```
+
+And the rendezvous server that `signaling` talks to — the entire "system" the specifications leave out — copies each message to the other peers in the same room and reads none of it:
+
+```javascript
+const rooms = new Map()
+wss.on('connection', (ws, req) => {
+  const room = new URL(req.url, 'http://_').searchParams.get('room')
+  const peers = rooms.get(room) ?? rooms.set(room, new Set()).get(room)
+  peers.add(ws)
+  ws.on('message', data => { for (const p of peers) if (p !== ws) p.send(data) })
+  ws.on('close', () => peers.delete(ws))
+})
+```
+
+Ten lines. The rendezvous server never parses an SDP or knows the first thing about WebRTC. It is a pipe keyed by a room name.
+
 ## How real projects answered the signaling question
 
-Signaling is where the standards stop and the choices start.
+The rendezvous server can be almost anything, and that is the whole story of how real projects filled the gap. Each reached for one it already ran rather than standing up a new one.
 
 ### WebTorrent used a tracker
 
 A BitTorrent client already contacts a tracker to learn who else has the file it wants — that round trip is happening regardless. So WebTorrent extended the WebSocket tracker protocol to carry offers and answers alongside the peer list. The tracker was already positioned to introduce strangers; relaying a few kilobytes between them was nearly free to add.
 
-The result is that a WebTorrent tracker does two jobs a conventional tracker doesn't have to distinguish: the ordinary directory job of matching peers to a topic, and a signaling relay carrying opaque blobs between browsers that have no other way to reach each other. It doesn't parse SDP or know anything about WebRTC — it forwards addressed messages within a swarm.
+The result is that a WebTorrent tracker does two jobs a conventional tracker doesn't have to distinguish: the ordinary directory job of matching peers to a topic, and a rendezvous server carrying opaque blobs between browsers that have no other way to reach each other. It doesn't parse SDP or know anything about WebRTC — it forwards addressed messages within a swarm.
 
 ### Trystero generalized it, then moved off it
 
-[Trystero](https://github.com/dmotz/trystero) noticed that the tracker's role has nothing to do with files. An infohash is an arbitrary twenty-byte string; two peers agreeing on any string get introduced to each other. That makes any public BitTorrent tracker a general-purpose rendezvous for any application — a multiplayer game, a collaborative editor, a chat room.
+[Trystero](https://github.com/dmotz/trystero) noticed that the tracker's role has nothing to do with files. An infohash is an arbitrary twenty-byte string; two peers agreeing on any string get introduced to each other. That makes any public BitTorrent tracker a general-purpose rendezvous server for any application — a multiplayer game, a collaborative editor, a chat room.
 
 Then it went further and shipped seven interchangeable strategies: [Nostr](https://nostr.com), [BitTorrent](https://www.bittorrent.org), [MQTT](https://mqtt.org), [Firebase](https://firebase.google.com), [Supabase](https://supabase.com), [IPFS](https://ipfs.tech), and a self-hosted [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) relay. The default is Nostr, chosen for redundancy across hundreds of public relays.
 
-Trystero doesn't pick a signaling mechanism. It enumerates the free public infrastructure that happens to satisfy the requirement and lets the developer choose, which is only possible because the requirement is so weak.
+Trystero doesn't pick a rendezvous server. It enumerates the free public infrastructure that already plays the role and lets the developer choose, which is only possible because the requirement is so weak.
 
 ### Nostr became the default
 
 [Nostr](https://nostr.com) is a protocol for publishing signed messages to relays — deliberately simple, with no consensus mechanism and no tokens. Clients hold keypairs, relays accept and forward signed events, and anyone can run a relay. It was built for censorship-resistant social media, and hundreds of public relays exist that accept events from anyone without an account.
 
-None of that has anything to do with WebRTC. It works as signaling because the requirement for signaling is *a third party both peers can reach, willing to copy a few kilobytes from one to the other* — and Nostr relays satisfy it while being numerous, free, unauthenticated, and already deployed.
+None of that has anything to do with WebRTC. It works as a rendezvous server because the whole job of one is *to be a third party both peers can reach, willing to copy a few kilobytes from one to the other* — and Nostr relays are exactly that, while being numerous, free, unauthenticated, and already deployed.
 
 ### Why there is no standard, and won't be
 
-Compare the two problems directly.
+That ten-line rendezvous server is the reason, and it holds against any future standard too. Compare the two problems directly.
 
 **STUN needed something specific**: a server that observes the source address on your UDP packet and reports what it saw. Nothing else does that. A unique requirement produced a protocol, an RFC, an IANA-registered port, and a handful of public deployments the whole world shares.
 
-**Signaling needs almost nothing.** Any server both peers can reach, willing to relay a small message. Every one of Trystero's seven strategies qualifies. So does a Redis instance, an IRC channel, a shared document, or a person reading a code over the phone — pion's own examples have you copy a base64 blob between two terminals by hand, and it works.
+**A rendezvous server needs almost nothing.** Any server both peers can reach that will forward a small message. Every one of Trystero's seven strategies qualifies. So does a Redis instance, an IRC channel, a shared document, or a person reading a code over the phone — pion's own examples have you copy a base64 blob between two terminals by hand, and it works.
 
 When any server will do, no particular server becomes the standard. The specifications left signaling undefined not from neglect but because the requirement is too weak to be worth naming, and because it inevitably sits next to application-specific concerns — who may connect to whom, how peers are named, what a "room" means — that no transport specification should be deciding.
 
@@ -203,14 +280,14 @@ It also means the browser gives you nothing here. There is no API by which two p
 
 ## What's actually scarce
 
-Count the signaling options that need no account, no API key, and no server of your own: Nostr relays, BitTorrent trackers, a few public MQTT brokers, IPFS. It's a short list, and it's short for a reason that isn't technical.
+Count the public rendezvous servers that need no account, no API key, and nothing of your own to run: Nostr relays, BitTorrent trackers, a few public MQTT brokers, IPFS. It's a short list, and it's short for a reason that isn't technical.
 
-Writing a signaling relay takes an afternoon. Running one open to the public, unauthenticated, free, indefinitely — absorbing the bandwidth, staying up for years with nobody paying — is a different commitment entirely. That's why the free and open category is populated almost entirely by protocol commons rather than by products. The scarce resource in peer-to-peer connectivity was never the technology. It's somebody willing to operate the introduction infrastructure as a public good.
+Writing a rendezvous server takes an afternoon. Running one open to the public, unauthenticated, free, indefinitely — absorbing the bandwidth, staying up for years with nobody paying — is a different commitment entirely. That's why the free and open category is populated almost entirely by protocol commons rather than by products. The scarce resource in peer-to-peer connectivity was never the technology. It's somebody willing to operate the introduction infrastructure as a public good.
 
 Which is a reasonable note to end on, because the whole stack described here rests on a small number of parties doing exactly that. An enormous share of the world's direct connections are brokered by a Google server nobody documented, sitting on a non-standard port, that has simply never gone down.
 
 ## ftorrent's part
 
-[ftorrent](https://ftorrent.com) runs some of this infrastructure, in the spirit of the above. There's a public STUN server at `stun:stun.ftorrent.com:3478` — plain binding only, no relay, no account, its full configuration [in the repository](https://github.com/zootella/ftorrent/tree/master/good). A WebSocket BitTorrent tracker runs at [open.ftorrent.com](https://open.ftorrent.com); per the Trystero observation, it serves as a general rendezvous for applications that have nothing to do with files. And [good.ftorrent.com](https://good.ftorrent.com) reports how much of all this applies to your own connection.
+[ftorrent](https://ftorrent.com) runs some of this infrastructure, in the spirit of the above. There's a public STUN server at `stun:stun.ftorrent.com:3478` — plain binding only, no relay, no account, its full configuration [in the repository](https://github.com/zootella/ftorrent/tree/master/good). A WebSocket BitTorrent tracker runs at [open.ftorrent.com](https://open.ftorrent.com); per the Trystero observation, it serves as a general rendezvous server for applications that have nothing to do with files. And [good.ftorrent.com](https://good.ftorrent.com) reports how much of all this applies to your own connection.
 
-The tracker is also a small piece of the collaboration this essay keeps pointing at. We reached out to the Trystero project, and open.ftorrent.com now rides in the list of WebSocket trackers Trystero ships — one more public relay in a set meant to hold many. That's how the open web is supposed to grow: projects strengthening each other's defaults instead of each raising its own walls. It's the commitment ftorrent works by, and the same bet the whole stack above rests on — that shared infrastructure, openly operated, outlasts anything a single party could own.
+The tracker is also a small piece of the collaboration this essay keeps pointing at. We reached out to the Trystero project, and open.ftorrent.com now rides in the list of WebSocket trackers Trystero ships — one more public rendezvous server in a set meant to hold many. That's how the open web is supposed to grow: projects strengthening each other's defaults instead of each raising its own walls. It's the commitment ftorrent works by, and the same bet the whole stack above rests on — that shared infrastructure, openly operated, outlasts anything a single party could own.

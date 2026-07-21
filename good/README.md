@@ -21,7 +21,7 @@ Somewhere along the way the internet quietly sorted its machines into two classe
 
 That difference is exactly what peer-to-peer depends on. Two people's computers talking directly, with no company in the middle, only works if machines can listen for one another. good.ftorrent.com measures where you actually stand — and closing that gap, getting both ends of the connection back onto ordinary desks, is what ftorrent is for.
 
-If you want the full survey of how two machines on today's internet manage to reach each other — the protocols, the libraries, the public services, and what other projects chose — we wrote that up separately as [How Can Two Peers Connect?](https://docs.ftorrent.com/how-two-peers-connect). This guide is about the checker and the code in this directory.
+If you want the full survey of how two machines on today's internet manage to reach each other — the protocols, the libraries, the public services, and what other projects chose — we wrote that up separately as [How Can Two Peers Connect?](https://docs.ftorrent.com/how-peers-connect). This guide is about the checker and the code in this directory.
 
 ## Three things decide whether you can connect
 
