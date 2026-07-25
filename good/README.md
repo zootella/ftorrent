@@ -40,7 +40,7 @@ Today the checker answers the first of those and reports the addresses behind it
 good.ftorrent.com comes in three layers, and you can meet it at whichever one fits.
 
 - **The finished product.** Point a browser at [good.ftorrent.com](https://good.ftorrent.com) and it runs the checks and shows you the answer. No account, no install, nothing to configure — a page you just visit, the way ipchicken is.
-- **The APIs underneath.** The page keeps nothing to itself; it calls a few small public services that anyone else can call too. They're open primitives — no key, no signup — and good.ftorrent.com uses them exactly as your own code would, which is the proof they're solid enough to build on.
+- **The APIs underneath.** The page keeps nothing to itself; it calls a few small public services. They're general-purpose tools, free for anyone to use, and good.ftorrent.com uses them exactly as your own code would — which is the proof they're solid enough to build on.
 - **The code itself.** It's all here in this repository, open. Fork the page, keep our APIs as its backend, or fork the whole thing and run your own copy. If you'd rather not trust ours, good — running your own is the point.
 
 ## The public APIs
@@ -76,15 +76,15 @@ Browsers don't come with one. A browser is client software, so of course it isn'
 ```javascript
 const pc = new RTCPeerConnection({
 	iceServers: [{ urls: [
-		'stun:stun.ftorrent.com:3478',
 		'stun:stun.l.google.com:19302',
 		'stun:stun.cloudflare.com:3478',
-		'stun:global.stun.twilio.com:3478'
+		'stun:global.stun.twilio.com:3478',
+		'stun:stun.ftorrent.com:3478'
 	]}]
 })
 ```
 
-Google's is the one most WebRTC tutorials paste in and is probably the most-queried STUN server anywhere, though Google publishes no documentation offering it as a service — the hostname answers STUN and nothing else, so there's no page to link. [Cloudflare](https://developers.cloudflare.com/realtime/turn/) and [Twilio](https://www.twilio.com/docs/stun-turn) document theirs. All three are free to use and reliable.
+Google's is the one most WebRTC tutorials paste in and is probably the most-queried STUN server anywhere, though Google publishes no documentation offering it as a service — the hostname answers STUN and nothing else, so there's no page to link. [Cloudflare](https://developers.cloudflare.com/realtime/turn/) and [Twilio](https://www.twilio.com/docs/stun-turn) only mention theirs in passing, inside the docs for their paid TURN services — yet all three are used globally well beyond that, free and reliable.
 
 **Why we run our own**, given three good ones already exist. First, to understand it — you learn a protocol properly by operating it, and everything in this checker rests on knowing what STUN really does. Second, so the [ftorrent desktop client](https://github.com/zootella/ftorrent/tree/master/desktop) has a first-party option: a desktop application, unlike a browser, gets to choose its own default, and we'd rather ours ask our server than route every user's first move through someone else's. Third, because the decentralized web needs more of this. Public STUN is infrastructure the whole peer-to-peer world depends on, and nearly all of it currently sits at three companies. One more operator is one more.
 

@@ -147,9 +147,9 @@ Peer.config = {
 
 So an enormous share of the world's WebRTC connections ask Google for their address, without anyone along the way ever making that decision. Note also the non-standard port — 19302, where [IANA registered 3478 for STUN](https://datatracker.ietf.org/doc/html/rfc8489).
 
-**Cloudflare** documents theirs at [developers.cloudflare.com/realtime/turn](https://developers.cloudflare.com/realtime/turn/), and offers an alternate on UDP port 53 for networks that filter unusual ports but pass anything resembling DNS.
+**Cloudflare's** appears only in the docs for its paid [TURN service](https://developers.cloudflare.com/realtime/turn/), though it also answers on an alternate UDP port 53 for networks that filter unusual ports but pass anything resembling DNS.
 
-**Twilio** documents theirs at [twilio.com/docs/stun-turn](https://www.twilio.com/docs/stun-turn). Their API hands back both kinds of server in one response, and the difference between the two entries is the whole economics of this field: the STUN entry carries no credentials, and every TURN entry carries a username and a password. Providers give STUN away because a binding exchange is two small packets with no session behind it. They meter TURN because it moves real bandwidth — Cloudflare publishes five cents per gigabyte for relay traffic.
+**Twilio's** is part of its [Network Traversal Service](https://www.twilio.com/docs/stun-turn), whose API hands back both kinds of server in one response, and the difference between the two entries is the whole economics of this field: the STUN entry carries no credentials, and every TURN entry carries a username and a password. Providers give STUN away because a binding exchange is two small packets with no session behind it. They meter TURN because it moves real bandwidth — Cloudflare publishes five cents per gigabyte for relay traffic.
 
 One primitive given away by everyone, its neighbor sold by everyone. Discovery is cheap enough to run as a commons; relay is not, and no amount of goodwill changes the arithmetic.
 
