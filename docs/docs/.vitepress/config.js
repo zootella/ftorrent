@@ -36,12 +36,15 @@ export default defineConfig({
 			{
 				text: 'Repository Documentation',
 				items: [
+					{ text: 'Repository Overview', link: 'https://github.com/zootella/ftorrent/blob/master/README.md' },
 					{ text: 'Dockerizing Aquatic', link: 'https://github.com/zootella/ftorrent/blob/master/open/README.md' },
 					{ text: 'Tracker Page', link: 'https://github.com/zootella/ftorrent/blob/master/open/page/README.md' },
 					{ text: 'Tracker Gauge', link: 'https://github.com/zootella/ftorrent/blob/master/open/gauge/README.md' },
 					{ text: 'Tracker Circuit Breaker', link: 'https://github.com/zootella/ftorrent/blob/master/open/breaker/README.md' },
 					{ text: 'DHT Bootstrap Node', link: 'https://github.com/zootella/ftorrent/blob/master/open/dht/README.md' },
-					{ text: 'Home Page', link: 'https://github.com/zootella/ftorrent/blob/master/site/README.md' }
+					{ text: 'Connection Checker', link: 'https://github.com/zootella/ftorrent/blob/master/good/README.md' },
+					{ text: 'Home Page', link: 'https://github.com/zootella/ftorrent/blob/master/site/README.md' },
+					{ text: 'Documentation Website', link: 'https://github.com/zootella/ftorrent/blob/master/docs/README.md' }
 				]
 			},
 			{
