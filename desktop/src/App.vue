@@ -1,51 +1,13 @@
-<script setup>
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
-
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-	// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-	greetMsg.value = await invoke("greet", { name: name.value });
-}
-</script>
-
 <template>
-	<main class="container">
-		<h1>Welcome to ftorrent, powered by Tauri + Vue</h1>
-
-		<div class="row">
-			<a href="https://vite.dev" target="_blank">
-				<img src="/vite.svg" class="logo vite" alt="Vite logo" />
-			</a>
-			<a href="https://tauri.app" target="_blank">
-				<img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-			</a>
-			<a href="https://vuejs.org/" target="_blank">
-				<img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-			</a>
-		</div>
-		<p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-		<form class="row" @submit.prevent="greet">
-			<input id="greet-input" v-model="name" placeholder="Enter a name..." />
-			<button type="submit">Greet</button>
-		</form>
-		<p>{{ greetMsg }}</p>
-	</main>
+	<!-- ./src/App.vue -->
+	<!-- the shell every view sits inside: the navigation across the top, and the outlet the router fills with whichever view is current -->
+	<nav class="nav">
+		<router-link to="/">Main</router-link>
+		<router-link to="/about">About</router-link>
+	</nav>
+	<router-view />
 </template>
 
-<style scoped>
-.logo.vite:hover {
-	filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-	filter: drop-shadow(0 0 2em #249b73);
-}
-
-</style>
 <style>
 :root {
 	font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -63,9 +25,20 @@ async function greet() {
 	-webkit-text-size-adjust: 100%;
 }
 
+.nav {
+	display: flex;
+	justify-content: center;
+	gap: 1.5em;
+	padding: 1em;
+}
+
+.nav a.router-link-active {
+	font-weight: 700;
+}
+
 .container {
 	margin: 0;
-	padding-top: 10vh;
+	padding-top: 6vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -77,10 +50,6 @@ async function greet() {
 	padding: 1.5em;
 	will-change: filter;
 	transition: 0.75s;
-}
-
-.logo.tauri:hover {
-	filter: drop-shadow(0 0 2em #24c8db);
 }
 
 .row {
