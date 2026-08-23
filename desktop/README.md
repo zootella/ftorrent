@@ -75,6 +75,25 @@ strings src-tauri/target/release/ftorrent | grep default-src
 
 Failure modes are visibly loud: a blocked IPC endpoint means the UI can't reach Rust at all, and a blocked img-src means images don't render. If the built app behaves normally, the policy fits.
 
+**Plugins and capabilities.** Tauri v2 gates what the webview may call. A plugin adds commands to the Rust core, and a capability file names which of those commands the window is allowed to invoke — a plugin registered but not permitted is unreachable from the page. The scaffold grants `opener:default`, a blanket set that includes opening arbitrary URLs. We name specific permissions instead, in `src-tauri/capabilities/default.json`:
+
+```json
+"permissions": [
+	"core:default",
+	"opener:allow-reveal-item-in-dir",
+	"dialog:allow-open",
+	"dialog:allow-save"
+]
+```
+
+Two plugins are registered in `src-tauri/src/lib.rs`: **dialog**, for the familiar operating-system open and save boxes — picking a `.torrent` file, choosing a download folder — and **opener**, for revealing a finished download in Finder or File Explorer.
+
+What is left out matters as much as what is in. Dialog's message, ask, and confirm boxes are excluded deliberately: a native-looking dialog an application can raise with arbitrary text is a social-engineering primitive, and ftorrent's own interface lives in the page where the user can see it for what it is. Opener's URL opening is excluded until a feature actually needs it, and should arrive then with an allowlist scoped to that feature rather than as a standing permission. The rule behind both: register only the plugins the app uses, and grant named permissions rather than a plugin's `:default` set.
+
+`core:default` stays as the scaffold shipped it, and that is the deliberate exception. It is Tauri's own set — path, event, window, webview, app, image, resources, menu, and tray — the machinery that makes a Tauri app an app at all. Enumerating it by hand would mean dozens of identifiers to arrive at nearly the same place; the granular rule is aimed at plugins, which extend the app's reach past the framework itself.
+
+Tauri validates permission identifiers when it compiles, so a typo here fails the build rather than failing silently at runtime. `cargo check` from `src-tauri` is the verification step.
+
 **Vue Router, in hash mode.** The frontend routes with [Vue Router](https://router.vuejs.org/) 5, configured with `createWebHashHistory()`. A router's other mode, history mode, writes real paths like `/about` and expects a server to answer a request for that path when the page reloads — but a Tauri window loads its frontend out of the bundle with no server behind it, so such a reload would find nothing. Hash mode keeps the whole route after a `#`, the part a browser resolves locally and never requests. The user never sees it: the window has no address bar.
 
 The frontend is arranged around that. `src/router/index.js` names every page the window can show and is meant to be read as the app's table of contents. `src/App.vue` is the shell — the navigation and the `<router-view />` outlet the current page fills — and the scaffold's greet demo moved into `src/pages/MainPage.vue`. `src/pages/AboutPage.vue` is written as a lazy route, an `() => import(…)` in place of an imported component, so the build gives it a chunk of its own that the app fetches the first time someone opens it; that second chunk is visible in the `vite build` output.
