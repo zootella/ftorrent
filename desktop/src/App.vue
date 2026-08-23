@@ -1,6 +1,6 @@
 <template>
 	<!-- ./src/App.vue -->
-	<!-- the shell every view sits inside: the navigation across the top, and the outlet the router fills with whichever view is current -->
+	<!-- the shell every page sits inside: the navigation across the top, and the outlet the router fills with whichever page is current -->
 	<nav class="nav">
 		<router-link to="/">Main</router-link>
 		<router-link to="/about">About</router-link>
