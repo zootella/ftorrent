@@ -1,0 +1,3 @@
+#no line-ending conversion in either direction: this workspace is a preserved record of the 2010-2012 Win32 client, committed with windows line endings
+#-text overrides the repo-wide lf policy in the root .gitattributes, so an edit here can never renormalize a file into an every-line diff
+* -text

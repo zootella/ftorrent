@@ -1,0 +1,4 @@
+#one newline everywhere: lf in the repository and in every working tree, mac and windows
+#this overrides each machine's core.autocrlf, so the policy lives here rather than in local git configs
+#classic/.gitattributes exempts the preserved 2010 Win32 source, which is committed with windows line endings and stays that way
+* text=auto eol=lf
