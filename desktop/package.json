@@ -7,6 +7,9 @@
 	"type": "module",
 	"scripts": {
 		"local": "tauri dev",
+		"build-binary": "tauri build --no-bundle",
+		"build-app": "tauri build --bundles app",
+		"build-dmg": "tauri build",
 		"build": "tauri build",
 		"app": "open src-tauri/target/release/bundle/macos/ftorrent.app",
 		"win": "start src-tauri/target/release/ftorrent.exe",

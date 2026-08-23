@@ -39,7 +39,22 @@ The lockfiles are part of the design: one pnpm-lock.yaml at the monorepo root an
 
 ## Modifications after scaffolding
 
-**Scripts**, in package.json: `local` (tauri dev), `build` (tauri build), `app` (open the built Mac bundle), `win` (start the built Windows exe), `vite-build`, and `wash` (delete build output and dependencies for a from-scratch install). A pnpm script cannot be named `run` — pnpm's builtin shadows it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
+**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), `vite-build`, and `wash` (delete build output and dependencies for a from-scratch install). `wash` calls `rimraf`, which is deliberately not a declared dependency of this workspace — install it globally (`pnpm add -g rimraf`) or that one script fails while everything else works. A pnpm script cannot be named `run` — pnpm's builtin shadows it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
+
+**Three depths of a build.** `tauri build` compiles once and then packages in stages, and package.json names each stopping point along the trail:
+
+```
+pnpm build-binary    # the native binary, at src-tauri/target/release/ftorrent
+pnpm build-app       # that, then wrapped into ftorrent.app
+pnpm build-dmg       # that, then every packager the targets list names
+pnpm build           # the same as build-dmg, under the name a reader looks for first
+```
+
+Each stage builds on the one before, and all three run the same frontend build and the same Rust release compile — they differ only in how far the packaging goes. The binary is the compiled Rust with the frontend embedded in it. `ftorrent.app` is that binary placed in a directory alongside the `Info.plist` and icons, which is what makes macOS treat it as an application rather than a command-line tool — so a bare binary launches, but not quite like the shipped app. The last stage produces the packages a user downloads: on a Mac the `.dmg`, on Windows the NSIS `.exe`, on Ubuntu the `.deb`.
+
+That last stage is worth knowing about on macOS. Building a `.dmg` mounts the disk image and drives Finder to position the icons and set the window background, so Finder windows open and close on the desktop while it runs. That is the bundler working, not a fault — but during an ordinary edit-and-check loop, `build-app` gets you a launchable app without the interruption. The script names follow what this stage produces on a Mac; on Windows the same full build hands back the NSIS installer instead, so `build-dmg` there means the whole trail rather than a disk image.
+
+**Which depth a change deserves.** While working, the two halves are quicker on their own: `pnpm vite-build` finishes in a fraction of a second and catches every frontend error, and `cargo check` from `src-tauri` is nearly as quick and catches every Rust error — including a mistyped capability or permission identifier, which Tauri validates as it compiles. `pnpm build-binary` is the gate before handing work over, because it is the cheapest single command that runs the frontend build and a real release compile; `cargo check` type-checks without generating or linking any code, so it cannot stand in for that. Go further only when the change earns it: `build-app` once you have touched the bundle section of tauri.conf.json or the icons, since bundling is what exercises the `Info.plist` and the icon pipeline, and the full build before a release or a handoff to the other platform. Two things to expect — the release profile shares nothing with the debug profile `pnpm local` uses, so the first release build after a stretch of dev work compiles everything over again; and a green build says the code compiles, not that it works. Only running the app tells you that.
 
 **tauri.conf.json**: `beforeBuildCommand` points at `pnpm vite-build`; the window opens 1200×1050 with `dragDropEnabled` true; the identity values are productName `ftorrent` and identifier `com.ftorrent`.
 
