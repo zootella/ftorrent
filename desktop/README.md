@@ -43,6 +43,22 @@ The lockfiles are part of the design: one pnpm-lock.yaml at the monorepo root an
 
 **tauri.conf.json**: `beforeBuildCommand` points at `pnpm vite-build`; the window opens 1200×1050 with `dragDropEnabled` true; the identity values are productName `ftorrent` and identifier `com.ftorrent`.
 
+**Bundle targets.** The scaffold ships `"targets": "all"`, which builds everything each platform can build — on Windows an MSI beside the NSIS installer, on Linux an AppImage beside the Debian package. ftorrent distributes four packages and no more, so the four are named instead:
+
+```
+"targets": ["app", "dmg", "nsis", "deb"]
+```
+
+One list serves all three platforms: a target that doesn't apply to the machine doing the build is skipped, so macOS produces the .app and .dmg, Windows the NSIS .exe, and Ubuntu the .deb. The portable zip is assembled separately, later.
+
+**The Windows install mode.** Beside the targets sits the NSIS installer's mode:
+
+```
+"windows": {"nsis": {"installMode": "currentUser"}}
+```
+
+`currentUser` installs into the user's own directory — no UAC elevation, and no wizard page asking the user to choose between a per-user and a machine-wide install. That is what the plan calls for on Windows, where the whole installation is per-user. Tauri 2.11 already defaults to this mode, so the line changes no behavior today; it's here because the plan depends on the mode and a default is not a promise.
+
 **Content Security Policy.** We replaced the scaffold's `"csp": null` with a real policy:
 
 ```
@@ -65,4 +81,4 @@ Failure modes are visibly loud: a blocked IPC endpoint means the UI can't reach 
 
 ## Verified
 
-We built and smoke-tested from a fresh clone on both active platforms in August 2026: on macOS, `pnpm build` produces the .app bundle and .dmg and `pnpm local` serves the dev window with hot module replacement; on Windows, the same commands produce the NSIS and MSI installers and the dev window, with both lockfiles byte-identical after install. The frontend-to-Rust IPC round-trip works in both debug and release profiles on both platforms.
+We built and smoke-tested from a fresh clone on both active platforms in August 2026: on macOS, `pnpm build` produces the .app bundle and .dmg and `pnpm local` serves the dev window with hot module replacement; on Windows, the same commands produce the dev window and the installers, with both lockfiles byte-identical after install. That Windows pass ran before the bundle targets were narrowed, when the build still produced an MSI alongside the NSIS installer; the next Windows build should produce the NSIS installer alone. The frontend-to-Rust IPC round-trip works in both debug and release profiles on both platforms.
