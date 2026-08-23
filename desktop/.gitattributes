@@ -1,0 +1,4 @@
+#one newline everywhere: lf in the repository and in both working trees, mac and windows
+#this overrides each machine's core.autocrlf, so the policy lives here rather than in two local git configs
+#scoped to the desktop workspace on purpose — a repo-wide rule would invite renormalizing classic/, the preserved 2010 Win32 source
+* text=auto eol=lf
