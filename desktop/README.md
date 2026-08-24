@@ -12,6 +12,7 @@ _ftorrent/desktop/README.md_
 > <br>[Tailwind CSS](https://tailwindcss.com/): 4
 > <br>[pnpm](https://pnpm.io/): 10.28
 > <br>Node: 22
+> <br>[Rust](https://www.rust-lang.org/): 1.98
 
 This workspace holds the ftorrent desktop client — a cross-platform BitTorrent and WebTorrent client for Windows, Mac, and Linux, built as a [Tauri](https://tauri.app/) app with a Vue frontend. The design planning lives on [docs.ftorrent.com](https://docs.ftorrent.com/); this guide records how we scaffolded the workspace and what we changed afterward, so the state of the code is reproducible and every departure from the scaffold has its reason written down.
 
@@ -33,13 +34,13 @@ The scaffold's stale pins were raised to current versions:
 - **Vue ^3.5.41** with **@vitejs/plugin-vue ^6.0.8** and **Vite ^8.2.2**. Vite 8 requires Node 20.19+ or 22.12+.
 - **Tailwind 4** (^4.3.3) through its Vite plugin only: `@tailwindcss/vite` in vite.config.js and `@import "tailwindcss";` in src/index.css. There is no postcss.config.js, no tailwind.config.js, and no autoprefixer — Tailwind 4's Vite plugin handles prefixing and configuration natively. A tutorial telling you to create those files is describing Tailwind 3.
 - **pnpm 10.28.2**, pinned once in the monorepo root package.json's `packageManager` field, enforced everywhere by corepack.
-- **Rust edition 2021**, as Tauri's template ships it.
+- **Rust edition 2021**, as Tauri's template ships it. An edition is a language dialect, not a compiler version: Rust ships a new compiler every six weeks and never breaks working code, so the rare change that would break something arrives instead as an edition a crate opts into. There are four — 2015, 2018, 2021, and 2024 — and a single compiler builds all of them, so a crate on one edition links fine against dependencies on another. This workspace sets no minimum compiler version of its own, and Tauri's crates ask for 1.77.2 or newer, which is the real floor.
 
 The lockfiles are part of the design: one pnpm-lock.yaml at the monorepo root and this workspace's src-tauri/Cargo.lock are both committed and both cross-platform — pnpm records every platform's native binaries and selects at install time. A fresh clone on a different operating system should install and build without changing either file; if one changes, that's a finding to investigate, and deleting or regenerating a lockfile is never the fix.
 
 ## Modifications after scaffolding
 
-**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), `vite-build`, and `wash` (delete build output and dependencies for a from-scratch install). `wash` calls `rimraf`, which is deliberately not a declared dependency of this workspace — install it globally (`pnpm add -g rimraf`) or that one script fails while everything else works. A pnpm script cannot be named `run` — pnpm's builtin shadows it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
+**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), and `vite-build`. A pnpm script cannot be named `run` — pnpm's builtin shadows it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
 
 **Three depths of a build.** `tauri build` compiles once and then packages in stages, and package.json names each stopping point along the trail:
 

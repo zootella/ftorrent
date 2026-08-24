@@ -16,8 +16,7 @@
 		"dev": "vite",
 		"vite-build": "vite build",
 		"preview": "vite preview",
-		"tauri": "tauri",
-		"wash": "rimraf dist node_modules src-tauri/target src-tauri/gen"
+		"tauri": "tauri"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.11.1",
