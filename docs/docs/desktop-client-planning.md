@@ -109,6 +109,10 @@ other stuff it can do
 - test trackers on those lists, show statistics
 - fetch good.json from good.ftorrent.com and tell the user their ip addresses and nat information
 
+>window size and position
+the window opens where the OS puts it: with no x/y and center left false, tauri sets no position and the platform places it, cascading each new window down and right. that cascade is worth keeping — an installed copy and a portable copy running side by side land distinguishable rather than exactly stacked — so fitting the window to the screen is about size, not about taking placement away.
+Monitor.workArea, in the pinned @tauri-apps/api 2.11.1, reports the monitor area excluding taskbars and docks, so sizing to usable space needs no plugin. it's a runtime call rather than a config option, so it's a few lines at startup. the trap to design against: workArea comes back in physical pixels while window size and position are logical, and a missing conversion is invisible on a machine at 100% scaling.
+
 >first example features
 magnet link maker and inspector
 good.ftorrent.com client for connection nat cone cgnat ipv6 status checker
