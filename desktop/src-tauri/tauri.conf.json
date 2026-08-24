@@ -16,6 +16,7 @@
 				"width": 1200,
 				"height": 1050,
 				"dragDropEnabled": true,
+				"visible": false,
 				"fullscreen": false
 			}
 		],
