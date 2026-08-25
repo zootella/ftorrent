@@ -40,7 +40,7 @@ The lockfiles are part of the design: one pnpm-lock.yaml at the monorepo root an
 
 ## Modifications after scaffolding
 
-**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), and `vite-build`. A pnpm script cannot be named `run` — pnpm's builtin shadows it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
+**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), and `vite-build`. A pnpm script cannot be named `run` — pnpm's builtin shadows it. And `local` fails with a stack trace that reads like a bug if a dev server is already running: vite.config.js sets `port: 1420` with `strictPort: true`, because Tauri needs to find the frontend at a fixed address, so the second one exits rather than sliding to another port. `lsof -ti :1420` on macOS, or `netstat -ano | findstr :1420` on Windows, names the process already holding it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
 
 **Three depths of a build.** `tauri build` compiles once and then packages in stages, and package.json names each stopping point along the trail:
 
@@ -126,6 +126,18 @@ A note on that naming, since Vue Router's own documentation says `views/HomeView
 
 Two version notes. This is the 5.x line, released January 2026, rather than the 4.x line that Vue 3 shipped alongside for years — 5.x is current, its peer requirements (Vue 3.5, Vite 8) match what this workspace already runs, and starting on the previous major would mean a migration later for nothing gained now. And 5.x installs a set of build-time dependencies that 4.x did not, because the file-based and typed-routes tooling that used to be a separate plugin now lives in the package; nothing in that tooling is imported here and none of it reaches the shipped bundle, where the router costs about 9 kB gzipped.
 
+**How the window sizes itself.** The window is created hidden — `"visible": false` in tauri.conf.json — and `src/window.js` gives it a size before anything reveals it, so it appears once already correct rather than flashing at one size and jumping to another.
+
+The sizing reads `currentMonitor()` and takes its `workArea`: the monitor rectangle minus the chrome the operating system keeps for itself, the menu bar and Dock on macOS, the taskbar on Windows. On Windows that resolves to `GetMonitorInfoW`'s `rcWork`, so it handles a taskbar on any edge, at any thickness, with auto-hide on or off. The window becomes 60% of the usable width and 80% of the usable height.
+
+One conversion in there is easy to get wrong and hard to catch. `workArea` arrives in physical pixels while `setSize` speaks logical ones, so the measurement is divided by the monitor's `scaleFactor`. On a display at 100% scaling that division is multiply-by-one, and code with the conversion is byte-identical to code without it — the mistake surfaces only on a scaled or Retina display, where it produces a window roughly twice the screen in each direction.
+
+What the code deliberately does not do is set a position. Where a window opens is the operating system's job, and leaving it there is what makes a second copy land beside the first instead of exactly on top of it — which matters here, because an installed copy and a portable copy are meant to run side by side.
+
+The width and height in tauri.conf.json are 800 × 600, which is also Tauri's own default, and they are only a fallback. Tauri needs some size at creation, and this is what the window keeps if the monitor cannot be identified or the sizing throws. It is deliberately small: an aspirational size would put every failure path on a window too large for a modest screen, and on Windows it would constrain placement as well, since the OS picks the cascade position from the creation size before any resize runs.
+
+Two capability grants make this work: `core:window:allow-set-size` and `core:window:allow-show`. Reading the monitor and checking visibility are already covered by `core:window:default`.
+
 **Indentation and line endings.** All source files indent with tabs, per the style guide at the repository root (the scaffold's space-indented files were converted). Line endings are LF in the repository and in every working tree on every platform, enforced by the .gitattributes at the repository root.
 
 **Ignore rules.** The scaffold's own .gitignore files were dropped — the monorepo root .gitignore already covers everything Tauri generates: target/, gen/, dist, node_modules.
@@ -133,3 +145,5 @@ Two version notes. This is the 5.x line, released January 2026, rather than the 
 ## Verified
 
 We built and smoke-tested from a fresh clone on both active platforms in August 2026. On macOS, `pnpm build` produces the .app bundle and .dmg, and `pnpm local` serves the dev window with hot module replacement. On Windows 10 22H2, `pnpm build` produces the NSIS installer alone — one bundle, no .msi — and that installer runs with no UAC prompt and no page asking whether to install for one user or for the whole machine, landing the app under `%LOCALAPPDATA%` with its uninstall entry in `HKCU` and nothing in `HKLM` or Program Files. On both platforms `pnpm install` left the two lockfiles byte-identical, the Tauri CLI reported no version mismatches, and the frontend-to-Rust IPC round-trip works in both the debug and release profiles. One gap: navigating between pages has been exercised on macOS but not yet on Windows.
+
+The window sizing was measured on Windows rather than eyeballed. Against a 1920 × 1200 display whose work area is 1160 tall, the client rect came back 1152 × 928 — 60% and 80% of the usable space exactly, and 928 rather than the 960 that using the full monitor height would have produced, which proves the taskbar exclusion rather than assuming it. The window landed at (156, 111), placed by the OS as intended. One line remains unverified anywhere: both test machines run at 100% scaling, where the scale-factor conversion cannot be told apart from its absence.

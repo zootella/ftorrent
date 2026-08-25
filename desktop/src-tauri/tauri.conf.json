@@ -13,8 +13,8 @@
 		"windows": [
 			{
 				"title": "ftorrent",
-				"width": 1200,
-				"height": 1050,
+				"width": 800,
+				"height": 600,
 				"dragDropEnabled": true,
 				"visible": false,
 				"fullscreen": false
