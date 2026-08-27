@@ -1,10 +1,12 @@
 <script setup>
 //./src/pages/MainPage.vue
 import {ref} from 'vue'
+import {storeToRefs} from 'pinia'
 import {invoke} from '@tauri-apps/api/core'
+import {useGreetStore} from '../stores/greet.js'
 
-let name = ref('')//what the user typed into the form
-let greetMessage = ref('')//what rust sent back, shown beneath it
+let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
+let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
 
 //hand the name to the rust command named greet and show its answer; this round trip is the scaffold's proof that the webview can reach the native core, and it runs the same way in the dev window and the built app
 async function greet() {

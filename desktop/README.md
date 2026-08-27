@@ -8,6 +8,8 @@ _ftorrent/desktop/README.md_
 > <br>Last reviewed: 2026-Aug
 > <br>[Tauri](https://tauri.app/): 2.11
 > <br>[Vue](https://vuejs.org/): 3.5
+> <br>[Vue Router](https://router.vuejs.org/): 5.2
+> <br>[Pinia](https://pinia.vuejs.org/): 4.0
 > <br>[Vite](https://vite.dev/): 8
 > <br>[Tailwind CSS](https://tailwindcss.com/): 4
 > <br>[pnpm](https://pnpm.io/): 10.28
@@ -57,7 +59,7 @@ That last stage is worth knowing about on macOS. Building a `.dmg` mounts the di
 
 **Which depth a change deserves.** While working, the two halves are quicker on their own: `pnpm vite-build` finishes in a fraction of a second and catches every frontend error, and `cargo check` from `src-tauri` is nearly as quick and catches every Rust error — including a mistyped capability or permission identifier, which Tauri validates as it compiles. `pnpm build-binary` is the gate before handing work over, because it is the cheapest single command that runs the frontend build and a real release compile; `cargo check` type-checks without generating or linking any code, so it cannot stand in for that. Go further only when the change earns it: `build-app` once you have touched the bundle section of tauri.conf.json or the icons, since bundling is what exercises the `Info.plist` and the icon pipeline, and the full build before a release or a handoff to the other platform. Two things to expect — the release profile shares nothing with the debug profile `pnpm local` uses, so the first release build after a stretch of dev work compiles everything over again; and a green build says the code compiles, not that it works. Only running the app tells you that.
 
-**tauri.conf.json**: `beforeBuildCommand` points at `pnpm vite-build`; the window opens 1200×1050 with `dragDropEnabled` true; the identity values are productName `ftorrent` and identifier `com.ftorrent`.
+**tauri.conf.json**: `beforeBuildCommand` points at `pnpm vite-build`; the window is created 800 × 600 with `dragDropEnabled` true; the identity values are productName `ftorrent` and identifier `com.ftorrent`.
 
 **Bundle targets.** The scaffold ships `"targets": "all"`, which builds everything each platform can build — on Windows an MSI beside the NSIS installer, on Linux an AppImage beside the Debian package. ftorrent distributes four packages and no more, so the four are named instead:
 
@@ -125,6 +127,30 @@ The frontend is arranged around that. `src/router/index.js` names every page the
 A note on that naming, since Vue Router's own documentation says `views/HomeView.vue` and this says `pages/MainPage.vue`. The rest of this monorepo already calls them pages — the website workspace runs on Nuxt, where `pages/` is the framework's own directory — so one word across the repository beat matching the router's examples. It reads better out loud, too, in a project where every component file already ends in `.vue`.
 
 Two version notes. This is the 5.x line, released January 2026, rather than the 4.x line that Vue 3 shipped alongside for years — 5.x is current, its peer requirements (Vue 3.5, Vite 8) match what this workspace already runs, and starting on the previous major would mean a migration later for nothing gained now. And 5.x installs a set of build-time dependencies that 4.x did not, because the file-based and typed-routes tooling that used to be a separate plugin now lives in the package; nothing in that tooling is imported here and none of it reaches the shipped bundle, where the router costs about 9 kB gzipped.
+
+**Pinia, for state that outlives a view.** The frontend keeps its state in [Pinia](https://pinia.vuejs.org/) 4, Vue's official store, added at scaffold time for the reason the router was: it settles a shape, and a shape is cheap to settle before anything is built on it. The rule it answers is narrow — state that outlives the component displaying it, or that more than one component reads, belongs in a store; state that belongs to one view and dies with it does not.
+
+A torrent client has a great deal of the first kind, and it arrives from more than one direction. The engine will push a stream of updates — progress, peers, alerts — that keeps arriving whether or not the view showing it happens to be mounted. Whether ftorrent owns the `.torrent` association, whether a firewall exemption is in place, whether the router accepted a port mapping are questions answered somewhere else entirely. Those facts have no single home beneath the interface where they could all meet, and a component the router unmounts on navigation is the wrong place to keep any of them. The store is where they meet: it fills itself by calling down through `invoke()` and by listening for events, and every component reads from it rather than from the source, so a fact crosses the boundary once when it changes rather than once for every view that shows it.
+
+**What the desktop changes.** Pinia was written for the web, and several of its standard practices answer problems this app doesn't have.
+
+Its instance model is the first. A `createPinia()` per request, with state serialized into the page and rehydrated on the client, exists for server-side rendering. This process opens one window once, so `createPinia()` is called a single time in `src/main.js` and none of that machinery is in play.
+
+Listeners belong to the store rather than to a component. On the web a subscription opens inside a composable that a component uses and closes when that component unmounts. The engine's event stream has to outlive every component here — the window can be hidden for days with nothing rendered at all while transfers continue — so the subscription starts once and is held, rather than being tied to whatever is on screen.
+
+The session is long. A page in a browser lives for minutes and takes its store with it when the tab closes, so a store that accumulates is never anyone's problem. This process runs for weeks. Anything a store appends to — an alert list, an event log — needs a bound written in from the start, because it fails slowly and no short test will show it.
+
+And browser storage is not where anything persists. `localStorage` is the standard answer on the web because it is the only durable place a page has; here there is a filesystem behind the Rust core, and the webview's own storage sits in a per-user directory on the host machine, which the design keeps clear so that a copy running from a USB stick leaves nothing behind. So neither `pinia-plugin-persistedstate` nor `@tauri-apps/plugin-store` — both are the right answer to a constraint we don't have, and the wrong answer to the one we do.
+
+**What the store holds today.** One value, in `src/stores/greet.js`: the name typed into the greet form on the main page. It used to be a `ref` inside `MainPage.vue`, which meant a trip to the about page and back returned an empty box — the router unmounted the page, and mounting it again ran its setup from scratch. Moving that ref into a store is the whole change, and it is the smallest honest instance of the rule above: a fact the interface owns outright, with nothing underneath to ask and nothing to save, that simply has to survive the component displaying it.
+
+Wrapping the router outlet in `<KeepAlive>` would have kept the box filled too, and it is the more common reflex. It preserves the component instead of moving the state out of it, so the value stays welded to the one component that owns it, and a second component wanting the same fact still can't reach it. The reply from the Rust `greet` command is deliberately left as component state and still clears on navigation — the two behaviors sitting side by side in one small page are easier to see than to describe. Stores are written in the setup form, `defineStore` with a function that returns what the store holds, which reads like the `<script setup>` components around them.
+
+**The package.** Pinia 4.0.3 is the only package this adds to the tree, which its manifest does not lead you to expect. It declares a runtime dependency on `nostics` — a small, dependency-free structured-diagnostics library first published in April 2026, living under `vercel-labs` rather than `vuejs` — and a non-optional peer dependency on `@vue/devtools-api` rather than the ordinary dependency that would usually be. Both were already installed here, pulled in by the build-time tooling Vue Router 5 carries, so the lockfile gains exactly one new resolution: `pinia 4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.41)`.
+
+The Vue Router line that moves alongside it is that package's own resolution key being re-stamped. Vue Router 5 declares Pinia as an optional peer for its data loaders, so installing Pinia satisfies a peer that was previously unmet — which rewrites the key without changing a line of what we import or ship.
+
+That peer deserves one clarification, since its name suggests a benefit we are not collecting. Pinia's devtools timeline is a real convenience on the web and is no part of the case for a store here — we have neither set it up in the Tauri window nor needed it. The reason to keep state in a store in this app is the rule at the top of this section, not the tooling around it.
 
 **How the window sizes itself.** The window is created hidden — `"visible": false` in tauri.conf.json — and `src/window.js` gives it a size before anything reveals it, so it appears once already correct rather than flashing at one size and jumping to another.
 
