@@ -691,6 +691,11 @@ Carl Sagan
 https://en.wikipedia.org/wiki/Carl_Sagan
 The Demon-Haunted World: Science as a Candle in the Dark, 1995
 
+If you wish to make an apple pie from scratch, you must first invent the universe.
+Carl Sagan
+https://en.wikipedia.org/wiki/Carl_Sagan
+Cosmos: A Personal Voyage, "The Lives of the Stars," November 23, 1980
+
 The medium is the message.
 Marshall McLuhan
 https://en.wikipedia.org/wiki/Marshall_McLuhan
@@ -737,11 +742,6 @@ https://en.wikipedia.org/wiki/Buckminster_Fuller
 Synergetics, 1975
 
 We live in capitalism. Its power seems inescapable. So did the divine right of kings. Any human power can be resisted and changed by human beings.
-Ursula K. Le Guin
-https://en.wikipedia.org/wiki/Ursula_K._Le_Guin
-National Book Awards acceptance speech, November 19, 2014
-
-We need writers who know the difference between production of a market commodity and the practice of an art.
 Ursula K. Le Guin
 https://en.wikipedia.org/wiki/Ursula_K._Le_Guin
 National Book Awards acceptance speech, November 19, 2014
@@ -1155,6 +1155,86 @@ If I have seen further, it is by standing on the shoulders of giants.
 Isaac Newton
 https://en.wikipedia.org/wiki/Isaac_Newton
 Letter to Robert Hooke, February 5, 1675
+
+We will walk on our own feet; we will work with our own hands; we will speak our own minds.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+The American Scholar, address at Harvard, August 31, 1837
+
+Nothing is at last sacred but the integrity of your own mind.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+Self-Reliance, 1841
+
+God offers to every mind its choice between truth and repose. Take which you please--you can never have both.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+Intellect, 1841
+
+Every revolution was first a thought in one man's mind, and when the same thought occurs to another man, it is the key to that era.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+History, 1841
+
+Whoso would be a man must be a nonconformist.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+Self-Reliance, 1841
+
+Nothing great was ever achieved without enthusiasm.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+Circles, 1841
+
+The reward of a thing well done, is to have done it.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+New England Reformers, 1844
+
+Build, therefore, your own world.
+Ralph Waldo Emerson
+https://en.wikipedia.org/wiki/Ralph_Waldo_Emerson
+Nature, 1836
+
+Every now and then a man's mind is stretched by a new idea or sensation, and never shrinks back to its former dimensions.
+Oliver Wendell Holmes Sr.
+https://en.wikipedia.org/wiki/Oliver_Wendell_Holmes_Sr.
+The Autocrat of the Breakfast-Table, The Atlantic Monthly, September 1858
+
+It seems to me the only thing to do in the world is to "do" something. The "doing" is what the world is.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Journals, May 4, 1982
+
+I am not a beginning. I am not an end. I am a link in a chain.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Journals, November 7, 1978
+
+The public has a right to art. The public is being ignored by most contemporary artists. The public needs art, and it is the responsibility of a "self-proclaimed artist" to realize the public needs art, and not to make bourgeois art for the few and ignore the masses.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Journals, October 14, 1978
+
+Art is for everybody.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Journals, 1978
+
+The only way art lives is through the experience of the observer. The reality of art begins in the eyes of the beholder and gains power through imagination, invention, and confrontation.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Art in Transit, The Keith Haring Foundation
+
+Whatever you do, the only secret is to believe in it and satisfy yourself. Don't do it for anyone else.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Letter to Michael
+
+Art is one of the last areas that is totally within the realm of the human individual and can't be copied or done better by a machine.
+Keith Haring
+https://en.wikipedia.org/wiki/Keith_Haring
+Haring-isms, 2020
 `
 
 function formatQuote(s) {
