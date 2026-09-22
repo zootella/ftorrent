@@ -128,3 +128,13 @@ The server runs [coturn](https://github.com/coturn/coturn), the reference implem
 ## 2026-Aug-25: Desktop client scaffolded
 
 ftorrent began as a desktop program, and today it has one again. The `desktop` workspace became a running application — [Tauri 2](https://tauri.app/) with a [Vue](https://vuejs.org/) front end over a Rust core — built and launched from fresh clones on both macOS and Windows, with Linux beside them. Where the classic client was written directly against the Win32 API and ran on one operating system, this one is cross-platform from its first commit. It downloads nothing yet, and that is the plan: we are building it from the outside in, so installation, updates, and the window itself come before the engine, which arrives last onto a foundation already settled.
+
+## 2026-Sep-22: libtorrent in the desktop client
+
+We put [libtorrent](https://www.libtorrent.org/) into the desktop client scaffold today, without needing to build it from source. libtorrent 2.1 shipped in July with WebTorrent on by default, and its maintainers publish wheels for every platform we ship from a workflow in libtorrent's own repository, so we know who built each one and how. We pin each platform's wheel by SHA-256 in a lockfile, and every build machine fetches the same bytes and verifies them before it builds.
+
+ftorrent will run libtorrent in a second process, the engine: a small Python program, since libtorrent's only maintained bindings are Python, frozen with its interpreter into a folder the app carries beside itself. The app starts the engine as its own child and talks to it over pipes, one line of JSON per message, rather than over a local network port. A pipe between a parent and its child has no address, so no other process on the machine can reach the conversation. We built and ran it on macOS and on Windows.
+
+Linux ships from a pipeline that runs in Docker on the Mac, with no Linux computer involved. One Dockerfile builds a toolchain image per architecture, arm64 native on Apple Silicon and x86-64 emulated, and a container made from it lives for exactly one build: it takes a read-only copy of the source, freezes the engine on Linux from the same lockfile, compiles the app, and writes a `.deb`. A third container, a bare Debian 12 with nothing installed, unpacks each package and runs the engine from where the package put it. We build on a Debian 12 base for its glibc, which sets the floor on who can run the result: Debian 12 and 13, Ubuntu 24.04 LTS and 26.04, Mint 22, Fedora 40 and up, and both current generations of Raspberry Pi OS.
+
+The engine creates no session yet. But it holds BitTorrent and WebTorrent together from the start, so when it does, a browser tab and a PC will share one swarm.
