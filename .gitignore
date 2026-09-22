@@ -112,6 +112,8 @@ htmlcov/
 
 # pyenv
 .python-version
+# but the desktop engine's pin is a source file, the interpreter every machine freezes the engine on
+!desktop/engine/.python-version
 
 # Jupyter
 .ipynb_checkpoints/
@@ -134,6 +136,10 @@ target/
 desktop/src-tauri/WixTools/
 desktop/src-tauri/gen/
 desktop/src-tauri/binaries/
+
+# Linux builds of the desktop client (desktop/linux): the whitelist copy handed to a container, and what comes out
+desktop/linux/.stage/
+desktop/linux/release/
 
 # ----------------------------------------------------------------------------
 # Docker

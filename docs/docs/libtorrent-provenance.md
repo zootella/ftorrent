@@ -92,9 +92,9 @@ We opened the macOS wheel rather than taking its contents on faith.
 - The Python extension module is a single 20 MB file. libtorrent, Boost, and the WebTorrent stack are linked into it statically.
 - The WebTorrent stack is there: the module's socket type includes a WebRTC stream, and the symbols of libdatachannel, libjuice, and usrsctp are present.
 - The four WebTorrent settings exist: the STUN server, the connection timeout, the minimum WebSocket announce interval, and the offer limit.
-- OpenSSL 3.6.3, dated June 2026 in its own version string, rides beside the module as two shared libraries the wheel carries. On Linux and Windows the maintainers' build compiles it in instead; we will confirm that when we build there.
+- On macOS, OpenSSL 3.6.3, dated June 2026 in its own version string, rides beside the module as two shared libraries the wheel carries. On Linux the maintainers' build compiles it into the module, and the version there is older: OpenSSL 3.5.0, dated April 2025, in both the x86_64 and the aarch64 wheel. Windows we will confirm when we build there.
 
-One consequence to hold onto: OpenSSL fixes reach the engine only through new libtorrent wheels. We watch libtorrent's releases for that reason as much as for libtorrent's own fixes.
+One consequence to hold onto: OpenSSL fixes reach the engine only through new libtorrent wheels, and the Linux wheels already show what that means. They carry the first release of OpenSSL's 3.5 line, from April 2025, while the macOS wheel carries a build from June 2026, so the two platforms differ by more than a year of OpenSSL fixes inside one libtorrent version. We watch libtorrent's releases for that reason as much as for libtorrent's own fixes, and a new wheel is worth taking promptly.
 
 The release notes for 2.1 say plainly that WebTorrent "significantly widens the attack surface" of libtorrent, and they are right: it adds a WebRTC implementation, a WebSocket client, and SDP parsing to a library that already parses raw packets from the internet. We want it, because a single engine that holds desktop and browser peers in one swarm is the point of this client, and we take it with eyes open: it is a release feature now, fuzz targets for its parsers are part of libtorrent's own testing, and the module carrying it runs in a process of its own, apart from the app's window.
 
@@ -107,7 +107,13 @@ Checked 2026-Sep-21 on an Apple Silicon Mac running macOS 15.7, against the whee
 - The frozen engine folder is 45 MB, freezes in under five seconds, and its executable is ad-hoc signed, which is what Apple Silicon requires to run it at all. Run by hand, it answers an init line with its ready line: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen.
 - Started by the app, it reports the same over the pipe, and quitting the app takes it down with no process left behind.
 
-Windows and Linux are pinned in the lockfile and not yet built. Their entries in the log below will say what we found.
+Checked the same day in Docker containers on the same Mac, Debian 12 for both x86_64 and aarch64.
+
+- uv fetched the two Linux wheels and the two Linux interpreters by the hashes above, and PyInstaller froze the engine on each architecture, in about the time it takes on the Mac.
+- Unpacked from the finished `.deb` onto a bare `debian:12-slim` with no toolchain, the engine answered its init line with libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen, on both architectures. The frozen folder needs only glibc and the base libraries, as the wheel and the interpreter promise.
+- The Linux module is 26 MB, larger than the macOS one because OpenSSL is compiled in, and the only shared libraries beside it are the interpreter's own and the C++ runtime.
+
+Windows is pinned in the lockfile and not yet built. Its entry in the log below will say what we found.
 
 ## Checking it yourself
 
@@ -129,3 +135,4 @@ shasum -a 256 /tmp/wheel/libtorrent-*.whl
 ## Log
 
 - **2026-Sep-21.** First record. libtorrent 2.1.1 from the maintainers' wheels, Python 3.13.15 from python-build-standalone 20260807, PyInstaller 6.22.3. Verified and frozen on macOS; Windows and Linux pinned, not yet built.
+- **2026-Sep-21, later the same day.** Linux, both architectures, frozen in Docker containers on the Mac and checked on a bare Debian 12. The Linux wheels compile OpenSSL in, at 3.5.0 from April 2025, older than the macOS wheel's 3.6.3. Windows still pending.

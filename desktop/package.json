@@ -8,6 +8,10 @@
 	"scripts": {
 		"local": "tauri dev",
 		"engine": "cd engine && uv sync --frozen && uv run --frozen pyinstaller --noconfirm --clean ftorrent-engine.spec",
+		"linux": "node linux/build.js build",
+		"linux-images": "node linux/build.js images",
+		"linux-stage": "node linux/build.js stage",
+		"linux-check": "node linux/build.js check",
 		"build-binary": "tauri build --no-bundle",
 		"build-app": "tauri build --bundles app",
 		"build-dmg": "tauri build",

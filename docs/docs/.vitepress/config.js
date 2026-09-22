@@ -45,6 +45,8 @@ export default defineConfig({
 					{ text: 'DHT Bootstrap Node', link: 'https://github.com/zootella/ftorrent/blob/master/open/dht/README.md' },
 					{ text: 'Connection Checker', link: 'https://github.com/zootella/ftorrent/blob/master/good/README.md' },
 					{ text: 'Home Page', link: 'https://github.com/zootella/ftorrent/blob/master/site/README.md' },
+					{ text: 'Desktop Client', link: 'https://github.com/zootella/ftorrent/blob/master/desktop/README.md' },
+					{ text: 'Desktop Client on Linux', link: 'https://github.com/zootella/ftorrent/blob/master/desktop/linux/README.md' },
 					{ text: 'Documentation Website', link: 'https://github.com/zootella/ftorrent/blob/master/docs/README.md' }
 				]
 			},

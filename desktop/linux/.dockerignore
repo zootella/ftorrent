@@ -1,0 +1,6 @@
+# Nothing needs to reach the docker daemon.
+#
+# An image here is the toolchain and bakes in no files of ours: what a container runs is mounted at run time by build.js, and the source it builds is mounted too. So the build context can be empty, and saying so keeps finished packages in release/ from being shipped to the daemon on every image build, read by nothing.
+#
+# If a Dockerfile ever gains a COPY from this folder, un-ignore exactly what it copies and nothing else.
+*
