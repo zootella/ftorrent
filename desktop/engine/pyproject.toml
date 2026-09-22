@@ -1,0 +1,19 @@
+# ./desktop/engine/pyproject.toml
+# The engine's manifest: what Python it runs on and the two packages it needs. uv.lock beside this file pins every platform's wheel by hash, and uv sync --frozen refuses anything the lock does not name.
+
+[project]
+name = "ftorrent-engine"
+version = "0.1.0"
+description = "The BitTorrent and WebTorrent engine inside the ftorrent desktop client: libtorrent behind a newline-delimited JSON pipe"
+requires-python = "==3.13.*"
+dependencies = [
+	"libtorrent==2.1.1", # the maintainers' own wheel, WebTorrent compiled in; libtorrent-provenance on docs.ftorrent.com is the record of where it comes from and how we checked
+]
+
+[dependency-groups]
+dev = [
+	"pyinstaller==6.22.3", # freezes engine.py, the interpreter, and libtorrent into one folder the app carries
+]
+
+[tool.uv]
+python-preference = "only-managed" # every machine builds on the same python-build-standalone interpreter uv installs, never on whatever python the box happens to have

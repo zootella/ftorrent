@@ -5,7 +5,7 @@ _ftorrent/desktop/README.md_
 
 > Prepared by [Claude Code](https://claude.ai/code) using Fable 5
 > <br>Created: 2026-Aug
-> <br>Last reviewed: 2026-Aug
+> <br>Last reviewed: 2026-Sep
 > <br>[Tauri](https://tauri.app/): 2.11
 > <br>[Vue](https://vuejs.org/): 3.5
 > <br>[Vue Router](https://router.vuejs.org/): 5.2
@@ -15,6 +15,10 @@ _ftorrent/desktop/README.md_
 > <br>[pnpm](https://pnpm.io/): 10.28
 > <br>Node: 22
 > <br>[Rust](https://www.rust-lang.org/): 1.98
+> <br>[libtorrent](https://www.libtorrent.org/): 2.1
+> <br>[Python](https://www.python.org/): 3.13
+> <br>[uv](https://docs.astral.sh/uv/): 0.12
+> <br>[PyInstaller](https://pyinstaller.org/): 6.22
 
 This workspace holds the ftorrent desktop client — a cross-platform BitTorrent and WebTorrent client for Windows, Mac, and Linux, built as a [Tauri](https://tauri.app/) app with a Vue frontend. The design planning lives on [docs.ftorrent.com](https://docs.ftorrent.com/); this guide records how we scaffolded the workspace and what we changed afterward, so the state of the code is reproducible and every departure from the scaffold has its reason written down.
 
@@ -42,7 +46,7 @@ The lockfiles are part of the design: one pnpm-lock.yaml at the monorepo root an
 
 ## Modifications after scaffolding
 
-**Scripts**, in package.json: `local` (tauri dev), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), and `vite-build`. A pnpm script cannot be named `run` — pnpm's builtin shadows it. And `local` fails with a stack trace that reads like a bug if a dev server is already running: vite.config.js sets `port: 1420` with `strictPort: true`, because Tauri needs to find the frontend at a fixed address, so the second one exits rather than sliding to another port. `lsof -ti :1420` on macOS, or `netstat -ano | findstr :1420` on Windows, names the process already holding it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
+**Scripts**, in package.json: `local` (tauri dev), `engine` (freeze the engine, described below), the four build scripts described under the build depths, `app` (open the built Mac bundle), `win` (start the built Windows exe), and `vite-build`. A pnpm script cannot be named `run` — pnpm's builtin shadows it. And `local` fails with a stack trace that reads like a bug if a dev server is already running: vite.config.js sets `port: 1420` with `strictPort: true`, because Tauri needs to find the frontend at a fixed address, so the second one exits rather than sliding to another port. `lsof -ti :1420` on macOS, or `netstat -ano | findstr :1420` on Windows, names the process already holding it. Note that `tauri dev` and `tauri build` compile into separate profile directories, target/debug and target/release, which share no artifacts — the second full compile after the first is expected.
 
 **Three depths of a build.** `tauri build` compiles once and then packages in stages, and package.json names each stopping point along the trail:
 
@@ -120,6 +124,24 @@ What keeps it safe sits outside the module, in three layers. Every path these co
 
 The write family — writing, renaming, deleting, creating directories — is sketched at the bottom of the file and deliberately unbuilt. Reading and copying can trust their caller; deleting should trust less, and what guard those operations deserve is a decision to make once the client's own features say what they need.
 
+**The engine.** The client's BitTorrent and WebTorrent work happens in a second process rather than in the app's own: a small Python program that holds [libtorrent](https://www.libtorrent.org/), frozen together with its interpreter and libtorrent into a folder the app carries beside itself. Why it is Python, why we take the maintainers' prebuilt libtorrent rather than compiling it, and the versions and hashes of everything in that folder are the subject of the libtorrent provenance document on [docs.ftorrent.com](https://docs.ftorrent.com/); this section is how the workspace is arranged around it.
+
+`engine/` holds the program, `engine.py`; its manifest, `pyproject.toml`; the lockfile, `uv.lock`, which pins every platform's wheel by hash; `.python-version`, which pins the interpreter; and the PyInstaller recipe, `ftorrent-engine.spec`. [uv](https://docs.astral.sh/uv/) has to be installed on the machine, and it installs the pinned Python itself, so nothing depends on whatever Python the box already has. One script does the rest:
+
+```
+pnpm engine    # uv sync --frozen, then PyInstaller: the result is engine/dist/ftorrent-engine/
+```
+
+Run it once after cloning and again whenever `engine.py` or the lockfile changes. It is a prerequisite for the Rust build, not an optional step: tauri-build copies resources at compile time and refuses a resource path that matches nothing, so until the freeze exists even `cargo check` stops with `glob pattern ../engine/dist/ftorrent-engine path not found`. That message is the build asking for `pnpm engine`.
+
+The freeze is a folder, the executable `ftorrent-engine` beside an `_internal` directory holding the interpreter and libtorrent, rather than PyInstaller's single-file form. A single file unpacks itself into a temporary directory on every launch, and that self-extracting shape is what antivirus heuristics on Windows most often flag; a folder unpacks nothing and looks like the ordinary program it is. It also starts faster, and it is the same shape on all three platforms. tauri.conf.json names the folder under `bundle.resources` in the directory form, `{"../engine/dist/ftorrent-engine": "ftorrent-engine"}`, and the form matters: the glob form, `.../**/*`, flattens every file into one directory and loses `_internal`, which we found out by building it. Tauri copies the folder into the bundle, `Contents/Resources` on macOS, beside the executable on Windows, `/usr/lib/ftorrent` on Linux, and during development next to the debug binary, so `resource_dir()` finds it in every case.
+
+`src-tauri/src/engine.rs` starts the process from `setup`, before any page exists, writes it one line, `{"command":"init"}`, and keeps the `ready` line it answers with: libtorrent's version, whether WebTorrent is compiled in, the Python version, and whether it is running frozen. The engine's stderr is held in memory, the last hundred lines, so a failure to start has something to show. `engine_status` is the one command the page has, wrapped by `src/engine.js`, and the main page asks once a second and prints the answer as a line. The engine opens no sockets yet and creates no libtorrent session; what exists is the loop everything later will ride on.
+
+Stopping runs from the two run events every quit reaches, `ExitRequested` and `Exit`: a quit line down the pipe, the pipe closed, two seconds' grace, then a kill. The closed pipe is the signal that always lands, because the engine exits when its input ends, so even an app that dies without reaching those events takes the engine with it. We measured both endings on macOS: the app killed outright with SIGTERM, and the app asked to quit through its own quit event; no engine process survived either.
+
+No shell plugin is registered, and that is deliberate. The only code in the app that can start a process is the Rust in engine.rs, from a path it computes, and nothing the page can invoke spawns anything.
+
 **Vue Router, in hash mode.** The frontend routes with [Vue Router](https://router.vuejs.org/) 5, configured with `createWebHashHistory()`. A router's other mode, history mode, writes real paths like `/about` and expects a server to answer a request for that path when the page reloads — but a Tauri window loads its frontend out of the bundle with no server behind it, so such a reload would find nothing. Hash mode keeps the whole route after a `#`, the part a browser resolves locally and never requests. The user never sees it: the window has no address bar.
 
 The frontend is arranged around that. `src/router/index.js` names every page the window can show and is meant to be read as the app's table of contents. `src/App.vue` is the shell — the navigation and the `<router-view />` outlet the current page fills — and the scaffold's greet demo moved into `src/pages/MainPage.vue`. `src/pages/AboutPage.vue` is written as a lazy route, an `() => import(…)` in place of an imported component, so the build gives it a chunk of its own that the app fetches the first time someone opens it; that second chunk is visible in the `vite build` output.
@@ -177,3 +199,5 @@ Two capability grants make this work: `core:window:allow-set-size` and `core:win
 We built and smoke-tested from a fresh clone on both active platforms in August 2026. On macOS, `pnpm build` produces the .app bundle and .dmg, and `pnpm local` serves the dev window with hot module replacement. On Windows 10 22H2, `pnpm build` produces the NSIS installer alone — one bundle, no .msi — and that installer runs with no UAC prompt and no page asking whether to install for one user or for the whole machine, landing the app under `%LOCALAPPDATA%` with its uninstall entry in `HKCU` and nothing in `HKLM` or Program Files. On both platforms `pnpm install` left the two lockfiles byte-identical, the Tauri CLI reported no version mismatches, and the frontend-to-Rust IPC round-trip works in both the debug and release profiles. One gap: navigating between pages has been exercised on macOS but not yet on Windows.
 
 The window sizing was measured on Windows rather than eyeballed. Against a 1920 × 1200 display whose work area is 1160 tall, the client rect came back 1152 × 928 — 60% and 80% of the usable space exactly, and 928 rather than the 960 that using the full monitor height would have produced, which proves the taskbar exclusion rather than assuming it. The window landed at (156, 111), placed by the OS as intended. One line remains unverified anywhere: both test machines run at 100% scaling, where the scale-factor conversion cannot be told apart from its absence.
+
+The engine was frozen and run on macOS in September 2026: the freeze takes under five seconds and produces a 45 MB folder, the built app starts the engine within a second of launch as its own child process, the main page shows libtorrent 2.1.1.0 with WebTorrent on, and quitting the app leaves no engine process behind. The Windows and Linux freezes are pinned in the lockfile and not yet exercised.

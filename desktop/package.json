@@ -7,6 +7,7 @@
 	"type": "module",
 	"scripts": {
 		"local": "tauri dev",
+		"engine": "cd engine && uv sync --frozen && uv run --frozen pyinstaller --noconfirm --clean ftorrent-engine.spec",
 		"build-binary": "tauri build --no-bundle",
 		"build-app": "tauri build --bundles app",
 		"build-dmg": "tauri build",

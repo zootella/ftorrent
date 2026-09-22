@@ -24,7 +24,7 @@ export default defineConfig({
 		hmr: host ? {protocol: "ws", host, port: 1421} : undefined,
 		watch: {
 			// 3. tell vite to ignore watching `src-tauri`
-			ignored: ["**/src-tauri/**"],
+			ignored: ["**/src-tauri/**", "**/engine/**", "**/linux/**"],//and the engine's freeze and the linux builds, which write thousands of files a page never imports
 		},
 	},
 })
