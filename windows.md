@@ -1,6 +1,6 @@
 # Letter to the Windows session — the libtorrent engine
 
-From the Claude Code session on the Mac, to the session on the Windows machine, 2026-09-21. The desktop client gained its engine today: a second process holding libtorrent 2.1.1 with WebTorrent, frozen from Python by PyInstaller, started and stopped by the app's Rust core. It is built and verified on macOS and, through Docker on the Mac, for Linux on both architectures. Windows is the third platform, and the one with the most users. This letter asks you to build it there, answer the questions only Windows can answer, and append a report at the bottom.
+From the Claude Code session on the Mac, to the session on the Windows machine, written 2026-09-21 and revised 2026-09-22. The desktop client gained its engine on the 21st: a second process holding libtorrent 2.1.1 with WebTorrent, frozen from Python by PyInstaller, started and stopped by the app's Rust core. It is built and verified on macOS and, through Docker on the Mac, for Linux on both architectures. Windows is the third platform, and the one with the most users. This letter asks you to build it there, answer the questions only Windows can answer, and append a report at the bottom.
 
 This file travels by git and is public. The user carries it back.
 
@@ -21,9 +21,11 @@ This file travels by git and is public. The user carries it back.
 
 Two decisions in that folder matter to you in particular. It is a folder rather than PyInstaller's single-file form, because a single file unpacks itself into a temporary directory on every launch, and that self-extracting shape is what antivirus heuristics on Windows most often flag. And the executable is named `ftorrent-engine` so that Task Manager says whose process it is.
 
-`src-tauri/tauri.conf.json` names that folder under `bundle.resources` in the directory form, so Tauri copies it into the bundle and, during development, next to the debug binary. `src-tauri/src/engine.rs` starts the process from `setup`, writes it `{"command":"init"}`, keeps the `ready` line it answers with, and stops it from the `ExitRequested` and `Exit` run events. On Windows it starts the process with `CREATE_NO_WINDOW`, so no console window should appear behind the app. No shell plugin is registered; the only code that can spawn a process is that Rust. The main page shows one line about the engine, and `src/engine.js` wraps the one command behind it.
+`src-tauri/tauri.conf.json` names that folder under `bundle.resources` in the directory form, so Tauri copies it into the bundle and, during development, next to the debug binary. `src-tauri/src/engine.rs` starts the process from `setup`, writes it `{"command":"init","version":"0.1.0"}` with the version read from tauri.conf.json, keeps the `ready` line it answers with, and stops it from the `ExitRequested` and `Exit` run events. On Windows it starts the process with `CREATE_NO_WINDOW`, so no console window should appear behind the app. No shell plugin is registered; the only code that can spawn a process is that Rust. The main page shows one line about the engine, and `src/engine.js` wraps the one command behind it.
 
 `src-tauri/rust-toolchain.toml` is also new and pins Rust 1.98.0, the version this machine and the Mac already run. The first Cargo command after pulling may download that toolchain once as a named version if rustup only holds it as "stable". That is expected; note whether it happened.
+
+On the 22nd the engine also learned to name the client: from the version in that init line it builds the handshake name and user agent `ftorrent/0.1.0 libtorrent/2.1.1.0` and the peer id prefix `-FF0100-`, ftorrent's own client code, and it reports both in its `ready` line along with the table of servers it will reach on its own. The Names and Numbers document on docs.ftorrent.com is the public record; nothing about it is platform-specific, so it asks nothing of you beyond the expected line in step 3.
 
 The build commands were renamed, and the desktop README lists them: `compile` builds the release binary and stops, `installer` builds the NSIS installer, `reveal` opens Explorer on it, `hash` stages it as `ftorrent.exe` beside a JSON sidecar in `desktop/release/`, and `upload` is a stub that checks and sends nothing. The app's identifier also changed from `com.ftorrent` to `com.ftorrent.ftorrent`, and its bundle now carries a publisher, copyright, license, and description. The install from August under the old identifier will show as a separate app beside the new one; that is expected on this machine, and the user will clean it up. The lockfile gained an entry for a nested Linux workspace, which your `pnpm install --frozen-lockfile` will simply accept.
 
@@ -48,16 +50,22 @@ Open a new terminal afterward so `uv` is on the path. Do not install Python. uv 
 **3. Run the frozen engine by hand.** In Git Bash:
 
 ```
-printf '{"command":"init"}\n{"command":"quit"}\n' | engine/dist/ftorrent-engine/ftorrent-engine.exe
+printf '{"command":"init","version":"0.1.0"}\n{"command":"quit"}\n' | engine/dist/ftorrent-engine/ftorrent-engine.exe
 ```
 
 or in PowerShell:
 
 ```
-'{"command":"init"}','{"command":"quit"}' | .\engine\dist\ftorrent-engine\ftorrent-engine.exe
+'{"command":"init","version":"0.1.0"}','{"command":"quit"}' | .\engine\dist\ftorrent-engine\ftorrent-engine.exe
 ```
 
-Expected: one line, `{"event":"ready","libtorrent":"2.1.1.0","webtorrent":true,"python":"3.13.15","frozen":true}`, and a clean exit. Record the line exactly as printed.
+Expected: one line, byte for byte what the Mac's frozen engine prints, and a clean exit:
+
+```
+{"event":"ready","libtorrent":"2.1.1.0","webtorrent":true,"python":"3.13.15","frozen":true,"client":"ftorrent/0.1.0 libtorrent/2.1.1.0","fingerprint":"-FF0100-","centralized_servers":{"stun":["stun.ftorrent.com:3478","stun.cloudflare.com:3478","stun.l.google.com:19302"],"dht":["dht.ftorrent.com:51420","dht.libtorrent.org:25401","dht.transmissionbt.com:6881"],"trackers":["udp://open.ftorrent.com:443/announce","https://open.ftorrent.com/announce","wss://open.ftorrent.com","wss://tracker.webtorrent.dev","wss://tracker.openwebtorrent.com","udp://tracker.opentrackr.org:1337/announce"]}}
+```
+
+Record the line exactly as printed, and say whether it differs from that one anywhere.
 
 **4. Which OpenSSL the Windows wheel carries.** The macOS wheel bundles OpenSSL 3.6.3 as separate libraries; the Linux wheels compile in 3.5.0. From `desktop/engine/`:
 

@@ -46,7 +46,7 @@ def session_settings():#the settings the engine will hand libtorrent when it cre
 		'dht_bootstrap_nodes': ','.join(centralized_servers['dht']),
 		'user_agent': client_name(),#the HTTP User-Agent trackers and web seeds see
 		'handshake_client_version': client_name(),#the free-text name in the extension handshake, which libtorrent-based clients show verbatim in their peer lists; libtorrent would fall back to user_agent for this, and setting it says so out loud
-		'peer_fingerprint': fingerprint(),#the client code and version at the front of the peer id, which clients reading only the peer id look up in a table; libtorrent stamps the same two letters into its DHT messages
+		'peer_fingerprint': fingerprint(),#the client code and version at the front of the peer id, which clients reading only the peer id look up in a table; the DHT is separate, where libtorrent writes its own LT and version into every message from no setting at all
 	}
 
 def ready():#what the engine reports about itself once it is up, and the first thing the app asks for

@@ -33,7 +33,7 @@ After both, a third container that is not ours: a bare debian:12-slim, with no t
 
 ## What this does not do
 
-It builds and it does not deliver. Renaming packages for publication, hashing them, uploading them, an updater manifest: none of that is here yet, and what lands in release/ carries Tauri's own filenames.
+It builds and it does not publish. What lands in release/ carries Tauri's own filenames; renaming a package to its published name, hashing it, and uploading it live in ../scripts.js, which the hash and upload commands in package.json reach, so that work exists once for every platform rather than once per workspace. An updater manifest is not written anywhere yet.
 */
 
 //every path is built from this file's own location, never from the working directory, because pnpm runs this from the desktop workspace and a person may run it from anywhere
