@@ -45,6 +45,8 @@ importers:
         specifier: ^8.2.2
         version: 8.2.2(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)
 
+  desktop/linux: {}
+
   docs:
     devDependencies:
       vitepress:

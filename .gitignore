@@ -137,9 +137,16 @@ desktop/src-tauri/WixTools/
 desktop/src-tauri/gen/
 desktop/src-tauri/binaries/
 
-# Linux builds of the desktop client (desktop/linux): the whitelist copy handed to a container, and what comes out
+# What the desktop client's publishing steps make. The packages stay out, but their sidecars are tracked, so the repository keeps a dated record of what hash each release had; excluding the contents rather than the directory is what lets the negation work
+desktop/release/*
+!desktop/release/*.json
+desktop/linux/release/*
+!desktop/linux/release/*.json
+# the whitelist copy handed to a Linux build container, rebuilt by every run
 desktop/linux/.stage/
-desktop/linux/release/
+# scratch trees the icon runs leave behind; the files worth keeping are copied out into mac/ and tile/
+desktop/src-tauri/icons/.mac/
+desktop/src-tauri/icons/.tile/
 
 # ----------------------------------------------------------------------------
 # Docker

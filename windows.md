@@ -25,6 +25,8 @@ Two decisions in that folder matter to you in particular. It is a folder rather 
 
 `src-tauri/rust-toolchain.toml` is also new and pins Rust 1.98.0, the version this machine and the Mac already run. The first Cargo command after pulling may download that toolchain once as a named version if rustup only holds it as "stable". That is expected; note whether it happened.
 
+The build commands were renamed, and the desktop README lists them: `compile` builds the release binary and stops, `installer` builds the NSIS installer, `reveal` opens Explorer on it, `hash` stages it as `ftorrent.exe` beside a JSON sidecar in `desktop/release/`, and `upload` is a stub that checks and sends nothing. The app's identifier also changed from `com.ftorrent` to `com.ftorrent.ftorrent`, and its bundle now carries a publisher, copyright, license, and description. The install from August under the old identifier will show as a separate app beside the new one; that is expected on this machine, and the user will clean it up. The lockfile gained an entry for a nested Linux workspace, which your `pnpm install --frozen-lockfile` will simply accept.
+
 ## What the machine needs
 
 - Node 22 and pnpm through corepack, as before.
@@ -69,13 +71,13 @@ Record the output. Together with the DLL question in step 2, it says whether Win
 
 **6. Development mode.** From `desktop/`, `pnpm local`. Record: whether the window opened; the engine line on the main page, exactly as shown; whether any console window flashed or stayed open behind the app; and what `Get-Process ftorrent-engine` in PowerShell shows while the app is up, including its parent if Task Manager's Details tab shows it. Then close the window and run `Get-Process ftorrent-engine` again. Expected: the process is gone.
 
-**7. The installer.** From `desktop/`, `pnpm build`. Record the installer's size and, if you can list its contents, whether `ftorrent-engine\` is inside it. Then install it. The user may prefer to double-click the installer themselves; either way, record what the SmartScreen screen said, since the installer is unsigned and that screen is expected. After installing, record whether `%LOCALAPPDATA%\ftorrent\ftorrent-engine\ftorrent-engine.exe` exists with `_internal` beside it, then launch from the Start menu and repeat the checks from step 6: the engine line, no console window, the process present while the app is up and gone after the window closes.
+**7. The installer.** From `desktop/`, `pnpm installer`, then `pnpm reveal` to open Explorer on it. Record the installer's size and, if you can list its contents, whether `ftorrent-engine\` is inside it. Then `pnpm hash`, which stages it as `desktop/release/ftorrent.exe` and writes `ftorrent.exe.json` beside it; paste the sidecar into your report, since it is the first record of a Windows build. Then install it. The user may prefer to double-click the installer themselves; either way, record what the SmartScreen screen said, since the installer is unsigned and that screen is expected. After installing, record whether `%LOCALAPPDATA%\ftorrent\ftorrent-engine\ftorrent-engine.exe` exists with `_internal` beside it, then launch from the Start menu and repeat the checks from step 6: the engine line, no console window, the process present while the app is up and gone after the window closes.
 
 **8. Uninstall.** Run the uninstaller from Add or Remove Programs and record whether `%LOCALAPPDATA%\ftorrent\` is gone entirely, including the `ftorrent-engine` folder. The client's plan says uninstall must leave nothing behind, and a resource folder is the first thing that might.
 
 **9. Windows Defender, throughout.** This is the question the folder shape was chosen to answer, so watch for it at every step and report exactly. Before you start, note the current state of Windows Security's Protection history. After each of steps 2, 6, 7, and 8, check it again, and run `Get-MpThreatDetection` and `Get-MpThreat` in PowerShell. Record any detection with its name, the file it named, and what Defender did about it. If nothing was flagged, say so plainly for each step; that is the result we hope for and it needs to be stated, not implied. Distinguish SmartScreen on the installer, which is expected, from a Defender detection of a file, which is not.
 
-**10. The tree at the end.** `git status`. Expected: only this file modified. If a lockfile changed, report the diff and leave it as it is.
+**10. The tree at the end.** `git status`. Expected: this file modified, and one new file, `desktop/release/ftorrent.exe.json`, the sidecar `pnpm hash` wrote, which is meant to be committed. Nothing else. If a lockfile changed, report the diff and leave it as it is.
 
 ## Your report
 

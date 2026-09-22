@@ -108,7 +108,7 @@ function tauri(tag, bundles) {
 function check(tag) {
 	let image = images[tag]
 	let deb = newestIn(release, '.deb', image.debianArch)
-	if (!deb) throw new Error(`no ${image.debianArch} .deb in release/ to check; run pnpm linux first`)
+	if (!deb) throw new Error(`no ${image.debianArch} .deb in release/ to check; run pnpm build first`)
 	say(`==> checking ${deb} on a bare debian:12-slim  (${image.platform})`)
 	run(['run', '--rm', '--platform', image.platform,
 		...inside('inside-check.sh'),
@@ -152,13 +152,13 @@ function report() {
 }
 
 /*
-The verbs package.json passes. images, stage, and check are here for factoring rather than for typing: build runs all of them itself, stage is a window into what a container is handed when something about the whitelist needs looking at, and check re-runs the bare-Debian test on packages already built.
+The verbs package.json passes. build-images, stage, and check are here for factoring rather than for typing: build runs all of them itself, stage is a window into what a container is handed when something about the whitelist needs looking at, and check re-runs the bare-Debian test on packages already built.
 
 Not named prepare, which would be the obvious name for the image step and is a trap: npm and pnpm treat prepare as a lifecycle script and run it on every install, so cloning the repository and running pnpm install would try to build gigabytes of Docker images, and fail the install outright on a machine where Docker is not running.
 */
 const commands = {
 	'build':  () => build(),
-	'images': () => buildImages(),
+	'build-images': () => buildImages(),
 	'stage':  () => stageSource(),
 	'check':  () => { for (let tag of Object.keys(images)) check(tag) },
 }

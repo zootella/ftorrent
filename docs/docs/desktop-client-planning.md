@@ -58,7 +58,7 @@ and a third upcoming epic for the roadmap is dht.ftorrent.com
 
 ### Distribution
 
-**Installers.** Configure Tauri to produce three packages: NSIS `.exe` for Windows, `.dmg` for macOS (Apple Silicon only), and `.deb` for Ubuntu Desktop and derivatives. Disable Tauri's default `.AppImage` output — we ship `.deb` only for now. NSIS runs completely silently with no wizard UI, set to `currentUser` mode so no UAC prompt appears. The DMG uses the background image and icon positions from the icons story. Build artifacts are renamed from Tauri's versioned filenames to `ftorrent.exe`, `ftorrent.dmg`, and `ftorrent.deb` for website distribution. As built: the `.deb` is made on the Mac in Docker containers, described in the Linux guide in the repository, for x86_64 and, since it costs nothing there, arm64 as well; whether the arm64 package is published is undecided. Smoke test: confirm NSIS installs with no visible UI and the app launches from `AppData\Local\ftorrent\`; confirm the DMG opens with the drag-to-Applications layout; confirm the `.deb` installs and launches on Ubuntu.
+**Installers.** Configure Tauri to produce three packages: NSIS `.exe` for Windows, `.dmg` for macOS (Apple Silicon only), and `.deb` for Ubuntu Desktop and derivatives. Disable Tauri's default `.AppImage` output — we ship `.deb` only for now. NSIS runs completely silently with no wizard UI, set to `currentUser` mode so no UAC prompt appears. The DMG uses the background image and icon positions from the icons story. Build artifacts are renamed from Tauri's versioned filenames to `ftorrent.exe`, `ftorrent.dmg`, `ftorrent.amd64.deb`, and `ftorrent.arm64.deb` for website distribution. As built: the `.deb` is made on the Mac in Docker containers, described in the Linux guide in the repository, for x86_64 and arm64 both, and the Linux names carry their architecture because there are two. Smoke test: confirm NSIS installs with no visible UI and the app launches from `AppData\Local\ftorrent\`; confirm the DMG opens with the drag-to-Applications layout; confirm the `.deb` installs and launches on Ubuntu.
 
 **Uninstall.** Remove ftorrent the way each platform expects, with the user in charge: the NSIS uninstaller on Windows (listed in Add or Remove Programs), dragging `ftorrent.app` to the Trash on macOS, `apt remove` / `dpkg -r` on Linux. Only the Windows uninstaller and the Debian package scripts run code, so only they actively reverse changes — clearing the `HKCU` autostart and handler entries, and offering to remove the machine-wide firewall exemption (which elevates, as adding it did). macOS drag-to-Trash runs nothing, so ftorrent's job is to never leave anything that misbehaves: the login item is registered through the OS's ServiceManagement framework so it does not orphan when the app is deleted (§Start at login), and everything else it leaves is small, standard, and inert. The user's data is always preserved — downloaded files, the `.ftorrent` session directories beside them, and `ftorrent.json` and `state` all remain, so uninstalling never deletes a download and reinstalling resumes cleanly. A user who wants ftorrent's system changes gone first can flip each off in the status surface (§System status and permissions) before removing the app. A portable copy has nothing to uninstall — delete the folder; portable mode never wrote to the host. Smoke test: on Windows enable start-at-login, claim the default handler, add a firewall exemption, run the uninstaller, and confirm all three are reversed; on macOS enable start-at-login, drag the app to the Trash, and confirm no login item is left pointing at the missing app; on every platform confirm downloads, `.ftorrent` directories, settings, and state survive and a reinstall resumes; delete a portable folder and confirm the host is untouched.
 
@@ -179,7 +179,7 @@ A remaining theoretical vector is a compromised npm dependency importing `@tauri
 
 - `ftorrent.exe` — NSIS installer for Windows 10 and later.
 - `ftorrent.dmg` — macOS disk image, supporting Sequoia and Tahoe, Apple Silicon only.
-- `ftorrent.deb` — Debian package for Ubuntu Desktop and its derivatives (Mint, Pop!_OS, Zorin, elementary), which together account for the majority of desktop Linux users. Fedora and Arch users can build from source, and adding `.rpm` or `.AppImage` targets is straightforward if demand appears.
+- `ftorrent.amd64.deb` and `ftorrent.arm64.deb` — Debian packages for Ubuntu Desktop and its derivatives (Mint, Pop!_OS, Zorin, elementary), which together account for the majority of desktop Linux users, and for Raspberry Pi OS. Fedora and Arch users can build from source, and adding `.rpm` or `.AppImage` targets is straightforward if demand appears.
 - `ftorrent.zip` — portable distribution, described separately below.
 
 During development, macOS and Windows are the active test matrix — the platforms where daily work and testing happen. Linux is a first-class target but not a hot path. The expectation is that by keeping choices simple and standard, Tauri's Linux build will work at the end with little or no correction.
@@ -194,7 +194,7 @@ ftorrent/desktop/src-tauri/target/release/bundle/nsis/ftorrent_0.1.0_x64-setup.e
 ftorrent/desktop/src-tauri/target/release/bundle/dmg/ftorrent_0.1.0_aarch64.dmg
 ftorrent/desktop/src-tauri/target/release/bundle/deb/ftorrent_0.1.0_amd64.deb
 ```
-The `.dmg` contains `ftorrent.app` for the user to drag into Applications. The `.exe` is the NSIS setup program, not the application binary itself — it extracts and installs the app into the program files location described below. These are renamed to `ftorrent.dmg`, `ftorrent.exe`, and `ftorrent.deb` for distribution on the website.
+The `.dmg` contains `ftorrent.app` for the user to drag into Applications. The `.exe` is the NSIS setup program, not the application binary itself — it extracts and installs the app into the program files location described below. These are renamed to `ftorrent.dmg`, `ftorrent.exe`, `ftorrent.amd64.deb`, and `ftorrent.arm64.deb` for distribution on the website.
 
 ### Paths §2: Installed and running
 
@@ -209,9 +209,9 @@ On macOS, the `.dmg` presents `ftorrent.app` for the user to drag into `/Applica
 **Application settings.** ftorrent's own settings file, keyed by the Tauri bundle identifier:
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent\ftorrent.json    # Windows
-~/Library/Application Support/com.ftorrent/ftorrent.json        # macOS
-~/.local/share/com.ftorrent/ftorrent.json                       # Linux
+C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\ftorrent.json    # Windows
+~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.json        # macOS
+~/.local/share/com.ftorrent.ftorrent/ftorrent.json                       # Linux
 ```
 
 `ftorrent.json` contains user-facing configuration: the ordered list of download folders, the default download location, UI preferences, and any other settings the user knows about and can change. The Windows registry is avoided except where a feature absolutely requires it, like file type associations for `.torrent` files. On Linux, the base path follows the XDG Base Directory Specification — `$XDG_DATA_HOME` defaults to `~/.local/share/` on Ubuntu Desktop, and virtually no one changes it.
@@ -219,9 +219,9 @@ C:\Users\username\AppData\Roaming\com.ftorrent\ftorrent.json    # Windows
 **Global libtorrent state.** Separate from user settings, libtorrent maintains session-wide state that persists across restarts:
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent\state            # Windows
-~/Library/Application Support/com.ftorrent/state                # macOS
-~/.local/share/com.ftorrent/state                               # Linux
+C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\state            # Windows
+~/Library/Application Support/com.ftorrent.ftorrent/state                # macOS
+~/.local/share/com.ftorrent.ftorrent/state                               # Linux
 ```
 
 This file holds the DHT routing table and session-wide settings — global state that belongs to the running instance, not to any individual torrent. It is serialized via libtorrent's `write_session_params()` on shutdown and restored with `read_session_params()` on startup. Without it, every launch would bootstrap DHT from scratch. Per-torrent state — resume data, piece completion, tracker lists — lives alongside downloads in `.ftorrent` directories, described below.
@@ -397,10 +397,10 @@ C:\Users\Bill\Downloads\ftorrent.exe
 C:\Users\Bill\AppData\Local\ftorrent\ftorrent.exe
 
 # settings (created on first launch)
-C:\Users\Bill\AppData\Roaming\com.ftorrent\ftorrent.json
+C:\Users\Bill\AppData\Roaming\com.ftorrent.ftorrent\ftorrent.json
 
 # global libtorrent state
-C:\Users\Bill\AppData\Roaming\com.ftorrent\state
+C:\Users\Bill\AppData\Roaming\com.ftorrent.ftorrent\state
 
 # downloaded content
 C:\Users\Bill\Downloads\ftorrent\Big Buck Bunny.mp4
@@ -427,10 +427,10 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /Applications/ftorrent.app/Contents/MacOS/ftorrent
 
 # settings (created on first launch)
-/Users/Steve/Library/Application Support/com.ftorrent/ftorrent.json
+/Users/Steve/Library/Application Support/com.ftorrent.ftorrent/ftorrent.json
 
 # global libtorrent state
-/Users/Steve/Library/Application Support/com.ftorrent/state
+/Users/Steve/Library/Application Support/com.ftorrent.ftorrent/state
 
 # downloaded content
 /Users/Steve/Downloads/ftorrent/Big Buck Bunny.mp4
@@ -456,10 +456,10 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /usr/bin/ftorrent
 
 # settings (created on first launch)
-/home/linus/.local/share/com.ftorrent/ftorrent.json
+/home/linus/.local/share/com.ftorrent.ftorrent/ftorrent.json
 
 # global libtorrent state
-/home/linus/.local/share/com.ftorrent/state
+/home/linus/.local/share/com.ftorrent.ftorrent/state
 
 # downloaded content
 /home/linus/Downloads/ftorrent/Big Buck Bunny.mp4
@@ -545,9 +545,9 @@ ftorrent does not have a logging system. During development, diagnostic output i
 If the sidecar exits with a non-zero exit code, the Rust core writes the buffer contents to `crash.log` in the application data directory (or `portable/` in portable mode):
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent\crash.log        # Windows
-~/Library/Application Support/com.ftorrent/crash.log             # macOS
-~/.local/share/com.ftorrent/crash.log                            # Linux
+C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\crash.log        # Windows
+~/Library/Application Support/com.ftorrent.ftorrent/crash.log             # macOS
+~/.local/share/com.ftorrent.ftorrent/crash.log                            # Linux
 ```
 
 The file is overwritten on each crash, not appended. It contains only what the sidecar printed to stderr in its final moments — Python tracebacks, libtorrent alert messages, or native library segfault output. A user reporting a crash can attach this file to a GitHub issue. Without it, every crash report is "it broke."
@@ -646,7 +646,7 @@ On Windows and Linux there is no equivalent gate for a user writing within their
 
 On Windows, the lock is a named mutex via `CreateMutex`. The mutex name is a fixed prefix plus a SHA-256 hash of the absolute path to `ftorrent.json` — something like `ftorrent-a1b2c3d4...`. Raw filesystem paths aren't valid mutex names, so the hash produces a fixed-length, namespace-safe identifier. If the mutex already exists, `CreateMutex` returns `ERROR_ALREADY_EXISTS` and the second launch knows to hand off and exit. The kernel destroys the mutex automatically when the owning process exits for any reason — clean exit, crash, kill, or power loss. There are no stale locks.
 
-On macOS and Linux, the lock is `flock()` on a dedicated file, `ftorrent.lock`, in the same directory as `ftorrent.json`. The first launch ever creates this file empty via `open(O_CREAT)` and immediately acquires an exclusive non-blocking lock with `flock(fd, LOCK_EX | LOCK_NB)`. If the lock is already held by another process, `flock` fails with `EWOULDBLOCK` and the second launch knows to hand off and exit. The lock is tied to the open file descriptor — the OS releases it automatically when the process exits for any reason. There are no stale locks. No hashing is needed on these platforms because the directory path already distinguishes instances — `~/Library/Application Support/com.ftorrent/ftorrent.lock` and `portable/ftorrent.lock` are different files with different inodes. `ftorrent.lock` exists solely to be locked. It is never written to, never replaced, never renamed — a separate file avoids the inode-replacement problem that would arise from locking `ftorrent.json` itself, which is atomically replaced on every settings save. PID-based lock files are deliberately not used on any platform: a PID file can be left behind when a process is killed without cleanup, producing the worst case — nothing visibly running, but startup blocked by a stale lock. A mutex and `flock()` both avoid this, because the OS releases them on process exit however it exits.
+On macOS and Linux, the lock is `flock()` on a dedicated file, `ftorrent.lock`, in the same directory as `ftorrent.json`. The first launch ever creates this file empty via `open(O_CREAT)` and immediately acquires an exclusive non-blocking lock with `flock(fd, LOCK_EX | LOCK_NB)`. If the lock is already held by another process, `flock` fails with `EWOULDBLOCK` and the second launch knows to hand off and exit. The lock is tied to the open file descriptor — the OS releases it automatically when the process exits for any reason. There are no stale locks. No hashing is needed on these platforms because the directory path already distinguishes instances — `~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.lock` and `portable/ftorrent.lock` are different files with different inodes. `ftorrent.lock` exists solely to be locked. It is never written to, never replaced, never renamed — a separate file avoids the inode-replacement problem that would arise from locking `ftorrent.json` itself, which is atomically replaced on every settings save. PID-based lock files are deliberately not used on any platform: a PID file can be left behind when a process is killed without cleanup, producing the worst case — nothing visibly running, but startup blocked by a stale lock. A mutex and `flock()` both avoid this, because the OS releases them on process exit however it exits.
 
 When the second launch detects the lock, it signals the running instance to bring its window to the front. On Windows, it finds the window by a registered window class name and sends a focus message via the Windows API. On macOS, it uses `NSRunningApplication` to activate the existing process. This is the one piece of platform-specific UI code in the lock system — the lock itself is simple; finding the other window is the fiddly part. If the focus step fails — the running instance is hung, or the window lookup doesn't match — the second launch exits anyway. It never forces past the lock. The user can kill the stuck process manually and relaunch; the OS will have already cleaned up the lock.
 

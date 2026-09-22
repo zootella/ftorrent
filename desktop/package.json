@@ -1,6 +1,6 @@
 {
 	"name": "desktop",
-	"description": "Next generation desktop BitTorrent and WebTorrent client, built with Tauri",
+	"description": "Next-generation client for the decentralized web",
 	"homepage": "https://ftorrent.com/",
 	"private": true,
 	"version": "0.1.0",
@@ -8,19 +8,16 @@
 	"scripts": {
 		"local": "tauri dev",
 		"engine": "cd engine && uv sync --frozen && uv run --frozen pyinstaller --noconfirm --clean ftorrent-engine.spec",
-		"linux": "node linux/build.js build",
-		"linux-images": "node linux/build.js images",
-		"linux-stage": "node linux/build.js stage",
-		"linux-check": "node linux/build.js check",
-		"build-binary": "tauri build --no-bundle",
-		"build-app": "tauri build --bundles app",
-		"build-dmg": "tauri build",
-		"build": "tauri build",
-		"app": "open src-tauri/target/release/bundle/macos/ftorrent.app",
-		"win": "start src-tauri/target/release/ftorrent.exe",
+		"compile": "tauri build --no-bundle",
+		"installer": "tauri build",
+		"reveal": "node scripts.js reveal",
+		"hash": "node scripts.js hash --source=bundle",
+		"upload": "node scripts.js upload --source=bundle",
+
+		"icons": "tauri icon src-tauri/icons/app-icon.svg && tauri icon src-tauri/icons/app-icon-mac.svg -o src-tauri/icons/.mac && tauri icon src-tauri/icons/app-icon-tile.svg -o src-tauri/icons/.tile && node scripts.js icons-collect",
+
 		"dev": "vite",
 		"vite-build": "vite build",
-		"preview": "vite preview",
 		"tauri": "tauri"
 	},
 	"dependencies": {

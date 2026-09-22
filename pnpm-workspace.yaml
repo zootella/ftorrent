@@ -19,3 +19,5 @@ packages:
 
   # Desktop BitTorrent and WebTorrent client (Tauri) for Mac, Windows, and Linux
   - desktop
+  # its Linux packages, built on a Mac in Docker containers; nested inside the desktop folder, so cd deeper only to make a release
+  - desktop/linux

@@ -22,21 +22,22 @@ Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and le
 
 In its settings, turn on **Use Rosetta for x86/amd64 emulation**. The x86-64 package builds in an emulated container, and Rosetta is several times faster than the alternative.
 
-Then, from the repository root, `pnpm install` once. This folder has no dependencies of its own, because everything it does is drive containers whose toolchains live inside them, and it is a folder rather than a workspace: its commands live in the desktop workspace's package.json and run from there.
+Then, from the repository root, `pnpm install` once; it installs every workspace. This one has no dependencies of its own, because everything it does is drive containers whose toolchains live inside them. It is a workspace nested inside the desktop one, so its commands are typed from here, and most days you are in `desktop` and come down to `linux` only to make a release.
 
 ## The commands
 
 ```
-cd desktop
-pnpm linux           # the whole pipeline: images, staging, both packages, both checks
-pnpm linux-images    # only the two toolchain images
-pnpm linux-stage     # only the whitelist copy a container is handed, to look at what goes in
-pnpm linux-check     # only the bare-Debian check, on packages already built
+cd desktop/linux
+pnpm build           # the two packages: images, staging, both builds, both checks
+pnpm hash            # stage them under their published names and write the sidecars
+pnpm upload          # send them to ftorrent.com; a stub until the server has a downloads directory
 ```
 
-`pnpm linux` is the one to type. The other three exist so it is factored rather than one long function, and for the moment something needs looking at on its own.
+That is the whole of it, and it is the same three words the desktop workspace uses for its own installer. Three steps rather than one, because each leaves behind a different kind of thing: `build` writes packages, which are gitignored and disposable; `hash` writes sidecars, which are committed; `upload` will put files on a server, the one step you cannot take back, which is why it stays separate.
 
-The first `pnpm linux` on a new machine takes far longer than the rest, because it builds the two toolchain images before it builds anything else: Debian carrying Node, Rust, uv with the engine's Python, and the WebKit headers, once per architecture. Every build after that rebuilds the images too, and that is the answer to a question the design would otherwise have no answer to: how would you know the toolchain had moved? You could not. Somebody bumps a version in the Dockerfile, you pull it, and nothing tells you. Docker's layer cache makes checking free, a few seconds when nothing changed, so the build simply brings its own images up to date and uses them. It is not called `prepare`, which was the obvious name and is a trap: npm and pnpm treat `prepare` as a lifecycle script and run it on every install.
+Three commands sit underneath so `build` is factored rather than one long function: `build-images` for the two toolchain images alone, `stage` for the whitelist copy a container is handed, and `check` for the bare-Debian test on packages already built. You would rarely type one.
+
+The first `pnpm build` on a new machine takes far longer than the rest, because it builds the two toolchain images before it builds anything else: Debian carrying Node, Rust, uv with the engine's Python, and the WebKit headers, once per architecture. Every build after that rebuilds the images too, and that is the answer to a question the design would otherwise have no answer to: how would you know the toolchain had moved? You could not. Somebody bumps a version in the Dockerfile, you pull it, and nothing tells you. Docker's layer cache makes checking free, a few seconds when nothing changed, so the build simply brings its own images up to date and uses them. It is not called `prepare`, which was the obvious name and is a trap: npm and pnpm treat `prepare` as a lifecycle script and run it on every install.
 
 ## Where everything goes
 
@@ -53,7 +54,16 @@ linux/release/ftorrent_0.1.0_arm64.deb     built native
 linux/release/ftorrent_0.1.0_amd64.deb     built emulated
 ```
 
-The `0.1.0` is read from `src-tauri/tauri.conf.json`, the one place the client's version is written. Both files are gitignored; so is `.stage/`.
+The `0.1.0` is read from `src-tauri/tauri.conf.json`, the one place the client's version is written.
+
+**`pnpm hash` stages them under their published names** and writes a sidecar beside each, a small JSON file holding the filename, version, architecture, byte count, SHA-256, and build date:
+
+```
+linux/release/ftorrent.arm64.deb    from ftorrent_0.1.0_arm64.deb    with ftorrent.arm64.deb.json
+linux/release/ftorrent.amd64.deb    from ftorrent_0.1.0_amd64.deb    with ftorrent.amd64.deb.json
+```
+
+Every Linux name states its architecture and none carries a version, the rule `scripts.js` in the desktop workspace explains: a stable name is overwritten in place on every release, so a link anyone shares keeps handing people the current build, and the arm64 package is not given the bare name that would make it read as the ordinary choice. The packages are gitignored and the sidecars are committed; so is nothing under `.stage/`.
 
 **The check runs last.** For each package, a container made from a bare `debian:12-slim`, with no toolchain and nothing of ours installed, unpacks it without installing it, reports what it declares it depends on and where the app and the engine landed, and runs the frozen engine from there. That proves the one thing a build container cannot: that the engine runs on a system with only glibc and the base libraries, which is the promise the manylinux wheel and python-build-standalone both make. It does not install the package, because that would pull WebKitGTK and the desktop stack into a container with no display, and it cannot show a window. The app itself is smoke tested on a real Linux machine, the way it is on the other two.
 
@@ -71,13 +81,13 @@ The `0.1.0` is read from `src-tauri/tauri.conf.json`, the one place the client's
 
 ## Things that will confuse you once
 
-**Editing an `inside-*.sh` script takes effect immediately.** Those are mounted into the container at run time, not baked into the image, so there is no image to rebuild. Editing `Dockerfile.tauri` needs no action either: the next `pnpm linux` rebuilds the image on its own.
+**Editing an `inside-*.sh` script takes effect immediately.** Those are mounted into the container at run time, not baked into the image, so there is no image to rebuild. Editing `Dockerfile.tauri` needs no action either: the next `pnpm build` rebuilds the image on its own.
 
 **The amd64 build is the slow one.** Apple Silicon runs arm64 natively and emulates x86-64, so the same steps take several times longer the second time through. Nothing is wrong.
 
 **The engine's freeze stops the build if it fails**, and it does so before the Rust compile, on purpose: the engine is the cheaper half, and a wheel that will not import or an interpreter that will not start is worth finding in the first minute. The line above the failure says what the engine answered, or did not.
 
-**There is nothing to publish yet.** The packages keep Tauri's filenames, and no renaming, hashing, or upload step exists here. That arrives with the release pipeline.
+**`pnpm upload` sends nothing yet.** It runs every check the real one will, compares each sidecar against the package beside it, and then says what it would send, because ftorrent.com has no downloads directory for the client and no account that writes one. Standing those up is server-side work; when it lands, the command sends each package and then its sidecar, package first so a page never fetches a hash for a file still arriving.
 
 ## Building on Linux instead
 
@@ -87,14 +97,14 @@ You can clone this repository on Ubuntu or Raspberry Pi OS and build the client 
 pnpm install
 cd desktop
 pnpm engine
-pnpm build
+pnpm installer
 ```
 
 `pnpm engine` has to come first, for the reason the desktop guide gives: the Rust build carries the frozen engine as a resource and refuses to start without it.
 
 ## Verified
 
-We ran the whole pipeline on an Apple Silicon Mac in September 2026, starting from no images at all. The first run took thirteen minutes end to end: two toolchain images built from scratch, then both packages, then both checks. A run with the images already built skips most of that.
+We ran the whole pipeline on an Apple Silicon Mac in September 2026, starting from no images at all. The first run took thirteen minutes end to end: two toolchain images built from scratch, then both packages, then both checks. The next run, with the images cached, took under eight minutes, most of it the emulated amd64 compile.
 
 | Package | Size | Unpacked | Declares |
 |---|---|---|---|

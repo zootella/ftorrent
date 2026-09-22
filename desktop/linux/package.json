@@ -1,0 +1,16 @@
+{
+	"name": "linux",
+	"description": "ftorrent's Linux packages, built on a Mac through Docker",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"build": "node build.js build",
+		"hash": "node ../scripts.js hash --source=linux",
+		"upload": "node ../scripts.js upload --source=linux",
+
+		"build-images": "node build.js build-images",
+		"stage": "node build.js stage",
+		"check": "node build.js check"
+	}
+}

@@ -1,8 +1,9 @@
 [package]
 name = "ftorrent"
 version = "0.1.0"
-description = "Next generation desktop BitTorrent and WebTorrent client, built with Tauri"
-authors = ["zootella"]
+description = "Next-generation client for the decentralized web"
+# becomes the .deb's Maintainer field, public in every installed copy, so the project rather than a person; ftorrent has no mailbox yet, so the site stands in for one
+authors = ["ftorrent <https://ftorrent.com/>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
