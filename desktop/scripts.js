@@ -154,11 +154,27 @@ function hashOne(name, version, demanded) {
 /*
 Send what this machine staged: every package it makes, and the sidecar beside each.
 
-**This is a stub, on purpose, until the server has somewhere to put the files.** The design it will follow is settled: the installers go over scp as a second account with no shell, chrooted to a downloads directory and able to speak only the SFTP file protocol, so a compromise of a machine that builds an installer could overwrite the installers and their sidecars and nothing else; the package goes before its sidecar, every time, so a page never fetches a hash for a file still arriving; and the destination and the key come from a gitignored file at the desktop workspace, never from this one. Standing up that account and directory is server-side work with its own process, and it has not happened yet. Until it does, this command runs every check the real one will, says what it would send, and sends nothing.
+The installers go as an account with no shell at all: chrooted to the downloads directory and able to speak only the SFTP file protocol, so a compromise of a machine that builds an installer could overwrite the installers and their sidecars and nothing else. rsync is unavailable to such an account by construction, since rsync works by running a program on the far side; scp is what remains, and since OpenSSH 9.0 scp transfers over SFTP anyway. The site ships separately, as an account that administers the server, into a directory beside this one. The server answers one hostname from both, so an installer sits at the apex, like ftorrent.com/ftorrent.dmg, and a site deploy has no way to reach it.
+
+## Running this against your own server
+
+The destination comes from upload.hide.env in this workspace, which is gitignored, so a fresh clone will not have one and readServer will say which values are missing and stop. Write it yourself, five values and no logic:
+
+	DEPLOY_HOST=files.example.com
+	DEPLOY_PORT=22
+	DEPLOY_FILES_USER=upload
+	DEPLOY_FILES_PATH=/downloads/
+	DEPLOY_FILES_KEY=/home/you/.ssh/upload_ed25519
+
+DEPLOY_FILES_PATH is written as the chrooted account sees it: its own directory is its filesystem root, so give it the full path ls would show you elsewhere and scp fails with no such file or directory. Keep the trailing slash, which turns a missing directory into an error rather than a file written by that name. DEPLOY_FILES_KEY is a full path rather than one starting with ~, because scp is started from an argument array with no shell to expand the tilde; naming the key, with IdentitiesOnly beside it, means ssh offers that key and no other, not even one loaded in ssh-agent.
+
+The name is chosen so Vite never reads it. Vite loads .env, .env.local, and .env.[mode] from a workspace it builds, and copies any VITE_-prefixed value into the client bundle; this workspace is one Vite builds, and upload.hide.env is none of those names. Node does not read it on its own either: the package.json scripts pass --env-file-if-exists, which is why this runs as pnpm upload rather than node scripts.js. The tolerant spelling is deliberate, because plain --env-file makes node refuse to start when the file is absent, before readServer can say anything useful.
 */
 function upload() {
 	let {names, demanded} = chosenTargets()
 	let version = readVersion()
+
+	//gather and check everything before reading the destination, so a missing env file is never what hides a stale sidecar, and a half-finished release is never half uploaded
 	let sending = []
 	for (let name of names) {
 		let target = readTarget(name)
@@ -166,17 +182,53 @@ function upload() {
 		let sidecarName = target.publish + '.json'
 		if (!existsSync(join(stage, sidecarName))) {
 			if (demanded) throw new Error(`${name}: no sidecar staged; run pnpm hash on this machine first`)
-			say(`skipped  ${name.padEnd(10)} not staged`)
+			say(`skipped  ${name.padEnd(12)} not staged`)
 			continue
 		}
 		let sidecar = JSON.parse(readFileSync(join(stage, sidecarName), 'utf8'))
 		checkSidecar(name, stage, sidecar, sidecarName, version)
-		sending.push({file: sidecar.file, sidecarName})
+		sending.push({stage, file: sidecar.file, sidecarName})
 	}
 	if (!sending.length) throw new Error('nothing staged to upload; run pnpm hash first')
-	say('')
-	say('upload is a stub: ftorrent.com has no downloads directory for the desktop client yet. The checks above are the whole command until it does.')
-	for (let one of sending) say(`would send  ${one.file}  and then  ${one.sidecarName}`)
+
+	let server = readServer()
+	reportTransport()
+	for (let one of sending) { send(server, one.stage, one.file); send(server, one.stage, one.sidecarName) }//the package before its sidecar, every time, so a page never fetches a hash for a file still arriving
+	say(`sent     ${sending.length} package${sending.length == 1 ? '' : 's'} and ${sending.length} sidecar${sending.length == 1 ? '' : 's'}`)
+}
+
+function readServer() {//gather the destination from the environment, naming whatever the script did not fill
+	let required = ['DEPLOY_HOST', 'DEPLOY_PORT', 'DEPLOY_FILES_USER', 'DEPLOY_FILES_PATH', 'DEPLOY_FILES_KEY']
+	let missing = required.filter(name => !process.env[name])
+	if (missing.length) throw new Error(`upload.hide.env in the desktop workspace is missing ${missing.join(', ')}; see the comment above upload in scripts.js, and run this as pnpm upload rather than node, so the env file is passed`)
+	return {
+		host: process.env.DEPLOY_HOST,
+		port: process.env.DEPLOY_PORT,
+		user: process.env.DEPLOY_FILES_USER,//no shell, chrooted, SFTP only
+		path: process.env.DEPLOY_FILES_PATH,
+		key:  process.env.DEPLOY_FILES_KEY, //that account's own key, so an upload never offers an administrative one
+	}
+}
+
+function send(server, folder, name) {//copy one file into the downloads directory as the restricted account
+	//run from the staging directory and name the file bare: a Windows absolute path contains the colon scp uses to split host from path, and a bare filename makes that question stop existing
+	execFileSync('scp', [
+		'-P', server.port,//scp spells the port capital -P, unlike ssh and rsync
+		'-o', 'IdentitiesOnly=yes',//offer only the key named below; without this, keys loaded in ssh-agent are offered too, and can go first
+		'-i', server.key,
+		name,
+		`${server.user}@${server.host}:${server.path}`,
+	], {stdio: 'inherit', cwd: folder})
+}
+
+//say which scp is about to run. Windows carries two OpenSSH installs, and which one a script gets depends on the shell it was launched from; they judge a private key's permissions differently, so this is the first thing anyone will want to know when authentication fails. Diagnostic only, so it never throws; a missing scp is reported by the transfer
+function reportTransport() {
+	try {
+		let found = execFileSync(process.platform == 'win32' ? 'where.exe' : 'which', ['scp'], {encoding: 'utf8'}).trim().split('\n')[0]
+		say('using    ' + found.trim())
+	} catch (e) {
+		say('using    could not locate scp')
+	}
 }
 
 //catch a sidecar left from a previous release, which would otherwise publish a hash describing a file nobody can download

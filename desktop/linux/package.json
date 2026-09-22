@@ -7,7 +7,7 @@
 	"scripts": {
 		"build": "node build.js build",
 		"hash": "node ../scripts.js hash --source=linux",
-		"upload": "node ../scripts.js upload --source=linux",
+		"upload": "node --env-file-if-exists=../upload.hide.env ../scripts.js upload --source=linux",
 
 		"build-images": "node build.js build-images",
 		"build-distro": "node build.js build-distro",

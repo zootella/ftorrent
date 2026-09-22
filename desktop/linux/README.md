@@ -32,10 +32,10 @@ Then, from the repository root, `pnpm install` once; it installs every workspace
 cd desktop/linux
 pnpm build           # the four packages: images, staging, three builds, three checks
 pnpm hash            # stage them under their published names and write the sidecars
-pnpm upload          # send them to ftorrent.com; a stub until the server has a downloads directory
+pnpm upload          # send each package and then its sidecar to ftorrent.com
 ```
 
-That is the whole of it, and it is the same three words the desktop workspace uses for its own installer. Three steps rather than one, because each leaves behind a different kind of thing: `build` writes packages, which are gitignored and disposable; `hash` writes sidecars, which are committed; `upload` will put files on a server, the one step you cannot take back, which is why it stays separate.
+That is the whole of it, and it is the same three words the desktop workspace uses for its own installer. Three steps rather than one, because each leaves behind a different kind of thing: `build` writes packages, which are gitignored and disposable; `hash` writes sidecars, which are committed; `upload` puts files on a server, the one step you cannot take back, which is why it stays separate.
 
 Five commands sit underneath so `build` is factored rather than one long function: `build-images` for the three toolchain images alone; `build-distro` for the two `.deb` files and the `.rpm`, out of the two Tauri runs; `build-flatpak` for the Flatpak, which needs the x86-64 `.deb` to exist first; `stage` for the whitelist copy a container is handed; and `check` for the bare-image tests on packages already built. You would rarely type one, and `build-distro` then `build-flatpak` is what `build` does between its images and its checks.
 
@@ -114,7 +114,7 @@ A Flatpak is less another package format than a different bargain: the applicati
 
 **The engine's freeze stops the build if it fails**, and it does so before the Rust compile, on purpose: the engine is the cheaper half, and a wheel that will not import or an interpreter that will not start is worth finding in the first minute. The line above the failure says what the engine answered, or did not.
 
-**`pnpm upload` sends nothing yet.** It runs every check the real one will, compares each sidecar against the package beside it, and then says what it would send, because ftorrent.com has no downloads directory for the client and no account that writes one. Standing those up is server-side work; when it lands, the command sends each package and then its sidecar, package first so a page never fetches a hash for a file still arriving.
+**`pnpm upload` checks before it sends.** It compares each sidecar against the package beside it, and refuses the whole upload if any sidecar is stale, before it reads the destination; then it sends each package and then its sidecar, package first so a page never fetches a hash for a file still arriving. The destination and key come from `upload.hide.env` in the desktop workspace, which is gitignored; the comment above `upload` in `scripts.js` lists its five values, for a reader pointing this at a server of their own.
 
 ## Building on Linux instead
 

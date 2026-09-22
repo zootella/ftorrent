@@ -55,7 +55,7 @@ pnpm compile      build the release binary, and stop there
 pnpm installer    build the installer, all the way through the app to the dmg on a Mac or the exe on Windows
 pnpm reveal       open the file manager on that installer, to install it as a person would
 pnpm hash         stage what is built under its published name and write its sidecar, building nothing
-pnpm upload       send what is staged to ftorrent.com; a stub that runs every check and sends nothing, until the server has a downloads directory
+pnpm upload       check what is staged against its sidecar, then send the package and its sidecar to ftorrent.com
 pnpm icons        regenerate every platform's icons from the SVG sources
 ```
 
