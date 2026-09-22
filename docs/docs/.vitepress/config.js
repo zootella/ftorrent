@@ -27,7 +27,7 @@ export default defineConfig({
 			{
 				text: 'Essays and Guides',
 				items: [
-					{ text: 'Centralized Servers', link: '/centralized-servers' },
+					{ text: 'Names and Numbers', link: '/names-and-numbers' },
 					{ text: 'Desktop Architecture', link: '/desktop-architecture' },
 					{ text: 'How Can Two Peers Connect?', link: '/how-peers-connect' },
 					{ text: 'libtorrent Provenance', link: '/libtorrent-provenance' },
