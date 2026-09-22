@@ -12,7 +12,7 @@ use tauri::{command, AppHandle, Manager, State};
 /*
 The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches the process, and the page cannot start one at all: there is no shell plugin registered, so the only way a process is spawned is the Rust in this file, from a path this file computes.
 
-The conversation is newline-delimited JSON on the engine's own pipes. Rust writes one command per line to its stdin and reads one event per line from its stdout, and pipes are the reason for that choice over a local socket: a pipe between a parent and its child is reachable by no other process on the machine. Today the whole protocol is one exchange, init in and ready out, which proves both directions work. The engine's stderr is kept in memory, the last hundred lines, so that a failure to start has something to show.
+The conversation is newline-delimited JSON on the engine's own pipes. Rust writes one command per line to its stdin and reads one event per line from its stdout, and pipes are the reason for that choice over a local socket: a pipe between a parent and its child is reachable by no other process on the machine. Today the whole protocol is one exchange, init in and ready out, which proves both directions work; init carries the app's version, which is how the engine learns the one number it cannot read for itself. The engine's stderr is kept in memory, the last hundred lines, so that a failure to start has something to show.
 
 Stopping is the part that has to be right. A torrent client that leaves an engine running after its window closes is broken, so engine_stop runs from the two run events every quit path reaches, asks the engine to quit and closes its stdin, gives it a moment, and kills it if it is still there. Closing stdin is a second, independent signal: the engine exits when its input ends, so even an engine that never sees the quit line goes when the app does.
 
@@ -84,7 +84,8 @@ pub fn engine_start(app: &AppHandle) {
 	let stdout = child.stdout.take().expect("stdout was piped");
 	let stderr = child.stderr.take().expect("stderr was piped");
 	let pid = child.id();
-	if let Err(e) = stdin.write_all(b"{\"command\":\"init\"}\n") { lock(&engine).status.trouble = format!("could not write to the engine: {e}") }//recorded and carried on: the reader below will see the engine's side of whatever went wrong
+	let init = format!("{{\"command\":\"init\",\"version\":{}}}\n", serde_json::to_string(&app.package_info().version.to_string()).unwrap_or_else(|_| "\"\"".to_string()));//the app's version, read from tauri.conf.json at compile time, so the engine can name the client on the wire without a second place the number is written
+	if let Err(e) = stdin.write_all(init.as_bytes()) { lock(&engine).status.trouble = format!("could not write to the engine: {e}") }//recorded and carried on: the reader below will see the engine's side of whatever went wrong
 	{
 		let mut inner = lock(&engine);
 		inner.child = Some(child);
