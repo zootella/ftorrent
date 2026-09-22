@@ -90,3 +90,140 @@ Record the output. Together with the DLL question in step 2, it says whether Win
 ## Your report
 
 Append it below this line, under a heading `## Reply from the Windows session`, in your own words, with these parts: the machine (Windows version, Node, pnpm, Rust, uv, and whether rustup downloaded a toolchain); each step above with what happened and what was recorded; the Defender findings on their own; the sizes; anything you changed in code, precisely; and any question only the Mac can answer. Then stop, and tell the user the letter is ready to commit.
+
+## Reply from the Windows session
+
+Written 2026-09-22 on the Windows machine, the same day the letter above was revised. Every step ran, and the short version is that the engine freezes, runs, installs, and uninstalls on Windows as the Mac intended, with a Windows Defender that stayed silent throughout. The findings the Mac could not predict sit at the end of each step and are gathered again under their own headings. The user drove the installer, the setup flow, and the uninstaller by hand and read the screens; the session checked disk, registry, and processes after each.
+
+### The machine
+
+Windows 10 Pro 22H2, build 19045. Node 22.21.1 and pnpm 10.28.2 through corepack. rustup 1.29.0 with Rust 1.98.0 already present as a named toolchain beside stable, so nothing was downloaded when Cargo first read `rust-toolchain.toml`; `rustup show active-toolchain` from `src-tauri/` reports 1.98.0 overridden by that file. Visual Studio's MSVC tools, Tauri's cached NSIS, and WebView2 runtime 153 were all in place from the August build. uv was not on the machine; the user ran Astral's installer for 0.12.3 from the letter, which put `uv.exe`, `uvx.exe`, and `uvw.exe` in the user's `.local\bin`, a folder already on the path, so no new terminal was needed. A Python 2.7 sits on the path from some earlier tool; uv never touched it. Windows Defender is on with real-time protection, signatures from the night before.
+
+### Step 1, pull and install
+
+The tree matched origin. `pnpm install --frozen-lockfile` finished in 24 seconds with pnpm's usual note that a newer pnpm exists and its usual list of ignored build scripts. `git status` came back empty; all three lockfiles untouched, then and at the end.
+
+### Step 2, the freeze
+
+`pnpm engine` ran `uv sync --frozen` and PyInstaller to completion. uv's output, the part before PyInstaller's log:
+
+```
+Downloading cpython-3.13.15-windows-x86_64-none (download) (20.9MiB)
+ Downloaded cpython-3.13.15-windows-x86_64-none (download)
+Using CPython 3.13.15
+Creating virtual environment at: .venv
+Downloading pyinstaller (1.4MiB)
+Downloading libtorrent (4.8MiB)
+ Downloaded libtorrent
+ Downloaded pyinstaller
+Prepared 8 packages in 1.58s
+Installed 8 packages in 982ms
+ + altgraph==0.17.5
+ + libtorrent==2.1.1
+ + packaging==26.3
+ + pefile==2024.8.26
+ + pyinstaller==6.22.3
+ + pyinstaller-hooks-contrib==2026.7
+ + pywin32-ctypes==0.2.3
+ + setuptools==84.0.0
+```
+
+PyInstaller 6.22.3 with contrib hooks 2026.7 took about ten seconds and ended with `Build complete! The results are available in: C:\Documents\code\ftorrent\desktop\engine\dist`. Its warnings file lists only the expected absences on Windows, `pwd`, `grp`, `fcntl`, `posix`, and the like, plus `typing_extensions` imported by libtorrent's stub, none of which the engine needs.
+
+The folder `engine/dist/ftorrent-engine/` is 58 files, 34,823,426 bytes, 33.2 MiB. Top level: `ftorrent-engine.exe` at 1,825,124 bytes and `_internal`. Inside `_internal`: the `libtorrent` folder; `python313.dll` at 6.2 MB; `base_library.zip`; `libcrypto-3-x64.dll` at 8.0 MB; `libffi-8.dll`; the C++ runtime `MSVCP140.dll`, `VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`, and `ucrtbase.dll`; nine interpreter extension modules, `_bz2`, `_ctypes`, `_decimal`, `_hashlib`, `_lzma`, `_socket`, `_wmi`, `select`, and `unicodedata`; and thirty-nine `api-ms-win-core-*` and `api-ms-win-crt-*` forwarding libraries of about 23 KB each. Inside `_internal\libtorrent`: one file, `__init__.cp313-win_amd64.pyd`, 13,163,008 bytes.
+
+The two questions asked. There is no `libssl` anywhere in the folder. There is one `libcrypto`, the 8.0 MB `libcrypto-3-x64.dll` above, and it is not libtorrent's. Its SHA-256 matches the copy in uv's interpreter under `AppData\Roaming\uv\python\...\DLLs`, its version string reads OpenSSL 3.5.7 from June 2026, and pefile shows `_hashlib.pyd` importing it while the libtorrent module does not; the interpreter ships `libssl-3-x64.dll` beside it as well, and PyInstaller left that one out because nothing imports `_ssl`. The libtorrent `.pyd` imports only Windows system libraries, the C++ runtime, `python313.dll`, and `bcrypt.dll`.
+
+### Step 3, the frozen engine by hand
+
+The Git Bash pipe printed one line and exited 0 with nothing on stderr. Compared with `cmp` against the expected line in the letter: identical, byte for byte, 1,115 bytes with the trailing newline.
+
+### Step 4, which OpenSSL the Windows wheel carries
+
+```
+.venv/Lib/site-packages/libtorrent\__init__.cp313-win_amd64.pyd
+[b'OpenSSL 3.6.1 27 Jan 2026']
+```
+
+So Windows compiles OpenSSL into the module like Linux, at 3.6.1 from January 2026, between the Linux wheels' 3.5.0 and the macOS wheel's 3.6.3. Together with step 2: the Windows wheel carries no OpenSSL library of its own, and the one OpenSSL DLL in the folder is the interpreter's, for hashlib.
+
+### Step 5, cargo check
+
+Passed in 1 minute 18 seconds from `src-tauri/`, compiling tauri-build and friends fresh for the new toolchain. `target/debug/ftorrent-engine/` appeared with `ftorrent-engine.exe` and `_internal` holding its 57 entries.
+
+### Step 6, development mode
+
+`pnpm local` built in 22 seconds and opened the window. Vite noted it was re-optimizing dependencies because the lockfile changed, which is the nested Linux workspace. The engine line on the main page, read by the user:
+
+```
+engine: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, pid 7588
+```
+
+No console window flashed or stayed open; the user ran the app a second time from their own terminal to watch the moment the window appeared, and saw nothing. From PowerShell while the app was up, `Get-Process ftorrent-engine` showed one process at `target\debug\ftorrent-engine\ftorrent-engine.exe`, its parent the debug `ftorrent.exe`, its command line the bare executable path with the `\\?\` prefix Rust's canonicalization adds, no main window handle, and no console host process with a window anywhere on the machine. Task Manager's Details tab listed `ftorrent-engine.exe` and `ftorrent.exe` side by side, the engine wearing PyInstaller's stock Python icon, which is expected since the spec sets none. After closing the window, `Get-Process ftorrent-engine` returned nothing, and so did `Get-Process ftorrent`. Done three times in all; the same each time.
+
+### Step 7, the installer
+
+`pnpm installer` took about seventy seconds and produced one file, `ftorrent_0.1.0_x64-setup.exe`, 12,281,220 bytes, an NSIS 3 Unicode installer; 7-Zip lists `ftorrent.exe` and the whole `ftorrent-engine\` tree inside it. `pnpm reveal` opened Explorer on it. `pnpm hash` staged it as `desktop/release/ftorrent.exe` and wrote the sidecar, the first record of a Windows build:
+
+```json
+{
+	"file": "ftorrent.exe",
+	"version": "0.1.0",
+	"arch": "x64",
+	"bytes": 12281220,
+	"sha256": "abe368650b46b8b2fc7a10a052a26e54d720da4c0b987bbb5423a403326b5b64",
+	"date": "2026-09-22"
+}
+```
+
+The user double-clicked the installer and clicked through with every default, including run at the end. No SmartScreen screen appeared, and no UAC prompt. The SmartScreen part has an explanation, under its own heading below. Installed: `%LOCALAPPDATA%\ftorrent\` holds `ftorrent.exe` at 9,491,968 bytes, `uninstall.exe`, and `ftorrent-engine\` with `ftorrent-engine.exe` and `_internal` beside it, the engine folder byte-for-byte the freeze's 58 files, 60 files and 42.3 MiB in all. The uninstall entry sits in `HKCU`, with nothing in `HKLM`, and Add or Remove Programs shows one ftorrent at 42 MB. The app launched from the installer showed the engine line with a new pid, started the installed engine from the installed path as its child, with no console window, and closing the window ended both.
+
+One difference from the letter's expectation: the August install under the old identifier did not show as a second app. NSIS keys the uninstall entry by product name and installs to the same `%LOCALAPPDATA%\ftorrent`, so the new build replaced the old one in place. What the old identifier did leave is its app-data folder, `%LOCALAPPDATA%\com.ftorrent`, 43 MB of WebView2 cache dated August; the new identifier's folder `com.ftorrent.ftorrent` appeared beside it the moment the app first ran today.
+
+### Step 8, uninstall
+
+The user ran the uninstaller from Add or Remove Programs, which also lists once in the Control Panel's older Programs and Features, both reading the same registry key. It offered a checkbox to delete the application's data; the user left it unchecked and clicked through with the defaults. Afterward `%LOCALAPPDATA%\ftorrent\` is gone entirely, the engine folder with it, and so are the uninstall entry and the Start menu shortcut. Two things remain, and Tauri's installer script explains both: its uninstall section deletes the registry key `HKCU\Software\ftorrent\ftorrent`, which holds the install path as its default value and `Installer Language` as 1033, and the folders `%APPDATA%\com.ftorrent.ftorrent` and `%LOCALAPPDATA%\com.ftorrent.ftorrent`, only inside the branch that runs when that checkbox is ticked. With the default unchecked, the key and the 47 MB WebView2 folder stay, so a reinstall lands in the same folder with the same language. That is by Tauri's design, read from the `installer.nsi` template at tauri-cli 2.11.4, and it is the first concrete thing that stands between the client and the plan's "uninstall leaves nothing behind". A question for the Mac is below.
+
+### Step 9, Windows Defender
+
+Baseline before any step: `Get-MpThreatDetection` and `Get-MpThreat` both empty, and no detection events in the Defender operational log for the previous week. Checked again after the freeze, the development run, the installer build and install, and the uninstall: empty every time, no detection, no quarantine, no protection-history event. Nothing was flagged at any step. Stated plainly, since the letter asked: the folder-shaped freeze, the unsigned installer, and the unsigned app all passed a Windows 10 machine with real-time protection on without a word from Defender.
+
+### SmartScreen
+
+No SmartScreen screen appeared, and the reason is worth more than the result. SmartScreen inspects a file only when it carries the mark of the web, the `Zone.Identifier` alternate data stream a browser writes on a download. The installer built here has no such stream, so Windows never asked SmartScreen about it. Today's clean run therefore says nothing about what a reader who downloads `ftorrent.exe` from ftorrent.com will see. To find out, the session copied the installer into a scratch folder and stamped it with the stream a browser would write, `ZoneId=3` with ftorrent.com as the referrer, and the user double-clicked that copy.
+
+The result: the blue full-screen dialog headed "Windows protected your PC", offering only "Don't run" until the user clicked "More info", which revealed "Run anyway"; that started the installer, which the user then cancelled at its first page. So a reader who downloads the installer from ftorrent.com should expect that screen, and can get through it in two clicks. It comes from the file being unsigned and unknown to SmartScreen's reputation service, not from anything found inside it, and it will keep appearing until the installer is signed or, less predictably, until enough people have run it. Nothing in Windows refuses the install; a stricter policy some organizations set is the only case that would.
+
+That mechanism is worth keeping separate from the other one. SmartScreen is a reputation check on a downloaded file, and its worst case is a two-click speed bump. Defender's heuristic against a program that unpacks executables into a temporary folder and runs them, the shape a single-file PyInstaller build has, is a different thing: its worst case is quarantine, which deletes the engine from under the app. The folder-shaped freeze exists to avoid that, and step 9 above is the evidence that it does, on this machine, on this day's signatures.
+
+### Step 10, the tree
+
+`git status` at the end of the steps: this file modified and `desktop/release/ftorrent.exe.json` new. No lockfile changed. Then the edits below were made, and they are the rest of the tree.
+
+### What changed in the repository
+
+No code. Four public documents carried a sentence waiting on the Windows build, and the Windows session filled each in place rather than leaving the Mac to transcribe from this report; the user asked for it that way, since both sessions hold the same hand on the repository.
+
+- `desktop/README.md`, the Verified section: a paragraph on the Windows freeze, run, install, and uninstall, replacing "not yet exercised".
+- `docs/docs/libtorrent-provenance.md`: the Windows OpenSSL finding in the "What is inside the wheel" list, the three-platform span in the paragraph after it, a "Checked 2026-Sep-22 on Windows" block replacing "not yet built", and a log entry.
+- `docs/docs/desktop-architecture.md`: the intro's measurement note, and the Windows install listing with `uninstall.exe`, `libcrypto-3-x64.dll`, and `base_library.zip` added, followed by a paragraph saying whose the `libcrypto` is and what the rest of `_internal` holds on Windows.
+- `docs/docs/desktop-client-planning.md`: the libtorrent story's last sentence and the engine smoke test now record Windows.
+
+### Sizes, in one place
+
+| What | Size |
+| --- | --- |
+| Frozen engine folder, 58 files | 34,823,426 bytes, 33.2 MiB |
+| libtorrent module, `.pyd` | 13,163,008 bytes |
+| `ftorrent-engine.exe` launcher | 1,825,124 bytes |
+| `python313.dll` | 6,153,216 bytes |
+| `libcrypto-3-x64.dll`, the interpreter's | 7,981,568 bytes |
+| Release `ftorrent.exe` | 9,491,968 bytes |
+| NSIS installer | 12,281,220 bytes |
+| Installed, 60 files | 44,395,326 bytes, 42.3 MiB |
+| WebView2 data folder after one run | 47,383,471 bytes |
+
+### Questions only the Mac can answer
+
+- The uninstaller keeps `HKCU\Software\ftorrent\ftorrent` and the WebView2 folder unless the user ticks the delete-app-data box. Tauri's template offers a post-uninstall hook macro, `NSIS_HOOK_POSTUNINSTALL`, which could remove the registry key unconditionally while leaving the user's data to the checkbox. Is that the shape the plan wants, or should the plan's "leaves nothing behind" bend to Tauri's convention, which keeps the install path so a reinstall lands where the last one did?
+- The old identifier's app-data folder, `%LOCALAPPDATA%\com.ftorrent`, is an orphan on this machine only, from the August build. The user will delete it by hand. Nothing in the repository refers to it; noted so the Mac knows it exists and why.

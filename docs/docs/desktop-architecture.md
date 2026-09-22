@@ -7,7 +7,7 @@ description: How the ftorrent desktop client works under the hood — the proces
 
 The ftorrent desktop client is a [Tauri](https://tauri.app/) application: a Vue page in the operating system's own web view, a Rust core beneath it, and beside them a second process, the engine, that holds [libtorrent](https://www.libtorrent.org/). This document opens the hood. It shows the client three ways, as the processes it runs as, as the files it is made of, and as the channel its parts talk over, and it explains each part plainly as it comes up. A last section steps back and says how the parts relate and why they are shaped the way they are.
 
-Everything here is measured rather than reasoned from the design, on an Apple Silicon Mac running macOS 15 in September 2026, with the Linux layout taken from the built package. The client is early: the engine starts, reports itself, and stops, and creates no libtorrent session yet. What this document describes is the structure that the torrent work will ride on.
+Everything here is measured rather than reasoned from the design, on an Apple Silicon Mac running macOS 15 in September 2026, with the Linux layout taken from the built package and the Windows layout from an install on Windows 10 the following day. The client is early: the engine starts, reports itself, and stops, and creates no libtorrent session yet. What this document describes is the structure that the torrent work will ride on.
 
 ## The processes
 
@@ -131,14 +131,19 @@ On Linux, installed from the `.deb`, the app goes where programs go and the engi
 /usr/lib/ftorrent/ftorrent-engine/_internal/libtorrent/__init__.cpython-313-x86_64-linux-gnu.so
 ```
 
-There are no OpenSSL files on Linux because the Linux build of libtorrent compiles OpenSSL into the module. On Windows, installed, the layout is expected to sit under the user's own profile, with the engine folder beside the app's executable; that layout is pinned in the lockfile and not yet built, and this page will say what was found.
+There are no OpenSSL files on Linux because the Linux build of libtorrent compiles OpenSSL into the module. On Windows, installed, everything sits under the user's own profile, the engine folder beside the app's executable, measured from an install on Windows 10 in September 2026:
 
 ```
 C:\Users\username\AppData\Local\ftorrent\ftorrent.exe                                the app
+C:\Users\username\AppData\Local\ftorrent\uninstall.exe                               the uninstaller
 C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\ftorrent-engine.exe         the launcher
 C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\python313.dll
+C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\libcrypto-3-x64.dll
+C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\base_library.zip
 C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\libtorrent\__init__.cp313-win_amd64.pyd
 ```
+
+The Windows build of libtorrent compiles OpenSSL in as well, so the `libcrypto` library there is not libtorrent's. It belongs to the interpreter, which needs it for the standard library's hashlib module, and PyInstaller collects it for that reason. The rest of `_internal` on Windows is the interpreter's extension modules, the C++ runtime, and some forty small Windows API forwarding libraries the interpreter ships, which together bring the folder to 33 MB, the smallest of the three platforms because the module is 13 MB there.
 
 None of these are files the engine writes. It writes nothing yet. The settings file, libtorrent's saved state, and the per-download session folders arrive with later work, in the per-user locations the planning document lays out.
 
