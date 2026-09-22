@@ -11,7 +11,7 @@ The publishing pipeline for the desktop client, in one file, reached by a verb: 
 
 **This file publishes; it does not build.** The desktop workspace builds with tauri and the nested linux workspace builds in containers, and both then call in here to stage, hash, and send, which is why hashing and uploading exist once rather than once per workspace. linux/build.js is the other half of that split and knows nothing about publishing.
 
-Two machines publish ftorrent. Windows sends the exe. The Mac sends the dmg it built natively and the two Linux packages it built in Docker. So a command means the same thing everywhere while doing different work underneath: pnpm hash is one package in desktop on Windows and two in linux on the Mac, and nobody has to remember which computer they are sitting at. What differs is passed as --source by the workspace that asked.
+Two machines publish ftorrent. Windows sends the exe. The Mac sends the dmg it built natively and the four Linux packages it built in Docker. So a command means the same thing everywhere while doing different work underneath: pnpm hash is one package in desktop on Windows and four in linux on the Mac, and nobody has to remember which computer they are sitting at. What differs is passed as --source by the workspace that asked.
 
 It lives in the desktop folder rather than at the repository root because the root belongs to six workspaces and this file is about one product; the nested linux workspace reaches it as ../scripts.js. Every path is built from this file's own location, never from the working directory, because both workspaces call it from their own folders. It imports node builtins and nothing else.
 */
@@ -21,18 +21,20 @@ Every artifact ftorrent publishes, and the one place any of it is said.
 
 source says where the built file is found: 'bundle' is tauri's own output under this workspace, 'linux' is what the containers left in linux/release. publish is the name the file takes on the server, and its sidecar is that name plus .json.
 
-The rule for a published name: **every Linux package states its architecture, and none carries a version.** macOS and Windows ship one architecture each by decision, so ftorrent.dmg and ftorrent.exe need no token. Linux ships two, so every name there says which machine it is for; giving the arm64 package the bare name would read as the ordinary choice while being the rarer one. A versioned filename would pin whatever version was current the day a link was shared, so a stable name is overwritten in place and every link ever shared keeps handing people the current build. Which version a download is belongs on the page, which reads it from the sidecar.
+The rule for a published name: **every Linux package states its architecture, and none carries a version.** macOS and Windows ship one architecture each by decision, so ftorrent.dmg and ftorrent.exe need no token. Linux ships two architectures and three formats, so every name there says which machine it is for, including the two formats with only one build today; giving the arm64 package the bare name would read as the ordinary choice while being the rarer one, and keeping every name explicit means none has to change when an aarch64 Flatpak or an ARM rpm turns up. The architecture token is each ecosystem's own word, amd64 for Debian and x86_64 for RPM and Flatpak, because a Debian user and a Fedora user each expect their own. A versioned filename would pin whatever version was current the day a link was shared, so a stable name is overwritten in place and every link ever shared keeps handing people the current build. Which version a download is belongs on the page, which reads it from the sidecar.
 */
 const targets = {
 	'dmg':       {source: 'bundle', folder: 'dmg',  suffix: '.dmg',       publish: 'ftorrent.dmg'},
 	'exe':       {source: 'bundle', folder: 'nsis', suffix: '-setup.exe', publish: 'ftorrent.exe'},
 	'deb-arm64': {source: 'linux',  match: /_(arm64)\.deb$/, publish: 'ftorrent.arm64.deb'},
 	'deb-x64':   {source: 'linux',  match: /_(amd64)\.deb$/, publish: 'ftorrent.amd64.deb'},
+	'rpm-x64':   {source: 'linux',  match: /\.(x86_64)\.rpm$/, publish: 'ftorrent.x86_64.rpm'},
+	'flatpak-x64': {source: 'linux', match: /_(x86_64)\.flatpak$/, publish: 'ftorrent.x86_64.flatpak'},
 }
 
 //which targets this computer stages and sends. Linux is deliberately absent: a Linux box can clone this repository and build the client for itself, and that is development and works, but a published package comes from the Mac, where both are built together against one base image and one lockfile
 const machines = {
-	darwin: ['dmg', 'deb-arm64', 'deb-x64'],
+	darwin: ['dmg', 'deb-arm64', 'deb-x64', 'rpm-x64', 'flatpak-x64'],
 	win32:  ['exe'],
 }
 
@@ -102,7 +104,7 @@ function findBuilt(target, version) {
 		if (!names.length) return false
 		return {folder, file: names[0], arch: names[0].slice(prefix.length, names[0].length - target.suffix.length)}
 	}
-	//a container wrote this one, under the name tauri chose. hash stages into the same folder, so after one run ftorrent.arm64.deb sits beside ftorrent_0.1.0_arm64.deb; skipping every published name is what makes hash repeatable
+	//a container wrote this one, under the name tauri or the flatpak script chose. The regex does two jobs: it finds the file, and its group is where the architecture comes from, so a sidecar describes the file that exists. hash stages into the same folder, so after one run ftorrent.arm64.deb sits beside ftorrent_0.1.0_arm64.deb and ftorrent.x86_64.rpm matches the same pattern ftorrent-0.1.0-1.x86_64.rpm does; skipping every published name is what makes hash repeatable
 	let folder = staged.linux
 	if (!existsSync(folder)) return false
 	let published = new Set(Object.values(targets).map(t => t.publish))

@@ -119,7 +119,7 @@ On macOS, installed, everything is inside the `.app`, which is a folder the Find
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libtorrent.dylibs/libcrypto.3.dylib
 ```
 
-On Linux, installed from the `.deb`, the app goes where programs go and the engine where a program's private files go:
+On Linux, installed from the `.deb` or the `.rpm`, the app goes where programs go and the engine where a program's private files go:
 
 ```
 /usr/bin/ftorrent                                                      the app
@@ -131,7 +131,7 @@ On Linux, installed from the `.deb`, the app goes where programs go and the engi
 /usr/lib/ftorrent/ftorrent-engine/_internal/libtorrent/__init__.cpython-313-x86_64-linux-gnu.so
 ```
 
-There are no OpenSSL files on Linux because the Linux build of libtorrent compiles OpenSSL into the module. On Windows, installed, everything sits under the user's own profile, the engine folder beside the app's executable, measured from an install on Windows 10 in September 2026:
+The Flatpak carries the same layout under `/app` instead of `/usr`, and the same rule finds it: the app looks for `lib/ftorrent` beside its own `bin`, wherever that is. There are no OpenSSL files on Linux because the Linux build of libtorrent compiles OpenSSL into the module. On Windows, installed, everything sits under the user's own profile, the engine folder beside the app's executable, measured from an install on Windows 10 in September 2026:
 
 ```
 C:\Users\username\AppData\Local\ftorrent\ftorrent.exe                                the app

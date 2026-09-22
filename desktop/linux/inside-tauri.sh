@@ -1,10 +1,10 @@
 #!/bin/sh
-# What one build container does, start to finish: install the pinned dependencies, freeze the engine, build the app, bundle the .deb.
+# What one build container does, start to finish: install the pinned dependencies, freeze the engine, build the app, bundle the packages it is asked for. It is handed a bundle list, deb or deb,rpm, and builds exactly that and nothing else.
 #
 # /src is the whitelist copy, mounted read only so a container can never write into the working tree on the Mac. /out is linux/release, the only writable thing here. Everything in between happens in /work, which dies with the container.
 set -eu
 
-bundles="${1:?say which bundles to make, like deb}"
+bundles="${1:?say which bundles to make, like deb or deb,rpm}"
 
 echo "==> copying source out of the read-only mount"
 rm -rf /work
@@ -36,7 +36,7 @@ pnpm tauri build --bundles "${bundles}"
 echo "==> collecting packages"
 mkdir -p /out
 found=0
-for f in $(find src-tauri/target/release/bundle -type f -name '*.deb' | sort); do
+for f in $(find src-tauri/target/release/bundle -type f \( -name '*.deb' -o -name '*.rpm' \) | sort); do
 	cp -v "$f" /out/
 	found=$((found + 1))
 done

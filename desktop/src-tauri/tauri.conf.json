@@ -49,6 +49,10 @@
 		"resources": {
 			"../engine/dist/ftorrent-engine": "ftorrent-engine"
 		},
+		"linux": {
+			"deb": {"desktopTemplate": "ftorrent.desktop.hbs"},
+			"rpm": {"desktopTemplate": "ftorrent.desktop.hbs"}
+		},
 		"windows": {
 			"nsis": {
 				"installMode": "currentUser"

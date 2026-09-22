@@ -85,6 +85,19 @@ PyInstaller, uploaded 2026-09-12; the macOS wheel is one universal file:
 
 The macOS wheel is tagged for macOS 15, which is the floor the client already sets; a wheel for macOS 14 exists on PyPI and is not the one a build on macOS 15 selects.
 
+### Which wheel is in which package
+
+Four wheels, six packages. Each package carries one frozen engine, and the engine holds one wheel, so the map is short. The x86-64 Linux wheel serves three packages: the rpm comes out of the same container run as the amd64 deb and holds the same frozen folder, and the Flatpak copies that folder out of the deb whole.
+
+| Package | Wheel inside it |
+|---|---|
+| `ftorrent.dmg` | `macosx_15_0_arm64` |
+| `ftorrent.exe` | `win_amd64` |
+| `ftorrent.amd64.deb` | `manylinux x86_64` |
+| `ftorrent.x86_64.rpm` | `manylinux x86_64`, the same frozen folder as the amd64 deb |
+| `ftorrent.x86_64.flatpak` | `manylinux x86_64`, the amd64 deb's folder copied whole |
+| `ftorrent.arm64.deb` | `manylinux aarch64` |
+
 ## What is inside the wheel
 
 We opened the macOS wheel rather than taking its contents on faith.
@@ -112,6 +125,7 @@ Checked the same day in Docker containers on the same Mac, Debian 12 for both x8
 - uv fetched the two Linux wheels and the two Linux interpreters by the hashes above, and PyInstaller froze the engine on each architecture.
 - Unpacked from the finished `.deb` onto a bare `debian:12-slim` with no toolchain, the engine answered its init line with libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen, on both architectures. The frozen folder needs only glibc and the base libraries, as the wheel and the interpreter promise.
 - The Linux module is 26 MB, larger than the macOS one in part because OpenSSL is compiled in, and the only shared libraries beside it are the interpreter's own and the C++ runtime.
+- The rpm and the Flatpak, added the next day, carry the x86_64 engine unchanged: the rpm's was run on a bare Fedora 40 and answered the same ready line, and the Flatpak's was run from the laid-out tree before the bundle was exported.
 
 Checked 2026-Sep-22 on a Windows 10 22H2 machine, against the Windows wheel and interpreter named above.
 
@@ -142,3 +156,4 @@ shasum -a 256 libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 - **2026-Sep-21.** First record. libtorrent 2.1.1 from the maintainers' wheels, Python 3.13.15 from python-build-standalone 20260807, PyInstaller 6.22.3. Verified and frozen on macOS; Windows and Linux pinned, not yet built.
 - **2026-Sep-21, later the same day.** Linux, both architectures, frozen in Docker containers on the Mac and checked on a bare Debian 12. The Linux wheels compile OpenSSL in, at 3.5.0 from April 2025, older than the macOS wheel's 3.6.3. Windows still pending.
 - **2026-Sep-22.** Windows, frozen and installed on a Windows 10 22H2 machine. The Windows wheel compiles OpenSSL in, at 3.6.1 from January 2026. The frozen engine answered the same ready line as the Mac's, ran as the installed app's child, and drew no Windows Defender detection at any step. All three platforms are now built.
+- **2026-Sep-22, later the same day.** The Linux pipeline grew an rpm and a Flatpak. Neither adds a wheel: both carry the x86_64 engine the amd64 deb carries. Six packages, four wheels.
