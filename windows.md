@@ -198,7 +198,7 @@ That mechanism is worth keeping separate from the other one. SmartScreen is a re
 
 ### Step 10, the tree
 
-`git status` at the end of the steps: this file modified and `desktop/release/ftorrent.exe.json` new. No lockfile changed. Then the edits below were made, and they are the rest of the tree.
+`git status` at the end of the steps: `desktop/release/ftorrent.exe.json` new, and nothing else. No lockfile changed. This report and the edits below were written afterward, and they are the rest of the tree.
 
 ### What changed in the repository
 
