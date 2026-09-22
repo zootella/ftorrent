@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Flathub is contacted here for one thing only: the runtime to build against. That is fetching a dependency, the way cargo fetches from crates.io, and not an account, a submission, or a listing; publishing to Flathub is a separate decision this pipeline does not make.
 #
-# This version needs watching, in a way the other pins in this folder do not. The runtime supplies WebKitGTK, the engine that draws ftorrent's window, so an end-of-life runtime means shipping an unpatched browser inside a sandbox whose whole purpose is containment. GNOME 49 carries libwebkit2gtk-4.1, which Tauri 2 links; newer runtimes will eventually drop it for webkitgtk-6.0, and that drop is a Tauri migration rather than a number to bump here.
+# This version needs watching, in a way the other pins in this folder do not. The runtime supplies WebKitGTK, the web view that draws ftorrent's window, so an end-of-life runtime means shipping an unpatched browser inside a sandbox whose whole purpose is containment. GNOME 49 carries libwebkit2gtk-4.1, which Tauri 2 links; newer runtimes will eventually drop it for webkitgtk-6.0, and that drop is a Tauri migration rather than a number to bump here.
 ARG GNOME_VERSION=49
 RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo \
  && flatpak install -y --noninteractive flathub \

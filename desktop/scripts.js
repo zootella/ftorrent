@@ -32,7 +32,7 @@ const targets = {
 	'flatpak-x64': {source: 'linux', match: /_(x86_64)\.flatpak$/, publish: 'ftorrent.x86_64.flatpak'},
 }
 
-//which targets this computer stages and sends. Linux is deliberately absent: a Linux box can clone this repository and build the client for itself, and that is development and works, but a published package comes from the Mac, where both are built together against one base image and one lockfile
+//which targets this computer stages and sends. Linux is deliberately absent: a Linux box can clone this repository and build the client for itself, and that is development and works, but a published package comes from the Mac, where all four are built together against one base image and one lockfile
 const machines = {
 	darwin: ['dmg', 'deb-arm64', 'deb-x64', 'rpm-x64', 'flatpak-x64'],
 	win32:  ['exe'],
