@@ -50,7 +50,7 @@ The wheels stop at Python 3.13, which is why the engine does not run on a newer 
 
 ### uv, the tool that reads the lock
 
-[uv](https://docs.astral.sh/uv/) performs the fetches and the checks. On the Mac it is 0.12.3 from Homebrew; on Windows and Linux it comes from Astral's installers. It is a build tool and ships nothing to users, so it is not pinned by hash here, but it is the component that enforces every hash above.
+[uv](https://docs.astral.sh/uv/) performs the fetches and the checks, at 0.12.3 everywhere: from Homebrew on the Mac, from Astral's installer on Windows, and copied out of Astral's published container image in the Linux containers. It is a build tool and ships nothing to users, so it is not pinned by hash here, but it is the component that enforces every hash above.
 
 ## The hashes
 
@@ -105,13 +105,13 @@ Checked 2026-Sep-21 on an Apple Silicon Mac running macOS 15.7, against the whee
 - A session created with the wheel accepted our own STUN server, stun.ftorrent.com, as its WebTorrent STUN setting.
 - An announce for a Creative Commons torrent over `wss://open.ftorrent.com`, our WebSocket tracker, got a tracker reply in under a second. So did one to `wss://tracker.webtorrent.dev`, the WebTorrent project's own tracker. A UDP announce to our tracker returned peers, and the torrent's metadata arrived within five seconds. libtorrent's WebTorrent and our Aquatic WebSocket tracker speak to each other.
 - The frozen engine folder is 45 MB, freezes in under five seconds, and its executable is ad-hoc signed, which is what Apple Silicon requires to run it at all. Run by hand, it answers an init line with its ready line: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen.
-- Started by the app, it reports the same over the pipe, and quitting the app takes it down with no process left behind.
+- Started by the app, it runs as the app's own child process, and quitting the app takes it down with no process left behind.
 
 Checked the same day in Docker containers on the same Mac, Debian 12 for both x86_64 and aarch64.
 
-- uv fetched the two Linux wheels and the two Linux interpreters by the hashes above, and PyInstaller froze the engine on each architecture, in about the time it takes on the Mac.
+- uv fetched the two Linux wheels and the two Linux interpreters by the hashes above, and PyInstaller froze the engine on each architecture.
 - Unpacked from the finished `.deb` onto a bare `debian:12-slim` with no toolchain, the engine answered its init line with libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen, on both architectures. The frozen folder needs only glibc and the base libraries, as the wheel and the interpreter promise.
-- The Linux module is 26 MB, larger than the macOS one because OpenSSL is compiled in, and the only shared libraries beside it are the interpreter's own and the C++ runtime.
+- The Linux module is 26 MB, larger than the macOS one in part because OpenSSL is compiled in, and the only shared libraries beside it are the interpreter's own and the C++ runtime.
 
 Windows is pinned in the lockfile and not yet built. Its entry in the log below will say what we found.
 
@@ -125,11 +125,11 @@ uv sync --frozen
 uv run --frozen python -c "import libtorrent as lt; s = lt.default_settings(); print(lt.version, 'webtorrent' if 'webtorrent_stun_server' in s else 'no webtorrent')"
 ```
 
-To compare a wheel against this page by hand, download it without installing and hash it:
+To compare a wheel against this page by hand, fetch it by the URL `uv.lock` records for it and hash the file. The macOS wheel, for example:
 
 ```
-uv run --frozen pip download libtorrent==2.1.1 --no-deps --only-binary :all: -d /tmp/wheel
-shasum -a 256 /tmp/wheel/libtorrent-*.whl
+curl -LO https://files.pythonhosted.org/packages/56/e7/8c92ca04c63f6e909f768dceae64559b9e73ed615a084bc04ca53a3ef60d/libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
+shasum -a 256 libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 ```
 
 ## Log

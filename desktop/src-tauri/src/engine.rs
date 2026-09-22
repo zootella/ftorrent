@@ -99,7 +99,7 @@ pub fn engine_start(app: &AppHandle) {
 	//stdout: one json event per line, of which only ready means anything yet. The end of the stream is the end of the engine, so this thread is also what notices a crash
 	let app_out = app.clone();
 	std::thread::spawn(move || {
-		for line in BufReader::new(stdout).lines().map_while(Result::ok) {
+		for line in BufReader::new(stdout).lines().filter_map(Result::ok) {//a line that is not utf-8 is dropped rather than ending the reader, because a reader that stops while the engine keeps writing leaves the engine blocked on a full pipe; the stream ends only when the engine does
 			if let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) {
 				if value.get("event").and_then(|v| v.as_str()) == Some("ready") { lock(&app_out.state::<Engine>()).status.ready = Some(value) }
 			}
@@ -116,7 +116,7 @@ pub fn engine_start(app: &AppHandle) {
 	//stderr: kept, not shown, until somebody asks
 	let app_err = app.clone();
 	std::thread::spawn(move || {
-		for line in BufReader::new(stderr).lines().map_while(Result::ok) {
+		for line in BufReader::new(stderr).lines().filter_map(Result::ok) {//the same rule as stdout
 			let engine = app_err.state::<Engine>();
 			let mut inner = lock(&engine);
 			if inner.stderr.len() >= STDERR_LINES { inner.stderr.pop_front(); }
