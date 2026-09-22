@@ -35,7 +35,7 @@ pnpm hash            # stage them under their published names and write the side
 pnpm upload          # send each package and then its sidecar to ftorrent.com
 ```
 
-That is the whole of it, and it is the same three words the desktop workspace uses for its own installer. Three steps rather than one, because each leaves behind a different kind of thing: `build` writes packages, which are gitignored and disposable; `hash` writes sidecars, which are committed; `upload` puts files on a server, the one step you cannot take back, which is why it stays separate.
+That is the whole of it, and it is the same shape as the desktop workspace's: one word builds, `hash` stages, `upload` sends. Three steps rather than one, because each leaves behind a different kind of thing: `build` writes packages, which are gitignored and disposable; `hash` writes sidecars, which are committed; `upload` puts files on a server, the one step you cannot take back, which is why it stays separate.
 
 Five commands sit underneath so `build` is factored rather than one long function: `build-images` for the three toolchain images alone; `build-distro` for the two `.deb` files and the `.rpm`, out of the two Tauri runs; `build-flatpak` for the Flatpak, which needs the x86-64 `.deb` to exist first; `stage` for the whitelist copy a container is handed; and `check` for the bare-image tests on packages already built. You would rarely type one, and `build-distro` then `build-flatpak` is what `build` does between its images and its checks.
 
@@ -114,7 +114,7 @@ A Flatpak is less another package format than a different bargain: the applicati
 
 **The engine's freeze stops the build if it fails**, and it does so before the Rust compile, on purpose: the engine is the cheaper half, and a wheel that will not import or an interpreter that will not start is worth finding in the first minute. The line above the failure says what the engine answered, or did not.
 
-**`pnpm upload` checks before it sends.** It compares each sidecar against the package beside it, and refuses the whole upload if any sidecar is stale, before it reads the destination; then it sends each package and then its sidecar, package first so a page never fetches a hash for a file still arriving. The destination and key come from `upload.hide.env` in the desktop workspace, which is gitignored; the comment above `upload` in `scripts.js` lists its five values, for a reader pointing this at a server of their own.
+**`pnpm upload` checks before it sends.** It compares each sidecar against the package beside it, and refuses the whole upload if any sidecar is stale, before it reads the destination; then it sends each package and then its sidecar, package first so a page never fetches a hash for a file still arriving. They land at the site's root under the same names every release, `ftorrent.com/ftorrent.amd64.deb` and so on. The destination and key come from `upload.hide.env` in the desktop workspace, which is gitignored; the comment above `upload` in `scripts.js` lists its five values, for a reader pointing this at a server of their own.
 
 ## Building on Linux instead
 
@@ -143,5 +143,7 @@ The four-package pipeline ran the next day, 2026-Sep-22, in ten minutes and seve
 | `ftorrent_0.1.0_x86_64.flatpak` | 18.5 MB | the GNOME 49 runtime, `org.gnome.Platform` |
 
 Tauri puts the app at `/usr/bin/ftorrent` and the engine folder at `/usr/lib/ftorrent/ftorrent-engine/` in the `.deb` and the `.rpm` alike, with the executable bit intact through both bundlers, which is what `resource_dir()` resolves to on Linux. In a bare `debian:12-slim` on each architecture, and in a bare `fedora:40` for the rpm, the frozen engine answered its init line with libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, frozen, and exited cleanly. The Flatpak's engine, run from the laid-out `/app` tree before export, answered the same. The desktop entry in the `.deb` reads `Categories=Network;FileTransfer;P2P;` from the template, and the Flatpak exported that entry and three icons under `com.ftorrent.ftorrent`. The Linux libtorrent wheel carries its OpenSSL compiled into the module rather than as separate libraries, and at an older version than the macOS wheel's; the libtorrent provenance document on [docs.ftorrent.com](https://docs.ftorrent.com/) records which.
+
+The first upload followed later that day: `pnpm hash` and `pnpm upload` sent the four packages and their sidecars to ftorrent.com, and each package, downloaded back from the site, hashed to the sidecar committed in the repository.
 
 What remains unverified is the window itself, on every package. Installing a package and opening the app needs a Linux machine with a display, and the Flatpak in particular needs one, since its sandbox cannot start on this Mac; that is where the app gets smoke tested, the way it is on the other two platforms.
