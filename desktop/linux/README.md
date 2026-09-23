@@ -96,7 +96,7 @@ Every Linux name states its architecture and none carries a version, the rule `s
 | `.rpm` x86_64 | Fedora, RHEL, Rocky, AlmaLinux | `ftorrent.x86_64.rpm` |
 | `.flatpak` x86_64 | any distribution, sandboxed; the only one that installs on SteamOS and Bazzite | `ftorrent.x86_64.flatpak` |
 
-A Flatpak is less another package format than a different bargain: the application ships with its libraries and runs in a sandbox, so it does not care what the host has installed. That is what makes it the one package here that reaches SteamOS and Bazzite, whose root filesystems are read-only or atomic and where a `.deb` or an `.rpm` cannot be installed at all. Arch users can build from source.
+A Flatpak is less another package format than a different bargain: the application ships with its libraries and runs in a sandbox, so it does not care what the host has installed. That is what makes it the one package here that reaches SteamOS and Bazzite, whose root filesystems are read-only or atomic and where a `.deb` or an `.rpm` cannot be installed at all. Arch users install the Flatpak.
 
 ## Things that will confuse you once
 

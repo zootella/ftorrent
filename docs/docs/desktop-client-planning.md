@@ -181,7 +181,7 @@ A remaining theoretical vector is a compromised npm dependency importing `@tauri
 - `ftorrent.dmg` — macOS disk image, supporting Sequoia and Tahoe, Apple Silicon only.
 - `ftorrent.amd64.deb` and `ftorrent.arm64.deb` — Debian packages for Ubuntu Desktop and its derivatives (Mint, Pop!_OS, Zorin, elementary), which together account for the majority of desktop Linux users, and for Raspberry Pi OS on ARM.
 - `ftorrent.x86_64.rpm` — RPM package for Fedora, RHEL, Rocky, and AlmaLinux.
-- `ftorrent.x86_64.flatpak` — Flatpak bundle for any distribution, sandboxed, and the only package that installs on SteamOS and Bazzite, whose root filesystems are read-only or atomic. Arch users can build from source.
+- `ftorrent.x86_64.flatpak` — Flatpak bundle for any distribution, sandboxed, and the only package that installs on SteamOS and Bazzite, whose root filesystems are read-only or atomic. Arch users install the Flatpak.
 - `ftorrent.zip` — portable distribution, described separately below.
 
 During development, macOS and Windows are the active test matrix — the platforms where daily work and testing happen. Linux is a first-class target but not a hot path. The expectation is that by keeping choices simple and standard, Tauri's Linux build will work at the end with little or no correction. As built, it did, and with no Linux machine: the four Linux packages come out of Docker containers on the Mac from one command, so Linux is built on every release rather than when someone sits down at a Linux box.
