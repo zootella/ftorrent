@@ -135,3 +135,10 @@ colors with different brightness, and 1 soft color.
 .vp-doc li {
 	line-height: 28px;
 }
+
+/* A line of facts under a download or an install command: the face and size code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
+.detail {
+	font-family: var(--vp-font-family-mono);
+	font-size: var(--vp-code-font-size);
+	color: var(--vp-c-text-2);
+}

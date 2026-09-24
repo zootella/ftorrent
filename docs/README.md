@@ -72,3 +72,21 @@ pnpm build
 ```
 
 The deployed files land in the static directory on the server. The reverse proxy serves them as the docs.ftorrent.com site.
+
+## The installing page and its sidecars
+
+Almost every page here is static: what the build writes is all a reader sees. The installing page is the exception. Its download boxes and install commands fetch each installer's sidecar, the small JSON file the desktop workspace publishes beside it, when the page opens, so publishing a new installer changes the hashes on the page without rebuilding this site. `docs/.vitepress/theme/downloads.js` has the details.
+
+The sidecars live on the apex, `https://ftorrent.com/ftorrent.dmg.json` beside `https://ftorrent.com/ftorrent.dmg`, and this site is a different host, so the browser makes a cross-origin request. It lets the page read the answer only if the server that sends the downloads adds one response header:
+
+```
+Access-Control-Allow-Origin: *
+```
+
+We set it on every file in the downloads directory rather than on a list of names, so a new installer needs no change on the server. Without it, the page shows Not yet published for every installer. To check it:
+
+```bash
+curl -sI -H 'Origin: https://docs.ftorrent.com' https://ftorrent.com/ftorrent.dmg.json | grep -i access-control
+```
+
+The download host is written once, as `origin` in `docs/.vitepress/config.js`. In development, `pnpm local` needs no header: the dev server answers sidecar requests itself, from what `pnpm hash` has staged in `desktop/release` and `desktop/linux/release`, and proxies anything not staged there to the download host.

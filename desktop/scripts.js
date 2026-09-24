@@ -32,6 +32,18 @@ const targets = {
 	'flatpak-x64': {source: 'linux', match: /_(x86_64)\.flatpak$/, publish: 'ftorrent.x86_64.flatpak'},
 }
 
+/*
+The app inside the dmg carries an ad-hoc code signature, asked for by one line: signingIdentity "-" under bundle.macOS in tauri.conf.json. That file cannot hold a comment, so the line is explained here, beside the pipeline that ships what it produces.
+
+Without it, tauri skips signing, and the app leaves with only the stamp the linker puts on every arm64 executable: nothing seals the bundle, Info.plist is not bound, and codesign --verify reports "code has no resources but signature indicates they must be present". A browser quarantines whatever it downloads, and at the first launch of a quarantined app Gatekeeper reads a signature that fails to verify as corruption. The dialog says "ftorrent is damaged and can't be opened. You should move it to the Trash", with no button that proceeds. Development never shows this, because nothing there quarantines: a dmg built here, or fetched with curl, carries no quarantine attribute, and Gatekeeper never looks. The first 0.1.0 dmg went up in that state.
+
+With the identity "-", tauri runs codesign over the executable and then the bundle, with hardened runtime and no certificate — an ad-hoc signature is a seal with nobody's name on it. The seal verifies, so Gatekeeper can read what the app is, an unnotarized app from no known developer, and shows the dialog it has for that: "Apple could not verify ftorrent is free of malware", with Done and Move to Trash, and for about an hour afterwards an Open Anyway button under Privacy & Security in System Settings. It removes nothing: only a Developer ID certificate and notarization take the dialog away, and ftorrent ships without them. Tauri tries to notarize after signing, finds no credentials, and logs a warning, which is expected in every mac installer build.
+
+The engine rides inside the seal without being re-signed. PyInstaller already gave every Mach-O file in the ftorrent-engine folder an ad-hoc signature of its own when it froze it, so tauri's bundle signature takes them in as signed code under Resources, and the engine keeps its own signature, without hardened runtime, as the separate process it runs as. Hardened runtime on the main executable checks the libraries that executable loads, and it loads only the system's.
+
+Windows is untouched by this and has the same story in its own words: an installer with no certificate meets SmartScreen's "Windows protected your PC", and Run anyway sits behind More info. Neither dialog is about the bytes; the sidecar's hash is.
+*/
+
 //which targets this computer stages and sends. Linux is deliberately absent: a Linux box can clone this repository and build the client for itself, and that is development and works, but a published package comes from the Mac, where all four are built together against one base image and one lockfile
 const machines = {
 	darwin: ['dmg', 'deb-arm64', 'deb-x64', 'rpm-x64', 'flatpak-x64'],
