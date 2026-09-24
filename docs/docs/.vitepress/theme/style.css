@@ -131,9 +131,19 @@ colors with different brightness, and 1 soft color.
 
 /* Typography overrides */
 
-/* VitePress gives paragraphs line-height: 28px but leaves list items to inherit the base 24px, so a wrapped bullet reads tighter than a paragraph. Match them. Fenced code and blockquotes set their own line-height and are untouched. */
-.vp-doc li {
-	line-height: 28px;
+/*
+The distance between wrapped lines of prose: 1.5 times the text size, 24px at VitePress's 16px.
+
+We set prose in Verdana for the web of the early 2000s, and those pages set no line height at all, so the browser used the font's own, which for Verdana is about 1.22. That's the authentic look, and it's too tight for these pages: Verdana's tall lowercase leaves little white between lines, and our pages are long essays where 2002's were short posts. VitePress's 1.75 went the other way, airy and modern. 1.5 sits between them, visibly denser and more period than the default and still comfortable over a long read, and it's the spacing VitePress already gives its base text, so the sidebar and the page body match.
+
+A number rather than 24px, because the spacing is a proportion of the text: if the size changes, the spacing follows without a second edit. One variable for paragraphs and list items both, because VitePress gives paragraphs 28px of its own and leaves list items to inherit the base 24px, and a wrapped bullet spaced differently from a wrapped paragraph reads as a mistake. Space between blocks is margin, not this: 16px around paragraphs and lists, 8px between list items. Inline code keeps line-height 1, below, so it never pushes a line apart, and fenced code sets its own.
+*/
+:root {
+	--prose-line-height: 1.5;
+}
+
+.vp-doc p, .vp-doc li {
+	line-height: var(--prose-line-height);
 }
 
 /* A line of facts under a download or an install command: the face, size and weight code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
@@ -191,4 +201,9 @@ Plex Mono came from IBM's own npm package, @ibm/plex-mono 2.5.0, whose tarball m
 .vp-doc :not(pre, h1, h2, h3, h4, h5, h6) > code,
 .vp-doc [class*='language-'] pre code {
 	font-weight: 500;
+}
+
+/* Inline code at line-height 1, so a line holding code is as tall as a line without. Every inline piece of a line gets the paragraph's line height, and each centers its own font's ascent and descent in that height, then lines up on the baseline. Verdana is top-heavy, 1.005 of its em above the baseline and 0.210 below, while Consolas and Plex Mono sit lower, so a code box at full line height landed below Verdana's and grew the line, by up to 3px on a Mac with Consolas. At line-height 1 the code's box is its own size, well inside the paragraph's line, and the padded chip behind it still paints, since vertical padding on inline text never changes a line's height. Fenced blocks are pre, with their own line height, and untouched. */
+.vp-doc :not(pre) > code {
+	line-height: 1;
 }
