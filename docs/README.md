@@ -73,6 +73,20 @@ pnpm build
 
 The deployed files land in the static directory on the server. The reverse proxy serves them as the docs.ftorrent.com site.
 
+## Type and color
+
+- Prose in Verdana, headings in Trebuchet MS, both with Inter behind them
+- Code in Monaspace Krypton at weight 550, served to every reader
+- One orange, Pantone 151 C, `#FF7900`, used as is for links and inline code
+- Neutral grays, with headings in `#808080`
+- Everything lives in `docs/.vitepress/theme/style.css`, and the fonts beside it in `theme/fonts/`
+
+We styled the site to look like the web at the turn of the millennium. Verdana and Trebuchet are the faces Microsoft drew for the screen in the late 1990s, and for readers whose systems have them, the page downloads nothing. Code is set in Krypton, the mechanical face open.ftorrent.com uses for its LCD digits, whose squared-off letters look like the screens of The Matrix.
+
+The orange is the brand color. We use it everywhere the site draws orange, including as text, even though 151C on white falls short of the contrast WCAG asks of body text, so that anything orange on the site is the brand and never a shade tilted away from it. Inline code carries it at a heavier weight on a pale chip. `brand-color.html` at the repository root compares 151C with the darker shades we tried for text.
+
+The grays are the other half of that period's orange-and-silver look. We took the blue tint out of VitePress's grays, so orange is the only hue on the page, and set headings in `#808080`, the dark gray of the Windows 95 interface. Bold prose sits a step lighter than the text around it, because Verdana comes in regular and bold only. A link under the pointer stays orange, and its underline goes from solid to dotted, which is how links of that era said so. Dark mode still has VitePress's own grays, and the button fill and callout tint are still its indigo.
+
 ## The installing page and its sidecars
 
 Almost every page here is static: what the build writes is all a reader sees. The installing page is the exception. Its download boxes and install commands fetch each installer's sidecar, the small JSON file the desktop workspace publishes beside it, when the page opens, so publishing a new installer changes the hashes on the page without rebuilding this site. `docs/.vitepress/theme/downloads.js` has the details.

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Orange Shades</title>
+<style>
+	/* Pantone 151 C and the shades darkened from it for contrast: same OKLCH hue and chroma, lower lightness only */
+	:root {
+		--brand: #FF7900;
+		--ui-white: #EE7102;
+		--ui-soft: #E56C00;
+		--ui-chip: #DF6902;
+		--text-white: #BF5900;
+		--text-soft: #B75501;
+		--text-chip: #B15202;
+
+		/* VitePress's own backgrounds and text colors as they were when we compared the shades, still with their slight blue tint */
+		--bg: #FFFFFF;
+		--bg-soft: #F6F6F7;
+		--chip: #EFF0F3;
+		--text-1: #3C3C43;
+		--dark-bg: #1B1B1F;
+		--dark-text-1: #DFDFD6;
+		--dark-chip: #2E2E32;
+	}
+	body {
+		margin: 0;
+		padding: 32px 16px 64px;
+		background: var(--bg);
+		color: var(--text-1);
+		font-family: Verdana, Inter, sans-serif;
+		font-size: 16px;
+		line-height: 1.5;
+	}
+	/* the docs site's own copy of Krypton; a browser that won't load fonts from a local file falls back to its monospace */
+	@font-face { font-display: swap; font-weight: 200 800; font-style: normal; font-family: "Monaspace Krypton"; src: url('docs/docs/.vitepress/theme/fonts/monaspace-krypton.woff2') format('woff2'); }
+	main { max-width: 960px; margin: 0 auto; }
+	h1, h2 { font-family: "Trebuchet MS", Inter, sans-serif; font-weight: 600; }
+	h2 { margin-top: 48px; }
+	code { font-family: "Monaspace Krypton", monospace; font-size: 14px; font-weight: 550; padding: 3px 6px; border-radius: 4px; background: var(--chip); line-height: 1; }
+	.mono { font-family: "Monaspace Krypton", monospace; font-size: 14px; }
+
+	/* all seven side by side, touching, so the family reads as one band */
+	.band { display: flex; height: 96px; border-radius: 8px; overflow: hidden; }
+	.band div { flex: 1; }
+	.band-labels { display: flex; }
+	.band-labels div { flex: 1; text-align: center; padding-top: 6px; font-size: 12px; }
+
+	table { width: 100%; border-collapse: collapse; }
+	th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--bg-soft); vertical-align: middle; }
+	th { font-size: 13px; font-weight: normal; color: #67676C; }
+	.swatch { width: 48px; height: 32px; border-radius: 4px; }
+	.pass { color: #18794E; }
+	.fail { color: #C20E4D; }
+
+	.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+	.panel { padding: 16px 20px; border-radius: 8px; }
+	.panel p { margin: 8px 0; }
+	.panel a { text-decoration: underline; text-underline-offset: 2px; }
+	.label { font-size: 12px; color: #67676C; }
+
+	.button { display: inline-block; padding: 0 20px; line-height: 40px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+	<h1>Brand orange, Pantone 151 C</h1>
+	<p>Every shade below keeps 151C's hue and saturation and lowers only its lightness, measured in OKLCH, just far enough to reach a WCAG contrast target on one of the site's light backgrounds. The ratios in the table are computed on this page from the hex values.</p>
+	<p>We compared these for the docs site and chose none of them: the site uses 151C as is, for links and for inline code, and sets code heavier on a lighter chip instead. The last panel shows where we landed.</p>
+
+	<h2>The family</h2>
+	<div class="band" id="band"></div>
+	<div class="band-labels mono" id="band-labels"></div>
+
+	<h2>Contrast</h2>
+	<table>
+		<thead><tr><th></th><th>hex</th><th>role</th><th>on white</th><th>on bg-soft</th><th>on code chip</th><th>on dark bg</th></tr></thead>
+		<tbody id="rows"></tbody>
+	</table>
+	<p class="label">A pass needs 4.5 for body text, and 3 for large text (24px, or about 18.7px bold) and UI like icons and borders.</p>
+
+	<h2>As links and code in prose</h2>
+	<div class="panels" id="prose"></div>
+
+	<h2>Mixed, the way the site would use them</h2>
+	<div class="panels">
+		<div class="panel" style="background: var(--bg); border: 1px solid var(--bg-soft);">
+			<div class="label">light, each shade where it passes</div>
+			<h2 style="margin-top: 8px; color: var(--ui-white);">A heading in #EE7102</h2>
+			<p>A paragraph with <a style="color: var(--text-chip);">a link in #B15202</a> and some <code style="color: var(--text-chip);">inline code</code> in the same shade.</p>
+			<p><span class="button" style="background: var(--brand); color: #000;">Download</span> &nbsp;151C fill, black text</p>
+		</div>
+		<div class="panel" style="background: var(--dark-bg); color: var(--dark-text-1);">
+			<div class="label" style="color: #98989F;">dark, pure 151C throughout</div>
+			<h2 style="margin-top: 8px; color: var(--brand);">A heading in #FF7900</h2>
+			<p>A paragraph with <a style="color: var(--brand);">a link in #FF7900</a> and some <code style="color: var(--brand); background: var(--dark-chip);">inline code</code> in the same shade.</p>
+			<p><span class="button" style="background: var(--brand); color: #000;">Download</span> &nbsp;151C fill, black text</p>
+		</div>
+	</div>
+
+	<h2>What the docs site settled on</h2>
+	<div class="panels">
+		<div class="panel" style="background: #FFFFFF; border: 1px solid #F6F6F6; color: #3D3D3D;">
+			<div class="label" style="color: #676767;">light mode: one orange, neutral grays</div>
+			<h2 style="margin-top: 8px; color: #808080;">A heading in #808080</h2>
+			<p>Body text in #3D3D3D, with <strong style="color: #4D4D4D;">bold a step lighter in #4D4D4D</strong>, <a style="color: var(--brand);">a link in 151C</a>, and <code style="color: var(--brand); background: rgba(150, 150, 150, 0.07); box-shadow: inset 0 0 0 1px rgba(150, 150, 150, 0.25);">inline code</code> in 151C at weight 550 on a faint chip with a one pixel edge.</p>
+			<p class="mono" style="color: #676767; font-weight: 550;">1.2 MB · SHA-256 · a detail line in #676767</p>
+		</div>
+	</div>
+</main>
+<script>
+	const shades = [
+		['brand', '151C itself: fills and decoration'],
+		['ui-white', '3:1 on white'],
+		['ui-soft', '3:1 on bg-soft'],
+		['ui-chip', '3:1 on code chip'],
+		['text-white', '4.5:1 on white'],
+		['text-soft', '4.5:1 on bg-soft'],
+		['text-chip', '4.5:1 on code chip'],
+	]
+	const css = getComputedStyle(document.documentElement)
+	const value = name => css.getPropertyValue('--' + name).trim()
+
+	// WCAG 2 relative luminance and contrast ratio
+	const luminance = hex => {
+		let [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+		return 0.2126 * r + 0.7152 * g + 0.0722 * b
+	}
+	const contrast = (a, b) => {
+		let [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p)
+		return (x + 0.05) / (y + 0.05)
+	}
+	const cell = (fg, bg) => {
+		let ratio = contrast(fg, bg)
+		let verdict = ratio >= 4.5 ? 'pass' : ratio >= 3 ? 'large and UI' : 'fail'
+		let kind = ratio >= 3 ? 'pass' : 'fail'
+		return `<td><span class="mono">${ratio.toFixed(2)}</span> <span class="${kind}">${verdict}</span></td>`
+	}
+
+	let band = '', labels = '', rows = '', prose = ''
+	for (let [name, role] of shades) {
+		let hex = value(name)
+		band += `<div style="background: ${hex}"></div>`
+		labels += `<div>${hex}</div>`
+		rows += `<tr><td><div class="swatch" style="background: ${hex}"></div></td><td class="mono">${hex}</td><td>${role}</td>`
+			+ cell(hex, value('bg')) + cell(hex, value('bg-soft')) + cell(hex, value('chip')) + cell(hex, value('dark-bg')) + '</tr>'
+		prose += `<div class="panel" style="background: var(--bg); border: 1px solid var(--bg-soft);">
+			<div class="label mono">${hex}, ${role}</div>
+			<p>A paragraph with <a style="color: ${hex};">a link in this shade</a> and some <code style="color: ${hex};">inline code</code> beside it.</p>
+		</div>`
+	}
+	document.getElementById('band').innerHTML = band
+	document.getElementById('band-labels').innerHTML = labels
+	document.getElementById('rows').innerHTML = rows
+	document.getElementById('prose').innerHTML = prose
+</script>
+</body>
+</html>

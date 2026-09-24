@@ -69,12 +69,11 @@ async function copyHash() {
 </template>
 
 <style scoped>
-/* the outline is --vp-c-divider, exactly what the theme draws an hr and a heading rule with, and the radius is the 8px it gives a code block, its nearest neighbor on a documentation page */
+/* the outline is --vp-c-divider, exactly what the theme draws an hr and a heading rule with, and the corners are square, because a rounded box around the rounded chip of the code inside it drew two different curves one inside the other */
 .download {
 	margin: 16px 0;
 	padding: 12px 16px;
 	border: 1px solid var(--vp-c-divider);
-	border-radius: 8px;
 }
 
 .download code {

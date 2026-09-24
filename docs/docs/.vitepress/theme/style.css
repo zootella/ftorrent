@@ -43,14 +43,25 @@ colors with different brightness, and 1 soft color.
   in custom container, badges, etc.
 */
 
+/*
+Color at ftorrent, in light mode: one orange, and grays with no hue at all.
+
+The orange is Pantone 151 C, #FF7900, the brand color. We use it as is everywhere the site draws orange: links, inline code, the active page in the sidebar, the outline. 151C on white is 2.6:1, under the 4.5:1 WCAG asks of body text, and we chose it anyway, so that anything orange on the site is the brand and never a shade tilted away from it. We tried darker shades of the same hue for text, and brand-color.html at the repository root keeps that comparison. What we did instead is give the orange more to stand on: inline code is set heavier, on a chip lighter than VitePress's.
+
+The grays are the other half of a look from the turn of the millennium, when orange beside silver and graphite was everywhere, from music to clothing to SIM cards. We took the blue tint out of VitePress's grays so orange is the only hue on the page, and chose the lighter grays from what the web and Windows of that time used: headings in #808080, the dark gray of Windows 95's sixteen-color palette, and the 216 web-safe colors, whose channels step by 0x33, as the frame for which grays read as period.
+
+Hover is 151C too: --vp-c-brand-2 points at the brand color rather than a lighter or darker orange. Still VitePress's indigo: --vp-c-brand-3, the brand button fill, and --vp-c-brand-soft, the tint behind tip callouts. Dark mode keeps VitePress's grays, and takes the orange as is.
+*/
+
 :root {
 	--vp-c-default-1: var(--vp-c-gray-1);
 	--vp-c-default-2: var(--vp-c-gray-2);
 	--vp-c-default-3: var(--vp-c-gray-3);
 	--vp-c-default-soft: var(--vp-c-gray-soft);
 
-	--vp-c-brand-1: var(--vp-c-indigo-1);
-	--vp-c-brand-2: var(--vp-c-indigo-2);
+	--vp-c-brand-1: #FF7900;/* Pantone 151 C, ftorrent's brand color */
+	--vp-code-bg: rgba(150, 150, 150, 0.07);/* the chip behind inline code, the neutral gray below at half VitePress's 0.14 */
+	--vp-c-brand-2: var(--vp-c-brand-1);/* hover, 151C as well, so there is only ever one orange */
 	--vp-c-brand-3: var(--vp-c-indigo-3);
 	--vp-c-brand-soft: var(--vp-c-indigo-soft);
 
@@ -68,6 +79,27 @@ colors with different brightness, and 1 soft color.
 	--vp-c-danger-2: var(--vp-c-red-2);
 	--vp-c-danger-3: var(--vp-c-red-3);
 	--vp-c-danger-soft: var(--vp-c-red-soft);
+}
+
+/*
+Neutral grays in light mode. VitePress tints its grays slightly blue, a few steps more blue than red and green, and we keep every one of its shades but take the tint out, so orange is the only hue on the page. Each value here is the pure gray with the same luminance as the VitePress gray it replaces, so every contrast ratio stays where it was. Scoped away from .dark, because this file loads after VitePress's and a plain :root here would override its dark values too; dark mode keeps VitePress's grays for now.
+*/
+:root:not(.dark) {
+	--vp-c-gray-1: #dddddd;/* was #dddde3 */
+	--vp-c-gray-2: #e4e4e4;/* was #e4e4e9 */
+	--vp-c-gray-3: #ebebeb;/* was #ebebef */
+	--vp-c-gray-soft: rgba(150, 150, 150, 0.14);/* was rgba(142, 150, 170, 0.14) */
+
+	--vp-c-bg-alt: #f6f6f6;/* was #f6f6f7 */
+	--vp-c-bg-soft: #f6f6f6;/* was #f6f6f7 */
+
+	--vp-c-border: #c2c2c2;/* was #c2c2c4 */
+	--vp-c-divider: #e2e2e2;/* was #e2e2e3 */
+	--vp-c-gutter: #e2e2e2;/* was #e2e2e3 */
+
+	--vp-c-text-1: #3d3d3d;/* was #3c3c43 */
+	--vp-c-text-2: #676767;/* was #67676c */
+	--vp-c-text-3: #929292;/* was #929295 */
 }
 
 /* Component: Button */
@@ -146,43 +178,56 @@ A number rather than 24px, because the spacing is a proportion of the text: if t
 	line-height: var(--prose-line-height);
 }
 
+/* Bold prose a step lighter than the text around it in light mode, #4d4d4d against the body's #3d3d3d, so it reads as the same text with less ink rather than soaked. Verdana comes in regular and bold only, so a lower weight can't do this; its bold strokes put down more ink per letter, and the lighter color brings its overall tone back level with the regular text. Scoped away from .dark like the neutral grays above. */
+:root:not(.dark) .vp-doc strong {
+	color: #4d4d4d;
+}
+
+/* A link under the pointer keeps its orange, since hover is 151C too, and shows it's being pointed at by its underline going from solid to dotted, a hover straight from the web of the early 2000s. Browsers space the dots differently, Safari, Chrome and Firefox each their own way, and we took that with the look. */
+.vp-doc a:hover {
+	text-decoration-style: dotted;
+}
+
 /* A line of facts under a download or an install command: the face, size and weight code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
 .detail {
 	font-family: var(--vp-font-family-mono);
 	font-size: var(--vp-code-font-size);
-	font-weight: 500;
+	font-weight: 550;
 	color: var(--vp-c-text-2);
 }
 
 /*
-Fonts, in two layers, and no request to anyone else's server.
+Fonts, in two layers for prose and one for code, and no request to anyone else's server.
 
-Each of the three roles names two fonts and a generic keyword. The first is a face we expect a reader's system to have already: Verdana for prose, Trebuchet MS for headings, and Consolas for code, which Microsoft drew for the screen and which read as the web of the early 2000s. We name them and never ship them; they're licensed with Windows and macOS, and not to us, so their files can't be served from here. The second is a face this site serves itself as woff2, licensed so we can: Inter for prose and headings, and IBM Plex Mono for code. The generic keyword at the end, sans-serif or monospace, is only a floor for a reader who blocks web fonts, so they never land on the browser's default serif.
+Prose and headings each name two fonts and a generic keyword. The first is a face we expect a reader's system to have already: Verdana for prose and Trebuchet MS for headings, which Microsoft drew for the screen and which read as the web of the early 2000s. We name them and never ship them; they're licensed with Windows and macOS, and not to us, so their files can't be served from here. The second is Inter, a face this site serves itself as woff2. A browser takes the first name it can find: where the system has the face, the page downloads nothing, and where it doesn't, which is most Android phones and Linux desktops, the page loads Inter from its own origin.
 
-A browser takes the first name it can find. Where the system has the face, the page downloads nothing; where it doesn't, which is most Android phones and Linux desktops for all three, and most Macs for Consolas, the page loads our woff2 from its own origin. We keep each list that short on purpose, so a reader of this file can say which face any reader will see. A long list of look-alikes would spread readers across faces nobody tested. Two places step outside the three roles, and both use only faces we serve: the home page's hero stays in Inter, and the site name in the nav bar is Jura, the face open.ftorrent.com sets its headings in.
+Code names one font, Monaspace Krypton, which this site serves to every reader, so code looks the same on every device and its weight is ours to set. We name no system face ahead of it, because one would win wherever it's installed and hide Krypton there.
 
-No layer ever reaches another origin. Inter arrives inside the vitepress package, and the build copies its woff2 into dist/assets. VitePress's fonts.css also carries a Google Fonts @import for Inter, between two webfont-marker comments, and its build plugin strips that block from both the dev server and the build unless a site sets useWebFonts, which this one does not.
+The generic keyword at the end of each list, sans-serif or monospace, is only a floor for a reader who blocks web fonts, so they never land on the browser's default serif. We keep each list that short on purpose, so a reader of this file can say which face any reader will see. A long list of look-alikes would spread readers across faces nobody tested. Two places step outside the three roles, and both use only faces we serve: the home page's hero stays in Inter, and the site name in the nav bar is Jura, the face open.ftorrent.com sets its headings in.
 
-Plex Mono came from IBM's own npm package, @ibm/plex-mono 2.5.0, whose tarball matched the registry's sha512 integrity when we fetched it. We copied the woff2 files out of fonts/complete and never installed the package, so its postinstall telemetry script never ran. Plex is under the SIL Open Font License, which allows bundling and serving it, and IBM's license sits in the folder beside the fonts. We carry six faces rather than IBM's sixteen: Regular 400, Medium 500 and SemiBold 600, each with its italic. Code is set in Medium, by the rule below; SemiBold is for code inside bold text or a heading, so the browser doesn't fake a bold from a lighter face; and Regular is what the line numbers beside a code block keep. Vite copies a font into dist/assets only when a rule names it, and a reader downloads only the faces a page uses.
+No layer ever reaches another origin. Inter arrives inside the vitepress package, and the build copies its woff2 into dist/assets. VitePress's fonts.css also carries a Google Fonts @import for Inter, between two webfont-marker comments, and its build plugin strips that block from both the dev server and the build unless a site sets useWebFonts, which this one does not. Vite copies a font into dist/assets only when a rule names it, and a reader downloads only the faces a page uses.
 */
-@font-face { font-display: swap; font-weight: 400; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-regular.woff2')         format('woff2'); }
-@font-face { font-display: swap; font-weight: 400; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-italic.woff2')          format('woff2'); }
-@font-face { font-display: swap; font-weight: 500; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-medium.woff2')          format('woff2'); }
-@font-face { font-display: swap; font-weight: 500; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-medium-italic.woff2')   format('woff2'); }
-@font-face { font-display: swap; font-weight: 600; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-semibold.woff2')        format('woff2'); }
-@font-face { font-display: swap; font-weight: 600; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-semibold-italic.woff2') format('woff2'); }
 
 /* Jura, for the site name in the nav bar, the same face open.ftorrent.com sets its headings in. The file is a copy of that page's own, a Latin subset of the variable font, weights 300 to 700; Jura's license, OFL 1.1 with no reserved name, sits beside it. A copy rather than a link across subdomains, so this site loads nothing from another origin. */
 @font-face { font-display: swap; font-weight: 300 700; font-style: normal; font-family: Jura; src: url('./fonts/jura-latin.woff2') format('woff2'); }
 
+/* Monaspace Krypton, GitHub Next's sharp, mechanical mono, for code. Its squared-off letters look like the screens of The Matrix, which came out in 1999, and it's the face open.ftorrent.com sets its LCD digits in. We tried Radon and Argon from the same family: Radon, drawn to look handwritten, clashed with Verdana, and Argon, at code size, looked medieval. The file is a copy of that page's own, from Monaspace release v1.400, whose webfont-variable zip matched the sha256 digest GitHub publishes for it. It's the full variable font, unsubset, weights 200 to 800, at 445 KB. Monaspace is under the SIL Open Font License with the reserved name "Monaspace", and GitHub's license sits beside it. */
+@font-face { font-display: swap; font-weight: 200 800; font-style: normal; font-family: "Monaspace Krypton"; src: url('./fonts/monaspace-krypton.woff2') format('woff2'); }
+
 :root {
 	--vp-font-family-base: Verdana, Inter, sans-serif;
-	--vp-font-family-mono: Consolas, "IBM Plex Mono", monospace;
+	--vp-font-family-mono: "Monaspace Krypton", monospace;
 }
 
-/* Headings in Trebuchet MS. VitePress sets them in the base font and has no variable of its own for them, so this takes a rule. They keep VitePress's weight of 600, which Trebuchet, drawn in regular and bold only, shows as bold, and Inter, the woff2 behind it, shows as SemiBold. */
+/* Headings in Trebuchet MS. VitePress sets them in the base font and has no variable of its own for them, so this takes a rule. Weight 600, VitePress's own, named here because it's chosen for the pair: Trebuchet, drawn in regular and bold only, shows 600 as its bold, and Inter, the woff2 behind it, shows a true SemiBold, which looks closer to Trebuchet's bold than Inter's own bold does. Inter runs wider and taller than Trebuchet, so at the same size its SemiBold carries about as much ink. */
 .vp-doc h1, .vp-doc h2, .vp-doc h3, .vp-doc h4, .vp-doc h5, .vp-doc h6 {
 	font-family: "Trebuchet MS", Inter, sans-serif;
+	font-weight: 600;
+}
+
+/* Headings in #808080 in light mode, a gray well lighter than the #3d3d3d body text, so paragraphs read near-black and headings read silver. It's the dark gray of the sixteen-color palette Windows 95 and 98 drew their interface in, the shadow edge of every button and title bar, beside #C0C0C0 for the button faces. We tried the web-safe grays on either side of it: #666 was too close to the body text, and #999, 2.8:1 on white, went faint at h3's 20px; #808080 is 3.9:1, above the 3:1 WCAG asks of large text for h1 through h3, and one color serves every level. Scoped away from .dark like the neutral grays above; dark mode keeps VitePress's heading color for now. */
+:root:not(.dark) .vp-doc :is(h1, h2, h3, h4, h5, h6) {
+	color: #808080;
 }
 
 /* The home page's hero, its name, the line under it and the tagline, stays in Inter, the face VitePress drew it in, rather than taking Verdana from the base. Inter is our own woff2, so this names it alone. */
@@ -197,13 +242,23 @@ Plex Mono came from IBM's own npm package, @ibm/plex-mono 2.5.0, whose tarball m
 	font-weight: 500;
 }
 
-/* Code in Medium rather than Regular, because Plex Mono at code size on a light background reads lighter than it measures. VitePress has no variable for code weight, so this takes a rule. The first selector is VitePress's own for inline code, leaving out headings, which are 600 already and would otherwise go lighter around their code; the second is the fenced block, whose line numbers keep Regular. Consolas, ahead of Plex where a system has it, comes in regular and bold only, and shows 500 as regular. */
+/* Code at weight 550, between Medium and SemiBold, rather than Regular, because orange code on its pale chip reads lighter than the prose around it. The weight is what lets inline code carry 151C as is, rather than a darker shade of it. The .detail rule above sets the same weight, so the two change together. VitePress has no variable for code weight, so this takes a rule. The first selector is VitePress's own for inline code, leaving out headings, whose code takes their 600; the second is the fenced block, whose line numbers keep Regular. Krypton is variable, so any weight from 200 to 800 renders as drawn rather than rounding to the nearest file. */
 .vp-doc :not(pre, h1, h2, h3, h4, h5, h6) > code,
 .vp-doc [class*='language-'] pre code {
-	font-weight: 500;
+	font-weight: 550;
 }
 
-/* Inline code at line-height 1, so a line holding code is as tall as a line without. Every inline piece of a line gets the paragraph's line height, and each centers its own font's ascent and descent in that height, then lines up on the baseline. Verdana is top-heavy, 1.005 of its em above the baseline and 0.210 below, while Consolas and Plex Mono sit lower, so a code box at full line height landed below Verdana's and grew the line, by up to 3px on a Mac with Consolas. At line-height 1 the code's box is its own size, well inside the paragraph's line, and the padded chip behind it still paints, since vertical padding on inline text never changes a line's height. Fenced blocks are pre, with their own line height, and untouched. */
+/* Inline code at line-height 1, so a line holding code is as tall as a line without. Every inline piece of a line gets the paragraph's line height, and each centers its own font's ascent and descent in that height, then lines up on the baseline. Verdana is top-heavy, 1.005 of its em above the baseline and 0.210 below, and a code face proportioned differently lands its box off Verdana's and grows the line; with Consolas, the code face before Krypton, that was up to 3px. At line-height 1 the code's box is its own size, well inside the paragraph's line, whatever face sets it, and the padded chip behind it still paints, since vertical padding on inline text never changes a line's height. Fenced blocks are pre, with their own line height, and untouched. */
 .vp-doc :not(pre) > code {
 	line-height: 1;
+}
+
+/* A one pixel edge around the chip behind inline code, so the chip stays distinct while its fill stays faint behind the orange. An inset shadow rather than a border, so it draws inside the chip and adds no width. */
+.vp-doc :not(pre) > code {
+	box-shadow: inset 0 0 0 1px rgba(150, 150, 150, 0.25);
+}
+
+/* Table rows all on the page background, without VitePress's stripe on every second row. The stripe darkened the chip behind inline code, and orange code in a table cell is already the smallest code on the site. Every cell has its own border, so rows stay easy to follow without it. The header row keeps its gray. */
+.vp-doc tr:nth-child(2n) {
+	background-color: var(--vp-c-bg);
 }
