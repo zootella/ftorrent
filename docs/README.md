@@ -85,7 +85,7 @@ We styled the site to look like the web at the turn of the millennium. Verdana a
 
 The orange is the brand color. We use it everywhere the site draws orange, including as text, even though 151C on white falls short of the contrast WCAG asks of body text, so that anything orange on the site is the brand and never a shade tilted away from it. Inline code carries it at a heavier weight on a pale chip. `brand-color.html` at the repository root compares 151C with the darker shades we tried for text.
 
-The grays are the other half of that period's orange-and-silver look. We took the blue tint out of VitePress's grays, so orange is the only hue on the page, and set headings in `#808080`, the dark gray of the Windows 95 interface. Bold prose sits a step lighter than the text around it, because Verdana comes in regular and bold only. A link under the pointer stays orange, and its underline goes from solid to dotted, which is how links of that era said so. Dark mode still has VitePress's own grays, and the button fill and callout tint are still its indigo.
+The grays are the other half of that period's orange-and-silver look. We took the blue tint out of VitePress's grays, so orange is the only hue on the page, and set headings in `#808080`, the dark gray of the Windows 95 interface. Bold prose sits a step lighter than the text around it, because Verdana comes in regular and bold only. A link under the pointer stays orange, and its underline goes from solid to dotted, which is how links of that era said so. Dark mode still has VitePress's own grays, and the callout tint is still its indigo. On the home page, the name and the brand button are 151C, the button with white text.
 
 ## The installing page and its sidecars
 

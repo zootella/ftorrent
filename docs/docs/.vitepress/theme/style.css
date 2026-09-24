@@ -50,7 +50,7 @@ The orange is Pantone 151 C, #FF7900, the brand color. We use it as is everywher
 
 The grays are the other half of a look from the turn of the millennium, when orange beside silver and graphite was everywhere, from music to clothing to SIM cards. We took the blue tint out of VitePress's grays so orange is the only hue on the page, and chose the lighter grays from what the web and Windows of that time used: headings in #808080, the dark gray of Windows 95's sixteen-color palette, and the 216 web-safe colors, whose channels step by 0x33, as the frame for which grays read as period.
 
-Hover is 151C too: --vp-c-brand-2 points at the brand color rather than a lighter or darker orange. Still VitePress's indigo: --vp-c-brand-3, the brand button fill, and --vp-c-brand-soft, the tint behind tip callouts. Dark mode keeps VitePress's grays, and takes the orange as is.
+Hover is 151C too: --vp-c-brand-2 points at the brand color rather than a lighter or darker orange. The brand button is 151C too, with white text. Still VitePress's indigo: --vp-c-brand-soft, the tint behind tip callouts. Dark mode keeps VitePress's grays, and takes the orange as is.
 */
 
 :root {
@@ -62,7 +62,7 @@ Hover is 151C too: --vp-c-brand-2 points at the brand color rather than a lighte
 	--vp-c-brand-1: #FF7900;/* Pantone 151 C, ftorrent's brand color */
 	--vp-code-bg: rgba(150, 150, 150, 0.07);/* the chip behind inline code, the neutral gray below at half VitePress's 0.14 */
 	--vp-c-brand-2: var(--vp-c-brand-1);/* hover, 151C as well, so there is only ever one orange */
-	--vp-c-brand-3: var(--vp-c-indigo-3);
+	--vp-c-brand-3: var(--vp-c-brand-1);/* the brand button's fill, 151C as well */
 	--vp-c-brand-soft: var(--vp-c-indigo-soft);
 
 	--vp-c-tip-1: var(--vp-c-brand-1);
@@ -119,12 +119,8 @@ Neutral grays in light mode. VitePress tints its grays slightly blue, a few step
 /* Component: Home */
 
 :root {
-	--vp-home-hero-name-color: transparent;
-	--vp-home-hero-name-background: -webkit-linear-gradient(
-		120deg,
-		#2b4573 30%,
-		#9a8268
-	);
+	--vp-home-hero-name-color: var(--vp-c-brand-1);/* the name on the home page in solid 151C, the largest the brand color appears */
+	--vp-home-hero-name-background: none;
 
 	--vp-home-hero-image-background-image: linear-gradient(
 		-45deg,
@@ -144,6 +140,31 @@ Neutral grays in light mode. VitePress tints its grays slightly blue, a few step
 	:root {
 		--vp-home-hero-image-filter: blur(68px);
 	}
+}
+
+/* The name on the home page, ftorrent, at twice VitePress's size, with its line height doubled to match: 64px on a phone, 96px from 640px wide, 112px from 960px. VitePress sizes the name and the line under it together, and this takes the name alone. */
+.VPHero .heading .name {
+	font-size: 64px;
+	line-height: 80px;
+}
+
+@media (min-width: 640px) {
+	.VPHero .heading .name {
+		font-size: 96px;
+		line-height: 112px;
+	}
+}
+
+@media (min-width: 960px) {
+	.VPHero .heading .name {
+		font-size: 112px;
+		line-height: 128px;
+	}
+}
+
+/* The two lines under the name on the home page, docs.ftorrent.com and the tagline, in the #808080 the page headings use, in light mode */
+:root:not(.dark) .VPHero :is(.text, .tagline) {
+	color: #808080;
 }
 
 /* Component: Custom Block */
