@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Where the desktop client's installers and their sidecars live. Said once here because three things need it: the installing page's links point at it, curl.data.js writes it into the install commands, and the dev proxy below forwards to it. This site is docs.ftorrent.com, so in production the page fetches sidecars from that other host, across origins, which works because ftorrent.com sends an Access-Control-Allow-Origin header with its downloads.
+// Where the desktop client's installers and their sidecars live. Said once here because three things need it: the installing page's download boxes link to it, downloads.js fetches sidecars from it, and the dev proxy below forwards to it. The install commands on that page name it too, as plain text in their fences. This site is docs.ftorrent.com, so in production the page fetches sidecars from that other host, across origins, which works because ftorrent.com sends an Access-Control-Allow-Origin header with its downloads.
 const origin = 'https://ftorrent.com'
 
 /*

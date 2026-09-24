@@ -14,7 +14,7 @@ export default {
 		})
 	},
 	enhanceApp({ app, router, siteData }) {
-		//registered globally so markdown can place them: DownloadLink is one installer's box, and DownloadCommand is one install command with the current hash written in. downloads.js has the system they belong to
+		//registered globally so markdown can place them: DownloadLink is one installer's box, and DownloadCommand wraps a fenced install command in the markdown and writes the current hash into it when the page opens. downloads.js has the system they belong to
 		app.component('DownloadLink', DownloadLink)
 		app.component('DownloadCommand', DownloadCommand)
 	}

@@ -6,9 +6,9 @@ import { fetchSidecar, readableDate, saySize, copyText } from '../downloads.js'
 /*
 One download: the outlined box that offers a file and says what is known about it. downloads.js has the system it belongs to, where a sidecar comes from, what is in one, and why the fetch happens on mount.
 
-The installing page places two of these by hand rather than looping over a list:
+The installing page places six of these by hand rather than looping over a list, one for each published package:
 
-	<DownloadLink file="ftorrent.dmg" platform="macOS" system="Apple silicon" />
+	<DownloadLink file="ftorrent.exe" platform="Windows" system="64-bit Intel and AMD" />
 
 The attributes are what a sidecar cannot say. A sidecar knows the version, the architecture token, the byte count and the build date, because the machine that built the installer wrote them down; it does not know that aarch64 on a Mac is what everyone calls Apple silicon. So the words come from the page and the numbers come from the build.
 
@@ -18,8 +18,8 @@ The copy message rides the end of the line below the hash rather than taking a l
 */
 
 let props = defineProps({
-	file: String,     //the published name, ftorrent.dmg or ftorrent.exe; its sidecar sits beside it under the same name
-	platform: String, //macOS or Windows
+	file: String,     //the published name, like ftorrent.dmg or ftorrent.amd64.deb; its sidecar sits beside it under the same name
+	platform: String, //Windows, macOS, or Linux
 	system: String,   //what it runs on, in the words somebody choosing a download would use
 })
 
@@ -50,7 +50,7 @@ async function copyHash() {
 </script>
 
 <template>
-<!-- a div per line: a p would bring the theme's 16px between each, and these lines belong tight together. the link carries no download attribute, because browsers ignore it across origins; ftorrent.com serves both installers with content types a browser saves rather than shows -->
+<!-- a div per line: a p would bring the theme's 16px between each, and these lines belong tight together. the link carries no download attribute, because browsers ignore it across origins; ftorrent.com serves every package with a content type a browser saves rather than shows -->
 <div class="download">
 	<div><a :href="address">{{ address }}</a></div>
 

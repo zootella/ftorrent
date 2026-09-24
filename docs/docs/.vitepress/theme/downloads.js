@@ -3,15 +3,14 @@
 /*
 The desktop client's downloads, as the documentation site sees them: from the machine that built an installer to the page that offers it.
 
-An installer is built where it can be, the dmg on a Mac and the exe on Windows, and `pnpm hash` in the desktop workspace stages it under a published name and writes a small JSON sidecar beside it: file, version, arch, bytes, sha256, date. `pnpm upload` sends the pair to ftorrent.com, so an installer and its sidecar sit at the apex: ftorrent.com/ftorrent.dmg beside ftorrent.com/ftorrent.dmg.json. Nothing in this build knows a hash. A page fetches the sidecars when it opens, so publishing an installer changes what the site says without the site being rebuilt.
+An installer is built where it can be, the exe on Windows and the dmg on a Mac, and `pnpm hash` in the desktop workspace stages it under a published name and writes a small JSON sidecar beside it: file, version, arch, bytes, sha256, date. `pnpm upload` sends the pair to ftorrent.com, so an installer and its sidecar sit at the apex: ftorrent.com/ftorrent.dmg beside ftorrent.com/ftorrent.dmg.json. Nothing in this build knows a hash. A page fetches the sidecars when it opens, so publishing an installer changes what the site says without the site being rebuilt.
 
 	desktop/scripts.js              pnpm hash writes a sidecar, pnpm upload sends it to ftorrent.com
 	  ↓                             or, in development, .vitepress/config.js serves it
 	theme/downloads.js              this file: the fetch, two small readings and the clipboard call
 	  ↓
-	components/DownloadLink.vue     one download; installing-ftorrent.md places two
-	theme/curl.data.js              the two install commands, highlighted during the build with a run of zeros where the hash goes
-	components/DownloadCommand.vue  one install command with the hash written in; installing-ftorrent.md places two
+	components/DownloadLink.vue     one download; installing-ftorrent.md places six
+	components/DownloadCommand.vue  the hash written into a fenced install command; installing-ftorrent.md places two
 
 This site is docs.ftorrent.com and the sidecars live on ftorrent.com, so in production the fetch crosses origins, and it works only because ftorrent.com sends an Access-Control-Allow-Origin header with its downloads. A download host without that header leaves every sidecar unreadable, the fetch reads that as missing, and the page says Not yet published. Development fetches the same names from its own origin instead, where config.js answers from what is staged on this machine and proxies the rest to production, so nothing cross-origin happens there.
 
@@ -50,7 +49,7 @@ export async function copyText(text) {
 	} catch (error) { return false }
 }
 
-//whole kilobytes, counted by 1000 the way macOS and browsers do. whole, because a decimal point is a comma in half the world, and a number with no separator is right in both
+//whole megabytes, counted by 1000 the way macOS and browsers do; the installers run from about 12 to 26 MB, where a megabyte is fine enough to tell them apart. whole, because a decimal point is a comma in half the world, and a number with no separator is right in both
 export function saySize(bytes) {
-	return Math.round(bytes / 1000) + ' KB'
+	return Math.round(bytes / 1_000_000) + ' MB'
 }

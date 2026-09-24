@@ -1,20 +1,24 @@
 ---
 title: Installing ftorrent
-description: How to download, install, and open ftorrent on Windows and macOS, how to let every program from the web run, how to install with one hash-checked command, why ftorrent is not signed through Apple's or Microsoft's programs, and how to check a download against its published hash.
+description: How to download, install, and open ftorrent on Windows and macOS, how to let every program from the web run, how to install with one hash-checked command, why ftorrent is not signed through Microsoft's or Apple's programs, and how to check a download against its published hash.
 ---
 
 # Installing ftorrent
 
-ftorrent for Windows and macOS comes directly from ftorrent.com as two files: `ftorrent.exe`, an installer for 64-bit Intel and AMD PCs, and `ftorrent.dmg`, a disk image for Macs with Apple silicon. Neither is in an app store, and neither is signed with a certificate from Apple or Microsoft. Both systems notice, and the first time you run ftorrent, each one stops and asks you to confirm. This page walks through that confirmation on each system, shows the settings that let every program from the web run without it, gives a command that installs ftorrent with no first-run prompt, explains why ftorrent ships this way, and ends with how to check that the file you downloaded is exactly the one we published.
+ftorrent for Windows and macOS comes directly from ftorrent.com as two files: `ftorrent.exe`, an installer for 64-bit Intel and AMD PCs, and `ftorrent.dmg`, a disk image for Macs with Apple silicon. Neither is in an app store, and neither is signed with a certificate from Microsoft or Apple. Both systems notice, and the first time you run ftorrent, each one stops and asks you to confirm. This page walks through that confirmation on each system, shows the settings that let every program from the web run without it, gives a command that installs ftorrent with no first-run prompt, explains why ftorrent ships this way, and ends with how to check that the file you downloaded is exactly the one we published.
 
-<DownloadLink file="ftorrent.dmg" platform="macOS"   system="Apple silicon" />
-<DownloadLink file="ftorrent.exe" platform="Windows" system="64-bit Intel and AMD" />
+<DownloadLink file="ftorrent.exe"            platform="Windows" system="64-bit Intel and AMD" />
+<DownloadLink file="ftorrent.dmg"            platform="macOS"   system="Apple silicon" />
+<DownloadLink file="ftorrent.x86_64.flatpak" platform="Linux"   system="any distribution, sandboxed, 64-bit Intel and AMD" />
+<DownloadLink file="ftorrent.amd64.deb"      platform="Linux"   system="Debian and Ubuntu on 64-bit Intel and AMD" />
+<DownloadLink file="ftorrent.arm64.deb"      platform="Linux"   system="Raspberry Pi, and other ARM machines running Debian or Ubuntu" />
+<DownloadLink file="ftorrent.x86_64.rpm"     platform="Linux"   system="Fedora and RHEL on 64-bit Intel and AMD" />
 
 ## What the check looks at
 
 - A browser marks every file it downloads. Windows calls the mark the Mark of the Web, and macOS calls it quarantine. It is an attribute stored with the file, recording that the file came from the internet.
 - The first time a marked program runs, the system checks it: SmartScreen on Windows, Gatekeeper on macOS.
-- The check asks who published the program and whether Apple or Microsoft recognizes that publisher. It does not look at what the program does.
+- The check asks who published the program and whether Microsoft or Apple recognizes that publisher. It does not look at what the program does.
 - A program without the mark meets no check. A copy of ftorrent you build yourself from the source opens directly, and so does one you download with a command-line tool, which sets no mark.
 
 So the prompt is about the file's origin and who vouches for it. Once you confirm it, the system remembers, and ftorrent opens like any other program from then on.
@@ -85,25 +89,44 @@ XProtect, the malware scanner built into macOS, is a separate mechanism and keep
 
 Instead of downloading through your browser and then working through the prompts above, you can install ftorrent with one command. The command also checks the hash for you before anything is installed.
 
-**macOS:** Press **Command-Space**, type **Terminal**, and press **Return**. Paste the command below, and press **Return**.
-
-<DownloadCommand file="ftorrent.dmg" />
-
 **Windows:** Click **Start**, type **PowerShell**, and press **Enter**. Paste the command below, and press **Enter**.
 
-<DownloadCommand file="ftorrent.exe" />
+<DownloadCommand file="ftorrent.exe">
+
+```powershell
+cd ~\Downloads
+curl.exe -fsSLO https://ftorrent.com/ftorrent.exe
+if ((Get-FileHash ftorrent.exe).Hash -eq '0000000000000000000000000000000000000000000000000000000000000000') { .\ftorrent.exe } else { 'The hash does not match. ftorrent was not installed.' }
+```
+
+</DownloadCommand>
+
+**macOS:** Press **Command-Space**, type **Terminal**, and press **Return**. Paste the command below, and press **Return**.
+
+<DownloadCommand file="ftorrent.dmg">
+
+```bash
+cd ~/Downloads && \
+curl -fsSLO https://ftorrent.com/ftorrent.dmg && \
+echo "0000000000000000000000000000000000000000000000000000000000000000  ftorrent.dmg" | shasum -a 256 -c && \
+hdiutil attach -nobrowse -quiet -mountpoint ftorrent-image ftorrent.dmg && \
+cp -R ftorrent-image/ftorrent.app /Applications/ && \
+hdiutil detach -quiet ftorrent-image
+```
+
+</DownloadCommand>
 
 Both commands follow the same steps:
 
 - They download the installer into your **Downloads** folder with `curl`.
 - They compute the file's SHA-256 hash and compare it with the hash written into the command, which this page reads from the sidecar published beside the installer. If the two differ, the command stops, and nothing is installed.
-- On macOS, the command then opens the disk image, copies ftorrent into **Applications**, and closes the image. macOS lets administrator accounts write to **Applications**, and most Macs are set up with one; on a standard account, the copy fails, nothing is installed, and the disk image stays open until you eject it. On Windows, the command runs the installer, which installs ftorrent for your account without asking for an administrator password.
+- On Windows, the command then runs the installer, which installs ftorrent for your account without asking for an administrator password. On macOS, it opens the disk image, copies ftorrent into **Applications**, and closes the image. macOS lets administrator accounts write to **Applications**, and most Macs are set up with one; on a standard account, the copy fails, nothing is installed, and the disk image stays open until you eject it.
 
 Neither system shows its first-run prompt, because `curl` sets no mark on what it downloads. Smart App Control on Windows 11 is the exception: it checks programs whether or not they carry the mark, so if it's on, you have to turn it off first. The macOS command has two spaces between the hash and the filename, which is the format `shasum -c` reads, so keep both if you type it out by hand. To install a newer version on macOS later, move the old ftorrent to the Trash first, because copying an app over an existing one merges the two instead of replacing it.
 
 ## Why ftorrent is not signed
 
-Apple and Microsoft each run a program that removes the prompts above. On macOS, a developer joins the Apple Developer Program, signs each release with a Developer ID certificate Apple issues, and uploads each release to Apple for notarization. Apple scans the release and returns a ticket that Gatekeeper checks at launch. On Windows, a developer signs with a certificate from a certificate authority or from Microsoft's own signing service, and SmartScreen builds a reputation for that certificate as its downloads add up. These programs do real work. They tie a file to an accountable publisher, notarization scans for known malware, and revocation lets a vendor stop a malicious program on millions of machines at once. For most people, installing mostly from stores, they are a reasonable default.
+Microsoft and Apple each run a program that removes the prompts above. On Windows, a developer signs with a certificate from a certificate authority or from Microsoft's own signing service, and SmartScreen builds a reputation for that certificate as its downloads add up. On macOS, a developer joins the Apple Developer Program, signs each release with a Developer ID certificate Apple issues, and uploads each release to Apple for notarization. Apple scans the release and returns a ticket that Gatekeeper checks at launch. These programs do real work. They tie a file to an accountable publisher, notarization scans for known malware, and revocation lets a vendor stop a malicious program on millions of machines at once. For most people, installing mostly from stores, they are a reasonable default.
 
 They also make each release depend on an ongoing approval: an account in good standing, a certificate that can be revoked, and a scan that has to pass, all on the vendor's schedule and under terms the vendor can change. ftorrent is built so that no single party holds that kind of decision over it. The protocols are open standards, the tracker and DHT node are public infrastructure anyone can run, and the source is public for anyone to build. We keep the client consistent with the rest: ftorrent isn't registered with an app store or a developer program, and its releases don't go through signing or notarization.
 

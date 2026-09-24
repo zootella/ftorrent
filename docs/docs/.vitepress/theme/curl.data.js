@@ -12,9 +12,14 @@ VitePress runs a *.data.js file during the build and in the dev server, and a co
 
 export const placeholder = '0'.repeat(64)//stands where the hash goes, and has to come through highlighting as one run of text so the swap is one replace. a hex-shaped run inside a quoted string does, in both shells, and load checks it rather than assuming
 
-//the command per file, with the download address written in. each downloads into the Downloads folder, checks the hash, and installs only on a match. the mac one chains with && so a failed check stops the chain, and mounts at a fixed folder rather than under the image's own name, which lands on "ftorrent 1" when an ftorrent volume is already open. the windows one names curl.exe because in windows powershell bare curl is an alias for a different command with different flags, and -eq compares the hash without regard to case, so powershell's uppercase matches the sidecar's lowercase
+//the command per file, with the download address written in. each downloads into the Downloads folder, checks the hash, and installs only on a match. the windows one names curl.exe because in windows powershell bare curl is an alias for a different command with different flags, and -eq compares the hash without regard to case, so powershell's uppercase matches the sidecar's lowercase. the mac one chains with && so a failed check stops the chain, and mounts at a fixed folder rather than under the image's own name, which lands on "ftorrent 1" when an ftorrent volume is already open
 function commands(origin) {
 	return {
+		'ftorrent.exe': {language: 'powershell', text:
+`cd ~\\Downloads
+curl.exe -fsSLO ${origin}/ftorrent.exe
+if ((Get-FileHash ftorrent.exe).Hash -eq '${placeholder}') { .\\ftorrent.exe } else { 'The hash does not match. ftorrent was not installed.' }`},
+
 		'ftorrent.dmg': {language: 'bash', text:
 `cd ~/Downloads && \\
 curl -fsSLO ${origin}/ftorrent.dmg && \\
@@ -22,11 +27,6 @@ echo "${placeholder}  ftorrent.dmg" | shasum -a 256 -c && \\
 hdiutil attach -nobrowse -quiet -mountpoint ftorrent-image ftorrent.dmg && \\
 cp -R ftorrent-image/ftorrent.app /Applications/ && \\
 hdiutil detach -quiet ftorrent-image`},
-
-		'ftorrent.exe': {language: 'powershell', text:
-`cd ~\\Downloads
-curl.exe -fsSLO ${origin}/ftorrent.exe
-if ((Get-FileHash ftorrent.exe).Hash -eq '${placeholder}') { .\\ftorrent.exe } else { 'The hash does not match. ftorrent was not installed.' }`},
 	}
 }
 
