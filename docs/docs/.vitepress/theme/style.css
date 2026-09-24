@@ -136,9 +136,59 @@ colors with different brightness, and 1 soft color.
 	line-height: 28px;
 }
 
-/* A line of facts under a download or an install command: the face and size code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
+/* A line of facts under a download or an install command: the face, size and weight code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
 .detail {
 	font-family: var(--vp-font-family-mono);
 	font-size: var(--vp-code-font-size);
+	font-weight: 500;
 	color: var(--vp-c-text-2);
+}
+
+/*
+Fonts, in two layers, and no request to anyone else's server.
+
+Each of the three roles names two fonts and a generic keyword. The first is a face we expect a reader's system to have already: Verdana for prose, Trebuchet MS for headings, and Consolas for code, which Microsoft drew for the screen and which read as the web of the early 2000s. We name them and never ship them; they're licensed with Windows and macOS, and not to us, so their files can't be served from here. The second is a face this site serves itself as woff2, licensed so we can: Inter for prose and headings, and IBM Plex Mono for code. The generic keyword at the end, sans-serif or monospace, is only a floor for a reader who blocks web fonts, so they never land on the browser's default serif.
+
+A browser takes the first name it can find. Where the system has the face, the page downloads nothing; where it doesn't, which is most Android phones and Linux desktops for all three, and most Macs for Consolas, the page loads our woff2 from its own origin. We keep each list that short on purpose, so a reader of this file can say which face any reader will see. A long list of look-alikes would spread readers across faces nobody tested. Two places step outside the three roles, and both use only faces we serve: the home page's hero stays in Inter, and the site name in the nav bar is Jura, the face open.ftorrent.com sets its headings in.
+
+No layer ever reaches another origin. Inter arrives inside the vitepress package, and the build copies its woff2 into dist/assets. VitePress's fonts.css also carries a Google Fonts @import for Inter, between two webfont-marker comments, and its build plugin strips that block from both the dev server and the build unless a site sets useWebFonts, which this one does not.
+
+Plex Mono came from IBM's own npm package, @ibm/plex-mono 2.5.0, whose tarball matched the registry's sha512 integrity when we fetched it. We copied the woff2 files out of fonts/complete and never installed the package, so its postinstall telemetry script never ran. Plex is under the SIL Open Font License, which allows bundling and serving it, and IBM's license sits in the folder beside the fonts. We carry six faces rather than IBM's sixteen: Regular 400, Medium 500 and SemiBold 600, each with its italic. Code is set in Medium, by the rule below; SemiBold is for code inside bold text or a heading, so the browser doesn't fake a bold from a lighter face; and Regular is what the line numbers beside a code block keep. Vite copies a font into dist/assets only when a rule names it, and a reader downloads only the faces a page uses.
+*/
+@font-face { font-display: swap; font-weight: 400; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-regular.woff2')         format('woff2'); }
+@font-face { font-display: swap; font-weight: 400; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-italic.woff2')          format('woff2'); }
+@font-face { font-display: swap; font-weight: 500; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-medium.woff2')          format('woff2'); }
+@font-face { font-display: swap; font-weight: 500; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-medium-italic.woff2')   format('woff2'); }
+@font-face { font-display: swap; font-weight: 600; font-style: normal; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-semibold.woff2')        format('woff2'); }
+@font-face { font-display: swap; font-weight: 600; font-style: italic; font-family: "IBM Plex Mono"; src: url('./fonts/ibm-plex-mono-semibold-italic.woff2') format('woff2'); }
+
+/* Jura, for the site name in the nav bar, the same face open.ftorrent.com sets its headings in. The file is a copy of that page's own, a Latin subset of the variable font, weights 300 to 700; Jura's license, OFL 1.1 with no reserved name, sits beside it. A copy rather than a link across subdomains, so this site loads nothing from another origin. */
+@font-face { font-display: swap; font-weight: 300 700; font-style: normal; font-family: Jura; src: url('./fonts/jura-latin.woff2') format('woff2'); }
+
+:root {
+	--vp-font-family-base: Verdana, Inter, sans-serif;
+	--vp-font-family-mono: Consolas, "IBM Plex Mono", monospace;
+}
+
+/* Headings in Trebuchet MS. VitePress sets them in the base font and has no variable of its own for them, so this takes a rule. They keep VitePress's weight of 600, which Trebuchet, drawn in regular and bold only, shows as bold, and Inter, the woff2 behind it, shows as SemiBold. */
+.vp-doc h1, .vp-doc h2, .vp-doc h3, .vp-doc h4, .vp-doc h5, .vp-doc h6 {
+	font-family: "Trebuchet MS", Inter, sans-serif;
+}
+
+/* The home page's hero, its name, the line under it and the tagline, stays in Inter, the face VitePress drew it in, rather than taking Verdana from the base. Inter is our own woff2, so this names it alone. */
+.VPHero .heading, .VPHero .tagline {
+	font-family: Inter, sans-serif;
+}
+
+/* The site name in the upper left, in Jura, larger than VitePress's 16px. Weight 500 rather than VitePress's 600, and heavier than the 300 open.ftorrent.com sets its 48px title in, because a stroke that reads airy at 48px looks spindly at 28px; it's the step that page takes itself for its smaller Jura, the footer links at 500. The file is variable, so any value from 300 to 700 works. The nav bar is a fixed 64px tall, so the size has room up to about 40px */
+.VPNavBarTitle .title {
+	font-family: Jura, sans-serif;
+	font-size: 28px;
+	font-weight: 500;
+}
+
+/* Code in Medium rather than Regular, because Plex Mono at code size on a light background reads lighter than it measures. VitePress has no variable for code weight, so this takes a rule. The first selector is VitePress's own for inline code, leaving out headings, which are 600 already and would otherwise go lighter around their code; the second is the fenced block, whose line numbers keep Regular. Consolas, ahead of Plex where a system has it, comes in regular and bold only, and shows 500 as regular. */
+.vp-doc :not(pre, h1, h2, h3, h4, h5, h6) > code,
+.vp-doc [class*='language-'] pre code {
+	font-weight: 500;
 }
