@@ -101,7 +101,7 @@ if ((Get-FileHash ftorrent_setup.exe).Hash -eq '00000000000000000000000000000000
 
 </DownloadCommand>
 
-**macOS:** Press **Command-Space**, type **Terminal**, and press **Return**. Paste the command below, and press **Return**.
+**macOS:** Click search in the upper right, and type **Terminal**. Paste the command below, and press **Return**.
 
 <DownloadCommand file="ftorrent.dmg">
 
