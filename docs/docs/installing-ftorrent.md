@@ -1,11 +1,11 @@
 ---
 title: Installing ftorrent
-description: How to download, install, and open ftorrent on Windows and macOS, how to let every program from the web run, how to install with one hash-checked command, why ftorrent is not signed through Microsoft's or Apple's programs, and how to check a download against its published hash.
+description: How to download, install, and open ftorrent on Windows and macOS, how to let every program from the web run, how to get it with one hash-checked command, why ftorrent is not signed through Microsoft's or Apple's programs, and how to check a download against its published hash.
 ---
 
 # Installing ftorrent
 
-ftorrent for Windows and macOS comes directly from ftorrent.com as two files: `ftorrent.exe`, an installer for 64-bit Intel and AMD PCs, and `ftorrent.dmg`, a disk image for Macs with Apple silicon. Neither is in an app store, and neither is signed with a certificate from Microsoft or Apple. Both systems notice, and the first time you run ftorrent, each one stops and asks you to confirm. This page walks through that confirmation on each system, shows the settings that let every program from the web run without it, gives a command that installs ftorrent with no first-run prompt, explains why ftorrent ships this way, and ends with how to check that the file you downloaded is exactly the one we published.
+ftorrent for Windows and macOS comes directly from ftorrent.com as two files: `ftorrent.exe`, an installer for 64-bit Intel and AMD PCs, and `ftorrent.dmg`, a disk image for Macs with Apple silicon. Neither is in an app store, and neither is signed with a certificate from Microsoft or Apple. Both systems notice, and the first time you run ftorrent, each one stops and asks you to confirm. This page walks through that confirmation on each system, shows the settings that let every program from the web run without it, gives a command that gets ftorrent with no first-run prompt, explains why ftorrent ships this way, and ends with how to check that the file you downloaded is exactly the one we published.
 
 <DownloadLink file="ftorrent.exe"            platform="Windows" system="64-bit Intel and AMD" />
 <DownloadLink file="ftorrent.dmg"            platform="macOS"   system="Apple silicon" />
@@ -87,7 +87,7 @@ XProtect, the malware scanner built into macOS, is a separate mechanism and keep
 
 ## Installing from the command line
 
-Instead of downloading through your browser and then working through the prompts above, you can install ftorrent with one command. The command also checks the hash for you before anything is installed.
+Instead of downloading through your browser and then working through the prompts above, you can get ftorrent with one command. The command also checks the hash for you before anything opens.
 
 **Windows:** Click **Start**, type **PowerShell**, and press **Enter**. Paste the command below, and press **Enter**.
 
@@ -95,8 +95,8 @@ Instead of downloading through your browser and then working through the prompts
 
 ```powershell
 cd ~\Downloads
-curl.exe -fsSLO https://ftorrent.com/ftorrent.exe
-if ((Get-FileHash ftorrent.exe).Hash -eq '0000000000000000000000000000000000000000000000000000000000000000') { .\ftorrent.exe } else { 'The hash does not match. ftorrent was not installed.' }
+curl.exe -fsSL -o ftorrent_setup.exe https://ftorrent.com/ftorrent.exe
+if ((Get-FileHash ftorrent_setup.exe).Hash -eq '0000000000000000000000000000000000000000000000000000000000000000') { .\ftorrent_setup.exe } else { 'The hash does not match. ftorrent was not installed.' }
 ```
 
 </DownloadCommand>
@@ -107,22 +107,20 @@ if ((Get-FileHash ftorrent.exe).Hash -eq '00000000000000000000000000000000000000
 
 ```bash
 cd ~/Downloads && \
-curl -fsSLO https://ftorrent.com/ftorrent.dmg && \
-echo "0000000000000000000000000000000000000000000000000000000000000000  ftorrent.dmg" | shasum -a 256 -c && \
-hdiutil attach -nobrowse -quiet -mountpoint ftorrent-image ftorrent.dmg && \
-cp -R ftorrent-image/ftorrent.app /Applications/ && \
-hdiutil detach -quiet ftorrent-image
+curl -fsSL -o ftorrent_setup.dmg https://ftorrent.com/ftorrent.dmg && \
+echo "0000000000000000000000000000000000000000000000000000000000000000  ftorrent_setup.dmg" | shasum -a 256 -c && \
+open ftorrent_setup.dmg
 ```
 
 </DownloadCommand>
 
-Both commands follow the same steps:
+Both commands do the same three things:
 
-- They download the installer into your **Downloads** folder with `curl`.
-- They compute the file's SHA-256 hash and compare it with the hash written into the command, which this page reads from the sidecar published beside the installer. If the two differ, the command stops, and nothing is installed.
-- On Windows, the command then runs the installer, which installs ftorrent for your account without asking for an administrator password. On macOS, it opens the disk image, copies ftorrent into **Applications**, and closes the image. macOS lets administrator accounts write to **Applications**, and most Macs are set up with one; on a standard account, the copy fails, nothing is installed, and the disk image stays open until you eject it.
+- They save the installer in your **Downloads** folder as `ftorrent_setup.exe` or `ftorrent_setup.dmg`.
+- They compute the file's SHA-256 hash and compare it with the hash written into the command, which this page reads from the sidecar published beside the installer. If the two differ, the command stops, and nothing opens.
+- They open the file, the same as a double-click. On Windows the installer runs and installs ftorrent for your account, without asking for an administrator password. On macOS the disk image appears, and you drag ftorrent into **Applications**.
 
-Neither system shows its first-run prompt, because `curl` sets no mark on what it downloads. Smart App Control on Windows 11 is the exception: it checks programs whether or not they carry the mark, so if it's on, you have to turn it off first. The macOS command has two spaces between the hash and the filename, which is the format `shasum -c` reads, so keep both if you type it out by hand. To install a newer version on macOS later, move the old ftorrent to the Trash first, because copying an app over an existing one merges the two instead of replacing it.
+Neither system shows its first-run prompt, because `curl` sets no mark on what it downloads. Smart App Control on Windows 11 is the exception: it checks programs whether or not they carry the mark, so if it's on, you have to turn it off first. The command saves the installer under a name of its own, `ftorrent_setup`, because a copy you already downloaded through your browser carries the mark, and a file saved over it keeps the mark it had. The macOS command has two spaces between the hash and the filename, which is the format `shasum -c` reads, so keep both if you type it out by hand.
 
 ## Why ftorrent is not signed
 
