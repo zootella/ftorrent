@@ -68,7 +68,7 @@ def main():
 		out.flush()#every line at once; the app is waiting on it
 
 	for raw in sys.stdin.buffer:#one line per message; the loop ends when the app closes the pipe, which is how a dying app takes the engine with it
-		line = raw.decode('utf-8', 'replace').strip()
+		line = raw.decode('utf-8-sig', 'replace').strip()#utf-8-sig drops a byte-order mark at the start, which Windows PowerShell 5.1 puts ahead of anything it pipes into a program
 		if not line: continue
 		try:
 			message = json.loads(line)

@@ -6,21 +6,9 @@ The desktop client now builds and installs the ordinary way on both active platf
 - **The portable edition.** A zip for Windows and macOS that runs from a folder or a USB stick and keeps its state beside itself.
 - **Instances.** ftorrent runs once per user and once per copy. A second launch of the same copy hands its request to the one already running. A portable copy runs beside an installed one without either noticing the other, and two people signed in to their own accounts on one machine each run their own.
 
-The desktop client planning document on the docs site describes the paths, the portable edition, and the instance lock as first designed. This sprint builds on that design, and the next section records where checking it against the platforms changed it. The planning document gets one correction pass when the sprint ends.
+The desktop client planning document on the docs site describes the paths, the portable edition, and the instance lock as first designed. This sprint builds on that design, and the next section records where checking it against the platforms changed it. The planning document gets one correction pass when the sprint ends. This note stays current and gets shorter as the sprint goes: a finished step leaves it, and what's left at the end is a short list of things to confirm and scraps for a later sprint.
 
 ## What changed from the first design
-
-### The shipped bundles hold no symlinks
-
-The libtorrent wheel for macOS keeps its OpenSSL libraries in a folder of its own, `libtorrent.dylibs`. The libtorrent module loads `@rpath/libssl.3.dylib`, and its search path is the engine's `_internal` folder. PyInstaller bridges the two with a pair of symlinks in `_internal`, and the engine fails to start without them.
-
-A cross-platform stick is formatted exFAT, because exFAT is the one format both Windows and macOS write natively (FAT32 stops at 4 GB per file, and macOS reads NTFS but doesn't write it). exFAT can't hold a symlink, and neither can a zip unpacked by Windows. So we checked whether anything we ship depends on one:
-
-- The PyInstaller build on Windows makes no symlinks.
-- When Tauri copies the engine folder into the Mac `.app` as a resource, it copies the file each symlink points to, so the bundle already holds two real files where the links were, plus the originals in `libtorrent.dylibs`.
-- Moving the two real files up into `_internal` and deleting `libtorrent.dylibs` still gives an engine that starts and answers `ready`, because `libssl` finds `libcrypto` through the same search path.
-
-The engine recipe does that move at the end of each build: every symlink in the output is replaced by the file it points to, and a folder left empty is removed. Nothing on any platform, installed or portable, relies on a symlink after that. The Mac bundle loses about 5.8 MB of duplicate libraries along the way.
 
 ### A quarantined Mac app runs from somewhere else
 
@@ -51,10 +39,17 @@ The Security framework has a call that recovers the original path, `SecTransloca
 
 The first design promised that portable mode never touches the host. ftorrent's own code can keep that promise. The platforms and the web view keep their usual records of any program that runs, whether or not the program asks them to:
 
-- **Windows.** WebView2 keeps a profile folder. By default Tauri puts it at `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, and it can be pointed elsewhere, so a portable copy puts it under `portable/`. Beyond that, SmartScreen remembers a program it has approved. SmartScreen checks only programs the shell launches, so the engine, which ftorrent starts directly, meets no check of its own. The Windows Defender Firewall asks the first time a program listens. An administrator who allows it creates allow rules. For a user who isn't an administrator, Windows creates block rules whichever option is chosen, and inbound connections stay blocked until an administrator changes them. Either way the prompt doesn't return while the rules exist. The shell keeps its recent and jump-list entries.
-- **macOS.** WKWebView keeps its data under the bundle identifier, and no public API moves it: `~/Library/WebKit/`, `~/Library/Caches/`, and `~/Library/HTTPStorages/` each get a folder named for it. AppKit may keep window state in `~/Library/Saved Application State/`. Launch Services registers every app that runs, along with the URL schemes and document types its `Info.plist` declares; a test app launched from an exFAT image was registered with its URL scheme the moment it opened. Gatekeeper keeps its approval, and the privacy system keeps any grant for the removable volume. On the stick itself, macOS 15 writes a `._` file beside every file it touches, to hold extended attributes exFAT can't store. Windows shows those files as ordinary files.
+- **Windows.** WebView2 keeps a profile folder. By default Tauri puts it at `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, naming the folder on each WebView2 process's command line, and it can be pointed elsewhere, so a portable copy puts it under `portable/`. Beyond that, SmartScreen remembers a program it has approved. SmartScreen checks only programs the shell launches, so the engine, which ftorrent starts directly, meets no check of its own. The Windows Defender Firewall asks the first time a program listens. An administrator who allows it creates allow rules. For a user who isn't an administrator, Windows creates block rules whichever option is chosen, and inbound connections stay blocked until an administrator changes them. Either way the prompt doesn't return while the rules exist. The shell keeps its recent and jump-list entries.
+- **macOS.** WKWebView keeps its data under the bundle identifier, and no public API moves it: `~/Library/WebKit/`, `~/Library/Caches/`, and `$TMPDIR` each get a folder named for it, and `~/Library/HTTPStorages/` can too once a page stores cookies. It creates them at launch, even for a page that stores nothing. A binary run outside a bundle, as `tauri dev` runs one, has no identifier, and WebKit names the folders after the executable instead. AppKit may keep window state in `~/Library/Saved Application State/`. Launch Services registers every app that runs, along with the URL schemes and document types its `Info.plist` declares; a test app launched from an exFAT image was registered with its URL scheme the moment it opened. Gatekeeper keeps its approval, and the privacy system keeps any grant for the removable volume. On the stick itself, macOS 15 writes a `._` file beside every file it touches, to hold extended attributes exFAT can't store. Windows shows those files as ordinary files.
 
 The portable promise becomes: ftorrent itself writes nothing to the host, and the operating system keeps its usual records of a program that ran. The portable page lists those records plainly, so a reader who cares knows exactly where to look.
+
+The baseline to compare a portable copy's host records against is what an installed copy leaves today, launched once and quit, before ftorrent writes anything of its own:
+
+- **Windows 10.** The installer writes the program to `%LOCALAPPDATA%\ftorrent`, an uninstall entry and the install path under `HKCU`, and the Start menu shortcut. Launching adds nothing outside `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, and nothing ftorrent-named appears under `%APPDATA%`.
+- **macOS 15.** Launching creates `~/Library/WebKit/com.ftorrent.ftorrent`, `~/Library/Caches/com.ftorrent.ftorrent`, and `$TMPDIR/com.ftorrent.ftorrent`, all the web view's. Quitting adds nothing.
+
+On both, ftorrent's own code has written nothing yet, and the engine exits with the app.
 
 ### The portable Mac bundle has its own identifier
 
@@ -147,7 +142,7 @@ The main page shows the resolved values: portable or installed, the data folder,
 A second launch happens when the user opens a copy that's already running, or when the operating system opens a `.torrent` file or a `magnet:` link in an installed copy that's already running.
 
 - **macOS.** Launch Services brings the running app to the front rather than starting a second process for the same bundle, and it delivers a file or link to the running app as an Apple Event. The file lock stays as the backstop for a launch that bypasses Launch Services, such as running the binary directly or `open -n`. A second process in that case exits after bringing the first one forward.
-- **Windows.** Each launch starts a new process, so ftorrent carries the request itself. The running instance serves a named pipe, `\\.\pipe\ftorrent-` followed by a hash of the lock file's full path. A second launch that finds the lock held connects to that pipe, writes its command-line arguments as one line of JSON, and exits. The running instance brings its window to the front and passes any `.torrent` path or magnet link on to the engine. Tauri's runtime already includes tokio, whose `named_pipe` module provides both ends.
+- **Windows.** Each launch starts a new process, so ftorrent carries the request itself. The running instance serves a named pipe, `\\.\pipe\ftorrent-` followed by a hash of the lock file's full path. A second launch that finds the lock held connects to that pipe, writes its command-line arguments as one line of JSON, and exits. The running instance brings its window to the front and passes any `.torrent` path or magnet link on to the engine. Tauri's runtime already includes tokio, whose `named_pipe` module provides both ends. That module sits behind tokio's `net` feature, which nothing in the tree turns on yet, so the handoff adds `tokio = { version = "1", features = ["net"] }` to `Cargo.toml`. It unifies onto the tokio already locked, and the crates `net` brings in are already in `Cargo.lock`, so the lockfile gains one entry under ftorrent's own dependencies.
 
 The pipe name comes from the lock path, so each copy only ever hears from launches of itself. A portable copy's pipe is reached only by opening that portable copy again. The server end is set up with three properties:
 
@@ -161,25 +156,23 @@ By default a named pipe gives full access to the account that created it, to adm
 
 - **The Mac portable bundle.** `tauri build --config tauri.portable.conf.json --bundles app` applies a second file over `tauri.conf.json` as a JSON merge patch, and the result is also the config compiled into the app. The patch sets `identifier` to `com.ftorrent.portable`. A `null` deletes a key, so `"bundle": {"fileAssociations": null}` removes the file associations and `"plugins": {"deep-link": null}` removes the URL schemes. `--bundles app` builds the `.app` and no disk image.
 - **The Windows side.** It's the same `ftorrent.exe` an installed copy runs, taken from the release build with its engine folder, before NSIS wraps them. The same binary serves both modes, and only the folder beside it differs. A portable copy needs the WebView2 runtime, the part of Edge that draws the window. Windows 11 includes it, and nearly every Windows 10 machine already has it. An installed copy's NSIS installer fetches it when it's missing. A portable copy can't install it, so on a machine without it, it shows Tauri's message naming the download and doesn't open. The portable page says so.
-- **The portable WebView2 folder.** Tauri points WebView2 at `AppData\Local\com.ftorrent.ftorrent` unless told otherwise. The window moves from `tauri.conf.json` into the startup code, where `WebviewWindowBuilder::data_directory` can name the data folder that startup resolved, whether installed or portable. WebView2 keeps its files in a subfolder of the folder it's given. Microsoft documents the subfolder without naming it, and `EBWebView` is the name observed in practice.
+- **The portable WebView2 folder.** Tauri points WebView2 at `AppData\Local\com.ftorrent.ftorrent` unless told otherwise. The window moves from `tauri.conf.json` into the startup code, where `WebviewWindowBuilder::data_directory` can name the data folder that startup resolved, whether installed or portable. WebView2 keeps its files in a subfolder of the folder it's given. Microsoft documents the subfolder without naming it; on Windows 10 it's `EBWebView`.
 - **Which machine builds what.** Each half has to be built on its own platform. Tauri's Mac bundler only compiles on a Mac. Tauri can cross-compile a Windows executable from a Mac, but it calls that experimental and a last resort, and PyInstaller can't cross-build at all, so the Windows engine is frozen on Windows. Windows builds its half first, and the Mac builds its half and assembles the zip. The Mac is the right place to zip because zip tools on Windows don't record Unix permissions: a `.app` zipped on Windows and unpacked on a Mac would lose the executable bit on its binaries.
 - **Getting the Windows half to the Mac.** The repository carries source and records, not build output, so the Windows half travels through the download server instead. On Windows, the upload step packs `ftorrent.exe` and its engine folder into `portable_win.zip`, the Windows portion of the portable build, with `tar -a`, which ships with Windows 10 and later and writes forward slashes. It uploads that zip to `https://ftorrent.com/portable_win.zip`, beside `ftorrent.exe` and `ftorrent.exe.json`, and nothing links to it. The sidecar `pnpm hash` writes for it, `portable_win.zip.json`, is committed and pushed like the others. On the Mac, the assembly step downloads the half and computes its hash. It goes on only if the hash matches the sidecar in the repository. The server is only the courier, and the committed hash is what the Mac trusts.
-- **Assembly.** The Mac unpacks the Windows half, adds the portable `.app` and `portable/ftorrent.json`, and zips the folder as `ftorrent.zip`, without macOS metadata (`__MACOSX`, `._` files) and without symlinks.
+- **Assembly.** The Mac unpacks the Windows half, adds the portable `.app` and `portable/ftorrent.json`, and zips the folder as `ftorrent.zip`, without macOS metadata (`__MACOSX`, `._` files) and without symlinks. The stick it's meant for is exFAT, the one format both systems write natively, and exFAT can't hold a symlink; the engine build already replaces its own symlinks with the files they point to, so nothing in either half relies on one.
 - **Publishing.** `ftorrent.zip` gets a sidecar from `pnpm hash` and a box on the installing page like the other packages. The page gains a portable section that clears the mark before the first launch.
 
 ## Sprint steps
 
-1. **Commit this plan**, so it's versioned and reaches the Windows build machine.
-2. **Remove the symlinks from the engine build.** Change `ftorrent-engine.spec` to replace symlinks with the files they point to. Confirm the engine answers `ready` on macOS, that the `.app` holds one copy of each OpenSSL library, and that the Linux containers still build.
-3. **Resolve paths.** Build the startup steps in the Rust core, from finding the program's own location through reading `ftorrent.json`, and show the results on the main page. An installed copy on Windows keeps everything in `AppData\Local`, and never writes to Roaming.
-4. **Lock the settings folder** with `File::try_lock`.
-5. **Hand off a second launch** through the named pipe on Windows, and confirm that Launch Services already covers it on macOS.
-6. **Lock the download folders**, and show a folder that's in use.
-7. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows.
-8. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
-9. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
-10. **Run the tests below** on both machines.
-11. **Correct the planning document** once, to match what we built.
+1. **Resolve paths.** Build the startup steps in the Rust core, from finding the program's own location through reading `ftorrent.json`, and show the results on the main page. An installed copy on Windows keeps everything of its own in `AppData\Local`, and nothing in Roaming.
+2. **Lock the settings folder** with `File::try_lock`.
+3. **Hand off a second launch** through the named pipe on Windows, and confirm that Launch Services already covers it on macOS.
+4. **Lock the download folders**, and show a folder that's in use.
+5. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows.
+6. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
+7. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
+8. **Run the tests below** on both machines.
+9. **Correct the planning document** once, to match what we built.
 
 ## Tests
 
@@ -197,7 +190,7 @@ By default a named pipe gives full access to the account that created it, to adm
 
 ### On Windows, Local or Roaming?
 
-Windows gives each user two application-data folders. `AppData\Roaming` is meant for settings that follow a user between machines when an organization sets up roaming profiles. `AppData\Local` is meant for data tied to one machine, and for anything large or regenerable. ftorrent uses exactly one of them, never a mixture. We chose Local: everything an installed copy keeps for itself goes in `AppData\Local\com.ftorrent.ftorrent`, and ftorrent never writes to Roaming.
+Windows gives each user two application-data folders. `AppData\Roaming` is meant for settings that follow a user between machines when an organization sets up roaming profiles. `AppData\Local` is meant for data tied to one machine, and for anything large or regenerable. ftorrent uses exactly one of them, never a mixture. We chose Local: everything an installed copy keeps for itself goes in `AppData\Local\com.ftorrent.ftorrent`, and ftorrent keeps nothing of its own in Roaming. The one file an install puts there is its Start menu shortcut, `ftorrent.lnk`, in the shell's own `Microsoft\Windows\Start Menu\Programs` folder, which is where every per-user install puts its shortcut.
 
 We said we'd stay in Roaming if it turned out to be the common default today. It isn't:
 
@@ -210,7 +203,7 @@ We said we'd stay in Roaming if it turned out to be the common default today. It
 
 Keeping to one folder takes a little discipline, because a stock Tauri app already writes to both. `app_data_dir` and `app_config_dir` are Roaming on Windows. The store and window-state plugins default to Roaming, and the log plugin writes to Local. So ftorrent resolves its data folder once, from `app_local_data_dir`, and passes that one path to everything that writes. A plugin that picks its own folder is pointed at ours before we adopt it. Tauri has an unreleased option, `appDirectoriesOverride`, that sends every one of those paths to one root, and we'll take it when it ships.
 
-The installed copies built so far write nothing of their own yet, so moving now costs nothing. It's done at the start of the sprint, while paths are resolved for the first time.
+It takes effect when paths are resolved.
 
 ### Locks on exFAT, FAT, and network shares
 
