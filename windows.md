@@ -50,3 +50,55 @@ On the Mac, three cases passed: installed, portable, and an unreadable `ftorrent
 ## Your answers
 
 Add a section here headed with the date, and report each numbered step: what you ran, and what happened.
+
+## 2026-09-24, from the Windows session
+
+Windows 10 22H2, Windows PowerShell 5.1, Rust 1.98.0, uv 0.12.3, Node 22.21.1, pnpm 10.28.2. Both cases came out exactly as the letter predicted. Details per step, and one observation at the end about the web view's profile in portable mode.
+
+**1. Pull and clean tree.** Clean at 62a5704, the commit that carries this letter, and still clean after everything below. No lockfile changed.
+
+**2. `pnpm engine`.** Succeeded, about 10 seconds. Same shape as before, `ftorrent-engine.exe` (1,825,222 bytes) beside `_internal`, no reparse points. Run by hand with an init line carrying `"paths":{"data":"X","state":"Y","download_folders":["Z"]}`, the ready event ended with `"paths":{"data":"X","state":"Y","download_folders":["Z"]}`, so the echo works. And the byte-order-mark fix from last time holds: the letter's original init command, piped from Windows PowerShell 5.1, which got a malformed-json error before, now gets the full ready event, ending in `"paths":{}` since that line carries none.
+
+**3. Installed.** `target\debug\portable` did not exist, and neither did `target\debug\downloads`. `pnpm local` compiled the debug profile in 26 seconds and opened the window, with `ftorrent-engine.exe` as the app's child. The user read the page:
+
+```
+engine: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, pid 12560
+ftorrent is installed, and the engine has its paths
+program: C:\Documents\code\ftorrent\desktop\src-tauri\target\debug
+data: C:\Users\username\AppData\Local\com.ftorrent.ftorrent
+downloads: ~/Downloads/ftorrent → C:\Users\username\Downloads\ftorrent
+```
+
+`program:` starts with the drive letter, not `\\?\`. Every path came out with backslashes. The user closed the window, and the app and engine both exited.
+
+**4. The data folder** now holds `ftorrent.json` beside `EBWebView`, and nothing else. The file is 55 bytes, exactly:
+
+```
+{
+	"download_folders": [
+		"~/Downloads/ftorrent"
+	]
+}
+```
+
+Indented with tabs, one per level, checked byte by byte with `od -c`: the line endings are bare LF, there is no byte-order mark, and the file ends with one newline. Nothing named ftorrent appeared directly under `%APPDATA%`.
+
+**5. Portable.** Wrote `target\debug\portable\ftorrent.json` with `printf`, containing the letter's line and a trailing newline, 80 bytes. `pnpm local` again, which rebuilt nothing (0.63 seconds) and opened the window. The user read the page:
+
+```
+engine: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, pid 1160
+ftorrent is portable, and the engine has its paths
+program: C:\Documents\code\ftorrent\desktop\src-tauri\target\debug
+data: C:\Documents\code\ftorrent\desktop\src-tauri\target\debug\portable
+downloads: ./downloads → C:\Documents\code\ftorrent\desktop\src-tauri\target\debug\downloads
+downloads: C:/Games → C:\Games
+downloads: /Volumes/ALICE2TB/torrents → \Volumes\ALICE2TB\torrents
+```
+
+All three resolutions match the letter, the Mac path included: a bare leading slash becomes a path from the root of the current drive, with backslashes, and no drive letter in front. The user closed the window, and both processes exited.
+
+**6. What the portable run left.** The installed `%LOCALAPPDATA%\com.ftorrent.ftorrent\ftorrent.json` still has its step 4 timestamp, 23:14:07, and the same 55 bytes and SHA-256 as before the portable run, so it wasn't rewritten. No `downloads` folder was created under `target\debug`. The `portable` folder holds only the `ftorrent.json` we put there, still 80 bytes: no state file, no lock, nothing else, which is right for a step that only resolves paths.
+
+One thing the letter didn't ask about but which the folder dates show: during the portable run, `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView` was written again (its timestamp moved to 23:15). The web view still keeps its profile in the installed data folder whichever mode the app is in, since the sprint's step 7, pointing WebView2 into `portable\`, hasn't been built yet. So today a portable copy on Windows resolves its own paths correctly while WebView2 still writes to the host. Expected, and worth knowing when that step is tested.
+
+**7. Deleting the portable folder** is the user's, by this session's rules, so the user was asked to remove `target\debug\portable` after this reply was written.
