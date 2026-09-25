@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::{command, AppHandle, Manager, State};
 
 /*
-Where everything is. This runs once, in setup, before the engine starts and before the page exists, and everything that reads or writes a file of ftorrent's own takes its path from what this works out. Nothing else in the app asks Tauri or the operating system where to put things.
+Where everything is. This runs in setup, in two halves on either side of instance.rs taking the lock, before the engine starts and before the page exists, and everything that reads or writes a file of ftorrent's own takes its path from what this works out. Nothing else in the app asks Tauri or the operating system where to put things.
 
 Three anchors, and every path comes from one of them. The program's location is the folder the program sits in: beside the executable on Windows and Linux, and the folder holding ftorrent.app on macOS, not a folder inside the bundle. The data folder is ftorrent's own, and holds ftorrent.json and, as the sprint goes on, the lock, the libtorrent state, and the crash log. And the user's home folder.
 
@@ -41,8 +41,8 @@ pub struct Paths {
 	pub trouble: String,//what went wrong, blank when nothing did; startup carries on with the built-in settings rather than stopping
 }
 
-/// Work out where everything is; called once from setup
-pub fn resolve(app: &AppHandle) -> Paths {
+/// Find the program's location and the data folder, the first half of startup; instance.rs locks the data folder before read looks inside it
+pub fn locate(app: &AppHandle) -> Paths {
 	let mut paths = Paths::default();
 
 	let location = match program_location() {
@@ -69,11 +69,17 @@ pub fn resolve(app: &AppHandle) -> Paths {
 		}
 	};
 	paths.data = display(&data);
-	let settings = data.join(SETTINGS_NAME);
-	paths.settings = display(&settings);
+	paths.settings = display(&data.join(SETTINGS_NAME));
 	paths.state = display(&data.join(STATE_NAME));
+	paths
+}
 
-	let folders = match read_settings(&data, &settings) {
+/// Read ftorrent.json and resolve the download folders, the second half of startup, once this copy holds its lock
+pub fn read(app: &AppHandle, paths: &mut Paths) {
+	if paths.data.is_empty() { return }//translocated, or no data folder, so there's nothing to read
+	let data = PathBuf::from(&paths.data);
+	let location = PathBuf::from(&paths.location);
+	let folders = match read_settings(&data, &data.join(SETTINGS_NAME)) {
 		Ok(folders) => folders,
 		Err(trouble) => { paths.trouble = trouble; vec![DEFAULT_DOWNLOAD_FOLDER.to_string()] }//run on the built-in default, and leave the file alone
 	};
@@ -82,7 +88,6 @@ pub fn resolve(app: &AppHandle) -> Paths {
 		let path = display(&resolve_folder(&setting, &location, home.as_deref()));
 		DownloadFolder { setting, path }
 	}).collect();
-	paths
 }
 
 /// The folder the program sits in: beside the executable, or beside the .app on macOS

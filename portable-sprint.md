@@ -164,18 +164,30 @@ By default a named pipe gives full access to the account that created it, to adm
 
 ## Sprint steps
 
-1. **Lock the settings folder** with `File::try_lock`.
-2. **Hand off a second launch** through the named pipe on Windows, and confirm that Launch Services already covers it on macOS.
-3. **Lock the download folders**, and show a folder that's in use. Taking a folder's lock is the first time ftorrent looks inside a download folder, and on macOS the default one sits in the protected Downloads folder, so this is where the system's permission prompt first appears. Path resolution deliberately doesn't check whether folders exist, to keep that prompt away until now. Either this step brings the warning ftorrent shows before the prompt, or it accepts the bare prompt during development and says so.
-4. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows. Today a portable run still writes to `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, so the check is that folder's timestamp: a portable run must leave it unchanged.
-5. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
-6. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
-7. **Run the tests below** on both machines.
-8. **Correct the planning document** once, to match what we built.
+1. **Instance management**, the lock and the handoff built and tested as one feature, because a lock alone keeps a second window away but drops the magnet that launched it. A second launch of a running copy delivers what it carried and exits, whatever the user does:
+	- **Many at once.** Ten selected `.torrent` files, or five magnets clicked in a row, can start ten processes together on Windows. One wins the lock, and every other one delivers; nothing is dropped.
+	- **A click during a cold start.** The first process holds the lock a moment before its pipe exists. A second launch in that gap retries for a few seconds rather than giving up, and the pipe is created as early in setup as possible, right after the lock and before the engine and the window.
+	- **Arriving before the page is ready.** A request can land before the page has loaded or the engine has answered. The Rust core keeps it until they're there. On macOS the same queue will catch the Apple Event from a cold start by magnet, once the associations story registers the handlers.
+	- **One launch carrying several files.** Explorer can pass a multiple selection to a single process, so the handoff forwards the whole argument list.
+	- **A hidden window.** Closing the window hides it, so bringing it forward means showing it if it's hidden, restoring it if it's minimized, and then focusing it.
+
+	Closing the window is part of this step, because a copy that quits when its window closes is never there to hand off to. On macOS and Windows the close button hides the window, and ftorrent and its engine keep running; there's no setting for it. The web view stays alive rather than being torn down, so the page keeps its state and comes back at once. Quitting is explicit. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, which macOS provides on its own; clicking the Dock icon of a running ftorrent with its window hidden brings the window back. On Windows it's Exit in the tray icon's menu, which also has Show, and clicking the tray icon brings the window back; the tray uses the app icon until the icons story draws its own, and a File menu with Exit in the window comes with the interface. Linux keeps closing as quitting for now, since it has no tray and no handoff yet.
+
+	Until there's an interface, the page lists each request as it arrives, which is the proof that nothing was dropped. Windows limits which process may take the foreground, so a running copy asked to come forward may only flash in the taskbar; the tests find out, and the fix, if one is needed, is the second launch granting the first permission to come forward before it hands off.
+2. **Lock the download folders**, and show a folder that's in use. Taking a folder's lock is the first time ftorrent looks inside a download folder, and on macOS the default one sits in the protected Downloads folder, so this is where the system's permission prompt first appears. Path resolution deliberately doesn't check whether folders exist, to keep that prompt away until now. Either this step brings the warning ftorrent shows before the prompt, or it accepts the bare prompt during development and says so.
+3. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows. Today a portable run still writes to `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, so the check is that folder's timestamp: a portable run must leave it unchanged.
+4. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
+5. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
+6. **Run the tests below** on both machines.
+7. **Correct the planning document** once, to match what we built.
 
 ## Tests
 
 - Launch an installed copy twice, and confirm the second launch brings the first forward and no second window appears.
+- With a copy running, start ten launches at once, each carrying a different argument, and confirm all ten arrive and no second window appears.
+- Start a launch with an argument, and while it's still starting, start a second one with another argument, and confirm both arrive.
+- Hide the window, minimize it, and leave it behind other windows, and each time confirm a second launch brings it forward.
+- Close the window, confirm the engine keeps running, then bring the window back from the Dock icon on macOS and from the tray icon on Windows. Quit from each place quitting is offered, and confirm the engine exits with the app.
 - Run an installed copy and a portable copy side by side, confirm each keeps its own folder and window, and confirm neither sees the other's pipe or lock.
 - Sign in as two users and run each user's installed copy at the same time, on Windows and on macOS.
 - On Windows, have two signed-in users launch the same portable copy from one stick, and confirm the second is told it's running under another account.
@@ -203,6 +215,10 @@ We said we'd stay in Roaming if it turned out to be the common default today. It
 Keeping to one folder takes a little discipline, because a stock Tauri app already writes to both. `app_data_dir` and `app_config_dir` are Roaming on Windows. The store and window-state plugins default to Roaming, and the log plugin writes to Local. So ftorrent resolves its data folder once, from `app_local_data_dir`, and passes that one path to everything that writes. A plugin that picks its own folder is pointed at ours before we adopt it. Tauri has an unreleased option, `appDirectoriesOverride`, that sends every one of those paths to one root, and we'll take it when it ships.
 
 It takes effect when paths are resolved.
+
+### Magnet links and .torrent files, after this sprint
+
+Clicking a magnet link or opening a `.torrent` file belongs to the associations story in the planning document, and it comes after this sprint. That story declares ftorrent as able to open both, handles the open events, and offers the panel that shows and claims the defaults. This sprint's handoff doesn't wait for it on Windows, where the operating system opens a file or a link by running `ftorrent.exe` with it as an argument, so a launch from the command line tests exactly what a click will do. On macOS a click arrives as an Apple Event instead, which needs the types declared in `Info.plist` and `tauri-plugin-deep-link` listening, so the associations story is where that path is built and tested. Everything that arrives, either way, feeds the one request list instance management keeps.
 
 ### Locks on exFAT, FAT, and network shares
 

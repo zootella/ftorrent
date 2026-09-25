@@ -6,6 +6,7 @@ import {invoke} from '@tauri-apps/api/core'
 import {useGreetStore} from '../stores/greet.js'
 import {engineStatus} from '../engine.js'
 import {pathsStatus} from '../paths.js'
+import {instanceStatus} from '../instance.js'
 
 let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
 let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
@@ -17,8 +18,9 @@ async function greet() {
 
 //the engine's status, asked for once a second while this page is showing; a fact from below that this one page displays for now, so it lives here rather than in a store
 let engine = ref(null)
+let instance = ref(null)//this copy's lock and handoff, and the requests that have reached it
 let engineTimer = null
-async function askEngine() { engine.value = await engineStatus() }
+async function askEngine() { engine.value = await engineStatus(); instance.value = await instanceStatus() }//the instance rides the same timer, so a request handed over from a second launch shows up within a second
 onMounted(() => { askEngine(); engineTimer = setInterval(askEngine, 1000) })
 onUnmounted(() => clearInterval(engineTimer))
 let engineLine = computed(() => {//one sentence about the engine, whatever state it is in
@@ -34,6 +36,37 @@ let engineLine = computed(() => {//one sentence about the engine, whatever state
 let paths = ref(null)
 onMounted(async () => { paths.value = await pathsStatus() })
 let pathsHeard = computed(() => engine.value?.ready?.paths?.data === paths.value?.data && !!paths.value?.data)//the engine sent back the data folder it was told, so the paths made the round trip
+
+//everything above as plain lines, in one box the user can copy from, since a status is most useful pasted into a message or an issue
+let report = computed(() => {
+	let lines = [engineLine.value]
+	let p = paths.value
+	if (p) {
+		if (p.mode == 'translocated') {
+			lines.push(`macOS is running ftorrent from a temporary copy at ${p.location}, so it can't see its own folder. To fix it, quit ftorrent, run xattr -dr com.apple.quarantine on ftorrent.app where you put it, and open it again.`)
+		} else {
+			lines.push(`ftorrent is ${p.mode}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
+			lines.push(`program: ${p.location}`)
+			lines.push(`data: ${p.data}`)
+			for (let folder of p.download_folders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
+		}
+		if (p.trouble) lines.push(p.trouble)
+	}
+	let i = instance.value
+	if (i) {
+		if (i.held) lines.push(`lock: held, ${i.lock}`)
+		if (i.handoff) lines.push(`handoff: ${i.handoff}`)
+		if (i.trouble) lines.push(i.trouble)
+		i.requests.forEach((request, n) => lines.push(`${n + 1}. ${request.from}: ${request.args.join(' ') || '(no arguments)'}`))
+	}
+	return lines.join('\n')
+})
+let copied = ref(false)//true for a moment after the button is pressed, so it can say so
+async function copyReport() {
+	await navigator.clipboard.writeText(report.value)
+	copied.value = true
+	setTimeout(() => { copied.value = false }, 1500)
+}
 </script>
 
 <template>
@@ -59,24 +92,28 @@ let pathsHeard = computed(() => engine.value?.ready?.paths?.data === paths.value
 		</form>
 		<p>{{ greetMessage }}</p>
 
-		<p>{{ engineLine }}</p>
-
-		<div v-if="paths" class="paths">
-			<p v-if="paths.mode == 'translocated'">macOS is running ftorrent from a temporary copy at {{ paths.location }}, so it can't see its own folder. To fix it, quit ftorrent, run <code>xattr -dr com.apple.quarantine</code> on ftorrent.app where you put it, and open it again.</p>
-			<template v-else>
-				<p>ftorrent is {{ paths.mode }}{{ pathsHeard ? ', and the engine has its paths' : '' }}</p>
-				<p>program: {{ paths.location }}</p>
-				<p>data: {{ paths.data }}</p>
-				<p v-for="folder in paths.download_folders" :key="folder.setting">downloads: {{ folder.setting }} → {{ folder.path }}</p>
-			</template>
-			<p v-if="paths.trouble">{{ paths.trouble }}</p>
+		<div class="report">
+			<textarea readonly :value="report" :rows="report.split('\n').length"></textarea>
+			<button type="button" @click="copyReport">{{ copied ? 'Copied' : 'Copy' }}</button>
 		</div>
 	</main>
 </template>
 
 <style scoped>
-.paths p {
-	margin: 0.2em 0;
+.report {
+	text-align: left;
+}
+
+.report textarea {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;/* the border and padding inside the width, so full width means the page's width and no more */
+	border: 1px solid #888;
+	padding: 0.5em;
+	margin-bottom: 0.5em;
+	font-family: ui-monospace, monospace;
+	font-size: 0.8em;
+	resize: vertical;
 	overflow-wrap: anywhere;/* a path is one long word, and should wrap rather than push the window wider */
 }
 
