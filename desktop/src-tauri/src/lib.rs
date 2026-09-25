@@ -43,6 +43,8 @@ pub fn run() {
 			engine::engine_start(app.handle());//so the engine is already up, or already known to have failed, by the time the page asks
 			#[cfg(target_os = "windows")]
 			lifecycle::tray_install(app.handle())?;//windows has no dock, so the tray is where a hidden ftorrent is brought back and quit
+			#[cfg(target_os = "windows")]
+			lifecycle::menu_install(app.handle())?;//and the window's own File menu is the other way to quit, the one that needs no tray
 			Ok(())
 		})
 		.on_window_event(lifecycle::window_event)//the close button hides the window rather than closing it
@@ -52,7 +54,11 @@ pub fn run() {
 			tauri::RunEvent::ExitRequested { .. } => engine::engine_stop(app),//a quit, or on linux the window closing; stop the engine now rather than at an exit that may be later
 			#[cfg(target_os = "macos")]
 			tauri::RunEvent::Reopen { has_visible_windows, .. } => { if !has_visible_windows { lifecycle::bring_forward(app) } }//the dock icon clicked while the window is hidden, which is how a mac user asks for it back
-			tauri::RunEvent::Exit => engine::engine_stop(app),//the one event every way of quitting reaches, and a second call finds nothing left to stop
+			tauri::RunEvent::Exit => {//the one event every way of quitting reaches, and a second call finds nothing left to stop
+				engine::engine_stop(app);
+				#[cfg(target_os = "windows")]
+				lifecycle::tray_remove(app);//so the icon goes with the process rather than lingering as a ghost
+			}
 			_ => {}//RunEvent is non-exhaustive, and everything else is somebody else's business
 		});
 }

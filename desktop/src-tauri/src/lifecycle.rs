@@ -7,7 +7,7 @@ ftorrent keeps running with its window closed, the way a file transfer applicati
 
 Closing hides. The close button on Windows and the red button on macOS hide the window instead of closing it, so the page and its webview stay alive, keep their state, and come back at once; the webview's footprint is small next to the engine's. The window is created once when ftorrent starts and destroyed once when it quits.
 
-Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine.
+Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
 Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back.
 */
@@ -29,6 +29,23 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 			let _ = window.hide();
 		}
 	}
+}
+
+/// On Windows, the menu bar: File, and Exit under it. The close button hides, so this is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Called once from setup
+#[cfg(target_os = "windows")]
+pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
+	use tauri::menu::{Menu, MenuItem, Submenu};
+	let exit = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler; no shortcut, the way Exit reads in a Windows File menu, since the system's own Alt+F4 is a close, which now hides
+	let file = Submenu::with_items(app, "File", true, &[&exit])?;
+	app.set_menu(Menu::with_items(app, &[&file])?)?;//on windows, a menu set on the app is the menu bar of its window
+	app.on_menu_event(|app, event| if event.id().as_ref() == "exit" { app.exit(0) });//reaches the Exit run event, which stops the engine; the tray's menu has its own handler, and its Show never comes here
+	Ok(())
+}
+
+/// On Windows, take the tray icon down before the process ends; called from the Exit run event, which every way of quitting reaches. Dropping the icon is what sends the shell its remove message; a process that just exits leaves a ghost icon in the notification area until the mouse touches it
+#[cfg(target_os = "windows")]
+pub fn tray_remove(app: &AppHandle) {
+	let _ = app.remove_tray_by_id("main");//none means it was never built, or is already gone
 }
 
 /// On Windows, the tray icon that brings the window back and quits; called once from setup
