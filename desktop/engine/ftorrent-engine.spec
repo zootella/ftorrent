@@ -40,3 +40,16 @@ coll = COLLECT(
 	upx=False,
 	name='ftorrent-engine',
 )
+
+# No symlinks in the output. On the mac, the libtorrent wheel keeps its OpenSSL libraries in _internal/libtorrent.dylibs, while libtorrent loads them from _internal itself, and PyInstaller bridges the two with a pair of symlinks. A symlink can't survive the places this folder has to go: an exFAT drive, or a zip unpacked on Windows, for the portable edition. So each link is replaced by the file it points to, moved rather than copied so there's one copy of each library, and a folder the moves leave empty is removed. On Windows and Linux there's nothing for this to find
+import os
+output = os.path.join(DISTPATH, 'ftorrent-engine')#DISTPATH is where PyInstaller wrote the folder, dist unless told otherwise
+links = [os.path.join(folder, name) for folder, names, files in os.walk(output) for name in names + files if os.path.islink(os.path.join(folder, name))]#found first, then changed, so the walk never sees a folder mid-edit
+for link in links:
+	target = os.path.realpath(link)#the real file at the end of the link, following any chain of them
+	if not target.startswith(os.path.realpath(output) + os.sep) or not os.path.exists(target):#a link out of the folder, or a second link to a file already moved, isn't a shape this was written for
+		raise SystemExit(f'ftorrent-engine.spec: cannot replace the symlink {link} with {target}')
+	os.remove(link)
+	os.rename(target, link)#the file takes the link's place, and its old place is left empty
+	if not os.listdir(os.path.dirname(target)):#only a folder these moves emptied, never one PyInstaller wrote empty on purpose
+		os.rmdir(os.path.dirname(target))

@@ -95,7 +95,7 @@ The engine is the only process the project adds to what a plain Tauri app alread
 	<text x="456" y="218" style="fill: var(--vp-c-text-2)">standard library</text>
 	<text x="316" y="238">libtorrent/</text>
 	<text x="456" y="238" style="fill: var(--vp-c-text-2)">the C++ module</text>
-	<text x="316" y="258">libtorrent.dylibs/</text>
+	<text x="316" y="258">libssl, libcrypto</text>
 	<text x="456" y="258" style="fill: var(--vp-c-text-2)">OpenSSL, macOS only</text>
 	<text x="316" y="300" style="fill: var(--vp-c-text-2)">what our program's bytecode runs on,</text>
 	<text x="316" y="318" style="fill: var(--vp-c-text-2)">carried inside the launcher itself</text>
@@ -115,8 +115,8 @@ On macOS, installed, everything is inside the `.app`, which is a folder the Find
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libpython3.13.dylib
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/base_library.zip
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libtorrent/__init__.cpython-313-darwin.so
-/Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libtorrent.dylibs/libssl.3.dylib
-/Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libtorrent.dylibs/libcrypto.3.dylib
+/Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libssl.3.dylib
+/Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libcrypto.3.dylib
 ```
 
 On Linux, installed from the `.deb` or the `.rpm`, the app goes where programs go and the engine where a program's private files go:
