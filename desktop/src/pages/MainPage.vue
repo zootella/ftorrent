@@ -5,6 +5,7 @@ import {storeToRefs} from 'pinia'
 import {invoke} from '@tauri-apps/api/core'
 import {useGreetStore} from '../stores/greet.js'
 import {engineStatus} from '../engine.js'
+import {pathsStatus} from '../paths.js'
 
 let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
 let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
@@ -28,6 +29,11 @@ let engineLine = computed(() => {//one sentence about the engine, whatever state
 	if (s.running) return 'engine: starting…'
 	return `engine: stopped${s.exit ? ', ' + s.exit : ''}`
 })
+
+//where everything is, asked for once, since startup worked it out before this page existed and none of it changes while the app runs
+let paths = ref(null)
+onMounted(async () => { paths.value = await pathsStatus() })
+let pathsHeard = computed(() => engine.value?.ready?.paths?.data === paths.value?.data && !!paths.value?.data)//the engine sent back the data folder it was told, so the paths made the round trip
 </script>
 
 <template>
@@ -54,10 +60,26 @@ let engineLine = computed(() => {//one sentence about the engine, whatever state
 		<p>{{ greetMessage }}</p>
 
 		<p>{{ engineLine }}</p>
+
+		<div v-if="paths" class="paths">
+			<p v-if="paths.mode == 'translocated'">macOS is running ftorrent from a temporary copy at {{ paths.location }}, so it can't see its own folder. To fix it, quit ftorrent, run <code>xattr -dr com.apple.quarantine</code> on ftorrent.app where you put it, and open it again.</p>
+			<template v-else>
+				<p>ftorrent is {{ paths.mode }}{{ pathsHeard ? ', and the engine has its paths' : '' }}</p>
+				<p>program: {{ paths.location }}</p>
+				<p>data: {{ paths.data }}</p>
+				<p v-for="folder in paths.download_folders" :key="folder.setting">downloads: {{ folder.setting }} → {{ folder.path }}</p>
+			</template>
+			<p v-if="paths.trouble">{{ paths.trouble }}</p>
+		</div>
 	</main>
 </template>
 
 <style scoped>
+.paths p {
+	margin: 0.2em 0;
+	overflow-wrap: anywhere;/* a path is one long word, and should wrap rather than push the window wider */
+}
+
 .logo.vite:hover {
 	filter: drop-shadow(0 0 2em #747bff);
 }

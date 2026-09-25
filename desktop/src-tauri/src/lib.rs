@@ -2,6 +2,9 @@
 
 mod disk;//compile disk.rs as a module named disk
 mod engine;//and engine.rs: the process that holds libtorrent, started here and stopped from the run events below
+mod paths;//and paths.rs: where everything is, worked out once at startup
+
+use tauri::Manager;//brings manage into scope, for handing the paths to tauri's shared state in setup
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -22,10 +25,12 @@ pub fn run() {
 				disk::disk_read,
 				disk::disk_copy,
 				engine::engine_status,//and in engine.rs
+				paths::paths_status,//and in paths.rs
 				greet,//the scaffold's demonstration command
 			]
 		)
 		.setup(|app| {//before any page exists
+			app.manage(paths::resolve(app.handle()));//first, because the engine is told where everything is
 			engine::engine_start(app.handle());//so the engine is already up, or already known to have failed, by the time the page asks
 			Ok(())
 		})

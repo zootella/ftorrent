@@ -32,6 +32,7 @@ centralized_servers = {
 }
 
 version = ''#the app's version, which arrives in the init line because the engine cannot read tauri.conf.json, the one place it is written
+paths = {}#where the engine will keep what it keeps: the data folder, the state file, and the download folders, which also arrive in init because the app works them out and the engine never does
 
 def client_name():#how the client names itself on the wire: brand first, then lineage, the way a browser's user agent reads, so a narrow column shows the brand and a wide one shows the whole truth
 	return f'ftorrent/{version} libtorrent/{lt.version}'
@@ -59,6 +60,7 @@ def ready():#what the engine reports about itself once it is up, and the first t
 		'client': client_name(),#the name peers and trackers will see
 		'fingerprint': fingerprint(),#and the front of the peer id they will see
 		'centralized_servers': centralized_servers,#so the app can show them, and so anyone running the engine by hand sees the same list the document publishes
+		'paths': paths,#the paths init carried, sent back unchanged, so the app can see they arrived; the engine uses them once it has a session
 	}
 
 def main():
@@ -76,8 +78,9 @@ def main():
 			emit({'event': 'error', 'message': 'malformed json', 'line': line[:200]}); continue
 		command = message.get('command') if isinstance(message, dict) else None
 		if command == 'init':
-			global version
+			global version, paths
 			version = str(message.get('version', ''))#the app says which version it is, once, before anything else
+			paths = message.get('paths', {}) if isinstance(message.get('paths'), dict) else {}
 			emit(ready())
 		elif command == 'quit':
 			break
