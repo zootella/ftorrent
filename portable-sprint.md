@@ -164,15 +164,14 @@ By default a named pipe gives full access to the account that created it, to adm
 
 ## Sprint steps
 
-1. **Resolve paths.** Build the startup steps in the Rust core, from finding the program's own location through reading `ftorrent.json`, and show the results on the main page. An installed copy on Windows keeps everything of its own in `AppData\Local`, and nothing in Roaming.
-2. **Lock the settings folder** with `File::try_lock`.
-3. **Hand off a second launch** through the named pipe on Windows, and confirm that Launch Services already covers it on macOS.
-4. **Lock the download folders**, and show a folder that's in use.
-5. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows.
-6. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
-7. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
-8. **Run the tests below** on both machines.
-9. **Correct the planning document** once, to match what we built.
+1. **Lock the settings folder** with `File::try_lock`.
+2. **Hand off a second launch** through the named pipe on Windows, and confirm that Launch Services already covers it on macOS.
+3. **Lock the download folders**, and show a folder that's in use. Taking a folder's lock is the first time ftorrent looks inside a download folder, and on macOS the default one sits in the protected Downloads folder, so this is where the system's permission prompt first appears. Path resolution deliberately doesn't check whether folders exist, to keep that prompt away until now. Either this step brings the warning ftorrent shows before the prompt, or it accepts the bare prompt during development and says so.
+4. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows. Today a portable run still writes to `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, so the check is that folder's timestamp: a portable run must leave it unchanged.
+5. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
+6. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
+7. **Run the tests below** on both machines.
+8. **Correct the planning document** once, to match what we built.
 
 ## Tests
 
