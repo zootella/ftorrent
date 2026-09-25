@@ -33,3 +33,65 @@ Two things in the plan touch Windows now:
 ## Your answers
 
 Add a section here headed with the date, and report each numbered step: what you ran, and what happened.
+
+## 2026-09-24, from the Windows session
+
+Windows 10 22H2, Windows PowerShell 5.1, Rust 1.98.0, uv 0.12.3, Node 22.21.1, pnpm 10.28.2.
+
+**1. Pull and clean tree.** The working tree was clean at 4520cc7, the commit that carries this letter. It stayed clean through every step below: `git status` showed nothing, and none of the three lockfiles changed.
+
+**2. `pnpm engine`.** Succeeded, about 13 seconds. The output folder has the same shape as before: `ftorrent-engine.exe` (1,825,124 bytes) beside `_internal`, 58 files and 34.8 MB in all. `_internal` holds `libcrypto-3-x64.dll` once, directly, and libtorrent as `_internal\libtorrent\__init__.cp313-win_amd64.pyd`, so there is no OpenSSL folder for the new step to find. No symlinks or junctions, checked two ways: `dir /AL /S desktop\engine\dist\ftorrent-engine` in `cmd` printed `File Not Found`, which is what `dir` says when the attribute filter matches nothing, and `Get-ChildItem -Recurse -Force -Attributes ReparsePoint` in PowerShell counted 0. The symlink step found nothing and changed nothing, as expected.
+
+**3. The init line, with a surprise.** The letter's command, run in Windows PowerShell 5.1, gets this back:
+
+```
+{"event":"error","message":"malformed json","line":"﻿{\"command\":\"init\",\"version\":\"0.1.0\"}"}
+```
+
+The `﻿` is a UTF-8 byte-order mark. Windows PowerShell 5.1 writes one ahead of a string it pipes into a native program, and the engine reads it as the first character of the line. Setting `$OutputEncoding` to UTF-8 without a BOM in the same session made no difference. PowerShell 7 isn't installed on this machine, so whether it behaves the same is untested. The engine itself is fine: the same line sent from Git Bash with `printf` gets the full ready event:
+
+```
+{"event":"ready","libtorrent":"2.1.1.0","webtorrent":true,"python":"3.13.15","frozen":true,"client":"ftorrent/0.1.0 libtorrent/2.1.1.0","fingerprint":"-FF0100-","centralized_servers":{"stun":["stun.ftorrent.com:3478","stun.cloudflare.com:3478","stun.l.google.com:19302"],"dht":["dht.ftorrent.com:51420","dht.libtorrent.org:25401","dht.transmissionbt.com:6881"],"trackers":["udp://open.ftorrent.com:443/announce","https://open.ftorrent.com/announce","wss://open.ftorrent.com","wss://tracker.webtorrent.dev","wss://tracker.openwebtorrent.com","udp://tracker.opentrackr.org:1337/announce"]}}
+```
+
+Nothing in the app is affected, since Rust writes the bytes itself. Two things you might want anyway: decode stdin lines in engine.py with `utf-8-sig` instead of `utf-8`, which strips a leading BOM and costs one word, so that anyone poking the engine from PowerShell gets an answer; and if the letter's command is going to stay in the README, note that it wants PowerShell 7 or a shell that doesn't add the mark.
+
+**4. `pnpm installer`.** Succeeded in 75 seconds, of which the release compile was 54. It produced `src-tauri\target\release\bundle\nsis\ftorrent_0.1.0_x64-setup.exe`, 12,277,982 bytes, one bundle and no MSI.
+
+**5. Install and launch.** The user installed it from that folder, clicking through the NSIS pages and leaving the run-ftorrent box unticked at the end, which gave us a clean split between what installing writes and what launching writes. Then the user launched ftorrent from the Start menu, and the engine line read `engine: libtorrent 2.1.1.0, WebTorrent on, Python 3.13.15, pid 10428`, appearing right after the window did. The user left it running while the session took a snapshot, then closed the window. After that, `ftorrent.exe`, `ftorrent-engine.exe`, and every `msedgewebview2.exe` were gone.
+
+**6. What exists for ftorrent in the application-data folders.** Four snapshots, in order.
+
+Before installing, this machine still carried what the September 22 uninstall left behind, as the README records: `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView` dated 2026-09-22, the registry key `HKCU\Software\ftorrent\ftorrent` holding the old install path, and the older `%LOCALAPPDATA%\com.ftorrent` from step 8. No program folder, no uninstall entry, no Start menu shortcut, and nothing named ftorrent directly under `%APPDATA%`.
+
+After installing and before launching, the installer had written exactly these:
+
+```
+%LOCALAPPDATA%\ftorrent\
+%LOCALAPPDATA%\ftorrent\ftorrent.exe             9,491,968 bytes
+%LOCALAPPDATA%\ftorrent\uninstall.exe               79,932 bytes
+%LOCALAPPDATA%\ftorrent\ftorrent-engine\
+%LOCALAPPDATA%\ftorrent\ftorrent-engine\ftorrent-engine.exe
+%LOCALAPPDATA%\ftorrent\ftorrent-engine\_internal\
+```
+
+plus the uninstall entry under `HKCU\...\Uninstall\ftorrent` (DisplayVersion 0.1.0, Publisher ftorrent, EstimatedSize 43354 KB), the install path rewritten into `HKCU\Software\ftorrent\ftorrent`, and a Start menu shortcut. That shortcut is the one thing the install puts under Roaming: `%APPDATA%\Microsoft\Windows\Start Menu\Programs\ftorrent.lnk`. It sits in the shell's own folder, not in a folder named for ftorrent, so the letter's check of entries directly under `%APPDATA%` still finds nothing. The data folder `com.ftorrent.ftorrent` kept its September 22 dates: installing didn't touch it.
+
+While running, the process tree was `ftorrent.exe` with `ftorrent-engine.exe` as its child (pid 10428, matching the engine line) and six `msedgewebview2.exe` helpers. Every WebView2 process carried `--user-data-dir="%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView"` on its command line, so Tauri names the folder outright rather than letting WebView2 pick one. The launch created no new entry under `%LOCALAPPDATA%` or `%APPDATA%`. Every change was inside `EBWebView`: a `lockfile` appeared, and `Local State`, `Last Version`, and the four `Variations*` files were rewritten.
+
+After quitting, directly under `%LOCALAPPDATA%`, the entries whose name contains ftorrent are `com.ftorrent`, `com.ftorrent.ftorrent`, and `ftorrent`, and directly under `%APPDATA%` there are none. Two levels deep, names only:
+
+```
+%LOCALAPPDATA%\ftorrent\                        ftorrent-engine\, ftorrent.exe, uninstall.exe
+%LOCALAPPDATA%\ftorrent\ftorrent-engine\        _internal\, ftorrent-engine.exe
+%LOCALAPPDATA%\com.ftorrent.ftorrent\           EBWebView\
+%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView\ AutoLaunchProtocolsComponent\, BrowserMetrics\, CertificateRevocation\, component_crx_cache\, Crashpad\, Default\, extensions_crx_cache\, GPUPersistentCache\, GrShaderCache\, hyphen-data\, MEIPreload\, OriginTrials\, PKIMetadata\, ShaderCache\, Speech Recognition\, Subresource Filter\, Trust Protection Lists\, TrustTokenKeyCommitments\, WidevineCdm\, Last Version, Local State, Variations, VariationsRuntimeSeedV2, VariationsSafeSeedV2, VariationsSeedV2
+```
+
+The `lockfile` in `EBWebView` went away with the processes. So the expectation holds: the program under `%LOCALAPPDATA%\ftorrent`, the data folder `%LOCALAPPDATA%\com.ftorrent.ftorrent` holding only a WebView2 profile, and nothing under `%APPDATA%` except the shell's shortcut.
+
+**7. The WebView2 profile folder** is `EBWebView`, confirmed both as the only entry in the data folder and by name on WebView2's command line.
+
+**8. The older folder.** `%LOCALAPPDATA%\com.ftorrent` exists, created 2026-08-23 and last written 2026-08-24, from the two-component identifier before it was changed. It holds one folder, `EBWebView`, with the same layout as the current one plus a `BrowserMetrics-spare.pma`. Neither this install nor this launch touched it. There is no `com.ftorrent` under `%APPDATA%`. Nothing was deleted.
+
+**One thing from the plan, for step 5 before it's written.** The plan says tokio's `named_pipe` module comes with Tauri's runtime. The tokio 1.53.1 in Cargo.lock is there, but `cargo tree -e features -i tokio` shows the tree enables only `rt`, `rt-multi-thread`, `fs`, `sync`, `io-util`, and `bytes`. `named_pipe` lives behind the `net` feature, which nothing enables. A direct dependency line, `tokio = { version = "1", features = ["net"] }`, will unify onto the same locked tokio; `mio` and `socket2`, which `net` pulls in, are already in the lockfile, so the lockfile change should be one added entry under ftorrent's own dependencies rather than anything resolved fresh.
