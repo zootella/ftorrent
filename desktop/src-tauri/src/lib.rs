@@ -4,6 +4,7 @@ mod associate;//compile associate.rs as a module named associate: what ftorrent 
 mod disk;//and disk.rs: file commands the page calls, thin wrappers over std::fs
 mod desktop;//and desktop.rs: text the page hands down to be written when ftorrent exits
 mod engine;//and engine.rs: the process that holds libtorrent, started here and stopped from the run events below
+mod folders;//and folders.rs: the lock inside each download folder, so two copies of ftorrent never share one
 mod paths;//and paths.rs: where everything is, worked out once at startup
 mod instance;//and instance.rs: one running ftorrent per copy, and a second launch handing over what it carried
 mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is explicit
@@ -25,6 +26,7 @@ pub fn run() {
 		.plugin(tauri_plugin_dialog::init())
 		.manage(engine::Engine::default())//the engine's process and status, shared state any command can reach
 		.manage(instance::Instance::default())//this copy's lock, and what has reached it
+		.manage(folders::Folders::default())//the download folders this copy holds, kept open so their locks stay held
 		.manage(desktop::ExitFiles::default())//text to write on the way out, by path
 		.manage(associate::Associate::default())//what registration did this launch, for the page
 		.invoke_handler(//register all the commands JS can invoke
@@ -34,10 +36,13 @@ pub fn run() {
 				disk::disk_stat,
 				disk::disk_read,
 				disk::disk_write,
+				disk::disk_mkdir,
 				disk::disk_copy,
 				desktop::desktop_exit_hold,//and in desktop.rs
 				engine::engine_status,//and in engine.rs
 				engine::engine_folders,
+				folders::folder_lock,//and in folders.rs
+				folders::folder_unlock,
 				paths::paths_status,//and in paths.rs
 				instance::instance_status,//and in instance.rs
 				greet,//the scaffold's demonstration command

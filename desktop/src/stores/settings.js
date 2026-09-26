@@ -3,7 +3,9 @@
 import {ref, reactive, computed} from 'vue'
 import {defineStore} from 'pinia'
 import {settingsFactory, settingsParse, settingsRender} from '../settings.js'
-import {diskRead, diskWrite} from '../disk.js'
+import {diskRead, diskWrite, diskMkdir} from '../disk.js'
+import {folderLock} from '../folders.js'
+import {engineFolders} from '../engine.js'
 import {desktopExitHold} from '../desktop.js'
 import {resolveFolder} from '../paths.js'
 
@@ -19,6 +21,7 @@ export const useSettingsStore = defineStore('settings', () => {
 	let settings = reactive(settingsFactory())//the live settings the rest of ftorrent reads, filled in by load and never replaced
 	let paths = ref(null)//where everything is, as paths.rs worked it out; load takes it, and the page and the folder resolution below read it from here
 	let problems = ref([])//what reading or writing the file had to say, for the page to show; empty when the file was fine
+	let folderStates = ref({})//how each resolved download folder stands, by path, as folder_lock last answered: held, busy, missing, or trouble with the reason after a colon
 	let fileText = ''//what ftorrent last read from or wrote to the file, to tell when a write would change nothing
 	let heldText = ''//what rust is holding to write at exit, to tell when handing it down again would change nothing
 	let unreadable = false//there's no file to use, or it's there and won't open or won't parse, so nothing may be written
@@ -28,6 +31,28 @@ export const useSettingsStore = defineStore('settings', () => {
 		if (!p) return []
 		return settings.downloads.folders.map(setting => ({setting, path: resolveFolder(setting, p.location, p.home)}))
 	})
+
+	let heldFolders = computed(() => resolvedFolders.value.map(folder => folder.path).filter(path => folderStates.value[path] == 'held'))//the folders this copy holds, in settings order, which are the only ones the engine is told about
+
+	async function lockFolders() {//take the lock on every download folder that exists, and tell the engine which ones this copy holds; at startup, never making a folder
+		for (let folder of resolvedFolders.value) folderStates.value[folder.path] = await folderLock(folder.path)
+		await engineFolders(heldFolders.value)
+	}
+
+	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the main page's button until then
+		let state = await folderLock(path)
+		if (state == 'missing') {
+			try {
+				await diskMkdir(path)
+				state = await folderLock(path)
+			} catch (error) {
+				state = `trouble: could not make the folder, ${error}`
+			}
+		}
+		folderStates.value[path] = state
+		await engineFolders(heldFolders.value)
+		return state
+	}
 
 	async function load(loadedPaths) {//read the settings file and leave it exactly as ftorrent would write it, unless it won't open or won't parse; call once, before anything reads a setting
 		paths.value = loadedPaths//first, and always, so the page can show where everything is, and explain a copy with no data folder
@@ -85,5 +110,5 @@ export const useSettingsStore = defineStore('settings', () => {
 		desktopExitHold(paths.value.settings, text).catch(error => problems.value.push(`settings: handing the file down to rust: ${error}`))
 	}
 
-	return {settings, paths, problems, resolvedFolders, load, save, remember}
+	return {settings, paths, problems, folderStates, resolvedFolders, heldFolders, load, save, remember, lockFolders, prepareFolder}
 })

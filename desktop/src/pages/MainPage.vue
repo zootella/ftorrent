@@ -29,6 +29,20 @@ async function saveNote() {
 	setTimeout(() => { noteSaved.value = false }, 1500)
 }
 
+//get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
+let prepared = ref(false)//true for a moment after the button, so it can say so
+async function prepareFolder() {
+	let first = store.resolvedFolders[0]
+	if (!first) return//no download folders in the settings at all
+	try {
+		await store.prepareFolder(first.path)
+	} catch (error) {
+		store.problems.push(`engine: ${error}`)//the engine isn't running, most likely, and its own status line says why
+	}
+	prepared.value = true
+	setTimeout(() => { prepared.value = false }, 1500)
+}
+
 //the engine's status, asked for once a second while this page is showing; a fact from below that this one page displays for now, so it lives here rather than in a store
 let engine = ref(null)
 let instance = ref(null)//this copy's lock and handoff, and the requests that have reached it
@@ -52,11 +66,17 @@ onMounted(async () => { associations.value = await associateStatus() })
 //where everything is, as startup worked it out before this page existed; the settings store holds it, because the download folders resolve against it
 let paths = computed(() => store.paths)
 let pathsHeard = computed(() => engine.value?.ready?.paths?.data === paths.value?.data && !!paths.value?.data)//the engine sent back the data folder it was told, so the paths made the round trip
-let foldersHeard = computed(() => {//and the download folders the page sent it, in the same order, so the settings made the round trip too
-	let sent = store.resolvedFolders.map(folder => folder.path)
+let foldersHeard = computed(() => {//and the download folders the page sent it, which are the ones this copy holds, in the same order, so the settings made the round trip too; an empty list counts, since a first run's default folder may not exist yet
+	let sent = store.heldFolders
 	let heard = engine.value?.folders?.folders
-	return sent.length > 0 && Array.isArray(heard) && heard.join('\n') == sent.join('\n')
+	return Array.isArray(heard) && heard.join('\n') == sent.join('\n')
 })
+let folderWords = {held: 'held', busy: 'in use by another copy of ftorrent', missing: 'not on this machine'}//how each state reads on the page; trouble reads as itself, reason and all
+function folderState(path) {//how the resolved folder at this path stands, in words, or blank before the page has asked
+	let state = store.folderStates[path]
+	if (!state) return ''
+	return `, ${folderWords[state] ?? state}`
+}
 
 //everything above as plain lines, in one box the user can copy from, since a status is most useful pasted into a message or an issue
 let report = computed(() => {
@@ -67,7 +87,7 @@ let report = computed(() => {
 		lines.push(`program: ${p.location}`)
 		lines.push(`data: ${p.data}`)
 		lines.push(`settings: ${p.settings}${foldersHeard.value ? ', and the engine has its folders' : ''}`)
-		for (let folder of store.resolvedFolders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
+		for (let folder of store.resolvedFolders) lines.push(`downloads: ${folder.setting} → ${folder.path}${folderState(folder.path)}`)
 		if (p.trouble) lines.push(p.trouble)
 	}
 	for (let problem of store.problems) lines.push(problem)
@@ -116,6 +136,10 @@ async function copyReport() {
 			<input id="note-input" v-model="noteDraft" placeholder="A note to yourself..." />
 			<button type="submit">{{ noteSaved ? 'Saved' : 'Save as Setting' }}</button>
 		</form>
+
+		<div class="row">
+			<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
+		</div>
 
 		<div class="report">
 			<textarea readonly :value="report" :rows="report.split('\n').length"></textarea>

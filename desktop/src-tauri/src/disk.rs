@@ -168,6 +168,15 @@ pub fn disk_write(path: String, data: Vec<u8>) -> Result<(), String> {
 the first of the write family, brought up from the sketch below for the settings file: the page renders ftorrent.toml and hands the bytes here. A Vec<u8> crosses the ipc as one json number per byte, which is fine for a file of a few hundred bytes and would not be for a big one; disk_read has the same note in the other direction
 */
 
+/// POSIX `mkdir(2)`, single level: the parent has to exist, and a folder already there is an error, just like mkdir without -p
+#[tauri::command]
+pub fn disk_mkdir(path: String) -> Result<(), String> {
+	fs::create_dir(&path).map_err(|e| e.to_string())
+}
+/*
+brought up from the sketch below when download folders arrived: the page makes a download folder the moment it's first needed, like the default ~/Downloads/ftorrent, whose parent is always there
+*/
+
 /*
 more to add later...
 
@@ -187,11 +196,5 @@ pub fn disk_unlink(path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn disk_rmdir(path: String) -> Result<(), String> {
 	fs::remove_dir(&path).map_err(|e| e.to_string())
-}
-
-/// POSIX `mkdir(2)` (single level only)  
-#[tauri::command]
-pub fn disk_mkdir(path: String) -> Result<(), String> {
-	fs::create_dir(&path).map_err(|e| e.to_string())
 }
 */
