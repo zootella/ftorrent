@@ -46,43 +46,43 @@ and a third upcoming epic for the roadmap is dht.ftorrent.com
 
 **Router and pages.** Add Vue Router to `package.json` and configure it for hash mode, which is the correct choice for Tauri since there's no server to handle `pushState` URLs. The app has at least two navigable pages — main and about — and the about page is written as a lazy route, so the build splits it into a chunk of its own and the router's code splitting shows up in the build output. The frontend dependency pipeline needs no separate proof: Vue and `@tauri-apps/api` already resolve out of `node_modules` and are bundled into the app that runs, which is the path any further package would take.
 
-**Filesystem commands.** Port Fuji's `io.rs` into the Tauri command layer as `disk.rs` (renamed to avoid ambiguity with network I/O), bringing all commands from the start: `disk_readdir`, `disk_stat`, `disk_read`, `disk_copy`, `disk_write`, `disk_rename`, `disk_unlink`, `disk_rmdir`, `disk_mkdir`. All are callable from Vue through `invoke()`. These are the app's own commands rather than a plugin's, so they need no permission entries in Tauri v2's capability configuration — that system governs what a plugin exposes, not what the app writes for itself. The main view surfaces a directory listing — the user pastes a path, the app lists contents below using `disk_readdir` and `disk_stat` over IPC — as proof the full pipeline works. The remaining commands are ported and available but not individually surfaced in the UI at this stage. Smoke test: paste a directory path and confirm its contents appear; confirm all commands are registered and invocable from the frontend console. As built: the four read-and-copy commands are ported and registered; the write family is sketched at the bottom of `disk.rs` and deliberately unbuilt until a feature says what guard it needs; the directory-listing page is not yet built.
+**Filesystem commands.** Port Fuji's `io.rs` into the Tauri command layer as `disk.rs` (renamed to avoid ambiguity with network I/O), bringing all commands from the start: `disk_readdir`, `disk_stat`, `disk_read`, `disk_copy`, `disk_write`, `disk_rename`, `disk_unlink`, `disk_rmdir`, `disk_mkdir`. All are callable from Vue through `invoke()`. These are the app's own commands rather than a plugin's, so they need no permission entries in Tauri v2's capability configuration — that system governs what a plugin exposes, not what the app writes for itself. The main view surfaces a directory listing — the user pastes a path, the app lists contents below using `disk_readdir` and `disk_stat` over IPC — as proof the full pipeline works. The remaining commands are ported and available but not individually surfaced in the UI at this stage. Smoke test: paste a directory path and confirm its contents appear; confirm all commands are registered and invocable from the frontend console. As built: seven commands are registered, `disk_readdir`, `disk_stat`, `disk_read`, `disk_write`, `disk_mkdir`, `disk_copy`, and `disk_hide`, which sets the hidden attribute on Windows and does nothing elsewhere; `disk_rename`, `disk_unlink`, and `disk_rmdir` are sketched at the bottom of `disk.rs` for the feature that needs them. They carry no guards, on purpose: the Rust core's commands stay general, and the page, which runs only its own code, decides what's right to do with them (§Security). The directory-listing page is not yet built.
 
 **Take libtorrent (all platforms).** Written as two from-source build stories, one for macOS and one for Windows, and overtaken before either began: libtorrent 2.1 shipped in July 2026 with WebTorrent on by default, and its maintainers publish wheels for every platform we ship. So the story became a lockfile rather than a build. `desktop/engine/uv.lock` pins the libtorrent 2.1.1 wheel, the Python 3.13 interpreter, and PyInstaller for macOS, Windows, and Linux by SHA-256, and `uv sync --frozen` fetches and verifies them on any machine. The libtorrent provenance document on this site records the chain of custody and the hashes. Validated on macOS by importing libtorrent from the wheel, printing its version, confirming the WebTorrent settings are present, and announcing over `wss://open.ftorrent.com`; the same lock built and ran in Linux containers for both architectures. Windows followed on 2026-Sep-22: the same lock fetched the Windows wheel and interpreter, and the frozen engine there printed a ready line identical to the Mac's.
 
-**Engine.** Tauri's word for a bundled helper process is sidecar; ours is the engine, and the process is named `ftorrent-engine`. As built: PyInstaller freezes the Python program, the interpreter, and libtorrent into a folder, an executable beside an `_internal` directory, rather than a single self-extracting binary, because the single-file shape is what antivirus heuristics on Windows most often flag. No custom hook was needed; the wheel installs like any package and PyInstaller collects it. The folder is carried as a resource directory in `tauri.conf.json` rather than through `externalBin`, so there is no target-triple suffix and one path works on every platform: inside the bundle on macOS, beside the executable on Windows, under `/usr/lib/ftorrent` on Linux. The Rust core starts it at setup with the standard library's process API, without the shell plugin, sends it `init`, keeps the `ready` line it answers, and stops it from the `ExitRequested` and `Exit` run events. The main page shows the engine's status. Smoke test, passed on macOS and on Windows: launch the app and confirm `ftorrent-engine` runs as its child; quit the app, through its own quit event or killed outright, and confirm no engine process survives. On Windows the engine also ran with no console window behind the app, from the development build and from the installed one, and Windows Defender raised nothing at any step. The Linux packages carry the same folder, and their engine answered on a bare Debian 12. The desktop architecture document on this site describes the processes, the files, and the channel as built.
+**Engine.** Tauri's word for a bundled helper process is sidecar; ours is the engine, and the process is named `ftorrent-engine`. As built: PyInstaller freezes the Python program, the interpreter, and libtorrent into a folder, an executable beside an `_internal` directory, rather than a single self-extracting binary, because the single-file shape is what antivirus heuristics on Windows most often flag. No custom hook was needed; the wheel installs like any package and PyInstaller collects it. The folder is carried as a resource directory in `tauri.conf.json` rather than through `externalBin`, so there is no target-triple suffix and one path works on every platform: inside the bundle on macOS, beside the executable on Windows, under `/usr/lib/ftorrent` on Linux. The Rust core starts it at setup with the standard library's process API, without the shell plugin, sends it `init`, carries every other line between the page and the engine without reading it, and stops it from the `ExitRequested` and `Exit` run events. The main page shows the engine's status. Smoke test, passed on macOS and on Windows: launch the app and confirm `ftorrent-engine` runs as its child; quit the app, through its own quit event or killed outright, and confirm no engine process survives. On Windows the engine also ran with no console window behind the app, from the development build and from the installed one, and Windows Defender raised nothing at any step. The Linux packages carry the same folder, and their engine answered on a bare Debian 12. The desktop architecture document on this site describes the processes, the files, and the road between the page and the engine as built.
 
-**IPC end to end.** Wire up NDJSON communication between the Tauri Rust core and the Python sidecar over stdin/stdout. The Rust core's first message to the sidecar on startup is an `init` command containing all paths the sidecar needs to operate: the state file location, the list of download folders from `ftorrent.json`, and any session configuration. The sidecar loads session state, scans `.ftorrent` directories in each reachable download folder, loads resume data, starts the libtorrent session, and emits a `ready` event on stdout. From there, the Rust core writes JSON commands on stdin and the sidecar emits NDJSON events on stdout (progress, peer updates, alerts). Vue invokes a Tauri command, the Rust core forwards it to the sidecar, and the result comes back to the UI. The main view displays a live libtorrent session value — like DHT node count or listen port — proving the full path works. Malformed JSON from either side is handled without crashing. Smoke test: launch the app, confirm the sidecar receives init, emits ready, and the UI shows a live session value; send a malformed JSON line and confirm no crash. Built so far: the pipe carrying newline-delimited JSON both ways, the `init` and `ready` exchange, and the engine answering a malformed or unknown line with an `error` line; the session, the live value, and the event stream to the page are still to come.
+**IPC end to end.** Wire up NDJSON communication between the Tauri Rust core and the Python sidecar over stdin/stdout. The Rust core's first message to the sidecar on startup is an `init` command containing the product name, the version, and the paths the sidecar needs to operate: the data folder and the state file location. The download folders are a setting, so the page sends them in a `folders` command once it has read `ftorrent.toml`. The sidecar loads session state, scans `.ftorrent` directories in each reachable download folder, loads resume data, starts the libtorrent session, and emits a `ready` event on stdout. From there, the page builds each command as a line of JSON, which the Rust core writes to the sidecar's stdin without reading it; the sidecar emits NDJSON events on stdout (progress, peer updates, alerts), which wait in a queue in the Rust core until the page takes them. The sidecar keeps one dispatch table, one entry per command, where JSON meets libtorrent, so a new libtorrent call is two edits, the page and the table, and no Rust. The main view displays a live libtorrent session value — like DHT node count or listen port — proving the full path works. Malformed JSON from either side is handled without crashing. Smoke test: launch the app, confirm the sidecar receives init, emits ready, and the UI shows a live session value; send a malformed JSON line and confirm no crash. Built so far: the road both ways, `engine_send` down and `engine_take` up, the `init` and `ready` exchange, the `folders` command and its echo, and the engine answering a malformed or unknown line with an `error` line; the session and the live value are still to come.
 
-**Icons and graphics.** Produce all icon and graphic assets per the design document and wire them into the build. Two app icon sources: full-bleed for Windows/Linux and Apple HIG-padded for macOS, with the build swapping only `icon.icns`. Tray icons provided directly: monochrome template for macOS, small color for Windows/Linux, with the Rust core overriding to template mode at runtime on macOS. A document icon for `.torrent` files, generated to `.icns`, `.ico`, and themed PNGs and wired to the file association on each platform. DMG background with drag-arrow cue. Windows 10 `VisualElementsManifest.xml` and tile PNGs placed by the NSIS installer. Website favicon in the website repo. Smoke test: confirm macOS Dock icon matches neighboring app sizing; confirm tray icon is legible in both light and dark menu bar; confirm a `.torrent` file shows the document icon in Finder and File Explorer; confirm DMG opens with background and correctly positioned icons; confirm Windows 10 shows the branded Start tile.
+**Icons and graphics.** Produce all icon and graphic assets per §Icons and graphics and wire them into the build. One SVG drawing, seen through three viewBoxes: full-bleed for Windows/Linux, inset for the macOS Dock, and inset further for the Windows 10 Start tile, with the build taking only `icon.icns` from the second and the tile images from the third. Tray icons provided directly: monochrome template for macOS, small color for Windows/Linux, with the Rust core overriding to template mode at runtime on macOS. A document icon for `.torrent` files on Windows, wired to the file association; macOS and Linux draw a document icon themselves. DMG background with drag-arrow cue. Windows 10 `VisualElementsManifest.xml` and tile PNGs placed beside the executable as bundle resources. Website favicon, an SVG, in each site. As built: the application icon, the document icon, and the Start tile; the tray uses the application icon until it has its own. Smoke test: confirm macOS Dock icon matches neighboring app sizing; confirm tray icon is legible in both light and dark menu bar; confirm a `.torrent` file shows the document icon in Finder and File Explorer; confirm DMG opens with background and correctly positioned icons; confirm Windows 10 shows the branded Start tile.
 
 ### Distribution
 
 **Installers.** Configure Tauri to produce the packages ftorrent ships: NSIS `.exe` for Windows, `.dmg` for macOS (Apple Silicon only), and for Linux a `.deb` for each of two architectures, an `.rpm`, and a Flatpak. Disable Tauri's default `.AppImage` output. This story first said we would ship `.deb` only, written when the Linux packages were expected to be built by hand on a Linux machine, the way the Windows package is built on a Windows one; the Docker pipeline in the repository's Linux guide made all four Linux packages as cheap as one, so that limit is retired. NSIS runs completely silently with no wizard UI, set to `currentUser` mode so no UAC prompt appears. The DMG uses the background image and icon positions from the icons story. Build artifacts are renamed from Tauri's versioned filenames to `ftorrent.exe`, `ftorrent.dmg`, `ftorrent.amd64.deb`, `ftorrent.arm64.deb`, `ftorrent.x86_64.rpm`, and `ftorrent.x86_64.flatpak` for website distribution. As built: the Linux packages are made on the Mac in Docker containers, the two `.deb` files and the `.rpm` by Tauri and the Flatpak wrapped from the x86-64 `.deb`, engine and all; every Linux name carries its architecture, in each ecosystem's own word for it. The desktop entry the `.deb` and `.rpm` install declares the categories `Network;FileTransfer;P2P;`, which is what qBittorrent and Transmission declare, so launchers file ftorrent beside them. Smoke test: confirm NSIS installs with no visible UI and the app launches from `AppData\Local\ftorrent\`; confirm the DMG opens with the drag-to-Applications layout; confirm the `.deb` installs and launches on Ubuntu, the `.rpm` on Fedora, and the Flatpak on SteamOS.
 
-**Uninstall.** Remove ftorrent the way each platform expects, with the user in charge: the NSIS uninstaller on Windows (listed in Add or Remove Programs), dragging `ftorrent.app` to the Trash on macOS, `apt remove` or `dnf remove` for the Linux packages and `flatpak uninstall` for the Flatpak. Only the Windows uninstaller and the Linux package scripts run code, so only they actively reverse changes — clearing the `HKCU` autostart and handler entries, and offering to remove the machine-wide firewall exemption (which elevates, as adding it did). macOS drag-to-Trash runs nothing, so ftorrent's job is to never leave anything that misbehaves: the login item is registered through the OS's ServiceManagement framework so it does not orphan when the app is deleted (§Start at login), and everything else it leaves is small, standard, and inert. The user's data is always preserved — downloaded files, the `.ftorrent` session directories beside them, and `ftorrent.json` and `state` all remain, so uninstalling never deletes a download and reinstalling resumes cleanly. A user who wants ftorrent's system changes gone first can flip each off in the status surface (§System status and permissions) before removing the app. A portable copy has nothing to uninstall — delete the folder; portable mode never wrote to the host. Smoke test: on Windows enable start-at-login, claim the default handler, add a firewall exemption, run the uninstaller, and confirm all three are reversed; on macOS enable start-at-login, drag the app to the Trash, and confirm no login item is left pointing at the missing app; on every platform confirm downloads, `.ftorrent` directories, settings, and state survive and a reinstall resumes; delete a portable folder and confirm the host is untouched.
+**Uninstall.** Remove ftorrent the way each platform expects, with the user in charge: the NSIS uninstaller on Windows (listed in Add or Remove Programs), dragging `ftorrent.app` to the Trash on macOS, `apt remove` or `dnf remove` for the Linux packages and `flatpak uninstall` for the Flatpak. Only the Windows uninstaller and the Linux package scripts run code, so only they actively reverse changes — clearing the `HKCU` autostart and handler entries, and offering to remove the machine-wide firewall exemption (which elevates, as adding it did). macOS drag-to-Trash runs nothing, so ftorrent's job is to never leave anything that misbehaves: the login item is registered through the OS's ServiceManagement framework so it does not orphan when the app is deleted (§Start at login), and everything else it leaves is small, standard, and inert. The user's data is always preserved — downloaded files, the `.ftorrent` session directories beside them, and `ftorrent.toml` and `state` all remain, so uninstalling never deletes a download and reinstalling resumes cleanly. A user who wants ftorrent's system changes gone first can flip each off in the status surface (§System status and permissions) before removing the app. A portable copy has nothing to uninstall — delete the folder; ftorrent's own code never wrote to the host. Smoke test: on Windows enable start-at-login, claim the default handler, add a firewall exemption, run the uninstaller, and confirm all three are reversed; on macOS enable start-at-login, drag the app to the Trash, and confirm no login item is left pointing at the missing app; on every platform confirm downloads, `.ftorrent` directories, settings, and state survive and a reinstall resumes; delete a portable folder and confirm the host is untouched.
 
-**Portable mode.** Implement portable detection and path resolution per §4. On startup, look for `portable/ftorrent.json` alongside the executable before checking the platform data directory. If found, all state — settings, lock, session state, crash log — stays under `portable/`; the platform data directory is never touched. `./` paths resolve relative to the executable on Windows and Linux, and relative to the `.app` bundle on macOS. The build produces `ftorrent.zip` with binaries for all three platforms and `portable/ftorrent.json` defaulting downloads to `./downloads`. `start_at_login` is grayed out in portable mode. Smoke test: launch from a USB stick on both macOS and Windows, confirm all state stays on the stick and nothing is written to the host; add a torrent, move the stick to the other platform, confirm it resumes; confirm installed and portable run side by side without lock collision.
+**Portable mode.** Implement portable detection and path resolution per §4. On startup, look for `portable/ftorrent.toml` alongside the program before choosing the platform data directory. If found, all state — settings, lock, session state, crash log, and WebView2's profile on Windows — stays under `portable/`, and ftorrent's own code never writes the platform data directory. `./` paths resolve relative to the executable on Windows and Linux, and relative to the `.app` bundle on macOS. The build produces `ftorrent.zip` with Windows and macOS in one folder and `portable/ftorrent.toml` defaulting downloads to `./downloads`. `start_at_login` is grayed out in portable mode. As built: detection, path resolution, and the data folder with WebView2's profile inside it; the zip is not yet built. Smoke test: launch from a USB stick on both macOS and Windows, confirm all state stays on the stick and nothing is written to the host; add a torrent, move the stick to the other platform, confirm it resumes; confirm installed and portable run side by side without lock collision.
 
-**Automatic update.** Implement Tauri's built-in updater with Ed25519 signing. The build generates a keypair once; the public key ships in `tauri.conf.json`. Each release publishes a static JSON manifest per platform at `ftorrent.com/update/{target-triple}`. The app checks on launch and every 24 hours, failing silently if offline. When a newer version is verified, a non-modal text indicator appears at the bottom of the window — no popup, no interruption. On click, confirm, close, apply silently, relaunch. On Linux and in portable mode, the indicator opens `ftorrent.com` in the browser instead. An `update_check` setting in `ftorrent.json` defaults to `true`; when `false`, no requests are made and no indicator appears. Smoke test: host a manifest locally with two versions, confirm detection, indicator, and successful apply-and-relaunch; confirm a bad signature is rejected; confirm `update_check: false` suppresses everything.
+**Automatic update.** Implement Tauri's built-in updater with Ed25519 signing. The build generates a keypair once; the public key ships in `tauri.conf.json`. Each release publishes a static JSON manifest per platform at `ftorrent.com/update/{target-triple}`. The app checks on launch and every 24 hours, failing silently if offline. When a newer version is verified, a non-modal text indicator appears at the bottom of the window — no popup, no interruption. On click, confirm, close, apply silently, relaunch. On Linux, and for any copy not running from where the installer put it, the indicator opens `ftorrent.com` in the browser instead. An `update_check` setting in `ftorrent.toml` defaults to `true`; when `false`, no requests are made and no indicator appears. Smoke test: host a manifest locally with two versions, confirm detection, indicator, and successful apply-and-relaunch; confirm a bad signature is rejected; confirm `update_check: false` suppresses everything.
 
 ### Lifecycle
 
-**System status and permissions.** ftorrent's standing with the operating system — default handler for `.torrent` and `magnet:`, external reachability and firewall, file-access permissions, start at login — is gathered into one status surface that always shows the current state of each in plain language ("you are externally contactable," "ftorrent is not your default torrent app"). These checks run on startup, never at install, and nothing about them blocks the app from running. ftorrent is never pushy: there are no demanding popups. Each item the user could change carries a short explanation and, where applicable, a button that asks ftorrent to make the change for them — and where that hands off to an OS confirmation, ftorrent warns first — and/or written instructions to do it by hand. In portable mode the surface is read-only: it reports status but offers no changes and writes nothing to the host. Smoke test: launch installed and confirm the surface reports each integration's real current state; use one item's button and confirm ftorrent warns about the impending OS prompt before invoking it; confirm a fresh install has taken no system action on its own; confirm portable mode shows status without offering to change anything.
+**System status and permissions.** ftorrent's standing with the operating system — default handler for `.torrent` and `magnet:`, external reachability and firewall, file-access permissions, start at login — is gathered into one status surface that always shows the current state of each in plain language ("you are externally contactable," "ftorrent is not your default torrent app"). These checks run on startup, never at install, and nothing about them blocks the app from running. ftorrent is never pushy: there are no demanding popups. Each item the user could change carries a short explanation and, where applicable, a button that asks ftorrent to make the change for them — and where that hands off to an OS confirmation, ftorrent warns first — and/or written instructions to do it by hand. For a copy not running from where the installer put it — a portable copy, a development build, a copy on the Desktop — the surface is read-only: it reports status but offers no changes and writes nothing to the host. Smoke test: launch installed and confirm the surface reports each integration's real current state; use one item's button and confirm ftorrent warns about the impending OS prompt before invoking it; confirm a fresh install has taken no system action on its own; confirm a portable copy shows status without offering to change anything.
 
-**Start at login.** When the user enables `start_at_login` in settings, ftorrent registers for launch at OS login; disabling it unregisters. On Windows and Linux this is `tauri-plugin-autostart` (a `HKCU\Run` value, an XDG `.desktop` file), both per-user and cleanly removed on uninstall. On macOS, ftorrent registers through the system ServiceManagement framework (`SMAppService`) rather than dropping a raw LaunchAgent, so the login item is OS-managed, bound to the app, and does not orphan when the user later drags the app to the Trash (§Uninstall). The UI reflects the current state. In portable mode the setting is grayed out and nothing is registered. On macOS the first enable may require approval in System Settings → Login Items — expected, and noted in the settings UI.
+**Start at login.** When the user enables `start_at_login` in settings, ftorrent registers for launch at OS login; disabling it unregisters. On Windows and Linux this is `tauri-plugin-autostart` (a `HKCU\Run` value, an XDG `.desktop` file), both per-user and cleanly removed on uninstall. On macOS, ftorrent registers through the system ServiceManagement framework (`SMAppService`) rather than dropping a raw LaunchAgent, so the login item is OS-managed, bound to the app, and does not orphan when the user later drags the app to the Trash (§Uninstall). The UI reflects the current state. For a copy not running from where the installer put it, the setting is grayed out and nothing is registered. On macOS the first enable may require approval in System Settings → Login Items — expected, and noted in the settings UI.
 
-**File and protocol associations.** Register ftorrent as the handler for the `.torrent` extension and the `magnet:` URI scheme. Eligibility is declared at build time — `.torrent` under `fileAssociations` in `tauri.conf.json`, `magnet:` through `tauri-plugin-deep-link` — so after install ftorrent appears in the OS "Open with" menu without becoming anyone's default. When the OS routes a torrent to ftorrent, whether as a launch argument at cold start or as a live event to a running instance, the deep-link plugin delivers it to the Rust core, which forwards it to the sidecar as an add-torrent command; the instance lock routes a magnet clicked while ftorrent is already open to the existing window. Becoming the default is separate and never automatic: a "Default torrent app" panel in settings shows who currently owns `.torrent` and `magnet:`, then queries and claims each through Rust commands on an explicit click, writing per-user state only. In portable mode the panel is grayed out and nothing is declared or claimed. The §File and protocol associations section covers the per-platform mechanics. Smoke test: confirm the panel reports the current `.torrent` and `magnet:` owners; claim and confirm it updates to ftorrent; double-click a `.torrent` file and click a magnet link and confirm both open ftorrent and start the add-torrent flow; launch cold from a magnet and confirm the torrent arrives at startup; click a second magnet while running and confirm the existing window receives it; confirm portable mode declares and claims nothing.
+**File and protocol associations.** Register ftorrent as a handler for the `.torrent` and `.ftorrent` extensions and the `magnet:` and `ftorrent:` URI schemes, so after install ftorrent appears in the OS "Open with" menu without becoming anyone's default. When the OS routes a torrent to ftorrent, whether as a launch argument at cold start or to a running instance, it reaches the page, which will start the add-torrent flow; the instance handoff routes a magnet clicked while ftorrent is already open to the existing window. On Windows the installed copy registers itself at every startup under `HKCU`, offering and taking nothing another program holds; on macOS the types and schemes are declared in `Info.plist`, and opens arrive as Apple Events through `RunEvent::Opened`. As built: the Windows registration, and a launch argument and a second launch's handoff both arriving in the page's request list. Becoming the default is separate and never automatic: a "Default torrent app" panel in settings shows who currently owns `.torrent` and `magnet:`, then queries and claims each through Rust commands on an explicit click, writing per-user state only. For a copy not running from where the installer put it, the panel is grayed out and nothing is declared or claimed. The §File and protocol associations section covers the per-platform mechanics. Smoke test: confirm the panel reports the current `.torrent` and `magnet:` owners; claim and confirm it updates to ftorrent; double-click a `.torrent` file and click a magnet link and confirm both open ftorrent and start the add-torrent flow; launch cold from a magnet and confirm the torrent arrives at startup; click a second magnet while running and confirm the existing window receives it; confirm a portable copy declares and claims nothing.
 
 **Drag and drop.** The user can drag a `.torrent` file from Finder, File Explorer, or a Linux file manager onto the ftorrent window and ftorrent adds it. Tauri's native drag-and-drop delivers the dropped file's path to the Rust core, which routes a `.torrent` to the sidecar as the same add-torrent command the open-event path uses (§File and protocol associations) — a double-click, a clicked magnet, and a file drop all converge on one entry point into the engine. The window shows a drop affordance while a drag is over it, and an unrelated payload is ignored without error. Dragging a *magnet link* (which is dropped text, not a file) is a deliberate open question: Tauri makes native file-drop and webview drop mutually exclusive, so supporting it could degrade the reliable file-drop we get for free — the trade-off and the condition for adding it are in §Drag and drop, and for now magnets arrive by click and paste. Smoke test: drag a `.torrent` from the file manager onto the window and confirm it is added; confirm the drop affordance appears during the drag and clears after; confirm an unrelated dropped file is ignored without error.
 
-**Inbound connectivity and firewall.** ftorrent listens on a port for incoming peer connections. Outbound traffic always works; inbound depends on the host firewall, so ftorrent reports its state in the status surface — distinguishing what it can know locally (is a firewall exemption in place?) from true external reachability, which only an outside probe can confirm (§Inbound connectivity and firewall). Adding a firewall exemption is the one place ftorrent makes a system-wide rather than per-user change, and that is correct — the firewall is where this capability lives. On Windows, ftorrent offers a button that adds the exemption through an elevated call (a UAC prompt it warns about first) and instructions to do it by hand; a user with no administrator rights can't enable inbound at all and runs outbound-only. On macOS there is no supported API to add an application-firewall exemption — and that firewall is off for most users anyway — so ftorrent reports status and gives instructions rather than offering a button. It never forces the choice. The exemption is offered only for installed copies; portable mode reports status but changes nothing on the host. Smoke test: on Windows behind a default firewall, confirm the surface reports no exemption; use the button, confirm the UAC warning precedes the prompt, accept it, and confirm incoming peers connect; decline and confirm downloads still proceed outbound-only; on macOS confirm status and instructions appear with no button; confirm portable mode reports status without offering the change.
+**Inbound connectivity and firewall.** ftorrent listens on a port for incoming peer connections. Outbound traffic always works; inbound depends on the host firewall, so ftorrent reports its state in the status surface — distinguishing what it can know locally (is a firewall exemption in place?) from true external reachability, which only an outside probe can confirm (§Inbound connectivity and firewall). Adding a firewall exemption is the one place ftorrent makes a system-wide rather than per-user change, and that is correct — the firewall is where this capability lives. On Windows, ftorrent offers a button that adds the exemption through an elevated call (a UAC prompt it warns about first) and instructions to do it by hand; a user with no administrator rights can't enable inbound at all and runs outbound-only. On macOS there is no supported API to add an application-firewall exemption — and that firewall is off for most users anyway — so ftorrent reports status and gives instructions rather than offering a button. It never forces the choice. The exemption is offered only for a copy running from where the installer put it; any other copy reports status but changes nothing on the host. Smoke test: on Windows behind a default firewall, confirm the surface reports no exemption; use the button, confirm the UAC warning precedes the prompt, accept it, and confirm incoming peers connect; decline and confirm downloads still proceed outbound-only; on macOS confirm status and instructions appear with no button; confirm a portable copy reports status without offering the change.
 
-**Port mapping (UPnP and NAT-PMP/PCP).** ftorrent asks the router to forward its listen port inward so peers can reach it. libtorrent provides this through two mechanisms, each its own setting — `enable_upnp` and `enable_natpmp` (the NAT-PMP mapper also speaks PCP, NAT-PMP's successor; there is no separate PCP switch) — and ftorrent unifies them under one user-facing setting, `port_mapping` in `ftorrent.json`, default `true`, which turns both on or both off. That matches the single "UPnP/NAT-PMP" control mainstream clients present, and gives a clean opt-out for users on managed networks, who consider it a risk, or who forward ports by hand. ftorrent reads libtorrent's port-mapping alerts — whose transport is one of two values, NAT-PMP or UPnP — and shows the result in the status surface (§System status and permissions): mapped, naming the mechanism that worked and the external port, or not mapped because the router declined or offers no such service. A successful mapping means the router cooperated — not that the internet can reach you, which is confirmed separately (§Inbound connectivity and firewall). Unlike the host-level integrations, a port mapping is a transient request the router expires on its own, so it is not gated by portable mode — a portable copy maps its port too. Smoke test: behind a UPnP-capable router, launch and confirm the status names the mechanism (UPnP or NAT-PMP) and the external port; set `port_mapping` to `false` and confirm neither mechanism is attempted and the status reflects that; on a router with both off, confirm the failure is reported rather than hidden.
+**Port mapping (UPnP and NAT-PMP/PCP).** ftorrent asks the router to forward its listen port inward so peers can reach it. libtorrent provides this through two mechanisms, each its own setting — `enable_upnp` and `enable_natpmp` (the NAT-PMP mapper also speaks PCP, NAT-PMP's successor; there is no separate PCP switch) — and ftorrent unifies them under one user-facing setting, `port_mapping` in `ftorrent.toml`, default `true`, which turns both on or both off. That matches the single "UPnP/NAT-PMP" control mainstream clients present, and gives a clean opt-out for users on managed networks, who consider it a risk, or who forward ports by hand. ftorrent reads libtorrent's port-mapping alerts — whose transport is one of two values, NAT-PMP or UPnP — and shows the result in the status surface (§System status and permissions): mapped, naming the mechanism that worked and the external port, or not mapped because the router declined or offers no such service. A successful mapping means the router cooperated — not that the internet can reach you, which is confirmed separately (§Inbound connectivity and firewall). Unlike the host-level integrations, a port mapping is a transient request the router expires on its own, so it is not gated like them — a portable copy maps its port too. Smoke test: behind a UPnP-capable router, launch and confirm the status names the mechanism (UPnP or NAT-PMP) and the external port; set `port_mapping` to `false` and confirm neither mechanism is attempted and the status reflects that; on a router with both off, confirm the failure is reported rather than hidden.
 
 **File access (macOS).** On macOS Ventura and later, the system gates access to the Downloads, Desktop, and Documents folders and to removable and network volumes behind per-folder permission prompts, independent of code signing and declared with `NS…UsageDescription` strings in the app's `Info.plist`. ftorrent's default download folder sits in Downloads and portable copies run from removable USB volumes, so these prompts will appear. There is no API to query permission ahead of time — it is discovered by attempting access, and the attempt is what triggers the prompt — and since ftorrent must read its download folders at startup to resume torrents, that is when the prompt appears; ftorrent warns in its own UI just before. macOS will not re-prompt once denied, so on a prior denial ftorrent reports the block in the status surface and gives instructions to grant access in System Settings → Privacy & Security. On Windows and Linux this is a no-op for a user writing within their own profile: the surface reports full access. Smoke test: on a clean macOS account, point a download folder at Downloads and confirm ftorrent warns before the access attempt that triggers the system prompt; grant access and confirm writes succeed and status reads clear; deny it and confirm the surface explains the block and links to the Settings instructions; run a portable copy from a USB volume and confirm the removable-volume prompt is anticipated the same way.
 
-**Instance lock.** Enforce single-instance per settings file. After resolving which `ftorrent.json` to use, claim an OS lock: on Windows, a named mutex keyed on a SHA-256 hash of the absolute path; on macOS and Linux, `flock()` on a `ftorrent.lock` file created empty alongside `ftorrent.json` (a separate file because `ftorrent.json` itself gets atomically replaced on save, which would break the lock's inode). If the lock is already held, signal the running instance to focus its window and exit — on Windows via window class lookup, on macOS via `NSRunningApplication`. This replaces Tauri's single-instance plugin, which keys on bundle ID and would incorrectly block installed-plus-portable from running side by side. Smoke test: launch ftorrent, launch it again from the same shortcut, confirm the existing window comes forward and no second instance appears; then launch a portable copy alongside the installed copy and confirm both run independently; then test two OS users on the same machine and confirm no collision.
+**Instance lock.** Enforce single-instance per data folder. After resolving which data folder to use, take an exclusive lock on `ftorrent.lock` inside it, with the standard library's `File::try_lock` on every platform; the file stays empty and separate from `ftorrent.toml`, which is replaced whole on save. If the lock is already held, hand this launch's arguments to the running instance, which brings its window forward, and exit — on Windows through a named pipe the running instance serves, named from the lock file's path, and on macOS through Launch Services, which brings a running app forward and delivers opens to it itself. This replaces Tauri's single-instance plugin, which keys on bundle ID and would incorrectly block installed-plus-portable from running side by side. Each download folder is locked the same way, on `.ftorrent/ftorrent.lock`, so two copies never load the same torrents. Smoke test: launch ftorrent, launch it again from the same shortcut, confirm the existing window comes forward and no second instance appears; then launch a portable copy alongside the installed copy and confirm both run independently; then test two OS users on the same machine and confirm no collision. As built on macOS and Windows: the lock, the handoff, and the download folder locks.
 
 **Sleep detection and prevention.** A timer in the Rust core writes a timestamp every 60 seconds. If the next tick sees a gap longer than two minutes, the system slept — the Rust core tells the sidecar to re-announce to trackers. An optional `prevent_sleep` setting, off by default, holds a platform power assertion while ftorrent is running to prevent idle sleep. macOS and Windows only.
 
@@ -90,7 +90,7 @@ and a third upcoming epic for the roadmap is dht.ftorrent.com
 
 **Sidecar crash and recovery.** The Rust core captures the sidecar's stderr to a 100-line ring buffer in memory (built). During normal operation, nothing is written to disk. If the sidecar exits with a non-zero code, the Rust core writes the buffer to `crash.log` in the application data directory (or `portable/`), overwriting any previous file. The UI surfaces a message indicating the engine has stopped — not a silent failure. The user can restart the sidecar from the UI without relaunching the app; on restart, the sidecar reloads session state and the most recent resume data written by periodic saves, and resumes normally. Normal shutdown produces no `crash.log`. Smoke test: trigger a deliberate sidecar crash via a debug command, confirm `crash.log` appears with the traceback and the UI shows the failure state; click restart in the UI and confirm the sidecar comes back and torrents resume; crash again and confirm `crash.log` is overwritten not appended; confirm clean exit produces no `crash.log`.
 
-**Close and exit.** Clicking the window's close button hides the window — the webview stays alive, JS keeps running, the sidecar keeps transferring. The window is created once at startup and destroyed once at shutdown; hiding and showing is the only transition during normal use. On Windows, the tray icon indicates ftorrent is still running and clicking it shows the window. On macOS, the app remains in the dock. On Linux, the app remains in the taskbar. Quitting from the tray menu, dock menu, or `⌘Q` / keyboard shortcut triggers graceful shutdown. A torrent client that disappears when you close the window is broken.
+**Close and exit.** Clicking the window's close button hides the window — the webview stays alive, JS keeps running, the sidecar keeps transferring. The window is created once at startup and destroyed once at shutdown; hiding and showing is the only transition during normal use. On Windows, the tray icon indicates ftorrent is still running, clicking it shows the window, and its menu has Show and Exit, as does a File menu in the window. On macOS, the app remains in the Dock, and clicking it brings the window back. On Linux, the app remains in the taskbar. Quitting from the tray menu, the File menu, the Dock menu, or `⌘Q` triggers graceful shutdown. A torrent client that disappears when you close the window is broken. As built on macOS and Windows; on Linux, closing still quits.
 
 **Graceful shutdown.** When the app exits — whether from user action, OS shutdown, or sidecar crash — ftorrent saves all state. Per-torrent resume data is written to each torrent's `resume` file inside the appropriate `.ftorrent` directory, as described in §3. Global libtorrent state — the DHT routing table and session-wide settings — is written to the `state` file in the application data directory (or `portable/state` in portable mode). Without this, every restart means re-checking pieces and rebuilding the DHT from scratch. If the sidecar crashes rather than exiting cleanly, the Rust core detects the lost process and surfaces the failure in the UI rather than silently doing nothing.
 
@@ -108,11 +108,7 @@ other stuff it can do
 - fetch good.json from good.ftorrent.com and tell the user their ip addresses and nat information
 
 >window size and position
-the window opens where the OS puts it: with no x/y and center left false, tauri sets no position and the platform places it, cascading each new window down and right. that cascade is worth keeping — an installed copy and a portable copy running side by side land distinguishable rather than exactly stacked — so fitting the window to the screen is about size, not about taking placement away.
-Monitor.workArea, in the pinned @tauri-apps/api 2.11.1, reports the monitor area excluding taskbars and docks, so sizing to usable space needs no plugin. it's a runtime call rather than a config option, so it's a few lines at startup. the trap to design against: workArea comes back in physical pixels while window size and position are logical, and a missing conversion is invisible on a machine at 100% scaling.
-no tauri-plugin-window-state. it remembers window geometry across launches, which we do eventually want, so it's the obvious thing to reach for — but it keeps that state in its own file in the platform data directory, bypassing ftorrent.json and writing to the host machine, which is the one thing portable mode promises never happens. it isn't a rectangle we dislike, it's a rectangle in the wrong place.
-no minWidth or minHeight, deliberately unset. if someone wants the window absurdly small, let them: the webview inside is doing css layout, which degrades rather than breaks. that's the difference from a fully native application, where tiny sizes have produced real crashes.
-when geometry does get remembered, it belongs in ftorrent.json as ordinary settings keys, under the same path rules as everything else there and portable-mode aware like the rest. one bug to design against rather than discover: a saved rectangle can land entirely offscreen after a monitor is unplugged or a resolution changes, so a restored rectangle needs checking against the current availableMonitors() work areas before it's applied, with the default as the fallback.
+built, and the notes that were here are settled. the window is made hidden in code, and the page places it: the saved rectangle is replayed exactly when the monitor under its middle is the size recorded, and otherwise the window gets a fresh place, five eighths of the primary screen by half, at a random spot in the centered three-quarter field, which keeps it off any taskbar or dock without asking where they are and keeps an installed and a portable copy from stacking. geometry lives in ftorrent.toml under [window] and [screen], in css pixels, so tauri-plugin-window-state stays out. still no minWidth or minHeight.
 
 >first example features
 magnet link maker and inspector
@@ -129,7 +125,7 @@ This is a desktop BitTorrent client that participates fully in both traditional 
 
 **Tauri** is the application framework. It provides a native webview, a Rust core for system-level operations, and a well-defined sidecar mechanism for embedding external binaries. Tauri was chosen over Electron because it uses the operating system's native webview rather than shipping a full Chromium instance, resulting in dramatically smaller binaries, lower memory usage, and a smaller attack surface. Its Rust core also provides a strong security model: Tauri v2's capabilities system requires explicit, scoped permission grants for everything the frontend can access, including sidecar execution and argument validation.
 
-**Vue** is the UI framework running inside Tauri's webview. It was chosen as the team's strongest frontend framework and pairs naturally with Tauri, which is frontend-framework-agnostic. The UI communicates with the Tauri Rust core via Tauri's built-in IPC (commands and events).
+**Vue** is the UI framework running inside Tauri's webview. It was chosen as the team's strongest frontend framework and pairs naturally with Tauri, which is frontend-framework-agnostic. The UI communicates with the Tauri Rust core via Tauri's built-in IPC commands.
 
 **Vue Router** is used for top-level view management even though the app has no visible location bar. This is standard practice in Tauri and Electron apps — a client-side router provides lazy-loaded route components, route guards for flows like first-run setup, and a single declarative file (`router/index.js`) that serves as a readable table of contents for the app's view structure. The alternative of swapping components via `v-if` or dynamic `<component :is>` works for trivial cases but degrades quickly, leading teams to reinvent history stacks, guard logic, and lazy-loading wrappers — a router in all but name. Vue Router runs in hash mode (`createWebHashHistory()`) since there is no server to handle `pushState` URLs; the hash fragment is purely an internal concern, invisible to the user in a chromeless Tauri window.
 
@@ -147,7 +143,7 @@ The resulting architecture, from top to bottom:
 
 ```
 Vue UI (Tauri webview)
-  ↕  Tauri IPC (commands / events)
+  ↕  Tauri IPC (engine_send down, engine_take up, and general commands)
 Tauri Rust core
   ↕  stdin / stdout (NDJSON)
 Python engine (PyInstaller folder)
@@ -159,13 +155,15 @@ Traditional and browser peers
 
 ## Security
 
-The app exposes POSIX-style filesystem commands through Tauri IPC: `disk_readdir` (list directory contents), `disk_stat` (file metadata), `disk_read` (read file bytes), `disk_copy` (copy a file), along with `disk_write`, `disk_rename`, `disk_unlink`, `disk_rmdir`, and `disk_mkdir`. Together these give the webview effectively the same filesystem access as a native desktop application — arbitrary reads, writes, deletes, and directory manipulation across any path the user account can reach.
+The app exposes POSIX-style filesystem commands through Tauri IPC: `disk_readdir` (list directory contents), `disk_stat` (file metadata), `disk_read` (read file bytes), `disk_write` (write file bytes), `disk_mkdir` (make a directory), `disk_copy` (copy a file), and `disk_hide` (set the hidden attribute on Windows), with `disk_rename`, `disk_unlink`, and `disk_rmdir` to follow when a feature needs them. Together these give the webview effectively the same filesystem access as a native desktop application — arbitrary reads, writes, and directory manipulation across any path the user account can reach.
 
 Tauri deliberately does not ship this kind of access as a built-in. Traditional desktop frameworks like Win32 or Qt grant full filesystem access because all running code is compiled by the developer — there is no mechanism for foreign code to appear at runtime. A webview is a browser engine, and if an application loads remote content or renders unsanitized HTML, injected script runs with whatever privileges the framework has exposed. Tauri protects against this by scoping its filesystem plugin to specific directories, so that apps built by teams who may not fully understand the threat model don't ship dangerous defaults. For our app, we bypass those guardrails intentionally by writing our own Rust commands and exposing them through IPC.
 
 The entire security posture depends on preventing foreign script from executing in the webview, because IPC is trust-by-origin — any script running in the webview can call `invoke()` exactly as our own Vue components do, and the Rust core cannot distinguish between them. The threat is concrete: if a torrent were named `<img onerror="invoke('disk_unlink',{path:'/'})" src=x>` and that string were inserted into the DOM via `innerHTML` or `v-html`, the attack payload would execute with full filesystem access.
 
 Our app closes this vector at two layers. First, the webview serves only our own bundled assets from Tauri's custom protocol (`tauri://` / `asset://`), never from `http://` or `https://` origins — there is no path for remote content to enter the renderer. Second, all untrusted data from trackers, peers, and the user is rendered through Vue's template interpolation (`{{ }}`), which calls `createTextNode()` under the hood and produces plain text nodes, never parsed HTML. The rule is simple: never use `v-html` with data that originated outside the app. CSP with compile-time nonces is the backstop — even if something somehow bypassed Vue's escaping, an injected script without a valid nonce would not execute.
+
+This is also why the Rust commands carry no guards of their own. Every command the Rust core offers is general, like one in any desktop application's API, and the page holds all of ftorrent's logic about when and why to use it. A guard in Rust would be a second copy of that logic on the other side of the boundary, and it would protect against nothing the two layers above don't already stop.
 
 The sidecar runs as a regular OS child process with the user's own filesystem permissions — Tauri's security model governs the webview, not child processes. libtorrent reads and writes freely without any special configuration, and this is secure because the trust boundary sits between the webview and the Rust core, not between the Rust core and its children.
 
@@ -182,7 +180,7 @@ A remaining theoretical vector is a compromised npm dependency importing `@tauri
 - `ftorrent.amd64.deb` and `ftorrent.arm64.deb` — Debian packages for Ubuntu Desktop and its derivatives (Mint, Pop!_OS, Zorin, elementary), which together account for the majority of desktop Linux users, and for Raspberry Pi OS on ARM.
 - `ftorrent.x86_64.rpm` — RPM package for Fedora, RHEL, Rocky, and AlmaLinux.
 - `ftorrent.x86_64.flatpak` — Flatpak bundle for any distribution, sandboxed, and the only package that installs on SteamOS and Bazzite, whose root filesystems are read-only or atomic. Arch users install the Flatpak.
-- `ftorrent.zip` — portable distribution, described separately below.
+- `ftorrent.zip` — portable distribution for Windows and macOS, described separately below.
 
 During development, macOS and Windows are the active test matrix — the platforms where daily work and testing happen. Linux is a first-class target but not a hot path. The expectation is that by keeping choices simple and standard, Tauri's Linux build will work at the end with little or no correction. As built, it did, and with no Linux machine: the four Linux packages come out of Docker containers on the Mac from one command, so Linux is built on every release rather than when someone sits down at a Linux box.
 
@@ -214,17 +212,17 @@ On macOS, the `.dmg` presents `ftorrent.app` for the user to drag into `/Applica
 **Application settings.** ftorrent's own settings file, keyed by the Tauri bundle identifier:
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\ftorrent.json    # Windows
-~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.json        # macOS
-~/.local/share/com.ftorrent.ftorrent/ftorrent.json                       # Linux
+C:\Users\username\AppData\Local\com.ftorrent.ftorrent\ftorrent.toml      # Windows
+~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.toml        # macOS
+~/.local/share/com.ftorrent.ftorrent/ftorrent.toml                       # Linux
 ```
 
-`ftorrent.json` contains user-facing configuration: the ordered list of download folders, the default download location, UI preferences, and any other settings the user knows about and can change. The Windows registry is avoided except where a feature absolutely requires it, like file type associations for `.torrent` files. On Linux, the base path follows the XDG Base Directory Specification — `$XDG_DATA_HOME` defaults to `~/.local/share/` on Ubuntu Desktop, and virtually no one changes it.
+`ftorrent.toml` contains user-facing configuration: the ordered list of download folders, the window's place, UI preferences, and any other settings the user knows about and can change. It's TOML because it's meant to be opened in a text editor, and JSON can't carry comments: every setting is written out under a comment explaining it, so the file documents every knob ftorrent has. The page owns it, reading it at startup and writing it whole when a setting changes. On Windows everything ftorrent keeps is in Local rather than Roaming, because it belongs to this machine: Tauri already keeps WebView2's profile in Local, and the DHT routing table in `state` is this machine's view of the network. The same folder holds `ftorrent.lock` and, on Windows, WebView2's profile in `EBWebView`. The Windows registry is avoided except where a feature absolutely requires it, like file type associations for `.torrent` files. On Linux, the base path follows the XDG Base Directory Specification — `$XDG_DATA_HOME` defaults to `~/.local/share/` on Ubuntu Desktop, and virtually no one changes it.
 
 **Global libtorrent state.** Separate from user settings, libtorrent maintains session-wide state that persists across restarts:
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\state            # Windows
+C:\Users\username\AppData\Local\com.ftorrent.ftorrent\state              # Windows
 ~/Library/Application Support/com.ftorrent.ftorrent/state                # macOS
 ~/.local/share/com.ftorrent.ftorrent/state                               # Linux
 ```
@@ -237,21 +235,17 @@ C:\Users\username\Downloads\ftorrent\                       # Windows
 ~/Downloads/ftorrent/                                       # macOS
 ~/Downloads/ftorrent/                                       # Linux
 ```
-The user can change this in `ftorrent.json`, but the out-of-box default puts everything in a clearly named subfolder of Downloads rather than scattering files into the user's home directory. On Linux, `~/Downloads/` is the default value of `$XDG_DOWNLOAD_DIR`, a system variable that distributions can override — Ubuntu Desktop leaves it at the default.
+The user can change this in `ftorrent.toml`, but the out-of-box default puts everything in a clearly named subfolder of Downloads rather than scattering files into the user's home directory. On Linux, `~/Downloads/` is the default value of `$XDG_DOWNLOAD_DIR`, a system variable that distributions can override — Ubuntu Desktop leaves it at the default.
 
 ### Paths §3: Download locations and session data
 
 ftorrent does not keep a central session store. Session data lives alongside the downloaded files it describes — each download folder carries its own `.ftorrent` directory. If you move a folder, copy it to a different drive, or carry it on a USB stick, the session information travels with it.
 
-`ftorrent.json` maintains an ordered list of download folder paths:
+`ftorrent.toml` maintains an ordered list of download folder paths:
 
 ```
-{
-  "download_folders": [
-    "~/Downloads/ftorrent",
-    "E:/big torrents"
-  ]
-}
+[downloads]
+folders = ["~/Downloads/ftorrent", "E:/big torrents"]
 ```
 
 The first entry is the default — new torrents go here unless the user specifies otherwise. This list changes only when the user adds or removes an entire download location, not when individual torrents are added or removed.
@@ -272,7 +266,7 @@ Inside each download folder, a hidden `.ftorrent` directory contains one subfold
 
 Each info hash subfolder contains at minimum a `resume` file — the bencoded blob from libtorrent. It may also contain `metadata.torrent` (the original `.torrent` file) and in the future other per-torrent metadata. The folder-per-torrent structure provides room for this without changing the naming scheme.
 
-**Startup.** ftorrent reads `ftorrent.json` and walks `download_folders` in order. For each reachable folder, it scans `.ftorrent/`, loads each `resume` file with `read_resume_data()`, overwrites `save_path` on the returned `add_torrent_params` with the absolute path of the download folder it's currently scanning, and passes it to `session.async_add_torrent()`. Unreachable folders — drive not mounted, path doesn't exist — are skipped, but not removed; a future session may be able to reach that folder, and list the torrents there. (For instance, the user might be running ftorrent installed, but not have plugged in a removable high capacity usb drive.)
+**Startup.** ftorrent reads `ftorrent.toml` and walks `folders` in order. For each reachable folder, it takes an exclusive lock on `.ftorrent/ftorrent.lock`, and a folder another copy of ftorrent already holds shows as in use and loads nothing. For each folder it holds, it scans `.ftorrent/`, loads each `resume` file with `read_resume_data()`, overwrites `save_path` on the returned `add_torrent_params` with the absolute path of the download folder it's currently scanning, and passes it to `session.async_add_torrent()`. Unreachable folders — drive not mounted, path doesn't exist — are skipped, but not removed; a future session may be able to reach that folder, and list the torrents there. (For instance, the user might be running ftorrent installed, but not have plugged in a removable high capacity usb drive.)
 
 **Adding a torrent.** ftorrent creates an info hash subfolder inside the target download folder's `.ftorrent` directory, writes the initial resume data, and passes `add_torrent_params` to libtorrent with `save_path` set to that download folder.
 
@@ -280,11 +274,11 @@ Each info hash subfolder contains at minimum a `resume` file — the bencoded bl
 
 **Graceful shutdown.** ftorrent calls `save_resume_data()` on every active torrent, waits for each corresponding `save_resume_data_alert`, and writes the serialized blob to the torrent's `resume` file. Global session state — DHT routing table and session-wide settings — is saved separately to the `state` file in the application data directory.
 
-**Path resolution.** libtorrent bakes `save_path` into resume data as an absolute path. ftorrent ignores it. The path is determined by physical location: `.ftorrent` lives inside the download folder that contains the files, so ftorrent always knows the correct path from the folder it's scanning. This means a drive letter change — Windows assigns `E:\` one day and `F:\` the next — is a one-line fix in `download_folders`. On next launch, ftorrent finds `.ftorrent` at the new path, sets `save_path` accordingly, and all torrents recover without re-checking pieces.
+**Path resolution.** libtorrent bakes `save_path` into resume data as an absolute path. ftorrent ignores it. The path is determined by physical location: `.ftorrent` lives inside the download folder that contains the files, so ftorrent always knows the correct path from the folder it's scanning. This means a drive letter change — Windows assigns `E:\` one day and `F:\` the next — is a one-line fix in `folders`. On next launch, ftorrent finds `.ftorrent` at the new path, sets `save_path` accordingly, and all torrents recover without re-checking pieces.
 
 ### Paths §4: Portable ftorrent, startup, and path defaults
 
-**Paths in settings.** Paths in `ftorrent.json` are normalized to forward slashes on write. Three forms are supported:
+**Paths in settings.** Paths in `ftorrent.toml` are written with forward slashes. Three forms are supported:
 
 ```
 ./    relative to the application directory
@@ -294,61 +288,65 @@ Each info hash subfolder contains at minimum a `resume` file — the bencoded bl
 
 `./` resolves relative to the application directory on every platform. On Windows and Linux, this is the directory containing the executable. On macOS, the running binary is inside `ftorrent.app/Contents/MacOS/`, but `./` resolves to the directory containing the `.app` bundle — the code detects that it's inside a bundle and walks up to the bundle's parent. This means `./downloads` resolves to the same level as `ftorrent.exe` on Windows, `ftorrent` on Linux, and `ftorrent.app/` on macOS — which is what the user expects. `~` resolves to `/Users/username/` on macOS, `C:\Users\username\` on Windows, `/home/username/` on Linux. Absolute paths are also allowed — a user who points downloads at `D:\torrents` stores exactly that. A user may wish to keep ftorrent portable on a thumb drive plugged into `G:\` which downloads and seeds torrents to a desktop USB drive on `H:\`, for instance. Relative and `~`-prefixed paths are portable across machines; absolute paths are intentionally machine-specific.
 
-**Startup flow.** When ftorrent launches, it computes the path to its own running executable and looks for `portable/ftorrent.json` alongside it — on Windows, next to `ftorrent.exe`; on macOS, next to the `ftorrent.app` bundle. If that file exists, ftorrent is in portable mode and uses it as its settings file. If it doesn't, ftorrent looks for `ftorrent.json` in the platform-standard application data directory described in §2. If that file exists, ftorrent uses it. If neither exists — a clean first launch after installation — ftorrent creates `ftorrent.json` at the installed location, prepopulated with:
+**Startup flow.** When ftorrent launches, it computes the path to its own running executable and looks for `portable/ftorrent.toml` alongside it — on Windows, next to `ftorrent.exe`; on macOS, next to the `ftorrent.app` bundle. If that file exists, ftorrent is portable and `portable/` is its data folder. If it doesn't, ftorrent is installed and uses the platform-standard data folder described in §2, creating it if missing. Anything that isn't portable is installed, whatever the reason: a development build, a copy on the Desktop, or a Mac app macOS translocates, running it from a random read-only folder because it still carries a download's quarantine mark. A translocated portable copy can't see its `portable/` folder, so it acts installed, and works; the portable instructions clear the mark first.
+
+A second rule, separate from the first, decides whether a copy may change the host: only a copy running from where the installer put it registers file types and link schemes, and later starts itself at login or updates itself in place. On Windows that's `%LOCALAPPDATA%\ftorrent`. A copy on the Desktop or one run from the repository is installed by the first rule, but it shouldn't point the registry at a file that will move.
+
+Once the page is up, it reads `ftorrent.toml`. A missing key takes its factory value, a bad value is reported and its factory value kept, and the repaired file is written back; a missing file is written whole, every setting under its comment. A file that won't parse, or can't be read, is reported and left exactly as it is, since it may be one typo from right, and ftorrent runs on factory settings until it's fixed. On a first run the downloads section reads:
 
 ```
-{"download_folders": ["~/Downloads/ftorrent"]}
+[downloads]
+folders = ["~/Downloads/ftorrent"]
 ```
 
-All other settings follow the same pattern — if absent from `ftorrent.json`, a hardcoded default applies. The file only accumulates values the user has explicitly changed. This also absorbs version changes: a newer ftorrent with different factory defaults applies its own default for any key the user never set, so there is no settings-migration step to maintain.
+A setting a newer ftorrent adds is filled in with its factory value and written out on the next save. Because every value is written out, the file can't tell an old factory value from a choice the user made, so a newer ftorrent that changes a factory default carries it over with a step of its own. Each line shows its factory value in a comment, so a user can see where theirs differ.
 
-**What ftorrent.zip contains.** The portable distribution unpacks to a self-contained directory with binaries for all three platforms:
+**What ftorrent.zip contains.** The portable distribution unpacks to a self-contained directory for Windows and macOS:
 
 ```
 ftorrent/
 ftorrent/ftorrent.exe                                               # Windows binary
-ftorrent/ftorrent-engine/                                           # Windows engine folder: ftorrent-engine.exe beside _internal/
-ftorrent/ftorrent.app/                                              # macOS app bundle
+ftorrent/ftorrent-engine/                                           # Windows engine folder, where an installed copy keeps it too
+ftorrent/ftorrent.app/                                              # macOS app bundle, identifier com.ftorrent.portable
 ftorrent/ftorrent.app/Contents/MacOS/ftorrent                       # macOS binary
 ftorrent/ftorrent.app/Contents/Resources/ftorrent-engine/           # macOS engine folder
-ftorrent/ftorrent                                                   # Linux binary
-ftorrent/ftorrent-engine/                                           # Linux engine folder, wanting the same path as the Windows one
 ftorrent/portable/
-ftorrent/portable/ftorrent.json                                     # triggers portable mode
+ftorrent/portable/ftorrent.toml                                     # triggers portable mode
 ```
 
-One wrinkle the engine's folder shape adds, to settle in the portable story: on Windows and Linux the app looks for `ftorrent-engine/` beside its own executable, and in this layout both platforms' executables share one directory, so their two engine folders would want the same path. The portable build resolves that either by giving each platform's engine folder a name the app knows to look for, or by giving each platform's binary a subfolder of its own.
+Linux isn't in the zip. A bare Tauri binary on Linux depends on the system's WebKitGTK, which not every distribution installs, Linux ships on two architectures, and it sits outside the active test matrix, so Linux keeps its four packages. Leaving Linux out also keeps each engine folder where its app looks for it: beside `ftorrent.exe` on Windows, as in an installed copy, and inside the bundle on macOS. The portable Mac bundle has its own identifier, `com.ftorrent.portable`, and declares no document types or URL schemes, so Launch Services never sends a clicked magnet to a portable copy that happens to be running.
 
-`portable/ftorrent.json` is set during the build that produces the zip and contains:
+`portable/ftorrent.toml` is set during the build that produces the zip and contains:
 
 ```
-{"download_folders": ["./downloads"]}
+[downloads]
+folders = ["./downloads"]
 ```
 
-The `./downloads` path resolves relative to the executable on every platform, so the default portable download location works regardless of drive letter or mount point. This is a single zip that works on Windows, macOS, and Linux. The user plugs in a USB stick, launches the binary for their platform, and the same `portable/ftorrent.json` governs all three. Downloaded files, `.ftorrent` directories, and the `state` file are all platform-agnostic. A user can download a torrent on a Mac, eject the stick, plug it into a Windows machine, and resume seeding without re-checking pieces. Most portable app distributions are single-platform. A cross-platform portable BitTorrent client that carries its state between operating systems is, as far as we know, novel.
+The `./downloads` path resolves relative to the executable on every platform, so the default portable download location works regardless of drive letter or mount point. This is a single zip that works on Windows and macOS. The user plugs in a USB stick, launches the binary for their platform, and the same `portable/ftorrent.toml` governs both. Downloaded files, `.ftorrent` directories, and the `state` file are all platform-agnostic. A user can download a torrent on a Mac, eject the stick, plug it into a Windows machine, and resume seeding without re-checking pieces. Most portable app distributions are single-platform. A cross-platform portable BitTorrent client that carries its state between operating systems is, as far as we know, novel.
 
-**Portable mode must not touch the host.** In portable mode, ftorrent never writes to the platform application data directory. Settings live at `portable/ftorrent.json`, global libtorrent state at `portable/state`, and the default download location is alongside the executable. A user can explicitly point downloads at a host drive, but out of the box, everything stays on the stick.
+**Portable ftorrent writes nothing to the host.** A portable copy's own code never writes the platform application data directory. Settings live at `portable/ftorrent.toml`, the lock at `portable/ftorrent.lock`, global libtorrent state at `portable/state`, WebView2's profile on Windows at `portable/EBWebView`, and the default download location is alongside the executable. A user can explicitly point downloads at a host drive, but out of the box, everything stays on the stick. The operating system still keeps its usual records of any program that runs: WKWebView's folders named for the bundle identifier and Launch Services' registration on macOS, SmartScreen's approval and the shell's recent items on Windows, and a firewall rule on either once the firewall has asked about incoming connections. The installing page's portable section lists them plainly.
 
 ### Paths §5: Multiple running instances
 
-Single-instance is enforced *per settings file*, which is the key to how the paths model handles multiple copies on one machine: the `ftorrent.json` a launch resolves to (§4's startup flow) is its instance identity. The same settings file means the same instance; different settings files run independently. The lock that enforces this — a named mutex on Windows, `flock()` on macOS and Linux — is detailed in §Instance lock; here is what it means in practice.
+Single-instance is enforced *per data folder*, which is the key to how the paths model handles multiple copies on one machine: the data folder a launch resolves to (§4's startup flow) is its instance identity. The same data folder means the same instance; different data folders run independently. The lock that enforces this — an exclusive lock on `ftorrent.lock` in the data folder, the same mechanism on every platform — is detailed in §Instance lock; here is what it means in practice.
 
-If Alice double-clicks `ftorrent.exe` while her installed copy is already running, the second launch resolves to the same `ftorrent.json`, finds the lock held, signals the running instance to focus its window, and exits. She never sees two windows from the same installation — no error dialog, no delay.
+If Alice double-clicks `ftorrent.exe` while her installed copy is already running, the second launch resolves to the same data folder, finds the lock held, hands what it carried to the running instance, which brings its window forward, and exits. She never sees two windows from the same installation — no error dialog, no delay.
 
 Multiple *independent* instances are expected and allowed, because they resolve to different settings files:
 
-- **Two OS users.** Alice and Bob share a Mac. Alice is signed in running her installed ftorrent; she locks the screen, Bob signs in and runs his. Separate accounts mean separate application data directories, separate `ftorrent.json` files, and separate locks — no conflict, even with both accounts active at once via fast user switching.
-- **Installed plus portable.** Alice runs her installed ftorrent and a portable copy from her USB stick side by side. One settings file lives in the platform application data directory, the other at `portable/ftorrent.json` on the stick — different files, different locks, two windows each managing its own torrents. This is exactly the case Tauri's single-instance plugin would wrongly block, which is why ftorrent uses its own lock (§Instance lock).
+- **Two OS users.** Alice and Bob share a Mac. Alice is signed in running her installed ftorrent; she locks the screen, Bob signs in and runs his. Separate accounts mean separate application data directories, separate `ftorrent.toml` files, and separate locks — no conflict, even with both accounts active at once via fast user switching.
+- **Installed plus portable.** Alice runs her installed ftorrent and a portable copy from her USB stick side by side. One data folder is the platform application data directory, the other is `portable/` on the stick — different files, different locks, two windows each managing its own torrents. This is exactly the case Tauri's single-instance plugin would wrongly block, which is why ftorrent uses its own lock (§Instance lock).
 
 ### Paths §6: Example story: Portable Alice
 
 The paths system is designed to be simple in its rules but flexible under strain — the same mechanics that handle a single-machine install with one download folder also handle a portable drive moving between platforms with machine-specific download locations, without special cases or user intervention. Consider this example: Alice carries ftorrent on a 2TB USB drive. She uses a Windows desktop at home and a Mac at the office.
 
-She unzips `ftorrent.zip` to her USB drive and launches `ftorrent.exe` on her Windows desktop, where the drive mounts as `E:\`. She adds a few torrents — a Linux ISO and a documentary. Because `portable/ftorrent.json` contains `{"download_folders": ["./downloads"]}`, both go to `E:\ftorrent\downloads\`. Her drive looks like:
+She unzips `ftorrent.zip` to her USB drive and launches `ftorrent.exe` on her Windows desktop, where the drive mounts as `E:\`. She adds a few torrents — a Linux ISO and a documentary. Because `portable/ftorrent.toml` lists `./downloads` as its download folder, both go to `E:\ftorrent\downloads\`. Her drive looks like:
 
 ```
 E:\ftorrent\ftorrent.exe
-E:\ftorrent\portable\ftorrent.json
+E:\ftorrent\portable\ftorrent.toml
 E:\ftorrent\portable\state
 E:\ftorrent\downloads\ubuntu-24.04\
 E:\ftorrent\downloads\some-documentary\
@@ -356,22 +354,18 @@ E:\ftorrent\downloads\.ftorrent\v1.aabb...\
 E:\ftorrent\downloads\.ftorrent\v1.ccdd...\
 ```
 
-A friend sends her a magnet link for a large Windows game he's developing, a new build for her to play-test. She wants that on her PC, not on the stick, so when adding the magnet she chooses a custom download location: `C:\Games`. ftorrent adds this folder to `download_folders` automatically — the folder doesn't need to be empty or ftorrent-specific. ftorrent only reads and writes inside the `.ftorrent` subdirectory it creates there, and only looks for files and folders it has resume data for. Everything else in `C:\Games` is untouched. Her `ftorrent.json` is now:
+A friend sends her a magnet link for a large Windows game he's developing, a new build for her to play-test. She wants that on her PC, not on the stick, so when adding the magnet she chooses a custom download location: `C:\Games`. ftorrent adds this folder to its download folders automatically — the folder doesn't need to be empty or ftorrent-specific. ftorrent only reads and writes inside the `.ftorrent` subdirectory it creates there, and only looks for files and folders it has resume data for. Everything else in `C:\Games` is untouched. Her `ftorrent.toml` now reads:
 
 ```
-{
-  "download_folders": [
-    "./downloads",
-    "C:/Games"
-  ]
-}
+[downloads]
+folders = ["./downloads", "C:/Games"]
 ```
 
 The game downloads to `C:\Games\moondrop-mountain-nightly\`, with resume data in `C:\Games\.ftorrent\`. She seeds it overnight.
 
 Next morning, she ejects the drive and takes it to work. She plugs it into her Mac, where it mounts at `/Volumes/ALICE2TB/`. She double-clicks `ftorrent.app`. On startup:
 
-1. ftorrent finds `portable/ftorrent.json`, enters portable mode.
+1. ftorrent finds `portable/ftorrent.toml`, enters portable mode.
 2. `./downloads` resolves to `/Volumes/ALICE2TB/ftorrent/downloads/`. The `.ftorrent` directory is there — the Linux ISO and documentary load normally.
 3. `C:/Games` doesn't exist on this Mac. ftorrent can't reach the directory, can't read its `.ftorrent`, and has no information about what's there — no names, no hashes, nothing. Those torrents simply don't appear. There's no error, no gray row, no dialog. The torrent list shows the two torrents on the stick and that's it.
 4. She adds a new torrent at work. It goes to the default `./downloads` on the stick.
@@ -382,7 +376,7 @@ She takes the drive home. Her desktop already has a thumb drive plugged in, so t
 2. `C:/Games` exists on this machine. ftorrent scans its `.ftorrent`, finds the game torrent's resume data, sets `save_path` to `C:\Games\`, and the game resumes seeding exactly where it left off. Nothing about the trip to the Mac disturbed it — the resume data has been sitting on `C:\` the whole time, untouched.
 3. Everything is back. No paths were edited. No dialogs were shown.
 
-Her `download_folders` list grows over time as she adds locations on different machines. Entries that don't resolve on the current machine are silently skipped. There are no ghost entries in the torrent list, no error states, no prompts — torrents from unreachable folders simply aren't there, and come back when the folder is reachable again.
+Her list of download folders grows over time as she adds locations on different machines. Entries that don't resolve on the current machine are silently skipped. There are no ghost entries in the torrent list, no error states, no prompts — torrents from unreachable folders simply aren't there, and come back when the folder is reachable again.
 
 ### Paths §7: Example story: Three users who install
 
@@ -402,10 +396,10 @@ C:\Users\Bill\Downloads\ftorrent.exe
 C:\Users\Bill\AppData\Local\ftorrent\ftorrent.exe
 
 # settings (created on first launch)
-C:\Users\Bill\AppData\Roaming\com.ftorrent.ftorrent\ftorrent.json
+C:\Users\Bill\AppData\Local\com.ftorrent.ftorrent\ftorrent.toml
 
 # global libtorrent state
-C:\Users\Bill\AppData\Roaming\com.ftorrent.ftorrent\state
+C:\Users\Bill\AppData\Local\com.ftorrent.ftorrent\state
 
 # downloaded content
 C:\Users\Bill\Downloads\ftorrent\Big Buck Bunny.mp4
@@ -432,7 +426,7 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /Applications/ftorrent.app/Contents/MacOS/ftorrent
 
 # settings (created on first launch)
-/Users/Steve/Library/Application Support/com.ftorrent.ftorrent/ftorrent.json
+/Users/Steve/Library/Application Support/com.ftorrent.ftorrent/ftorrent.toml
 
 # global libtorrent state
 /Users/Steve/Library/Application Support/com.ftorrent.ftorrent/state
@@ -461,7 +455,7 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /usr/bin/ftorrent
 
 # settings (created on first launch)
-/home/linus/.local/share/com.ftorrent.ftorrent/ftorrent.json
+/home/linus/.local/share/com.ftorrent.ftorrent/ftorrent.toml
 
 # global libtorrent state
 /home/linus/.local/share/com.ftorrent.ftorrent/state
@@ -480,10 +474,11 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /home/linus/Downloads/ftorrent/.ftorrent/v1.a88fda59...dad3/metadata.torrent
 ```
 
-All three users' `ftorrent.json` contains the same thing:
+All three users' `ftorrent.toml` lists the same download folder:
 
 ```
-{"download_folders": ["~/Downloads/ftorrent"]}
+[downloads]
+folders = ["~/Downloads/ftorrent"]
 ```
 
 This was created by ftorrent on first launch. The `~` resolves to `C:\Users\Bill\`, `/Users/Steve/`, and `/home/linus/` respectively. Every other path follows from the decisions in §1–§4 — nothing was configured, nothing was customized, everything is factory defaults.
@@ -494,15 +489,15 @@ Uninstalling is the counterpart to the install flow in §1–§2, and ftorrent f
 
 **Only some of these run code — so we design for the ones that don't.** A subtlety decides the whole approach: a Windows uninstaller and a Debian `postrm` script execute, so they *can* actively reverse changes, but macOS drag-to-Trash runs nothing at all. There is no uninstall hook on macOS, so anything ftorrent leaves behind it leaves for good until the user removes it by hand. The answer is not to fake an uninstaller but to make sure ftorrent never leaves anything that misbehaves.
 
-- **Windows.** The uninstaller clears the per-user autostart and file/protocol class entries from `HKCU` (§Start at login, §File and protocol associations). A firewall exemption is machine-wide, so removing it elevates just as adding it did (§Inbound connectivity and firewall); the uninstaller offers to do so.
+- **Windows.** The uninstaller clears the per-user autostart and file/protocol class entries from `HKCU` (§Start at login, §File and protocol associations). A bare NSIS uninstall leaves the keys ftorrent wrote behind, so an `NSIS_HOOK_PREUNINSTALL` hook, named in `bundle.windows.nsis.installerHooks`, deletes ftorrent's own keys, and a shared scheme class like `magnet` only while it still names ftorrent. A firewall exemption is machine-wide, so removing it elevates just as adding it did (§Inbound connectivity and firewall); the uninstaller offers to do so.
 - **macOS.** Nothing runs, so the design carries the weight. The login item is registered through `SMAppService`, not a raw LaunchAgent, so it is bound to the app and simply stops existing when the app is trashed — no orphaned plist still trying to launch a deleted binary (§Start at login). The default-handler registration in Launch Services goes stale and the system drops it on its own; any file-access (TCC) grants and a rarely-used firewall entry are inert references the user can clear in System Settings. What remains is small, standard, and harmless.
 - **Linux.** `postrm` runs as root and reverses the system-level install. Per-user files — the autostart `.desktop`, `mimeapps.list`, the application-data directory — live in each user's home and are left in place, small and in standard locations.
 
-**The user's data is always preserved.** Downloaded files, the `.ftorrent` session directories beside them, and `ftorrent.json` and `state` in the application data directory all remain on every platform. Uninstalling never deletes a download, and a later reinstall finds its settings and resumes its torrents without re-checking. Deleting someone's downloads on the way out would be the wrong default; a user who wants a clean sweep removes the application data directory and the download folders by hand.
+**The user's data is always preserved.** Downloaded files, the `.ftorrent` session directories beside them, and `ftorrent.toml` and `state` in the application data directory all remain on every platform. Uninstalling never deletes a download, and a later reinstall finds its settings and resumes its torrents without re-checking. Deleting someone's downloads on the way out would be the wrong default; a user who wants a clean sweep removes the application data directory and the download folders by hand.
 
 **Undo-first, for the tidy.** A user who wants ftorrent's system changes gone *before* removing the app can turn each one off in the status surface (§System status and permissions) — the same controls that enabled start-at-login, the default-handler claim, and the firewall exemption switch them back off. This is the honest, user-in-charge way to "fully uninstall," and it works identically on all three platforms. It also pairs with the install philosophy: install is deliberately minimal — close to xcopy, taking no active system action — so what little there is to undo is exactly what the user explicitly turned on.
 
-**Portable has nothing to uninstall.** A portable copy never wrote to the host — no binary in a program directory, no autostart entry, no handler claim, no firewall rule, no application-data files. Uninstalling is deleting the folder on the stick, and the host is left exactly as it was before the stick was plugged in. This is the portable promise (§4) seen from the other end.
+**Portable has nothing to uninstall.** A portable copy's own code never wrote to the host — no binary in a program directory, no autostart entry, no handler claim, no firewall rule, no application-data files. Uninstalling is deleting the folder on the stick; what remains on the host is only the operating system's own records of a program that ran, which §4 lists. This is the portable promise seen from the other end.
 
 ## Automatic Update
 
@@ -539,9 +534,9 @@ When the user clicks, a brief confirmation prompt appears. On confirmation, the 
 
 This seamless apply-and-restart works on macOS and Windows. On macOS, Tauri replaces the `.app` bundle and relaunches. On Windows, Tauri runs the NSIS installer silently in per-user mode and relaunches. Neither requires admin privileges or platform signing.
 
-On Linux and in portable mode, the same check and notification happen, but clicking the indicator opens `ftorrent.com` in the user's browser rather than applying the update in place. Linux updates require package manager privileges that the app shouldn't silently acquire, and portable installs can't replace a running binary on a USB stick. The user downloads the new `.deb` or `ftorrent.zip` manually — this matches platform expectations.
+On Linux, and for a copy not running from where the installer put it, the same check and notification happen, but clicking the indicator opens `ftorrent.com` in the user's browser rather than applying the update in place. Linux updates require package manager privileges that the app shouldn't silently acquire, portable installs can't replace a running binary on a USB stick, and a copy the installer didn't place isn't one the updater should replace. The user downloads the new `.deb` or `ftorrent.zip` manually — this matches platform expectations.
 
-**Setting.** `ftorrent.json` has an `"update_check"` key, defaulting to `true`. If the user sets it to `false`, the app makes no HTTP requests to the update endpoint, no download occurs, no notification appears, and no install base data reaches the server.
+**Setting.** `ftorrent.toml` has an `update_check` key, defaulting to `true`. If the user sets it to `false`, the app makes no HTTP requests to the update endpoint, no download occurs, no notification appears, and no install base data reaches the server.
 
 ## Crash capture
 
@@ -550,7 +545,7 @@ ftorrent does not have a logging system. During development, diagnostic output i
 If the sidecar exits with a non-zero exit code, the Rust core writes the buffer contents to `crash.log` in the application data directory (or `portable/` in portable mode):
 
 ```
-C:\Users\username\AppData\Roaming\com.ftorrent.ftorrent\crash.log        # Windows
+C:\Users\username\AppData\Local\com.ftorrent.ftorrent\crash.log          # Windows
 ~/Library/Application Support/com.ftorrent.ftorrent/crash.log             # macOS
 ~/.local/share/com.ftorrent.ftorrent/crash.log                            # Linux
 ```
@@ -563,7 +558,7 @@ ftorrent has two separate layers for dealing with system sleep: detection and pr
 
 **Detection.** The Rust core writes a timestamp to memory every 60 seconds. When the system sleeps, the timer stops. When it wakes, the timer resumes and the next tick sees a gap — an hour of missing timestamps means an hour of sleep. The first tick after the gap triggers the sidecar to re-announce to trackers and refresh peer connections rather than waiting for libtorrent's internal timers to expire naturally. No platform-specific sleep/wake notifications are involved — this works identically on macOS, Windows, and Linux.
 
-**Prevention.** An optional setting in `ftorrent.json`, `"prevent_sleep"`, defaults to `false`. When the user enables it, ftorrent holds a power assertion that prevents the system from sleeping due to inactivity. On macOS, this is an `IOPMAssertion` with `PreventUserIdleSystemSleep`. On Windows, this is `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)`. The assertion is held as long as ftorrent is running, regardless of whether any transfers are active — the user may want to keep the machine awake for DHT participation alone. The assertion is released when ftorrent exits.
+**Prevention.** An optional setting in `ftorrent.toml`, `prevent_sleep`, defaults to `false`. When the user enables it, ftorrent holds a power assertion that prevents the system from sleeping due to inactivity. On macOS, this is an `IOPMAssertion` with `PreventUserIdleSystemSleep`. On Windows, this is `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)`. The assertion is held as long as ftorrent is running, regardless of whether any transfers are active — the user may want to keep the machine awake for DHT participation alone. The assertion is released when ftorrent exits.
 
 This only prevents idle sleep. It cannot prevent lid close, user-initiated sleep, critical battery shutdown, or forced OS restarts. These are correct OS boundaries — no unprivileged app can override them. When they happen, the timestamp gap detects the wake and the sidecar recovers.
 
@@ -573,7 +568,7 @@ Linux is excluded from the prevention layer for now. The mechanism (`systemd-inh
 
 A desktop app sits inside an operating system that guards certain capabilities behind the user's consent: which app owns a file type or URL scheme, whether a program may accept incoming network connections, whether it may read a particular folder, whether it launches at login. ftorrent treats all of these the same way — through one surface and one philosophy.
 
-**Checks run on startup, not at install.** Installation places files and little else, as close to xcopy as each platform allows. The packages carry only the inherent metadata that lets the OS list ftorrent as an option — the document types in the macOS `Info.plist`, the `MimeType` in the Linux `.desktop` file, the per-user class registration on Windows — and beyond that take no active system action: no default claims, no firewall rules, no login registration. Each time it launches, ftorrent instead checks where it actually stands — am I the default for `.torrent` and `magnet:`? am I externally contactable? can I write my download folders? am I set to start at login? — and reports the answers.
+**Checks run on startup, not at install.** Installation places files and little else, as close to xcopy as each platform allows. The packages carry only the inherent metadata that lets the OS list ftorrent as an option — the document types in the macOS `Info.plist` and the `MimeType` in the Linux `.desktop` file; on Windows, where an installer-placed app has no manifest, the installed copy writes its per-user class registration itself at startup — and beyond that take no active system action: no default claims, no firewall rules, no login registration. Each time it launches, ftorrent instead checks where it actually stands — am I the default for `.torrent` and `magnet:`? am I externally contactable? can I write my download folders? am I set to start at login? — and reports the answers.
 
 **The surface is always honest and never pushy.** A single area in the app shows the current state of each integration in plain language: "you are externally contactable," "ftorrent is not your default torrent app," "incoming connections are blocked." There are no demanding popups and nothing the user must dismiss to use the app. Each item the user could change carries a short explanation of the situation and, where applicable, two ways forward: a button that asks ftorrent to make the change, and written instructions for doing it by hand. The user can ignore all of it and the app still works. Every change the surface can make it can also undo — the control that claims the default handler or adds the firewall exemption is the same one that gives it back — which is also how a user tidies up before removing the app (§Uninstall).
 
@@ -583,29 +578,29 @@ A desktop app sits inside an operating system that guards certain capabilities b
 
 **Notifications.** ftorrent prefers to tell the user things inside its own window — a banner or a line of text — rather than through OS notifications, the same way the updater shows a quiet in-window indicator instead of a popup (§Automatic Update). OS notifications are not banned; where one is genuinely the better tool, such as an event worth surfacing while the window is hidden, ftorrent may post one, and if that requires the OS notification permission, the permission is handled like any other — shown in the surface, explained, never forced.
 
-**Portable mode is read-only toward the host.** A portable copy runs the same checks and shows the same status read-outs, but offers no changes and writes nothing to the host — no claims, no rules, no login registration. The promise that a portable ftorrent leaves the machine exactly as it found it holds here too.
+**Only the installer's copy changes the host.** A copy not running from where the installer put it — a portable copy, a development build, a copy on the Desktop — runs the same checks and shows the same status read-outs, but offers no changes and writes nothing to the host — no claims, no rules, no login registration. For a portable copy, that's the portable promise; for the others, it keeps the host from pointing at a file that may move.
 
 ## Start at login
 
-An optional `"start_at_login"` setting in `ftorrent.json`, defaulting to `false`, registers ftorrent to launch at OS login. On Windows and Linux this goes through Tauri's `tauri-plugin-autostart`: on Windows it writes `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, reliable on Windows 10 and 11; on Linux it creates a `.desktop` file in `~/.config/autostart/`, the XDG autostart standard followed by Ubuntu Desktop and its derivatives. Both are per-user and are removed cleanly on uninstall.
+An optional `start_at_login` setting in `ftorrent.toml`, defaulting to `false`, registers ftorrent to launch at OS login. On Windows and Linux this goes through Tauri's `tauri-plugin-autostart`: on Windows it writes `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, reliable on Windows 10 and 11; on Linux it creates a `.desktop` file in `~/.config/autostart/`, the XDG autostart standard followed by Ubuntu Desktop and its derivatives. Both are per-user and are removed cleanly on uninstall.
 
 macOS needs more care, because the obvious approach has a tail. The autostart plugin registers a LaunchAgent — a plist in `~/Library/LaunchAgents` — which is not tied to the app bundle: drag the app to the Trash and the plist stays behind, still trying to launch a binary that is gone, lingering in the system's background-items list with nothing to remove it. ftorrent instead registers the login item through the macOS ServiceManagement framework (`SMAppService`, macOS 13+), so the item is OS-managed and bound to the app — it presents a single, clearly-labeled approval when enabled and stops existing when the app is deleted, so nothing orphans (§Uninstall). Because ftorrent ships unsigned, macOS may still require the user to approve the item in System Settings → Login Items before it takes effect.
 
-In portable mode, this setting is grayed out in the UI — a portable app on a USB stick does not register itself on the host system's login sequence, as the portable promise is no change to the running system at all!
+For a copy not running from where the installer put it, this setting is grayed out in the UI — a portable app on a USB stick does not register itself on the host system's login sequence, and a copy on the Desktop or in a development folder shouldn't start a file that may move.
 
 ## File and protocol associations
 
-A desktop BitTorrent client is expected to open when you double-click a `.torrent` file or click a `magnet:` link in a browser. ftorrent registers for both, but splits the work into two steps that carry very different consent: being *eligible* to handle them, and being the user's *default*. This is outer-first work — the OS-level shell that delivers a torrent into the app is built and finished here so the in-app experience is later built on top of it, the same way the filesystem commands were ported whole before any view surfaced them.
+A desktop BitTorrent client is expected to open when you double-click a `.torrent` file or click a `magnet:` link in a browser. ftorrent registers for both, and for its own `.ftorrent` files and `ftorrent:` links, but splits the work into two steps that carry very different consent: being *eligible* to handle them, and being the user's *default*. This is outer-first work — the OS-level shell that delivers a torrent into the app is built and finished here so the in-app experience is later built on top of it, the same way the filesystem commands were ported whole before any view surfaced them.
 
-**Eligibility is declared at build time** and costs the user nothing. `.torrent` is listed under `fileAssociations` in `tauri.conf.json` with its extension, the `application/x-bittorrent` MIME type, and a document icon; `magnet:` is registered as a URI scheme through `tauri-plugin-deep-link`. Tauri's bundler translates these into each platform's native form — `CFBundleDocumentTypes` and `CFBundleURLTypes` in the macOS `Info.plist`, registry entries under `HKCU\Software\Classes` written by the NSIS installer on Windows, and `MimeType` and `x-scheme-handler/magnet` lines in the `.desktop` file on Linux. After install the OS knows ftorrent *can* open torrents and magnets — it shows up in the "Open with" menu — without changing any default the user already depends on.
+**Eligibility costs the user nothing.** On macOS the types and schemes are declared in `Info.plist`, `CFBundleDocumentTypes` and `CFBundleURLTypes`, and on Linux in the `.desktop` file's `MimeType` and `x-scheme-handler/magnet` lines; the system reads them from the package. Windows is different: an app placed by an installer has no manifest, so its only channel is the registry, and the installed copy writes it itself, at every startup, from `associate.js` on three general registry commands that read a value, write one only if it would change, and tell the shell. Under `HKCU` only, it writes a ProgID for each type and scheme, ftorrent's entry in each extension's `OpenWithProgids` list, and a `Capabilities` block named in `RegisteredApplications`, so ftorrent appears in Explorer's Open with menu and in Settings under Default apps. It never writes an extension's default value or the sealed `UserChoice`. A scheme's shared class, like `magnet` itself, which Windows falls back to when no user has chosen, is written only while it's empty or already ftorrent's, so on a machine with no torrent client a clicked magnet reaches ftorrent with no user step, and where another program holds it, ftorrent leaves it alone. Tauri's `bundle.fileAssociations` stays out of `tauri.conf.json` on purpose: on Windows its NSIS macro seizes each type's default at install. After install the OS knows ftorrent *can* open torrents and magnets — it shows up in the "Open with" menu — without changing any default the user already depends on.
 
-**The open event is the plumbing that matters.** A torrent reaches ftorrent two ways: when ftorrent is opened cold by double-clicking a file or following a magnet link, or as a live event to an instance already running. The mechanics differ by platform — Windows and Linux pass the path or URI as a launch argument to a new process, while macOS delivers it as an Apple Event to the app whether or not it is already running — and `tauri-plugin-deep-link` normalizes them into a single event on the Rust side. The Rust core forwards the path or URI to the sidecar as an add-torrent command. When a second launch carries an open request while ftorrent is already running (the Windows/Linux case), our instance lock forwards that payload to the running instance rather than just focusing it (§Instance lock) — the role Tauri's single-instance plugin normally plays for deep links, which we provide ourselves because we don't use that plugin. Finishing this plumbing on all three platforms, in both cold-start and already-running states, is the whole point of the story: the inner UI — the add-torrent dialog, the download-folder choice, duplicate detection — is later built on an event that already arrives reliably.
+**The open event is the plumbing that matters.** A torrent reaches ftorrent two ways: when ftorrent is opened cold by double-clicking a file or following a magnet link, or as a live event to an instance already running. The mechanics differ by platform — Windows and Linux pass the path or URI as a launch argument to a new process, while macOS delivers it as an Apple Event to the app whether or not it is already running. On Windows, this copy's own launch argument and a second launch's handoff through the instance pipe both land in one queue the page takes from, each marked as a launch or a handoff (§Instance lock). On macOS, `RunEvent::Opened` delivers files and URLs from Launch Services and feeds the same queue. No deep-link plugin is needed for either: the handoff is the role Tauri's single-instance plugin normally plays for deep links, and we provide it ourselves because we don't use that plugin. Finishing this plumbing on all three platforms, in both cold-start and already-running states, is the whole point of the story: the inner UI — the add-torrent dialog, the download-folder choice, duplicate detection — is later built on an event that already arrives reliably.
 
 **Becoming the default is where ftorrent asks.** Setting ftorrent as the default handler overwrites a choice the user may have made deliberately, so it never happens on install and never happens silently. A "Default torrent app" panel in settings shows who currently owns `.torrent` and `magnet:` and offers to claim each. Three Rust commands back it: a query that reads the current owner (Launch Services on macOS, the `UserChoice` ProgId under `HKCU\Software\Classes` on Windows, `xdg-mime query default` on Linux), a claim that sets ftorrent as the default, and a re-query so the panel reflects the result. The user watches "magnet links currently open in qBittorrent" become "ftorrent" only after pressing the button.
 
 The claim writes per-user state only, matching the per-user, no-UAC install model from §1 — `HKCU` rather than `HKLM` on Windows, the user's `mimeapps.list` and `~/.local/share/applications` rather than system paths on Linux, the per-user Launch Services database on macOS. Windows guards the default itself and ftorrent leans on that rather than fighting it: Windows 10 and 11 seal the `UserChoice` value with a per-user hash precisely to stop apps from silently seizing defaults, so ftorrent registers its ProgId and classes and, where the OS won't honor a programmatic default, opens the native "Default apps" settings page focused on the relevant type, letting the final confirmation happen in the OS's own trusted UI. macOS is the opposite: setting a non-browser handler through Launch Services (`LSSetDefaultRoleHandlerForContentType` / `LSSetDefaultHandlerForURLScheme`) generally succeeds quietly, with no system dialog — so there the button simply works, and ftorrent reflects the new state in the status surface rather than promising a confirmation that may not appear. (These Launch Services calls have churned across macOS releases and should be verified against the current OS before we rely on them.) Either way the principle holds — ftorrent asks to become the default and never seizes it behind the user's back.
 
-**Portable mode declares and claims nothing.** In portable mode the panel is grayed out and no associations are registered. A copy carried on a USB stick must leave the host exactly as it found it; registering as the machine's torrent handler would break that the moment the stick is ejected, leaving a dead association pointing at a path that no longer exists. This is the same reasoning that grays out `start_at_login` in portable mode: anything that writes the app into the host's persistent configuration is off the table.
+**Only the installer's copy registers.** On Windows, `associate.js` registers only when `ftorrent.exe` runs from `%LOCALAPPDATA%\ftorrent`, where the installer puts it, and skips silently everywhere else; the panel is grayed out for any other copy. A copy carried on a USB stick must leave the host as it found it, and registering as the machine's torrent handler would leave a dead association pointing at a path that no longer exists the moment the stick is ejected; a development build or a copy on the Desktop would point the registry at a file that moves. On macOS the portable bundle carries its own identifier, `com.ftorrent.portable`, and declares no types or schemes, so Launch Services never hands it a click. This is the same reasoning that grays out `start_at_login`: anything that writes the app into the host's persistent configuration belongs to the installer's copy.
 
 ## Drag and drop
 
@@ -623,7 +618,7 @@ A BitTorrent client is most useful when other peers can reach it. ftorrent alway
 
 Three layers stand between ftorrent and an incoming peer: the host firewall, the router's NAT, and the wider internet. ftorrent can act on the first two and can only observe the third.
 
-**Router port mapping (UPnP and NAT-PMP/PCP).** Even with the host firewall open, a home router's NAT will not deliver incoming connections unless it forwards the listen port inward. libtorrent does this automatically, and it exposes exactly two mechanisms as two settings: `enable_upnp` and `enable_natpmp`. There is no third switch for PCP — libtorrent's NAT-PMP mapper also speaks PCP, NAT-PMP's successor, so PCP rides along inside NAT-PMP rather than being controlled separately. ftorrent unifies the pair behind a single user-facing `port_mapping` setting in `ftorrent.json`, default `true`, which flips both libtorrent booleans together — the same single "UPnP/NAT-PMP" control mainstream clients present, on by default. libtorrent reports the outcome through port-mapping alerts whose transport is one of two values (NAT-PMP or UPnP) plus the external port, or a failure when the router refuses or offers no such service; ftorrent surfaces this in the status surface, naming the mechanism that won — "router port mapped via UPnP," or "no port mapping — your router declined or has UPnP/NAT-PMP turned off." Users on managed networks, who consider letting an app open a router port a risk, or who forward ports by hand can set `port_mapping` to `false`. A successful mapping is a good sign but not a guarantee: carrier-grade NAT or double-NAT can still sit above the router.
+**Router port mapping (UPnP and NAT-PMP/PCP).** Even with the host firewall open, a home router's NAT will not deliver incoming connections unless it forwards the listen port inward. libtorrent does this automatically, and it exposes exactly two mechanisms as two settings: `enable_upnp` and `enable_natpmp`. There is no third switch for PCP — libtorrent's NAT-PMP mapper also speaks PCP, NAT-PMP's successor, so PCP rides along inside NAT-PMP rather than being controlled separately. ftorrent unifies the pair behind a single user-facing `port_mapping` setting in `ftorrent.toml`, default `true`, which flips both libtorrent booleans together — the same single "UPnP/NAT-PMP" control mainstream clients present, on by default. libtorrent reports the outcome through port-mapping alerts whose transport is one of two values (NAT-PMP or UPnP) plus the external port, or a failure when the router refuses or offers no such service; ftorrent surfaces this in the status surface, naming the mechanism that won — "router port mapped via UPnP," or "no port mapping — your router declined or has UPnP/NAT-PMP turned off." Users on managed networks, who consider letting an app open a router port a risk, or who forward ports by hand can set `port_mapping` to `false`. A successful mapping is a good sign but not a guarantee: carrier-grade NAT or double-NAT can still sit above the router.
 
 **What we can know, and what we can't.** Locally, ftorrent can tell whether it has bound its listen port, whether a firewall exemption is in place, and whether the router accepted a port mapping — all reported in the status surface (§System status and permissions). True *external reachability* is still a separate question: it depends on NAT, the router, and the ISP, and can only be confirmed by something outside the machine probing back in — the job intended for a future good.ftorrent.com reachability check (noted in the futures list above). So the status is honest about its own limits: it reports the local facts it knows and defers the stronger claim "peers on the internet can reach you" to the external check. Either way the user is not left guessing, because the failure is otherwise silent — an outbound-only client works, just less well.
 
@@ -631,7 +626,7 @@ Three layers stand between ftorrent and an incoming peer: the host firewall, the
 
 **macOS is status-and-instructions, not a button.** macOS offers no supported API for an app to add itself to the application firewall, and that firewall is off by default for most users in any case. So on macOS ftorrent reports the state and, if the user has the firewall on and wants incoming connections, gives instructions — it does not shell out to undocumented tools to do it silently. When the macOS firewall is on, it shows its own allow-incoming prompt the first time ftorrent listens; the same warn-first treatment applies.
 
-**Never required.** A user who declines runs outbound-only and ftorrent keeps working. The exemption is offered only for installed copies; a portable copy reports its status but does not touch the host firewall, consistent with the portable promise (§4).
+**Never required.** A user who declines runs outbound-only and ftorrent keeps working. The exemption is offered only for a copy running from where the installer put it; a portable copy reports its status but does not touch the host firewall, consistent with the portable promise (§4).
 
 ## File access on macOS
 
@@ -647,215 +642,45 @@ On Windows and Linux there is no equivalent gate for a user writing within their
 
 ## Instance lock
 
-**Instance lock.** ftorrent enforces a single running instance per settings file. On startup, after resolving which `ftorrent.json` to use (either `portable/ftorrent.json` alongside the executable or the platform-standard location per §4), the app claims an OS-level lock tied to that settings file. If the lock is already held, the app signals the running instance to focus its window and exits. What this means in practice — relaunches, two OS users, installed-plus-portable side by side — is walked through in §5.
+**Instance lock.** ftorrent enforces a single running instance per data folder. On startup, after resolving the data folder (`portable/` beside the program, or the platform-standard location per §4), the app takes an exclusive lock on `ftorrent.lock` inside it. If the lock is already held, the app hands what it carried to the running instance, which brings its window forward, and exits. What this means in practice — relaunches, two OS users, installed-plus-portable side by side — is walked through in §5.
 
-On Windows, the lock is a named mutex via `CreateMutex`. The mutex name is a fixed prefix plus a SHA-256 hash of the absolute path to `ftorrent.json` — something like `ftorrent-a1b2c3d4...`. Raw filesystem paths aren't valid mutex names, so the hash produces a fixed-length, namespace-safe identifier. If the mutex already exists, `CreateMutex` returns `ERROR_ALREADY_EXISTS` and the second launch knows to hand off and exit. The kernel destroys the mutex automatically when the owning process exits for any reason — clean exit, crash, kill, or power loss. There are no stale locks.
+**One mechanism on every platform.** Rust's standard library has had file locking since 1.89: `File::try_lock` takes an exclusive lock with `flock()` on macOS and Linux and `LockFileEx` on Windows, and the operating system releases it however the process ends — clean exit, crash, kill, or power loss — so there are no stale locks. A file lock applies to everyone who opens the file, whatever account they're signed in as, so two people running the same portable copy from one stick can't both win it. A named mutex, the usual choice on Windows, lives in the per-session namespace and would let exactly that happen. `ftorrent.lock` stays empty and separate from `ftorrent.toml` for two reasons: the settings file is replaced whole on save, which would drop a lock held on the old file, and a lock on Windows is mandatory, so while it's held no other process could read the locked file at all. PID-based lock files are deliberately not used: a PID file can be left behind when a process is killed without cleanup, producing the worst case — nothing visibly running, but startup blocked by a stale lock. The lock holds on exFAT and FAT32, the formats a USB stick carries; a volume that can't lock at all runs without the lock and says so, rather than refusing to start.
 
-On macOS and Linux, the lock is `flock()` on a dedicated file, `ftorrent.lock`, in the same directory as `ftorrent.json`. The first launch ever creates this file empty via `open(O_CREAT)` and immediately acquires an exclusive non-blocking lock with `flock(fd, LOCK_EX | LOCK_NB)`. If the lock is already held by another process, `flock` fails with `EWOULDBLOCK` and the second launch knows to hand off and exit. The lock is tied to the open file descriptor — the OS releases it automatically when the process exits for any reason. There are no stale locks. No hashing is needed on these platforms because the directory path already distinguishes instances — `~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.lock` and `portable/ftorrent.lock` are different files with different inodes. `ftorrent.lock` exists solely to be locked. It is never written to, never replaced, never renamed — a separate file avoids the inode-replacement problem that would arise from locking `ftorrent.json` itself, which is atomically replaced on every settings save. PID-based lock files are deliberately not used on any platform: a PID file can be left behind when a process is killed without cleanup, producing the worst case — nothing visibly running, but startup blocked by a stale lock. A mutex and `flock()` both avoid this, because the OS releases them on process exit however it exits.
+**Forwarding an open request.** A second launch is sometimes not a stray double-click but the OS asking ftorrent to open a `.torrent` or a `magnet:` (§File and protocol associations). On Windows every launch starts a new process, so ftorrent carries the request itself: the running instance serves a named pipe, `\\.\pipe\ftorrent-` followed by a hash of the lock file's path, and a second launch that finds the lock held connects, writes its command-line arguments as one line of JSON, and exits. The pipe name comes from the lock path, so each copy only hears from launches of itself. The server end is inbound only, local clients only, and asks for the first instance of its name, so it never joins another process's pipe. A second launch that finds the lock held a moment before the pipe exists, during a cold start, retries for a few seconds rather than giving up. On macOS, Launch Services brings a running app forward rather than starting a second process for the same bundle and delivers opens to it as Apple Events, so there is no second process to forward from; the file lock remains the backstop for a launch that bypasses Launch Services, like `open -n`. When another account runs the same portable copy, the second person's launch can't write to the first person's pipe, and it leaves without a word.
 
-When the second launch detects the lock, it signals the running instance to bring its window to the front. On Windows, it finds the window by a registered window class name and sends a focus message via the Windows API. On macOS, it uses `NSRunningApplication` to activate the existing process. This is the one piece of platform-specific UI code in the lock system — the lock itself is simple; finding the other window is the fiddly part. If the focus step fails — the running instance is hung, or the window lookup doesn't match — the second launch exits anyway. It never forces past the lock. The user can kill the stuck process manually and relaunch; the OS will have already cleaned up the lock.
+**Focus.** The running instance brings its window forward only when the user asked: a second launch, the tray, or the Dock. It shows the window if hidden, restores it if minimized, and focuses it. Windows limits which process may take the foreground; a handoff brings the window to the front from hidden, minimized, or behind another window.
 
-**Forwarding an open request.** A second launch is sometimes not a stray double-click but the OS asking ftorrent to open a `.torrent` or a `magnet:` (§File and protocol associations, §Drag and drop). On Windows and Linux that second process receives the path or URI as a launch argument; before it exits, it must hand that payload to the running instance, not merely focus it, so the already-open window actually adds the torrent. The lock's hand-off therefore carries the argument across the same channel it uses to signal focus. This is the job Tauri's single-instance plugin performs for deep links — and because ftorrent uses its own lock instead of that plugin, ftorrent forwards the payload itself. macOS does not need this step: the OS delivers the open to the running app directly as an Apple Event, so there is no second process to forward from.
+This replaces Tauri's built-in single-instance plugin, which keys on the bundle identifier — a named mutex in the per-session namespace on Windows, a socket in the shared `/tmp` on macOS. An installed copy and a portable copy share the same bundle ID on Windows, so the plugin would block the second from launching — exactly the case ftorrent needs to allow — and it can't tell two different OS users' installed copies apart. ftorrent's own per-data-folder lock handles both; the user-facing scenarios it enables are walked through in §5.
 
-This replaces Tauri's built-in single-instance plugin, which keys on the bundle identifier. An installed copy and a portable copy share the same bundle ID, so the plugin would block the second from launching — exactly the case ftorrent needs to allow — and because the bundle ID is identical, the plugin also can't tell two different OS users' installed copies apart. ftorrent's own per-settings-file lock handles both; the user-facing scenarios it enables are walked through in §5.
+**Download folders are locked too.** The data folder lock keeps two launches of one copy apart, but two different copies can share a download folder. So each copy also takes an exclusive lock on `.ftorrent/ftorrent.lock` inside every download folder it loads, with the same mechanism, and a folder another copy already holds shows as in use and loads nothing. The lock is the Rust core's general `lock_take`, which locks any file; the page decides which folders to lock, makes each `.ftorrent`, and hides it on Windows. One folder listed under two spellings is held once. The engine receives each real folder once: `lock_take` answers the lock file's real path, and the page hands the engine each folder once.
 
 ## Appearance and dark mode
 
-Full dark mode support in a Tauri + Vue app involves three layers. The Tauri window has a `theme` property — set to `"dark"`, `"light"`, or omitted to follow the system preference. This controls the native title bar and window chrome appearance, and sets the webview's `prefers-color-scheme` media query so CSS can respond. On the Vue side, styles branch on that media query or on a class applied to the root element (Tailwind's `dark:` variant uses the class approach). A complete implementation would detect the OS setting, let the user override it with a three-way toggle (system / light / dark), persist the choice in `ftorrent.json`, and apply it both to the Tauri window via the runtime API and to the Vue root element so all three layers — native chrome, CSS media query, and class-based styles — agree.
+Full dark mode support in a Tauri + Vue app involves three layers. The Tauri window has a `theme` property — set to `"dark"`, `"light"`, or omitted to follow the system preference. This controls the native title bar and window chrome appearance, and sets the webview's `prefers-color-scheme` media query so CSS can respond. On the Vue side, styles branch on that media query or on a class applied to the root element (Tailwind's `dark:` variant uses the class approach). A complete implementation would detect the OS setting, let the user override it with a three-way toggle (system / light / dark), persist the choice in `ftorrent.toml`, and apply it both to the Tauri window via the runtime API and to the Vue root element so all three layers — native chrome, CSS media query, and class-based styles — agree.
 
-For v0.1, ftorrent ships a single dark appearance. The window theme is pinned to `"dark"` in `tauri.conf.json`, and the UI is designed dark from the start — there are no light-mode styles, no media queries, no toggle. This is a design constraint, not a technical limitation. Adding light mode and a system-follow toggle later means building out the CSS for a second palette and wiring the three-way preference through to the Tauri window API, but nothing about the v0.1 architecture prevents it.
+For v0.1, ftorrent ships a single dark appearance. The window theme is pinned to `"dark"` where `window.rs` builds the window, and the UI is designed dark from the start — there are no light-mode styles, no media queries, no toggle. This is a design constraint, not a technical limitation. Adding light mode and a system-follow toggle later means building out the CSS for a second palette and wiring the three-way preference through to the Tauri window API, but nothing about the v0.1 architecture prevents it.
 
 ## Icons and graphics
 
-ftorrent needs a small set of source assets. The main app icon appears in two forms — one for macOS with Apple's required padding, one full-bleed for Windows and Linux — plus a monochrome tray icon, a document icon for `.torrent` files, a DMG background, and a website favicon.
+ftorrent needs a small set of source assets: the application icon, a document icon for `.torrent` files, the Windows 10 Start tile, a tray icon, a DMG background, and a website favicon.
 
-**Application icon.** The main icon is a color square at 1024×1024 pixels. The designer places the source file in the repo:
+**Application icon.** The mark is an orange pill, `#FF7900`, holding two white rings joined by a bar: two nodes, linked. It's drawn as an SVG on a sixteen-unit grid, so every coordinate lands on a pixel at the smallest sizes. Tauri's icon generator resizes a square SVG edge to edge into every platform's files at once, and it has no notion of a platform's safe area, which the platforms disagree about: Windows and Linux want an icon that fills its canvas, macOS draws an icon exactly as authored on a grid where every neighbor leaves a margin, and the Windows 10 Start tile wants the mark inset on its background. So `pnpm icons` feeds the generator three sources, the same drawing seen through three viewBoxes, full bleed, inset for the Dock, and inset further for the tile, and a script copies out only the wanted files: the Mac's `.icns` from the second run and the tile PNGs from the third. `bundle.icon` in `tauri.conf.json` names the full-bleed `.ico` and PNGs and the Mac `.icns`, and Tauri picks the `.icns` for the Mac by extension, so that one list is the whole per-platform switch. The NSIS installer and uninstaller wear the same `.ico`. Generated icons are frozen at the CLI that made them, so `pnpm icons` runs again after a CLI upgrade as well as after an artwork change.
 
-```
-ftorrent/desktop/assets/app-icon.png
-```
+**Document icon.** A `.torrent` file wears a document icon, not the application icon, so a folder of torrents isn't a folder of identical pills: a blank page with a folded corner carrying one orange circle with a white dot at its center, one node waiting to join the others. It's drawn by hand on the same sixteen-unit grid, with its center and radii on whole units, so every edge sits on a pixel at 16. Only Windows needs one: macOS composes a document icon itself, a page with the application's icon on it, for any type an app declares, and Linux draws the desktop theme's own icon for the MIME type. On Windows, `bundle.resources` lands `torrent.ico` beside the executable, and the registration names it as the `.torrent` ProgID's `DefaultIcon` (§File and protocol associations). The icon studio in `desktop/icon-studio/`, Windows only and run by hand, is where the icons are made; its README has the flow.
 
-Tauri's CLI generates all platform-specific formats from it:
+**Windows 10 Start.** For any desktop `.exe`, Windows 10 looks for `ftorrent.VisualElementsManifest.xml` beside it, naming a larger tile image, a background color, and whether to show the app name; without one, Start extracts the small icon from the `.ico` onto a generic tile. `bundle.resources` places the manifest and its two tile PNGs beside `ftorrent.exe`, since on Windows the resource directory is the executable's own folder. The two logo attributes are all or nothing, and naming one without the other makes Windows silently ignore the file. Windows 10 paints the tile in the theme's own color behind the inset mark, milky white in light mode and near black in dark, as the major browsers' tiles do, whatever color the manifest declares. Windows 11 has no tiles and ignores the file.
 
-```
-cd ftorrent/desktop
-cargo tauri icon assets/app-icon.png
-```
-
-This populates the required files that Tauri reads at build time:
-
-```
-ftorrent/desktop/src-tauri/icons/icon.ico
-ftorrent/desktop/src-tauri/icons/icon.icns
-ftorrent/desktop/src-tauri/icons/icon.png
-ftorrent/desktop/src-tauri/icons/32x32.png
-ftorrent/desktop/src-tauri/icons/128x128.png
-ftorrent/desktop/src-tauri/icons/128x128@2x.png
-```
-
-These are referenced in `tauri.conf.json`:
-
-```
-{
-  "bundle": {
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  }
-}
-```
-
-This icon appears in the Dock, taskbar, app switcher, Start menu, Finder, File Explorer, Spotlight, and application launchers on all three platforms.
-
-**macOS icon padding.** macOS requires app icons to include transparent padding within the 1024×1024 canvas — the artwork sits within roughly an 824×824 rounded rectangle, centered. If the source image fills edge to edge, the icon appears oversized in the Dock compared to every other app. This is a known issue with Tauri's icon generator, which does not add the padding automatically. The designer provides a second source:
-
-```
-ftorrent/desktop/assets/app-icon-macos.png
-```
-
-Same artwork but with transparent padding and rounded corners per Apple HIG. The build script automates the swap: run `tauri icon` with the full-bleed source, then replace only `icon.icns` with the macOS-padded version:
-
-```
-cd ftorrent/desktop
-cargo tauri icon assets/app-icon.png
-cargo tauri icon assets/app-icon-macos.png --output /tmp/macos-icons
-cp /tmp/macos-icons/icon.icns src-tauri/icons/icon.icns
-```
-
-Only `icon.icns` differs — the `.ico` and `.png` files stay full-bleed, which is correct for Windows and Linux.
-
-**Tray and menu bar icons.** Separate from the application icon, a small icon appears in the system tray (Windows), menu bar (macOS), or status notifier area (Linux) when ftorrent is running with its window hidden. All tray icons should be simple and legible at tiny sizes — the main app icon scaled down will be an unreadable blob.
-
-On macOS, this must be a monochrome "template image" — a single-color shape on a transparent background. The system applies the appropriate color for light mode, dark mode, and the translucent menu bar. On Windows and Linux, a small color icon is used instead.
-
-The designer provides these directly:
+**Tray and menu bar icons.** Separate from the application icon, a small icon appears in the system tray (Windows), menu bar (macOS), or status notifier area (Linux) when ftorrent is running with its window hidden. All tray icons should be simple and legible at tiny sizes — the main app icon scaled down will be an unreadable blob. On macOS, this must be a monochrome "template image" — a single-color shape on a transparent background, which the system colors for light mode, dark mode, and the translucent menu bar. On Windows and Linux, a small color icon is used instead. The designer provides these directly:
 
 ```
 ftorrent/desktop/src-tauri/icons/tray-template.png       # 22×22, monochrome black on transparent, macOS
 ftorrent/desktop/src-tauri/icons/tray-color.png           # 32×32, color on transparent, Windows and Linux
 ```
 
-The tray icon is configured in `tauri.conf.json`:
+The tray is built in code, with Tauri's `TrayIconBuilder`, and on macOS it takes the template image with `icon_as_template(true)`.
 
-```
-{
-  "app": {
-    "trayIcon": {
-      "iconPath": "icons/tray-color.png",
-      "iconAsTemplate": false
-    }
-  }
-}
-```
+**DMG background.** The macOS DMG window displays a decorative background image behind the app icon and the Applications folder icon, with a visual arrow cueing the user to drag the icon to Applications. The designer provides it directly, `ftorrent/desktop/assets/dmg-background.png` at 660×400, and Tauri configures it under `bundle.macOS.dmg`: `background`, `windowSize`, `appPosition`, and `applicationFolderPosition`, with the arrow in the image drawn to connect the last two.
 
-On macOS, the Rust code overrides this at runtime to use the template icon:
+**Windows installer.** The NSIS installer runs silently — no wizard pages, no UI. The user double-clicks `ftorrent.exe`, files are extracted to `AppData\Local\ftorrent\`, and the app launches. It needs no graphics beyond its icon, `installerIcon` and `uninstallerIcon` naming the application's `.ico`.
 
-```rust
-let tray = TrayIconBuilder::new()
-    .icon_as_template(true)
-    .icon(Image::from_path("icons/tray-template.png")?)
-    .build(app)?;
-```
-
-On Windows and Linux, `tray-color.png` from the config is used as-is.
-
-**Document icon.** Separate from the application icon, the OS paints an icon *on `.torrent` files themselves* — in Finder, File Explorer, and Linux file managers — once ftorrent is the registered handler (see §File and protocol associations). It should read as a document, the ftorrent mark on a page shape, so a torrent file is distinguishable at a glance from the ftorrent app itself. The designer provides one source:
-
-```
-ftorrent/desktop/assets/torrent-file-icon.png             # 1024×1024, color, square, reads as a document
-```
-
-Each platform consumes it differently, and Tauri does not yet wire any of it automatically — the `fileAssociations` config has no icon field (an open Tauri feature request), so ftorrent places these itself as a build step. On macOS, the icon is an `.icns` placed in the app bundle's `Resources` and named in `Info.plist` under `CFBundleDocumentTypes` → `CFBundleTypeIconFile`, written into the bundle after Tauri builds it. On Windows, it is an `.ico` referenced by the `DefaultIcon` registry key under ftorrent's ProgId — `HKCU\Software\Classes\ftorrent.torrent\DefaultIcon` — written by the NSIS installer alongside the file-association keys. On Linux, it follows the freedesktop icon-naming spec: a themed PNG named for the MIME type (`application-x-bittorrent`) installed into the hicolor icon theme under `~/.local/share/icons/`, which the file manager picks up. Generate the `.icns`, `.ico`, and themed PNG sizes from the single source the same way the app icon is generated from `app-icon.png`.
-
-**DMG background.** The macOS DMG window displays a decorative background image behind the app icon and the Applications folder icon. This image typically includes a visual arrow or cue indicating the user should drag the icon to Applications.
-
-The designer provides this directly:
-
-```
-ftorrent/desktop/assets/dmg-background.png                # 660×400, decorative with drag arrow
-```
-
-The DMG layout is configured in `tauri.conf.json`:
-
-```
-{
-  "bundle": {
-    "macOS": {
-      "dmg": {
-        "background": "assets/dmg-background.png",
-        "windowSize": {
-          "width": 660,
-          "height": 400
-        },
-        "appPosition": {
-          "x": 180,
-          "y": 220
-        },
-        "applicationFolderPosition": {
-          "x": 480,
-          "y": 220
-        }
-      }
-    }
-  }
-}
-```
-
-The `appPosition` and `applicationFolderPosition` values position the ftorrent icon and the Applications folder alias within the window. The designer should place the drag arrow in the background image to connect these two points.
-
-**Windows installer.** The NSIS installer runs silently — no wizard pages, no UI. The user double-clicks `ftorrent.exe`, files are extracted to `AppData\Local\ftorrent\`, and the app launches. No installer graphics are needed. This is configured in `tauri.conf.json`:
-
-```
-{
-  "bundle": {
-    "windows": {
-      "nsis": {
-        "installerIcon": "icons/icon.ico",
-        "installMode": "currentUser"
-      }
-    }
-  }
-}
-```
-
-**Website favicon.** A standard favicon for ftorrent.com. Not part of the Tauri build — this goes in the website repo.
-
-```
-ftorrent/website/assets/favicon.png                       # 512×512, color, square
-```
-
-Converted to `.ico` and multiple `.png` sizes for web use with any favicon generator such as realfavicongenerator.net.
-
-### Windows 10 Start
-
-That's the Windows 10 `VisualElementsManifest`. For any desktop `.exe`, Windows looks for an XML file next to it — for `ftorrent.exe`, the Start menu looks for `ftorrent.VisualElementsManifest.xml` in the same folder. The manifest specifies a larger purpose-designed PNG for the medium tile, a background color, and whether to show the app name. Without it, Windows just extracts the tiny icon from the `.ico` and displays it on a generic theme-colored tile.
-
-The manifest looks like this:
-
-```xml
-<Application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <VisualElements
-    BackgroundColor="#1a1a2e"
-    ShowNameOnSquare150x150Logo="on"
-    ForegroundText="light"
-    Square150x150Logo="Assets\tile-150.png"
-    Square70x70Logo="Assets\tile-70.png"/>
-</Application>
-```
-
-The NSIS installer would need to place this file and the PNG assets next to `ftorrent.exe` in `AppData\Local\ftorrent\`:
-
-```
-C:\Users\username\AppData\Local\ftorrent\ftorrent.exe
-C:\Users\username\AppData\Local\ftorrent\ftorrent.VisualElementsManifest.xml
-C:\Users\username\AppData\Local\ftorrent\Assets\tile-150.png
-C:\Users\username\AppData\Local\ftorrent\Assets\tile-70.png
-```
-
-That gives you a large clean icon on a branded background in the Start menu, like Firefox.
-
-One caveat: Windows 11 dropped Live Tiles. The Start menu there just shows the icon from `.ico`, and the manifest is ignored. So this is Windows 10 polish only. Still worth doing — Windows 10 is in the support matrix — but it won't show on 11.
+**Website favicon.** ftorrent.com and docs.ftorrent.com wear the brand mark; open.ftorrent.com keeps its earth emoji, which suits a page about the planet's peers. The icon studio writes `favicon.svg`, the brand mark as it is, copied into each site's public folder and linked from its head as `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`, with `ftorrent.ico` beside it as `favicon.ico` for Safari, which still wants a raster.

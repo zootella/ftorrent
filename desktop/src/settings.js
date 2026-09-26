@@ -10,9 +10,9 @@ Three rules about what parsing does with a file. A value it can use replaces the
 */
 
 export const settingsFileName = `${brandName}.toml`//in the data folder paths.rs worked out, which is portable/ beside a portable copy and the user's local application data for an installed one
-const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file when it starts and writes it when a setting changes, and again when it quits
-# quit ${brandName} before editing this file: while ${brandName} is running, including hidden in the tray, it writes the file once more as it quits, over any change made here
-# with ${brandName} quit, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`
+const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file when it starts and writes it when a setting changes, and again as it closes
+# edit this file only while ${brandName} isn't running: while it runs, including hidden in the tray, it writes the file once more as it closes, over any change made here
+# with ${brandName} not running, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`//the same words on every platform, whose menus say quit or exit, so a portable copy's file that travels between them is never rewritten over wording
 
 //every setting ftorrent has, and the only place any of them is defined; a check, where the type alone isn't enough, has to accept the factory value or an ordinary file would report a problem against itself
 export const settingsSchema = [
