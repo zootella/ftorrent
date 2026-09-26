@@ -18,7 +18,7 @@ startup().catch(error => useSettingsStore(pinia).problems.push(`startup: ${error
 async function startup() {
 	let store = useSettingsStore(pinia)//outside a component, a store needs the pinia handed to it
 	await store.load(await pathsStatus())//where everything is, and then the settings file in the data folder, if there is one
-	if (!store.paths.settings) return//translocated, or no data folder: no window place to record and no engine to tell, and the main page explains
+	if (!store.paths.settings) return//no data folder, which the platform should always give: no window place to record and no engine to tell, and the main page shows the trouble
 	await watchWindow(store)//after load, so recording the window's place lands in settings that are already filled in from the file
 	try {
 		await engineFolders(store.resolvedFolders.map(folder => folder.path))

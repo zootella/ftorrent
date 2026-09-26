@@ -4,7 +4,7 @@ import {invoke} from '@tauri-apps/api/core'
 
 //where everything is: paths.rs works it out once at startup, before the page exists, and is the long version
 
-export function pathsStatus() { return invoke('paths_status') }//installed, portable, or translocated; the program's location, the home folder, the data folder and the files in it, and any trouble
+export function pathsStatus() { return invoke('paths_status') }//installed or portable; the program's location, the home folder, the data folder and the files in it, and any trouble
 
 //where a download folder setting points on this machine; the setting is written one of three ways, and paths.rs has the long version of what each means
 export function resolveFolder(setting, location, home) {

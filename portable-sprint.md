@@ -10,30 +10,14 @@ The desktop client planning document on the docs site describes the paths, the p
 
 ## What changed from the first design
 
-### A quarantined Mac app runs from somewhere else
+### Installed or portable: two rules, and no special cases
 
-A zip downloaded in a browser carries the quarantine mark, and Archive Utility passes the mark on to everything it unpacks. When macOS launches a quarantined app from a place Finder didn't move it to, it runs a copy from a randomized, read-only mount under `/private/var/folders/…/AppTranslocation/`. This is App Translocation. Its purpose is to stop an app from finding files planted beside it, and portable mode depends on exactly that, a folder named `portable` beside the app.
+Everything about which kind of copy is running comes down to two rules, and anything the rules don't name falls through them without a message:
 
-A translocated portable copy would look beside itself, find no `portable/ftorrent.toml`, and start as an installed copy. Translocation happens when three things are all true:
+- **Where the data lives.** A `portable/` folder holding `ftorrent.toml` beside the program makes the copy portable, with its data in that folder. Anything else uses the installed data folder. The portable folder isn't only a flag: it's where the portable copy's data is, which is why the signal is on portable and not on installed.
+- **Whether to register with the operating system.** Only Windows needs ftorrent to act, because an app installed by an installer has to write the registry itself; on macOS the declarations sit in `Info.plist` and Launch Services reads them, and on Linux the package's `.desktop` file carries them. So `associate.rs` registers only when `ftorrent.exe` is in `%LOCALAPPDATA%\ftorrent`, the one place the installer puts it, and skips silently everywhere else: a portable copy, a debug or release build from the repository, a copy on the Desktop. The same rule answers start at login and automatic update when they arrive: act only from the installer's place. The planning document's stories gray these out "in portable mode", and its correction pass should key them on this second rule instead, since a copy on the Desktop or one run from the repository is installed by the first rule but shouldn't register, start itself at login, or update itself.
 
-- the app carries the quarantine mark;
-- Launch Services opens it, from Finder or `open`, not from a shell;
-- the app hasn't been moved on its own in Finder out of the folder it arrived in.
-
-Approving the app with **Open Anyway** doesn't end it. The approval is recorded in the quarantine attribute, and the app is translocated again on every launch. What ends it is removing the mark.
-
-Where the zip is unpacked decides whether the mark is there at all:
-
-- **Downloaded on a Mac and unpacked with Archive Utility:** every file inside carries the mark, wherever it's unpacked to. This is the one route that leads to translocation.
-- **Unpacked on Windows onto an exFAT stick:** the Mac finds no mark. Windows never writes the Mac's quarantine attribute. Its own Mark of the Web is an NTFS alternate data stream, which exFAT can't hold, so on the stick the Windows files carry no mark either.
-- **Fetched with a command-line tool:** no mark is set.
-
-The design handles the one bad route in two layers:
-
-- The portable instructions for the Mac clear the mark after unpacking, with the same `xattr -dr com.apple.quarantine` command the installing page already gives, or fetch the zip with `curl`.
-- At startup, a copy whose own path runs through `/AppTranslocation/` knows it can't find its folder. It says so in its window, with the command that fixes it, and doesn't fall back to acting as an installed copy.
-
-The Security framework has a call that recovers the original path, `SecTranslocateCreateOriginalPathForURL`, but its header left the public SDK years ago. Apple's developer support says there's no supported way to detect translocation or find the original path. The path check is a heuristic we can see and test. We name the problem and show the fix rather than depending on a private call.
+Translocation falls through the first rule with no code of its own. A quarantined Mac app opened from where it arrived runs from a random read-only folder under `/private/var/folders/…/AppTranslocation/`, and **Open Anyway** doesn't stop it; only removing the mark does. The common case is someone who opens ftorrent inside its disk image without dragging it to Applications, and the installed data folder is what they want, since it doesn't depend on where the app is. The rare case is a portable copy unpacked with Archive Utility on a Mac, which can't see its `portable/` folder and so acts installed, and works. The portable instructions clear the mark after unpacking, with `xattr -dr com.apple.quarantine`, or fetch the zip with `curl`, and a zip unpacked on Windows onto an exFAT stick carries no mark at all.
 
 ### A portable copy writes nothing, and the operating system still keeps records
 
@@ -128,7 +112,7 @@ ftorrent/downloads/.ftorrent/
 
 ### Startup
 
-1. Find the program's own location: the folder of the executable on Windows, and the folder containing the `.app` bundle on macOS. On macOS, a location under `/AppTranslocation/` stops here with the explanation described above.
+1. Find the program's own location: the folder of the executable on Windows, and the folder containing the `.app` bundle on macOS.
 2. Look for `portable/ftorrent.toml` at that location. If it's there, this copy is portable, and the `portable` folder is its data folder. If it isn't, the data folder is the installed one, created if missing.
 3. Try the exclusive lock on `ftorrent.lock` in the data folder. If another process holds it, hand this launch's request to that process and exit.
 4. Once the page is up, it reads `ftorrent.toml`. A missing key takes its factory value, a bad value is repaired and reported, and a missing file is written whole, every setting with its comment. Rust reads only the window's saved geometry before the page exists; everything else about settings is the page's.
@@ -150,11 +134,11 @@ The pipe name comes from the lock path, so each copy only ever hears from launch
 - **Local clients only.** tokio refuses clients from other machines by default.
 - **First instance.** Pipe names are global across the whole machine, so the running instance asks to create the first instance of its name. If something else already holds the name, creating it fails rather than joining another process's pipe. ftorrent then runs without the handoff, and a second launch of the same copy only exits.
 
-By default a named pipe gives full access to the account that created it, to administrators, and to the system, and read access to everyone else. So when another account already runs the same portable copy, the second person's launch can't open the first person's pipe for writing. It shows that this copy is already running under another account, and exits.
+By default a named pipe gives full access to the account that created it, to administrators, and to the system, and read access to everyone else. So when another account already runs the same portable copy, the second person's launch can't open the first person's pipe for writing. It leaves without a word, and the first person's copy keeps running undisturbed. Saying why would take a dialog with no window behind it, for a case this rare, so it waits until someone needs it.
 
 ### Building the zip
 
-- **The Mac portable bundle.** `tauri build --config tauri.portable.conf.json --bundles app` applies a second file over `tauri.conf.json` as a JSON merge patch, and the result is also the config compiled into the app. The patch sets `identifier` to `com.ftorrent.portable`. A `null` deletes a key, so `"bundle": {"fileAssociations": null}` removes the file associations and `"plugins": {"deep-link": null}` removes the URL schemes. `--bundles app` builds the `.app` and no disk image.
+- **The Mac portable bundle.** `tauri build --config tauri.portable.conf.json --bundles app` applies a second file over `tauri.conf.json` as a JSON merge patch, and the result is also the config compiled into the app. The patch sets `identifier` to `com.ftorrent.portable`, and a `null` deletes a key, which is how the portable bundle leaves out the document types and URL schemes the installed one declares. Which keys it nulls follows however the Mac associations work puts those declarations in, which isn't built yet; Windows no longer uses `bundle.fileAssociations` at all, since `associate.rs` registers from the installed copy itself. `--bundles app` builds the `.app` and no disk image.
 - **The Windows side.** It's the same `ftorrent.exe` an installed copy runs, taken from the release build with its engine folder, before NSIS wraps them. The same binary serves both modes, and only the folder beside it differs. A portable copy needs the WebView2 runtime, the part of Edge that draws the window. Windows 11 includes it, and nearly every Windows 10 machine already has it. An installed copy's NSIS installer fetches it when it's missing. A portable copy can't install it, so on a machine without it, it shows Tauri's message naming the download and doesn't open. The portable page says so.
 - **The portable WebView2 folder.** Tauri points WebView2 at `AppData\Local\com.ftorrent.ftorrent` unless told otherwise. The window moves from `tauri.conf.json` into the startup code, where `WebviewWindowBuilder::data_directory` can name the data folder that startup resolved, whether installed or portable. WebView2 keeps its files in a subfolder of the folder it's given. Microsoft documents the subfolder without naming it; on Windows 10 it's `EBWebView`.
 - **Which machine builds what.** Each half has to be built on its own platform. Tauri's Mac bundler only compiles on a Mac. Tauri can cross-compile a Windows executable from a Mac, but it calls that experimental and a last resort, and PyInstaller can't cross-build at all, so the Windows engine is frozen on Windows. Windows builds its half first, and the Mac builds its half and assembles the zip. The Mac is the right place to zip because zip tools on Windows don't record Unix permissions: a `.app` zipped on Windows and unpacked on a Mac would lose the executable bit on its binaries.
@@ -190,10 +174,10 @@ By default a named pipe gives full access to the account that created it, to adm
 - Close the window, confirm the engine keeps running, then bring the window back from the Dock icon on macOS and from the tray icon on Windows. Quit from each place quitting is offered, and confirm the engine exits with the app.
 - Run an installed copy and a portable copy side by side, confirm each keeps its own folder and window, and confirm neither sees the other's pipe or lock.
 - Sign in as two users and run each user's installed copy at the same time, on Windows and on macOS.
-- On Windows, have two signed-in users launch the same portable copy from one stick, and confirm the second is told it's running under another account.
+- On Windows, have two signed-in users launch the same portable copy from one stick, and confirm the second launch leaves and the first copy keeps running undisturbed.
 - Give an installed copy and a portable copy the same download folder, and confirm the second shows it as in use and loads nothing from it.
 - Unzip on Windows onto an exFAT stick, carry the stick to the Mac, clear the mark, and run the `.app`. Then do it the other way round.
-- Launch a portable Mac copy without clearing the mark, and confirm it explains translocation instead of starting as an installed copy.
+- Launch a portable Mac copy without clearing the mark, and confirm it runs as an installed copy; clear the mark, and confirm it runs as portable.
 - Kill the app outright, relaunch, and confirm no stale lock blocks it.
 - After a portable session on each platform, list what the host gained, and check it against the list on the portable page.
 

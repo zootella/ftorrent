@@ -55,7 +55,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	let instance = app.state::<Instance>();
 	let args: Vec<String> = std::env::args().skip(1).collect();//what the operating system launched this copy with, like a magnet link or the path of a .torrent file
 	if paths.data.is_empty() {
-		status(&instance).trouble = "no data folder, so no lock".to_string();//translocated, and paths.rs has already said why
+		status(&instance).trouble = "no data folder, so no lock".to_string();//the platform gave no data folder, and paths.rs has already said so
 		return Start::Run;
 	}
 	let data = Path::new(&paths.data);

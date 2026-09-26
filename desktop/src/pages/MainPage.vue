@@ -63,15 +63,11 @@ let report = computed(() => {
 	let lines = [engineLine.value]
 	let p = paths.value
 	if (p) {
-		if (p.mode == 'translocated') {
-			lines.push(`macOS is running ftorrent from a temporary copy at ${p.location}, so it can't see its own folder. To fix it, quit ftorrent, run xattr -dr com.apple.quarantine on ftorrent.app where you put it, and open it again.`)
-		} else {
-			lines.push(`ftorrent is ${p.mode}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
-			lines.push(`program: ${p.location}`)
-			lines.push(`data: ${p.data}`)
-			lines.push(`settings: ${p.settings}${foldersHeard.value ? ', and the engine has its folders' : ''}`)
-			for (let folder of store.resolvedFolders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
-		}
+		lines.push(`ftorrent is ${p.mode}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
+		lines.push(`program: ${p.location}`)
+		lines.push(`data: ${p.data}`)
+		lines.push(`settings: ${p.settings}${foldersHeard.value ? ', and the engine has its folders' : ''}`)
+		for (let folder of store.resolvedFolders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
 		if (p.trouble) lines.push(p.trouble)
 	}
 	for (let problem of store.problems) lines.push(problem)

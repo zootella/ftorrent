@@ -9,7 +9,7 @@ Where everything is. This runs in setup, before instance.rs takes the lock, befo
 
 Three anchors, and every path comes from one of them. The program's location is the folder the program sits in: beside the executable on Windows and Linux, and the folder holding ftorrent.app on macOS, not a folder inside the bundle. The data folder is ftorrent's own, and holds ftorrent.toml and the lock, and, as the sprint goes on, the libtorrent state and the crash log. And the user's home folder. The page gets all three, because the page is what turns a download folder setting like ./downloads or ~/Downloads/ftorrent into a real path: ./ is relative to the program's location, so it follows a portable copy onto whatever drive letter or mount point it lands on, ~ is relative to whoever is signed in, and an absolute path like D:/torrents means exactly that place, on the machines that have it. Settings are written with forward slashes on every platform. Neither side checks whether a download folder exists: on macOS the default sits in Downloads, which the system guards behind a permission prompt, and the first look inside is what raises it, so that look waits for the step that locks download folders and can warn the user first.
 
-One decision picks the data folder. If a folder named portable with a ftorrent.toml inside sits at the program's location, this copy is portable, and that folder is its data folder, so everything it keeps travels with it. Otherwise it's an installed copy, and the data folder is the one the platform gives the signed-in user: AppData\Local\com.ftorrent.ftorrent on Windows, where Tauri already keeps the web view's profile, and Application Support on macOS. An installed copy keeps nothing of its own in Roaming.
+One decision picks the data folder. If a folder named portable with a ftorrent.toml inside sits at the program's location, this copy is portable, and that folder is its data folder, so everything it keeps travels with it. Otherwise it's an installed copy, and the data folder is the one the platform gives the signed-in user: AppData\Local\com.ftorrent.ftorrent on Windows, where Tauri already keeps the web view's profile, and Application Support on macOS. An installed copy keeps nothing of its own in Roaming. Anything that isn't portable is installed, whatever the reason: a development build, a copy on the Desktop, or a Mac app that macOS has translocated, running it from a random read-only folder because it still carries a download's quarantine mark and was opened from where it arrived. That last one is usually someone who opened ftorrent inside its disk image without dragging it to Applications, and the installed data folder is exactly what they want, since it doesn't depend on where the app is. A translocated portable copy can't see its portable folder, so it acts installed too, and works; the portable instructions clear the mark first, which is what keeps it portable.
 
 This module never opens ftorrent.toml. The page owns the settings, reads the file once it's up, repairs it, and writes it, and Rust knows the file only as a path to hand over, as text to write when the page asks, and, in settings.rs, as the window's size, place, and maximized flag, read before the page exists. That keeps every setting defined in one place, the page's schema, with nothing duplicated on this side of the boundary.
 */
@@ -21,7 +21,7 @@ const STATE_NAME: &str = "state";//libtorrent's session state, the DHT routing t
 /// Everything startup worked out about where things are, which the page shows and resolves settings against, and the engine is told
 #[derive(Serialize, Clone, Default)]
 pub struct Paths {
-	pub mode: String,//installed, portable, or translocated
+	pub mode: String,//installed or portable
 	pub location: String,//the program's location, the anchor for ./
 	pub home: String,//the signed-in user's home folder, the anchor for ~
 	pub data: String,//the data folder
@@ -42,12 +42,6 @@ pub fn locate(app: &AppHandle) -> Paths {
 		Err(trouble) => { paths.trouble = trouble; return paths }
 	};
 	paths.location = display(&location);
-
-	//a quarantined app opened from where it was unpacked runs from a random read-only copy, so the location is wrong and a portable folder beside the real app can't be seen from here; apple offers no supported way to find the real one, so ftorrent stops and says how to fix it
-	if cfg!(target_os = "macos") && paths.location.contains("/AppTranslocation/") {
-		paths.mode = "translocated".to_string();
-		return paths;
-	}
 
 	let portable = location.join(PORTABLE_NAME);
 	let data = if portable.join(SETTINGS_NAME).is_file() {

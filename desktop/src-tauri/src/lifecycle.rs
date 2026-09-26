@@ -9,7 +9,7 @@ Closing hides. The close button on Windows and the red button on macOS hide the 
 
 Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
-Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back.
+Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back. The page listens for the close too, to save where the window was, and in Tauri a page that listens decides whether the close goes ahead. It always declines, so that on macOS and Windows the hide is the only thing a close does. So on Linux, Rust turns the close into a quit, which reaches the same Exit run event, where the settings the page handed down are written.
 */
 
 /// Show the window, restore it if it's minimized, and give it focus; the tray, the Dock, and a second launch all bring ftorrent back this way
@@ -21,12 +21,14 @@ pub fn bring_forward(app: &AppHandle) {
 	}
 }
 
-/// The close button hides the window rather than closing it, on macOS and Windows
+/// The close button hides the window rather than closing it, on macOS and Windows, and quits on Linux
 pub fn window_event(window: &Window, event: &WindowEvent) {
-	if cfg!(any(target_os = "macos", target_os = "windows")) {
-		if let WindowEvent::CloseRequested { api, .. } = event {
+	if let WindowEvent::CloseRequested { api, .. } = event {
+		if cfg!(any(target_os = "macos", target_os = "windows")) {
 			api.prevent_close();//the window stays, and so does everything behind it
 			let _ = window.hide();
+		} else {
+			window.app_handle().exit(0);//linux: the page declined the close, so quitting is said outright; Exit writes the settings and stops the engine
 		}
 	}
 }

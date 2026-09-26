@@ -23,7 +23,7 @@ export async function watchWindow(store) {//keep the settings store told where t
 }
 
 async function recordWindow(appWindow, store) {//the window's place and size and the screen it's on, into the store's [window] and [screen], in css pixels, and whether it's maximized
-	if (await appWindow.isMinimized() || await appWindow.isFullscreen()) return//a minimized window reports a position like -32000, -32000 on windows, and a fullscreen one fills a screen it wasn't sized to
+	if (await appWindow.isMinimized() || await appWindow.isFullscreen()) return//a minimized window reports a position like -32000, -32000 on windows, and a fullscreen one fills a screen it wasn't sized to. Fullscreen also isn't brought back, on purpose: on macOS it's a Space of its own, somewhere a user steps into for a while, and an application that opened into a new Space at launch would feel like it had taken over the screen. Maximized is different, the everyday way to work on Windows and zoom on the Mac, so that one is recorded below and comes back
 	let s = store.settings
 	s.window.maximized = await appWindow.isMaximized()
 	if (s.window.maximized) { store.remember(); return }//a maximized window fills its screen, so leave the numbers below where the window was before: that's where restoring it goes

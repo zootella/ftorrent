@@ -64,7 +64,6 @@ fn engine_path(app: &AppHandle) -> Result<PathBuf, String> {
 pub fn engine_start(app: &AppHandle) {
 	let engine = app.state::<Engine>();
 	let paths = app.state::<Paths>().inner().clone();
-	if paths.mode == "translocated" { lock(&engine).status.trouble = "macOS is running ftorrent from a temporary copy, away from its own folder".to_string(); return }//paths.rs says why; the page explains the fix
 	let path = match engine_path(app) {
 		Ok(path) => path,
 		Err(trouble) => { lock(&engine).status.trouble = trouble; return }

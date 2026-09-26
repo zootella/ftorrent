@@ -32,13 +32,13 @@ export const useSettingsStore = defineStore('settings', () => {
 	async function load(loadedPaths) {//read the settings file and leave it exactly as ftorrent would write it, unless it won't open or won't parse; call once, before anything reads a setting
 		paths.value = loadedPaths//first, and always, so the page can show where everything is, and explain a copy with no data folder
 		let path = loadedPaths.settings
-		if (!path) { unreadable = true; return }//translocated, or no data folder: no file to read, and none to write
+		if (!path) { unreadable = true; return }//no data folder: no file to read, and none to write
 		let text = ''
 		try {
 			text = new TextDecoder().decode(new Uint8Array(await diskRead(path)))
 		} catch (error) {
 			unreadable = !String(error).includes('os error 2')//both platforms number a missing file 2; anything else is a lock, a permission, or a disk saying no
-			problems.value.push(`settings: ${unreadable ? 'leaving alone' : 'starting a new file at'} ${path}, because reading one said: ${error}`)
+			problems.value.push(unreadable ? `settings: leaving alone ${path}, because reading it said: ${error}` : `settings: first run, so writing ${path} with every setting at its factory value`)//a missing file is the ordinary first run, and says so plainly; anything else is a file that's there and won't open
 		}
 		fileText = text
 
