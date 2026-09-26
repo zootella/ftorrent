@@ -1,11 +1,11 @@
-#./desktop/engine/engine.py
-
 import sys
 import json
 import platform
 import libtorrent as lt
 
 # The engine is the process that will hold libtorrent, and this file is its whole program for now. It starts, answers a few lines of newline-delimited JSON on its pipes, and exits when told to or when its pipe closes. It opens no sockets and creates no libtorrent session yet. What it proves is the shape of things: the app can carry a frozen Python beside itself, start it, talk to it in both directions, and stop it without leaving a process behind. The torrent work arrives later on top of exactly this loop.
+#
+# The engine is the far end of the one road between the page and libtorrent. The page builds each command as a line of JSON, the app's Rust passes it down the engine's stdin without reading it, and every line the engine writes to stdout goes back up the same way, unread, until the page takes it. So this file is where JSON meets libtorrent: the dispatch table at the bottom has one entry per command, each entry translates what it's given into libtorrent's own terms and back, and the table is also the list of everything the page can ask the engine to do, on purpose, rather than a way to call any libtorrent method by name. Using a libtorrent call ftorrent hasn't used before means one new entry here and the page that sends it, and nothing in between.
 #
 # Two rules about the pipes, both because the other end is Rust reading lines. Every message is one line of JSON ending in a newline and flushed at once, so nothing sits in a buffer while the app waits. And a line that is not JSON, or JSON that is not a command the engine knows, gets an error line back rather than a crash, so a mistake on one side never takes the other side down.
 
@@ -31,12 +31,13 @@ centralized_servers = {
 	],
 }
 
-version = ''#the app's version, which arrives in the init line because the engine cannot read tauri.conf.json, the one place it is written
+name = ''#the product's name, and
+version = ''#the app's version, both of which arrive in the init line because the engine cannot read tauri.conf.json, the one place they're written
 paths = {}#where the engine will keep what it keeps: the data folder and the state file, which also arrive in init because the app works them out and the engine never does
 folders = []#the download folders, as absolute paths; these arrive later, in a folders line, because they are a setting and the page reads the settings after the engine has started
 
 def client_name():#how the client names itself on the wire: brand first, then lineage, the way a browser's user agent reads, so a narrow column shows the brand and a wide one shows the whole truth
-	return f'ftorrent/{version} libtorrent/{lt.version}'
+	return f'{name}/{version} libtorrent/{lt.version}'
 
 def fingerprint():#the eight characters at the front of every peer id, like -FF0100-: FF is ftorrent's own client code, unused in every table of codes when we chose it and to be registered in each; the digits are the version, one character per part, the same way libtorrent makes its own -LT2110-
 	parts = [int(p) if p.isdigit() else 0 for p in (version.split('.') + ['0', '0', '0'])[:3]]#major, minor, patch, with a missing or odd part reading as zero rather than stopping the engine
@@ -64,13 +65,32 @@ def ready():#what the engine reports about itself once it is up, and the first t
 		'paths': paths,#the paths init carried, sent back unchanged, so the app can see they arrived; the engine uses them once it has a session
 	}
 
-def main():
-	global version, paths, folders#the module's values the commands below set; a global statement covers the whole function wherever it's written, so it goes at the top where a reader looks for it
-	out = sys.stdout.buffer#bytes rather than text, so the newline is exactly one byte on every platform and nothing translates it
-	def emit(message):
-		out.write((json.dumps(message, separators=(',', ':')) + '\n').encode('utf-8'))
-		out.flush()#every line at once; the app is waiting on it
+out = sys.stdout.buffer#bytes rather than text, so the newline is exactly one byte on every platform and nothing translates it
 
+def emit(message):#one line up the road
+	out.write((json.dumps(message, separators=(',', ':')) + '\n').encode('utf-8'))
+	out.flush()#every line at once; the app is waiting on it
+
+def command_init(message):#the app says which version it is and where the engine keeps what it keeps, once, before anything else
+	global name, version, paths
+	name = str(message.get('name', ''))
+	version = str(message.get('version', ''))
+	paths = message.get('paths', {}) if isinstance(message.get('paths'), dict) else {}
+	emit(ready())
+
+def command_folders(message):#the download folders the page holds the locks for, as absolute paths
+	global folders
+	listed = message.get('folders')
+	if not isinstance(listed, list): listed = []#anything but a list names no folders, rather than stopping the engine
+	folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
+	emit({'event': 'folders', 'folders': folders})#sent back as kept, so the page can see they arrived and notice if one was passed over; the engine uses them once it has a session
+
+commands = {#every command the engine understands, and the function that carries it out; quit is handled in the loop below, since it ends the loop
+	'init': command_init,
+	'folders': command_folders,
+}
+
+def main():
 	for raw in sys.stdin.buffer:#one line per message; the loop ends when the app closes the pipe, which is how a dying app takes the engine with it
 		line = raw.decode('utf-8-sig', 'replace').strip()#utf-8-sig drops a byte-order mark at the start, which Windows PowerShell 5.1 puts ahead of anything it pipes into a program
 		if not line: continue
@@ -79,19 +99,10 @@ def main():
 		except ValueError:
 			emit({'event': 'error', 'message': 'malformed json', 'line': line[:200]}); continue
 		command = message.get('command') if isinstance(message, dict) else None
-		if command == 'init':
-			version = str(message.get('version', ''))#the app says which version it is, once, before anything else
-			paths = message.get('paths', {}) if isinstance(message.get('paths'), dict) else {}
-			emit(ready())
-		elif command == 'folders':
-			listed = message.get('folders')
-			if not isinstance(listed, list): listed = []#anything but a list names no folders, rather than stopping the engine
-			folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
-			emit({'event': 'folders', 'folders': folders})#sent back as kept, so the app can see they arrived, and notices if one was passed over; the engine uses them once it has a session
-		elif command == 'quit':
-			break
-		else:
-			emit({'event': 'error', 'message': 'unknown command', 'command': command})
+		if command == 'quit': break
+		handler = commands.get(command)
+		if handler: handler(message)
+		else: emit({'event': 'error', 'message': 'unknown command', 'command': command})
 
 if __name__ == '__main__':
 	try:

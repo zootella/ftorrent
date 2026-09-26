@@ -1,5 +1,3 @@
-//./src-tauri/src/engine.rs
-
 use std::collections::VecDeque;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
@@ -9,19 +7,24 @@ use std::time::{Duration, Instant};
 use serde::Serialize;
 use tauri::{command, AppHandle, Manager, State};
 use crate::paths::Paths;
+use crate::queue::{Drained, Queue};
 
 /*
 The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches the process, and the page cannot start one at all: there is no shell plugin registered, so the only way a process is spawned is the Rust in this file, from a path this file computes.
 
-The conversation is newline-delimited JSON on the engine's own pipes. Rust writes one command per line to its stdin and reads one event per line from its stdout, and pipes are the reason for that choice over a local socket: a pipe between a parent and its child is reachable by no other process on the machine. Today the protocol is two exchanges. init goes down as soon as the engine starts, carrying the app's version, which is how the engine learns the one number it cannot read for itself, and the data folder and state file startup worked out; ready comes back with them echoed. folders goes down later, once the page has read the settings and resolved the download folders, because the download folders are a setting and the page owns the settings; the engine echoes those back in a folders event the same way. Both echoes are how the app sees that a value arrived, until the engine has a session to use it in. The engine's stderr is kept in memory, the last hundred lines, so that a failure to start has something to show.
+The conversation is the one road between the page and libtorrent, and this module is the wire in the middle of it. In a plain Python program, libtorrent is one process and function calls: calls on the session and on a torrent's handle post requests to libtorrent's own network thread and return at once, and libtorrent reports everything back as alerts, which the program collects in batches. ftorrent puts a process boundary between the app and the engine, and that boundary is the only wire protocol ftorrent owns: newline-delimited JSON on the engine's own pipes. Pipes rather than a local socket, because a pipe between a parent and its child is reachable by no other process on the machine.
+
+One road down, one road up, and Rust reads neither. Going down, the page builds a command as a line of JSON and hands it to engine_send, which writes it to the engine's stdin; the only thing checked is that it's one line, since a newline would make it two. Coming up, every line the engine writes to stdout goes on a drained queue as text, and engine_take hands the page everything waiting. The engine is where JSON meets libtorrent, with one entry in its dispatch table per command, and the page is where the answers mean something. So using a libtorrent call ftorrent hasn't used before is two edits, the page that sends the command and the engine's entry that makes the call, and nothing here changes. Take pausing a torrent. With a Rust command per engine message it would be six edits across four layers: a JavaScript wrapper, a Rust command, its registration in lib.rs, the engine's branch, a Rust status field for the answer, and the page. On this road it's two: the page sends {"command":"pause",…}, and one entry in engine.py calls handle.pause(); libtorrent's answer comes back as an alert the engine already turns into a line. That's on purpose: a Rust command per engine message would rebuild libtorrent's whole surface at every layer, one feature at a time.
+
+Two things stay special here, because they're about the process rather than the conversation. init goes down the moment the engine starts, before the page exists, carrying the app's version, which is how the engine learns the one number it can't read for itself, and the data folder and state file startup worked out; its answer, ready, comes up the road like any other line. And the engine's stderr is kept in a ring of the last hundred lines, uninterpreted, so that a failure to start or a crash has something to show.
 
 Stopping is the part that has to be right. A torrent client that leaves an engine running after its window closes is broken, so engine_stop runs from the two run events every quit path reaches, asks the engine to quit and closes its stdin, gives it a moment, and kills it if it is still there. Closing stdin is a second, independent signal: the engine exits when its input ends, so even an engine that never sees the quit line goes when the app does.
 
 Where the engine lives is the one platform question, and Tauri's resource directory answers it: inside the bundle on macOS, beside the executable on Windows, under the application's lib directory on Linux, and in the target directory during development. The folder name is the same everywhere, so the path is built once below and never branches.
 */
 
-const ENGINE_NAME: &str = "ftorrent-engine";//the folder the freeze produced, and the executable inside it
 const STDERR_LINES: usize = 100;//how many of the engine's stderr lines to keep; the last ones are the ones that explain a crash
+const STDOUT_LINES: usize = 1000;//how many stdout lines wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst, not a history
 const STOP_WAIT: Duration = Duration::from_secs(2);//how long a quit gets before a kill
 
 /// What the page sees when it asks how the engine is doing
@@ -30,8 +33,6 @@ pub struct EngineStatus {
 	pub path: String,//where the app looked for the engine
 	pub running: bool,
 	pub pid: u32,
-	pub ready: Option<serde_json::Value>,//the engine's ready event, exactly as it sent it, once it has arrived
-	pub folders: Option<serde_json::Value>,//and its folders event, echoing the download folders the page sent, once that has
 	pub exit: String,//how the last run ended, blank while running or before the first start
 	pub trouble: String,//why the engine could not be started, blank when it could
 	pub stderr: Vec<String>,//the last lines the engine wrote to stderr
@@ -43,6 +44,7 @@ struct EngineInner {
 	stdin: Option<ChildStdin>,//the pipe commands go down; dropped to close it
 	status: EngineStatus,
 	stderr: VecDeque<String>,//the ring behind status.stderr
+	lines: Queue<String, STDOUT_LINES>,//what the engine has written to stdout that the page hasn't taken yet
 }
 
 //managed by lib.rs; the Mutex because commands arrive on tauri's threads and the reader threads below on their own
@@ -55,8 +57,9 @@ fn lock(engine: &Engine) -> std::sync::MutexGuard<'_, EngineInner> {
 
 /// Where the engine's executable is on this platform, whether or not it is there
 fn engine_path(app: &AppHandle) -> Result<PathBuf, String> {
-	let mut path = app.path().resource_dir().map_err(|e| format!("no resource directory: {e}"))?.join(ENGINE_NAME);
-	path.push(if cfg!(target_os = "windows") { "ftorrent-engine.exe" } else { ENGINE_NAME });
+	let name = format!("{}-engine", app.package_info().name);//the folder the freeze produced, and the executable inside it, named for the product in tauri.conf.json
+	let mut path = app.path().resource_dir().map_err(|e| format!("no resource directory: {e}"))?.join(&name);
+	path.push(if cfg!(target_os = "windows") { format!("{name}.exe") } else { name });
 	Ok(path)
 }
 
@@ -89,8 +92,9 @@ pub fn engine_start(app: &AppHandle) {
 	let pid = child.id();
 	let init = serde_json::json!({
 		"command": "init",
+		"name": app.package_info().name,//the product name, which the engine puts at the front of the client name peers and trackers see
 		"version": app.package_info().version.to_string(),//the app's version, read from tauri.conf.json at compile time, so the engine can name the client on the wire without a second place the number is written
-		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so they arrive from the page through engine_folders once it has read the settings file
+		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so the page sends them down the road once it has read the settings file
 			"data": paths.data,
 			"state": paths.state,
 		},
@@ -102,23 +106,16 @@ pub fn engine_start(app: &AppHandle) {
 		inner.stdin = Some(stdin);
 		inner.status.running = true;
 		inner.status.pid = pid;
-		inner.status.ready = None;
-		inner.status.folders = None;
 		inner.status.exit = String::new();
 		inner.status.trouble = String::new();
 	}
 
-	//stdout: one json event per line, of which ready and folders are the ones kept. The end of the stream is the end of the engine, so this thread is also what notices a crash
+	//stdout: every line onto the queue for the page, unread. The end of the stream is the end of the engine, so this thread is also what notices a crash
 	let app_out = app.clone();
 	std::thread::spawn(move || {
-		for line in BufReader::new(stdout).split(b'\n').map_while(Result::ok) {//raw bytes up to each newline, so a line that is not utf-8 is dropped by the parse below rather than ending the reader, because a reader that stops while the engine keeps writing leaves the engine blocked on a full pipe; only a failed read ends the loop, and that means the pipe is gone
-			if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&line) {//json counts a trailing \r as whitespace, so a windows line ending parses too
-				match value.get("event").and_then(|v| v.as_str()) {
-					Some("ready")   => lock(&app_out.state::<Engine>()).status.ready = Some(value),
-					Some("folders") => lock(&app_out.state::<Engine>()).status.folders = Some(value),
-					_ => {}//an error line, or an event nothing here listens for yet
-				}
-			}
+		for line in BufReader::new(stdout).split(b'\n').map_while(Result::ok) {//raw bytes up to each newline; only a failed read ends the loop, and that means the pipe is gone, because a reader that stopped while the engine kept writing would leave the engine blocked on a full pipe
+			let line = String::from_utf8_lossy(&line).trim_end_matches('\r').to_string();//text, with anything not utf-8 shown as a replacement character rather than losing the line, and a windows line ending trimmed
+			lock(&app_out.state::<Engine>()).lines.push(line);
 		}
 		let child = lock(&app_out.state::<Engine>()).child.take();//outside the lock below, because wait blocks, and engine_stop must be able to get in meanwhile
 		let exit = match child { Some(mut child) => child.wait().map(|s| s.to_string()).unwrap_or_else(|e| e.to_string()), None => String::new() };//none means engine_stop already has it and will record how it ended
@@ -164,13 +161,19 @@ pub fn engine_stop(app: &AppHandle) {
 	inner.status.exit = exit;
 }
 
-/// Tell the engine which download folders to use, as absolute paths the page resolved from the settings; called once the page has read the settings file, and again whenever the list changes
+/// Send the engine one line, a command the page built; it isn't read here, only checked to be a single line
 #[command]
-pub fn engine_folders(engine: State<'_, Engine>, folders: Vec<String>) -> Result<(), String> {
-	let line = serde_json::json!({"command": "folders", "folders": folders}).to_string() + "\n";
+pub fn engine_send(engine: State<'_, Engine>, line: String) -> Result<(), String> {
+	if line.contains('\n') || line.contains('\r') { return Err("a line for the engine can't contain a line break".to_string()) }//it would arrive as two messages, the second a fragment
 	let mut inner = lock(&engine);
 	let Some(stdin) = inner.stdin.as_mut() else { return Err("the engine is not running".to_string()) };//not started, or already gone; the page shows the engine's own status beside this
-	stdin.write_all(line.as_bytes()).map_err(|e| format!("could not write to the engine: {e}"))
+	stdin.write_all((line + "\n").as_bytes()).map_err(|e| format!("could not write to the engine: {e}"))
+}
+
+/// Everything the engine has written to stdout since the last take, oldest first, and how many lines were dropped because the page fell behind
+#[command]
+pub fn engine_take(engine: State<'_, Engine>) -> Drained<String> {
+	lock(&engine).lines.take()
 }
 
 /// How the engine is doing right now; the page asks, rather than being told, so nothing here has to know whether a page exists

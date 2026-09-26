@@ -8,6 +8,9 @@
 	"permissions": [
 		"core:default",
 		"core:window:allow-show",
+		"core:window:allow-set-position",
+		"core:window:allow-set-size",
+		"core:window:allow-maximize",
 		"opener:allow-reveal-item-in-dir",
 		"dialog:allow-open",
 		"dialog:allow-save"

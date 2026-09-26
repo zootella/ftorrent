@@ -1,13 +1,12 @@
-//./src/stores/settings.js
-
 import {ref, reactive, computed} from 'vue'
 import {defineStore} from 'pinia'
 import {settingsFactory, settingsParse, settingsRender} from '../settings.js'
-import {diskRead, diskWrite, diskMkdir} from '../disk.js'
-import {folderLock} from '../folders.js'
-import {engineFolders} from '../engine.js'
+import {diskRead, diskWrite, diskMkdir, diskHide, diskStat} from '../disk.js'
+import {lockTake} from '../locks.js'
+import {useIncomingStore} from './incoming.js'
 import {desktopExitHold} from '../desktop.js'
 import {resolveFolder} from '../paths.js'
+import {brandName} from '../brand.js'
 
 /*
 The live settings, and the reading and writing of ftorrent.toml around them. settings.js knows what a setting is; this store knows where the file is, what it last said, and when to write it. The rest of the app imports this store and reads settings.section.key, the way it reads any other store, and the one object is filled in at startup rather than replaced, so a component that grabbed it early is looking at the same thing as one that came later.
@@ -21,7 +20,7 @@ export const useSettingsStore = defineStore('settings', () => {
 	let settings = reactive(settingsFactory())//the live settings the rest of ftorrent reads, filled in by load and never replaced
 	let paths = ref(null)//where everything is, as paths.rs worked it out; load takes it, and the page and the folder resolution below read it from here
 	let problems = ref([])//what reading or writing the file had to say, for the page to show; empty when the file was fine
-	let folderStates = ref({})//how each resolved download folder stands, by path, as folder_lock last answered: held, busy, missing, or trouble with the reason after a colon
+	let folderStates = ref({})//how each resolved download folder stands, by path, as folderLock last answered: held, busy, missing, or trouble with the reason after a colon
 	let fileText = ''//what ftorrent last read from or wrote to the file, to tell when a write would change nothing
 	let heldText = ''//what rust is holding to write at exit, to tell when handing it down again would change nothing
 	let unreadable = false//there's no file to use, or it's there and won't open or won't parse, so nothing may be written
@@ -32,11 +31,28 @@ export const useSettingsStore = defineStore('settings', () => {
 		return settings.downloads.folders.map(setting => ({setting, path: resolveFolder(setting, p.location, p.home)}))
 	})
 
+	const sessionFolder = `.${brandName}`//inside each download folder, where the session data of the torrents in it lives, and the lock that keeps two copies of ftorrent from using the folder at once
+	const lockName = `${brandName}.lock`//inside that, empty, and never written; it exists to be locked
 	let heldFolders = computed(() => resolvedFolders.value.map(folder => folder.path).filter(path => folderStates.value[path] == 'held'))//the folders this copy holds, in settings order, which are the only ones the engine is told about
+
+	async function folderLock(path) {//lock one download folder, never making it: missing if it isn't on this machine; otherwise it gets its hidden .ftorrent, if it hasn't one yet, and the lock inside it. Answers held, busy, missing, or trouble with the reason after a colon
+		let found
+		try { found = await diskStat(path) } catch { return 'missing' }//a drive not plugged in, or a default folder nothing has needed yet
+		if (!found.is_dir && !found.is_symlink) return 'trouble: this is a file, not a folder'
+		let separator = path.includes('\\') ? '\\' : '/'//the resolved path already has the platform's own separators
+		let session = path + separator + sessionFolder
+		try {
+			try { await diskStat(session) } catch { await diskMkdir(session) }//made the first time this folder is used, beside the downloads, holding one subfolder per torrent
+			await diskHide(session)//on windows; the leading dot hides it elsewhere
+		} catch (error) {
+			return `trouble: could not make ${sessionFolder}, ${error}`
+		}
+		return await lockTake(session + separator + lockName)//held against every other copy of ftorrent for as long as this one runs; one folder under two spellings is held once
+	}
 
 	async function lockFolders() {//take the lock on every download folder that exists, and tell the engine which ones this copy holds; at startup, never making a folder
 		for (let folder of resolvedFolders.value) folderStates.value[folder.path] = await folderLock(folder.path)
-		await engineFolders(heldFolders.value)
+		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 	}
 
 	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the main page's button until then
@@ -50,7 +66,7 @@ export const useSettingsStore = defineStore('settings', () => {
 			}
 		}
 		folderStates.value[path] = state
-		await engineFolders(heldFolders.value)
+		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 		return state
 	}
 

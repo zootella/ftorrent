@@ -1,4 +1,4 @@
-<script setup>//./docs/.vitepress/theme/components/DownloadLink.vue
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
 import { fetchSidecar, readableDate, saySize, copyText } from '../downloads.js'

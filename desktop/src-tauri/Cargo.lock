@@ -1052,7 +1052,6 @@ dependencies = [
 name = "ftorrent"
 version = "0.1.0"
 dependencies = [
- "fastrand",
  "serde",
  "serde_json",
  "tauri",
@@ -1060,7 +1059,6 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tokio",
- "toml 0.8.2",
  "windows",
 ]
 

@@ -1,4 +1,3 @@
-# ./desktop/engine/pyproject.toml
 # The engine's manifest: what Python it runs on and the two packages it needs. uv.lock beside this file pins every platform's wheel by hash, and uv sync --frozen refuses anything the lock does not name.
 
 [project]

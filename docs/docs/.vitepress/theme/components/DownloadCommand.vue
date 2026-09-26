@@ -1,4 +1,4 @@
-<script setup>//./docs/.vitepress/theme/components/DownloadCommand.vue
+<script setup>
 import { ref, onMounted } from 'vue'
 import { useData } from 'vitepress'
 import { fetchSidecar } from '../downloads.js'

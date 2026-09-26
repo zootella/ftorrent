@@ -1,5 +1,3 @@
-//./src-tauri/src/disk.rs
-
 use serde::Serialize;
 use std::fs;
 //use std::path::Path;
@@ -9,7 +7,7 @@ use tauri::command;
 /*
 The design contract of this module: these commands hand the page the full, standard power a desktop application has over the disk, the same power a native Mac or Windows app wields through its file APIs. Each one is a single atomic operation with POSIX semantics, followed faithfully, sharp edges included: disk_copy overwrites an existing destination, just like cp and std::fs::copy do, and disk_write replaces the whole file, just like fs::write does. Code that calls these commands must be careful and correct, exactly as native application code must.
 
-They take any path and hold no guard, on purpose. Application logic lives in the page, which alone knows what a path means and whether writing it is right; down here, Rust receives commands and follows them. A guard in this file would be a second copy of that knowledge on the other side of the boundary, and logic split across layers drifts apart, which makes the whole less safe rather than more. What keeps this power in the right hands is that the page runs only its own code: untrusted text, like file names, file contents, and metadata, reaches it only through Vue's escaping interpolation, so it can never become script that calls these commands, and the Content-Security-Policy in tauri.conf.json keeps foreign script out of the webview even if that wall someday cracks.
+They take any path and hold no guard, on purpose: the page alone knows what a path means and whether writing it is right, and a guard here would be a second copy of that knowledge. lib.rs has the long version of why, and of what keeps this power in the right hands.
 */
 
 #[derive(Serialize)]
@@ -165,7 +163,7 @@ pub fn disk_write(path: String, data: Vec<u8>) -> Result<(), String> {
 	fs::write(&path, data).map_err(|e| e.to_string())
 }
 /*
-the first of the write family, brought up from the sketch below for the settings file: the page renders ftorrent.toml and hands the bytes here. A Vec<u8> crosses the ipc as one json number per byte, which is fine for a file of a few hundred bytes and would not be for a big one; disk_read has the same note in the other direction
+the first of the write family, brought up from the sketch below. A Vec<u8> crosses the ipc as one json number per byte, which is fine for a file of a few hundred bytes and would not be for a big one; disk_read has the same note in the other direction
 */
 
 /// POSIX `mkdir(2)`, single level: the parent has to exist, and a folder already there is an error, just like mkdir without -p
@@ -173,8 +171,29 @@ the first of the write family, brought up from the sketch below for the settings
 pub fn disk_mkdir(path: String) -> Result<(), String> {
 	fs::create_dir(&path).map_err(|e| e.to_string())
 }
+/// Hide a file or folder from the file browser: on Windows, set its hidden attribute, keeping the ones it already has; on macOS and Linux, do nothing, since there a name that starts with a dot is what hides it
+#[tauri::command]
+pub fn disk_hide(path: String) -> Result<(), String> {
+	hide(std::path::Path::new(&path))
+}
+
+#[cfg(target_os = "windows")]
+fn hide(path: &std::path::Path) -> Result<(), String> {
+	use std::os::windows::ffi::OsStrExt;
+	use windows::core::PCWSTR;
+	use windows::Win32::Storage::FileSystem::{GetFileAttributesW, SetFileAttributesW, FILE_ATTRIBUTE_HIDDEN, FILE_FLAGS_AND_ATTRIBUTES, INVALID_FILE_ATTRIBUTES};
+	let wide: Vec<u16> = path.as_os_str().encode_wide().chain(std::iter::once(0)).collect();//the path as windows takes it, utf-16 ending in a zero, bound to a variable so the pointers below point into something that lives
+	let current = unsafe { GetFileAttributesW(PCWSTR(wide.as_ptr())) };
+	if current == INVALID_FILE_ATTRIBUTES { return Err(format!("could not read the attributes of {}", path.display())) }
+	if current & FILE_ATTRIBUTE_HIDDEN.0 != 0 { return Ok(()) }//hidden already, so there's nothing to write
+	unsafe { SetFileAttributesW(PCWSTR(wide.as_ptr()), FILE_FLAGS_AND_ATTRIBUTES(current | FILE_ATTRIBUTE_HIDDEN.0)) }.map_err(|e| e.to_string())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn hide(_path: &std::path::Path) -> Result<(), String> { Ok(()) }//the dot does it
+
 /*
-brought up from the sketch below when download folders arrived: the page makes a download folder the moment it's first needed, like the default ~/Downloads/ftorrent, whose parent is always there
+brought up from the sketch below, alongside disk_hide above it; single level, like the mkdir it mirrors
 */
 
 /*

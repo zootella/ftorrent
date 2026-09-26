@@ -1,8 +1,7 @@
-//./src/engine.js
-
 import {invoke} from '@tauri-apps/api/core'
 
-//the engine is the second process, a frozen python holding libtorrent, that rust starts beside the app; engine.rs is the long version, and says why only rust can start it and how it is stopped
+//the engine is the second process, a frozen python holding libtorrent, that rust starts beside the app; engine.rs is the long version, with the road between the page and libtorrent that these three commands are the page's end of
 
-export function engineStatus()         { return invoke('engine_status') }//how the engine is doing right now: whether it is running, its pid, the ready and folders events it sent, how its last run ended, and the last lines it wrote to stderr
-export function engineFolders(folders) { return invoke('engine_folders', {folders}) }//tell the engine which download folders to use, as absolute paths; once after the settings are read, and again whenever they change
+export function engineStatus()   { return invoke('engine_status') }       //how the engine process is doing: whether it is running, its pid, how its last run ended, any trouble starting it, and the last lines it wrote to stderr
+export function engineSend(line) { return invoke('engine_send', {line}) } //one command down the road, a line of json the page built; rust passes it on without reading it
+export function engineTake()     { return invoke('engine_take') }         //every line the engine has written since the last take, oldest first, as {items, dropped}

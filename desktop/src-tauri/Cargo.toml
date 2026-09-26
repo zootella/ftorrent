@@ -24,10 +24,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-toml = "0.8"#settings.rs reads the window's saved geometry out of ftorrent.toml before the page exists; the page owns everything else about that file
-fastrand = "2"#window.rs drops a first-run window at a random spot in the middle of the screen, which needs nothing cryptographic; both crates are already in the tree under tauri, so this unifies rather than adds
 
 [target.'cfg(windows)'.dependencies]
 tokio = { version = "1", features = ["net", "io-util"] }#the named pipe a second launch hands over through; tauri already brings tokio, and this turns on the part that speaks pipes
-windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem"] }#the registry calls associate.rs makes and the shell notification after them, and the hidden attribute folders.rs sets on .ftorrent; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem"] }#the registry calls registry.rs makes and the shell notification after them, and the hidden attribute disk.rs sets; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
 

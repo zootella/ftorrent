@@ -1,5 +1,3 @@
-//./src/desktop.js
-
 import {invoke} from '@tauri-apps/api/core'
 
 //the actions the user takes on the desktop rather than inside the window, which for now is one: quitting. desktop.rs is the long version, and says why only rust can see a quit coming

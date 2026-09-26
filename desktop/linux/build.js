@@ -1,5 +1,3 @@
-//./desktop/linux/build.js
-
 import {execFileSync} from 'node:child_process'
 import {cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync} from 'node:fs'
 import {basename, join} from 'node:path'

@@ -1,5 +1,3 @@
-//./docs/.vitepress/theme/downloads.js
-
 /*
 The desktop client's downloads, as the documentation site sees them: from the machine that built an installer to the page that offers it.
 

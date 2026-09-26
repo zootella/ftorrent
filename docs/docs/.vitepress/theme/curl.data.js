@@ -1,5 +1,3 @@
-//./docs/.vitepress/theme/curl.data.js
-
 import { defineLoader, createMarkdownRenderer } from 'vitepress'
 
 /*

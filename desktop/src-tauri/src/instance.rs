@@ -1,11 +1,10 @@
-//./src-tauri/src/instance.rs
-
 use std::fs::{self, File, TryLockError};
 use std::path::Path;
 use std::sync::Mutex;
 use serde::Serialize;
 use tauri::{command, AppHandle, Manager, State};
 use crate::paths::Paths;
+use crate::queue::{Drained, Queue};
 
 /*
 ftorrent runs once per copy, and a second launch of a copy that's already running hands over what it carried and leaves. That second launch is ordinary: clicking a magnet link or double-clicking a .torrent file while ftorrent is open starts one, on Windows, and a person who selects ten torrents and presses Enter starts ten. Whatever they carried has to reach the copy that's running, every time, and no second window may appear.
@@ -14,11 +13,10 @@ Two halves do that. The lock says whether this copy is already running. It's an 
 
 The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives is kept in order, and the page lists it. Until there's an interface that adds torrents, that list is how we see that nothing was dropped.
+What arrives, this copy's own command line or a second launch's, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live.
 */
 
-const LOCK_NAME: &str = "ftorrent.lock";//empty, and never written; it exists to be locked
-const REQUESTS_KEPT: usize = 100;//how many arrivals the page can list
+const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
 
 /// One launch's arguments, as they reached this copy
 #[derive(Serialize, Clone)]
@@ -34,7 +32,6 @@ pub struct InstanceStatus {
 	pub held: bool,//true once this copy holds it
 	pub handoff: String,//how a second launch reaches this copy
 	pub trouble: String,//why this copy runs without its lock or its handoff, blank when it has both
-	pub requests: Vec<Request>,//everything that has arrived, oldest first
 }
 
 //managed by lib.rs; the lock file lives here so it stays open, and the lock stays held, for as long as the process runs
@@ -42,6 +39,7 @@ pub struct InstanceStatus {
 pub struct Instance {
 	lock: Mutex<Option<File>>,
 	status: Mutex<InstanceStatus>,
+	arrivals: Mutex<Queue<Request, ARRIVALS_WAITING>>,//what has reached this copy that the page hasn't taken yet
 }
 
 /// How startup should go on
@@ -59,7 +57,8 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		return Start::Run;
 	}
 	let data = Path::new(&paths.data);
-	let lock_path = data.join(LOCK_NAME);
+	let brand = app.package_info().name.clone();//the product name from tauri.conf.json, which names the lock file and the pipe
+	let lock_path = data.join(format!("{brand}.lock"));//empty, and never written; it exists to be locked
 	status(&instance).lock = lock_path.to_string_lossy().into_owned();
 
 	match take(&lock_path) {
@@ -68,7 +67,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 			status(&instance).held = true;
 		}
 		Err(Taken::Busy) => {
-			handoff::send(&lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
+			handoff::send(&brand, &lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
 			return Start::Leave;
 		}
 		Err(Taken::Unsupported(e)) => {
@@ -76,7 +75,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		}
 	}
 
-	match handoff::serve(app, &lock_path) {
+	match handoff::serve(app, &brand, &lock_path) {
 		Ok(how) => status(&instance).handoff = how,
 		Err(e) => {
 			let mut s = status(&instance);
@@ -104,14 +103,9 @@ pub fn take(path: &Path) -> Result<File, Taken> {
 	}
 }
 
-/// Something reached this copy: keep it for the page, and bring the window forward if a second launch sent it
+/// Something reached this copy: queue it for the page, and bring the window forward if a second launch sent it
 fn arrive(app: &AppHandle, from: &str, args: Vec<String>, forward: bool) {
-	{
-		let instance = app.state::<Instance>();
-		let mut s = status(&instance);
-		if s.requests.len() >= REQUESTS_KEPT { s.requests.remove(0); }
-		s.requests.push(Request { from: from.to_string(), args });
-	}
+	app.state::<Instance>().arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push(Request { from: from.to_string(), args });
 	if forward { crate::lifecycle::bring_forward(app) }//closing the window hides it, so it may be hidden, minimized, or behind something else
 }
 
@@ -119,10 +113,16 @@ fn status(instance: &Instance) -> std::sync::MutexGuard<'_, InstanceStatus> {
 	instance.status.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
-/// This copy's lock, its handoff, and everything that has reached it; the page asks
+/// This copy's lock and its handoff; the page asks
 #[command]
 pub fn instance_status(instance: State<'_, Instance>) -> InstanceStatus {
 	status(&instance).clone()
+}
+
+/// Everything that has reached this copy since the last take, oldest first, and how many were dropped because the page fell behind
+#[command]
+pub fn instance_take(instance: State<'_, Instance>) -> Drained<Request> {
+	instance.arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take()
 }
 
 #[cfg(target_os = "windows")]
@@ -138,17 +138,17 @@ mod handoff {
 	const MOST: u64 = 64 * 1024;//the longest request read from the pipe; a launch's arguments are far shorter
 	const ERROR_PIPE_BUSY: i32 = 231;//every instance of the pipe is taken for the moment, as when many launches arrive together
 
-	/// The pipe's name: a fixed prefix and a hash of the lock file's path, so each copy has its own and a launch finds the right one
-	fn name(lock: &Path) -> String {
+	/// The pipe's name: the product name and a hash of the lock file's path, so each copy has its own and a launch finds the right one
+	fn name(brand: &str, lock: &Path) -> String {
 		let path = lock.to_string_lossy().to_lowercase();//windows paths ignore case, so C:\Users and c:\users are one copy
 		let mut hash: u64 = 0xcbf29ce484222325;//FNV-1a, the same answer in every process and every build; a name needs no more than that, and first_pipe_instance below stops another process from taking it
 		for byte in path.bytes() { hash ^= byte as u64; hash = hash.wrapping_mul(0x100000001b3); }
-		format!(r"\\.\pipe\ftorrent-{hash:016x}")
+		format!(r"\\.\pipe\{brand}-{hash:016x}")
 	}
 
 	/// Serve the pipe for as long as this copy runs; each connection brings one launch's arguments
-	pub fn serve(app: &AppHandle, lock: &Path) -> Result<String, String> {
-		let name = name(lock);
+	pub fn serve(app: &AppHandle, brand: &str, lock: &Path) -> Result<String, String> {
+		let name = name(brand, lock);
 		let first = tauri::async_runtime::block_on(async {//created here, before setup goes on, so the gap a cold start leaves is as short as it can be
 			ServerOptions::new()
 				.first_pipe_instance(true)//fails if something already has this name, rather than joining it
@@ -183,8 +183,8 @@ mod handoff {
 	}
 
 	/// Hand this launch's arguments to the copy that holds the lock
-	pub fn send(lock: &Path, args: &[String]) {
-		let name = name(lock);
+	pub fn send(brand: &str, lock: &Path, args: &[String]) {
+		let name = name(brand, lock);
 		let line = serde_json::json!({ "args": args }).to_string() + "\n";
 		let started = Instant::now();
 		loop {
@@ -204,10 +204,10 @@ mod handoff {
 	use tauri::AppHandle;
 
 	/// Nothing to serve: Launch Services delivers to a running app on macOS
-	pub fn serve(_app: &AppHandle, _lock: &Path) -> Result<String, String> {
+	pub fn serve(_app: &AppHandle, _brand: &str, _lock: &Path) -> Result<String, String> {
 		Ok(if cfg!(target_os = "macos") { "Launch Services".to_string() } else { "none yet on this platform".to_string() })
 	}
 
 	/// A second process here got around Launch Services; the copy that's running is already on screen, so this one leaves
-	pub fn send(_lock: &Path, _args: &[String]) {}
+	pub fn send(_brand: &str, _lock: &Path, _args: &[String]) {}
 }

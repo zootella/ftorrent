@@ -1,5 +1,3 @@
-//./src-tauri/src/lifecycle.rs
-
 use tauri::{AppHandle, Manager, Window, WindowEvent};
 
 /*
@@ -9,11 +7,14 @@ Closing hides. The close button on Windows and the red button on macOS hide the 
 
 Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
-Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back. The page listens for the close too, to save where the window was, and in Tauri a page that listens decides whether the close goes ahead. It always declines, so that on macOS and Windows the hide is the only thing a close does. So on Linux, Rust turns the close into a quit, which reaches the same Exit run event, where the settings the page handed down are written.
+Focus is taken only when the user asks for the window. bring_forward shows the window, restores it if it's minimized, and gives it focus, and it runs only for a second launch's handoff, the tray, and the Dock, each of which begins with the user reaching for ftorrent; without the focus, a window brought back by a handoff on Windows can land behind whatever the user was just in. The app never takes focus on its own: at startup the page shows the window and leaves it to the operating system whether a newly launched app comes to the front, which it gets right for the Dock, Finder, Spotlight, and the Start menu, and holds back, on purpose, for a launch it didn't see the user make.
+
+Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back. The page listens for the close too, to save where the window was, and in Tauri a page that listens decides whether the close goes ahead. It always declines, so that on macOS and Windows the hide is the only thing a close does. So on Linux, Rust turns the close into a quit, which reaches the same Exit run event, where the text the page handed down for that moment is written.
 */
 
 /// Show the window, restore it if it's minimized, and give it focus; the tray, the Dock, and a second launch all bring ftorrent back this way
 pub fn bring_forward(app: &AppHandle) {
+	if !app.state::<crate::window::Revealed>().0.load(std::sync::atomic::Ordering::SeqCst) { return }//the page hasn't placed the window yet, and shows it itself in a moment; window.rs says why this waits
 	if let Some(window) = app.get_webview_window("main") {
 		let _ = window.show();
 		let _ = window.unminimize();
@@ -55,11 +56,12 @@ pub fn tray_remove(app: &AppHandle) {
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem};
 	use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-	let show = MenuItem::with_id(app, "show", "Show ftorrent", true, None::<&str>)?;
+	let brand = &app.package_info().name;//the product name from tauri.conf.json
+	let show = MenuItem::with_id(app, "show", format!("Show {brand}"), true, None::<&str>)?;
 	let exit = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;
 	let menu = Menu::with_items(app, &[&show, &exit])?;
 	let mut tray = TrayIconBuilder::with_id("main")
-		.tooltip("ftorrent")
+		.tooltip(brand)
 		.menu(&menu)
 		.show_menu_on_left_click(false)//left click brings the window back, and the menu is on the right, where Windows users look for it
 		.on_menu_event(|app, event| match event.id().as_ref() {

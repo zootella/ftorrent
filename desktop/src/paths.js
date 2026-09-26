@@ -1,5 +1,3 @@
-//./src/paths.js
-
 import {invoke} from '@tauri-apps/api/core'
 
 //where everything is: paths.rs works it out once at startup, before the page exists, and is the long version

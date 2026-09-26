@@ -1,4 +1,3 @@
-#./desktop/engine/ftorrent-engine.spec
 # PyInstaller's recipe for freezing the engine. pnpm engine in the desktop workspace runs it, and dist/ftorrent-engine/ is what comes out: the executable, and beside it an _internal folder holding the interpreter, the standard library, and libtorrent. tauri.conf.json carries that folder into the app as a resource.
 #
 # One folder rather than one file, on purpose. A single-file build unpacks itself into a temporary directory on every launch, and that self-extracting shape is what antivirus heuristics on Windows most often flag; a folder unpacks nothing and looks like the ordinary program it is. The folder also starts faster, since nothing is extracted, and it is the same shape on every platform, so the Rust that starts the engine has one path to build.

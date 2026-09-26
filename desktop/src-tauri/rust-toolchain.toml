@@ -1,4 +1,3 @@
-# ./src-tauri/rust-toolchain.toml
 # The Rust every machine that builds ftorrent uses, named once so the Mac, the Windows box, and the Linux containers cannot drift apart. Cargo reads this by searching upward from wherever it runs, and tauri runs it here in src-tauri. Raising the version is a deliberate edit, which is the point: a Rust upgrade becomes something that lands in a diff rather than something that arrives on one machine and not the others.
 
 [toolchain]
