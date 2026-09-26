@@ -50,7 +50,7 @@ pub enum Start {
 	Leave,//another process holds this copy's lock and has what this launch carried; exit now
 }
 
-/// Take this copy's lock, or hand this launch to the copy that has it; called from setup between paths::locate and paths::read
+/// Take this copy's lock, or hand this launch to the copy that has it; called from setup right after paths::locate, which has already created the data folder
 pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	let instance = app.state::<Instance>();
 	let args: Vec<String> = std::env::args().skip(1).collect();//what the operating system launched this copy with, like a magnet link or the path of a .torrent file
@@ -61,7 +61,6 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	let data = Path::new(&paths.data);
 	let lock_path = data.join(LOCK_NAME);
 	status(&instance).lock = lock_path.to_string_lossy().into_owned();
-	let _ = fs::create_dir_all(data);//an installed copy's data folder doesn't exist before its first launch
 
 	match take(&lock_path) {
 		Ok(file) => {

@@ -10,16 +10,7 @@
 		"frontendDist": "../dist"
 	},
 	"app": {
-		"windows": [
-			{
-				"title": "ftorrent",
-				"width": 800,
-				"height": 600,
-				"dragDropEnabled": true,
-				"visible": false,
-				"fullscreen": false
-			}
-		],
+		"windows": [],
 		"security": {
 			"csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' data: blob:"
 		}
@@ -43,11 +34,15 @@
 			"icons/32x32.png",
 			"icons/128x128.png",
 			"icons/128x128@2x.png",
-			"icons/icon.icns",
+			"icons/mac/icon.icns",
 			"icons/icon.ico"
 		],
 		"resources": {
-			"../engine/dist/ftorrent-engine": "ftorrent-engine"
+			"../engine/dist/ftorrent-engine": "ftorrent-engine",
+			"icons/tile/ftorrent.VisualElementsManifest.xml": "ftorrent.VisualElementsManifest.xml",
+			"icons/tile/tile-medium.png": "tile-medium.png",
+			"icons/tile/tile-small.png": "tile-small.png",
+			"icons/torrent.ico": "torrent.ico"
 		},
 		"linux": {
 			"deb": {"desktopTemplate": "ftorrent.desktop.hbs"},
@@ -55,7 +50,9 @@
 		},
 		"windows": {
 			"nsis": {
-				"installMode": "currentUser"
+				"installMode": "currentUser",
+				"installerIcon": "icons/icon.ico",
+				"uninstallerIcon": "icons/icon.ico"
 			}
 		},
 		"macOS": {

@@ -14,7 +14,7 @@ The desktop client planning document on the docs site describes the paths, the p
 
 A zip downloaded in a browser carries the quarantine mark, and Archive Utility passes the mark on to everything it unpacks. When macOS launches a quarantined app from a place Finder didn't move it to, it runs a copy from a randomized, read-only mount under `/private/var/folders/…/AppTranslocation/`. This is App Translocation. Its purpose is to stop an app from finding files planted beside it, and portable mode depends on exactly that, a folder named `portable` beside the app.
 
-A translocated portable copy would look beside itself, find no `portable/ftorrent.json`, and start as an installed copy. Translocation happens when three things are all true:
+A translocated portable copy would look beside itself, find no `portable/ftorrent.toml`, and start as an installed copy. Translocation happens when three things are all true:
 
 - the app carries the quarantine mark;
 - Launch Services opens it, from Finder or `open`, not from a shell;
@@ -61,7 +61,7 @@ The portable `.app` is built as `com.ftorrent.portable`, and the installed one s
 
 An installed copy offers to handle `.torrent` files and `magnet:` links. A portable copy never does. A user running portable brings torrents in explicitly: by dragging a `.torrent` file onto the window, by pasting a magnet link, or with an Open command that shows a file dialog. All three arrive with the torrent interface, after this sprint, and work the same in an installed copy.
 
-The portable `.app` belongs inside its folder. Dragged out on its own, away from `portable/ftorrent.json`, it isn't a supported way to run ftorrent, and the build does nothing special to catch it.
+The portable `.app` belongs inside its folder. Dragged out on its own, away from `portable/ftorrent.toml`, it isn't a supported way to run ftorrent, and the build does nothing special to catch it.
 
 ### Portable is Windows and macOS
 
@@ -71,7 +71,7 @@ The first design put Linux in the zip too. A bare Tauri binary on Linux depends 
 
 The first design used a named mutex on Windows and `flock()` on macOS and Linux. A plain named mutex lives in the per-session namespace, so two people signed in to one Windows machine and running the *same* portable copy from one stick would each get the lock, and both would write the same `portable/state`.
 
-Rust's standard library has had file locking since 1.89: `File::try_lock` takes an exclusive lock with `flock()` on macOS and Linux and `LockFileEx` on Windows, and the operating system releases it however the process ends. ftorrent pins Rust 1.98. So every platform uses one mechanism: an exclusive lock on `ftorrent.lock`, beside `ftorrent.json`, held for the life of the process. A file lock applies to everyone who opens the file, whatever account they're signed in as. It needs no hashing and no extra crate, and it leaves no stale lock after a crash. The lock file stays empty and separate from `ftorrent.json` for two reasons. `ftorrent.json` is replaced whole on every save, which would drop a lock held on the old file. And a lock on Windows is mandatory rather than advisory: while it's held, no other process can read the locked file at all.
+Rust's standard library has had file locking since 1.89: `File::try_lock` takes an exclusive lock with `flock()` on macOS and Linux and `LockFileEx` on Windows, and the operating system releases it however the process ends. ftorrent pins Rust 1.98. So every platform uses one mechanism: an exclusive lock on `ftorrent.lock`, beside `ftorrent.toml`, held for the life of the process. A file lock applies to everyone who opens the file, whatever account they're signed in as. It needs no hashing and no extra crate, and it leaves no stale lock after a crash. The lock file stays empty and separate from `ftorrent.toml` for two reasons. `ftorrent.toml` is replaced whole on every save, which would drop a lock held on the old file. And a lock on Windows is mandatory rather than advisory: while it's held, no other process can read the locked file at all.
 
 Tauri's own single-instance plugin shows why ftorrent carries its own lock. It keys everything on the bundle identifier. On Windows that's a named mutex in the per-session namespace, and on macOS it's a socket in the shared `/tmp`. So it would stop a portable copy from running beside an installed one, and it can't tell one account's copy from another's.
 
@@ -93,7 +93,7 @@ C:\Users\username\AppData\Local\com.ftorrent.ftorrent\      # Windows, with WebV
 ```
 
 ```
-ftorrent.json    settings, only the values the user has changed
+ftorrent.toml    settings, every one written out under a comment with its factory value
 ftorrent.lock    empty, exists to be locked
 state            libtorrent's session state, the DHT routing table among it
 crash.log        the engine's last words, written only when it fails
@@ -110,7 +110,7 @@ ftorrent/
 ftorrent/ftorrent.exe                   # Windows
 ftorrent/ftorrent-engine/               # the Windows engine, where an installed copy also keeps it
 ftorrent/ftorrent.app/                  # macOS, identifier com.ftorrent.portable, engine inside
-ftorrent/portable/ftorrent.json         # its presence is what makes a copy portable
+ftorrent/portable/ftorrent.toml         # its presence is what makes a copy portable
 ```
 
 After a first run, the portable folder holds the rest, and downloads land beside it:
@@ -124,15 +124,15 @@ ftorrent/downloads/
 ftorrent/downloads/.ftorrent/
 ```
 
-`portable/ftorrent.json` ships containing `{"download_folders": ["./downloads"]}`. A `./` path resolves against the folder that holds the program: the folder containing `ftorrent.exe` on Windows, and the folder containing `ftorrent.app` on macOS. Paths are stored with forward slashes. `~` means the current user's home folder. An absolute path stays exactly as written, and it only resolves on the machine it names.
+`portable/ftorrent.toml` ships with `folders = ["./downloads"]` under `[downloads]`, and the page fills in the rest of the file on the first run. A `./` path resolves against the folder that holds the program: the folder containing `ftorrent.exe` on Windows, and the folder containing `ftorrent.app` on macOS. Paths are stored with forward slashes. `~` means the current user's home folder. An absolute path stays exactly as written, and it only resolves on the machine it names.
 
 ### Startup
 
 1. Find the program's own location: the folder of the executable on Windows, and the folder containing the `.app` bundle on macOS. On macOS, a location under `/AppTranslocation/` stops here with the explanation described above.
-2. Look for `portable/ftorrent.json` at that location. If it's there, this copy is portable, and the `portable` folder is its data folder. If it isn't, the data folder is the installed one, created if missing.
+2. Look for `portable/ftorrent.toml` at that location. If it's there, this copy is portable, and the `portable` folder is its data folder. If it isn't, the data folder is the installed one, created if missing.
 3. Try the exclusive lock on `ftorrent.lock` in the data folder. If another process holds it, hand this launch's request to that process and exit.
-4. Read `ftorrent.json`. A missing key takes its built-in default, and a missing file is written with the one default download folder.
-5. Start the engine and send `init` with the resolved paths: the data folder, the state file, and the download folders.
+4. Once the page is up, it reads `ftorrent.toml`. A missing key takes its factory value, a bad value is repaired and reported, and a missing file is written whole, every setting with its comment. Rust reads only the window's saved geometry before the page exists; everything else about settings is the page's.
+5. Start the engine and send `init` with the resolved paths: the data folder and the state file. The download folders are a setting, so they follow once the page has read the file and resolved them, in a `folders` line the engine echoes back.
 6. For each download folder that exists, try the lock on its `.ftorrent/ftorrent.lock`. Load the folder's torrents when the lock is free, and report the folder as in use when it isn't. A folder that doesn't exist on this machine is skipped silently and kept in the list.
 
 The main page shows the resolved values: portable or installed, the data folder, and each download folder with its state. That way the whole resolution can be checked before any torrent exists.
@@ -159,7 +159,7 @@ By default a named pipe gives full access to the account that created it, to adm
 - **The portable WebView2 folder.** Tauri points WebView2 at `AppData\Local\com.ftorrent.ftorrent` unless told otherwise. The window moves from `tauri.conf.json` into the startup code, where `WebviewWindowBuilder::data_directory` can name the data folder that startup resolved, whether installed or portable. WebView2 keeps its files in a subfolder of the folder it's given. Microsoft documents the subfolder without naming it; on Windows 10 it's `EBWebView`.
 - **Which machine builds what.** Each half has to be built on its own platform. Tauri's Mac bundler only compiles on a Mac. Tauri can cross-compile a Windows executable from a Mac, but it calls that experimental and a last resort, and PyInstaller can't cross-build at all, so the Windows engine is frozen on Windows. Windows builds its half first, and the Mac builds its half and assembles the zip. The Mac is the right place to zip because zip tools on Windows don't record Unix permissions: a `.app` zipped on Windows and unpacked on a Mac would lose the executable bit on its binaries.
 - **Getting the Windows half to the Mac.** The repository carries source and records, not build output, so the Windows half travels through the download server instead. On Windows, the upload step packs `ftorrent.exe` and its engine folder into `portable_win.zip`, the Windows portion of the portable build, with `tar -a`, which ships with Windows 10 and later and writes forward slashes. It uploads that zip to `https://ftorrent.com/portable_win.zip`, beside `ftorrent.exe` and `ftorrent.exe.json`, and nothing links to it. The sidecar `pnpm hash` writes for it, `portable_win.zip.json`, is committed and pushed like the others. On the Mac, the assembly step downloads the half and computes its hash. It goes on only if the hash matches the sidecar in the repository. The server is only the courier, and the committed hash is what the Mac trusts.
-- **Assembly.** The Mac unpacks the Windows half, adds the portable `.app` and `portable/ftorrent.json`, and zips the folder as `ftorrent.zip`, without macOS metadata (`__MACOSX`, `._` files) and without symlinks. The stick it's meant for is exFAT, the one format both systems write natively, and exFAT can't hold a symlink; the engine build already replaces its own symlinks with the files they point to, so nothing in either half relies on one.
+- **Assembly.** The Mac unpacks the Windows half, adds the portable `.app` and `portable/ftorrent.toml`, and zips the folder as `ftorrent.zip`, without macOS metadata (`__MACOSX`, `._` files) and without symlinks. The stick it's meant for is exFAT, the one format both systems write natively, and exFAT can't hold a symlink; the engine build already replaces its own symlinks with the files they point to, so nothing in either half relies on one.
 - **Publishing.** `ftorrent.zip` gets a sidecar from `pnpm hash` and a box on the installing page like the other packages. The page gains a portable section that clears the mark before the first launch.
 
 ## Sprint steps
@@ -175,7 +175,7 @@ By default a named pipe gives full access to the account that created it, to adm
 
 	Until there's an interface, the page lists each request as it arrives, which is the proof that nothing was dropped. Windows limits which process may take the foreground, so a running copy asked to come forward may only flash in the taskbar; the tests find out, and the fix, if one is needed, is the second launch granting the first permission to come forward before it hands off.
 2. **Lock the download folders**, and show a folder that's in use. Taking a folder's lock is the first time ftorrent looks inside a download folder, and on macOS the default one sits in the protected Downloads folder, so this is where the system's permission prompt first appears. Path resolution deliberately doesn't check whether folders exist, to keep that prompt away until now. Either this step brings the warning ftorrent shows before the prompt, or it accepts the bare prompt during development and says so.
-3. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows. Today a portable run still writes to `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView`, so the check is that folder's timestamp: a portable run must leave it unchanged.
+3. **Set up WebView2 for portable copies**, pointing its profile into `portable/` on Windows. The window is now built in `window.rs` with `data_directory` set to the resolved data folder, which the Windows burst did while fixing the cold-start race; what's left is the check, once a portable copy exists: a portable run must leave the timestamp of `%LOCALAPPDATA%\com.ftorrent.ftorrent\EBWebView` unchanged.
 4. **Build the portable Mac bundle** from `tauri.portable.conf.json`.
 5. **Assemble and publish the zip**: the sidecar, and the installing page's portable section.
 6. **Run the tests below** on both machines.
@@ -214,11 +214,9 @@ We said we'd stay in Roaming if it turned out to be the common default today. It
 
 Keeping to one folder takes a little discipline, because a stock Tauri app already writes to both. `app_data_dir` and `app_config_dir` are Roaming on Windows. The store and window-state plugins default to Roaming, and the log plugin writes to Local. So ftorrent resolves its data folder once, from `app_local_data_dir`, and passes that one path to everything that writes. A plugin that picks its own folder is pointed at ours before we adopt it. Tauri has an unreleased option, `appDirectoriesOverride`, that sends every one of those paths to one root, and we'll take it when it ships.
 
-It takes effect when paths are resolved.
-
 ### Magnet links and .torrent files, after this sprint
 
-Clicking a magnet link or opening a `.torrent` file belongs to the associations story in the planning document, and it comes after this sprint. That story declares ftorrent as able to open both, handles the open events, and offers the panel that shows and claims the defaults. This sprint's handoff doesn't wait for it on Windows, where the operating system opens a file or a link by running `ftorrent.exe` with it as an argument, so a launch from the command line tests exactly what a click will do. On macOS a click arrives as an Apple Event instead, which needs the types declared in `Info.plist` and `tauri-plugin-deep-link` listening, so the associations story is where that path is built and tested. Everything that arrives, either way, feeds the one request list instance management keeps.
+Clicking a magnet link or opening a `.torrent` file belongs to the associations story in the planning document. That story declares ftorrent as able to open both, handles the open events, and offers the panel that shows and claims the defaults. On Windows the declaring half has already landed, in the Windows burst: `associate.rs` registers `.torrent`, `.ftorrent`, `magnet:`, and `ftorrent:` under the current user, offering and taking nothing another program holds, and the operating system opens a file or a link by running `ftorrent.exe` with it as an argument, so the handoff delivers it with nothing more to build. On macOS a click arrives as an Apple Event instead, which needs the types declared in `Info.plist` and `RunEvent::Opened` handled, and that is the Mac's next piece. The panel comes with the interface. Everything that arrives, either way, feeds the one request list instance management keeps.
 
 ### Locks on exFAT, FAT, and network shares
 

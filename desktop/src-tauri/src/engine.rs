@@ -13,7 +13,7 @@ use crate::paths::Paths;
 /*
 The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches the process, and the page cannot start one at all: there is no shell plugin registered, so the only way a process is spawned is the Rust in this file, from a path this file computes.
 
-The conversation is newline-delimited JSON on the engine's own pipes. Rust writes one command per line to its stdin and reads one event per line from its stdout, and pipes are the reason for that choice over a local socket: a pipe between a parent and its child is reachable by no other process on the machine. Today the whole protocol is one exchange, init in and ready out, which proves both directions work. init carries the app's version, which is how the engine learns the one number it cannot read for itself, and the paths startup worked out, which the engine echoes back in ready until it has a session to use them. The engine's stderr is kept in memory, the last hundred lines, so that a failure to start has something to show.
+The conversation is newline-delimited JSON on the engine's own pipes. Rust writes one command per line to its stdin and reads one event per line from its stdout, and pipes are the reason for that choice over a local socket: a pipe between a parent and its child is reachable by no other process on the machine. Today the protocol is two exchanges. init goes down as soon as the engine starts, carrying the app's version, which is how the engine learns the one number it cannot read for itself, and the data folder and state file startup worked out; ready comes back with them echoed. folders goes down later, once the page has read the settings and resolved the download folders, because the download folders are a setting and the page owns the settings; the engine echoes those back in a folders event the same way. Both echoes are how the app sees that a value arrived, until the engine has a session to use it in. The engine's stderr is kept in memory, the last hundred lines, so that a failure to start has something to show.
 
 Stopping is the part that has to be right. A torrent client that leaves an engine running after its window closes is broken, so engine_stop runs from the two run events every quit path reaches, asks the engine to quit and closes its stdin, gives it a moment, and kills it if it is still there. Closing stdin is a second, independent signal: the engine exits when its input ends, so even an engine that never sees the quit line goes when the app does.
 
@@ -31,6 +31,7 @@ pub struct EngineStatus {
 	pub running: bool,
 	pub pid: u32,
 	pub ready: Option<serde_json::Value>,//the engine's ready event, exactly as it sent it, once it has arrived
+	pub folders: Option<serde_json::Value>,//and its folders event, echoing the download folders the page sent, once that has
 	pub exit: String,//how the last run ended, blank while running or before the first start
 	pub trouble: String,//why the engine could not be started, blank when it could
 	pub stderr: Vec<String>,//the last lines the engine wrote to stderr
@@ -90,10 +91,9 @@ pub fn engine_start(app: &AppHandle) {
 	let init = serde_json::json!({
 		"command": "init",
 		"version": app.package_info().version.to_string(),//the app's version, read from tauri.conf.json at compile time, so the engine can name the client on the wire without a second place the number is written
-		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself
+		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so they arrive from the page through engine_folders once it has read the settings file
 			"data": paths.data,
 			"state": paths.state,
-			"download_folders": paths.download_folders.iter().map(|folder| folder.path.clone()).collect::<Vec<_>>(),
 		},
 	}).to_string() + "\n";
 	if let Err(e) = stdin.write_all(init.as_bytes()) { lock(&engine).status.trouble = format!("could not write to the engine: {e}") }//recorded and carried on: the reader below will see the engine's side of whatever went wrong
@@ -104,16 +104,21 @@ pub fn engine_start(app: &AppHandle) {
 		inner.status.running = true;
 		inner.status.pid = pid;
 		inner.status.ready = None;
+		inner.status.folders = None;
 		inner.status.exit = String::new();
 		inner.status.trouble = String::new();
 	}
 
-	//stdout: one json event per line, of which only ready means anything yet. The end of the stream is the end of the engine, so this thread is also what notices a crash
+	//stdout: one json event per line, of which ready and folders are the ones kept. The end of the stream is the end of the engine, so this thread is also what notices a crash
 	let app_out = app.clone();
 	std::thread::spawn(move || {
-		for line in BufReader::new(stdout).lines().filter_map(Result::ok) {//a line that is not utf-8 is dropped rather than ending the reader, because a reader that stops while the engine keeps writing leaves the engine blocked on a full pipe; the stream ends only when the engine does
-			if let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) {
-				if value.get("event").and_then(|v| v.as_str()) == Some("ready") { lock(&app_out.state::<Engine>()).status.ready = Some(value) }
+		for line in BufReader::new(stdout).split(b'\n').map_while(Result::ok) {//raw bytes up to each newline, so a line that is not utf-8 is dropped by the parse below rather than ending the reader, because a reader that stops while the engine keeps writing leaves the engine blocked on a full pipe; only a failed read ends the loop, and that means the pipe is gone
+			if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&line) {//json counts a trailing \r as whitespace, so a windows line ending parses too
+				match value.get("event").and_then(|v| v.as_str()) {
+					Some("ready")   => lock(&app_out.state::<Engine>()).status.ready = Some(value),
+					Some("folders") => lock(&app_out.state::<Engine>()).status.folders = Some(value),
+					_ => {}//an error line, or an event nothing here listens for yet
+				}
 			}
 		}
 		let child = lock(&app_out.state::<Engine>()).child.take();//outside the lock below, because wait blocks, and engine_stop must be able to get in meanwhile
@@ -128,7 +133,8 @@ pub fn engine_start(app: &AppHandle) {
 	//stderr: kept, not shown, until somebody asks
 	let app_err = app.clone();
 	std::thread::spawn(move || {
-		for line in BufReader::new(stderr).lines().filter_map(Result::ok) {//the same rule as stdout
+		for line in BufReader::new(stderr).split(b'\n').map_while(Result::ok) {//the same rule as stdout: only a failed read ends the loop
+			let line = String::from_utf8_lossy(&line).trim_end_matches('\r').to_string();//kept as text, with anything not utf-8 shown as a replacement character rather than losing the line
 			let engine = app_err.state::<Engine>();
 			let mut inner = lock(&engine);
 			if inner.stderr.len() >= STDERR_LINES { inner.stderr.pop_front(); }
@@ -157,6 +163,15 @@ pub fn engine_stop(app: &AppHandle) {
 	let mut inner = lock(&engine);
 	inner.status.running = false;
 	inner.status.exit = exit;
+}
+
+/// Tell the engine which download folders to use, as absolute paths the page resolved from the settings; called once the page has read the settings file, and again whenever the list changes
+#[command]
+pub fn engine_folders(engine: State<'_, Engine>, folders: Vec<String>) -> Result<(), String> {
+	let line = serde_json::json!({"command": "folders", "folders": folders}).to_string() + "\n";
+	let mut inner = lock(&engine);
+	let Some(stdin) = inner.stdin.as_mut() else { return Err("the engine is not running".to_string()) };//not started, or already gone; the page shows the engine's own status beside this
+	stdin.write_all(line.as_bytes()).map_err(|e| format!("could not write to the engine: {e}"))
 }
 
 /// How the engine is doing right now; the page asks, rather than being told, so nothing here has to know whether a page exists

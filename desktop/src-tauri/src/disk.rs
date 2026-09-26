@@ -7,27 +7,9 @@ use std::time::UNIX_EPOCH;
 use tauri::command;
 
 /*
-The design contract of this module: these commands hand the interface the full,
-standard power a desktop application has over the disk — the same power a native
-Mac or Windows app wields through its file APIs. They follow POSIX semantics
-faithfully, sharp edges included: disk_copy overwrites an existing destination,
-just like cp and std::fs::copy do. Code that calls these commands must be
-careful, exactly as native application code must.
+The design contract of this module: these commands hand the page the full, standard power a desktop application has over the disk, the same power a native Mac or Windows app wields through its file APIs. Each one is a single atomic operation with POSIX semantics, followed faithfully, sharp edges included: disk_copy overwrites an existing destination, just like cp and std::fs::copy do, and disk_write replaces the whole file, just like fs::write does. Code that calls these commands must be careful and correct, exactly as native application code must.
 
-The commands take any path and hold no guard, so the safety of the whole
-application rests on walls outside this file. First, every path originates from
-a user gesture — a drag onto the window, a choice in a dialog — never from
-outside content. Second, untrusted text (file names, file contents, metadata)
-reaches the page only through Vue's escaping interpolation, so it can never
-become script that calls these commands. Third, the Content-Security-Policy in
-tauri.conf.json keeps foreign script out of the webview even if a first wall
-someday cracks.
-
-When this module grows the write and delete family sketched at the bottom of
-this file, revisit holding a guard here as well: a Rust-side registry of allowed
-roots, recording folders the user has actually dragged in or chosen, with
-commands refusing paths outside them. Read-and-copy trusts its caller; unlink
-should trust less.
+They take any path and hold no guard, on purpose. Application logic lives in the page, which alone knows what a path means and whether writing it is right; down here, Rust receives commands and follows them. A guard in this file would be a second copy of that knowledge on the other side of the boundary, and logic split across layers drifts apart, which makes the whole less safe rather than more. What keeps this power in the right hands is that the page runs only its own code: untrusted text, like file names, file contents, and metadata, reaches it only through Vue's escaping interpolation, so it can never become script that calls these commands, and the Content-Security-Policy in tauri.conf.json keeps foreign script out of the webview even if that wall someday cracks.
 */
 
 #[derive(Serialize)]
@@ -177,16 +159,19 @@ for compare, the rust function will have to bring blocks of both files into its 
 the OS doesn't have an api like copy-on-clone
 */
 
-/*
-more to add later...
-
-/// POSIX `open` with `O_TRUNC|O_CREAT` + `write` + `close`  
+/// POSIX `open` with `O_TRUNC|O_CREAT` + `write` + `close`; the whole file replaced with these bytes, as cp and fs::write do
 #[tauri::command]
 pub fn disk_write(path: String, data: Vec<u8>) -> Result<(), String> {
 	fs::write(&path, data).map_err(|e| e.to_string())
 }
+/*
+the first of the write family, brought up from the sketch below for the settings file: the page renders ftorrent.toml and hands the bytes here. A Vec<u8> crosses the ipc as one json number per byte, which is fine for a file of a few hundred bytes and would not be for a big one; disk_read has the same note in the other direction
+*/
 
-/// POSIX `rename(2)`  
+/*
+more to add later...
+
+/// POSIX `rename(2)`
 #[tauri::command]
 pub fn disk_rename(source: String, destination: String) -> Result<(), String> {
 	fs::rename(&source, &destination).map_err(|e| e.to_string())

@@ -1,12 +1,13 @@
 <script setup>
 //./src/pages/MainPage.vue
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import {storeToRefs} from 'pinia'
 import {invoke} from '@tauri-apps/api/core'
 import {useGreetStore} from '../stores/greet.js'
+import {useSettingsStore} from '../stores/settings.js'
 import {engineStatus} from '../engine.js'
-import {pathsStatus} from '../paths.js'
 import {instanceStatus} from '../instance.js'
+import {associateStatus} from '../associate.js'
 
 let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
 let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
@@ -14,6 +15,18 @@ let greetMessage = ref('')//what rust sent back, shown beneath it; left as the c
 //hand the name to the rust command named greet and show its answer; this round trip is the scaffold's proof that the webview can reach the native core, and it runs the same way in the dev window and the built app
 async function greet() {
 	greetMessage.value = await invoke('greet', {name: name.value})
+}
+
+//the note, a setting that does nothing except prove that settings work: type one, save it, quit, start again, and it's here, and in ftorrent.toml. The box holds a draft of its own so typing changes nothing until Save; a setting writes when the user acts, not on every keystroke
+let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
+let noteDraft = ref(store.settings.note.text)
+watch(() => store.settings.note.text, text => { noteDraft.value = text })//when load fills in the saved note a moment after mount, the box follows
+let noteSaved = ref(false)//true for a moment after Save, so the button can say so
+async function saveNote() {
+	store.settings.note.text = noteDraft.value
+	await store.save()
+	noteSaved.value = true
+	setTimeout(() => { noteSaved.value = false }, 1500)
 }
 
 //the engine's status, asked for once a second while this page is showing; a fact from below that this one page displays for now, so it lives here rather than in a store
@@ -32,10 +45,18 @@ let engineLine = computed(() => {//one sentence about the engine, whatever state
 	return `engine: stopped${s.exit ? ', ' + s.exit : ''}`
 })
 
-//where everything is, asked for once, since startup worked it out before this page existed and none of it changes while the app runs
-let paths = ref(null)
-onMounted(async () => { paths.value = await pathsStatus() })
+//what registration did at startup, asked for once; blank everywhere but an installed windows copy
+let associations = ref('')
+onMounted(async () => { associations.value = await associateStatus() })
+
+//where everything is, as startup worked it out before this page existed; the settings store holds it, because the download folders resolve against it
+let paths = computed(() => store.paths)
 let pathsHeard = computed(() => engine.value?.ready?.paths?.data === paths.value?.data && !!paths.value?.data)//the engine sent back the data folder it was told, so the paths made the round trip
+let foldersHeard = computed(() => {//and the download folders the page sent it, in the same order, so the settings made the round trip too
+	let sent = store.resolvedFolders.map(folder => folder.path)
+	let heard = engine.value?.folders?.folders
+	return sent.length > 0 && Array.isArray(heard) && heard.join('\n') == sent.join('\n')
+})
 
 //everything above as plain lines, in one box the user can copy from, since a status is most useful pasted into a message or an issue
 let report = computed(() => {
@@ -48,10 +69,13 @@ let report = computed(() => {
 			lines.push(`ftorrent is ${p.mode}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
 			lines.push(`program: ${p.location}`)
 			lines.push(`data: ${p.data}`)
-			for (let folder of p.download_folders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
+			lines.push(`settings: ${p.settings}${foldersHeard.value ? ', and the engine has its folders' : ''}`)
+			for (let folder of store.resolvedFolders) lines.push(`downloads: ${folder.setting} → ${folder.path}`)
 		}
 		if (p.trouble) lines.push(p.trouble)
 	}
+	for (let problem of store.problems) lines.push(problem)
+	if (associations.value) lines.push(associations.value)
 	let i = instance.value
 	if (i) {
 		if (i.held) lines.push(`lock: held, ${i.lock}`)
@@ -91,6 +115,11 @@ async function copyReport() {
 			<button type="submit">Greet</button>
 		</form>
 		<p>{{ greetMessage }}</p>
+
+		<form class="row" @submit.prevent="saveNote">
+			<input id="note-input" v-model="noteDraft" placeholder="A note to yourself..." />
+			<button type="submit">{{ noteSaved ? 'Saved' : 'Save as Setting' }}</button>
+		</form>
 
 		<div class="report">
 			<textarea readonly :value="report" :rows="report.split('\n').length"></textarea>

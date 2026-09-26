@@ -32,7 +32,8 @@ centralized_servers = {
 }
 
 version = ''#the app's version, which arrives in the init line because the engine cannot read tauri.conf.json, the one place it is written
-paths = {}#where the engine will keep what it keeps: the data folder, the state file, and the download folders, which also arrive in init because the app works them out and the engine never does
+paths = {}#where the engine will keep what it keeps: the data folder and the state file, which also arrive in init because the app works them out and the engine never does
+folders = []#the download folders, as absolute paths; these arrive later, in a folders line, because they are a setting and the page reads the settings after the engine has started
 
 def client_name():#how the client names itself on the wire: brand first, then lineage, the way a browser's user agent reads, so a narrow column shows the brand and a wide one shows the whole truth
 	return f'ftorrent/{version} libtorrent/{lt.version}'
@@ -64,6 +65,7 @@ def ready():#what the engine reports about itself once it is up, and the first t
 	}
 
 def main():
+	global version, paths, folders#the module's values the commands below set; a global statement covers the whole function wherever it's written, so it goes at the top where a reader looks for it
 	out = sys.stdout.buffer#bytes rather than text, so the newline is exactly one byte on every platform and nothing translates it
 	def emit(message):
 		out.write((json.dumps(message, separators=(',', ':')) + '\n').encode('utf-8'))
@@ -78,10 +80,14 @@ def main():
 			emit({'event': 'error', 'message': 'malformed json', 'line': line[:200]}); continue
 		command = message.get('command') if isinstance(message, dict) else None
 		if command == 'init':
-			global version, paths
 			version = str(message.get('version', ''))#the app says which version it is, once, before anything else
 			paths = message.get('paths', {}) if isinstance(message.get('paths'), dict) else {}
 			emit(ready())
+		elif command == 'folders':
+			listed = message.get('folders')
+			if not isinstance(listed, list): listed = []#anything but a list names no folders, rather than stopping the engine
+			folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
+			emit({'event': 'folders', 'folders': folders})#sent back as kept, so the app can see they arrived, and notices if one was passed over; the engine uses them once it has a session
 		elif command == 'quit':
 			break
 		else:
