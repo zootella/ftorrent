@@ -6,7 +6,7 @@ The window's size and place, both halves: where it opens, and remembering where 
 
 Where it opens. ftorrent is single window, so it decides both size and place every time and never lets the operating system choose. After a session the settings file holds six numbers, all in CSS pixels, the window's outer position and inner size under [window] and under [screen] the size of the monitor it was on, and beside them whether it was maximized. At startup the monitor under the middle of the saved window is asked for; the middle rather than the corner, because Windows counts an invisible resize border as part of the window, so a window flush against the left edge of the screen has its corner a few pixels off it. If there's such a monitor and it's the size the file says, the ground beneath the user's choice is the same, and the rectangle is replayed exactly, so a window parked against the taskbar comes back there tomorrow. Anything else means a fresh place: no monitor under the point because a display was unplugged, or a different size because the resolution, rotation, or scaling changed. That's the whole guard, a fingerprint of the ground rather than reasoning about it.
 
-A fresh place, which is also the first run, is five eighths of the primary screen wide and half as tall, dropped at a random spot inside a field centered on the screen that's three quarters of it each way. The margin the field leaves, an eighth of the screen on every side, is deeper than any taskbar, menu bar, or dock, so the window misses the operating system's chrome without asking where it is, and the randomness keeps an installed copy and a portable one from opening exactly on top of each other. Monitors report physical pixels and the file holds CSS pixels, so the saved middle is scaled by the primary monitor's scale before the monitor under it is asked for; on monitors with different scales that can land a little off, and the worst case is a fresh place, which is the fallback anyway.
+A fresh place, which is also the first run, is five eighths of the primary screen wide and half as tall, though never more than three times as wide as it is tall, dropped at a random spot inside a field centered on the screen that's three quarters of it each way. The margin the field leaves, an eighth of the screen on every side, is deeper than any taskbar, menu bar, or dock, so the window misses the operating system's chrome without asking where it is, and the randomness keeps an installed copy and a portable one from opening exactly on top of each other. Monitors report physical pixels and the file holds CSS pixels, so the saved middle is scaled by the primary monitor's scale before the monitor under it is asked for; on monitors with different scales that can land a little off, and the worst case is a fresh place, which is the fallback anyway.
 
 The window is placed while it's hidden, maximized if it was, and only then shown, so it appears once, where it belongs. Maximizing goes last, beside showing, because on Windows maximizing a hidden window shows it. Then the page tells Rust the window is revealed, which is what lets a second launch, the tray, or the Dock bring it forward from then on. A place that can't be worked out still ends in showing the window, wherever the builder left it, since a window that never appears is worse than one in the wrong spot.
 
@@ -19,6 +19,7 @@ Everything recorded is in CSS pixels. Tauri reports positions and sizes in physi
 const fieldFraction  = 0.75  //the field a new window is dropped into, a box centered on the screen this fraction of it each way; the margin left over is what keeps the window off the taskbar, menu bar, and dock
 const widthFraction  = 0.625 //the window itself, five eighths of the screen wide
 const heightFraction = 0.5   //and half as tall
+const widthLimit     = 3     //but never wider than three times its height, so a super wide monitor gets a window, not a banner. A 16:9 screen makes a window about 2.2 to 1 and a 21:9 one just under 3, so only the 32:9 screens meet this
 const fallbackScreen = {x: 0, y: 0, width: 1280, height: 800}//a screen to size against when none can be named, so there's still a window
 
 export async function revealWindow(settings) {//place the hidden window where the settings remember or somewhere fresh, maximize it if it was, show it, and tell rust it's revealed; call once, after the settings have loaded, with the store's settings, which hold factory values when the file couldn't be read
@@ -51,8 +52,8 @@ async function freshPlace() {//a fraction of the primary screen, dropped at rand
 		x: monitor.position.x / monitor.scaleFactor, y: monitor.position.y / monitor.scaleFactor,//monitors are measured in physical pixels, and the window is placed in css ones
 		width: monitor.size.width / monitor.scaleFactor, height: monitor.size.height / monitor.scaleFactor,
 	} : fallbackScreen
-	let width  = Math.round(screen.width  * widthFraction)
 	let height = Math.round(screen.height * heightFraction)
+	let width  = Math.min(Math.round(screen.width * widthFraction), height * widthLimit)
 	let fieldWidth  = screen.width  * fieldFraction
 	let fieldHeight = screen.height * fieldFraction
 	let fieldX = screen.x + (screen.width  - fieldWidth)  / 2//the field's top left corner, an eighth of the screen in from the edges
