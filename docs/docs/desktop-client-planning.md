@@ -108,7 +108,7 @@ other stuff it can do
 - fetch good.json from good.ftorrent.com and tell the user their ip addresses and nat information
 
 >window size and position
-built, and the notes that were here are settled. the window is made hidden in code, and the page places it: the saved rectangle is replayed exactly when the monitor under its middle is the size recorded, and otherwise the window gets a fresh place, five eighths of the primary screen by half, at a random spot in the centered three-quarter field, which keeps it off any taskbar or dock without asking where they are and keeps an installed and a portable copy from stacking. geometry lives in ftorrent.toml under [window] and [screen], in css pixels, so tauri-plugin-window-state stays out. still no minWidth or minHeight.
+built, and the notes that were here are settled. the window is made hidden in code, and the page places it: the saved rectangle is replayed exactly when the screen it was recorded on is still there with the same position, size, and scale, and otherwise the window gets a fresh place, five eighths of the primary screen by half, at a random spot in the centered three-quarter field, which keeps it off any taskbar or dock without asking where they are and keeps an installed and a portable copy from stacking. a portable copy records no place and always opens fresh, never maximized. geometry lives in ftorrent.toml under [window] and [screen], in css pixels, so tauri-plugin-window-state stays out. still no minWidth or minHeight.
 
 >first example features
 magnet link maker and inspector

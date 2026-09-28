@@ -20,7 +20,7 @@ async function startup() {
 	try {
 		await store.load(await pathsStatus())//where everything is, and then the settings file in the data folder, if there is one
 	} finally {
-		await revealWindow(store.settings)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing or couldn't be read, and show it, whatever happened above
+		await revealWindow(store)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing, couldn't be read, or this copy is portable, and show it, whatever happened above
 	}
 	if (!store.paths?.settings) return//no data folder, which the platform should always give: no window place to record and no engine to tell, and the main page shows the trouble
 	await useAssociationsStore(pinia).start(store.paths)//on windows, an installed copy tells the system what it can open, and asks the user about being the default; everywhere else this returns at once

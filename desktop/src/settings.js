@@ -37,7 +37,7 @@ export const settingsSchema = [
 		section: 'window',
 		key: 'x',
 		factory: 0,
-		comment: `where the window was when ${brandName} last closed it, in css pixels, so it opens there again: the position of its top left corner, then its inner size. ${brandName} replays these only when the screen below still has the size recorded under [screen]; otherwise it picks a fresh size and place. Zeros mean nothing has been recorded yet`,
+		comment: `where the window was when ${brandName} last closed it, so it opens there again: the position of its top left corner, then its inner size, in css pixels, which on a Mac are points and on Windows are the screen's pixels divided by its scale. ${brandName} puts it back only on the screen recorded under [screen], still exactly as it was; otherwise it picks a fresh size and place. A portable copy records none of this, and opens somewhere fresh every time. Zeros mean nothing has been recorded yet`,
 		check: Number.isInteger,
 	}, {
 		section: 'window',
@@ -58,16 +58,31 @@ export const settingsSchema = [
 		section: 'window',
 		key: 'maximized',
 		factory: false,
-		comment: 'whether the window was maximized, so it opens maximized again; the four numbers above are the size and place it goes to when restored',
+		comment: 'whether the window was maximized, or zoomed on a Mac, so it opens that way again; the four numbers above are the size and place it goes to when restored',
+	}, {
+		section: 'screen',
+		key: 'x',
+		factory: 0,
+		comment: `the screen the window was on when its place was recorded: its position among your screens and its size, in css pixels, then its scale as a percent, 100 for a plain screen, 200 for a Retina display, 125 for Windows set to 125%. ${brandName} puts the window back only if a screen matches all five exactly, so a new resolution, scale, or rotation, or the screen unplugged or moved among the others, means a fresh place`,
+		check: Number.isInteger,
+	}, {
+		section: 'screen',
+		key: 'y',
+		factory: 0,
+		check: Number.isInteger,
 	}, {
 		section: 'screen',
 		key: 'width',
 		factory: 0,
-		comment: 'the size, in css pixels, of the screen the window was on when its position was recorded; the fingerprint that decides whether the position above still means anything',
 		check: Number.isInteger,
 	}, {
 		section: 'screen',
 		key: 'height',
+		factory: 0,
+		check: Number.isInteger,
+	}, {
+		section: 'screen',
+		key: 'scale',
 		factory: 0,
 		check: Number.isInteger,
 	},
