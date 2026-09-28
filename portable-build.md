@@ -66,4 +66,3 @@ The installing page lists these plainly.
 
 - **Mac associations.** The types and schemes in `Info.plist`, and `RunEvent::Opened` feeding the arrivals queue, since Launch Services delivers opens as Apple Events. Step 1's patch nulls whatever this adds.
 - **Each folder to the engine once.** Two spellings of one download folder are held once but would both reach the engine. `lock_take` should answer the lock file's real path, and the page hand the engine each real folder once, before the engine loads torrents.
-- **The NSIS uninstall hook.** A bare uninstall leaves the registration behind; `NSIS_HOOK_PREUNINSTALL` should delete ftorrent's own keys, and a shared scheme class only while it still names ftorrent.
