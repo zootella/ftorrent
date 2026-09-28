@@ -1,12 +1,12 @@
 import {ref} from 'vue'
 import {diskStat} from './disk.js'
-import {registryGet, registrySet, registryNotify} from './registry.js'
+import {registryGet, registrySet, registryNotify, registryOpens} from './registry.js'
 import {brandName, brandDescription} from './brand.js'
 
 /*
 ftorrent handles the .torrent file and the magnet link on Windows to be simple, modern, polite, and assertive, and to keep the user in control. Everything else in this file follows from those, and point for point they differ from how most Windows programs have handled file types for the last twenty-five years. The usual way made sense when it began. Before Windows 8, the default for a file type was a registry value any program could write, so a program that wanted to be sure of opening its files wrote it at install and checked it again at every launch. Windows 8 sealed the default with a hash so that only the user could set it, and the old habit stopped fitting the system it runs on; much of what association code still does in the wild is that habit, carried forward.
 
-Simple means the code is one plain pass: the same writes, in the same order, at every launch, on three general registry commands. It doesn't check which version of Windows it's on, try one method and fall back to another, or attempt to compute the hash that seals the user's choice. Association code has a way of sprawling into a maze of strategies as each release of Windows changes the rules; this stays a list of the values ftorrent writes and the few it deliberately doesn't.
+Simple means the code is one plain pass: the same writes, in the same order, at every launch, through general registry commands that know nothing about torrents. It doesn't check which version of Windows it's on, try one method and fall back to another, or attempt to compute the hash that seals the user's choice. Association code has a way of sprawling into a maze of strategies as each release of Windows changes the rules; this stays a list of the values ftorrent writes and the few it deliberately doesn't.
 
 Modern means following where Windows has gone rather than where it was: a per-user registration the program writes for itself, the same shape Microsoft's own current API for unpackaged apps produces, rather than an installer script that writes an extension's default value, often for the whole machine. So the installer places files and does nothing about associations; nothing is registered until the installed program runs.
 
@@ -18,7 +18,7 @@ The user in control means installing or running ftorrent is never taken as permi
 
 Polite and assertive pull against each other, and the design is in holding both: ftorrent takes nothing that belongs to another program or to the user's choice, and lets go of nothing that belongs to it.
 
-What ftorrent tells Windows it can open is two kinds of file, .torrent and .ftorrent, and two kinds of link, magnet: and ftorrent:. The page runs this once at startup, after reading the settings, and it does something only on Windows, and only for a copy running from the folder the installer puts it in; everywhere else it does nothing, and says nothing. Only the copy holding the lock has a page, so ten launches at once make one set of registry writes, not ten racing each other. macOS needs no code, because its declaration is not code: the document types and URL schemes sit in Info.plist inside the .app, Launch Services reads them when it first sees the bundle, and dragging ftorrent.app into Applications is the whole registration. Linux gets its MimeType lines in the .desktop file the packages install. Windows has no such file for an installer app, so an application registers itself, and this is how: the policy here, in plain JavaScript, on three general commands in registry.rs that read a value, write one only if it would change, and tell the shell, and know nothing about what they're reading or writing.
+What ftorrent tells Windows it can open is two kinds of file, .torrent and .ftorrent, and two kinds of link, magnet: and ftorrent:. The page runs this once at startup, after reading the settings, and it does something only on Windows, and only for a copy running from the folder the installer puts it in; everywhere else it does nothing, and says nothing. Only the copy holding the lock has a page, so ten launches at once make one set of registry writes, not ten racing each other. macOS needs no code, because its declaration is not code: the document types and URL schemes sit in Info.plist inside the .app, Launch Services reads them when it first sees the bundle, and dragging ftorrent.app into Applications is the whole registration. Linux gets its MimeType lines in the .desktop file the packages install. Windows has no such file for an installer app, so an application registers itself, and this is how: the policy here, in plain JavaScript, on general commands in registry.rs that read a value, write one only if it would change, tell the shell, and ask it what opens a type, and know nothing about what they're reading or writing.
 
 The subject is thick with folklore, so here is exactly what ftorrent writes, all under HKEY_CURRENT_USER and nothing under the machine: a ProgID per kind of file naming the type, its icon, and the command that opens it; that ProgID added to the extension's OpenWithProgids list, which is the offer; the executable's own key with the extensions it supports; a ProgID per URL scheme, marked as a protocol, with its icon and command; and a Capabilities block registered so the Settings app lists ftorrent by name with its types and links, each pointing at one of ftorrent's own ProgIDs.
 
@@ -47,6 +47,7 @@ const applicationDescription = brandDescription
 const documentIcon = 'torrent.ico'//beside the executable, put there by bundle.resources
 
 export const associations = ref('')//what registration did this launch, one line for the main page, blank where there was nothing to do
+export const opens = ref('')//which program windows opens a .torrent and a magnet with, one line for the main page after registration, blank where there was nothing to register
 
 export async function associate(paths) {//tell windows what an installed copy can open, taking nothing another program holds; call once at startup, after the settings are read
 	if (!paths.installer || paths.location.toLowerCase() != paths.installer.toLowerCase()) return//not where the installer puts ftorrent, so not an installed copy, whatever else it is, and on macOS and linux blank; skipped without a word, since the reason doesn't matter
@@ -95,6 +96,20 @@ export async function associate(paths) {//tell windows what an installed copy ca
 	} catch (error) {
 		associations.value = `associations: ${error}`//trouble reads the same way a result does, as a line on the page
 	}
+	opens.value = await whoOpens()
+}
+
+async function whoOpens() {//what windows would run for a .torrent and a magnet right now, the user's saved choice first and the fallbacks after, which is the answer its own Settings page shows
+	let answers = []
+	for (let name of ['.torrent', 'magnet']) {
+		try {
+			let found = await registryOpens(name)
+			answers.push(found ? `${name} with ${found.program}, ${found.executable || 'which runs nothing'}` : `${name} with nothing`)
+		} catch (error) {
+			answers.push(`${name}: ${error}`)
+		}
+	}
+	return `opens: ${answers.join('; ')}`
 }
 
 async function claimable(scheme, command) {//whether the class named for this scheme is ftorrent's to write: it runs no command yet, or already runs ftorrent's. Read through HKEY_CLASSES_ROOT, the view windows itself uses, which lays the user's classes over the machine's, so a client installed for everyone counts as holding it too

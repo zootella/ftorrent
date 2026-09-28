@@ -8,7 +8,7 @@ import {useIncomingStore} from '../stores/incoming.js'
 import {engineStatus} from '../engine.js'
 import {instanceStatus} from '../instance.js'
 import {brandName} from '../brand.js'
-import {associations} from '../associate.js'//what registration did at startup, one line, blank everywhere but an installed windows copy
+import {associations, opens} from '../associate.js'//what registration did at startup and what windows opens each contested type with after it, a line each, blank everywhere but an installed windows copy
 
 let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
 let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
@@ -91,6 +91,7 @@ let report = computed(() => {
 	}
 	for (let problem of store.problems) lines.push(problem)
 	if (associations.value) lines.push(associations.value)
+	if (opens.value) lines.push(opens.value)
 	let i = instance.value
 	if (i) {
 		if (i.held) lines.push(`lock: held, ${i.lock}`)

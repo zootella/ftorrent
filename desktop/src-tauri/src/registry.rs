@@ -1,9 +1,11 @@
 use tauri::command;
 
 /*
-The Windows registry, offered to the page the way disk.rs offers the disk: three general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open.
+The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open.
 
 registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
+
+registry_opens asks Windows which program it would open a file type or a link scheme with right now, and answers the ProgID it would use and the executable that ProgID runs. It's the shell's own lookup, AssocQueryString, rather than a reading of keys, because the answer is layered: the user's saved choice first, sealed where only the system's own screens can write it, and the fallbacks under Software\Classes after that, and a saved choice may name a shared class like magnet whose command belongs to whichever program wrote it last. Asking the shell gets the answer Explorer and Settings would give, whichever layer it came from.
 
 A blank value name means the key's own default value, which is how the registry spells "the value of this key itself". The commands take any key under their root and hold no guard, on purpose, the same as disk.rs: the page runs only ftorrent's own code, and it alone knows what a key means. They never write the machine-wide hive. On macOS and Linux there's no registry, and each command answers so.
 */
@@ -26,12 +28,26 @@ pub fn registry_notify() -> Result<(), String> {
 	platform::notify()
 }
 
+/// What Windows would open a file type or a link scheme with right now
+#[derive(serde::Serialize)]
+pub struct Opener {
+	program: String,//the ProgID windows would use, like ftorrent.torrent, or a shared class like magnet
+	executable: String,//the program that ProgID runs, as a full path
+}
+
+/// Which program Windows opens this with: a file type written with its dot, like .torrent, or a link scheme without one, like magnet. Answers nothing when nothing opens it
+#[command]
+pub fn registry_opens(name: String) -> Result<Option<Opener>, String> {
+	platform::opens(&name)
+}
+
 #[cfg(target_os = "windows")]
 mod platform {
-	use windows::core::PCWSTR;
-	use windows::Win32::Foundation::ERROR_FILE_NOT_FOUND;
+	use windows::core::{PCWSTR, PWSTR};
+	use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_NO_ASSOCIATION};
 	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegGetValueW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
-	use windows::Win32::UI::Shell::{SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
+	use windows::Win32::UI::Shell::{AssocQueryStringW, SHChangeNotify, ASSOCF, ASSOCF_IS_PROTOCOL, ASSOCF_NONE, ASSOCF_NOTRUNCATE, ASSOCSTR, ASSOCSTR_EXECUTABLE, ASSOCSTR_PROGID, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
+	use super::Opener;
 
 	/// Text the way windows takes it, utf-16 ending in a zero; bind the result to a variable before handing windows a pointer into it, because a pointer into a temporary dangles
 	fn wide(text: &str) -> Vec<u16> {
@@ -78,12 +94,32 @@ mod platform {
 		unsafe { SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None) }
 		Ok(())
 	}
+
+	pub fn opens(name: &str) -> Result<Option<Opener>, String> {
+		let flags = if name.starts_with('.') { ASSOCF_NONE } else { ASSOCF_IS_PROTOCOL };//a file type is written with its dot and a scheme without one, and the shell has to be told which it's looking up
+		let Some(executable) = associated(flags, ASSOCSTR_EXECUTABLE, name)? else { return Ok(None) };//nothing would run, which is what decides: for a file type no program registered, the shell still names its catch-all class, Unknown, as the ProgID
+		let program = associated(flags, ASSOCSTR_PROGID, name)?.unwrap_or_default();
+		Ok(Some(Opener { program, executable }))
+	}
+
+	/// One string the shell knows about a file type or a scheme, looked up the way Explorer would, or nothing when nothing is associated
+	fn associated(flags: ASSOCF, what: ASSOCSTR, name: &str) -> Result<Option<String>, String> {
+		let wide_name = wide(name);
+		let mut buffer = [0u16; 2048];//longer than any ProgID or path the answer holds; with NOTRUNCATE a longer one is reported rather than cut short
+		let mut size = buffer.len() as u32;//the shell counts in characters here, not bytes, including the terminating zero
+		let found = unsafe { AssocQueryStringW(flags | ASSOCF_NOTRUNCATE, what, PCWSTR(wide_name.as_ptr()), PCWSTR::null(), Some(PWSTR(buffer.as_mut_ptr())), &mut size) };//no verb, so the default one, which is open
+		if found == ERROR_NO_ASSOCIATION.to_hresult() { return Ok(None) }
+		if found.is_err() { return Err(format!("registry: could not ask what opens {name}, windows error {}", found)) }
+		Ok(Some(String::from_utf16_lossy(&buffer[..(size as usize).saturating_sub(1)])))//characters, less the terminating zero
+	}
 }
 
 #[cfg(not(target_os = "windows"))]
 mod platform {
+	use super::Opener;
 	const NONE: &str = "registry: there's no registry on this platform";
 	pub fn get(_root: &str, _key: &str, _name: &str) -> Result<Option<String>, String> { Err(NONE.to_string()) }
 	pub fn set(_key: &str, _name: &str, _value: &str) -> Result<bool, String> { Err(NONE.to_string()) }
 	pub fn notify() -> Result<(), String> { Err(NONE.to_string()) }
+	pub fn opens(_name: &str) -> Result<Option<Opener>, String> { Err(NONE.to_string()) }
 }

@@ -60,6 +60,7 @@ pub fn run() {
 				registry::registry_get,//and in registry.rs
 				registry::registry_set,
 				registry::registry_notify,
+				registry::registry_opens,
 				window::window_revealed,//and in window.rs
 				instance::instance_status,//and in instance.rs
 				instance::instance_take,
