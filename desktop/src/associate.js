@@ -1,56 +1,38 @@
-import {ref} from 'vue'
 import {diskStat} from './disk.js'
-import {registryGet, registrySet, registryNotify, registryOpens} from './registry.js'
+import {registryGet, registrySet, registryDelete, registryDeleteKey, registryNotify, registryOpens} from './registry.js'
 import {brandName, brandDescription} from './brand.js'
 
 /*
-ftorrent handles the .torrent file and the magnet link on Windows to be simple, modern, polite, and assertive, and to keep the user in control. Everything else in this file follows from those, and point for point they differ from how most Windows programs have handled file types for the last twenty-five years. The usual way made sense when it began. Before Windows 8, the default for a file type was a registry value any program could write, so a program that wanted to be sure of opening its files wrote it at install and checked it again at every launch. Windows 8 sealed the default with a hash so that only the user could set it, and the old habit stopped fitting the system it runs on; much of what association code still does in the wild is that habit, carried forward.
+ftorrent handles the .torrent file and the magnet link on Windows to be simple, modern, polite, and assertive, and to keep the user in control, which point for point differs from how most Windows programs have done it for twenty-five years. The usual way made sense when it began: before Windows 8 the default for a file type was a registry value any program could write, so a program that wanted its files wrote it at install and checked it at every launch. Windows 8 sealed the default with a hash that only the user can set, through the system's own screens, and much association code in the wild is that old habit, carried past the system it was built for.
 
-Simple means the code is one plain pass: the same writes, in the same order, at every launch, through general registry commands that know nothing about torrents. It doesn't check which version of Windows it's on, try one method and fall back to another, or attempt to compute the hash that seals the user's choice. Association code has a way of sprawling into a maze of strategies as each release of Windows changes the rules; this stays a list of the values ftorrent writes and the few it deliberately doesn't.
+Simple and modern are how it's built. Simple means one plain pass, the same writes in the same order every time, on general registry commands that know nothing about torrents, with one setting deciding which of them happen; where association code tends to sprawl into strategies as each release of Windows changes the rules, this never checks the Windows version, never tries one method with another behind it, and never computes the hash. Modern means the program registers itself, per user, in the shape Microsoft's own current API for unpackaged apps writes, rather than an installer script writing defaults, often for the whole machine; so the installer does nothing about associations, and the way to the default runs through Windows' Settings, where Microsoft says it belongs.
 
-Modern means following where Windows has gone rather than where it was: a per-user registration the program writes for itself, the same shape Microsoft's own current API for unpackaged apps produces, rather than an installer script that writes an extension's default value, often for the whole machine. So the installer places files and does nothing about associations; nothing is registered until the installed program runs.
+Polite, assertive, and the user in control are how it behaves. Polite means ftorrent offers itself as one more program that can open a .torrent or a magnet and, until the user says yes, leaves whatever opens them now exactly as it is. Assertive means the offer is rewritten every time, so anything missing comes back; after a yes ftorrent claims .torrent and magnet every time, whoever wrote them last; .ftorrent and ftorrent:, its own and known to no other program, it claims always; and a choice the user saves for it in Windows names something only ftorrent writes, so nothing quietly undoes it. The user in control means installing or running ftorrent is never taken as permission. ftorrent asks, in a bar across the top of its window at startup, and keeps the answer in one setting, associations.default, "ask" until the user answers and changeable any time on the Settings page. Windows' saved choice has the last word, so ftorrent reads it and follows: a choice of ftorrent already saved there counts as yes, and a yes that Windows doesn't share opens its Settings for the user to finish. Polite and assertive pull against each other, and the design is in holding both: ftorrent takes nothing that belongs to another program or to the user's choice, and lets go of nothing that belongs to it.
 
-Polite means ftorrent never takes an association from another program unprompted. It offers itself as one more program that can open a .torrent or a magnet, and leaves whatever opens them now exactly as it is.
+The mechanics, in brief. ftorrent opens two kinds of file, .torrent and .ftorrent, and two kinds of link, magnet: and ftorrent:. On macOS the .app declares them in its Info.plist, which Launch Services reads when it first sees the bundle, so dragging it to Applications is the whole registration, and on Linux the .desktop file the packages install carries MimeType lines. A Windows app an installer places has no such file, so it registers itself, all of it under HKEY_CURRENT_USER, and only a copy running from the installer's folder does. Three layers decide what opens a type. The offer, written always: ftorrent's own ProgIDs, its place in each extension's Open with list, its own key under Applications, and a Capabilities block that lists it by name in Settings. The fallback, which Windows uses where the user has saved no choice or has chosen a shared class: the extension's own default value for a file, and for a link the class named for the scheme, which any program may write; ftorrent writes it for the types it claims, and for the rest gives it back, only while it still names ftorrent. And above both the user's saved choice, sealed, which ftorrent never writes and only reads, by asking the shell what it would open each type with, the same lookup Explorer and Settings make. This file is the policy, and stores/associations.js runs it: at startup, after every answer, and whenever the window comes back into focus, as when the user returns from Windows' Settings.
 
-Assertive means ftorrent isn't a pushover either. The offer is rewritten at every launch, so anything that went missing comes back. Where a link belongs to no program at all, ftorrent claims it, so on a machine with no torrent client a clicked magnet simply works. And once the user chooses ftorrent, that choice names something only ftorrent writes, so no other program's registration can quietly undo it. What ftorrent should have, it gets, and keeps.
-
-The user in control means installing or running ftorrent is never taken as permission to become the default. That choice is the user's, made in Windows' own Open with menu and Default apps settings, and ftorrent's part is to be there as a clear option, say plainly on its page where things stand, and wait to be chosen.
-
-Polite and assertive pull against each other, and the design is in holding both: ftorrent takes nothing that belongs to another program or to the user's choice, and lets go of nothing that belongs to it.
-
-What ftorrent tells Windows it can open is two kinds of file, .torrent and .ftorrent, and two kinds of link, magnet: and ftorrent:. The page runs this once at startup, after reading the settings, and it does something only on Windows, and only for a copy running from the folder the installer puts it in; everywhere else it does nothing, and says nothing. Only the copy holding the lock has a page, so ten launches at once make one set of registry writes, not ten racing each other. macOS needs no code, because its declaration is not code: the document types and URL schemes sit in Info.plist inside the .app, Launch Services reads them when it first sees the bundle, and dragging ftorrent.app into Applications is the whole registration. Linux gets its MimeType lines in the .desktop file the packages install. Windows has no such file for an installer app, so an application registers itself, and this is how: the policy here, in plain JavaScript, on general commands in registry.rs that read a value, write one only if it would change, tell the shell, and ask it what opens a type, and know nothing about what they're reading or writing.
-
-The subject is thick with folklore, so here is exactly what ftorrent writes, all under HKEY_CURRENT_USER and nothing under the machine: a ProgID per kind of file naming the type, its icon, and the command that opens it; that ProgID added to the extension's OpenWithProgids list, which is the offer; the executable's own key with the extensions it supports; a ProgID per URL scheme, marked as a protocol, with its icon and command; and a Capabilities block registered so the Settings app lists ftorrent by name with its types and links, each pointing at one of ftorrent's own ProgIDs.
-
-And here is what it does not write: the extension's own default value, the single line that says .torrent means ftorrent from now on. That line is the one an installer from 1999 would write, it is the one Tauri's bundled NSIS macro still writes, and it is the one Microsoft's own current API for unpackaged apps deliberately does not. Since Windows 8 the default for a file type lives in a hash-sealed UserChoice key that only the user, through the system's own interface, can set. So after this runs, ftorrent is in Explorer's Open with menu and listed in Settings under Default apps, and every .torrent on the machine still opens with whatever opened it before. Which is why bundle.fileAssociations is absent from tauri.conf.json and must stay absent: on Windows it inserts the NSIS macro that seizes each type's default at install time, silently.
-
-Links are where ftorrent is assertive without taking anything. A scheme's default lives in its own sealed UserChoice key too, but when no user has chosen, Windows falls back to the class key named for the scheme, magnet itself, which is shared: any program can write it, and many clients register nothing else. So ftorrent writes that class only while it runs no command or already runs ftorrent's. On a machine with no torrent client, a clicked magnet arrives at ftorrent with no user step; where another program holds the class, ftorrent leaves it alone, says so on the page, and waits to be chosen. A choice of ftorrent names ftorrent's own ProgID, never the shared class, so it holds however often another client rewrites magnet; and a choice of a client that registered only the shared class names magnet itself, which ftorrent then never touches.
-
-The icon a .torrent wears is a file rather than the application: torrent.ico ships beside the executable through bundle.resources, and DefaultIcon names it, with ftorrent's own icon as the fallback if the file is not there. An application icon is meant to be unmistakable in a taskbar, which is exactly the wrong property on a document. The icon studio in the desktop workspace is where it's drawn. The ProgIDs are per type, so a different icon per format costs nothing later.
-
-Two practical notes. It runs on every launch, which is cheap because each value is read before it is written and an unchanged value is not touched; the shell is only notified if something actually moved. And it has one gate, which is the whole of how it tells an installed copy from anything else: the program has to be in the folder the per-user installer puts it in, %LOCALAPPDATA%\ftorrent, which paths.rs reports as a fact beside the program's own location. The command paths come from the executable's own location, so registering a copy anywhere else would point the registry at a file that may move or vanish: a portable copy on a stick that gets ejected, a debug or release build in the repository's target folder that gets rebuilt, a copy on the Desktop. None of them registers, and none needs to say why.
-
-What this writes, the uninstaller takes back: the hook in src-tauri/windows/hooks.nsh removes each key and value, and the shared class only while it still runs ftorrent, so a registration added here needs its removal added there.
+Two things elsewhere have to stay in step with this. bundle.fileAssociations stays absent from tauri.conf.json, since on Windows it adds the NSIS macro that seizes each type's default at install, silently. And the uninstall hook in src-tauri/windows/hooks.nsh removes everything this writes, each fallback only while it still names ftorrent, so a registration added here needs its removal added there.
 */
 
-//what ftorrent can open, and the names those things carry in Explorer's Type column and in the Settings app
+//what ftorrent can open, and the names those things carry in Explorer's Type column and in the Settings app; contested marks the two other programs want as well, which ftorrent claims only on the user's yes, while its own two it claims always
 const fileTypes = [//the extension with its dot, the ProgID, and the name a user reads
-	{extension: '.torrent',       program: `${brandName}.torrent`,    name: 'Torrent File'},//what µTorrent and qBittorrent call it too; Transmission's "BitTorrent Metadata File" is a developer's phrase
-	{extension: `.${brandName}`,  program: `${brandName}.${brandName}`, name: `${brandName} File`},//reserved early, for the metadata and capabilities ftorrent will add beyond the established standards
+	{extension: '.torrent',       program: `${brandName}.torrent`,    name: 'Torrent File',     contested: true},//what µTorrent and qBittorrent call it too; Transmission's "BitTorrent Metadata File" is a developer's phrase
+	{extension: `.${brandName}`,  program: `${brandName}.${brandName}`, name: `${brandName} File`, contested: false},//reserved early, for the metadata and capabilities ftorrent will add beyond the established standards
 ]
 const linkSchemes = [//the scheme, ftorrent's own ProgID for it, and the name a user reads; the class key named for the scheme itself is written too, so no ProgID may be named bare magnet or ftorrent
-	{scheme: 'magnet',  program: `${brandName}.url.magnet`,     name: 'URL:Magnet Link'},
-	{scheme: brandName, program: `${brandName}.url.${brandName}`, name: `URL:${brandName} Link`},
+	{scheme: 'magnet',  program: `${brandName}.url.magnet`,     name: 'URL:Magnet Link',       contested: true},
+	{scheme: brandName, program: `${brandName}.url.${brandName}`, name: `URL:${brandName} Link`, contested: false},
 ]
-const applicationName = brandName
+export const contested = [...fileTypes, ...linkSchemes].filter(type => type.contested).map(type => type.extension ?? type.scheme)//.torrent and magnet, the two the setting and the banner are about
+export const applicationName = brandName//the name under RegisteredApplications, which is also the name Windows 11's Settings link takes to open ftorrent's own page
 const applicationDescription = brandDescription
-const documentIcon = 'torrent.ico'//beside the executable, put there by bundle.resources
+const documentIcon = 'torrent.ico'//what a .torrent wears: a file of its own, beside the executable where bundle.resources puts it, rather than the application's icon, which is made to stand out in a taskbar, the wrong thing for a document to do. The icon studio in the desktop workspace draws it, and with a ProgID per type another format can have another icon later, at no cost
 
-export const associations = ref('')//what registration did this launch, one line for the main page, blank where there was nothing to do
-export const opens = ref('')//which program windows opens a .torrent and a magnet with, one line for the main page after registration, blank where there was nothing to register
+export function installedCopy(paths) {//whether this copy runs from the folder the installer puts ftorrent in, %LOCALAPPDATA%\ftorrent, which paths.rs reports beside the program's own location; the one gate on everything here. What gets registered names this executable's path, so a copy anywhere else would point windows at a file that may move or vanish, a portable copy on a stick, a build in the repository's target folder, a copy on the Desktop, and none of them registers or needs to say why. The installer's folder is blank on macOS and linux, so never there
+	return !!paths?.installer && paths.location.toLowerCase() == paths.installer.toLowerCase()
+}
 
-export async function associate(paths) {//tell windows what an installed copy can open, taking nothing another program holds; call once at startup, after the settings are read
-	if (!paths.installer || paths.location.toLowerCase() != paths.installer.toLowerCase()) return//not where the installer puts ftorrent, so not an installed copy, whatever else it is, and on macOS and linux blank; skipped without a word, since the reason doesn't matter
+export async function register(paths, answer) {//tell windows what this installed copy can open, and claim or give back the fallbacks for the contested types by the user's answer, yes, no, or ask; answers how many values changed. Only the copy holding the lock has a page to call this, so ten launches at once make one set of writes, not ten racing each other
 	let executable = paths.executable
 	let file = executable.split('\\').pop()//ftorrent.exe, which is the key windows expects under Applications
 	let command = `"${executable}" "%1"`//quoted, because a file's path will contain spaces; %1 is where windows puts the file or the link
@@ -62,61 +44,50 @@ export async function associate(paths) {//tell windows what an installed copy ca
 	let application = `Software\\Classes\\Applications\\${file}`
 	let capabilities = `Software\\${applicationName}\\Capabilities`
 	let changed = 0
-	let set = async (key, name, value) => { if (await registrySet(key, name, value)) changed++ }//each value read first and written only if it would change, so a launch that changed nothing knows it
-	try {
-		for (let {extension, program, name} of fileTypes) {
-			await set(`Software\\Classes\\${program}`, '', name)//the ProgID: what this kind of file is called
-			await set(`Software\\Classes\\${program}\\DefaultIcon`, '', fileIcon)//what explorer draws on one
-			await set(`Software\\Classes\\${program}\\shell\\open\\command`, '', command)//and what opens it
-			await set(`Software\\Classes\\${extension}\\OpenWithProgids`, program, '')//ftorrent joins the list of what could open this extension, which is the offer; the value is empty and only the name matters
-			await set(`${application}\\SupportedTypes`, extension, '')//so ftorrent is offered for these and not for everything else
-			await set(`${capabilities}\\FileAssociations`, extension, program)//and so the settings app can list ftorrent's types
-		}
-		let left = []//schemes whose shared class another program holds, named on the page
-		for (let {scheme, program, name} of linkSchemes) {
-			let classes = [`Software\\Classes\\${program}`]//ftorrent's own ProgID, which no other program writes, so a user's choice that names it stays ftorrent's
-			if (await claimable(scheme, command)) classes.push(`Software\\Classes\\${scheme}`); else left.push(scheme)//and the shared class named for the scheme, which windows falls back to when no user has chosen, but only while it's empty or already ours
-			for (let key of classes) {//the same four values under each
-				await set(key, '', name)
-				await set(key, 'URL Protocol', '')//the empty value that marks a class as a url scheme rather than a file type
-				await set(`${key}\\DefaultIcon`, '', applicationIcon)
-				await set(`${key}\\shell\\open\\command`, '', command)
-			}
-			await set(`${capabilities}\\URLAssociations`, scheme, program)//so the settings app lists ftorrent for this kind of link, and a choice there names ftorrent's own ProgID rather than the shared class
-		}
-		await set(application, 'FriendlyAppName', applicationName)
-		await set(`${application}\\shell\\open\\command`, '', command)
-		await set(capabilities, 'ApplicationName', applicationName)
-		await set(capabilities, 'ApplicationDescription', applicationDescription)
-		await set('Software\\RegisteredApplications', applicationName, capabilities)//the line that puts ftorrent in the settings app by name, and last on purpose: any write above can fail and stop the whole run, so publishing ftorrent to Settings is the step that only happens once everything it points at is there. The next launch starts again from the top and finishes the job
+	let set    = async (key, name, value) => { if (await registrySet(key, name, value)) changed++ }//each value read first and written only if it would change, so a pass that changed nothing knows it
+	let unset  = async (key, name)        => { if (await registryDelete(key, name))    changed++ }//and deleting something already gone isn't a change either
+	let unsetKey = async key              => { if (await registryDeleteKey(key))       changed++ }
+	let claims = type => !type.contested || answer == 'yes'//ftorrent's own types always, and the contested two once the user has said yes
+	let holds  = async (key, value) => { try { return await registryGet('user', key, '') == value } catch { return false } }//whether a key's default value still says what ftorrent wrote there; one too long or of another type isn't ftorrent's, and mustn't stop the pass
 
-		if (changed > 0) await registryNotify()//only when something moved, because this runs on every launch and almost always writes nothing
-		let note = left.length > 0 ? `; ${left.join(' and ')} left to the program that has it` : ''
-		associations.value = `associations: ${fileTypes.length} file types and ${linkSchemes.length} link types registered, ${changed} values written${note}`
-	} catch (error) {
-		associations.value = `associations: ${error}`//trouble reads the same way a result does, as a line on the page
+	for (let type of fileTypes) {
+		let {extension, program, name} = type
+		await set(`Software\\Classes\\${program}`, '', name)//the ProgID: what this kind of file is called
+		await set(`Software\\Classes\\${program}\\DefaultIcon`, '', fileIcon)//what explorer draws on one
+		await set(`Software\\Classes\\${program}\\shell\\open\\command`, '', command)//and what opens it
+		await set(`Software\\Classes\\${extension}\\OpenWithProgids`, program, '')//ftorrent joins the list of what could open this extension, which is the offer; the value is empty and only the name matters
+		await set(`${application}\\SupportedTypes`, extension, '')//so ftorrent is offered for these and not for everything else
+		await set(`${capabilities}\\FileAssociations`, extension, program)//and so the settings app can list ftorrent's types
+		let fallback = `Software\\Classes\\${extension}`//the extension's own key, whose default value names the ProgID windows uses when the user has saved no choice. That value is the single line that says .torrent means ftorrent from now on, which an installer from 1999 writes at install, Tauri's NSIS macro still writes, and Microsoft's own current API for unpackaged apps deliberately doesn't; here it waits for the user's yes
+		if (claims(type)) await set(fallback, '', program)//claimed, whoever wrote it last
+		else if (await holds(fallback, program)) await unset(fallback, '')//given back, but only while it still names ftorrent
 	}
-	opens.value = await whoOpens()
+	for (let type of linkSchemes) {
+		let {scheme, program, name} = type
+		let classes = [`Software\\Classes\\${program}`]//ftorrent's own ProgID, which no other program writes, so a user's choice that names it stays ftorrent's
+		let shared = `Software\\Classes\\${scheme}`//the class named for the scheme, which windows falls back to when no user has chosen; any program may write it, and many clients register nothing else, so a saved choice can name it too and then opens whichever program wrote it last
+		if (claims(type)) classes.push(shared)//claimed with the same four values as ftorrent's own, whoever wrote it last
+		else if (await holds(`${shared}\\shell\\open\\command`, command)) await unsetKey(shared)//given back whole, but only while it still runs ftorrent; what another program had there before the yes is gone, so the class waits empty for whichever program writes it next
+		for (let key of classes) {//the same four values under each
+			await set(key, '', name)
+			await set(key, 'URL Protocol', '')//the empty value that marks a class as a url scheme rather than a file type
+			await set(`${key}\\DefaultIcon`, '', applicationIcon)
+			await set(`${key}\\shell\\open\\command`, '', command)
+		}
+		await set(`${capabilities}\\URLAssociations`, scheme, program)//so the settings app lists ftorrent for this kind of link, and a choice there names ftorrent's own ProgID rather than the shared class, which holds however often another client rewrites it
+	}
+	await set(application, 'FriendlyAppName', applicationName)
+	await set(`${application}\\shell\\open\\command`, '', command)
+	await set(capabilities, 'ApplicationName', applicationName)
+	await set(capabilities, 'ApplicationDescription', applicationDescription)
+	await set('Software\\RegisteredApplications', applicationName, capabilities)//the line that puts ftorrent in the settings app by name, and last on purpose: any write above can fail and stop the whole pass, so publishing ftorrent to Settings is the step that only happens once everything it points at is there. The next pass starts again from the top and finishes the job
+
+	if (changed > 0) await registryNotify()//only when something moved, because this runs often and almost always changes nothing
+	return changed
 }
 
-async function whoOpens() {//what windows would run for a .torrent and a magnet right now, the user's saved choice first and the fallbacks after, which is the answer its own Settings page shows
-	let answers = []
-	for (let name of ['.torrent', 'magnet']) {
-		try {
-			let found = await registryOpens(name)
-			answers.push(found ? `${name} with ${found.program}, ${found.executable || 'which runs nothing'}` : `${name} with nothing`)
-		} catch (error) {
-			answers.push(`${name}: ${error}`)
-		}
-	}
-	return `opens: ${answers.join('; ')}`
-}
-
-async function claimable(scheme, command) {//whether the class named for this scheme is ftorrent's to write: it runs no command yet, or already runs ftorrent's. Read through HKEY_CLASSES_ROOT, the view windows itself uses, which lays the user's classes over the machine's, so a client installed for everyone counts as holding it too
-	try {
-		let found = await registryGet('classes', `${scheme}\\shell\\open\\command`, '')//the key's default value, which is the command
-		return !found || found == command//no class, a class with no command, or one that's already ftorrent's
-	} catch {
-		return false//too long or unreadable, so not ftorrent's
-	}
+export async function whoOpens() {//what windows would run for each contested type right now, by name, as registry_opens answers: {program, executable}, the ProgID and the path, or null when nothing would. The user's saved choice counts first and the fallbacks after, and a choice of a shared class resolves to the program the class runs, so this is the answer windows' own Settings shows
+	let found = {}
+	for (let name of contested) found[name] = await registryOpens(name)
+	return found
 }

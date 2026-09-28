@@ -2,7 +2,7 @@
 
 ; Uninstalling takes back what associate.js told Windows ftorrent can open. Those are writes the running program made, not the installer, so a bare NSIS uninstall knows nothing of them and would leave ftorrent listed in Open with and in Settings, pointing at a program that's gone. Everything is under HKEY_CURRENT_USER, like the install itself, and names come from the same product name associate.js reads, so a fork that renames the app cleans up after itself too.
 ; This runs after the uninstall rather than before it because the section's first real step is asking to close a running ftorrent, and a user who says no there stops the uninstall; the pre hook would already have taken the keys, leaving a working install that can't open anything. Here the files are gone and $INSTDIR still holds the folder they were in.
-; Removing ftorrent in Settings runs this, and so does running a newer installer by hand, as of Tauri 2.11.4: its reinstall page selects uninstalling first and runs the old uninstall.exe without /UPDATE, so the registrations go here and come back on the new copy's first launch, which the finish page offers. It's the old copy's uninstaller that runs, so a change to this file reaches upgrades one version later. An update, which runs the new installer with /UPDATE, never runs the old uninstaller at all, so the guard below is for uninstall.exe /UPDATE run directly, and for a later template that calls it that way.
+; Removing ftorrent in Settings runs this, and so does running a newer installer by hand, as of Tauri 2.11.4: its reinstall page selects uninstalling first and runs the old uninstall.exe without /UPDATE, so the registrations go here and come back on the new copy's first launch, which the finish page offers. The user's own saved choice isn't among them: it's sealed, only Windows' screens change it, and this leaves it naming ftorrent's ProgIDs, which point nowhere until a copy is installed again and then apply as before, so an upgrade keeps a choice of ftorrent. It's the old copy's uninstaller that runs, so a change to this file reaches upgrades one version later. An update, which runs the new installer with /UPDATE, never runs the old uninstaller at all, so the guard below is for uninstall.exe /UPDATE run directly, and for a later template that calls it that way.
 !macro NSIS_HOOK_POSTUNINSTALL
 	${If} $UpdateMode <> 1 ; an update replaces the program and leaves its registrations in place, the same guard Tauri's template puts on the shortcuts and the Run value just before this hook
 		DeleteRegValue HKCU "Software\RegisteredApplications" "${PRODUCTNAME}" ; first, the reverse of the order associate.js writes in, so Settings stops listing ftorrent before what that listing points at is removed
@@ -22,6 +22,10 @@
 !macro FTORRENT_UNREGISTER_FILE extension program ; a kind of file ftorrent offered to open
 	DeleteRegKey HKCU "Software\Classes\${program}" ; ftorrent's own ProgID, which no other program writes, taken whole
 	DeleteRegValue HKCU "Software\Classes\${extension}\OpenWithProgids" "${program}" ; the offer, one value in a list other programs share
+	ReadRegStr $R0 HKCU "Software\Classes\${extension}" "" ; the extension's own default value, the fallback associate.js writes when ftorrent claims the type
+	${If} $R0 == "${program}" ; so it goes only while it still names ftorrent; another program's stays
+		DeleteRegValue HKCU "Software\Classes\${extension}" ""
+	${EndIf}
 	DeleteRegKey /ifempty HKCU "Software\Classes\${extension}\OpenWithProgids" ; and the list and the extension's key only if that leaves them holding nothing: /ifempty spares a key with any subkey or any value, its default included, so another program's registration keeps its place
 	DeleteRegKey /ifempty HKCU "Software\Classes\${extension}"
 !macroend

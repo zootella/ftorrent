@@ -28,6 +28,12 @@ export const settingsSchema = [
 		comment: `where torrents go, and where ${brandName} looks for the ones it already has; each folder keeps its own .${brandName} subfolder with the session data of the torrents in it. ~ is your home folder, ./ is the folder ${brandName} itself is in, so a portable copy can say ./downloads and follow its own drive, and an absolute path like D:/torrents means exactly that place. Written with forward slashes on every platform`,
 		check: value => value.every(folder => typeof folder == 'string' && folder.trim() != '' && !/[\x00-\x1f\x7f]/.test(folder)),//text naming a place; a control character in one means a backslash in the file was read as an escape, the way D:\new holds a newline
 	}, {
+		section: 'associations',
+		key: 'default',
+		factory: 'ask',
+		comment: `whether ${brandName} opens .torrent files and magnet links: "yes", "no", or "ask", which puts a bar at the top of the window at startup until you answer it. The system keeps the final say, so yes may open its settings for you to confirm there. .${brandName} files and ${brandName}: links always open with ${brandName}`,
+		check: value => ['ask', 'yes', 'no'].includes(value),
+	}, {
 		section: 'window',
 		key: 'x',
 		factory: 0,

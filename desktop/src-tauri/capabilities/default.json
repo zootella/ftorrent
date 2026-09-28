@@ -12,6 +12,10 @@
 		"core:window:allow-set-size",
 		"core:window:allow-maximize",
 		"opener:allow-reveal-item-in-dir",
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [{"url": "ms-settings:defaultapps*"}]
+		},
 		"dialog:allow-open",
 		"dialog:allow-save"
 	]

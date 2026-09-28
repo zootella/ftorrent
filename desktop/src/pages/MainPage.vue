@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {storeToRefs} from 'pinia'
 import {invoke} from '@tauri-apps/api/core'
 import {useGreetStore} from '../stores/greet.js'
@@ -8,7 +8,7 @@ import {useIncomingStore} from '../stores/incoming.js'
 import {engineStatus} from '../engine.js'
 import {instanceStatus} from '../instance.js'
 import {brandName} from '../brand.js'
-import {associations, opens} from '../associate.js'//what registration did at startup and what windows opens each contested type with after it, a line each, blank everywhere but an installed windows copy
+import {useAssociationsStore} from '../stores/associations.js'
 
 let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
 let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
@@ -18,17 +18,8 @@ async function greet() {
 	greetMessage.value = await invoke('greet', {name: name.value})
 }
 
-//the note, a setting that does nothing except prove that settings work: type one, save it, quit, start again, and it's here, and in ftorrent.toml. The box holds a draft of its own so typing changes nothing until Save; a setting writes when the user acts, not on every keystroke
 let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
-let noteDraft = ref(store.settings.note.text)
-watch(() => store.settings.note.text, text => { noteDraft.value = text })//when load fills in the saved note a moment after mount, the box follows
-let noteSaved = ref(false)//true for a moment after Save, so the button can say so
-async function saveNote() {
-	store.settings.note.text = noteDraft.value
-	await store.save()
-	noteSaved.value = true
-	setTimeout(() => { noteSaved.value = false }, 1500)
-}
+let associations = useAssociationsStore()//what registration did and what windows opens each contested type with, lines for the report on an installed windows copy
 
 //get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
 let prepared = ref(false)//true for a moment after the button, so it can say so
@@ -90,8 +81,7 @@ let report = computed(() => {
 		if (p.trouble) lines.push(p.trouble)
 	}
 	for (let problem of store.problems) lines.push(problem)
-	if (associations.value) lines.push(associations.value)
-	if (opens.value) lines.push(opens.value)
+	lines.push(...associations.report)
 	let i = instance.value
 	if (i) {
 		if (i.held) lines.push(`lock: held, ${i.lock}`)
@@ -134,11 +124,6 @@ async function copyReport() {
 			<button type="submit">Greet</button>
 		</form>
 		<p>{{ greetMessage }}</p>
-
-		<form class="row" @submit.prevent="saveNote">
-			<input id="note-input" v-model="noteDraft" placeholder="A note to yourself..." />
-			<button type="submit">{{ noteSaved ? 'Saved' : 'Save as Setting' }}</button>
-		</form>
 
 		<div class="row">
 			<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>

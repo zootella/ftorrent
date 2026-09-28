@@ -3,11 +3,11 @@ use tauri::command;
 /*
 The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open.
 
-registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
+registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_delete removes one value, and registry_delete_key removes a key with everything under it, both only under HKEY_CURRENT_USER, and both answer whether there was anything there, so taking something back counts as a change the same way writing it does. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
 
 registry_opens asks Windows which program it would open a file type or a link scheme with right now, and answers the ProgID it would use and the executable that ProgID runs. It's the shell's own lookup, AssocQueryString, rather than a reading of keys, because the answer is layered: the user's saved choice first, sealed where only the system's own screens can write it, and the fallbacks under Software\Classes after that, and a saved choice may name a shared class like magnet whose command belongs to whichever program wrote it last. Asking the shell gets the answer Explorer and Settings would give, whichever layer it came from.
 
-A blank value name means the key's own default value, which is how the registry spells "the value of this key itself". The commands take any key under their root and hold no guard, on purpose, the same as disk.rs: the page runs only ftorrent's own code, and it alone knows what a key means. They never write the machine-wide hive. On macOS and Linux there's no registry, and each command answers so.
+A blank value name means the key's own default value, which is how the registry spells "the value of this key itself". The commands take any key under their root and hold no guard, on purpose, the same as disk.rs: the page runs only ftorrent's own code, and it alone knows what a key means. The one exception is a blank key handed to registry_delete_key, which it refuses, since that would name the whole of the user's hive. They never write the machine-wide hive. On macOS and Linux there's no registry, and each command answers so.
 */
 
 /// Read a string value; root is classes or user, and a blank name is the key's default value. Answers nothing when the key or the value isn't there
@@ -20,6 +20,18 @@ pub fn registry_get(root: String, key: String, name: String) -> Result<Option<St
 #[command]
 pub fn registry_set(key: String, name: String, value: String) -> Result<bool, String> {
 	platform::set(&key, &name, &value)
+}
+
+/// Delete a value under the current user; a blank name is the key's default value. Answers whether there was one to delete
+#[command]
+pub fn registry_delete(key: String, name: String) -> Result<bool, String> {
+	platform::delete(&key, &name)
+}
+
+/// Delete a key under the current user, and everything under it. Answers whether there was one to delete
+#[command]
+pub fn registry_delete_key(key: String) -> Result<bool, String> {
+	platform::delete_key(&key)
 }
 
 /// Tell the shell that file associations changed
@@ -45,8 +57,8 @@ pub fn registry_opens(name: String) -> Result<Option<Opener>, String> {
 mod platform {
 	use windows::core::{PCWSTR, PWSTR};
 	use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_NO_ASSOCIATION};
-	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegGetValueW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
-	use windows::Win32::UI::Shell::{AssocQueryStringW, SHChangeNotify, ASSOCF, ASSOCF_IS_PROTOCOL, ASSOCF_NONE, ASSOCF_NOTRUNCATE, ASSOCSTR, ASSOCSTR_EXECUTABLE, ASSOCSTR_PROGID, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
+	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegGetValueW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
+	use windows::Win32::UI::Shell::{AssocQueryStringW, SHChangeNotify, SHDeleteKeyW, ASSOCF, ASSOCF_IS_PROTOCOL, ASSOCF_NONE, ASSOCF_NOTRUNCATE, ASSOCSTR, ASSOCSTR_EXECUTABLE, ASSOCSTR_PROGID, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
 	use super::Opener;
 
 	/// Text the way windows takes it, utf-16 ending in a zero; bind the result to a variable before handing windows a pointer into it, because a pointer into a temporary dangles
@@ -90,6 +102,24 @@ mod platform {
 		answer
 	}
 
+	pub fn delete(key: &str, name: &str) -> Result<bool, String> {
+		let wide_key = wide(key);
+		let wide_name = wide(name);
+		let deleted = unsafe { RegDeleteKeyValueW(HKEY_CURRENT_USER, PCWSTR(wide_key.as_ptr()), PCWSTR(wide_name.as_ptr())) };//an empty name is the default value here, as it is when reading and writing
+		if deleted == ERROR_FILE_NOT_FOUND { return Ok(false) }//no key, or no such value in it: nothing to take back
+		if deleted.is_err() { return Err(format!("registry: could not delete from {key}, windows error {}", deleted.0)) }
+		Ok(true)
+	}
+
+	pub fn delete_key(key: &str) -> Result<bool, String> {
+		if key.chars().all(|c| c == '\\' || c.is_whitespace()) { return Err("registry: a blank key would be all of HKEY_CURRENT_USER, which is never ftorrent's to delete".to_string()) }
+		let wide_key = wide(key);
+		let deleted = unsafe { SHDeleteKeyW(HKEY_CURRENT_USER, PCWSTR(wide_key.as_ptr())) };//the key, its values, and every key under it; the older RegDeleteKeyW refuses a key that has keys under it
+		if deleted == ERROR_FILE_NOT_FOUND { return Ok(false) }
+		if deleted.is_err() { return Err(format!("registry: could not delete {key}, windows error {}", deleted.0)) }
+		Ok(true)
+	}
+
 	pub fn notify() -> Result<(), String> {
 		unsafe { SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None) }
 		Ok(())
@@ -108,7 +138,7 @@ mod platform {
 		let mut buffer = [0u16; 2048];//longer than any ProgID or path the answer holds; with NOTRUNCATE a longer one is reported rather than cut short
 		let mut size = buffer.len() as u32;//the shell counts in characters here, not bytes, including the terminating zero
 		let found = unsafe { AssocQueryStringW(flags | ASSOCF_NOTRUNCATE, what, PCWSTR(wide_name.as_ptr()), PCWSTR::null(), Some(PWSTR(buffer.as_mut_ptr())), &mut size) };//no verb, so the default one, which is open
-		if found == ERROR_NO_ASSOCIATION.to_hresult() { return Ok(None) }
+		if found == ERROR_NO_ASSOCIATION.to_hresult() { return Ok(None) }//the shell's way of saying nothing opens it, which is an answer rather than trouble
 		if found.is_err() { return Err(format!("registry: could not ask what opens {name}, windows error {}", found)) }
 		Ok(Some(String::from_utf16_lossy(&buffer[..(size as usize).saturating_sub(1)])))//characters, less the terminating zero
 	}
@@ -120,6 +150,8 @@ mod platform {
 	const NONE: &str = "registry: there's no registry on this platform";
 	pub fn get(_root: &str, _key: &str, _name: &str) -> Result<Option<String>, String> { Err(NONE.to_string()) }
 	pub fn set(_key: &str, _name: &str, _value: &str) -> Result<bool, String> { Err(NONE.to_string()) }
+	pub fn delete(_key: &str, _name: &str) -> Result<bool, String> { Err(NONE.to_string()) }
+	pub fn delete_key(_key: &str) -> Result<bool, String> { Err(NONE.to_string()) }
 	pub fn notify() -> Result<(), String> { Err(NONE.to_string()) }
 	pub fn opens(_name: &str) -> Result<Option<Opener>, String> { Err(NONE.to_string()) }
 }

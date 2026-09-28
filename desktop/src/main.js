@@ -6,7 +6,7 @@ import {revealWindow, watchWindow} from './window.js'
 import {pathsStatus} from './paths.js'
 import {useSettingsStore} from './stores/settings.js'
 import {useIncomingStore} from './stores/incoming.js'
-import {associate} from './associate.js'
+import {useAssociationsStore} from './stores/associations.js'
 import './index.css'
 
 let pinia = createPinia()//one pinia for the life of the app: this process opens a single window once and closes it once, so there is never a second store to keep in step
@@ -23,7 +23,7 @@ async function startup() {
 		await revealWindow(store.settings)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing or couldn't be read, and show it, whatever happened above
 	}
 	if (!store.paths?.settings) return//no data folder, which the platform should always give: no window place to record and no engine to tell, and the main page shows the trouble
-	await associate(store.paths)//on windows, an installed copy tells the system what it can open; everywhere else this returns at once
+	await useAssociationsStore(pinia).start(store.paths)//on windows, an installed copy tells the system what it can open, and asks the user about being the default; everywhere else this returns at once
 	await watchWindow(store)//after load, so recording the window's place lands in settings that are already filled in from the file
 	try {
 		await store.lockFolders()//lock each download folder that exists, leaving any another copy holds to it, and hand the engine the ones this copy holds

@@ -59,6 +59,8 @@ pub fn run() {
 				paths::paths_status,//and in paths.rs
 				registry::registry_get,//and in registry.rs
 				registry::registry_set,
+				registry::registry_delete,
+				registry::registry_delete_key,
 				registry::registry_notify,
 				registry::registry_opens,
 				window::window_revealed,//and in window.rs
