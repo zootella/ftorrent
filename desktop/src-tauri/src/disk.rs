@@ -70,12 +70,13 @@ fn _millis(time: std::io::Result<std::time::SystemTime>) -> u128 {//a timestamp 
 
 /// POSIX-like `open` + `read` + `close`
 #[command]
-pub fn disk_read(path: String) -> Result<Vec<u8>, String> {
-	std::fs::read(&path).map_err(|e| e.to_string())
+pub fn disk_read(path: String) -> Result<tauri::ipc::Response, String> {
+	std::fs::read(&path).map(tauri::ipc::Response::new).map_err(|e| e.to_string())//Response carries the bytes raw, and the page gets an ArrayBuffer; the note below has why
 }
 /*
-note that this reads the whole file into memory
-fuji will have the file in memory three times: Rust + IPC + JS!
+Returning Response rather than Vec<u8> is the difference between a copy and a translation. A Vec<u8> crosses as a JSON array, one decimal number per byte, written here and parsed by the page on its main thread, so a megabyte becomes a million numbers, and the time that takes grows with the file. Response hands the same bytes over as an ArrayBuffer instead. The page wraps the result in new Uint8Array(...), which takes either, so nothing above had to change.
+
+Note that this still reads the whole file into memory, and holds it more than once: Rust's buffer, the transfer, and the JS heap.
 plugin-fs does streaming by:
 - on the Rust side, reading parts of the file in 64 KB chunks
 - on the JS side, presenting that using the Web Streams API
@@ -88,13 +89,13 @@ pub fn disk_copy(source: String, destination: String) -> Result<(), String> {
 	fs::copy(&source, &destination).map(|_| ()).map_err(|e| e.to_string())
 }
 /*
-a block of memory in a Tauri app like Fuji can exist in these layers:
+a block of memory in a Tauri app can exist in these layers:
 2. WebView renderer process (JS heap, JSON RPC strings)
 1. Rust backend process (fallback 8 KiB buffer, IPC deserialization)
 0. Kernel mode (page cache, zero‐copy)
 
 when disk_read above gets the bytes of an image onto the screen, the memory is copied many times:
-disk -> kernel page cache -> Rust heap buffer -> Rust JSON buffer -> WebView IPC buffer -> JS heap
+disk -> kernel page cache -> Rust heap buffer -> WebView IPC buffer -> JS heap
 
 disk_copy, on the other hand is far more efficient
 On Windows 10 and later, disk_copy (via std::fs::copy) invokes the Win32 CopyFileEx API,
@@ -127,7 +128,7 @@ we could write rust code which:
 which comes to about two screenfuls of Rust
 and could result in js code on top that's as simple as this:
 
-import { copyWithProgress } from 'fuji-disk';
+import { copyWithProgress } from './disk.js';
 let controller; // will hold the AbortController
 async function runCopy() {
   controller = new AbortController();

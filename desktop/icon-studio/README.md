@@ -71,7 +71,7 @@ This folder is Windows only and by hand. Nothing in the build reads it, and Taur
 
 **`donut.svg`** is the node on the same grid: an orange circle of diameter 8 centered at (8,9), and a white dot of diameter 2 on the same center. Whole units for the center and both radii, so at 16 pixels every edge sits on a pixel, with a clean one-pixel rim and nothing to hint by hand. The larger sizes are the same drawing scaled, sharp where the scale is whole and gently soft where it isn't, which is what the sheet's own border does at those sizes too.
 
-**`sheet.ico`** is the blank page as it arrived: drawn by Fuji's designer for that project and lent to this one, eight layers from 256 down to 16, including the 20 and 40 that Windows wants at 125 percent scaling, the 256 stored as a PNG and the rest as bare Windows bitmaps. `sheet-<size>.png` are those eight layers, split out once.
+**`sheet.ico`** is the blank page as it arrived: drawn by a designer for another project and lent to this one, eight layers from 256 down to 16, including the 20 and 40 that Windows wants at 125 percent scaling, the 256 stored as a PNG and the rest as bare Windows bitmaps. `sheet-<size>.png` are those eight layers, split out once.
 
 ### The scripts
 
