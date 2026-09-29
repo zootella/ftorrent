@@ -11,6 +11,7 @@ import {brandName} from './brand.js'
 import './style.css'
 
 document.title = brandName//the page's own title, which tauri doesn't show, since rust names the window; set here so index.html doesn't spell the name a second time
+if (import.meta.env.PROD) document.addEventListener('contextmenu', event => { if (!event.target.closest('input, textarea, [contenteditable]')) event.preventDefault() })//turn away the web view's own right-click menu, a browser's on every platform, with items like reload and print; text fields keep theirs for cut, copy, and paste, and a development build keeps it everywhere, for inspecting the page. window.rs turns off the browser's keys
 
 let pinia = createPinia()//one pinia for the life of the app: this process opens a single window once and closes it once, so there is never a second store to keep in step
 createApp(App).use(pinia).use(router).mount('#app')

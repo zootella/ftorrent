@@ -28,4 +28,5 @@ serde_json = "1"
 [target.'cfg(windows)'.dependencies]
 tokio = { version = "1", features = ["net", "io-util"] }#the named pipe a second launch hands over through; tauri already brings tokio, and this turns on the part that speaks pipes
 windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem"] }#the registry calls registry.rs makes and the shell notification after them, and the hidden attribute disk.rs sets; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
+webview2-com = "0.38"#the web view's key event, which window.rs handles to turn off the browser's shortcut keys; tauri already brings this crate at this version, and the controller tauri hands over is its type
 
