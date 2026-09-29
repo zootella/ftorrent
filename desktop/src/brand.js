@@ -4,3 +4,4 @@ import tauriConfiguration from '../src-tauri/tauri.conf.json' with {type: 'json'
 
 export const brandName        = tauriConfiguration.productName            //ftorrent, and the name in every file, folder, registry key, and line of text the page makes from it
 export const brandDescription = tauriConfiguration.bundle.shortDescription//the one line the installers and the settings app show beside the name
+export const brandHomepage    = tauriConfiguration.bundle.homepage        //the project's web address, https://ftorrent.com/, which the about page links to

@@ -28,3 +28,9 @@ pub fn window_build(app: &AppHandle) {
 pub fn window_revealed(revealed: State<'_, Revealed>) {
 	revealed.0.store(true, Ordering::SeqCst);
 }
+
+/// The version of the web view the page runs in, as the platform reports it: WebView2's on Windows, and WebKit's on macOS and Linux
+#[command]
+pub fn window_webview_version() -> Result<String, String> {
+	tauri::webview_version().map_err(|e| e.to_string())
+}

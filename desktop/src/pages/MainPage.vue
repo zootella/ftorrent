@@ -1,22 +1,11 @@
 <script setup>
 import {ref, computed, onMounted, onUnmounted} from 'vue'
-import {storeToRefs} from 'pinia'
-import {invoke} from '@tauri-apps/api/core'
-import {useGreetStore} from '../stores/greet.js'
 import {useSettingsStore} from '../stores/settings.js'
 import {useIncomingStore} from '../stores/incoming.js'
 import {engineStatus} from '../engine.js'
 import {instanceStatus} from '../instance.js'
 import {brandName} from '../brand.js'
 import {useAssociationsStore} from '../stores/associations.js'
-
-let {name} = storeToRefs(useGreetStore())//what the user typed, kept in the store so it's still here after a trip to the about page and back; storeToRefs hands back a writable ref, so v-model below works exactly as it did before
-let greetMessage = ref('')//what rust sent back, shown beneath it; left as the component's own state on purpose, so it clears on navigation and the difference is visible side by side
-
-//hand the name to the rust command named greet and show its answer; this round trip is the scaffold's proof that the webview can reach the native core, and it runs the same way in the dev window and the built app
-async function greet() {
-	greetMessage.value = await invoke('greet', {name: name.value})
-}
 
 let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
 let associations = useAssociationsStore()//what registration did and what windows opens each contested type with, lines for the report on an installed windows copy
@@ -103,66 +92,14 @@ async function copyReport() {
 </script>
 
 <template>
-	<main class="container">
-		<h1>Welcome to ftorrent, powered by Tauri + Vue</h1>
+	<main>
+		<h1>{{ brandName }}</h1>
 
-		<div class="row">
-			<a href="https://vite.dev" target="_blank">
-				<img src="/vite.svg" class="logo vite" alt="Vite logo" />
-			</a>
-			<a href="https://tauri.app" target="_blank">
-				<img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-			</a>
-			<a href="https://vuejs.org/" target="_blank">
-				<img src="../assets/vue.svg" class="logo vue" alt="Vue logo" />
-			</a>
-		</div>
-		<p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
+		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
 
-		<form class="row" @submit.prevent="greet">
-			<input id="greet-input" v-model="name" placeholder="Enter a name..." />
-			<button type="submit">Greet</button>
-		</form>
-		<p>{{ greetMessage }}</p>
-
-		<div class="row">
-			<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
-		</div>
-
-		<div class="report">
-			<textarea readonly :value="report" :rows="report.split('\n').length"></textarea>
+		<div class="w-full text-left">
+			<textarea readonly :value="report" :rows="report.split('\n').length" class="block w-full mb-2 font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider -->
 			<button type="button" @click="copyReport">{{ copied ? 'Copied' : 'Copy' }}</button>
 		</div>
 	</main>
 </template>
-
-<style scoped>
-.report {
-	text-align: left;
-}
-
-.report textarea {
-	display: block;
-	width: 100%;
-	box-sizing: border-box;/* the border and padding inside the width, so full width means the page's width and no more */
-	border: 1px solid #888;
-	padding: 0.5em;
-	margin-bottom: 0.5em;
-	font-family: ui-monospace, monospace;
-	font-size: 0.8em;
-	resize: vertical;
-	overflow-wrap: anywhere;/* a path is one long word, and should wrap rather than push the window wider */
-}
-
-.logo.vite:hover {
-	filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.tauri:hover {
-	filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.logo.vue:hover {
-	filter: drop-shadow(0 0 2em #249b73);
-}
-</style>

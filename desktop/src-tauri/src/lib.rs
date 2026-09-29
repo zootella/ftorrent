@@ -21,15 +21,9 @@ mod registry;//and registry.rs: the windows registry, read and written for the p
 mod instance;//and instance.rs: one running ftorrent per copy, and a second launch handing over what it carried
 mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is explicit
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
-mod window;//and window.rs: the one window, made hidden for the page to place and show
+mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
 
 use tauri::Manager;//brings manage into scope, for handing the paths to tauri's shared state in setup
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-	format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -64,9 +58,9 @@ pub fn run() {
 				registry::registry_notify,
 				registry::registry_opens,
 				window::window_revealed,//and in window.rs
+				window::window_webview_version,
 				instance::instance_status,//and in instance.rs
 				instance::instance_take,
-				greet,//the scaffold's demonstration command
 			]
 		)
 		.setup(|app| {//before any page exists

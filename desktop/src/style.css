@@ -1,0 +1,44 @@
+/* ./src/style.css */
+
+/*
+How ftorrent's page is styled, and the few rules that keep it simple as it grows.
+
+ftorrent is a desktop application made of web, and its look should be one thing everywhere, the same controls, spacing, and colors on every page, the way a native application's are. CSS was built for exactly that: a few rules near the top that reach down and set everything beneath them. So we let it cascade. This is the only stylesheet. It holds Tailwind, a small set of colors named for the job they do, and defaults for bare HTML elements, so a plain button, input, or heading written anywhere in a template already looks like ftorrent, with no class on it.
+
+Templates style with Tailwind's classes, for layout and for whatever one element does differently from the default: a row, a gap, a full width, a smaller font. A class on an element wins over the defaults here, because Tailwind puts its classes in a later layer than base. For color, templates use only the names in @theme below, like text-muted or border-line, never a hex value or one of Tailwind's own palette colors, so a second palette for dark mode, when it comes, is a change in this file and nowhere else. When the same markup and classes start to repeat, the repeat becomes a small Vue component of our own, not a new class name here, and not an @apply.
+
+Components carry no style blocks. Scoped styles are the usual Vue habit, and they answer a real problem, a codebase so large that teams need to keep one part's CSS from reaching into another's; our wish is the opposite, one look everywhere. Anything Tailwind's classes can't say cleanly goes here, where it cascades. A class name defined here must never also be a Tailwind utility's name: Tailwind reads every word in the source as a possible class, and when our pages each had a class named container, Tailwind's own container quietly narrowed every page. We looked at component libraries, shadcn-vue and the Reka UI primitives under it, and chose to make the few simple controls ftorrent needs ourselves, in these same patterns.
+
+Two choices make it feel like a desktop application rather than a web page. Buttons keep the arrow cursor, as native controls do, rather than a link's pointing hand; that's Tailwind's default, so nothing here overrides it. And text is set the way the system sets its own. The CSS keyword message-box asks the web view for the platform's font for dialog text, family and size together, Segoe UI at 9 points on Windows and San Francisco at 13 on the Mac, and it's set on the root, which is what rem measures from, so every Tailwind size and space follows it: a little denser on Windows, a little roomier on the Mac, each at home beside its own menus. The system already has these fonts, so there's nothing to carry and nothing to license. On the Mac, WebKit draws text through the same engine native applications use, so it matches; on Windows the web view's text engine differs a little from the one behind classic menus, near enough. The one face ftorrent carries is Jura, which the websites set their headings in, for the About page's heading; it loads from the app itself, with its license beside it in public/fonts. Focus rings and text selection stay at the web view's defaults for now, to be designed along with the controls they belong to.
+*/
+
+@import "tailwindcss" source(".");/* look for class names only here in src, where the pages are; the rest of the workspace is full of words tailwind would take for classes */
+
+@font-face {
+	font-family: Jura;
+	font-weight: 300 700;/* the file is variable, so any weight between works */
+	src: url('/fonts/jura-latin.woff2') format('woff2');/* a latin subset, the same file ftorrent.com serves */
+}
+
+@theme {
+	--font-brand:    Jura, sans-serif;/* ftorrent's own face, for the few places the brand speaks */
+
+	--color-ink:     #0f0f0f;/* text */
+	--color-muted:   #6b6b6b;/* text that steps back, like an aside */
+	--color-paper:   #f6f6f6;/* the window behind everything */
+	--color-surface: #ffffff;/* the face of a control */
+	--color-line:    #d4d4d4;/* borders */
+	--color-accent:  #396cd8;/* the one color: links, a control under the mouse, a banner tinted with it */
+}
+
+@layer base {
+	html { font: message-box; }/* the platform's own font for dialog text, family and size together; rem, and so every tailwind size and space, measures from here */
+	body { @apply bg-paper text-ink; }
+	main { @apply flex flex-col items-center gap-4 px-4 py-8 text-center; }/* every page is one centered column, for now */
+	h1   { @apply text-2xl font-semibold; }/* tailwind's reset leaves headings at body size */
+	a    { @apply text-accent; }
+
+	button, input, select, textarea { @apply rounded-md border border-line bg-surface px-3 py-1.5; }/* one look for every control, since tailwind's reset strips the browser's own */
+	button:enabled:hover            { @apply border-accent; }/* only a control that can be used lights up under the mouse */
+	:disabled                       { @apply text-muted; }/* and one that can't says so; tailwind's reset erases the browser's own graying */
+}

@@ -101,3 +101,5 @@ async function recordWindow(appWindow, store) {//the window's place and size and
 	Object.assign(s.screen, screenOf(monitor))
 	store.remember()//in memory and down to rust for the exit write, not to disk
 }
+
+export function windowWebviewVersion() { return invoke('window_webview_version') }//the version of the web view the page runs in, WebView2's on Windows and WebKit's on the Mac, as the platform reports it

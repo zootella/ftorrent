@@ -7,7 +7,10 @@ import {pathsStatus} from './paths.js'
 import {useSettingsStore} from './stores/settings.js'
 import {useIncomingStore} from './stores/incoming.js'
 import {useAssociationsStore} from './stores/associations.js'
-import './index.css'
+import {brandName} from './brand.js'
+import './style.css'
+
+document.title = brandName//the page's own title, which tauri doesn't show, since rust names the window; set here so index.html doesn't spell the name a second time
 
 let pinia = createPinia()//one pinia for the life of the app: this process opens a single window once and closes it once, so there is never a second store to keep in step
 createApp(App).use(pinia).use(router).mount('#app')
