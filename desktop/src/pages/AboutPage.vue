@@ -39,7 +39,7 @@ let parts = computed(() => {
 	<!-- ./src/pages/AboutPage.vue -->
 	<!-- where ftorrent lives on the web, and the parts it's built from, each with its version -->
 	<main>
-		<h1 class="font-brand">About {{ brandName }}</h1>
+		<h1 class="font-brand text-brand">About {{ brandName }}</h1>
 		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ homepageName }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent -->
 		<dl class="grid grid-cols-[auto_1fr] gap-x-4">
 			<template v-for="[name, version] in parts" :key="name">

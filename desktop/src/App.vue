@@ -4,7 +4,7 @@ import {brandName} from './brand.js'
 
 let associations = useAssociationsStore()//the banner's question and answers; the store decides when it's up
 let sampleText = 'Sphinx of black quartz, judge my vow. AVATAR Wavy Tofu QGRSJ 0123456789 Il1| O0 rn m'//a line whose letters give a typeface away, the same as the menu lifecycle.rs puts before File on windows, so the system's menu text and the page's can be compared one above the other
-let throwbackTexts = ['System Volume Information', 'Download Speed']//words from two windows xp windows, a folder in explorer and a label in µtorrent 2.2.1, for comparing the tahoma choice with the real thing side by side
+let throwbackTexts = ['cygwin', 'Data', 'Documents', 'Documents and Settings', 'KPCMS', 'libtorrent', 'MSOCache', 'openssl', 'Perl', 'Program Files', 'RECYCLER', 'System Volume Information', 'WINDOWS']//the folders a windows xp explorer window shows, exactly as it lists them, for comparing the verdana choice with the real thing side by side
 </script>
 
 <template>

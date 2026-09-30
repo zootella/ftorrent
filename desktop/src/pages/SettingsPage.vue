@@ -13,7 +13,7 @@ let associations = useAssociationsStore()//the answer to whether ftorrent opens 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
 let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the order the mac's own appearance setting uses
-let fontChoices        = [['system', 'System'], ['inter', 'Inter'], ['tahoma', 'Tahoma']].filter(([value]) => fontsOffered.includes(value))//tahoma only on windows; settings.js says why
+let fontChoices        = [['system', 'System'], ['inter', 'Inter'], ['verdana', 'Verdana']].filter(([value]) => fontsOffered.includes(value))//verdana only on windows; settings.js says why
 
 //light or dark, and the typeface, each taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
 async function chooseMode(mode) {

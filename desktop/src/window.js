@@ -109,7 +109,7 @@ export async function themeWindow(mode) {
 	await getCurrentWindow().setTheme(mode == 'system' ? null : mode)//tauri's null means follow the system
 }
 
-//the page's typeface, from the appearance setting: system, inter, or tahoma. style.css holds each look as a rule under html[data-font], and this sets the attribute; the page's, rather than the window's, but it's here beside the theme because both are how the window looks when it first appears
+//the page's typeface, from the appearance setting: system, inter, or verdana. style.css holds each look as a rule under html[data-font], and this sets the attribute; the page's, rather than the window's, but it's here beside the theme because both are how the window looks when it first appears
 export async function fontWindow(font) {
 	if (font == 'inter') await document.fonts.load('1em Inter')//the one face ftorrent carries a file for, so wait for the file first, and no text is drawn in a stand-in and then jumps; the system already has the others
 	document.documentElement.dataset.font = font
