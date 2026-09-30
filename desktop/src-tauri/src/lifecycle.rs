@@ -38,8 +38,8 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 #[cfg(target_os = "windows")]
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem, Submenu};
-	let exit = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler; no shortcut, the way Exit reads in a Windows File menu, since the system's own Alt+F4 is a close, which now hides
-	let file = Submenu::with_items(app, "File", true, &[&exit])?;
+	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler. The ampersand makes x its access key, underlined while Alt is held, so Alt, F, X quits, the way a Windows File menu does; and no shortcut, since the system's own Alt+F4 is a close, which now hides
+	let file = Submenu::with_items(app, "&File", true, &[&exit])?;//and F the menu's, so Alt+F opens it
 	let sample_text = "Sphinx of black quartz, judge my vow. AVATAR Wavy Tofu QGRSJ 0123456789 Il1| O0 rn m";//a line whose letters give a typeface away, the same as the top of App.vue, so the system's menu text and the page's can be compared right above and below each other; no ampersand, which a menu would take for an access key
 	let sample_item = MenuItem::with_id(app, "sample", sample_text, true, None::<&str>)?;//and inside, so the system's popup text can be compared too; clicking it does nothing
 	let sample = Submenu::with_items(app, sample_text, true, &[&sample_item])?;
@@ -60,8 +60,8 @@ pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem};
 	use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 	let brand = &app.package_info().name;//the product name from tauri.conf.json
-	let show = MenuItem::with_id(app, "show", format!("Show {brand}"), true, None::<&str>)?;
-	let exit = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;
+	let show = MenuItem::with_id(app, "show", format!("&Show {brand}"), true, None::<&str>)?;//access keys here too, S and x, so the menu works from the keyboard once it's open
+	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;
 	let menu = Menu::with_items(app, &[&show, &exit])?;
 	let mut tray = TrayIconBuilder::with_id("main")
 		.tooltip(brand)
