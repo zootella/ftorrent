@@ -3,9 +3,17 @@ import {ref, watch} from 'vue'
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
+import {themeWindow} from '../window.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
+
+//light or dark, taking effect at once and written to the file, the way a setting chosen from a list is, with no Save to press
+async function chooseMode(mode) {
+	store.settings.appearance.mode = mode
+	await themeWindow(mode)
+	await store.save()
+}
 
 //the note, a setting that does nothing except prove that settings work: type one, save it, quit, start again, and it's here, and in ftorrent.toml. The box holds a draft of its own so typing changes nothing until Save; a setting writes when the user acts, not on every keystroke
 let noteDraft = ref(store.settings.note.text)
@@ -35,6 +43,15 @@ async function saveNote() {
 			<!-- a copy the installer didn't place never registers anything, so it says why the choice is grayed; an installed one links to windows' own Settings when that's the only place left to settle a difference between this setting and windows -->
 			<p v-if="!associations.installed" class="text-muted">Only {{ brandName }} installed on Windows sets up file types and links, so far.</p>
 			<p v-else-if="associations.disagrees"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>
+		</div>
+
+		<div>
+			<label for="appearance-mode" class="mr-2">Appearance</label>
+			<select id="appearance-mode" :value="store.settings.appearance.mode" @change="chooseMode($event.target.value)">
+				<option value="system">System</option>
+				<option value="light">Light</option>
+				<option value="dark">Dark</option>
+			</select>
 		</div>
 
 		<form class="flex gap-2" @submit.prevent="saveNote">

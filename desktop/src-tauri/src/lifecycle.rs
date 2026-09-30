@@ -34,13 +34,16 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 	}
 }
 
-/// On Windows, the menu bar: File, and Exit under it. The close button hides, so this is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Called once from setup
+/// On Windows, the menu bar: File, and Exit under it, and for now a sample line before it, for comparing type. The close button hides, so this is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Called once from setup
 #[cfg(target_os = "windows")]
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem, Submenu};
 	let exit = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler; no shortcut, the way Exit reads in a Windows File menu, since the system's own Alt+F4 is a close, which now hides
 	let file = Submenu::with_items(app, "File", true, &[&exit])?;
-	app.set_menu(Menu::with_items(app, &[&file])?)?;//on windows, a menu set on the app is the menu bar of its window
+	let sample_text = "Sphinx of black quartz, judge my vow. AVATAR Wavy Tofu QGRSJ 0123456789 Il1| O0 rn m";//a line whose letters give a typeface away, the same as the top of App.vue, so the system's menu text and the page's can be compared right above and below each other; no ampersand, which a menu would take for an access key
+	let sample_item = MenuItem::with_id(app, "sample", sample_text, true, None::<&str>)?;//and inside, so the system's popup text can be compared too; clicking it does nothing
+	let sample = Submenu::with_items(app, sample_text, true, &[&sample_item])?;
+	app.set_menu(Menu::with_items(app, &[&sample, &file])?)?;//on windows, a menu set on the app is the menu bar of its window. The sample goes first for now, so it starts at the left edge right above the same line on the page
 	app.on_menu_event(|app, event| if event.id().as_ref() == "exit" { app.exit(0) });//reaches the Exit run event, which stops the engine; the tray's menu has its own handler, and its Show never comes here
 	Ok(())
 }

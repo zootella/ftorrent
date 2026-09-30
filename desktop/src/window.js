@@ -14,7 +14,7 @@ Tauri turns CSS pixels into physical ones by the scale of the screen the window 
 
 A fresh place, which is also the first run, is five eighths of the primary screen wide and half as tall, though never more than three times as wide as it is tall, dropped at a random spot inside a field centered on the screen that's three quarters of it each way. The margin the field leaves, an eighth of the screen on every side, is deeper than any taskbar, menu bar, or dock, so the window misses the operating system's chrome without asking where it is, and the randomness keeps an installed copy and a portable one from opening exactly on top of each other.
 
-The window is placed while it's hidden, maximized if it was, and only then shown, so it appears once, where it belongs. Maximizing goes last, beside showing, because on Windows maximizing a hidden window shows it. Then the page tells Rust the window is revealed, which is what lets a second launch, the tray, or the Dock bring it forward from then on. A place that can't be worked out still ends in showing the window, wherever the builder left it, since a window that never appears is worse than one in the wrong spot.
+The window is placed while it's hidden, given its light or dark theme, maximized if it was, and only then shown, so it appears once, where it belongs and in the right colors. Maximizing goes last, beside showing, because on Windows maximizing a hidden window shows it. Then the page tells Rust the window is revealed, which is what lets a second launch, the tray, or the Dock bring it forward from then on. A place that can't be worked out still ends in showing the window, wherever the builder left it, since a window that never appears is worse than one in the wrong spot.
 
 Recording and writing are separate on purpose. Every move and resize updates the store in memory, and hands the rendered file down to Rust to write when ftorrent exits, which is free; nothing touches the disk while the user drags. The file is written when the window is closed with its X, which in ftorrent hides it rather than quitting, and again by Rust at exit, which covers the user who quits from the tray or the File menu without ever closing the window, and a restart of Windows or a logout on the Mac, which reach the same exit. A user who parks the window just so and then loses power before either has lost the position and drags it once more; that's the trade for never debouncing.
 */
@@ -26,7 +26,7 @@ const heightFraction = 0.5   //and half as tall
 const widthLimit     = 3     //but never wider than three times its height, so a super wide monitor gets a window, not a banner. A 16:9 screen makes a window about 2.2 to 1 and a 21:9 one just under 3, so only the 32:9 screens meet this
 const fallbackScreen = {x: 0, y: 0, width: 1280, height: 800}//a screen to size against when none can be named, so there's still a window
 
-export async function revealWindow(store) {//place the hidden window where the settings remember or somewhere fresh, maximize it if it was, show it, and tell rust it's revealed; call once, after the settings have loaded, with the settings store, whose settings hold factory values when the file couldn't be read
+export async function revealWindow(store) {//place the hidden window where the settings remember or somewhere fresh, give it its theme, maximize it if it was, show it, and tell rust it's revealed; call once, after the settings have loaded, with the settings store, whose settings hold factory values when the file couldn't be read
 	let appWindow = getCurrentWindow()
 	let guest = portable(store)
 	try {
@@ -34,6 +34,7 @@ export async function revealWindow(store) {//place the hidden window where the s
 		if (monitor) await appWindow.setPosition(monitor.position)//first to the top left corner of the screen it's going to, in the physical pixels tauri measures screens in, so the two calls below convert by that screen's scale
 		await appWindow.setSize(new LogicalSize(place.width, place.height))
 		await appWindow.setPosition(new LogicalPosition(place.x, place.y))//after the size, so the last word on where the window sits is its top left corner
+		await themeWindow(store.settings.appearance.mode)//while still hidden, so it appears in its colors; after the place, so a theme that fails to take still leaves the window where it belongs
 		if (!guest && store.settings.window.maximized) await appWindow.maximize()//last, beside showing, since on windows maximizing a hidden window shows it
 	} finally {
 		await appWindow.show()//whatever happened above, a window that never appears is the worst outcome
@@ -100,6 +101,11 @@ async function recordWindow(appWindow, store) {//the window's place and size and
 	s.window.height = Math.round(size.height)
 	Object.assign(s.screen, screenOf(monitor))
 	store.remember()//in memory and down to rust for the exit write, not to disk
+}
+
+//light or dark, for the window's frame and menu bar and for the page inside, from the appearance setting: system, light, or dark. The window's theme is the one switch. Tauri hands it to the web view, which reports it to the page as prefers-color-scheme, where style.css picks its colors by it; and given null, the window follows the system, and passes each change along without any code of ours
+export async function themeWindow(mode) {
+	await getCurrentWindow().setTheme(mode == 'system' ? null : mode)//tauri's null means follow the system
 }
 
 export function windowWebviewVersion() { return invoke('window_webview_version') }//the version of the web view the page runs in, WebView2's on Windows and WebKit's on the Mac, as the platform reports it

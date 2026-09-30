@@ -34,6 +34,12 @@ export const settingsSchema = [
 		comment: `whether ${brandName} opens .torrent files and magnet links: "yes", "no", or "ask", which puts a bar at the top of the window at startup until you answer it. The system keeps the final say, so yes may open its settings for you to confirm there. .${brandName} files and ${brandName}: links always open with ${brandName}`,
 		check: value => ['ask', 'yes', 'no'].includes(value),
 	}, {
+		section: 'appearance',
+		key: 'mode',
+		factory: 'system',
+		comment: `light or dark: "system" matches the system's own light or dark setting, and changes when it does; "light" or "dark" keeps ${brandName} that way whatever the system is set to`,
+		check: value => ['system', 'light', 'dark'].includes(value),
+	}, {
 		section: 'window',
 		key: 'x',
 		factory: 0,

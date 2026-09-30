@@ -97,7 +97,7 @@ async function copyReport() {
 
 		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
 
-		<div class="w-full text-left">
+		<div class="w-full">
 			<textarea readonly :value="report" :rows="report.split('\n').length" class="block w-full mb-2 font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider -->
 			<button type="button" @click="copyReport">{{ copied ? 'Copied' : 'Copy' }}</button>
 		</div>

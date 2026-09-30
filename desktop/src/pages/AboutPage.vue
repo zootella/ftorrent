@@ -41,9 +41,9 @@ let parts = computed(() => {
 	<main>
 		<h1 class="font-brand">About {{ brandName }}</h1>
 		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ homepageName }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent -->
-		<dl class="grid grid-cols-2 gap-x-4 text-left">
+		<dl class="grid grid-cols-[auto_1fr] gap-x-4">
 			<template v-for="[name, version] in parts" :key="name">
-				<dt class="text-right text-muted">{{ name }}</dt>
+				<dt class="text-muted">{{ name }}</dt>
 				<dd>{{ version }}</dd>
 			</template>
 		</dl>

@@ -11,6 +11,7 @@
 		"core:window:allow-set-position",
 		"core:window:allow-set-size",
 		"core:window:allow-maximize",
+		"core:window:allow-set-theme",
 		"opener:allow-reveal-item-in-dir",
 		{
 			"identifier": "opener:allow-open-url",
