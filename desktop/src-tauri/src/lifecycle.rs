@@ -25,6 +25,8 @@ pub fn bring_forward(app: &AppHandle) {
 }
 
 /// The close button hides the window rather than closing it, on macOS and Windows, and quits on Linux
+///
+/// One known wrinkle on macOS, left as it is on purpose. A fullscreen window is a Space of its own, and hiding it leaves that Space behind, empty and black under ftorrent's menu bar, until the user switches away; the Dock icon brings the window back fullscreen inside it. ⌘H keeps the Space too. A Mac app that closes its last window collapses the Space instead, and the only way to get there from a hide is to take the window out of fullscreen first and hide it once the animation ends. Fullscreen Spaces see little use, and the empty Space is harmless and easy to leave, so that isn't worth the timing code it would take
 pub fn window_event(window: &Window, event: &WindowEvent) {
 	if let WindowEvent::CloseRequested { api, .. } = event {
 		if cfg!(any(target_os = "macos", target_os = "windows")) {
