@@ -18,8 +18,8 @@ const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file whe
 export const platformName = navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Macintosh') ? 'macOS' : 'Linux'
 const onWindows = platformName == 'Windows'
 
-//the face the System Font choice draws in, and who made it, for its answer on the settings page; blank on linux, where it's whatever the desktop is set to
-export const systemFaceName = {Windows: 'Segoe UI, from Microsoft', macOS: 'San Francisco, from Apple'}[platformName] ?? ''
+//the face the System Font choice draws in, and who made it, for its answer on the settings page; undefined on linux, where it's whatever the desktop is set to
+export const systemFace = {Windows: {face: 'Segoe UI', maker: 'Microsoft'}, macOS: {face: 'San Francisco', maker: 'Apple'}}[platformName]
 
 //what ftorrent calls its settings, in the menu and at the top of their page: options on windows, where a program's classic menu is tools, options, as it is in qbittorrent, and settings everywhere else, the word macos has used since ventura
 export const settingsName = onWindows ? 'Options' : 'Settings'

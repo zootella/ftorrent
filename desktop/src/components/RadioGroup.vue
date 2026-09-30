@@ -18,7 +18,7 @@ let name = useId()//one name shared by this group's buttons, which is what makes
 		<legend class="mb-1"><slot /></legend>
 		<label v-for="[value, words] in choices" :key="value" class="flex items-center gap-2"><!-- the words inside the label, so clicking them picks the answer too -->
 			<input type="radio" :name="name" :value="value" :checked="value == chosen" @change="$emit('choose', value)" />
-			{{ words }}
+			<span><slot name="answer" :words="words">{{ words }}</slot></span><!-- the words as they are, unless the page draws its answers its own way, as the font question does to set each face's name in italics. The span keeps them one flex item: the label is a flex row, so without it each run of text and each em would be an item of its own, with the row's gap between them -->
 		</label>
 	</fieldset>
 </template>

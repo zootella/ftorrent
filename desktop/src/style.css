@@ -67,7 +67,8 @@ That system face is the factory choice, System Font on the Settings page, and tw
 
 	html { color-scheme: light dark; }/* the page is drawn in both, so every light-dark() above, and the web view's own scrollbars and radio buttons, follow the window's theme. Keep it on the root, beside the palette: tailwind compiles each light-dark() into a pair of variables switched on whatever element carries this line, so the palette flips only where both are */
 	body { @apply bg-paper text-ink; }
-	main { @apply flex flex-col items-start gap-4 p-4; }/* every page is one column down the left; items-start keeps a button its own width rather than stretched across */
+	main          { @apply p-4; }/* every page is one column down the left, in plain block flow: each part as tall as its contents, stacked in order, and nothing stretched to fill; a button is inline, so it keeps its own width */
+	main > * + *  { @apply mt-4; }/* and the same space between each part and the one before it */
 	h1   { @apply text-2xl font-semibold; }/* tailwind's reset leaves headings at body size */
 	a    { @apply text-accent; }
 
