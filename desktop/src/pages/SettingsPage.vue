@@ -4,11 +4,16 @@ import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
 import {themeWindow} from '../window.js'
+import RadioGroup from '../components/RadioGroup.vue'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
 
-//light or dark, taking effect at once and written to the file, the way a setting chosen from a list is, with no Save to press
+//the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
+let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
+let appearanceChoices  = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
+
+//light or dark, taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
 async function chooseMode(mode) {
 	store.settings.appearance.mode = mode
 	await themeWindow(mode)
@@ -34,25 +39,13 @@ async function saveNote() {
 		<h1>Settings</h1>
 
 		<div>
-			<label for="associations-default" class="mr-2">Open .torrent files and magnet links with {{ brandName }}</label>
-			<select id="associations-default" :value="store.settings.associations.default" :disabled="!associations.installed" @change="associations.choose($event.target.value)">
-				<option value="yes">Yes</option>
-				<option value="no">No</option>
-				<option value="ask">Ask when {{ brandName }} starts</option>
-			</select>
+			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open .torrent files and magnet links with {{ brandName }}</RadioGroup>
 			<!-- a copy the installer didn't place never registers anything, so it says why the choice is grayed; an installed one links to windows' own Settings when that's the only place left to settle a difference between this setting and windows -->
 			<p v-if="!associations.installed" class="text-muted">Only {{ brandName }} installed on Windows sets up file types and links, so far.</p>
 			<p v-else-if="associations.disagrees"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>
 		</div>
 
-		<div>
-			<label for="appearance-mode" class="mr-2">Appearance</label>
-			<select id="appearance-mode" :value="store.settings.appearance.mode" @change="chooseMode($event.target.value)">
-				<option value="system">System</option>
-				<option value="light">Light</option>
-				<option value="dark">Dark</option>
-			</select>
-		</div>
+		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
 
 		<form class="flex gap-2" @submit.prevent="saveNote">
 			<input v-model="noteDraft" placeholder="A note to yourself..." />
