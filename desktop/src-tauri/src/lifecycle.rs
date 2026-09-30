@@ -3,7 +3,7 @@ use tauri::{AppHandle, Manager, Window, WindowEvent};
 /*
 ftorrent keeps running with its window closed, the way a file transfer application does: closing the window is putting it away, and quitting is a separate, explicit act. There is no setting for this. One process, one window, on every platform: a second launch never opens another window, it hands over to this one (instance.rs), and this module is how that one window goes away and comes back.
 
-Closing hides. The close button on Windows and the red button on macOS hide the window instead of closing it, so the page and its webview stay alive, keep their state, and come back at once; the webview's footprint is small next to the engine's. The window is created once when ftorrent starts and destroyed once when it quits.
+Closing hides. The close button on Windows and the red button on macOS hide the window instead of closing it, except from a fullscreen Space on the Mac, as the essay above window_event describes, so the page and its webview stay alive, keep their state, and come back at once; the webview's footprint is small next to the engine's. The window is created once when ftorrent starts and destroyed once when it quits.
 
 Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
@@ -24,14 +24,24 @@ pub fn bring_forward(app: &AppHandle) {
 	}
 }
 
-/// The close button hides the window rather than closing it, on macOS and Windows, and quits on Linux
-///
-/// One known wrinkle on macOS, left as it is on purpose. A fullscreen window is a Space of its own, and hiding it leaves that Space behind, empty and black under ftorrent's menu bar, until the user switches away; the Dock icon brings the window back fullscreen inside it. ⌘H keeps the Space too. A Mac app that closes its last window collapses the Space instead, and the only way to get there from a hide is to take the window out of fullscreen first and hide it once the animation ends. Fullscreen Spaces see little use, and the empty Space is harmless and easy to leave, so that isn't worth the timing code it would take
+/*
+The red button on a fullscreen Mac window, which takes two clicks to put the window away.
+
+A fullscreen window on macOS is a Space of its own, and a hidden window still owns its Space. So hiding straight from fullscreen, the way every other close hides, leaves the Space behind, empty and black under ftorrent's menu bar, with the Dock bringing the window back fullscreen inside it. ⌘H keeps the Space too. Instead, the first click takes the window out of fullscreen: macOS plays its exit animation, collapses the Space, and returns the window to the desktop it came from, at its size and place from before. In a Space, then, red does what green does, and a second click, now on an ordinary window, hides it as always.
+
+One click that does both, the way a Mac app that closes its last window disappears along with its Space, is what we'd rather have, and we tried it. tao clears the window's fullscreen state and then sends a resize once the exit animation finishes, so that resize is the moment to hide. Hidden there, or a turn of the event loop later, the window really does hide, and then AppKit shows it again and makes it key a moment afterward, as it finishes the transition. An app that destroys its window on close never meets this, since there's nothing left to show; ftorrent keeps its window so the page keeps its state. So the second click is the user's: one extra click, and never an empty Space.
+*/
+
+/// The close button hides the window rather than closing it, on macOS and Windows, and quits on Linux; on a fullscreen Mac window, it leaves fullscreen first
 pub fn window_event(window: &Window, event: &WindowEvent) {
 	if let WindowEvent::CloseRequested { api, .. } = event {
 		if cfg!(any(target_os = "macos", target_os = "windows")) {
 			api.prevent_close();//the window stays, and so does everything behind it
-			let _ = window.hide();
+			if cfg!(target_os = "macos") && window.is_fullscreen().unwrap_or(false) {
+				let _ = window.set_fullscreen(false);//out of the Space, which macOS then collapses; the next click hides
+			} else {
+				let _ = window.hide();
+			}
 		} else {
 			window.app_handle().exit(0);//linux: the page declined the close, so quitting is said outright; Exit writes the settings and stops the engine
 		}
