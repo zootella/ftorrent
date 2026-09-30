@@ -40,8 +40,8 @@ export const settingsSchema = [
 		section: 'appearance',
 		key: 'mode',
 		factory: 'system',
-		comment: `light or dark: "system" matches the system's own light or dark setting, and changes when it does; "light" or "dark" keeps ${brandName} that way whatever the system is set to`,
-		check: value => ['system', 'light', 'dark'].includes(value),
+		comment: `light or dark: "light" or "dark" keeps ${brandName} that way whatever the system is set to; "system" matches the system's own light or dark setting, and changes when it does`,
+		check: value => ['light', 'dark', 'system'].includes(value),
 	}, {
 		section: 'appearance',
 		key: 'font',

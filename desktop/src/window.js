@@ -104,7 +104,7 @@ async function recordWindow(appWindow, store) {//the window's place and size and
 	store.remember()//in memory and down to rust for the exit write, not to disk
 }
 
-//light or dark, for the window's frame and menu bar and for the page inside, from the appearance setting: system, light, or dark. The window's theme is the one switch. Tauri hands it to the web view, which reports it to the page as prefers-color-scheme, where style.css picks its colors by it; and given null, the window follows the system, and passes each change along without any code of ours
+//light or dark, for the window's frame and menu bar and for the page inside, from the appearance setting: light, dark, or system. The window's theme is the one switch. Tauri hands it to the web view, which reports it to the page as prefers-color-scheme, where style.css picks its colors by it; and given null, the window follows the system, and passes each change along without any code of ours
 export async function themeWindow(mode) {
 	await getCurrentWindow().setTheme(mode == 'system' ? null : mode)//tauri's null means follow the system
 }
