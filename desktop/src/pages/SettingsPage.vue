@@ -5,15 +5,15 @@ import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
-import {fontsOffered} from '../settings.js'
+import {fontsOffered, settingsName, platformName, systemFaceName} from '../settings.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
-let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the order the mac's own appearance setting uses
-let fontChoices        = [['system', 'System'], ['inter', 'Inter'], ['verdana', 'Verdana']].filter(([value]) => fontsOffered.includes(value))//verdana only on windows; settings.js says why
+let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', `Match ${platformName}`]]//the order the mac's own appearance setting uses
+let fontChoices        = [['system', systemFaceName ? `System Font: ${systemFaceName}` : 'System Font'], ['inter', 'Inter, by Rasmus Andersson'], ['verdana', 'Verdana, vibing Windows XP']].filter(([value]) => fontsOffered.includes(value))//verdana only on windows; settings.js says why
 
 //light or dark, and the typeface, each taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
 async function chooseMode(mode) {
@@ -43,7 +43,7 @@ async function saveNote() {
 	<!-- ./src/pages/SettingsPage.vue -->
 	<!-- the settings a user changes from inside ftorrent, each written to ftorrent.toml as it changes -->
 	<main>
-		<h1>Settings</h1>
+		<h1>{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
 			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open .torrent files and magnet links with {{ brandName }}</RadioGroup>
@@ -53,7 +53,7 @@ async function saveNote() {
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
-		<RadioGroup :choices="fontChoices"       :chosen="store.settings.appearance.font" @choose="chooseFont">Font</RadioGroup>
+		<RadioGroup :choices="fontChoices"       :chosen="store.settings.appearance.font" @choose="chooseFont">UI Font</RadioGroup>
 
 		<form class="flex gap-2" @submit.prevent="saveNote">
 			<input v-model="noteDraft" placeholder="A note to yourself..." />

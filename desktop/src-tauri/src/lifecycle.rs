@@ -7,6 +7,8 @@ Closing hides. The close button on Windows and the red button on macOS hide the 
 
 Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
+The words follow each platform too, wherever its users already know one. Windows says Exit, and macOS says Quit. On Windows the window has the menu bar Windows programs have had since the 1990s, File with Exit, Tools with Options, and Help with About, each with an access key and none with a shortcut, and the tray's menu has Show and Exit; on macOS the app menu is the one macOS provides. What ftorrent calls its settings follows the same way: Options on Windows, the classic word, which qBittorrent uses too, and Settings everywhere else, the word macOS has used since Ventura. The menu's words are written here, since Rust builds the menu before any page exists, and the page's words for the same things, the Options page's title and the Match Windows or Match macOS choice, come from settings.js, where the page asks which platform it's on. Past these few words, the page reads the same on every platform.
+
 Focus is taken only when the user asks for the window. bring_forward shows the window, restores it if it's minimized, and gives it focus, and it runs only for a second launch's handoff, the tray, and the Dock, each of which begins with the user reaching for ftorrent; without the focus, a window brought back by a handoff on Windows can land behind whatever the user was just in. The app never takes focus on its own: at startup the page shows the window and leaves it to the operating system whether a newly launched app comes to the front, which it gets right for the Dock, Finder, Spotlight, and the Start menu, and holds back, on purpose, for a launch it didn't see the user make.
 
 Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back. The page listens for the close too, to write the settings, where the window was among them, and in Tauri a page that listens decides whether the close goes ahead. It always declines, so that on macOS and Windows the hide is the only thing a close does. So on Linux, Rust turns the close into a quit, which reaches the same Exit run event, where the text the page handed down for that moment is written.
@@ -34,17 +36,24 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 	}
 }
 
-/// On Windows, the menu bar: File, and Exit under it, and for now a sample line before it, for comparing type. The close button hides, so this is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Called once from setup
+/// On Windows, the menu bar a Windows program has had since the 1990s: File with Exit, Tools with Options, and Help with About. The close button hides, so File, Exit is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Options and About each open a page, which the page's router does; Rust only says which item was picked. Called once from setup
 #[cfg(target_os = "windows")]
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem, Submenu};
+	use tauri::Emitter;//for emit, which hands the page an event
+	let brand = &app.package_info().name;//the product name from tauri.conf.json
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler. The ampersand makes x its access key, underlined while Alt is held, so Alt, F, X quits, the way a Windows File menu does; and no shortcut, since the system's own Alt+F4 is a close, which now hides
 	let file = Submenu::with_items(app, "&File", true, &[&exit])?;//and F the menu's, so Alt+F opens it
-	let sample_text = "Sphinx of black quartz, judge my vow. AVATAR Wavy Tofu QGRSJ 0123456789 Il1| O0 rn m";//a line whose letters give a typeface away, the same as the top of App.vue, so the system's menu text and the page's can be compared right above and below each other; no ampersand, which a menu would take for an access key
-	let sample_item = MenuItem::with_id(app, "sample", sample_text, true, None::<&str>)?;//and inside, so the system's popup text can be compared too; clicking it does nothing
-	let sample = Submenu::with_items(app, sample_text, true, &[&sample_item])?;
-	app.set_menu(Menu::with_items(app, &[&sample, &file])?)?;//on windows, a menu set on the app is the menu bar of its window. The sample goes first for now, so it starts at the left edge right above the same line on the page
-	app.on_menu_event(|app, event| if event.id().as_ref() == "exit" { app.exit(0) });//reaches the Exit run event, which stops the engine; the tray's menu has its own handler, and its Show never comes here
+	let options = MenuItem::with_id(app, "settings", "&Options...", true, None::<&str>)?;//windows' classic word for settings, where qbittorrent has it too; the page's settings.js names its page Options on windows to match. The id is the name of the route it opens
+	let tools = Submenu::with_items(app, "&Tools", true, &[&options])?;
+	let about = MenuItem::with_id(app, "about", format!("&About {brand}"), true, None::<&str>)?;//the id the name of its route too
+	let help = Submenu::with_items(app, "&Help", true, &[&about])?;//last, the way a Windows menu bar ends
+	app.set_menu(Menu::with_items(app, &[&file, &tools, &help])?)?;//on windows, a menu set on the app is the menu bar of its window
+	app.on_menu_event(|app, event| match event.id().as_ref() {//every menu event reaches this handler and the tray's both, as tauri documents, so each acts only on the ids it knows: the tray's Show falls through here, and exit, in both menus, runs twice, which is harmless, since the second finds nothing left to stop
+		"exit" => app.exit(0),//reaches the Exit run event, which stops the engine
+		route @ ("settings" | "about") => { let _ = app.emit("menu", route); }//the page opens the route of that name; a menu is only there to click once the page has shown the window, so the page is always listening by then
+		_ => {}
+	});
 	Ok(())
 }
 

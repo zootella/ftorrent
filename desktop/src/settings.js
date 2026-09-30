@@ -14,8 +14,18 @@ const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file whe
 # edit this file only while ${brandName} isn't running: while it runs, including hidden in the tray, it writes the file once more as it closes, over any change made here
 # with ${brandName} not running, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`//the same words on every platform, whose menus say quit or exit, so a portable copy's file that travels between them is never rewritten over wording
 
-//the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered only on windows, where it's certainly installed. One of ftorrent's few platform checks, on purpose; the web view's user agent names the platform, and WebView2's always says Windows
-export const fontsOffered = navigator.userAgent.includes('Windows') ? ['system', 'inter', 'verdana'] : ['system', 'inter']
+//the platform this copy runs on, by the name its users know it by: one of ftorrent's few platform checks, on purpose, for the windows conventions below and the words the settings page uses for its system choices, like Match macOS. The web view's user agent names the platform: WebView2's always says Windows, and WebKit's on a Mac says Macintosh
+export const platformName = navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Macintosh') ? 'macOS' : 'Linux'
+const onWindows = platformName == 'Windows'
+
+//the face the System Font choice draws in, and who made it, for its answer on the settings page; blank on linux, where it's whatever the desktop is set to
+export const systemFaceName = {Windows: 'Segoe UI, from Microsoft', macOS: 'San Francisco, from Apple'}[platformName] ?? ''
+
+//what ftorrent calls its settings, in the menu and at the top of their page: options on windows, where a program's classic menu is tools, options, as it is in qbittorrent, and settings everywhere else, the word macos has used since ventura
+export const settingsName = onWindows ? 'Options' : 'Settings'
+
+//the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered only on windows, where it's certainly installed
+export const fontsOffered = onWindows ? ['system', 'inter', 'verdana'] : ['system', 'inter']
 
 //every setting ftorrent has, and the only place any of them is defined; a check, where the type alone isn't enough, has to accept the factory value or an ordinary file would report a problem against itself
 export const settingsSchema = [
