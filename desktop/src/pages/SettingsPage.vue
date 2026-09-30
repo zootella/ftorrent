@@ -3,8 +3,9 @@ import {ref, watch} from 'vue'
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
-import {themeWindow} from '../window.js'
+import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
+import {fontsOffered} from '../settings.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
@@ -12,11 +13,17 @@ let associations = useAssociationsStore()//the answer to whether ftorrent opens 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
 let appearanceChoices  = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
+let fontChoices        = [['system', 'System'], ['inter', 'Inter'], ['tahoma', 'Tahoma']].filter(([value]) => fontsOffered.includes(value))//tahoma only on windows; settings.js says why
 
-//light or dark, taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
+//light or dark, and the typeface, each taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
 async function chooseMode(mode) {
 	store.settings.appearance.mode = mode
 	await themeWindow(mode)
+	await store.save()
+}
+async function chooseFont(font) {
+	store.settings.appearance.font = font
+	await fontWindow(font)
 	await store.save()
 }
 
@@ -46,6 +53,7 @@ async function saveNote() {
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
+		<RadioGroup :choices="fontChoices"       :chosen="store.settings.appearance.font" @choose="chooseFont">Font</RadioGroup>
 
 		<form class="flex gap-2" @submit.prevent="saveNote">
 			<input v-model="noteDraft" placeholder="A note to yourself..." />

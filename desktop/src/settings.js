@@ -14,6 +14,9 @@ const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file whe
 # edit this file only while ${brandName} isn't running: while it runs, including hidden in the tray, it writes the file once more as it closes, over any change made here
 # with ${brandName} not running, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`//the same words on every platform, whose menus say quit or exit, so a portable copy's file that travels between them is never rewritten over wording
 
+//the typefaces this copy offers: tahoma is a throwback to windows programs around 2000, offered only on windows, where it's certainly installed. One of ftorrent's few platform checks, on purpose; the web view's user agent names the platform, and WebView2's always says Windows
+export const fontsOffered = navigator.userAgent.includes('Windows') ? ['system', 'inter', 'tahoma'] : ['system', 'inter']
+
 //every setting ftorrent has, and the only place any of them is defined; a check, where the type alone isn't enough, has to accept the factory value or an ordinary file would report a problem against itself
 export const settingsSchema = [
 	{
@@ -39,6 +42,12 @@ export const settingsSchema = [
 		factory: 'system',
 		comment: `light or dark: "system" matches the system's own light or dark setting, and changes when it does; "light" or "dark" keeps ${brandName} that way whatever the system is set to`,
 		check: value => ['system', 'light', 'dark'].includes(value),
+	}, {
+		section: 'appearance',
+		key: 'font',
+		factory: 'system',
+		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, which ${brandName} carries, the same on every platform; "tahoma" is Tahoma at 8 points, the way Windows programs looked around 2000, and offered on Windows only`,
+		check: value => fontsOffered.includes(value),//so a portable copy's file carried from windows to a mac with tahoma in it says so once and goes back to system, like any value this copy can't use
 	}, {
 		section: 'window',
 		key: 'x',
