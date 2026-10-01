@@ -19,7 +19,6 @@
 		"active": true,
 		"targets": [
 			"app",
-			"dmg",
 			"nsis",
 			"deb"
 		],
@@ -59,13 +58,7 @@
 		"macOS": {
 			"minimumSystemVersion": "15.0",
 			"signingIdentity": "-",
-			"infoPlist": "macos/Info.plist",
-			"dmg": {
-				"background": "dmg/ceiling.jpg",
-				"windowSize": {"width": 800, "height": 800},
-				"appPosition": {"x": 200, "y": 360},
-				"applicationFolderPosition": {"x": 600, "y": 360}
-			}
+			"infoPlist": "macos/Info.plist"
 		}
 	}
 }

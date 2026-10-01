@@ -9,7 +9,7 @@
 		"local": "tauri dev",
 		"engine": "cd engine && uv sync --frozen && uv run --frozen pyinstaller --noconfirm --clean ftorrent-engine.spec",
 		"compile": "tauri build --no-bundle",
-		"installer": "tauri build",
+		"installer": "tauri build && node dmg.js",
 		"reveal": "node scripts.js reveal",
 		"hash": "node scripts.js hash --source=bundle",
 		"upload": "node --env-file-if-exists=upload.hide.env scripts.js upload --source=bundle",
