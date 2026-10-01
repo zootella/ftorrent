@@ -13,6 +13,7 @@ listen('menu', event => router.push({name: event.payload}))//the windows menu ba
 <template>
 	<!-- ./src/App.vue -->
 	<!-- the shell every page sits inside: the banner when there's a question to ask, the navigation across the top, and the outlet the router fills with whichever page is current -->
+	<!-- the question names the two types people know, .torrent and magnet:, while the answer covers all four and the bar is up if any of the four opens with another app; the same stance for the whole group, on purpose, as associate.js says -->
 	<div v-if="associations.bannerUp" class="flex items-center gap-2 py-2 pr-2 pl-4 bg-line/40 border-b border-line">
 		<span class="flex-1">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}?</span>
 		<button type="button" @click="associations.choose('yes')">Yes</button>

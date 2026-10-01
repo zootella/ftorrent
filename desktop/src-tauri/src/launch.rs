@@ -7,7 +7,7 @@ A type is named the way the page names it on every platform: a file extension wi
 
 launch_opens asks which app the system would open that type with right now, and answers the app's path, or nothing when no app would. It's the same lookup Finder makes, through NSWorkspace, so it reflects the user's own choice wherever they made it: Finder's Get Info, another app's button, or this one.
 
-launch_claim makes an app the default for that type, named by its path, so it's that exact copy and never another one Launch Services also knows about. macOS asks the user nothing for a file type or for a link scheme other than the web's, and answers once the change is made, which is when this answers too. There's no command to give a type back: a default on the Mac always names some app, and macOS has no way to unset one. On Windows and Linux each command answers that there's no Launch Services.
+launch_claim makes an app the default for that type. It takes the app by its path, but what macOS records is the app's bundle identifier, so where several copies share one, as an installed copy, a build in a repository, and a mounted disk image do, macOS chooses which of them opens, and launch_opens answers with the one it would choose. macOS asks the user nothing for a file type or for a link scheme other than the web's, and answers once the change is made, which is when this answers too. There's no command to give a type back: a default on the Mac always names some app, and macOS has no way to unset one. On Windows and Linux each command answers that there's no Launch Services.
 */
 
 /// Which app the system would open a file type like .torrent or a link scheme like magnet with right now, by its path; nothing when no app would
