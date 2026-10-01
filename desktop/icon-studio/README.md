@@ -4,7 +4,7 @@ _ftorrent/desktop/icon-studio/README.md_
 
 > Prepared by [Claude Code](https://claude.ai/code) using Fable 5
 > <br>Created: 2026-Sep
-> <br>Last reviewed: 2026-Sep
+> <br>Last reviewed: 2026-Oct
 > <br>Windows PowerShell: 5.1
 > <br>.NET Framework, System.Drawing: 4.8
 > <br>Tauri CLI, for `tauri icon`: 2.11
@@ -27,7 +27,7 @@ Everything starts from three files in this folder and ends as three files, with 
 | `donut.svg`, the node | `torrent-256.png`, `-64`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16` | | `torrent.ico` |
 | `sheet.ico`, the blank page | `sheet-256.png`, `-64`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16` | | |
 
-The outputs land here as the record of what shipped, and each has one place it is copied to. `torrent.ico` and the three `app-icon*.svg` are copied by the command; `favicon.svg` is copied by hand.
+The outputs land here as the record of what shipped. The command copies `torrent.ico` and the three `app-icon*.svg`; `favicon.svg` lives inline in the two branded sites' configs.
 
 ### The application icon, into the desktop build
 
@@ -59,7 +59,7 @@ The engine is the one executable a Windows user may meet that keeps a stock icon
 
 ### The favicon, into the websites
 
-`favicon.svg` is `brand.svg` unchanged, and it is copied by hand into each site's public folder, `site/public/` for ftorrent.com and `docs/docs/public/` for docs.ftorrent.com, where each site's config links it: `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`. An SVG favicon scales to every tab and pinned-site size, and is what current Chrome, Firefox, and Edge read; Safari still wants a raster, so `ftorrent.ico` goes beside it as `favicon.ico`. open.ftorrent.com is the exception and stays one: its favicon is an earth emoji, which is right for a page whose whole subject is the planet's peers.
+`favicon.svg` is `brand.svg` unchanged, and the heads of ftorrent.com and docs.ftorrent.com carry it inline as a data URI, set in `site/nuxt.config.ts` and `docs/docs/.vitepress/config.js`, with its `#` written `%23` and its double quotes made single. Inline, a site carries no favicon file at all, and an SVG favicon scales to every tab and pinned-site size. open.ftorrent.com and good.ftorrent.com are the exception: their favicon is an earth emoji, inline the same way, which is right for pages whose whole subject is the planet's peers.
 
 ## Inside the studio
 

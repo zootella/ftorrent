@@ -129,7 +129,7 @@ Nuxt 4 keeps application code under `app/`. The scripts follow the workspace con
 
 ## The server side
 
-The build is just static files, so the server's whole job is to hand them back — with one rule that makes client-side routing work: **for any path that isn't a real file on disk, serve `index.html`.** A request for a real asset (`/_nuxt/entry.HASH.js`, `/favicon.ico`) is served straight from disk; a request for a route (`/about`) is not a file, so it falls back to the shell, which boots and lets Vue Router render the page. This is the same primitive every static SPA host uses, under different names — it's nginx's `try_files`, Netlify's `_redirects`, Vercel's rewrites.
+The build is just static files, so the server's whole job is to hand them back — with one rule that makes client-side routing work: **for any path that isn't a real file on disk, serve `index.html`.** A request for a real asset (`/_nuxt/entry.HASH.js`) is served straight from disk; a request for a route (`/about`) is not a file, so it falls back to the shell, which boots and lets Vue Router render the page. This is the same primitive every static SPA host uses, under different names — it's nginx's `try_files`, Netlify's `_redirects`, Vercel's rewrites.
 
 Because the fallback is always `index.html`, the server returns `200` even for paths that match no route — the SPA's own router renders a not-found page client-side, so there's no server-side `404` for navigation. (Nuxt emits a `404.html` for hosts that serve one on a miss; this rule never reaches for it.)
 
