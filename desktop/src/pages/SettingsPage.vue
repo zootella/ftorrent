@@ -10,7 +10,7 @@ let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
-let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
+let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', 'Ask']]
 let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the same three words on every platform
 let fontChoices        = [//the words in three parts, so the template can set the face's own name in italics, and San Francisco reads as a typeface rather than the city
 	['system',  systemFace ? {face: systemFace.face, trail: `, from ${systemFace.maker}, the system font`} : {lead: 'System font'}],//named on windows and the mac; linux's is whatever the desktop sets, so it isn't named

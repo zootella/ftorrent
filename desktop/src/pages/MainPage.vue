@@ -8,7 +8,7 @@ import {brandName} from '../brand.js'
 import {useAssociationsStore} from '../stores/associations.js'
 
 let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
-let associations = useAssociationsStore()//what registration did and what windows opens each of the four with, lines for the report on an installed windows copy
+let associations = useAssociationsStore()//what registration did and what windows opens each of the four with, lines for the report on an installed copy
 
 //get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
 let prepared = ref(false)//true for a moment after the button, so it can say so

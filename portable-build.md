@@ -64,5 +64,4 @@ The installing page lists these plainly.
 
 ## Also waiting, outside the portable build
 
-- **Mac associations, the default question.** The declarations and delivery are built: `src-tauri/macos/Info.plist` offers all four, and `RunEvent::Opened` puts files and links on the arrivals queue, cold and running. The default question is built too, through `launch.rs`: a yes claims all four by this copy's path through `NSWorkspace`, silently, as macOS 15 allows, and the passes only read, so a type another app takes later brings the bar back rather than being taken back. Left: a Windows retest of the same rule, in `mac2win.md`. Building a release puts a second copy in `target/`, which Launch Services may prefer for `.ftorrent` until something claims it; `lsregister -u` on that copy settles it while testing.
 - **Each folder to the engine once.** Two spellings of one download folder are held once but would both reach the engine. `lock_take` should answer the lock file's real path, and the page hand the engine each real folder once, before the engine loads torrents.

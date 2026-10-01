@@ -50,8 +50,8 @@ Every font list here is short on purpose: one face and a generic family, or a pl
 	--color-muted:   light-dark(#6b6b6b, #a0a0a0);/* text that steps back, like an aside */
 	--color-paper:   light-dark(#ffffff, #2b2b2b);/* the window behind everything, on windows the same as the menu bar above it, so the page runs on from the menu without a seam: windows draws its menu bar white, and in dark mode tauri's menu library paints it this gray itself, since windows has no dark menu bar */
 	--color-surface: light-dark(#ffffff, #383838);/* the face of a control */
-	--color-line:    light-dark(#d4d4d4, #5a5a5a);/* borders */
-	--color-accent:  light-dark(#396cd8, #6f9cf0);/* the one color: links, a control under the mouse, a banner tinted with it */
+	--color-line:    light-dark(#d4d4d4, #5a5a5a);/* borders, and the bar across the top, at a fraction of its strength */
+	--color-accent:  light-dark(#396cd8, #6f9cf0);/* the one color: links, and a control under the mouse */
 
 	--spacing:                 0.25rem;/* the step every padding, margin, gap, and width counts in: a quarter of the root's text size, which is the system's. This and the values below through text-2xl are tailwind's own, kept as they were */
 	--radius-md:               0.375rem;/* a control's corners */

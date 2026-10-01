@@ -32,7 +32,7 @@ async function startup() {
 		await revealWindow(store)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing, couldn't be read, or this copy is portable, and show it, whatever happened above
 	}
 	if (!store.paths?.settings) return//no data folder, which the platform should always give: no window place to record and no engine to tell, and the main page shows the trouble
-	await useAssociationsStore(pinia).start(store.paths)//on windows, an installed copy tells the system what it can open, and asks the user about being the default; everywhere else this returns at once
+	await useAssociationsStore(pinia).start(store.paths)//an installed copy tells the system what it can open, and asks the user about being the default; any other copy returns at once
 	await watchWindow(store)//after load, so recording the window's place lands in settings that are already filled in from the file
 	try {
 		await store.lockFolders()//lock each download folder that exists, leaving any another copy holds to it, and hand the engine the ones this copy holds
