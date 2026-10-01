@@ -1,5 +1,4 @@
 <script setup>
-import {ref, watch} from 'vue'
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
@@ -31,16 +30,6 @@ async function chooseFont(font) {
 	await store.save()
 }
 
-//the note, a setting that does nothing except prove that settings work: type one, save it, quit, start again, and it's here, and in ftorrent.toml. The box holds a draft of its own so typing changes nothing until Save; a setting writes when the user acts, not on every keystroke
-let noteDraft = ref(store.settings.note.text)
-watch(() => store.settings.note.text, text => { noteDraft.value = text })//when load fills in the saved note a moment after mount, the box follows
-let noteSaved = ref(false)//true for a moment after Save, so the button can say so
-async function saveNote() {
-	store.settings.note.text = noteDraft.value
-	await store.save()
-	noteSaved.value = true
-	setTimeout(() => { noteSaved.value = false }, 1500)
-}
 </script>
 
 <template>
@@ -59,10 +48,5 @@ async function saveNote() {
 		<RadioGroup :choices="fontChoices"       :chosen="store.settings.appearance.font" @choose="chooseFont">UI Font
 			<template #answer="{words}">{{ words.lead }}<em v-if="words.face">{{ words.face }}</em>{{ words.trail }}</template>
 		</RadioGroup>
-
-		<form class="flex gap-2" @submit.prevent="saveNote">
-			<input v-model="noteDraft" placeholder="A note to yourself..." />
-			<button type="submit">{{ noteSaved ? 'Saved' : 'Save as Setting' }}</button>
-		</form>
 	</main>
 </template>

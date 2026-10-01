@@ -30,11 +30,6 @@ export const fontsOffered = onWindows ? ['system', 'inter', 'verdana'] : ['syste
 //every setting ftorrent has, and the only place any of them is defined; a check, where the type alone isn't enough, has to accept the factory value or an ordinary file would report a problem against itself
 export const settingsSchema = [
 	{
-		section: 'note',
-		key: 'text',
-		factory: '',
-		comment: 'a note to yourself, kept here and shown on the main page; it does nothing, and exists to prove that a setting survives quitting and starting again',
-	}, {
 		section: 'downloads',
 		key: 'folders',
 		factory: [`~/Downloads/${brandName}`],
@@ -62,7 +57,7 @@ export const settingsSchema = [
 		section: 'appearance',
 		key: 'font',
 		factory: 'system',
-		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, which ${brandName} carries, the same on every platform; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, and is offered on Windows only`,
+		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, with IBM Plex Mono for fixed-width text, both carried by ${brandName}; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, and is offered on Windows only`,
 		check: value => fontsOffered.includes(value),//so a portable copy's file carried from windows to a mac with verdana in it says so once and goes back to system, like any value this copy can't use
 	}, {
 		section: 'window',

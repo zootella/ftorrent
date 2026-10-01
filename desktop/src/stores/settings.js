@@ -97,7 +97,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		else hold(rendered)//the file already says this; rust just needs the text to write again on the way out
 	}
 
-	async function save() {//write the settings as they are now; call after changing a value by a user's action, the note box's Save button for one
+	async function save() {//write the settings as they are now; call after changing a value by a user's action, like picking an answer on the Settings page
 		if (!paths.value || unreadable) return//nothing to write to, or a file we've promised to leave alone
 		let rendered = settingsRender(settings)
 		if (rendered == fileText) return//nothing changed on disk terms, so nothing to write
