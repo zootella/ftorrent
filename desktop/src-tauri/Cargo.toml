@@ -30,3 +30,9 @@ tokio = { version = "1", features = ["net", "io-util"] }#the named pipe a second
 windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem"] }#the registry calls registry.rs makes and the shell notification after them, and the hidden attribute disk.rs sets; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
 webview2-com = "0.38"#the web view's key event, which window.rs handles to turn off the browser's shortcut keys; tauri already brings this crate at this version, and the controller tauri hands over is its type
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"#calling objective-c from rust, and Retained, the reference these calls hand back; tauri already brings this crate at this version
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSWorkspace", "block2", "objc2-uniform-type-identifiers"] }#NSWorkspace, which launch.rs asks what opens a type or a link and tells which app should; tauri already brings this crate at this version
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString", "NSURL", "NSError"] }#the strings, urls, and errors those calls take and give; already in the tree too
+objc2-uniform-type-identifiers = { version = "0.3.2", default-features = false, features = ["std", "UTType"] }#the type a file extension names, which NSWorkspace takes for a file; the one crate here tauri doesn't already bring, from the same family at the same version
+block2 = "0.6.2"#the completion handler NSWorkspace calls once a default is set; already in the tree

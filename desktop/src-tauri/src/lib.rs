@@ -18,8 +18,10 @@ mod engine;//and engine.rs: the process that holds libtorrent, started here and 
 mod paths;//and paths.rs: where everything is, worked out once at startup
 mod queue;//and queue.rs: the drained queue the engine's lines and a copy's arrivals wait in until the page takes them
 mod registry;//and registry.rs: the windows registry, read and written for the page
+mod launch;//and launch.rs: launch services on the mac, asked what opens a type and told which app should
 mod instance;//and instance.rs: one running ftorrent per copy, and a second launch handing over what it carried
 mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is explicit
+mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
 
@@ -48,6 +50,8 @@ pub fn run() {
 				engine::engine_status,//and in engine.rs
 				engine::engine_send,
 				engine::engine_take,
+				log::log_start,//and in log.rs
+				log::log_line,
 				locks::lock_take,//and in locks.rs
 				locks::lock_release,
 				paths::paths_status,//and in paths.rs
@@ -57,6 +61,8 @@ pub fn run() {
 				registry::registry_delete_key,
 				registry::registry_notify,
 				registry::registry_opens,
+				launch::launch_opens,//and in launch.rs
+				launch::launch_claim,
 				window::window_revealed,//and in window.rs
 				window::window_webview_version,
 				instance::instance_status,//and in instance.rs

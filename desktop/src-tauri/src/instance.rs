@@ -65,8 +65,10 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		Ok(file) => {
 			*instance.lock.lock().unwrap_or_else(|p| p.into_inner()) = Some(file);
 			status(&instance).held = true;
+			crate::log::log(&format!("took the lock, {}", lock_path.display()));
 		}
 		Err(Taken::Busy) => {
+			crate::log::log(&format!("another process holds the lock, {}, so this one hands over and leaves", lock_path.display()));//waits in memory, and goes nowhere, since this process never has a page to start the log
 			handoff::send(&brand, &lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
 			return Start::Leave;
 		}
@@ -115,6 +117,7 @@ pub fn opened(app: &AppHandle, urls: Vec<tauri::Url>) {
 
 /// Something reached this copy: queue it for the page, and bring the window forward if a second launch sent it
 fn arrive(app: &AppHandle, from: &str, args: Vec<String>, forward: bool) {
+	crate::log::log(&format!("arrived by {from}: {}", args.join(" ")));
 	app.state::<Instance>().arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push(Request { from: from.to_string(), args });
 	if forward { crate::lifecycle::bring_forward(app) }//closing the window hides it, so it may be hidden, minimized, or behind something else
 }

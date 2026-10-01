@@ -8,6 +8,9 @@ import {useSettingsStore} from './stores/settings.js'
 import {useIncomingStore} from './stores/incoming.js'
 import {useAssociationsStore} from './stores/associations.js'
 import {brandName} from './brand.js'
+import {logStart, log} from './log.js'
+import {platformName} from './settings.js'
+import {getVersion} from '@tauri-apps/api/app'
 import './style.css'
 
 document.title = brandName//the page's own title, which tauri doesn't show, since rust names the window; set here so index.html doesn't spell the name a second time
@@ -23,6 +26,8 @@ async function startup() {
 	let store = useSettingsStore(pinia)//outside a component, a store needs the pinia handed to it
 	try {
 		await store.load(await pathsStatus())//where everything is, and then the settings file in the data folder, if there is one
+		let logPath = await logStart(store.settings.log.record, store.paths?.home)//as soon as the setting is known, so the lines rust and the page have said so far land in the file or go
+		if (logPath) log(`${store.paths.mode} ${brandName} ${await getVersion()} on ${platformName}, at ${store.paths.location}, logging to ${logPath}`)//the first line from the page, saying which copy this file is about
 	} finally {
 		await revealWindow(store)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing, couldn't be read, or this copy is portable, and show it, whatever happened above
 	}

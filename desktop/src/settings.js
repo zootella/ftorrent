@@ -14,7 +14,7 @@ const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file whe
 # edit this file only while ${brandName} isn't running: while it runs, including hidden in the tray, it writes the file once more as it closes, over any change made here
 # with ${brandName} not running, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`//the same words on every platform, whose menus say quit or exit, so a portable copy's file that travels between them is never rewritten over wording
 
-//the platform this copy runs on, by the name its users know it by: one of ftorrent's few platform checks, on purpose, for the windows conventions below and the words the settings page uses for its system choices, like Match macOS. The web view's user agent names the platform: WebView2's always says Windows, and WebKit's on a Mac says Macintosh
+//the platform this copy runs on, by the name its users know it by: one of ftorrent's few platform checks, on purpose, for the windows conventions below and the few words that differ by platform, like Options. The web view's user agent names the platform: WebView2's always says Windows, and WebKit's on a Mac says Macintosh
 export const platformName = navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Macintosh') ? 'macOS' : 'Linux'
 const onWindows = platformName == 'Windows'
 
@@ -44,8 +44,14 @@ export const settingsSchema = [
 		section: 'associations',
 		key: 'default',
 		factory: 'ask',
-		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandName} files and magnet: and ${brandName}: links: "yes", "no", or "ask", which puts a bar at the top of the window at startup until you answer it. The system keeps the final say, so yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
+		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandName} files and magnet: and ${brandName}: links: "yes", "no", or "ask". Unless this is "no", a bar at the top of the window asks whenever the system opens any of them with another app, and answering yes there claims them; ${brandName} never claims them on its own. The system keeps the final say, so on Windows yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
 		check: value => ['ask', 'yes', 'no'].includes(value),
+	}, {
+		section: 'log',
+		key: 'record',
+		factory: false,
+		comment: `whether ${brandName} keeps a log, for answering a question about what it did: true writes a file for each time ${brandName} runs into ${brandName}-logs in your home folder, as things happen. A log names files and links you open, so it's off unless you turn it on`,
+		check: value => typeof value == 'boolean',
 	}, {
 		section: 'appearance',
 		key: 'mode',

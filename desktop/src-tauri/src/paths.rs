@@ -21,7 +21,7 @@ pub struct Paths {
 	pub mode: String,//installed or portable
 	pub location: String,//the program's location, the anchor for ./
 	pub executable: String,//the program file itself, which is what a registered command runs
-	pub installer: String,//on windows, the folder the per-user installer puts the program in, %LOCALAPPDATA% and the product name; blank elsewhere, where no installer places a program the page needs to recognize
+	pub installer: String,//the folder an install puts the program in: on windows the per-user installer's, %LOCALAPPDATA% and the product name, and on macOS /Applications, where the disk image says to drag it; blank on linux, where no installer places a program the page needs to recognize
 	pub home: String,//the signed-in user's home folder, the anchor for ~
 	pub data: String,//the data folder
 	pub settings: String,//ftorrent.toml in the data folder
@@ -78,8 +78,9 @@ fn program_location() -> Result<PathBuf, String> {
 	Ok(folder.to_path_buf())
 }
 
-/// Where the per-user installer puts the program on windows, %LOCALAPPDATA% joined with the product name from tauri.conf.json; a fact the page compares with the program's location to know it's running from an installed copy
+/// Where an install puts the program: on windows the per-user installer's folder, %LOCALAPPDATA% joined with the product name from tauri.conf.json, and on macOS /Applications; a fact the page compares with the program's location to know it's running from an installed copy
 fn installer_folder(app: &AppHandle) -> String {
+	if cfg!(target_os = "macos") { return "/Applications".to_string() }//the folder the disk image's window shows beside the app, for the user to drag it onto
 	if !cfg!(target_os = "windows") { return String::new() }
 	std::env::var_os("LOCALAPPDATA").map(|local| display(&PathBuf::from(local).join(&app.package_info().name))).unwrap_or_default()
 }

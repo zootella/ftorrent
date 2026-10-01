@@ -12,10 +12,10 @@ let associations = useAssociationsStore()//the answer to whether ftorrent opens 
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', `Ask when ${brandName} starts`]]
-let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', `Match ${platformName}`]]//the order the mac's own appearance setting uses
+let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the same three words on every platform
 let fontChoices        = [//the words in three parts, so the template can set the face's own name in italics, and San Francisco reads as a typeface rather than the city
-	['system',  systemFace ? {lead: 'System Font: ', face: systemFace.face, trail: `, from ${systemFace.maker}`} : {lead: 'System Font'}],
-	['inter',   {face: 'Inter', trail: ', by Rasmus Andersson'}],
+	['system',  systemFace ? {face: systemFace.face, trail: `, from ${systemFace.maker}, the system font`} : {lead: 'System font'}],//named on windows and the mac; linux's is whatever the desktop sets, so it isn't named
+	['inter',   {face: 'Inter', trail: ', by Rasmus Andersson, cross-platform'}],
 	['verdana', {face: 'Verdana', trail: ', vibing Windows XP'}],
 ].filter(([value]) => fontsOffered.includes(value))//verdana only on windows; settings.js says why
 
@@ -50,10 +50,9 @@ async function saveNote() {
 		<h1>{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
-			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open torrent files and links with {{ brandName }}</RadioGroup>
-			<!-- a copy the installer didn't place never registers anything, so it says why the choice is grayed; an installed one links to windows' own Settings when that's the only place left to settle a difference between this setting and windows -->
-			<p v-if="!associations.installed" class="text-muted">Only {{ brandName }} installed on Windows sets up file types and links, so far.</p>
-			<p v-else-if="associations.disagrees"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>
+			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names -->
+			<!-- a copy the installer didn't place never registers anything, and its choice is simply grayed; an installed one on windows links to windows' own Settings, the one place a saved choice of another program can be changed -->
+			<p v-if="associations.installed && associations.disagrees && platformName == 'Windows'"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
