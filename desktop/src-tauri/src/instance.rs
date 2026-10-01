@@ -11,9 +11,9 @@ ftorrent runs once per copy, and a second launch of a copy that's already runnin
 
 Two halves do that. The lock says whether this copy is already running. It's an exclusive lock on ftorrent.lock, an empty file in the data folder, taken with the standard library's File::try_lock, which is flock on macOS and Linux and LockFileEx on Windows. The operating system releases it when the process ends, however it ends, so a crash never leaves a stale lock behind. It's keyed on the data folder, not on the program, so an installed copy and a portable copy each have their own, and so do two people signed in to one machine. A file lock also holds across accounts, which a named mutex doesn't, so two people launching the same portable copy from one stick can't both run it.
 
-The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
+The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, which Tauri hands over as its Opened event, at a cold start and while running alike, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives, this copy's own command line or a second launch's, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live.
+What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live.
 */
 
 const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
@@ -21,7 +21,7 @@ const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to tak
 /// One launch's arguments, as they reached this copy
 #[derive(Serialize, Clone)]
 pub struct Request {
-	pub from: String,//launch, for this copy's own command line, or handoff, for one carried in from a second launch
+	pub from: String,//launch, for this copy's own command line, handoff, for one carried in from a second launch, or open, for files and links macOS opened with this copy
 	pub args: Vec<String>,
 }
 
@@ -101,6 +101,16 @@ pub fn take(path: &Path) -> Result<File, Taken> {
 		Err(TryLockError::WouldBlock) => Err(Taken::Busy),
 		Err(TryLockError::Error(e)) => Err(Taken::Unsupported(e.to_string())),
 	}
+}
+
+/// On macOS, the files and links Launch Services opened with this copy, as one request: a file as its path, the way a launch on Windows carries one, and a link as it was written; called from the Opened run event in lib.rs
+#[cfg(target_os = "macos")]
+pub fn opened(app: &AppHandle, urls: Vec<tauri::Url>) {
+	let args = urls.into_iter().map(|url| match url.to_file_path() {
+		Ok(path) if url.scheme() == "file" => path.to_string_lossy().into_owned(),
+		_ => url.to_string(),//magnet:, ftorrent:, or anything else a link might be
+	}).collect();
+	arrive(app, "open", args, true)//the user reached for ftorrent, so the window comes forward, hidden or not; at a cold start bring_forward waits, since the page is about to show it
 }
 
 /// Something reached this copy: queue it for the page, and bring the window forward if a second launch sent it

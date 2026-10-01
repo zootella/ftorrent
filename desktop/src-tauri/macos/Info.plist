@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+Keys merged into the Info.plist Tauri writes for the Mac bundle, named in bundle.macOS.infoPlist in tauri.conf.json. Launch Services reads them the moment it sees the app, so dragging ftorrent to Applications is the whole registration: ftorrent becomes one more program that can open these, in Finder's Open With menu, and takes nothing. Becoming the default is separate, and happens only on the user's yes; associate.js has the stance behind both.
+
+What ftorrent opens is the same four things as on Windows: .torrent and .ftorrent files, magnet: and ftorrent: links. A handler rank says what a type is to an app, not how hard the app reaches for it; that's the user's answer, the same for all four. A .torrent is everybody's, so ftorrent declares itself an Alternate for it, a program that can open one; a .ftorrent is a format ftorrent defines, so it's the Owner, which decides only who opens one when nobody has chosen. Links have no rank, and Launch Services gives a scheme nobody has claimed to the first app that declares it, which overrides nobody.
+
+A file type on the Mac is known by a type identifier, a reverse-DNS string, and a link only by its scheme, so of the four, the two files carry identifiers. Nobody hands these out; there's no registry. Any app may declare any identifier, and what keeps them from colliding is the convention of naming types under a domain you control, which makes com.ftorrent.* ftorrent's. The app that defines a format exports its identifier, describing it for every Mac, and other apps import it, describing it again only for a Mac where nobody has exported it. The .torrent is org.bittorrent.torrent, a name the early Mac clients took from bittorrent.org and every client since has kept, so ftorrent imports it and agrees with them all. The .ftorrent is com.ftorrent.file, which ftorrent exports. Nothing reserves a name, but once copies are out declaring it, and other apps import it, renaming it would split one type into two, so it stays as it is.
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Torrent File</string><!-- the same words as on Windows -->
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string><!-- ftorrent opens a torrent; it never saves one back -->
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.bittorrent.torrent</string><!-- the identifier the Mac's torrent clients already share, so they all agree on what a .torrent is -->
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ftorrent File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.ftorrent.file</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- the .torrent type, as the clients that define it describe it; imported rather than exported, since it isn't ftorrent's, and used only on a Mac where no other app has declared it -->
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.bittorrent.torrent</string>
+			<key>UTTypeDescription</key>
+			<string>Torrent File</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeReferenceURL</key>
+			<string>https://www.bittorrent.org/beps/bep_0003.html</string><!-- the protocol's own specification, where the torrent file is defined -->
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>torrent</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-bittorrent</string>
+			</dict>
+		</dict>
+	</array>
+
+	<!-- the .ftorrent type, which is ftorrent's, so exported: this is where every Mac learns what one is -->
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.ftorrent.file</string>
+			<key>UTTypeDescription</key>
+			<string>ftorrent File</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>ftorrent</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Magnet Link</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>magnet</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ftorrent Link</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ftorrent</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- the words macOS shows when ftorrent first reaches the local network, finding peers there and asking the router to forward its listening port -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ftorrent finds peers on your local network and asks your router to forward its listening port, so other computers can connect to it directly.</string>
+</dict>
+</plist>

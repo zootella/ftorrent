@@ -83,6 +83,8 @@ pub fn run() {
 			tauri::RunEvent::Ready => window::window_build(app),//the window, made here rather than declared in tauri.conf.json, so a launch that leaves in setup never builds one; window.rs has the other reason
 			tauri::RunEvent::ExitRequested { .. } => engine::engine_stop(app),//a quit, or on linux the window closing; stop the engine now rather than at an exit that may be later
 			#[cfg(target_os = "macos")]
+			tauri::RunEvent::Opened { urls } => instance::opened(app, urls),//a .torrent, a magnet, or ftorrent's own two, which launch services opened with this copy, cold or running
+			#[cfg(target_os = "macos")]
 			tauri::RunEvent::Reopen { has_visible_windows, .. } => { if !has_visible_windows { lifecycle::bring_forward(app) } }//the dock icon clicked while the window is hidden, which is how a mac user asks for it back
 			tauri::RunEvent::Exit => {//the one event every way of quitting reaches, and a second call finds nothing left to stop
 				desktop::desktop_exit_write(app);//whatever text the page handed down for this moment, first, because it's quick and the page can no longer do it

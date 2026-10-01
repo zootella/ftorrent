@@ -59,6 +59,7 @@
 		"macOS": {
 			"minimumSystemVersion": "15.0",
 			"signingIdentity": "-",
+			"infoPlist": "macos/Info.plist",
 			"dmg": {
 				"background": "dmg/ceiling.jpg",
 				"windowSize": {"width": 800, "height": 800},

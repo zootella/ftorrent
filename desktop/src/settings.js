@@ -44,7 +44,7 @@ export const settingsSchema = [
 		section: 'associations',
 		key: 'default',
 		factory: 'ask',
-		comment: `whether ${brandName} opens .torrent files and magnet links: "yes", "no", or "ask", which puts a bar at the top of the window at startup until you answer it. The system keeps the final say, so yes may open its settings for you to confirm there. .${brandName} files and ${brandName}: links always open with ${brandName}`,
+		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandName} files and magnet: and ${brandName}: links: "yes", "no", or "ask", which puts a bar at the top of the window at startup until you answer it. The system keeps the final say, so yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
 		check: value => ['ask', 'yes', 'no'].includes(value),
 	}, {
 		section: 'appearance',

@@ -8,7 +8,7 @@ import {brandName} from '../brand.js'
 import {useAssociationsStore} from '../stores/associations.js'
 
 let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
-let associations = useAssociationsStore()//what registration did and what windows opens each contested type with, lines for the report on an installed windows copy
+let associations = useAssociationsStore()//what registration did and what windows opens each of the four with, lines for the report on an installed windows copy
 
 //get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
 let prepared = ref(false)//true for a moment after the button, so it can say so
@@ -98,7 +98,7 @@ async function copyReport() {
 		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
 
 		<div class="w-full">
-			<textarea readonly :value="report" :rows="report.split('\n').length" class="block w-full mb-2 font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider -->
+			<textarea readonly :value="report" :rows="report.split('\n').length * 2" class="block w-full mb-2 font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider; twice as many rows as lines, since the long ones wrap onto a second, so the box shows the whole report without scrolling -->
 			<button type="button" @click="copyReport">{{ copied ? 'Copied' : 'Copy' }}</button>
 		</div>
 	</main>

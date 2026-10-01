@@ -50,7 +50,7 @@ async function saveNote() {
 		<h1>{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
-			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open .torrent files and magnet links with {{ brandName }}</RadioGroup>
+			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open torrent files and links with {{ brandName }}</RadioGroup>
 			<!-- a copy the installer didn't place never registers anything, so it says why the choice is grayed; an installed one links to windows' own Settings when that's the only place left to settle a difference between this setting and windows -->
 			<p v-if="!associations.installed" class="text-muted">Only {{ brandName }} installed on Windows sets up file types and links, so far.</p>
 			<p v-else-if="associations.disagrees"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>

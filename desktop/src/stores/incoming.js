@@ -4,7 +4,7 @@ import {engineSend, engineTake} from '../engine.js'
 import {instanceTake} from '../instance.js'
 
 /*
-What comes up from below, and the page's side of the road down to the engine. Rust holds two drained queues, the lines the engine writes and the requests that reach this copy, and knows nothing about what's in either; this store takes them, several times a second, and is where they start to mean something. The engine's lines are JSON the engine wrote, so they're parsed here, and the events the page cares about so far, ready and the folders echo, are kept as the engine last said them. The arrivals are kept as a list, each marked launch for this copy's own command line or handoff for one a second launch carried in. Adding a torrent will read that list.
+What comes up from below, and the page's side of the road down to the engine. Rust holds two drained queues, the lines the engine writes and the requests that reach this copy, and knows nothing about what's in either; this store takes them, several times a second, and is where they start to mean something. The engine's lines are JSON the engine wrote, so they're parsed here, and the events the page cares about so far, ready and the folders echo, are kept as the engine last said them. The arrivals are kept as a list, each marked launch for this copy's own command line, handoff for one a second launch carried in, or open for files and links macOS opened with this copy. Adding a torrent will read that list.
 
 Taking runs from main.js for the life of the app, not from a page, so nothing waits in Rust just because a different page is showing. If a queue ever filled while the page wasn't taking, Rust drops the oldest and counts them, and the count ends up here, where the main page shows it.
 */
