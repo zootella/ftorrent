@@ -111,7 +111,10 @@ export async function themeWindow(mode) {
 
 //the page's typefaces, from the appearance setting: system, inter, or verdana. style.css holds each look as a rule under html[data-font], and this sets the attribute; the page's, rather than the window's, but it's here beside the theme because both are how the window looks when it first appears
 export async function fontWindow(font) {
-	if (font == 'inter') await Promise.all([document.fonts.load('1em Inter'), document.fonts.load('1em "IBM Plex Mono"')])//the two faces ftorrent carries files for, so wait for both first, and no text is drawn in a stand-in and then jumps; the system already has the others
+	let carried = []//the faces ftorrent carries files for, which this choice draws in: wait for them first, so no text is drawn in a stand-in and then jumps; the system already has the others
+	if (font == 'inter') carried.push(document.fonts.load('1em Inter'))
+	if (font == 'inter' || font == 'verdana') carried.push(document.fonts.load('1em "IBM Plex Mono"'))//both draw fixed-width text in plex; style.css says why
+	await Promise.all(carried)
 	document.documentElement.dataset.font = font
 }
 

@@ -57,7 +57,7 @@ export const settingsSchema = [
 		section: 'appearance',
 		key: 'font',
 		factory: 'system',
-		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, with IBM Plex Mono for fixed-width text, both carried by ${brandName}; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, and is offered on Windows only`,
+		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, with IBM Plex Mono for fixed-width text, both carried by ${brandName}; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, with the same Plex Mono for fixed-width text, and is offered on Windows only`,
 		check: value => fontsOffered.includes(value),//so a portable copy's file carried from windows to a mac with verdana in it says so once and goes back to system, like any value this copy can't use
 	}, {
 		section: 'window',
