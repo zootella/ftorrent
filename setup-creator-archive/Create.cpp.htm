@@ -1,0 +1,2247 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List href="create.cpp_files/filelist.xml">
+<title>Zootella Setup Creator</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Kevin</o:Author>
+  <o:LastAuthor>Kevin</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>7</o:TotalTime>
+  <o:Created>2005-04-23T21:50:00Z</o:Created>
+  <o:LastSaved>2005-04-23T21:50:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>3340</o:Words>
+  <o:Characters>19044</o:Characters>
+  <o:Lines>158</o:Lines>
+  <o:Paragraphs>44</o:Paragraphs>
+  <o:CharactersWithSpaces>22340</o:CharactersWithSpaces>
+  <o:Version>10.6714</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;}
+h2
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-bidi-font-style:italic;}
+h3
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:13.0pt;
+	font-family:Arial;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]-->
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><a
+href="http://www.zootella.com/setupcreator/">http://www.zootella.com/setupcreator/</a><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Zootella Setup Creator<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Source Code<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Create.cpp<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Copyright (c)
+Zootella Development Team, 2005. This file is part of Zootella,
+http://www.zootella.com<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Zootella is
+free software; you can redistribute it and modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation; either
+version 2 of the License, or, at your option, any later version.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Zootella is
+distributed in the hope that it will be useful, but without any warranty;
+without even the implied warranty of merchantability or fitness for a particular
+purpose. See the GNU General Public License for more details.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// You should
+have received a copy of the GNU General Public License along with Zootella; if
+not, go to http://www.gnu.org/copyleft/gpl.html or write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// When compiling
+this .cpp file, paste the contents of the corresponding .h file into the top of
+this one<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>#include</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> &quot;Create.h&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// The global
+handle to the main dialog box<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>HWND Dialog;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Program main function<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>int</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> WINAPI WinMain(HINSTANCE
+instance, HINSTANCE previous, LPSTR command, <span style='color:blue'>int</span>
+show) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Display the Setup Creator dialog
+box to let the user make a self extracting setup file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DialogBox(instance, &quot;DIALOG_CREATE&quot;, NULL,
+DialogProcedure);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Returning will end this running
+process<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> 0;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Dialog box
+procedure<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Shows the
+Setup Creator dialog box, letting the user make a self extracting setup file<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>BOOL CALLBACK
+DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Create local string objects
+outside the switch statement<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string icon, folder, run, save;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// The dialog box is about to be
+displayed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>switch</span> (message) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>case</span> WM_INITDIALOG:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Save the dialog box handle
+in the global variable<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>Dialog = dialog;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Get text from the registry
+for the edit boxes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>SetDlgItemText(dialog, EDIT_ICON,<span
+style='mso-spacerun:yes'>   </span>RegistryRead(HKEY_CURRENT_USER,
+&quot;Software\\Zootella Setup Creator&quot;, &quot;icon&quot;));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>SetDlgItemText(dialog, EDIT_FOLDER,
+RegistryRead(HKEY_CURRENT_USER, &quot;Software\\Zootella Setup Creator&quot;,
+&quot;folder&quot;));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>SetDlgItemText(dialog, EDIT_RUN,<span
+style='mso-spacerun:yes'>    </span>RegistryRead(HKEY_CURRENT_USER,
+&quot;Software\\Zootella Setup Creator&quot;, &quot;run&quot;));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Let the system place the
+focus<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>return</span> <span
+style='color:blue'>true</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// The message is a command<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>case</span> WM_COMMAND:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// The user clicked the
+button with the Web address<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>switch</span> (LOWORD(wparam))
+{<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>case</span> BUTTON_HELP:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// The developer wrote
+a secret code word in the icon box and clicked the Web address button<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>if</span>
+(DialogText(dialog, EDIT_ICON) == &quot;assemble&quot;) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+4'>                           </span><span style='color:green'>// Assemble the
+small extracting program into a copy of this one<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+4'>                           </span>Assemble();<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// The user just
+clicked the button<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>} <span style='color:blue'>else</span> {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+4'>                           </span><span style='color:green'>// Open the Web
+page with help, documentation, and source code<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+4'>                           </span>ShellExecute(NULL, NULL,
+&quot;http://www.zootella.com/setupcreator/&quot;, &quot;&quot;, &quot;&quot;,
+SW_SHOWNORMAL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// The user clicked Open for
+the icon<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>case</span> BUTTON_ICON:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Show the Open
+dialog box, and write the path the user chooses into the edit box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>icon = DialogOpen(&quot;Icons
+(*.ico)\0*.ico\0\0&quot;); <span style='color:green'>// Pass a pointer to a
+string literal here with multiple nulls<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>if</span> (icon !=
+&quot;&quot;) SetDlgItemText(dialog, EDIT_ICON, icon);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// The user clicked Browse
+for the files<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>case</span> BUTTON_FOLDER:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Show the Browse for
+Folder dialog box, and write the path the user chooses into the edit box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>folder = DialogBrowse(&quot;Choose the folder
+that contains the setup files&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>if</span> (folder !=
+&quot;&quot;) SetDlgItemText(dialog, EDIT_FOLDER, folder);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// The user clicked the
+Create button<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>case</span> IDOK: <span
+style='color:green'>// The OK button is titled &quot;Create&quot; in the dialog
+box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Get the values the
+user set in the dialog box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>icon<span style='mso-spacerun:yes'>   </span>=
+DialogText(dialog, EDIT_ICON);<span style='mso-spacerun:yes'>   </span><span
+style='color:green'>// Path to the icon to put in the self extracting executable
+file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>folder = DialogText(dialog, EDIT_FOLDER); <span
+style='color:green'>// Folder where the files to compress and include are
+located<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>run<span style='mso-spacerun:yes'>    </span>=
+DialogText(dialog, EDIT_RUN);<span style='mso-spacerun:yes'>    </span><span
+style='color:green'>// File name, like &quot;setup.exe&quot; to run once the
+files are decompressed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Save the values in the
+registry<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>RegistryWrite(HKEY_CURRENT_USER,
+&quot;Software\\Zootella Setup Creator&quot;, &quot;icon&quot;,<span
+style='mso-spacerun:yes'>   </span>DialogText(dialog, EDIT_ICON));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>RegistryWrite(HKEY_CURRENT_USER,
+&quot;Software\\Zootella Setup Creator&quot;, &quot;folder&quot;,
+DialogText(dialog, EDIT_FOLDER));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>RegistryWrite(HKEY_CURRENT_USER,
+&quot;Software\\Zootella Setup Creator&quot;, &quot;run&quot;,<span
+style='mso-spacerun:yes'>    </span>DialogText(dialog, EDIT_RUN));<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Show the Save As
+dialog box to find out where the user wants to write the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>save = DialogSave(&quot;exe&quot;); <span
+style='color:green'>// Have the dialog box append &quot;.exe&quot; if the user
+doesn't type it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Show the Save As
+dialog box, and create the self extracting executable there<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>if</span> (save !=
+&quot;&quot;) Create(icon, folder, run, save); <span style='color:green'>// If
+the user cancelled the Save As dialog box, save will be blank<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// The user clicked the Close
+button, or the X button in the title bar<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>case</span> IDCANCEL: <span
+style='color:green'>// The cancel button is titled &quot;Close&quot; in the
+dialog box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Close the dialog
+box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>EndDialog(dialog, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>return</span> <span
+style='color:blue'>true</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>break</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Have Windows process messages
+that make it down here<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> <span style='color:
+blue'>false</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Copies this
+running instance of the create program to disk, and injects the setup program
+into it as the resource &quot;DATA_PROGRAM&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> Assemble() {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Have the user find the setup
+program, and choose where to save the create program with the setup program
+inside it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string program = DialogOpen(&quot;Programs
+(*.exe)\0*.exe\0\0&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string save = DialogSave(&quot;exe&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Get the path of this running
+instance of the create program, and copy it to the save location<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> running[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>GetModuleFileName(NULL, running, MAX_PATH);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>CopyFile(running, save, <span style='color:blue'>false</span>);
+<span style='color:green'>// False to overwrite a file already there<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Read all the bytes of the setup
+program into a buffer, and inject them into the disk copy of the create program<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer resource;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>FileRead(&amp;resource, program);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ResourceWrite(save, &quot;DATA_PROGRAM&quot;, resource.Memory,
+resource.Size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes the text
+the user entered into the Setup Creator dialog box<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Generates a
+self extracting setup program<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> Create(text icon, text
+folder, text run, text save) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Make a buffer for the not yet
+compressed data, and write the name to run at the start as null terminated
+ASCII text<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer data;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>data.Add((byte*)run, length(run) + 1); <span style='color:
+green'>// Plus 1 to add the null terminator also<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Loop through the files in the
+folder, adding the name, size, date, and data of each one to the buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE find = NULL;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>WIN32_FIND_DATA info;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>while</span> (FileList(folder,
+&amp;find, &amp;info)) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Write the file name null
+terminated, size 4 bytes, date 8 bytes, and data size bytes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>data.Add((byte*)(info.cFileName),
+length(info.cFileName) + 1);<span style='mso-spacerun:yes'>          </span><span
+style='color:green'>// Plus 1 to add the null terminator also<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>data.Add((byte*)&amp;(info.nFileSizeLow), <span
+style='color:blue'>sizeof</span>(info.nFileSizeLow));<span
+style='mso-spacerun:yes'>       </span><span style='color:green'>// Size, a 4
+byte DWORD<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>data.Add((byte*)&amp;(info.ftLastWriteTime), <span
+style='color:blue'>sizeof</span>(info.ftLastWriteTime)); <span
+style='color:green'>// Date modified, an 8 byte FILETIME structure<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>FileRead(&amp;data, string(folder) + &quot;\\&quot; +
+info.cFileName);<span style='mso-spacerun:yes'>                </span><span
+style='color:green'>// Add the file's data, size is the number of bytes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Compose the compressed data for
+the resource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer resource;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>resource.Add((byte*)&amp;data.Size, <span style='color:blue'>sizeof</span>(data.Size));
+<span style='color:green'>// Begin with the size of the data uncompressed, a 4
+byte DWORD<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>Compress(&amp;resource, data.Memory, data.Size);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Follow
+that with the data of the first buffer compressed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Pull the setup program out of a
+resource in this running .exe file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer program;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ResourceRead(&amp;program, &quot;DATA_PROGRAM&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Write it to disk<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DeleteFile(save); <span style='color:green'>// Delete a file
+that's already there<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>FileWrite(save, program.Memory, program.Size, NULL); <span
+style='color:green'>// Don't change the date modified<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// If the user specified a path to a
+.ico file, add it as a resource to the setup program<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (string(icon) !=
+&quot;&quot;) ResourceIcon(save, icon);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Inject the compressed data into
+the setup program as a raw data resource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ResourceWrite(save, &quot;DATA_SETUP&quot;, resource.Memory,
+resource.Size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a
+pointer to memory and how many bytes are there<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Uses the ZLib
+library to compress the data<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Writes the
+compressed data into the given buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> Compress(buffer* b, byte*
+memory, DWORD size) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Have ZLib guess how big this data
+will be compressed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD after = compressBound(size); <span style='color:green'>//
+It just uses a mathamatical expression to guess the size<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Prepare the given amount of space
+for the compressed bytes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Prepare(after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Have ZLib compress the data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>compress( <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>b-&gt;Write(),<span style='mso-spacerun:yes'>   
+</span><span style='color:green'>// Tell ZLib where it can write<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>&amp;after,<span style='mso-spacerun:yes'>       
+</span><span style='color:green'>// And how much space it has there, it changes
+after to report the number of bytes it wrote<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>memory, size); <span style='color:green'>// The data to
+compress<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Tell the buffer how many bytes
+ZLib wrote into it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Wrote(after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes the name
+of a raw data resource in this .exe file, like &quot;DATA_SETUP&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Reads the data
+into the given buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> ResourceRead(buffer* b, text
+name) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Find the data resource with the
+given name in this .exe file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HRSRC resource = FindResource(NULL, name, RT_RCDATA); <span
+style='color:green'>// Look for a data resource with that name in this running
+.exe<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HGLOBAL global = LoadResource(NULL, resource);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Get a
+pointer to its memory and find out its size<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPVOID lock = LockResource(global);<span
+style='mso-spacerun:yes'>                   </span><span style='color:green'>//
+It's not necessary to unlock or unload what we're getting here<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size = SizeofResource(NULL, resource);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Write the bytes of the resource
+into the given buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Add((byte*)lock, size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a path
+to a .exe file, a name for the new resource like &quot;DATA_SETUP&quot;, and
+the data<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Writes a new
+raw data resource with that name and data in the file on the disk<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> ResourceWrite(text path,
+text name, byte* memory, DWORD size) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open the .exe, write the memory
+in as a new raw data resource with the given name, and close it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE update = BeginUpdateResource(path, <span
+style='color:blue'>false</span>); <span style='color:green'>// False to not
+clear the resources from the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>UpdateResource(update, RT_RCDATA, name, MAKELANGID(LANG_NEUTRAL,
+SUBLANG_NEUTRAL), memory, size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>EndUpdateResource(update, <span style='color:blue'>false</span>);
+<span style='color:green'>// False to apply the changes to the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a path
+to an .exe file, and a path to a .ico file<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Turns the icon
+into a resource, and adds it to the setup program<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> ResourceIcon(text save, text
+icon) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Read the contents of the .ico
+file into memory<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer b1;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>FileRead(&amp;b1, icon);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>IconFileCount* file = (IconFileCount*)(b1.Memory); <span
+style='color:green'>// It starts with the structure that tells how many icons
+there are<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Make a buffer big enough to
+compose the data of the RT_GROUP_ICON resource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size = <span style='color:blue'>sizeof</span>(IconResourceCount)
++ (<span style='color:blue'>sizeof</span>(IconResource) * (file-&gt;ResCount -
+1)); <span style='color:green'>// Minus 1 because IconResourceCount contains 1
+IconResource already<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer b2;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b2.Prepare(size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>IconResourceCount* resource = (IconResourceCount*)(b2.Memory);
+<span style='color:green'>// Look at the buffer as the resource structure<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Copy the count information from
+the the file to the resource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>resource-&gt;Reserved = 0;<span
+style='mso-spacerun:yes'>              </span><span style='color:green'>// Must
+be 0<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>resource-&gt;ResType<span style='mso-spacerun:yes'>  </span>=
+file-&gt;ResType;<span style='mso-spacerun:yes'>  </span><span
+style='color:green'>// Resource type, 1 for icon<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>resource-&gt;ResCount = file-&gt;ResCount; <span
+style='color:green'>// The number of icons we're copying across<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Loop through each structure that
+describes an icon in the .ico file, and add it to the resource buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>for</span> (<span style='color:blue'>int</span>
+i = 0; i &lt; file-&gt;ResCount; i++) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Copy the parts of the
+structure across<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].bWidth<span
+style='mso-spacerun:yes'>       </span>= file-&gt;entry[i].bWidth;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].bHeight<span
+style='mso-spacerun:yes'>      </span>= file-&gt;entry[i].bHeight;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].bColorCount<span
+style='mso-spacerun:yes'>  </span>= file-&gt;entry[i].bColorCount;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].bReserved<span
+style='mso-spacerun:yes'>    </span>= file-&gt;entry[i].bReserved;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].wPlanes<span
+style='mso-spacerun:yes'>      </span>= file-&gt;entry[i].wPlanes;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].wBitCount<span
+style='mso-spacerun:yes'>    </span>= file-&gt;entry[i].wBitCount;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].dwBytesInRes =
+file-&gt;entry[i].dwBytesInRes;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource-&gt;entry[i].nID<span
+style='mso-spacerun:yes'>          </span>= i; <span style='color:green'>//
+Make the icon indices like 0, 1, 2 or 0 through 8<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Add the RT_GROUP_ICON resource
+with a resource identifier of 100<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE update = BeginUpdateResource(save, <span
+style='color:blue'>true</span>);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>UpdateResource(<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>update,<span
+style='mso-spacerun:yes'>                        </span><span
+style='mso-spacerun:yes'>            </span><span style='color:green'>// Handle
+from BeginUpdateResource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>RT_GROUP_ICON,<span
+style='mso-spacerun:yes'>                             </span><span
+style='color:green'>// Resource type, headers for a group of icons<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>MAKEINTRESOURCE(100),<span
+style='mso-spacerun:yes'>                      </span><span style='color:green'>//
+Use 100 as the resource identifier number for this icon in the .exe<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='mso-tab-count:1'>       </span>MAKELANGID(LANG_NEUTRAL,
+SUBLANG_NEUTRAL), <span style='color:green'>// No language specified<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>resource,<span
+style='mso-spacerun:yes'>                                  </span><span
+style='color:green'>// Bytes of the all the headers<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>size);<span
+style='mso-spacerun:yes'>                                     </span><span
+style='color:green'>// Size of all the headers<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Loop through each image in the .ico
+file and add it to the .exe as an RT_ICON resource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>for</span> (<span style='color:blue'>int</span>
+i = 0; i &lt; file-&gt;ResCount; i++) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Add the RT_ICON resource
+for this image<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>UpdateResource(<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>update,<span
+style='mso-spacerun:yes'>                                                  
+</span><span style='color:green'>// Handle from BeginUpdateResource<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>RT_ICON,<span
+style='mso-spacerun:yes'>                                                 
+</span><span style='color:green'>// Resource type, icon data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>MAKEINTRESOURCE(resource-&gt;entry[i].nID),<span
+style='mso-spacerun:yes'>                  </span><span style='color:green'>//
+Resource identifier number for this icon<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),<span
+style='mso-spacerun:yes'>                </span><span style='color:green'>// No
+language specified<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>(LPVOID)((DWORD_PTR)file +
+file-&gt;entry[i].dwImageOffset), <span style='color:green'>// Calculate where
+in the file the data for this icon starts<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>file-&gt;entry[i].dwBytesInRes);<span
+style='mso-spacerun:yes'>                   </span><span
+style='mso-spacerun:yes'>          </span><span style='color:green'>// How big
+the data for this icon is<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Done editing resources<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>EndUpdateResource(update, <span style='color:blue'>false</span>);
+<span style='color:green'>// False to apply the changes to the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a path
+to a file<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Opens it and
+reads all its bytes<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Writes them
+into the given buffer object<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> FileRead(buffer* b, text
+path) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open the file for reading, and
+find out how big it is<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE file = CreateFile(path, GENERIC_READ, 0, NULL,
+OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size = GetFileSize(file, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Read all its contents into the
+given buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Prepare(size);<span
+style='mso-spacerun:yes'>                              </span><span
+style='color:green'>// Have the buffer object prepare this much more space at
+its end<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ReadFile(file, b-&gt;Write(), size, &amp;size, NULL); <span
+style='color:green'>// Read the bytes of the file into the new space<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Wrote(size);<span
+style='mso-spacerun:yes'>                                </span><span
+style='color:green'>// Tell the buffer object how many bytes we wrote<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Close the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>CloseHandle(file);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes memory,
+a file path, and a date<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Makes a new
+file at the path, writes in the memory, and sets the date modified<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> FileWrite(text path, byte*
+memory, DWORD size, FILETIME* date) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Create and open a new empty file
+at the given path, write its contents, and close it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE file = CreateFile(path, GENERIC_WRITE, 0, NULL,
+CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>WriteFile(file, memory, size, &amp;size, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// If the caller passed a pointer to
+a date and time, use it to set the modified date of the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (date) SetFileTime(file,
+NULL, NULL, date); <span style='color:green'>// Only set Date Modified, leave
+Created and Accessed unchanged and set to right now<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Close the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>CloseHandle(file);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a path
+to a folder without a trailing slash, and a pointer to a handle set to null<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Lists all the
+files in the folder, writing find data information for each one<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns false
+when there are no more files to list, and the caller should exit the loop that
+calls this<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>bool</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> FileList(text folder,
+HANDLE* find, WIN32_FIND_DATA* info) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Find the next item in the folder<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>while</span> (FileListAll(folder,
+find, info)) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// If it isn't a directory
+navigation code or a folder, return true so the caller can read the info
+structure about this file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>if</span> (info-&gt;cFileName !=
+&quot;.&quot; &amp;&amp; info-&gt;cFileName != &quot;..&quot; &amp;&amp;
+(!(info-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY))) <span
+style='color:blue'>return</span> <span style='color:blue'>true</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Everything in the folder has been
+listed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> <span style='color:
+blue'>false</span>;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a path
+to a folder without a trailing slash, and a pointer to a handle set to null<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Lists the
+contents of the folder, writing find data information for each one<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns false
+when there is nothing more to list, and the caller should exit the loop that
+calls this<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>bool</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> FileListAll(text folder,
+HANDLE* find, WIN32_FIND_DATA* info) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Begin, continue, or end the file
+find operation<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (!*find) { *find =
+FindFirstFile(string(folder) + &quot;\\*.*&quot;, info); <span
+style='color:blue'>return</span> <span style='color:blue'>true</span>; } <span
+style='color:green'>// Begin the find<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>else</span> <span style='color:blue'>if</span>
+(FindNextFile(*find, info)) { <span style='color:blue'>return</span> <span
+style='color:blue'>true</span>; } <span style='color:green'>// Continue the
+find<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>else</span> { FindClose(*find); <span
+style='color:blue'>return</span> <span style='color:blue'>false</span>; } <span
+style='color:green'>// Nothing more to list, close the find and return false<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a root
+registry key handle, and a path from it<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Opens that
+registry key<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns a
+handle to the key<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>HKEY RegistryOpen(HKEY root,
+text path) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open or create and open the
+registry key, and return the open handle<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HKEY key;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD info;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegCreateKeyEx(root, path, 0, &quot;&quot;,
+REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &amp;key, &amp;info);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> key;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a root
+registry key handle, a path from it, and a variable name<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Reads the text
+value of that variable from the registry<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns it<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>string RegistryRead(HKEY
+root, text path, text name) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open the registry key<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HKEY key = RegistryOpen(root, path);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Find out the total size of the
+bytes of ASCII text and null terminator in the registry<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size; <span style='color:green'>// If the text is
+&quot;hello&quot;, size will be 6<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegQueryValueEx(key, name, 0, NULL, NULL, &amp;size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open a string, read the text
+bytes, and close it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPTSTR sbuffer = s.GetBuffer(size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegQueryValueEx(key, name, 0, NULL, (LPBYTE)sbuffer,
+&amp;size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>s.ReleaseBuffer(); <span style='color:green'>// The null
+terminator was in the registry, and copied here<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Close the registry key and return
+the string<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegCloseKey(key);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a root
+registry key handle, a path from it, a variable name, and a text value<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Sets the
+registry variable to the text value<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> RegistryWrite(HKEY root,
+text path, text name, text value) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open the registry key, set or
+make and set the text value, and close it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HKEY key = RegistryOpen(root, path);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegSetValueEx(key, name, 0, REG_SZ, (byte*)value,
+length(value) + 1); <span style='color:green'>// Add 1 to include the null
+terminator<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>RegCloseKey(key);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a pointer
+to a string literal with text separated by nulls, like &quot;Icons
+(*.ico)\0*.ico\0\0&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Shows the Open
+dialog box to let the user find and choose a file<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns its
+path, or blank if the user clicked Cancel<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>string DialogOpen(text
+filter) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Prepare the structure the call
+needs<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> name[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>lstrcpy(name, &quot;&quot;);<span
+style='mso-spacerun:yes'>                    </span><span style='color:green'>//
+The call will read this, so it must start out blank<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>OPENFILENAME info;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ZeroMemory(&amp;info, <span style='color:blue'>sizeof</span>(info));<span
+style='mso-spacerun:yes'>      </span><span style='color:green'>// Zero all the
+bytes to not have to set things to NULL or 0<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lStructSize = <span style='color:blue'>sizeof</span>(info);<span
+style='mso-spacerun:yes'>      </span><span style='color:green'>// Size of this
+structure<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.hwndOwner<span style='mso-spacerun:yes'>   </span>=
+Dialog;<span style='mso-spacerun:yes'>            </span><span
+style='color:green'>// Use the main dialog as the parent window<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lpstrFilter = filter;<span
+style='mso-spacerun:yes'>            </span><span style='color:green'>// Filter
+text, like &quot;Icons (*.ico)\0*.ico\0\0&quot;<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.Flags<span style='mso-spacerun:yes'>       </span>=
+OFN_HIDEREADONLY<span style='mso-spacerun:yes'>   </span><span
+style='color:green'>// Hide the Read Only check box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='mso-spacerun:yes'>                 </span>|
+OFN_PATHMUSTEXIST; <span style='color:green'>// Only let the user type names of
+paths and files that exist<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lpstrFile<span style='mso-spacerun:yes'>   </span>=
+name;<span style='mso-spacerun:yes'>              </span><span
+style='color:green'>// This is where the call writes the full path of the file
+the user selects<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.nMaxFile<span style='mso-spacerun:yes'>    </span>=
+MAX_PATH;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Show the Open system dialog box,
+read the path if the user clicks OK, and return it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span>
+(GetOpenFileName(&amp;info)) s = info.lpstrFile;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes the
+default extension to save without a period, like &quot;exe&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Shows the Save
+As dialog box to let the user choose where to save a file<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns the
+path, or blank if the user clicked Cancel<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>string DialogSave(text
+extension) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Prepare the structure the call
+needs<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> name[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>lstrcpy(name, &quot;&quot;);<span
+style='mso-spacerun:yes'>                      </span><span style='color:green'>//
+The call will read this, so it must start out blank<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>OPENFILENAME info;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ZeroMemory(&amp;info, <span style='color:blue'>sizeof</span>(info));<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Zero all
+the bytes to not have to set things to NULL or 0<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lStructSize = <span style='color:blue'>sizeof</span>(info);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Size of
+this structure<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.hwndOwner<span style='mso-spacerun:yes'>   </span>=
+Dialog;<span style='mso-spacerun:yes'>              </span><span
+style='color:green'>// Use the main dialog as the parent window<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lpstrDefExt = extension;<span
+style='mso-spacerun:yes'>           </span><span style='color:green'>// Have
+the dialog append the extension if the user doesn't type it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.Flags<span style='mso-spacerun:yes'>       </span>=
+OFN_HIDEREADONLY<span style='mso-spacerun:yes'>     </span><span
+style='color:green'>// Hide the Read Only check box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='mso-spacerun:yes'>                 </span>|
+OFN_OVERWRITEPROMPT; <span style='color:green'>// Show the user the &quot;Do
+you want to replace it?&quot; message box if the file already exists<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lpstrFile<span style='mso-spacerun:yes'>   </span>=
+name;<span style='mso-spacerun:yes'>                </span><span
+style='color:green'>// This is where the call writes the full path of the file
+the user selects<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.nMaxFile<span style='mso-spacerun:yes'>    </span>=
+MAX_PATH;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Show the Save As system dialog
+box, read the path if the user clicks OK, and return it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span>
+(GetSaveFileName(&amp;info)) s = info.lpstrFile;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes text to
+show in the dialog box<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Displays the
+Browse for Folder dialog box<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns the
+path the user chose without a trailing slash, or blank if the user clicked
+Cancel<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>string DialogBrowse(text
+display) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Prepare the structure the call
+needs<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> name[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>BROWSEINFO info;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ZeroMemory(&amp;info, <span style='color:blue'>sizeof</span>(info));<span
+style='mso-spacerun:yes'>            </span><span style='color:green'>// Zero
+all the bytes to not have to set things to NULL or 0<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.hwndOwner<span style='mso-spacerun:yes'>      </span>=
+Dialog;<span style='mso-spacerun:yes'>      </span><span
+style='mso-spacerun:yes'>         </span><span style='color:green'>// Use the
+main dialog as the parent window<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.pszDisplayName = name;<span
+style='mso-spacerun:yes'>                 </span><span style='color:green'>//
+Write the display name of the chosen folder here<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.lpszTitle<span style='mso-spacerun:yes'>      </span>=
+display;<span style='mso-spacerun:yes'>              </span><span
+style='color:green'>// Text to show in the dialog box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>info.ulFlags<span style='mso-spacerun:yes'>        </span>=
+BIF_RETURNONLYFSDIRS; <span style='color:green'>// Only let the user choose
+from amongst file system folders<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Display the Browse for Folder
+system dialog box<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPITEMIDLIST result = SHBrowseForFolder(&amp;info);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (!result) <span
+style='color:blue'>return</span> string(&quot;&quot;); <span style='color:green'>//
+The user clicked cancel in the browse dialog<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Get the folder path, make a new
+string from the text, and return it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> bay[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>SHGetPathFromIDList(result, bay);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> string(bay);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a handle
+to a dialog box, and a dialog box item identifier<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Gets the text
+from the item<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Returns it<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>string DialogText(HWND
+dialog, <span style='color:blue'>int</span> item) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Each dialog box item is a window
+itself, get a handle to this one<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HWND window = GetDlgItem(dialog, item);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Find out how many bytes we need
+to hold the ASCII text characters and a null terminator<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>int</span> size = (<span
+style='color:blue'>int</span>)SendMessage(window, WM_GETTEXTLENGTH, 0, 0) + 1; <span
+style='color:green'>// Add one for the null terminator<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Open a string, read in the text,
+and close and return it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>string s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPTSTR sbuffer = s.GetBuffer(size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>GetWindowText(window, sbuffer, size); <span style='color:green'>//
+Writes a null terminator at the end of the buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>s.ReleaseBuffer();<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> s;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+</div>
+
+</body>
+
+</html>

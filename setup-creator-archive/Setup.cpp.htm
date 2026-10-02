@@ -1,0 +1,792 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List href="setup.cpp_files/filelist.xml">
+<title>Zootella Setup Creator</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Kevin</o:Author>
+  <o:LastAuthor>Kevin</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>8</o:TotalTime>
+  <o:Created>2005-04-23T21:51:00Z</o:Created>
+  <o:LastSaved>2005-04-23T21:51:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>1007</o:Words>
+  <o:Characters>5742</o:Characters>
+  <o:Lines>47</o:Lines>
+  <o:Paragraphs>13</o:Paragraphs>
+  <o:CharactersWithSpaces>6736</o:CharactersWithSpaces>
+  <o:Version>10.6714</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;}
+h2
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-bidi-font-style:italic;}
+h3
+	{mso-style-next:Normal;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:13.0pt;
+	font-family:Arial;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]-->
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><a
+href="http://www.zootella.com/setupcreator/">http://www.zootella.com/setupcreator/</a><o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Zootella Setup Creator<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Source Code<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:16.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:gray'>Setup.cpp<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-family:Verdana;mso-bidi-font-family:"Courier New";color:gray'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Copyright (c)
+Zootella Development Team, 2005. This file is part of Zootella,
+http://www.zootella.com<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Zootella is
+free software; you can redistribute it and modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation; either
+version 2 of the License, or, at your option, any later version.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Zootella is
+distributed in the hope that it will be useful, but without any warranty;
+without even the implied warranty of merchantability or fitness for a particular
+purpose. See the GNU General Public License for more details.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// You should
+have received a copy of the GNU General Public License along with Zootella; if
+not, go to http://www.gnu.org/copyleft/gpl.html or write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// When compiling
+this .cpp file, paste the contents of the corresponding .h file into the top of
+this one<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>#include</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> &quot;Setup.h&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Program main
+function<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>int</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> WINAPI WinMain(HINSTANCE
+instance, HINSTANCE previous, LPSTR command, <span style='color:blue'>int</span>
+show) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Compose the path to the new empty
+folder where we will extract the files<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> folder[MAX_PATH],
+unique[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ShellPath(folder, CSIDL_APPDATA);<span
+style='mso-spacerun:yes'>       </span><span style='color:green'>// Make folder
+like &quot;C:\Documents and Settings\User\Application Data&quot;, or blank if
+not found<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>wsprintf(unique, &quot;%x&quot;, GetTickCount()); <span
+style='color:green'>// Make unique like &quot;92424a9&quot;<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (!lstrlen(folder)) {
+lstrcpy(folder, &quot;C:\\&quot;); lstrcat(folder, unique); } <span
+style='color:green'>// If the application data folder was not found, make
+folder like &quot;C:\92424a9&quot;<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>else</span><span
+style='mso-spacerun:yes'>                  </span>{ lstrcat(folder,
+&quot;\\&quot;);<span style='mso-spacerun:yes'>   </span>lstrcat(folder,
+unique); } <span style='color:green'>// Make the folder like &quot;C:\Documents
+and Settings\User\Application Data\92424a9&quot;<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Create the new empty folder<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>CreateDirectory(folder, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Extract the compressed setup data
+from the &quot;DATA_SETUP&quot; resource in this running instance of the setup
+program<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer resource;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ResourceRead(&amp;resource, &quot;DATA_SETUP&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Make a pointer and byte count we
+can move across the contents of buffers<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>byte* p = resource.Memory;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD n = resource.Size;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Read how many bytes the data will
+be decompressed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD after = *((DWORD*)p); <span style='color:green'>// The
+first 4 bytes of the resource data tell how big the rest will be decompressed<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>p += <span style='color:blue'>sizeof</span>(after);<span
+style='mso-spacerun:yes'>         </span><span style='color:green'>// Move past
+that DWORD to the start of the compressed data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>n -= <span style='color:blue'>sizeof</span>(after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Decompress the data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>buffer data;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>Decompress(&amp;data, p, n, after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>p = data.Memory; <span style='color:green'>// Now, point p and
+set n on the start of the decompressed data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>n = data.Size;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Read the name of the setup
+program we will run at the end<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> run[MAX_PATH];<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>lstrcpy(run, (<span style='color:blue'>char</span>*)p);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>p += (lstrlen(run) + 1); <span style='color:green'>// Move
+past the ASCII text and null terminator<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>n -= (lstrlen(run) + 1);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Loop to get information about
+each file, and create it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> name[MAX_PATH]; <span
+style='color:green'>// File name<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size;<span style='mso-spacerun:yes'>          </span><span
+style='color:green'>// Size of the file in bytes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>FILETIME date;<span style='mso-spacerun:yes'>       </span><span
+style='color:green'>// Date modified<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>char</span> path[MAX_PATH]; <span
+style='color:green'>// Complete path for the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>while</span> (n) {<span
+style='mso-spacerun:yes'>          </span><span style='color:green'>// Loop
+until there are no more bytes to process<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Read the file name, size,
+date, and create it with its data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>lstrcpy(name, (<span style='color:blue'>char</span>*)p);
+p += (lstrlen(name) + 1); n -= (lstrlen(name) + 1); <span style='color:green'>//
+Move past the ASCII text and null terminator<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>size = *((DWORD*)p);<span style='mso-spacerun:yes'>    
+</span>p += <span style='color:blue'>sizeof</span>(size);<span
+style='mso-spacerun:yes'>        </span>n -= <span style='color:blue'>sizeof</span>(size);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Move past
+the 4 byte DWORD<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>date = *((FILETIME*)p);<span style='mso-spacerun:yes'> 
+</span>p += <span style='color:blue'>sizeof</span>(date);<span
+style='mso-spacerun:yes'>        </span>n -= <span style='color:blue'>sizeof</span>(date);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Move past
+the 8 byte FILETIME structure<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Compose the path for the
+file, and write it there<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>lstrcpy(path, folder);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>lstrcat(path, &quot;\\&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>lstrcat(path, name);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>FileWrite(path, p, size, &amp;date);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>p += size; <span style='color:green'>// Move past the
+bytes of the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>n -= size;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Compose the path to the setup
+program, and run it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>lstrcat(folder, &quot;\\&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>lstrcat(folder, run);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>ShellExecute(NULL, NULL, folder, &quot;&quot;, &quot;&quot;,
+SW_SHOWNORMAL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Returning will end this running
+process<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>return</span> 0;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a
+special folder id, like CSIDL_APPDATA<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Finds the path
+of that folder on this computer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Writes the
+path, which does not have a trailing slash<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> ShellPath(<span
+style='color:blue'>char</span>* path, <span style='color:blue'>int</span>
+folder) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Get memory<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPMALLOC memory;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (SHGetMalloc(&amp;memory)
+== NOERROR) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Get list<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>LPITEMIDLIST list;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:blue'>if</span>
+(SHGetSpecialFolderLocation(NULL, folder, &amp;list) == NOERROR) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Get path<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:blue'>if</span>
+(!SHGetPathFromIDList(list, path)) lstrcpy(path, &quot;&quot;); <span
+style='color:green'>// Only keep the text if the call works<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span><span style='color:green'>// Free list<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+3'>                     </span>memory-&gt;Free(list);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span><span style='color:green'>// Free memory<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>memory-&gt;Release();<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes the name
+of a raw data resource in this .exe file, like &quot;DATA_SETUP&quot;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Reads the data
+into the given buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> ResourceRead(buffer* b, <span
+style='color:blue'>char</span>* name) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Find the data resource with the
+given name in this .exe file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HRSRC resource = FindResource(NULL, name, RT_RCDATA); <span
+style='color:green'>// Look for a data resource with that name in this running
+.exe<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HGLOBAL global = LoadResource(NULL, resource);<span
+style='mso-spacerun:yes'>        </span><span style='color:green'>// Get a
+pointer to its memory and find out its size<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>LPVOID lock = LockResource(global);<span
+style='mso-spacerun:yes'>                   </span><span style='color:green'>//
+It's not necessary to unlock or unload what we're getting here<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>DWORD size = SizeofResource(NULL, resource);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Write the bytes of the resource
+into the given buffer<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Add((byte*)lock, size);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes a
+pointer and the number of bytes we can read there, and how big it will be after
+decompression<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Uses the ZLib
+library to decompress the data<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Writes the
+decompressed data into the given buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> Decompress(buffer *b, byte*
+memory, DWORD size, DWORD after) {<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Prepare the given amount of space
+for the decompressed bytes<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Prepare(after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Have ZLib decompress the data<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>uncompress(<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>b-&gt;Write(),<span style='mso-spacerun:yes'>   
+</span><span style='color:green'>// Tell ZLib where it can write<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>&amp;after,<span style='mso-spacerun:yes'>       
+</span><span style='color:green'>// And how much space it has there, it changes
+after to report the number of bytes it wrote<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+2'>              </span>memory, size); <span style='color:green'>// The data to
+decompress<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Tell the buffer how many bytes
+ZLib wrote into it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>b-&gt;Wrote(after);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Takes memory,
+a file path, and a date<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'>// Makes a new
+file at the path, writes in the memory, and sets the date modified<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:blue'>void</span><span
+style='font-size:8.0pt;font-family:"Courier New"'> FileWrite(<span
+style='color:blue'>char</span>* path, byte* memory, DWORD size, FILETIME* date)
+{<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Create and open a new empty file
+at the given path, write its contents, and close it<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>HANDLE file = CreateFile(path, GENERIC_WRITE, 0, NULL,
+CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>WriteFile(file, memory, size, &amp;size, NULL);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// If the caller passed a pointer to
+a date and time, use it to set the modified date of the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:blue'>if</span> (date) SetFileTime(file,
+NULL, NULL, date); <span style='color:green'>// Only set Date Modified, leave
+Created and Accessed unchanged and set to right now<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New";color:green'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span><span style='color:green'>// Close the file<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'><span style='mso-tab-count:
+1'>       </span>CloseHandle(file);<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:8.0pt;font-family:"Courier New"'>}<o:p></o:p></span></p>
+
+</div>
+
+</body>
+
+</html>
