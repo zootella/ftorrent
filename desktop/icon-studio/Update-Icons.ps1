@@ -1,14 +1,15 @@
 <#
 .\desktop\icon-studio\Update-Icons.ps1
 
-The one command: from brand.svg, donut.svg, and the sheet, make favicon.svg, ftorrent.ico, and torrent.ico, and put copies where the build and the websites read them. Run it after changing the brand or the donut, then look at the results in Explorer.
+The one command: from brand.svg, donut.svg, glyph.svg, and the sheet, make favicon.svg, ftorrent.ico, torrent.ico, tray-white.ico, and tray-black.ico, and put copies where the build and the websites read them. Run it after changing a drawing, then look at the results in Explorer.
 
 What it does, in order:
 	1. Add-Donut.ps1 draws the donut onto every sheet size, sheet-<size>.png to torrent-<size>.png.
 	2. Join-Ico.ps1 packs those into torrent.ico, and a copy goes to src-tauri\icons\torrent.ico, which bundle.resources lands beside the executable for the .torrent file type's icon.
 	3. brand.svg is written out as favicon.svg, the same drawing, for the websites to link inline; and as the three sources the application icon pipeline reads, app-icon.svg, app-icon-mac.svg, and app-icon-tile.svg in src-tauri\icons, which differ only in viewBox: the same drawing seen full bleed, inset for the macOS Dock, and inset for the Windows Start menu tile.
-	4. pnpm icons, in the workspace above, generates every platform's application icon from those three. That is Tauri's own tool, and the only step here that isn't ours.
-	5. The .ico it wrote, src-tauri\icons\icon.ico, comes back here as ftorrent.ico, the Windows application and installer icon, kept beside the other two outputs as the record of what shipped.
+	4. Draw-Tray.ps1 renders glyph.svg, the mark as a stencil with the nodes cut out, at every size the notification area draws at and in each of the tray's two colors, tray-white-<size>.png and tray-black-<size>.png, and Join-Ico.ps1 packs each set into its .ico, which go to src-tauri\icons for lifecycle.rs to compile into the program and choose between by the taskbar's theme.
+	5. pnpm icons, in the workspace above, generates every platform's application icon from the three app-icon sources. That is Tauri's own tool, and the only step here that isn't ours.
+	6. The .ico it wrote, src-tauri\icons\icon.ico, comes back here as ftorrent.ico, the Windows application and installer icon, kept beside the other outputs as the record of what shipped.
 
 The sheet's layers, sheet-<size>.png, are not remade here; Split-Ico.ps1 makes them once when a new sheet.ico arrives.
 
@@ -42,9 +43,18 @@ foreach ($name in $viewBoxes.Keys) {
 	"wrote    $name to src-tauri\icons"
 }
 
+"glyph at every taskbar scale, in white and in black"
+& .\Draw-Tray.ps1
+foreach ($color in 'white', 'black') { #one icon per color: the notification area paints nothing, so the app carries both and shows the one the taskbar's theme calls for
+	"packing tray-$color.ico"
+	& .\Join-Ico.ps1 -Stem "tray-$color" -Ico "tray-$color.ico"
+	Copy-Item "tray-$color.ico" (Join-Path $icons "tray-$color.ico")
+	"copied   tray-$color.ico to src-tauri\icons"
+}
+
 "pnpm icons, in the workspace above"
 Push-Location .. #step up for the run and come back after, whatever happens
 try { pnpm icons; if ($LASTEXITCODE -ne 0) { throw "pnpm icons failed with exit code $LASTEXITCODE" } } finally { Pop-Location } #a program's failure doesn't stop powershell on its own, so its exit code is checked by hand
 Copy-Item (Join-Path $icons 'icon.ico') ftorrent.ico
 "copied   ftorrent.ico back from src-tauri\icons"
-"done: favicon.svg, ftorrent.ico, torrent.ico"
+"done: favicon.svg, ftorrent.ico, torrent.ico, tray-white.ico, tray-black.ico"

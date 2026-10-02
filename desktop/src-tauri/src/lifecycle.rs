@@ -5,7 +5,7 @@ ftorrent keeps running with its window closed, the way a file transfer applicati
 
 Closing hides. The close button on Windows and the red button on macOS hide the window instead of closing it, except from a fullscreen Space on the Mac, as the essay above window_event describes, so the page and its webview stay alive, keep their state, and come back at once; the webview's footprint is small next to the engine's. The window is created once when ftorrent starts and destroyed once when it quits.
 
-Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
+Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides; and clicking the Dock icon while the window is hidden sends Reopen, which brings it back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; its icon is the mark as a monochrome glyph, white on a dark taskbar and black on a light one, where Windows programs put their full-color icon, so that ftorrent reads as a glyph beside the system's own, which is on purpose; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. On a fresh Windows the tray icon starts behind the taskbar's overflow chevron, where Windows puts every new icon until the user drags it out, and a program can't promote its own; so the way back a user finds first is launching ftorrent again, from the Start menu or a pinned button, and that works: the second launch runs for a moment, hands over through the pipe (instance.rs), and leaves, and this copy brings its window forward. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
 The words follow each platform too, wherever its users already know one. Windows says Exit, and macOS says Quit. On Windows the window has the menu bar Windows programs have had since the 1990s, File with Exit, Tools with Options, and Help with About, each with an access key and none with a shortcut, and the tray's menu has Show and Exit; on macOS the app menu is the one macOS provides. What ftorrent calls its settings follows the same way: Options on Windows, the classic word, which qBittorrent uses too, and Settings everywhere else, the word macOS has used since Ventura. The menu's words are written here, since Rust builds the menu before any page exists, and the page's words for the same things, like the Options page's title, come from settings.js, where the page asks which platform it's on. Past these few words, the page reads the same on every platform.
 
@@ -75,6 +75,28 @@ pub fn tray_remove(app: &AppHandle) {
 	let _ = app.remove_tray_by_id("main");//none means it was never built, or is already gone
 }
 
+/// The registry key where Windows keeps the user's choice of light or dark, for the taskbar and for apps separately; both Windows 10 and 11 write it there
+#[cfg(target_os = "windows")]
+const THEME_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+
+/// On Windows, whether the taskbar is light. SystemUsesLightTheme is the taskbar's half of the theme, separate from AppsUseLightTheme, which is what the window follows and what Tauri reports as the theme; Windows 10 ships with the taskbar dark and apps light, so the two differ on most of its machines, and Windows 11 ships with both light. A missing value, which older Windows 10 builds have, means dark, and so does anything but a 1
+#[cfg(target_os = "windows")]
+fn taskbar_light() -> bool {
+	crate::registry::number(THEME_KEY, "SystemUsesLightTheme") == Some(1)
+}
+
+/// On Windows, the tray icon for a light or a dark taskbar, at the size the shell draws it. The notification area paints an icon's pixels as they are, so the program carries two icons, the glyph in black for a light taskbar and in white for a dark one, each packed by the icon studio at every taskbar scale, and the layer drawn for this system's scaling is the one handed over, so nothing is resized on the way to the screen; the application icon's first layer, which Tauri would hand the tray by default, is 32 pixels, which the shell shrinks to 16 at 100 percent scaling
+#[cfg(target_os = "windows")]
+fn tray_icon(light: bool) -> Option<tauri::image::Image<'static>> {
+	use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSMICON};
+	let wanted = unsafe { GetSystemMetrics(SM_CXSMICON) } as u32;//the small icon size at the system's scaling: 16 pixels at 100 percent, 20 at 125, 24 at 150, 32 at 200, which is the size the notification area draws at and the one LoadIconMetric would choose
+	let bytes: &[u8] = if light { include_bytes!("../icons/tray-black.ico") } else { include_bytes!("../icons/tray-white.ico") };//both files are built into the program, so neither can go missing from an installed copy; named as a slice because include_bytes types each file by its length, and the two differ
+	let directory = ico::IconDir::read(std::io::Cursor::new(bytes)).ok()?;//the file's directory
+	let entry = directory.entries().iter().filter(|entry| entry.width() >= wanted).min_by_key(|entry| entry.width()).or_else(|| directory.entries().iter().max_by_key(|entry| entry.width()))?;//the layer drawn for this size, or the next larger, which the shell shrinks a little; never a smaller one, which it would stretch
+	let image = entry.decode().ok()?;
+	Some(tauri::image::Image::new_owned(image.rgba_data().to_vec(), image.width(), image.height()))
+}
+
 /// On Windows, the tray icon that brings the window back and quits; called once from setup
 #[cfg(target_os = "windows")]
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
@@ -96,7 +118,12 @@ pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 		.on_tray_icon_event(|tray, event| {
 			if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event { bring_forward(tray.app_handle()) }
 		});
-	if let Some(icon) = app.default_window_icon() { tray = tray.icon(icon.clone()) }//the app icon until the icons story draws a small one for the tray
+	if let Some(icon) = tray_icon(taskbar_light()) { tray = tray.icon(icon) }//the glyph in the color the taskbar's theme calls for
+	else if let Some(icon) = app.default_window_icon() { tray = tray.icon(icon.clone()) }//the application icon, only if the file built into the program somehow won't read
 	tray.build(app)?;//the app keeps it, by its id, for as long as ftorrent runs
+	let handle = app.clone();
+	crate::registry::watch(THEME_KEY, move || {//the user changed the theme in Settings while ftorrent runs: read it again and show the other icon. The key holds the accent color and more besides, so a change there that isn't the taskbar's theme sets the same icon again, which the shell shows without a flicker
+		if let (Some(tray), Some(icon)) = (handle.tray_by_id("main"), tray_icon(taskbar_light())) { let _ = tray.set_icon(Some(icon)); }//set_icon runs on the main thread whichever thread asks, which this one isn't
+	});
 	Ok(())
 }

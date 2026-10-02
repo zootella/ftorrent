@@ -1,7 +1,7 @@
 use tauri::command;
 
 /*
-The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open.
+The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open. Two more functions, number and watch, serve the core itself rather than the page, in the same general terms: the tray in lifecycle.rs reads the taskbar's theme through one and follows it through the other.
 
 registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_delete removes one value, and registry_delete_key removes a key with everything under it, both only under HKEY_CURRENT_USER, and both answer whether there was anything there, so taking something back counts as a change the same way writing it does. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
 
@@ -53,11 +53,23 @@ pub fn registry_opens(name: String) -> Result<Option<Opener>, String> {
 	platform::opens(&name)
 }
 
+/// A number value under the current user, read for the core itself rather than for the page; nothing when the key or the value isn't there, or isn't a number
+#[cfg(target_os = "windows")]
+pub fn number(key: &str, name: &str) -> Option<u32> {
+	platform::number(key, name)
+}
+
+/// Call back whenever a value under a key of the current user is written, from a thread that waits on the key for the life of the process; the callback runs on that thread. Nothing happens if the key can't be opened
+#[cfg(target_os = "windows")]
+pub fn watch(key: &str, changed: impl Fn() + Send + 'static) {
+	platform::watch(key, changed)
+}
+
 #[cfg(target_os = "windows")]
 mod platform {
 	use windows::core::{PCWSTR, PWSTR};
 	use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_NO_ASSOCIATION};
-	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegGetValueW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
+	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegGetValueW, RegNotifyChangeKeyValue, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_NOTIFY, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_NOTIFY_CHANGE_LAST_SET, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_DWORD, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
 	use windows::Win32::UI::Shell::{AssocQueryStringW, SHChangeNotify, SHDeleteKeyW, ASSOCF, ASSOCF_IS_PROTOCOL, ASSOCF_NONE, ASSOCF_NOTRUNCATE, ASSOCSTR, ASSOCSTR_EXECUTABLE, ASSOCSTR_PROGID, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
 	use super::Opener;
 
@@ -76,6 +88,33 @@ mod platform {
 		if read == ERROR_FILE_NOT_FOUND { return Ok(None) }//no key, or a key without this value
 		if read.is_err() { return Err(format!("registry: could not read {key}, windows error {}", read.0)) }
 		Ok(Some(String::from_utf16_lossy(&buffer[..(size as usize / 2).saturating_sub(1)])))//characters, less the terminating zero; on success size never exceeds the buffer
+	}
+
+	pub fn number(key: &str, name: &str) -> Option<u32> {
+		let wide_key = wide(key);
+		let wide_name = wide(name);
+		let mut value = 0u32;
+		let mut size = std::mem::size_of::<u32>() as u32;//the registry counts in bytes, and a DWORD is four
+		let read = unsafe { RegGetValueW(HKEY_CURRENT_USER, PCWSTR(wide_key.as_ptr()), PCWSTR(wide_name.as_ptr()), RRF_RT_REG_DWORD, None, Some((&mut value as *mut u32).cast()), Some(&mut size)) };//only a DWORD is accepted; a value of any other type fails the read, which answers nothing, the same as a missing one
+		if read.is_err() { return None }
+		Some(value)
+	}
+
+	pub fn watch(key: &str, changed: impl Fn() + Send + 'static) {
+		let wide_key = wide(key);
+		let mut handle = HKEY::default();
+		let opened = unsafe { RegOpenKeyExW(HKEY_CURRENT_USER, PCWSTR(wide_key.as_ptr()), None, KEY_NOTIFY, &mut handle) };//opened only to be told about changes, which is the one right the handle needs
+		if opened.is_err() { return }
+		let raw = handle.0 as usize;//the handle is a pointer, which rust won't let cross into a thread as it is; as a number it goes, and comes back as a handle on the other side
+		std::thread::spawn(move || {
+			let handle = HKEY(raw as *mut _);
+			loop {
+				let waited = unsafe { RegNotifyChangeKeyValue(handle, false, REG_NOTIFY_CHANGE_LAST_SET, None, false) };//this key's own values and not its subkeys', and with no event and not asynchronous, so the call itself blocks this thread until a value is written, then returns once; windows arms the watch for one change at a time, so the loop arms it again. The thread must be the one that keeps waiting, since windows cancels the watch if its thread ends, which is why this is a thread of its own
+				if waited.is_err() { break }
+				changed();
+			}
+			let _ = unsafe { RegCloseKey(handle) };
+		});
 	}
 
 	pub fn set(key: &str, name: &str, value: &str) -> Result<bool, String> {
