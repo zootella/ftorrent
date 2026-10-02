@@ -31,8 +31,6 @@ export const useAssociationsStore = defineStore('associations', () => {
 	let answer = computed(() => settings.settings.associations.default)//yes, no, or ask, as the file says
 	let ours = name => !!opens.value[name]?.executable && opens.value[name].executable.toLowerCase() == thisCopy(paths).toLowerCase()//the system would open this type with this very copy of ftorrent. By path on both platforms, though the mac records a default by bundle identifier: while a newer copy sits elsewhere, as a mounted disk image during a manual upgrade can, macOS may route ftorrent's types to it and the bar asks until the user drags it in and ejects. Known, brief, and accepted rather than another lookup
 	let allOurs = computed(() => typeNames.every(ours))
-	let anyOurs = computed(() => typeNames.some(ours))
-	let disagrees = computed(() => installed.value && ((answer.value == 'yes' && !allOurs.value) || (answer.value == 'no' && anyOurs.value)))//the setting and the system tell different stories, which only the user can settle
 
 	let running = Promise.resolve()//the last pass queued, so the next one waits for it
 	function refresh(answering = '') { running = running.then(() => pass(answering)); return running }//a pass, after any still going; answering is the answer the user just gave, the one time anything gets written
@@ -101,5 +99,5 @@ export const useAssociationsStore = defineStore('associations', () => {
 		return lines
 	})
 
-	return {installed, opens, bannerUp, answer, disagrees, report, start, choose, dismiss, openWindowsSettings}
+	return {installed, opens, bannerUp, answer, report, start, choose, dismiss}
 })

@@ -4,10 +4,10 @@ import {useAssociationsStore} from '../stores/associations.js'
 import {brandName} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
-import {fontsOffered, settingsName, platformName, systemFace} from '../settings.js'
+import {fontsOffered, settingsName, systemFace} from '../settings.js'
 
 let store = useSettingsStore()
-let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether windows agrees
+let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether this copy is installed, the only kind that may answer
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', 'Ask']]
@@ -39,9 +39,7 @@ async function chooseFont(font) {
 		<h1>{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
-			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names -->
-			<!-- a copy the installer didn't place never registers anything, and its choice is simply grayed; an installed one on windows links to windows' own Settings, the one place a saved choice of another program can be changed -->
-			<p v-if="associations.installed && associations.disagrees && platformName == 'Windows'"><a href="#" @click.prevent="associations.openWindowsSettings()">Update in Windows Settings</a></p>
+			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This page only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
