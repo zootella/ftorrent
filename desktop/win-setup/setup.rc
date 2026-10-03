@@ -1,5 +1,7 @@
-// The resources compiled into setup.exe: its icon, its manifest, and the version block that Properties, Add or Remove Programs, and antivirus reputation systems read. The names and numbers come in as definitions on the resource compiler's command line, which is how win-setup.js stamps each release's version and each product's name and icon into a fresh stub; the defaults below are for building the stub by hand, with nothing in it.
+// The resources compiled into setup.exe: its icon, its manifest, and the version block that Properties, Add or Remove Programs, and antivirus reputation systems read. The names and numbers come from build/stamp.h, which win-setup.js writes for each release, so each product's name and icon and each release's version go into a fresh stub; the defaults below are for building the stub by hand, with nothing in it.
+#pragma code_page(65001) // this file and the stamp header are UTF-8, which the copyright sign in the version block needs; the resource compiler assumes the system code page without this
 #include <winres.h>
+#include "build/stamp.h" // what win-setup.js wrote for this build, or an empty file build.cmd made, so the defaults below apply
 
 #ifndef SETUP_ICON
 #define SETUP_ICON "..\\src-tauri\\icons\\icon.ico"
@@ -40,7 +42,7 @@ BEGIN
 			VALUE "FileDescription", SETUP_PRODUCT " Setup"
 			VALUE "FileVersion", SETUP_VERSION_TEXT
 			VALUE "LegalCopyright", SETUP_COPYRIGHT
-			VALUE "OriginalFilename", "setup.exe"
+			VALUE "OriginalFilename", SETUP_PRODUCT ".exe" // the name the installer is published under, like ftorrent.exe
 			VALUE "ProductName", SETUP_PRODUCT
 			VALUE "ProductVersion", SETUP_VERSION_TEXT
 		END

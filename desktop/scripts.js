@@ -23,7 +23,7 @@ The rule for a published name: **every Linux package states its architecture, an
 */
 const targets = {
 	'dmg':       {source: 'bundle', folder: 'dmg',  suffix: '.dmg',       publish: 'ftorrent.dmg'},
-	'exe':       {source: 'bundle', folder: 'nsis', suffix: '-setup.exe', publish: 'ftorrent.exe'},
+	'exe':       {source: 'bundle', folder: 'win-setup', suffix: '-setup.exe', publish: 'ftorrent.exe'},
 	'deb-arm64': {source: 'linux',  match: /_(arm64)\.deb$/, publish: 'ftorrent.arm64.deb'},
 	'deb-x64':   {source: 'linux',  match: /_(amd64)\.deb$/, publish: 'ftorrent.amd64.deb'},
 	'rpm-x64':   {source: 'linux',  match: /\.(x86_64)\.rpm$/, publish: 'ftorrent.x86_64.rpm'},

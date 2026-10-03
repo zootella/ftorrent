@@ -19,7 +19,6 @@
 		"active": true,
 		"targets": [
 			"app",
-			"nsis",
 			"deb"
 		],
 		"publisher": "ftorrent",
@@ -46,14 +45,6 @@
 		"linux": {
 			"deb": {"desktopTemplate": "ftorrent.desktop.hbs"},
 			"rpm": {"desktopTemplate": "ftorrent.desktop.hbs"}
-		},
-		"windows": {
-			"nsis": {
-				"installMode": "currentUser",
-				"installerIcon": "icons/icon.ico",
-				"uninstallerIcon": "icons/icon.ico",
-				"installerHooks": "windows/hooks.nsh"
-			}
 		},
 		"macOS": {
 			"minimumSystemVersion": "15.0",
