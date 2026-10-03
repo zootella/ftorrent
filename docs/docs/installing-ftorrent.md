@@ -31,8 +31,8 @@ So the prompt is about the file's origin and who vouches for it. Once you confir
 
 1. Download `ftorrent.exe`. Your browser may hold the download with a note that ftorrent.exe isn't commonly downloaded. In Microsoft Edge, open the **…** menu on the download, choose **Keep**, then **Show more**, then **Keep anyway**. Other browsers offer the same choice in a menu on the download itself.
 2. Run `ftorrent.exe`. SmartScreen shows a blue window titled **Windows protected your PC**, saying **Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.** The only button is **Don't run**. Click **More info**, and the window adds the file's name, **Publisher: Unknown publisher**, and a **Run anyway** button. Click **Run anyway**.
-3. The installer runs. It installs ftorrent for your Windows account alone, so it doesn't ask for an administrator password.
-4. Open ftorrent from the Start menu. The installer wrote the program to your disk, so the installed copy carries no mark and opens without a prompt, now and later.
+3. The installer runs. It shows nothing, installs ftorrent for your Windows account alone, so it doesn't ask for an administrator password, and opens ftorrent when it's done, a second or two later.
+4. From then on, open ftorrent from the Start menu. The installer wrote the program to your disk, so the installed copy carries no mark and opens without a prompt, now and later.
 
 You can also clear the mark yourself before step 2, which skips the SmartScreen window. Right-click `ftorrent.exe`, choose **Properties**, and on the **General** tab find the line **This file came from another computer and might be blocked to help protect this computer**. Check **Unblock** beside it and click **OK**. In PowerShell, this command does the same:
 
