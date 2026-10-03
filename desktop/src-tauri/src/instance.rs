@@ -13,7 +13,7 @@ Two halves do that. The lock says whether this copy is already running. It's an 
 
 The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, which Tauri hands over as its Opened event, at a cold start and while running alike, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live.
+What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, so an upgrade closes the running copy cleanly rather than ending its process.
 */
 
 const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
@@ -187,7 +187,8 @@ mod handoff {
 					let mut bytes = Vec::new();
 					if connected.take(MOST).read_to_end(&mut bytes).await.is_err() { return }//the launch writes one line and closes, which ends the read
 					let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else { return };
-					let args = value.get("args").and_then(|a| a.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
+					let args: Vec<String> = value.get("args").and_then(|a| a.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
+					if args.len() == 1 && args[0] == "--exit" { crate::log::log("asked to exit by handoff"); app.exit(0); return }//the one request that isn't for the page: the setup program sends it before it replaces the files, and it reaches the same Exit run event as File, Exit, so the engine stops and the session is saved
 					super::arrive(&app, "handoff", args, true);
 				});
 			}

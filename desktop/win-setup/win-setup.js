@@ -42,6 +42,7 @@ function main() {
 	if (!arch) throw new Error('no installer architecture for ' + process.arch)
 	let executable = join(target, binary + '.exe')
 	if (!existsSync(executable)) throw new Error(`${executable} is not built; tauri build makes it`)
+	let registry = readRegistryList(product, binary)
 
 	//stage: the executable and every resource, laid out as installed. tauri.conf.json's resources are a map from a path relative to src-tauri to the path it takes beside the executable; a folder copies whole, which keeps the engine's _internal where the freeze expects it
 	let stage = join(work, 'stage')
@@ -87,10 +88,10 @@ function main() {
 	let build = spawnSync(join(here, 'build.cmd'), [], {stdio: 'inherit', shell: true})//a batch file needs cmd, and shell: true hands it the path quoted whole, spaces and all
 	if (build.status != 0) throw new Error('build.cmd could not build setup.exe')
 	let stub = readFileSync(join(here, 'build/setup.exe'))
-	say(`stub     ${kilobytes(stub.length)} KB in ${seconds(compiling)} s`)
+	say(`stub     ${kilobytes(stub.length)} KB in ${seconds(compiling)} s, ${registry.length} uninstall instructions`)
 
 	//append: the table of strings the setup program reads, in the order setup.c documents, then the trailer, whose layout is the Trailer struct there: the hash, four offsets and sizes, and the magic that marks a stub with something in it
-	let table = Buffer.from([product, binary + '.exe'].map(string => string + '\0').join(''), 'utf16le')
+	let table = Buffer.from([product, binary + '.exe', configuration.identifier, version, bundle.publisher || '', bundle.homepage || '', ...registry].map(string => string + '\0').join(''), 'utf16le')
 	let trailer = Buffer.alloc(72)
 	createHash('sha256').update(cabinet).update(table).digest().copy(trailer, 0)
 	trailer.writeBigUInt64LE(BigInt(stub.length), 32)
@@ -105,6 +106,28 @@ function main() {
 	mkdirSync(bundled, {recursive: true})
 	writeFileSync(join(bundled, file), Buffer.concat([stub, cabinet, table, trailer]))
 	say(`finished ${join(bundled, file)}, ${megabytes(stub.length + cabinet.length + table.length + trailer.length)} MB in ${seconds(started)} s`)
+}
+
+/*
+The uninstall list from win-setup.toml: what uninstall.exe takes out of the registry, as the setup program's table carries it. Each entry names one instruction by its key, with name, equals, and at beside it where the instruction takes them, and the creator turns each into one string of tab-separated fields, verb, key, name, equals, at, in that order, which setup.c splits. {product} and {binary} are filled here; {program} is left for the setup program, since only it knows the installed path. Only keys under HKCU are allowed, because the installer is per user and never elevates: a key anywhere else could not be deleted even if it should be.
+*/
+const verbs = ['delete-key', 'delete-value', 'delete-value-if', 'delete-key-if-empty', 'delete-key-if']
+function readRegistryList(product, binary) {
+	let file = join(here, 'win-setup.toml')
+	if (!existsSync(file)) return []
+	let settings = parseToml(readFileSync(file, 'utf8'))
+	let entries = settings.uninstall?.registry || []
+	let fill = text => String(text).replaceAll('{product}', product).replaceAll('{binary}', binary)
+	return entries.map((entry, i) => {
+		let found = verbs.filter(verb => verb in entry)
+		if (found.length != 1) throw new Error(`win-setup.toml uninstall.registry entry ${i + 1} must have exactly one of ${verbs.join(', ')}`)
+		let verb = found[0]
+		let key = fill(entry[verb])
+		if (!/^HKCU\\./.test(key)) throw new Error(`win-setup.toml uninstall.registry entry ${i + 1}: ${key} is not under HKCU, the only hive a per-user installer touches`)
+		let fields = [verb, key, fill(entry.name ?? ''), fill(entry.equals ?? ''), fill(entry.at ?? '')]
+		if (fields.some(field => field.includes('\t'))) throw new Error(`win-setup.toml uninstall.registry entry ${i + 1} has a tab in it, which separates the fields`)
+		return fields.join('\t')
+	})
 }
 
 //every file under a folder, as paths relative to it with backslashes, which is how the cabinet and the setup program spell them
