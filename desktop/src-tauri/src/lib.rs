@@ -74,6 +74,8 @@ pub fn run() {
 			if let instance::Start::Leave = instance::start(app.handle(), &paths) {//another process is this copy, and now has what this launch carried
 				std::process::exit(0);//nothing has started yet, so there's nothing to stop: no engine, no lock, and no window, which is only built from the Ready event below
 			}
+			#[cfg(target_os = "windows")]
+			lifecycle::identity_install(app.handle());//which application this process is, said to the shell before the tray and the window exist, so the taskbar knows them as the shortcut's
 			app.manage(paths);//before the engine, which is told where everything is; the settings file inside the data folder is the page's to read, once it's up, and only the copy holding the lock has a page
 			engine::engine_start(app.handle());//so the engine is already up, or already known to have failed, by the time the page asks
 			#[cfg(target_os = "windows")]

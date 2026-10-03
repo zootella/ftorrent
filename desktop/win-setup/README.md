@@ -187,7 +187,7 @@ The user downloads `ftorrent.exe` from ftorrent.com and double-clicks it in `Dow
 
 8. **The downloaded `ftorrent.exe` writes the uninstall entry,** `Uninstall\ftorrent`, named for the product as NSIS named it, so an install over an NSIS-era copy takes over its entry rather than adding a second: the display name, icon, and version, the publisher, the install folder, the size in kilobytes, the date, the home page, and `uninstall.exe` as both the ordinary and the quiet uninstall command.
 
-9. **The downloaded `ftorrent.exe` writes `ftorrent.lnk`,** through the shell's link and property store interfaces, carrying `com.ftorrent.ftorrent` as its AppUserModelID. The application sets the same identifier on its window when it runs, so a pinned shortcut and the running window are one taskbar button.
+9. **The downloaded `ftorrent.exe` writes `ftorrent.lnk`,** through the shell's link and property store interfaces, carrying `com.ftorrent.ftorrent` as its AppUserModelID. The application tells the shell the same identifier for its process when it starts, in `src-tauri/src/lifecycle.rs`, so a pinned shortcut and the running window are one taskbar button; without that call Windows would know the window by the executable's path instead, and show two.
 
 10. **The downloaded `ftorrent.exe` starts the installed `ftorrent.exe`** and exits. About one second has passed. Before starting it, the downloaded one reads the registry for Microsoft Edge WebView2, which every current Windows has and which the application draws its window with; a Windows without it gets a dialog and Microsoft's page for it opened instead of a program that can't start.
 

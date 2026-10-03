@@ -57,8 +57,8 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		return Start::Run;
 	}
 	let data = Path::new(&paths.data);
-	let stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js in the page says which name goes where
-	let lock_path = data.join(format!("{stem}.lock"));//empty, and never written; it exists to be locked
+	let brand_stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js in the page says which name goes where
+	let lock_path = data.join(format!("{brand_stem}.lock"));//empty, and never written; it exists to be locked
 	status(&instance).lock = lock_path.to_string_lossy().into_owned();
 
 	match take(&lock_path) {
@@ -69,7 +69,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		}
 		Err(Taken::Busy) => {
 			crate::log::log(&format!("another process holds the lock, {}, so this one hands over and leaves", lock_path.display()));//waits in memory, and goes nowhere, since this process never has a page to start the log
-			handoff::send(&stem, &lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
+			handoff::send(&brand_stem, &lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
 			return Start::Leave;
 		}
 		Err(Taken::Unsupported(e)) => {
@@ -77,7 +77,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		}
 	}
 
-	match handoff::serve(app, &stem, &lock_path) {
+	match handoff::serve(app, &brand_stem, &lock_path) {
 		Ok(how) => status(&instance).handoff = how,
 		Err(e) => {
 			let mut s = status(&instance);
@@ -152,16 +152,16 @@ mod handoff {
 	const ERROR_PIPE_BUSY: i32 = 231;//every instance of the pipe is taken for the moment, as when many launches arrive together
 
 	/// The pipe's name: brandStem and a hash of the lock file's path, so each copy has its own and a launch finds the right one; the windows installer computes the same name to ask a running copy to exit
-	fn name(stem: &str, lock: &Path) -> String {
+	fn name(brand_stem: &str, lock: &Path) -> String {
 		let path = lock.to_string_lossy().to_lowercase();//windows paths ignore case, so C:\Users and c:\users are one copy
 		let mut hash: u64 = 0xcbf29ce484222325;//FNV-1a, the same answer in every process and every build; a name needs no more than that, and first_pipe_instance below stops another process from taking it
 		for byte in path.bytes() { hash ^= byte as u64; hash = hash.wrapping_mul(0x100000001b3); }
-		format!(r"\\.\pipe\{stem}-{hash:016x}")
+		format!(r"\\.\pipe\{brand_stem}-{hash:016x}")
 	}
 
 	/// Serve the pipe for as long as this copy runs; each connection brings one launch's arguments
-	pub fn serve(app: &AppHandle, stem: &str, lock: &Path) -> Result<String, String> {
-		let name = name(stem, lock);
+	pub fn serve(app: &AppHandle, brand_stem: &str, lock: &Path) -> Result<String, String> {
+		let name = name(brand_stem, lock);
 		let first = tauri::async_runtime::block_on(async {//created here, before setup goes on, so the gap a cold start leaves is as short as it can be
 			ServerOptions::new()
 				.first_pipe_instance(true)//fails if something already has this name, rather than joining it
@@ -197,8 +197,8 @@ mod handoff {
 	}
 
 	/// Hand this launch's arguments to the copy that holds the lock
-	pub fn send(stem: &str, lock: &Path, args: &[String]) {
-		let name = name(stem, lock);
+	pub fn send(brand_stem: &str, lock: &Path, args: &[String]) {
+		let name = name(brand_stem, lock);
 		let line = serde_json::json!({ "args": args }).to_string() + "\n";
 		let started = Instant::now();
 		loop {
@@ -218,10 +218,10 @@ mod handoff {
 	use tauri::AppHandle;
 
 	/// Nothing to serve: Launch Services delivers to a running app on macOS
-	pub fn serve(_app: &AppHandle, _stem: &str, _lock: &Path) -> Result<String, String> {
+	pub fn serve(_app: &AppHandle, _brand_stem: &str, _lock: &Path) -> Result<String, String> {
 		Ok(if cfg!(target_os = "macos") { "Launch Services".to_string() } else { "none yet on this platform".to_string() })
 	}
 
 	/// A second process here got around Launch Services; the copy that's running is already on screen, so this one leaves
-	pub fn send(_stem: &str, _lock: &Path, _args: &[String]) {}
+	pub fn send(_brand_stem: &str, _lock: &Path, _args: &[String]) {}
 }

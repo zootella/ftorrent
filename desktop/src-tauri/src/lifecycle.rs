@@ -53,12 +53,12 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem, Submenu};
 	use tauri::Emitter;//for emit, which hands the page an event
-	let brand = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
+	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler. The ampersand makes x its access key, underlined while Alt is held, so Alt, F, X quits, the way a Windows File menu does; and no shortcut, since the system's own Alt+F4 is a close, which now hides
 	let file = Submenu::with_items(app, "&File", true, &[&exit])?;//and F the menu's, so Alt+F opens it
 	let options = MenuItem::with_id(app, "settings", "&Options...", true, None::<&str>)?;//windows' classic word for settings, where qbittorrent has it too; the page's settings.js names its page Options on windows to match. The id is the name of the route it opens
 	let tools = Submenu::with_items(app, "&Tools", true, &[&options])?;
-	let about = MenuItem::with_id(app, "about", format!("&About {brand}"), true, None::<&str>)?;//the id the name of its route too
+	let about = MenuItem::with_id(app, "about", format!("&About {brand_name}"), true, None::<&str>)?;//the id the name of its route too
 	let help = Submenu::with_items(app, "&Help", true, &[&about])?;//last, the way a Windows menu bar ends
 	app.set_menu(Menu::with_items(app, &[&file, &tools, &help])?)?;//on windows, a menu set on the app is the menu bar of its window
 	app.on_menu_event(|app, event| match event.id().as_ref() {//every menu event reaches this handler and the tray's both, as tauri documents, so each acts only on the ids it knows: the tray's Show falls through here, and exit, in both menus, runs twice, which is harmless, since the second finds nothing left to stop
@@ -97,17 +97,26 @@ fn tray_icon(light: bool) -> Option<tauri::image::Image<'static>> {
 	Some(tauri::image::Image::new_owned(image.rgba_data().to_vec(), image.width(), image.height()))
 }
 
+/// On Windows, tell the shell which application this process is, before the tray or the window exists; called once from setup. The identifier is tauri.conf.json's, com.ftorrent.ftorrent, and the Start menu shortcut the installer writes carries the same string as its AppUserModelID. The taskbar matches a running window to a pinned shortcut by that identifier, and a window whose process never said one gets an identity Windows derives from the executable's path instead, so the pin and the running window would be two buttons rather than one, which is why every Electron app makes this same call. Notifications and the jump list key on it too
+#[cfg(target_os = "windows")]
+pub fn identity_install(app: &AppHandle) {
+	use windows::core::PCWSTR;
+	use windows::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
+	let wide: Vec<u16> = app.config().identifier.encode_utf16().chain(std::iter::once(0)).collect();
+	if let Err(e) = unsafe { SetCurrentProcessExplicitAppUserModelID(PCWSTR(wide.as_ptr())) } { crate::log::log(&format!("the shell did not take the application identifier: {e}")) }//noted and nothing more: the window still opens, under the path-derived identity it had before this call existed
+}
+
 /// On Windows, the tray icon that brings the window back and quits; called once from setup
 #[cfg(target_os = "windows")]
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem};
 	use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-	let brand = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
-	let show = MenuItem::with_id(app, "show", format!("&Show {brand}"), true, None::<&str>)?;//access keys here too, S and x, so the menu works from the keyboard once it's open
+	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
+	let show = MenuItem::with_id(app, "show", format!("&Show {brand_name}"), true, None::<&str>)?;//access keys here too, S and x, so the menu works from the keyboard once it's open
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;
 	let menu = Menu::with_items(app, &[&show, &exit])?;
 	let mut tray = TrayIconBuilder::with_id("main")
-		.tooltip(brand)
+		.tooltip(brand_name)
 		.menu(&menu)
 		.show_menu_on_left_click(false)//left click brings the window back, and the menu is on the right, where Windows users look for it
 		.on_menu_event(|app, event| match event.id().as_ref() {
