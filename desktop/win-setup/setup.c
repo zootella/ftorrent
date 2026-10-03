@@ -368,7 +368,7 @@ static void writeString(HKEY key, const WCHAR* name, const WCHAR* value) { RegSe
 static void writeNumber(HKEY key, const WCHAR* name, DWORD value) { RegSetValueExW(key, name, 0, REG_DWORD, (const BYTE*)&value, sizeof(value)); }
 static void uninstallEntryPath(WCHAR* path) { StringCchPrintfW(path, PATH_SIZE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s", brandName); }
 
-// The entry Add or Remove Programs and Settings read, under the user's own Uninstall key, named brandName as NSIS named it, so an install over an NSIS-era copy takes over its entry rather than adding a second
+// The entry Add or Remove Programs and Settings read, under the user's own Uninstall key, named brandName, so an install over an existing copy rewrites its entry rather than adding a second
 static void writeUninstallEntry(void) {
 	WCHAR path[PATH_SIZE], text[PATH_SIZE];
 	uninstallEntryPath(path);

@@ -185,7 +185,7 @@ The user downloads `ftorrent.exe` from ftorrent.com and double-clicks it in `Dow
 
 7. **The downloaded `ftorrent.exe` writes `uninstall.exe`:** the first bytes of its own file, up to where the cabinet began, which are the stub, then a trailer with a cabinet size of zero.
 
-8. **The downloaded `ftorrent.exe` writes the uninstall entry,** `Uninstall\ftorrent`, named for the product as NSIS named it, so an install over an NSIS-era copy takes over its entry rather than adding a second: the display name, icon, and version, the publisher, the install folder, the size in kilobytes, the date, the home page, and `uninstall.exe` as both the ordinary and the quiet uninstall command.
+8. **The downloaded `ftorrent.exe` writes the uninstall entry,** `Uninstall\ftorrent`, named for the product, so an install over an existing copy rewrites its entry rather than adding a second: the display name, icon, and version, the publisher, the install folder, the size in kilobytes, the date, the home page, and `uninstall.exe` as both the ordinary and the quiet uninstall command.
 
 9. **The downloaded `ftorrent.exe` writes `ftorrent.lnk`,** through the shell's link and property store interfaces, carrying `com.ftorrent.ftorrent` as its AppUserModelID. The application tells the shell the same identifier for its process when it starts, in `src-tauri/src/lifecycle.rs`, so a pinned shortcut and the running window are one taskbar button; without that call Windows would know the window by the executable's path instead, and show two.
 
