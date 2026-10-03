@@ -1,3 +1,0 @@
-#no line-ending conversion in either direction: this folder is a preserved record of the 2005 Setup Creator, committed with windows line endings
-#-text overrides the repo-wide lf policy in the root .gitattributes, so the archive goes into history exactly as it was found
-* -text

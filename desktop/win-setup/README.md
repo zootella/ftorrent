@@ -58,4 +58,4 @@ The installer isn't signed, so a downloaded copy meets SmartScreen's blue window
 
 ## Where it came from
 
-`setup.c` descends from a 2005 program, the Zootella Setup Creator, which made self-extracting installers that never showed an interface, from a zlib stream in a resource with ANSI strings; it's preserved under `setup-creator-archive` at the repository root, and its history there shows the steps from that program to this one. The creator was C then because there was no scripting language in the pipeline; it's Node now because the pipeline is.
+`setup.c` descends from a 2005 program, the Zootella Setup Creator, which made self-extracting installers that never showed an interface, from a zlib stream in a resource with ANSI strings; it's preserved in the repository's history, in the commit that brought it in, and the commits after it show the steps from that program to this one. The creator was C then because there was no scripting language in the pipeline; it's Node now because the pipeline is.
