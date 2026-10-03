@@ -60,7 +60,7 @@ fn lock(engine: &Engine) -> std::sync::MutexGuard<'_, EngineInner> {
 
 /// Where the engine's executable is on this platform, whether or not it is there
 fn engine_path(app: &AppHandle) -> Result<PathBuf, String> {
-	let name = format!("{}-engine", app.package_info().name);//the folder the freeze produced, and the executable inside it, named for the product in tauri.conf.json
+	let name = format!("{}-engine", app.package_info().crate_name);//the folder the freeze produced, and the executable inside it, named brandStem-engine, the crate's name; tauri.conf.json's resources and the PyInstaller spec write that name out, and must agree
 	let mut path = app.path().resource_dir().map_err(|e| format!("no resource directory: {e}"))?.join(&name);
 	path.push(if cfg!(target_os = "windows") { format!("{name}.exe") } else { name });
 	Ok(path)
@@ -95,7 +95,7 @@ pub fn engine_start(app: &AppHandle) {
 	let pid = child.id();
 	let init = serde_json::json!({
 		"command": "init",
-		"name": app.package_info().name,//the product name, which the engine puts at the front of the client name peers and trackers see
+		"name": app.package_info().name,//brandName, the product name, which the engine puts at the front of the client name peers and trackers see
 		"version": app.package_info().version.to_string(),//the app's version, read from tauri.conf.json at compile time, so the engine can name the client on the wire without a second place the number is written
 		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so the page sends them down the road once it has read the settings file
 			"data": paths.data,

@@ -49,10 +49,10 @@ function main() {
 	if (process.platform != 'darwin') return//a dmg is the mac's alone; windows finishes with tauri build
 
 	let configuration = JSON.parse(readFileSync(join(tauri, 'tauri.conf.json'), 'utf8'))
-	let name = configuration.productName
+	let brandName = configuration.productName//the name people read, which tauri names the .app and the dmg with; brand.js says how it and brandStem are used
 	let arch = {arm64: 'aarch64', x64: 'x64'}[process.arch]//spelled the way tauri spells it, since hash reads the architecture out of the filename and into the published sidecar
 	if (!arch) throw new Error('no dmg architecture for ' + process.arch)
-	let file = `${name}_${configuration.version}_${arch}.dmg`
+	let file = `${brandName}_${configuration.version}_${arch}.dmg`
 
 	//empty the folder first, so a dmg from an earlier version never gives hash two candidates. a copy still mounted in Finder is safe: it keeps reading the old file, and opening the new one mounts it beside, as ftorrent 1
 	let folder = join(bundled, 'dmg')
@@ -63,14 +63,14 @@ function main() {
 	let scratch = mkdtempSync(join(tmpdir(), 'ftorrent-dmg-'))
 	let settings = join(scratch, 'settings.json')
 	writeFileSync(settings, JSON.stringify({
-		'title':             name,
+		'title':             brandName,
 		'icon':              layout.volumeIcon,
 		'background':        layout.background,
 		'icon-size':         layout.iconSize,
 		'compression-level': 9,//zlib's best
 		'window':            layout.window,
 		'contents': [
-			{type: 'file', path: join(bundled, `macos/${name}.app`), ...layout.app},
+			{type: 'file', path: join(bundled, `macos/${brandName}.app`), ...layout.app},
 			{type: 'link', path: '/Applications',                    ...layout.applications},
 		],
 	}, null, '\t'))
@@ -79,7 +79,7 @@ function main() {
 	//uvx takes its own options before the tool and hands everything after it to the tool. --no-hidpi copies the picture as it is: without it, an @2x file beside ceiling.jpg would make dmgbuild combine the two into a tiff, and the one 144 dpi jpeg already serves both kinds of panel
 	let run = spawnSync('uvx', [
 		...dependencies.flatMap(dependency => ['--with', dependency]), dmgbuild,
-		'--no-hidpi', '-s', settings, name, join(folder, file),
+		'--no-hidpi', '-s', settings, brandName, join(folder, file),
 	], {stdio: 'inherit'})
 	rmSync(scratch, {recursive: true, force: true})
 	if (run.error && run.error.code == 'ENOENT') throw new Error('uvx is not on the path; the mac installer needs uv — brew install uv')

@@ -45,7 +45,7 @@ pub fn locate(app: &AppHandle) -> Paths {
 	paths.location = display(&location);
 
 	let portable = location.join(PORTABLE_NAME);
-	let settings_name = format!("{}.toml", app.package_info().name);//the settings file, named for the product in tauri.conf.json, in the data folder; the page reads and writes it
+	let settings_name = format!("{}.toml", app.package_info().crate_name);//the settings file, named brandStem, the crate's name as brand.js in the page calls it, in the data folder; the page reads and writes it
 	let data = if portable.join(&settings_name).is_file() {
 		paths.mode = "portable".to_string();
 		portable
@@ -82,7 +82,7 @@ fn program_location() -> Result<PathBuf, String> {
 fn installer_folder(app: &AppHandle) -> String {
 	if cfg!(target_os = "macos") { return "/Applications".to_string() }//the folder the disk image's window shows beside the app, for the user to drag it onto
 	if !cfg!(target_os = "windows") { return String::new() }
-	std::env::var_os("LOCALAPPDATA").map(|local| display(&PathBuf::from(local).join(&app.package_info().name))).unwrap_or_default()
+	std::env::var_os("LOCALAPPDATA").map(|local| display(&PathBuf::from(local).join(&app.package_info().name))).unwrap_or_default()//brandName, the product name, which is how windows names an install folder
 }
 
 /// A path as text, for the page and the engine

@@ -1,21 +1,24 @@
-# Mac: the Windows installer is ours now, and three shared files changed
+# Mac: two names for the product, the Windows installer is ours, and four shared files changed
 
 A note for the Mac session. It's public and committed, so it names nobody: in anything written for the public, say "the user." Git is read-only on both boxes, and the user makes every commit; report results exactly as they came out, failures included; never regenerate a lockfile. This letter is complete in itself and asks for no reply.
 
-## What changed on the Windows side
+## Two names, and the words for them
 
-**The Windows installer is no longer NSIS.** `desktop/win-setup/` holds a setup program of ftorrent's own: `setup.c`, a 64-bit C program with no interface that unpacks a cabinet from the end of its own file into `%LOCALAPPDATA%\ftorrent`, asks a running copy to exit first, writes the Start menu shortcut and the uninstall entry, and starts the program; `win-setup.js`, the creator, which stages what `tauri.conf.json` names, packs it with Windows' own `makecab`, compiles the stub fresh with the release's icon and version, and appends the payload; and `win-setup.toml`, the one configuration file, holding the uninstall list that `src-tauri/windows/hooks.nsh` used to hold. The README there is the guide. An upgrade writes over the files in place and never uninstalls first, which is what keeps a user's choice of ftorrent for `.torrent` and `magnet:` through a release.
+The product has two names, and the code now keeps them apart with two words, used in every language and file: **`brandName`**, the name people read, `productName` in `tauri.conf.json`, `ftorrent` here and `Fuji` in the sibling project; and **`brandStem`**, the stem of the executable's name, the crate's `name` in `Cargo.toml`, since Cargo names the executable from it, `ftorrent` here and `fuji` there; the Fuji session proposed the pair, both beginning with `brand` as `brand.js`'s other exports do, and stem being the languages' own word for a file name without its extension. Nothing derives one from the other. The essay atop `desktop/src/brand.js` says which goes where, the desktop README has a section, The two names, on how each flows through the page, the Rust core, and the pipelines, the planning document states the rule under Design principles, and `style.md` names the two words.
 
-## The three files both machines share
+What moved in the shared code, all mechanical:
 
-- **`tauri.conf.json`:** `nsis` is gone from `bundle.targets`, which is now `["app", "deb"]`, and the `bundle.windows` block is gone with it. A Mac build is unchanged by either; Tauri still makes the `.app`.
-- **`package.json`:** `installer` is `tauri build && node dmg.js && node win-setup/win-setup.js`. The new script returns at once on a Mac, exactly as `dmg.js` does on Windows. `scripts.js` now looks for the exe under `bundle/win-setup` rather than `bundle/nsis`, which only matters on Windows.
-- **`instance.rs`:** a handoff whose only argument is `--exit` quits the running copy the way File, Exit does, instead of queuing it for the page. It lives in the Windows-only pipe code, under `cfg(target_os = "windows")`, so nothing changes on the Mac; it's how the installer closes a running ftorrent before replacing its files.
+- **`src/brand.js`** exports `brandStem` beside `brandName`, read from `Cargo.toml` through a raw import and smol-toml. The page's file names moved to it: the settings file, the lock, the session folder, the log folder, the `.ftorrent` extension and `ftorrent:` scheme in `associate.js` and `settings.js`. Everything a person reads stays `brandName`.
+- **The Rust core** names the settings file, the lock, the pipe, and the engine's folder from `package_info().crate_name` rather than `name`, in `paths.rs`, `instance.rs`, and `engine.rs`. The window title, the tray, the menus, and the client name the engine receives keep `name`.
+- **`scripts.js`** builds the six published names from `brandStem` and the prefix it looks for from `brandName`, both read at the top of the file, and imports smol-toml for the crate's name. **`dmg.js`** calls the product name `brandName`. Neither changes what either does for ftorrent.
 
-Two smaller edits: the comment in `src/associate.js` that pointed at `hooks.nsh` now points at the TOML, and the desktop README's Windows paragraphs, the icon studio README's line about the installer icon, the planning document's mentions of NSIS, and the installing guide's Windows steps all describe the new installer.
+## The Windows installer
+
+`desktop/win-setup/` holds a setup program of ftorrent's own in place of NSIS: `setup.c`, a 64-bit C program with no interface that unpacks a cabinet from the end of its own file into local application data, asks a running copy to exit first, writes the Start menu shortcut and the uninstall entry, starts the program, and is its own uninstaller; `win-setup.js`, the creator, which stages what `tauri.conf.json` names, packs it with Windows' own `makecab`, compiles the stub fresh with the release's names and version, and appends the cabinet; and `registry.js`, which builds the uninstall list that `hooks.nsh` used to hold from one short list, the file extensions and link schemes the app opens, with the rules beneath it. The README there tells the whole story as two flows. An upgrade writes over the files in place and never uninstalls first, which is what keeps a user's choice of ftorrent for `.torrent` and `magnet:` through a release.
+
+The shared files it touched: `tauri.conf.json` lost the `nsis` target and the `bundle.windows` block, so `bundle.targets` is `["app", "deb"]`, which changes nothing for a Mac build; `package.json`'s `installer` runs `node win-setup/win-setup.js` after `dmg.js`, and it returns at once on a Mac exactly as `dmg.js` does on Windows; and `instance.rs` quits on a handoff whose only argument is `--exit`, inside the Windows-only pipe code, which is how the installer closes a running copy.
 
 ## Where to look
 
-- `desktop/win-setup/README.md` for the whole picture, and the essays atop `setup.c` and `win-setup.js` for the mechanics.
-- `desktop/README.md`, the Windows installer paragraph and the On Windows paragraph under Packages and releases.
-- The planning document's Distribution, Uninstall, and Paths §1 sections, revised to what's built.
+- `desktop/src/brand.js`, the essay, and the section The two names in `desktop/README.md`.
+- `desktop/win-setup/README.md`, for the installer whole, and the essays atop `setup.c` and `win-setup.js`.

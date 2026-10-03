@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto'
 import {copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync} from 'node:fs'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {parse as parseToml} from 'smol-toml'
 
 /*
 The publishing pipeline for the desktop client, in one file, reached by a verb: reveal, hash, upload, icons-collect. Everything the package.json scripts do beyond calling tauri or docker is here.
@@ -11,7 +12,7 @@ The publishing pipeline for the desktop client, in one file, reached by a verb: 
 
 Two machines publish ftorrent. Windows sends the exe. The Mac sends the dmg it built natively and the four Linux packages it built in Docker. So a command means the same thing everywhere while doing different work underneath: pnpm hash is one package in desktop on Windows and four in linux on the Mac, and nobody has to remember which computer they are sitting at. What differs is passed as --source by the workspace that asked.
 
-It lives in the desktop folder rather than at the repository root because the root belongs to six workspaces and this file is about one product; the nested linux workspace reaches it as ../scripts.js. Every path is built from this file's own location, never from the working directory, because both workspaces call it from their own folders. It imports node builtins and nothing else.
+It lives in the desktop folder rather than at the repository root because the root belongs to six workspaces and this file is about one product; the nested linux workspace reaches it as ../scripts.js. Every path is built from this file's own location, never from the working directory, because both workspaces call it from their own folders. It imports node builtins and smol-toml, to read the crate's name, and nothing else.
 */
 
 /*
@@ -21,13 +22,17 @@ source says where the built file is found: 'bundle' is this workspace's build ou
 
 The rule for a published name: **every Linux package states its architecture, and none carries a version.** macOS and Windows ship one architecture each by decision, so ftorrent.dmg and ftorrent.exe need no token. Linux ships two architectures and three formats, so every name there says which machine it is for, including the two formats with only one build today; giving the arm64 package the bare name would read as the ordinary choice while being the rarer one, and keeping every name explicit means none has to change when an aarch64 Flatpak or an ARM rpm turns up. The architecture token is each ecosystem's own word, amd64 for Debian and x86_64 for RPM and Flatpak, because a Debian user and a Fedora user each expect their own. A versioned filename would pin whatever version was current the day a link was shared, so a stable name is overwritten in place and every link ever shared keeps handing people the current build. Which version a download is belongs on the page, which reads it from the sidecar.
 */
+//the two names, read before anything is named, from the two files brand.js reads them from for the page: brandName is tauri.conf.json's productName, the name people read, which tauri names what it builds with; brandStem is Cargo.toml's crate name, the name files carry, which every published name begins with
+const brandName = JSON.parse(readFileSync(new URL('src-tauri/tauri.conf.json', import.meta.url), 'utf8')).productName
+const brandStem = parseToml(readFileSync(new URL('src-tauri/Cargo.toml', import.meta.url), 'utf8')).package.name
+
 const targets = {
-	'dmg':       {source: 'bundle', folder: 'dmg',  suffix: '.dmg',       publish: 'ftorrent.dmg'},
-	'exe':       {source: 'bundle', folder: 'win-setup', suffix: '-setup.exe', publish: 'ftorrent.exe'},
-	'deb-arm64': {source: 'linux',  match: /_(arm64)\.deb$/, publish: 'ftorrent.arm64.deb'},
-	'deb-x64':   {source: 'linux',  match: /_(amd64)\.deb$/, publish: 'ftorrent.amd64.deb'},
-	'rpm-x64':   {source: 'linux',  match: /\.(x86_64)\.rpm$/, publish: 'ftorrent.x86_64.rpm'},
-	'flatpak-x64': {source: 'linux', match: /_(x86_64)\.flatpak$/, publish: 'ftorrent.x86_64.flatpak'},
+	'dmg':       {source: 'bundle', folder: 'dmg',  suffix: '.dmg',       publish: `${brandStem}.dmg`},
+	'exe':       {source: 'bundle', folder: 'win-setup', suffix: '-setup.exe', publish: `${brandStem}.exe`},
+	'deb-arm64': {source: 'linux',  match: /_(arm64)\.deb$/, publish: `${brandStem}.arm64.deb`},
+	'deb-x64':   {source: 'linux',  match: /_(amd64)\.deb$/, publish: `${brandStem}.amd64.deb`},
+	'rpm-x64':   {source: 'linux',  match: /\.(x86_64)\.rpm$/, publish: `${brandStem}.x86_64.rpm`},
+	'flatpak-x64': {source: 'linux', match: /_(x86_64)\.flatpak$/, publish: `${brandStem}.x86_64.flatpak`},
 }
 
 /*
@@ -50,7 +55,7 @@ const machines = {
 
 function whatMachineMakes() {
 	let found = machines[process.platform]
-	if (!found) throw new Error(`ftorrent does not publish from ${process.platform}. The dmg and the Linux packages are staged on the Mac, the exe on Windows. Building here for your own use is a different thing and works: pnpm installer in desktop.`)
+	if (!found) throw new Error(`${brandName} does not publish from ${process.platform}. The dmg and the Linux packages are staged on the Mac, the exe on Windows. Building here for your own use is a different thing and works: pnpm installer in desktop.`)
 	return found
 }
 
@@ -108,7 +113,7 @@ function findBuilt(target, version) {
 	if (target.source == 'bundle') {
 		let folder = join(bundled, target.folder)
 		if (!existsSync(folder)) return false
-		let prefix = `ftorrent_${version}_`
+		let prefix = `${brandName}_${version}_`//tauri and win-setup.js name a build brandName, version, architecture
 		let names = readdirSync(folder).filter(n => n.startsWith(prefix) && n.endsWith(target.suffix))
 		if (names.length > 1) throw new Error(`expected one ${prefix}*${target.suffix} in ${folder}, found ${names.length}: ${names.join(', ')}`)
 		if (!names.length) return false

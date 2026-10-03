@@ -53,7 +53,7 @@ pub fn window_event(window: &Window, event: &WindowEvent) {
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem, Submenu};
 	use tauri::Emitter;//for emit, which hands the page an event
-	let brand = &app.package_info().name;//the product name from tauri.conf.json
+	let brand = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler. The ampersand makes x its access key, underlined while Alt is held, so Alt, F, X quits, the way a Windows File menu does; and no shortcut, since the system's own Alt+F4 is a close, which now hides
 	let file = Submenu::with_items(app, "&File", true, &[&exit])?;//and F the menu's, so Alt+F opens it
 	let options = MenuItem::with_id(app, "settings", "&Options...", true, None::<&str>)?;//windows' classic word for settings, where qbittorrent has it too; the page's settings.js names its page Options on windows to match. The id is the name of the route it opens
@@ -102,7 +102,7 @@ fn tray_icon(light: bool) -> Option<tauri::image::Image<'static>> {
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 	use tauri::menu::{Menu, MenuItem};
 	use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-	let brand = &app.package_info().name;//the product name from tauri.conf.json
+	let brand = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let show = MenuItem::with_id(app, "show", format!("&Show {brand}"), true, None::<&str>)?;//access keys here too, S and x, so the menu works from the keyboard once it's open
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;
 	let menu = Menu::with_items(app, &[&show, &exit])?;

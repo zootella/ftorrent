@@ -6,7 +6,7 @@ import {lockTake} from '../locks.js'
 import {useIncomingStore} from './incoming.js'
 import {desktopExitHold} from '../desktop.js'
 import {resolveFolder} from '../paths.js'
-import {brandName} from '../brand.js'
+import {brandStem} from '../brand.js'
 
 /*
 The live settings, and the reading and writing of ftorrent.toml around them. settings.js knows what a setting is; this store knows where the file is, what it last said, and when to write it. The rest of the app imports this store and reads settings.section.key, the way it reads any other store, and the one object is filled in at startup rather than replaced, so a component that grabbed it early is looking at the same thing as one that came later.
@@ -31,8 +31,8 @@ export const useSettingsStore = defineStore('settings', () => {
 		return settings.downloads.folders.map(setting => ({setting, path: resolveFolder(setting, p.location, p.home)}))
 	})
 
-	const sessionFolder = `.${brandName}`//inside each download folder, where the session data of the torrents in it lives, and the lock that keeps two copies of ftorrent from using the folder at once
-	const lockName = `${brandName}.lock`//inside that, empty, and never written; it exists to be locked
+	const sessionFolder = `.${brandStem}`//inside each download folder, where the session data of the torrents in it lives, and the lock that keeps two copies of ftorrent from using the folder at once
+	const lockName = `${brandStem}.lock`//inside that, empty, and never written; it exists to be locked
 	let heldFolders = computed(() => resolvedFolders.value.map(folder => folder.path).filter(path => folderStates.value[path] == 'held'))//the folders this copy holds, in settings order, which are the only ones the engine is told about
 
 	async function folderLock(path) {//lock one download folder, never making it: missing if it isn't on this machine; otherwise it gets its hidden .ftorrent, if it hasn't one yet, and the lock inside it. Answers held, busy, missing, or trouble with the reason after a colon

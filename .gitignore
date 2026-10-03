@@ -1,6 +1,6 @@
 # ============================================================================
 # .gitignore for pnpm monorepo
-# Workspaces: classic (Win32/VS), desktop (Tauri), plus Node/Python/Go/Docker
+# Workspaces: site, docs, open, good, tube, desktop, and classic, on Node, Python, Rust, Go, and Docker
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -201,12 +201,7 @@ classic/*.opendb
 classic/*.cachefile
 classic/*.VC.db
 classic/*.VC.opendb
-classic/.vs/
 classic/*.vcxproj.user
-
-# The Windows installer's build output, and Visual Studio's folder cache
-desktop/win-setup/build/
-desktop/win-setup/.vs/
 
 # Precompiled headers
 classic/*.pch
@@ -223,6 +218,9 @@ classic/*.DotSettings.user
 # ----------------------------------------------------------------------------
 # IDEs and Editors
 # ----------------------------------------------------------------------------
+
+# Visual Studio: the cache it writes beside any folder it opens, in folder mode or with a solution; classic and desktop/win-setup are two it has opened, and the root could be a third
+.vs/
 
 # VS Code
 .vscode/*

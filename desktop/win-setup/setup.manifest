@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!-- The application manifest, compiled into setup.exe by setup.rc and read by Windows before the program's first instruction: how the program asks to be treated. -->
+<!-- The setup program's manifest, compiled into setup.exe by setup.rc and read by Windows before the program's first instruction: how the program asks to be treated. It governs setup.exe in both of its lives, the downloaded installer while it installs and uninstall.exe while it uninstalls, and nothing else: the installed application has a manifest of its own, which Tauri writes into its executable when Cargo builds it. -->
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 
 	<!-- Run as whoever started it, and never ask to elevate; everything the program touches is the user's own -->

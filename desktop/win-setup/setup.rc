@@ -1,26 +1,7 @@
-// The resources compiled into setup.exe: its icon, its manifest, and the version block that Properties, Add or Remove Programs, and antivirus reputation systems read. The names and numbers come from build/stamp.h, which win-setup.js writes for each release, so each product's name and icon and each release's version go into a fresh stub; the defaults below are for building the stub by hand, with nothing in it.
+// The resources compiled into setup.exe: its icon, its manifest, and the version block that Properties, Add or Remove Programs, and antivirus reputation systems read. Every name and number comes from build/stamp.h, which win-setup.js writes for each release and build.cmd writes with placeholders for a build by hand; setup.c includes the same header, so the program and its resources never disagree.
 #pragma code_page(65001) // this file and the stamp header are UTF-8, which the copyright sign in the version block needs; the resource compiler assumes the system code page without this
 #include <winres.h>
-#include "build/stamp.h" // what win-setup.js wrote for this build, or an empty file build.cmd made, so the defaults below apply
-
-#ifndef SETUP_ICON
-#define SETUP_ICON "..\\src-tauri\\icons\\icon.ico"
-#endif
-#ifndef SETUP_PRODUCT
-#define SETUP_PRODUCT "winsetup"
-#endif
-#ifndef SETUP_PUBLISHER
-#define SETUP_PUBLISHER ""
-#endif
-#ifndef SETUP_COPYRIGHT
-#define SETUP_COPYRIGHT ""
-#endif
-#ifndef SETUP_VERSION
-#define SETUP_VERSION 0,0,0,0 // four numbers for the binary version fields
-#endif
-#ifndef SETUP_VERSION_TEXT
-#define SETUP_VERSION_TEXT "0.0.0" // the same version as text, which is what the dialogs show
-#endif
+#include "build/stamp.h"
 
 // The icon Explorer draws on the downloaded file, resource 1 so it is the first and the one the shell picks
 1 ICON SETUP_ICON
@@ -39,11 +20,11 @@ BEGIN
 		BLOCK "040904B0" // US English, Unicode
 		BEGIN
 			VALUE "CompanyName", SETUP_PUBLISHER
-			VALUE "FileDescription", SETUP_PRODUCT " Setup"
+			VALUE "FileDescription", SETUP_BRAND_NAME " Setup"
 			VALUE "FileVersion", SETUP_VERSION_TEXT
 			VALUE "LegalCopyright", SETUP_COPYRIGHT
-			VALUE "OriginalFilename", SETUP_PRODUCT ".exe" // the name the installer is published under, like ftorrent.exe
-			VALUE "ProductName", SETUP_PRODUCT
+			VALUE "OriginalFilename", SETUP_BRAND_STEM ".exe" // the name the installer is published under, brandStem with .exe
+			VALUE "ProductName", SETUP_BRAND_NAME
 			VALUE "ProductVersion", SETUP_VERSION_TEXT
 		END
 	END

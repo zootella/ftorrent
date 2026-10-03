@@ -1,5 +1,5 @@
 import {parse as parseToml} from 'smol-toml'
-import {brandName} from './brand.js'
+import {brandName, brandStem} from './brand.js'
 
 /*
 The settings file, ftorrent.toml, and the only place a setting is defined. Everything about the file is here: the schema below, which names every setting with its factory value and the comment that explains it; parsing, which turns the file's text into a settings object and a list of anything it had to turn away; and rendering, which turns a settings object back into the complete text of the file. The store in stores/settings.js does the reading and writing around these, and the rest of the app reads settings from the store. Rust never learns what a setting is: it hands the page the file's path, writes bytes when asked, and holds the text to write once more when ftorrent exits. The window's size, place, and maximized flag are settings like the rest, and window.js reads them from the store to place the window before showing it.
@@ -9,8 +9,8 @@ The file is TOML rather than JSON for the person who opens it in Notepad. Every 
 Three rules about what parsing does with a file. A value it can use replaces the factory value; a value of the wrong type or outside its check is reported and the factory value stays; a key the schema doesn't know is reported as a typo rather than ignored, since the file lists every setting and an unknown name is a mistake, not a default showing through. A file that won't parse at all leaves everything at factory and is reported, and the store never writes over it: the settings in it are the user's and may be one typo from right, so the file stays exactly as it is until the user fixes it. A file that parses is repaired instead, a bad value put back to its factory value and a missing setting added.
 */
 
-export const settingsFileName = `${brandName}.toml`//in the data folder paths.rs worked out, which is portable/ beside a portable copy and the user's local application data for an installed one
-const settingsHeader = `# ${brandName}.toml — ${brandName} reads this file when it starts and writes it when a setting changes, and again as it closes
+export const settingsFileName = `${brandStem}.toml`//in the data folder paths.rs worked out, which is portable/ beside a portable copy and the user's local application data for an installed one
+const settingsHeader = `# ${brandStem}.toml — ${brandName} reads this file when it starts and writes it when a setting changes, and again as it closes
 # edit this file only while ${brandName} isn't running: while it runs, including hidden in the tray, it writes the file once more as it closes, over any change made here
 # with ${brandName} not running, edit the values freely; the comments and the layout are regenerated every time, so notes of your own here will not survive`//the same words on every platform, whose menus say quit or exit, so a portable copy's file that travels between them is never rewritten over wording
 
@@ -33,19 +33,19 @@ export const settingsSchema = [
 		section: 'downloads',
 		key: 'folders',
 		factory: [`~/Downloads/${brandName}`],
-		comment: `where torrents go, and where ${brandName} looks for the ones it already has; each folder keeps its own .${brandName} subfolder with the session data of the torrents in it. ~ is your home folder, ./ is the folder ${brandName} itself is in, so a portable copy can say ./downloads and follow its own drive, and an absolute path like D:/torrents means exactly that place. Written with forward slashes on every platform`,
+		comment: `where torrents go, and where ${brandName} looks for the ones it already has; each folder keeps its own .${brandStem} subfolder with the session data of the torrents in it. ~ is your home folder, ./ is the folder ${brandName} itself is in, so a portable copy can say ./downloads and follow its own drive, and an absolute path like D:/torrents means exactly that place. Written with forward slashes on every platform`,
 		check: value => value.every(folder => typeof folder == 'string' && folder.trim() != '' && !/[\x00-\x1f\x7f]/.test(folder)),//text naming a place; a control character in one means a backslash in the file was read as an escape, the way D:\new holds a newline
 	}, {
 		section: 'associations',
 		key: 'default',
 		factory: 'ask',
-		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandName} files and magnet: and ${brandName}: links: "yes", "no", or "ask". Unless this is "no", a bar at the top of the window asks whenever the system opens any of them with another app, and answering yes there claims them; ${brandName} never claims them on its own. The system keeps the final say, so on Windows yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
+		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandStem} files and magnet: and ${brandStem}: links: "yes", "no", or "ask". Unless this is "no", a bar at the top of the window asks whenever the system opens any of them with another app, and answering yes there claims them; ${brandName} never claims them on its own. The system keeps the final say, so on Windows yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
 		check: value => ['ask', 'yes', 'no'].includes(value),
 	}, {
 		section: 'log',
 		key: 'record',
 		factory: false,
-		comment: `whether ${brandName} keeps a log, for answering a question about what it did: true writes a file for each time ${brandName} runs into ${brandName}-logs in your home folder, as things happen. A log names files and links you open, so it's off unless you turn it on`,
+		comment: `whether ${brandName} keeps a log, for answering a question about what it did: true writes a file for each time ${brandName} runs into ${brandStem}-logs in your home folder, as things happen. A log names files and links you open, so it's off unless you turn it on`,
 		check: value => typeof value == 'boolean',
 	}, {
 		section: 'appearance',
