@@ -6,7 +6,7 @@ cd /d "%~dp0"
 rem Find the newest Visual Studio with the C++ tools and load its developer environment, which puts cl, rc, and link on the path. vswhere is installed with every Visual Studio since 2017 at this fixed location.
 for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
 if not defined VSPATH echo Visual Studio with the C++ tools was not found & exit /b 1
-call "%VSPATH%\Common7\Tools\VsDevCmd.bat" -arch=x86 -host_arch=x64 -no_logo || exit /b 1
+call "%VSPATH%\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64 -no_logo || exit /b 1
 
 rem The compiler flags the project files set: /O1 minimize size, /MT the static runtime (the 2003 single-threaded static library /ML no longer exists, and /MT is its successor), /W3, and the defines; _MBCS is the project files' character set 2, 8-bit strings, which is why the code calls the ANSI versions of every function
 set CL_FLAGS=/nologo /W3 /O1 /MT /EHsc /D WIN32 /D NDEBUG /D _WINDOWS /D _MBCS

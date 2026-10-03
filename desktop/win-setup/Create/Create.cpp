@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR command, int sh
 
 // Dialog box procedure
 // Shows the Setup Creator dialog box, letting the user make a self extracting setup file
-BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
+INT_PTR CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam) {
 
 	// Create local string objects outside the switch statement
 	string icon, folder, run, save;

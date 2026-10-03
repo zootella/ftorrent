@@ -113,7 +113,7 @@ public:
 
 // Functions
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR command, int show);
-BOOL CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
+INT_PTR CALLBACK DialogProcedure(HWND dialog, UINT message, WPARAM wparam, LPARAM lparam);
 void Assemble();
 void Create(text icon, text folder, text run, text save);
 void Compress(buffer* b, byte* memory, DWORD size);
