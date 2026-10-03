@@ -78,8 +78,8 @@ pub fn run() {
 			lifecycle::identity_install(app.handle());//which application this process is, said to the shell before the tray and the window exist, so the taskbar knows them as the shortcut's
 			app.manage(paths);//before the engine, which is told where everything is; the settings file inside the data folder is the page's to read, once it's up, and only the copy holding the lock has a page
 			engine::engine_start(app.handle());//so the engine is already up, or already known to have failed, by the time the page asks
-			#[cfg(target_os = "windows")]
-			lifecycle::tray_install(app.handle())?;//windows has no dock, so the tray is where a hidden ftorrent is brought back and quit
+			#[cfg(any(target_os = "windows", target_os = "macos"))]
+			lifecycle::tray_install(app.handle())?;//the tray on windows and the menu bar icon on macos, where a hidden ftorrent is brought back and quit
 			#[cfg(target_os = "windows")]
 			lifecycle::menu_install(app.handle())?;//and the window's own File menu is the other way to quit, the one that needs no tray
 			Ok(())
@@ -93,7 +93,7 @@ pub fn run() {
 			#[cfg(target_os = "macos")]
 			tauri::RunEvent::Opened { urls } => instance::opened(app, urls),//a .torrent, a magnet, or ftorrent's own two, which launch services opened with this copy, cold or running
 			#[cfg(target_os = "macos")]
-			tauri::RunEvent::Reopen { has_visible_windows, .. } => { if !has_visible_windows { lifecycle::bring_forward(app) } }//the dock icon clicked while the window is hidden, which is how a mac user asks for it back
+			tauri::RunEvent::Reopen { has_visible_windows, .. } => { if !has_visible_windows { lifecycle::bring_forward(app) } }//a kept Dock tile clicked, or ftorrent launched again, while the window is hidden, which is how a mac user asks for it back; the Dock icon itself left with the window
 			tauri::RunEvent::Exit => {//the one event every way of quitting reaches, and a second call finds nothing left to stop
 				desktop::desktop_exit_write(app);//whatever text the page handed down for this moment, first, because it's quick and the page can no longer do it
 				engine::engine_stop(app);

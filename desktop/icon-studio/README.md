@@ -8,6 +8,7 @@ _ftorrent/desktop/icon-studio/README.md_
 > <br>Windows PowerShell: 5.1
 > <br>.NET Framework, System.Drawing: 4.8
 > <br>Tauri CLI, for `tauri icon`: 2.11
+> <br>ImageMagick, for the Mac's menu bar icon: 7.1
 
 Where ftorrent's icons are made, and the map of where they go. The first half of this document is for anyone working in the monorepo who needs to know what an icon file is, where it comes from, and which build reads it. The second half is for whoever opens this folder to change a drawing.
 
@@ -20,16 +21,16 @@ ftorrent has four icons, all drawn from two marks, and all but one in the brand 
 - **The tray icon**, the glyph: the pill as a stencil, with the two nodes and their bar cut out of it, filled in one color. It is what ftorrent shows in the Windows notification area while it runs, white on a dark taskbar and black on a light one, and it is the drawing the Mac's menu bar icon is rendered from too. It is the one place the brand is not orange, on purpose: Windows programs put their full-color icon in the tray, and ftorrent's reads as a glyph beside the system's own.
 - **The favicon**, the brand again, as an SVG the websites link inline.
 
-Everything starts from four files in this folder and ends as five files, with the intermediate files kept in between so any step can be looked at. The studio is a handful of PowerShell scripts, run by hand on Windows only; one command, `.\Update-Icons.ps1`, runs the whole chain.
+Everything starts from four files in this folder and ends as six files, with the intermediate files kept in between so any step can be looked at. The studio is a handful of PowerShell scripts, run by hand on Windows, and one zsh script, run by hand on the Mac: one command, `.\Update-Icons.ps1`, runs the whole Windows chain, and `./draw-template.sh` is the Mac's one step.
 
 | in | intermediate, in this folder | intermediate, in `src-tauri/icons/` | out |
 |---|---|---|---|
 | `brand.svg`, the mark | | `app-icon.svg`, `app-icon-mac.svg`, `app-icon-tile.svg`, then everything `tauri icon` generates from them | `favicon.svg`, `ftorrent.ico` |
-| `glyph.svg`, the stencil | `tray-white-64.png`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16`, and the same seven in black | | `tray-white.ico`, `tray-black.ico` |
+| `glyph.svg`, the stencil | `tray-white-64.png`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16`, and the same seven in black | | `tray-white.ico`, `tray-black.ico`, and on the Mac `tray-template.png` |
 | `donut.svg`, the node | `torrent-256.png`, `-64`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16` | | `torrent.ico` |
 | `sheet.ico`, the blank page | `sheet-256.png`, `-64`, `-48`, `-40`, `-32`, `-24`, `-20`, `-16` | | |
 
-The outputs land here as the record of what shipped. The command copies `torrent.ico`, the two tray icons, and the three `app-icon*.svg`; `favicon.svg` lives inline in the two branded sites' configs.
+The outputs land here as the record of what shipped. The Windows command copies `torrent.ico`, the two tray icons, and the three `app-icon*.svg`, and the Mac's script copies `tray-template.png`; `favicon.svg` lives inline in the two branded sites' configs.
 
 ### The application icon, into the desktop build
 
@@ -67,13 +68,13 @@ Two files because the notification area paints an icon's pixels exactly as given
 
 ### The menu bar icon, on the Mac
 
-The same `glyph.svg` is the source for the Mac's menu bar icon, rendered there to a PNG at 16 points and 32 for Retina, in any one color. The Mac marks the image as a template when it hands it to the system, and macOS then reads only the shape, the opaque pixels, and paints it in the menu bar's own color, black on a light bar and white on a dark one. The studio's scripts are Windows only, so that rendering is done on the Mac.
+The same `glyph.svg` is the source for the Mac's menu bar icon, `tray-template.png` in `src-tauri/icons/`, which `lifecycle.rs` builds into the program with `include_image!`. It is the glyph in black on a clear ground, drawn on an 18 point square at Retina, 36 pixels, with the 16 unit drawing centered one unit in from each edge. The size is the one the menu bar draws: the tray-icon crate under Tauri sets a status item's image to 18 points tall whatever size the file is, so a file drawn at exactly that lands on the menu bar's pixels with nothing resized on the way, the same care the Windows ladder takes. The Mac marks the image as a template when it hands it to the system, and macOS then reads only the shape, the opaque pixels, and paints it in the menu bar's own color, black on a light bar, white on a dark one, and inverted while its menu is open; the color in the file is ignored. The PowerShell scripts are Windows only, so this one file is drawn on the Mac, by `draw-template.sh` with ImageMagick from Homebrew, which writes it here and copies it into `src-tauri/icons/`. Run it after any change to `glyph.svg`, and commit both copies with the drawing.
 
 `favicon.svg` is `brand.svg` unchanged, and the heads of ftorrent.com and docs.ftorrent.com carry it inline as a data URI, set in `site/nuxt.config.ts` and `docs/docs/.vitepress/config.js`, with its `#` written `%23` and its double quotes made single. Inline, a site carries no favicon file at all, and an SVG favicon scales to every tab and pinned-site size. open.ftorrent.com and good.ftorrent.com are the exception: their favicon is an earth emoji, inline the same way, which is right for pages whose whole subject is the planet's peers.
 
 ## Inside the studio
 
-This folder is Windows only and by hand. Nothing in the build reads it, and Tauri never looks in it, the way it never looks in `linux/`. The scripts are PowerShell, drawing with the `System.Drawing` that every Windows has, and they run a few times a year, when a drawing changes. Each script opens with an essay saying what it does and how the format it touches works, so the scripts are the reference and this section is the tour.
+This folder is by hand, and Windows for all but one step. Nothing in the build reads it, and Tauri never looks in it, the way it never looks in `linux/`. The scripts are PowerShell, drawing with the `System.Drawing` that every Windows has, plus one zsh script for the Mac's menu bar icon, and they run a few times a year, when a drawing changes. Each script opens with an essay saying what it does and how the format it touches works, so the scripts are the reference and this section is the tour.
 
 ### The drawings
 
@@ -90,6 +91,7 @@ This folder is Windows only and by hand. Nothing in the build reads it, and Taur
 - **`Update-Icons.ps1`** is the one command. It runs `Add-Donut`, runs `Join-Ico` and copies the result into `src-tauri/icons/`, writes `favicon.svg` and the three `app-icon*.svg` from `brand.svg` by swapping the viewBox, runs `Draw-Tray` on `glyph.svg` and `Join-Ico` on each color's set and copies the two results into `src-tauri/icons/` too, runs `pnpm icons` in the workspace above, and copies the `icon.ico` that produced back here as `ftorrent.ico`. Of those, only the viewBox writing and the two copies are the studio's own work on the application icon; the generating is Tauri's and the routing is the workspace's, as the first half of this document lays out.
 - **`Add-Donut.ps1`** draws the donut onto every sheet size: `sheet-<size>.png` in, `torrent-<size>.png` out. It reads each circle's center, radius, and color out of `donut.svg` by pattern and draws it with GDI+ at sixteen grid units to the sheet's width, so `donut.svg` is the only place the shape is written.
 - **`Draw-Tray.ps1`** draws the glyph at every taskbar scale in each of the tray's two colors: `glyph.svg` in, `tray-white-<size>.png` and `tray-black-<size>.png` out, on a clear ground. It reads the path with a small interpreter for the commands the glyph uses, turning each SVG arc into the center, start angle, and sweep GDI+ draws from, and fills the path under GDI+'s even-odd rule, so the hole's rim is antialiased correctly; painting the hole afterward in transparent would leave that rim half dark.
+- **`draw-template.sh`** is the Mac's one script, zsh rather than PowerShell: `glyph.svg` in, `tray-template.png` out, here and in `src-tauri/icons/`. It rewrites the drawing's root element onto the 18 unit canvas with `sed` and renders it with ImageMagick, which has its own SVG renderer and needs no other library; the two things that renderer gets wrong without being told, a root `fill="none"` it would apply over the path and a black drawing it would save without color channels, are handled on the one line and explained beside it, and the script stops if the result has no ink.
 - **`Join-Ico.ps1`** packs `torrent-<size>.png` into `torrent.ico`, and each color's `tray-<color>-<size>.png` into `tray-<color>.ico`: a six byte header, a sixteen byte directory entry per layer, then the layers, each stored as a PNG, largest first.
 - **`Split-Ico.ps1`** is the reverse, an `.ico` into one PNG per layer, converting a layer stored as a bare bitmap along the way. It made the eight `sheet-<size>.png` and runs again only when a new sheet arrives.
 - **`Test-Ico.ps1`** asks the Windows shell for every layer of an icon, the way Explorer does, and reports the size and solid pixel count of each. It is the check to run on a packed icon.
@@ -104,7 +106,7 @@ Edit `brand.svg`, carry the same change into `glyph.svg` by hand, and run the sa
 
 ### Changing the glyph
 
-Edit `glyph.svg`, keeping it one path of closed figures in the commands the renderer reads, absolute M, L, H, V, A, and Z, and run the same command. Explorer is a poor place to look at the result, since it shows an icon on white, where the white glyph vanishes; run the app instead and watch the tray while switching the taskbar's theme in Settings, under Personalization, Colors, with Custom chosen so the taskbar and the apps can be set apart. `Test-Ico.ps1` counts each layer's solid pixels, and the two colors should count the same. Commit the drawing, the fourteen `tray-<color>-<size>.png`, and both copies of each `.ico`.
+Edit `glyph.svg`, keeping it one path of closed figures in the commands the renderer reads, absolute M, L, H, V, A, and Z, run the same command on Windows, and run `./draw-template.sh` on the Mac. Explorer is a poor place to look at the result, since it shows an icon on white, where the white glyph vanishes; run the app instead and watch the tray while switching the taskbar's theme in Settings, under Personalization, Colors, with Custom chosen so the taskbar and the apps can be set apart. `Test-Ico.ps1` counts each layer's solid pixels, and the two colors should count the same. Commit the drawing, the fourteen `tray-<color>-<size>.png`, both copies of each `.ico`, and both copies of `tray-template.png`.
 
 ### Checking a packed icon
 

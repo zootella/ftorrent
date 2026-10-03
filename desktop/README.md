@@ -141,7 +141,7 @@ The Rust core follows one rule, which the essay at the top of `src-tauri/src/lib
 
 - `paths.rs`: where the program, the user's home, and the data folder are, worked out once at startup, and what makes a copy portable rather than installed.
 - `instance.rs`: one running copy per copy of the app, held by a file lock, and how a second launch hands over what it carried and leaves.
-- `lifecycle.rs`: closing hides the window and quitting is explicit; the Windows tray and menu bar, the Mac's Dock and its fullscreen Space, and why the window takes focus only when the user asks for it.
+- `lifecycle.rs`: closing hides the window and quitting is explicit; the Windows tray and menu bar, the Mac's menu bar icon and the Dock icon that comes and goes with the window, its fullscreen Space, and why the window takes focus only when the user asks for it.
 - `window.rs`: the one window, made hidden from Tauri's `Ready` event rather than declared in the config, and the browser habits turned off in a release build.
 - `disk.rs`, `locks.rs`, `registry.rs`, and `launch.rs`: the disk, exclusive file locks, the Windows registry, and the Mac's Launch Services, each as general commands that hold no guard.
 - `engine.rs`: the engine's process, below.
