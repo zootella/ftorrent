@@ -205,6 +205,7 @@ classic/.vs/
 classic/*.vcxproj.user
 
 # Build output of the Windows installer's programs, under the Release and Debug folders the 2005 project files named, and Visual Studio's folder cache
+desktop/win-setup/build/
 desktop/win-setup/*/Release/
 desktop/win-setup/*/Debug/
 desktop/win-setup/.vs/

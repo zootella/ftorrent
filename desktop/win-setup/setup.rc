@@ -1,0 +1,52 @@
+// The resources compiled into setup.exe: its icon, its manifest, and the version block that Properties, Add or Remove Programs, and antivirus reputation systems read. The names and numbers come in as definitions on the resource compiler's command line, which is how win-setup.js stamps each release's version and each product's name and icon into a fresh stub; the defaults below are for building the stub by hand, with nothing in it.
+#include <winres.h>
+
+#ifndef SETUP_ICON
+#define SETUP_ICON "..\\src-tauri\\icons\\icon.ico"
+#endif
+#ifndef SETUP_PRODUCT
+#define SETUP_PRODUCT "winsetup"
+#endif
+#ifndef SETUP_PUBLISHER
+#define SETUP_PUBLISHER ""
+#endif
+#ifndef SETUP_COPYRIGHT
+#define SETUP_COPYRIGHT ""
+#endif
+#ifndef SETUP_VERSION
+#define SETUP_VERSION 0,0,0,0 // four numbers for the binary version fields
+#endif
+#ifndef SETUP_VERSION_TEXT
+#define SETUP_VERSION_TEXT "0.0.0" // the same version as text, which is what the dialogs show
+#endif
+
+// The icon Explorer draws on the downloaded file, resource 1 so it is the first and the one the shell picks
+1 ICON SETUP_ICON
+
+// The manifest, resource type 24 with identifier 1, which is where the loader looks for an executable's manifest
+1 24 "setup.manifest"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION SETUP_VERSION
+PRODUCTVERSION SETUP_VERSION
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904B0" // US English, Unicode
+		BEGIN
+			VALUE "CompanyName", SETUP_PUBLISHER
+			VALUE "FileDescription", SETUP_PRODUCT " Setup"
+			VALUE "FileVersion", SETUP_VERSION_TEXT
+			VALUE "LegalCopyright", SETUP_COPYRIGHT
+			VALUE "OriginalFilename", "setup.exe"
+			VALUE "ProductName", SETUP_PRODUCT
+			VALUE "ProductVersion", SETUP_VERSION_TEXT
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x409, 1200
+	END
+END
