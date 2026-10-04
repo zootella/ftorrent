@@ -4,11 +4,11 @@ import {parse as parseToml} from 'smol-toml'
 /*
 What uninstall takes out of the registry: the one list an app changes, and beneath it the rules every app shares, as code.
 
-The running program writes these entries, not the installer, when it offers itself for its file types and links and when the user says yes to opening them with it; the installer only takes them back, and only on uninstall, never on an upgrade, which is what keeps a user's choice of the program through a release. Every key is under HKCU, the user's own hive, which is the only one the installer touches.
+The running program writes these entries, not the installer, when it offers itself for its file types and links and when the user says yes to opening them with it; the installer only takes them back, and only on uninstall, never on an upgrade, which is what keeps a sealed registry association, the user's pick of the program held with a hash only Windows' own screens write, through a release. Every key is under HKCU, the user's own hive, which is the only one the installer touches.
 
 The list holds the only thing that differs from one app to the next: its associations, the file types and link protocols it opens, as plain strings written the way a person sees them. A file extension begins with its dot, .torrent, and a protocol ends with its colon, magnet:, which is stripped for the registry; anything that is neither stops the build. The app's own two, the .ftorrent file and the ftorrent: link, are named for the executable's stem, which this file reads from Cargo.toml so that they can be written as the strings they are; brand.js in the page explains the stem and its sibling, brandName. Another app adopting the installer replaces the list with its own, and an app that opens no types of its own leaves it empty.
 
-Everything else is the same for every app, and the code below knows it: a ProgID for each extension and protocol named the way associate.js in the page names them, {brandName}.torrent for a file and {brandName}.url.magnet for a link; the app's listing in Settings under Default apps, the Capabilities key that listing points at, and whatever else the app kept under its own key beneath Software; its key under Applications, which names the executable; and its line under Run for starting with Windows, with the line of the same name under StartupApproved, where Windows keeps the user's switch for it. An extension's own key and a protocol's shared class are never taken whole, since another program may own them next: the extension's default goes only while it still names the app, the class only while its command still runs the app, and the extension's keys only when nothing else is left in them.
+Everything else is the same for every app, and the code below knows it: a ProgID for each extension and protocol named the way associate.js in the page names them, {brandName}.torrent for a file and {brandName}.url.magnet for a link; the app's listing in Settings under Default apps, the Capabilities key that listing points at, and whatever else the app kept under its own key beneath Software; its key under Applications, which names the executable; and its line under Run for starting with Windows, with the line of the same name under StartupApproved, where Windows keeps the user's switch for it. An extension's own key and a protocol's shared class are never taken whole, since another program may own them next. Each holds the type's legacy registry association, the lower level beneath the sealed one, which any program may write: the extension's default value goes only while it still names the app, the class only while its command still runs the app, and the extension's keys only when nothing else is left in them.
 */
 
 const brandStem = parseToml(readFileSync(new URL('../src-tauri/Cargo.toml', import.meta.url), 'utf8')).package.name//the stem of the executable's name, which is the crate's name, since Cargo names the executable from it
@@ -43,7 +43,7 @@ export function uninstallInstructions(brandName) {
 	add('delete-value', 'Software\\RegisteredApplications', {name: brandName})
 	add('delete-key', 'Software\\' + brandName)
 
-	//each file type: the app's own ProgID, its place in the list of programs offered for the extension, the extension's default while it still names the app, and the extension's keys if that leaves them empty
+	//each file type: the app's own ProgID, its place in the list of programs offered for the extension, the extension's default value, its legacy association, while it still names the app, and the extension's keys if that leaves them empty
 	for (let extension of extensions) {
 		let program = brandName + extension//.torrent becomes ftorrent.torrent, the way associate.js names it
 		add('delete-key', classes + program)
@@ -53,7 +53,7 @@ export function uninstallInstructions(brandName) {
 		add('delete-key-if-empty', classes + extension)
 	}
 
-	//each protocol: the app's own ProgID whole, and the shared class named for the protocol only while its command still runs the app; another program that has taken the class since keeps it
+	//each protocol: the app's own ProgID whole, and the shared class named for the protocol, its legacy association, only while its command still runs the app; another program that has taken the class since keeps it
 	for (let protocol of protocols) {
 		add('delete-key', classes + brandName + '.url.' + protocol)
 		add('delete-key-if', classes + protocol, {at: 'shell\\open\\command', equals: command})
