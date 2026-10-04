@@ -7,7 +7,7 @@ Text to write when the process exits. The page hands down a path and the text th
 
 It exists for the one moment the page can't reach. Exit is the event every way of quitting reaches, and it arrives on the main thread inside an operating system callback: a synchronous file write is fine there, but a round trip to JavaScript needs the run loop to turn again, and it won't. So the page keeps what it wants written current here as it goes, an in-memory copy costing nothing, and Rust writes whatever is held when the process leaves. Today that's the settings file, whose window place changes too often to write on every move.
 
-A write that fails at exit has nowhere to report: the page is unreachable, and a release build has no console. The page writes the same file itself whenever it can report trouble, so this write is the backstop, not the witness.
+A write that fails at exit has nowhere to report: the page is unreachable, and a release build has no console. The page writes the same file itself whenever it can report trouble, so this write is the backstop, not the witness. The page's write is a rename over the file, through disk_write, so a page write still landing as this one runs leaves the file whole either way.
 */
 
 /// The text to write to each path when the application exits; a tuple struct reached as .0, behind a Mutex because tauri shares managed state by reference, and holding new text means changing it

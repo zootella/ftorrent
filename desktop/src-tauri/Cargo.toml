@@ -32,6 +32,7 @@ ico = "0.5"#reads the tray icons at startup, so lifecycle.rs can hand the shell 
 webview2-com = "0.38"#the web view's key event, which window.rs handles to turn off the browser's shortcut keys; tauri already brings this crate at this version, and the controller tauri hands over is its type
 
 [target.'cfg(target_os = "macos")'.dependencies]
+tokio = { version = "1", features = ["time"] }#the timeout launch.rs puts on waiting for macOS's answer; tauri already brings tokio, and this turns on the part that keeps time
 objc2 = "0.6.4"#calling objective-c from rust, and Retained, the reference these calls hand back; tauri already brings this crate at this version
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSWorkspace", "block2", "objc2-uniform-type-identifiers"] }#NSWorkspace, which launch.rs asks what opens a type or a link and tells which app should; tauri already brings this crate at this version
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString", "NSURL", "NSError", "NSAppleEventManager", "NSAppleEventDescriptor"] }#the strings, urls, and errors those calls take and give, and the apple event a launch arrives with, which login.rs reads to know a login item started this process; already in the tree too

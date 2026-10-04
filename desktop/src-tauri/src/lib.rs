@@ -10,6 +10,8 @@ Rust grows when the operating system is the only one who can do the thing, or wh
 The test for a new command is to describe it without naming a ftorrent feature. "Lock this folder" passes. "Lock the download folders in the settings, and let go of the ones no longer listed" fails, and the second half of it belongs to the page. A command that fails the test gets split: the general operation stays here, and the decision goes up.
 
 A command also takes one thing: one path, one lock, one value, one line. A list stays in the page, which calls down once per item and owns the order and how many are in flight, so no batch command grows here. The rule is about this boundary and nothing past it: engine_send carries one line, but that line is whatever the page built, and where libtorrent itself takes many things in a single call, the engine makes that call.
+
+A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, and the registry, which Windows serves from memory. A command that waits, on the disk, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, locks.rs, login.rs, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line stays plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
 */
 
 mod disk;//compile disk.rs as a module named disk: file commands the page calls, thin wrappers over std::fs
@@ -22,14 +24,20 @@ mod launch;//and launch.rs: launch services on the mac, asked what opens a type 
 mod login;//and login.rs: the mac's login item, and whether the system started this process at login
 mod instance;//and instance.rs: one running ftorrent per copy, and a second launch handing over what it carried
 mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is explicit
-mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to
+mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to, and every panic's location among them
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
 
 use tauri::Manager;//brings manage into scope, for handing the paths to tauri's shared state in setup
 
+/// The body of a command that waits, run on tokio's blocking pool and answered as a value however it ends: what the body returned, or an error if it panicked. The body is a move closure that owns what it uses, since it runs on another thread, so a command that needs managed state takes an AppHandle and looks the state up inside, as locks.rs does. The essay above disk_readdir in disk.rs says why every waiting command goes through here, and what it costs
+pub(crate) async fn run_blocking<T: Send + 'static>(body: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
+	tauri::async_runtime::spawn_blocking(body).await.map_err(|e| format!("the command panicked: {e}"))?
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+	log::log_panics();//first of all, so every panic from here on leaves its location in the log, whichever thread it's on and whatever happens to the process next
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_dialog::init())

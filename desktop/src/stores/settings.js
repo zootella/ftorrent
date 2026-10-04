@@ -112,13 +112,13 @@ export const useSettingsStore = defineStore('settings', () => {
 	}
 
 	async function write(text) {//the file, whole, and the same text to rust for the exit write
+		hold(text)//first, so a quit that lands while the write below is still under way carries this text rather than the last; and if the write fails, rust tries again on the way out
 		try {
 			await diskWrite(paths.value.settings, Array.from(new TextEncoder().encode(text)))//disk.rs speaks bytes because it mirrors posix, so this is where text becomes bytes
 			fileText = text
 		} catch (error) {
 			problems.value.push(`settings: writing ${paths.value.settings}: ${error}`)
 		}
-		hold(text)//after a write that worked this is belt and braces; after one that didn't, it leaves the file with rust to try again on the way out
 	}
 
 	function hold(text) {//hand the whole file down to rust, which writes it when ftorrent exits

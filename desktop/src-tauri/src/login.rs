@@ -1,11 +1,12 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde::Serialize;
 use tauri::{command, AppHandle, Manager, State};
+use crate::run_blocking;
 
 /*
 Starting at login, offered to the page the way launch.rs offers Launch Services: general commands any Mac application could use as they are, and one fact about this process that every platform has. Whether ftorrent should start at login, and what to do when the system disagrees, is the page's; stores/login.js is the one that uses these.
 
-On the Mac, login_register makes this app a login item and login_unregister takes it off, both through SMAppService's main app service, the way macOS 13 and later expects: the item belongs to the app's bundle, it's listed by name under Open at Login in System Settings, where the user can remove it, and it stops existing when the app is deleted, so nothing is left behind to launch a program that's gone. The older ways, a property list dropped in ~/Library/LaunchAgents, a helper app inside the bundle, or asking System Events through AppleScript, are all ones macOS has moved past, and the first two outlive the app. login_status answers what macOS says about the item: enabled; notRegistered, which is also what removing it from Open at Login leaves, as we measured; requiresApproval, an item registered but waiting on the user's approval in System Settings; or notFound, which macOS answers for an app it has never registered. login_settings opens that pane of System Settings. On Windows the page writes and reads the registry itself, through registry.rs, so each of these answers that there's no SMAppService there.
+On the Mac, login_register makes this app a login item and login_unregister takes it off, both through SMAppService's main app service, the way macOS 13 and later expects: the item belongs to the app's bundle, it's listed by name under Open at Login in System Settings, where the user can remove it, and it stops existing when the app is deleted, so nothing is left behind to launch a program that's gone. The older ways, a property list dropped in ~/Library/LaunchAgents, a helper app inside the bundle, or asking System Events through AppleScript, are all ones macOS has moved past, and the first two outlive the app. login_status answers what macOS says about the item: enabled; notRegistered, which is also what removing it from Open at Login leaves, as we measured; requiresApproval, an item registered but waiting on the user's approval in System Settings; or notFound, which macOS answers for an app it has never registered. login_settings opens that pane of System Settings. Each of the four waits on the system's own daemon for its answer, so each runs its body through run_blocking in lib.rs. On Windows the page writes and reads the registry itself, through registry.rs, so each of these answers that there's no SMAppService there.
 
 The fact is login_launch: whether the system started this process at login, which the page reads to start with the window hidden, leaving only the icon near the clock. On the Mac a login item is opened like any app, with an Apple Event, and the event says the launch was a login item's; it's read once, in setup, while that event is still the one being handled. On Windows a program started at sign-in is started with whatever command line its registration carries, so the registration carries one more argument, --login, and this process recognizes it. login_launch answers the argument too, so the page writes the very word this checks for. instance.rs keeps it out of what reaches the page, since it's no file or link, and a second launch carrying only it, a sign-in while ftorrent somehow already runs, changes nothing.
 */
@@ -64,26 +65,26 @@ pub fn login_launch(login: State<'_, Login>) -> Launch {
 
 /// What macOS says about this app as a login item: enabled, notRegistered, requiresApproval, or notFound
 #[command]
-pub fn login_status() -> Result<String, String> {
-	platform::status()
+pub async fn login_status() -> Result<String, String> {//on the blocking pool, as are the three below, since each waits on the system's own service to answer; lib.rs has the rule
+	run_blocking(platform::status).await
 }
 
 /// Make this app a login item
 #[command]
-pub async fn login_register() -> Result<(), String> {//async, so tauri runs it off the main thread
-	platform::register()
+pub async fn login_register() -> Result<(), String> {
+	run_blocking(platform::register).await
 }
 
 /// Take this app off the login items
 #[command]
 pub async fn login_unregister() -> Result<(), String> {
-	platform::unregister()
+	run_blocking(platform::unregister).await
 }
 
 /// Open the pane of System Settings where the user switches login items on and off
 #[command]
-pub fn login_settings() -> Result<(), String> {
-	platform::settings()
+pub async fn login_settings() -> Result<(), String> {
+	run_blocking(platform::settings).await
 }
 
 #[cfg(target_os = "macos")]
@@ -95,26 +96,28 @@ mod platform {
 	}
 
 	pub fn status() -> Result<String, String> {
-		let status = unsafe { main_app().status() };
-		Ok(match status {
-			SMAppServiceStatus::Enabled => "enabled",
-			SMAppServiceStatus::NotRegistered => "notRegistered",
-			SMAppServiceStatus::RequiresApproval => "requiresApproval",
-			SMAppServiceStatus::NotFound => "notFound",
-			_ => return Err(format!("login: macOS answered a status this doesn't know, {}", status.0)),
-		}.to_string())
+		objc2::rc::autoreleasepool(|_| {//a pool for this thread, as the three below have too: tokio's threads have none, and every thread that calls into Cocoa needs one, as launch.rs explains
+			let status = unsafe { main_app().status() };
+			Ok(match status {
+				SMAppServiceStatus::Enabled => "enabled",
+				SMAppServiceStatus::NotRegistered => "notRegistered",
+				SMAppServiceStatus::RequiresApproval => "requiresApproval",
+				SMAppServiceStatus::NotFound => "notFound",
+				_ => return Err(format!("login: macOS answered a status this doesn't know, {}", status.0)),
+			}.to_string())
+		})
 	}
 
 	pub fn register() -> Result<(), String> {
-		unsafe { main_app().registerAndReturnError() }.map_err(|e| format!("login: {}", e.localizedDescription()))
+		objc2::rc::autoreleasepool(|_| unsafe { main_app().registerAndReturnError() }.map_err(|e| format!("login: {}", e.localizedDescription())))
 	}
 
 	pub fn unregister() -> Result<(), String> {
-		unsafe { main_app().unregisterAndReturnError() }.map_err(|e| format!("login: {}", e.localizedDescription()))
+		objc2::rc::autoreleasepool(|_| unsafe { main_app().unregisterAndReturnError() }.map_err(|e| format!("login: {}", e.localizedDescription())))
 	}
 
 	pub fn settings() -> Result<(), String> {
-		unsafe { SMAppService::openSystemSettingsLoginItems() };
+		objc2::rc::autoreleasepool(|_| unsafe { SMAppService::openSystemSettingsLoginItems() });
 		Ok(())
 	}
 }
