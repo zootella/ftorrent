@@ -77,7 +77,7 @@ Every font list here is short on purpose: one face and a generic family, or a pl
 	main          { @apply p-4; }/* every page is one column down the left, in plain block flow: each part as tall as its contents, stacked in order, and nothing stretched to fill; a button is inline, so it keeps its own width */
 	main > * + *  { @apply mt-4; }/* and the same space between each part and the one before it */
 	h1   { @apply text-2xl font-semibold; }/* tailwind's reset leaves headings at body size */
-	a    { @apply text-accent; }
+	a    { @apply text-accent underline; }/* a link looks like one, in the accent color and underlined, since tailwind's reset strips the browser's own underline */
 
 	button, textarea, input:not([type=radio], [type=checkbox]) { @apply rounded-md border border-line bg-surface px-3 py-1.5; }/* one look for every control you type in or press, since tailwind's reset strips the browser's own */
 	button:enabled:hover                                       { @apply border-accent; }/* only a control that can be used lights up under the mouse */

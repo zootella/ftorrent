@@ -1,16 +1,19 @@
 <script setup>
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
+import {useLoginStore} from '../stores/login.js'
 import {brandName} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
-import {fontsOffered, settingsName, systemFace} from '../settings.js'
+import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether this copy is installed, the only kind that may answer
+let login = useLoginStore()//whether the user wants ftorrent to start at login, and whether the system agrees
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', 'Ask']]
+let loginChoices       = [['yes', 'Yes'], ['no', 'No']]//the setting is true or false, and the group speaks in strings
 let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the same three words on every platform
 let fontChoices        = [//the words in three parts, so the template can set the face's own name in italics, and San Francisco reads as a typeface rather than the city
 	['system',  systemFace ? {face: systemFace.face, trail: `, from ${systemFace.maker}, the system font`} : {lead: 'System font'}],//named on windows and the mac; linux's is whatever the desktop sets, so it isn't named
@@ -40,6 +43,11 @@ async function chooseFont(font) {
 
 		<div>
 			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This page only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
+		</div>
+
+		<div v-if="platformName != 'Linux'"><!-- starting at login is a Windows and Mac feature, so linux doesn't show the question at all -->
+			<RadioGroup :choices="loginChoices" :chosen="login.wanted ? 'yes' : 'no'" :disabled="!login.installed" @choose="value => login.choose(value == 'yes')">{{ loginWords.question }}</RadioGroup><!-- the user's answer, which only a click here changes, and which sets the system to match; off at the factory, asked about nowhere else, and grayed for any copy the installer didn't place -->
+			<p v-if="login.differs"><a href="#" @click.prevent="login.openSettings">{{ loginWords.confirm }}</a></p><!-- the system says otherwise than the answer, whichever way, as when the user changed it in the system's own page; the link opens that page, Login Items & Extensions on a Mac and Startup Apps on Windows, and goes away once the two agree. Why they differ is in the log and the main page's report -->
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>

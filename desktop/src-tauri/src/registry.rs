@@ -3,7 +3,7 @@ use tauri::command;
 /*
 The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open. Two more functions, number and watch, serve the core itself rather than the page, in the same general terms: the tray in lifecycle.rs reads the taskbar's theme through one and follows it through the other.
 
-registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_delete removes one value, and registry_delete_key removes a key with everything under it, both only under HKEY_CURRENT_USER, and both answer whether there was anything there, so taking something back counts as a change the same way writing it does. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
+registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_get_binary reads a binary value the same way, as its bytes, for the few flags Windows keeps that way. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_delete removes one value, and registry_delete_key removes a key with everything under it, both only under HKEY_CURRENT_USER, and both answer whether there was anything there, so taking something back counts as a change the same way writing it does. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
 
 registry_opens asks Windows which program it would open a file type or a link scheme with right now, and answers the ProgID it would use and the executable that ProgID runs. It's the shell's own lookup, AssocQueryString, rather than a reading of keys, because the answer is layered: the user's saved choice first, sealed where only the system's own screens can write it, and the fallbacks under Software\Classes after that, and a saved choice may name a shared class like magnet whose command belongs to whichever program wrote it last. Asking the shell gets the answer Explorer and Settings would give, whichever layer it came from.
 
@@ -14,6 +14,12 @@ A blank value name means the key's own default value, which is how the registry 
 #[command]
 pub fn registry_get(root: String, key: String, name: String) -> Result<Option<String>, String> {
 	platform::get(&root, &key, &name)
+}
+
+/// Read a binary value as its bytes; root is classes or user. Answers nothing when the key or the value isn't there
+#[command]
+pub fn registry_get_binary(root: String, key: String, name: String) -> Result<Option<Vec<u8>>, String> {
+	platform::get_binary(&root, &key, &name)
 }
 
 /// Write a string value under the current user, creating the key if it's missing, and only if it would change; answers whether it changed
@@ -69,7 +75,7 @@ pub fn watch(key: &str, changed: impl Fn() + Send + 'static) {
 mod platform {
 	use windows::core::{PCWSTR, PWSTR};
 	use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_NO_ASSOCIATION};
-	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegGetValueW, RegNotifyChangeKeyValue, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_NOTIFY, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_NOTIFY_CHANGE_LAST_SET, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_DWORD, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
+	use windows::Win32::System::Registry::{RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegGetValueW, RegNotifyChangeKeyValue, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, KEY_NOTIFY, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_NOTIFY_CHANGE_LAST_SET, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_NOEXPAND, RRF_RT_REG_BINARY, RRF_RT_REG_DWORD, RRF_RT_REG_EXPAND_SZ, RRF_RT_REG_SZ};
 	use windows::Win32::UI::Shell::{AssocQueryStringW, SHChangeNotify, SHDeleteKeyW, ASSOCF, ASSOCF_IS_PROTOCOL, ASSOCF_NONE, ASSOCF_NOTRUNCATE, ASSOCSTR, ASSOCSTR_EXECUTABLE, ASSOCSTR_PROGID, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
 	use super::Opener;
 
@@ -88,6 +94,18 @@ mod platform {
 		if read == ERROR_FILE_NOT_FOUND { return Ok(None) }//no key, or a key without this value
 		if read.is_err() { return Err(format!("registry: could not read {key}, windows error {}", read.0)) }
 		Ok(Some(String::from_utf16_lossy(&buffer[..(size as usize / 2).saturating_sub(1)])))//characters, less the terminating zero; on success size never exceeds the buffer
+	}
+
+	pub fn get_binary(root: &str, key: &str, name: &str) -> Result<Option<Vec<u8>>, String> {
+		let hive = match root { "classes" => HKEY_CLASSES_ROOT, "user" => HKEY_CURRENT_USER, _ => return Err(format!("registry: no root named {root}; it's classes or user")) };
+		let wide_key = wide(key);
+		let wide_name = wide(name);
+		let mut buffer = [0u8; 2048];//longer than any flag windows keeps this way; a longer value is reported rather than cut short
+		let mut size = buffer.len() as u32;
+		let read = unsafe { RegGetValueW(hive, PCWSTR(wide_key.as_ptr()), if name.is_empty() { PCWSTR::null() } else { PCWSTR(wide_name.as_ptr()) }, RRF_RT_REG_BINARY, None, Some(buffer.as_mut_ptr().cast()), Some(&mut size)) };//only a binary value is accepted
+		if read == ERROR_FILE_NOT_FOUND { return Ok(None) }
+		if read.is_err() { return Err(format!("registry: could not read {key}, windows error {}", read.0)) }
+		Ok(Some(buffer[..size as usize].to_vec()))
 	}
 
 	pub fn number(key: &str, name: &str) -> Option<u32> {
@@ -188,6 +206,7 @@ mod platform {
 	use super::Opener;
 	const NONE: &str = "registry: there's no registry on this platform";
 	pub fn get(_root: &str, _key: &str, _name: &str) -> Result<Option<String>, String> { Err(NONE.to_string()) }
+	pub fn get_binary(_root: &str, _key: &str, _name: &str) -> Result<Option<Vec<u8>>, String> { Err(NONE.to_string()) }
 	pub fn set(_key: &str, _name: &str, _value: &str) -> Result<bool, String> { Err(NONE.to_string()) }
 	pub fn delete(_key: &str, _name: &str) -> Result<bool, String> { Err(NONE.to_string()) }
 	pub fn delete_key(_key: &str) -> Result<bool, String> { Err(NONE.to_string()) }

@@ -24,6 +24,8 @@ export const systemFace = {Windows: {face: 'Segoe UI', maker: 'Microsoft'}, macO
 //what ftorrent calls its settings, in the menu and at the top of their page: options on windows, where a program's classic menu is tools, options, as it is in qbittorrent, and settings everywhere else, the word macos has used since ventura
 export const settingsName = onWindows ? 'Options' : 'Settings'
 
+//the words for starting at login, which say startup, the word people use for it, though the system starts ftorrent as each user logs in; and when the system differs from the answer, the link to its own page for it, by the name each platform gives that page
+export const loginWords = {question: `Run ${brandName} at startup`, confirm: onWindows ? 'Confirm in Startup Apps' : 'Confirm in Login Items & Extensions'}
 //the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered only on windows, where it's certainly installed
 export const fontsOffered = onWindows ? ['system', 'inter', 'verdana'] : ['system', 'inter']
 
@@ -41,6 +43,12 @@ export const settingsSchema = [
 		factory: 'ask',
 		comment: `whether ${brandName} opens torrent files and links, .torrent and .${brandStem} files and magnet: and ${brandStem}: links: "yes", "no", or "ask". Unless this is "no", a bar at the top of the window asks whenever the system opens any of them with another app, and answering yes there claims them; ${brandName} never claims them on its own. The system keeps the final say, so on Windows yes may open its settings for you to confirm there. Whatever the answer, ${brandName} stays in the system's Open with menu for all four`,
 		check: value => ['ask', 'yes', 'no'].includes(value),
+	}, {
+		section: 'login',
+		key: 'start',
+		factory: false,
+		comment: `whether ${brandName} runs at startup, starting hidden as you log in, with only its icon near the clock: true or false, on a Mac or Windows. Choosing on the settings page also sets it in the system's own settings, Login Items & Extensions on a Mac and Startup Apps on Windows; and when the two differ, as when it's changed there or here in the file, the settings page offers a link to confirm it there`,
+		check: value => typeof value == 'boolean',
 	}, {
 		section: 'log',
 		key: 'record',

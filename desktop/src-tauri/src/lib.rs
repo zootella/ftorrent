@@ -19,6 +19,7 @@ mod paths;//and paths.rs: where everything is, worked out once at startup
 mod queue;//and queue.rs: the drained queue the engine's lines and a copy's arrivals wait in until the page takes them
 mod registry;//and registry.rs: the windows registry, read and written for the page
 mod launch;//and launch.rs: launch services on the mac, asked what opens a type and told which app should
+mod login;//and login.rs: the mac's login item, and whether the system started this process at login
 mod instance;//and instance.rs: one running ftorrent per copy, and a second launch handing over what it carried
 mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is explicit
 mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to
@@ -36,7 +37,8 @@ pub fn run() {
 		.manage(instance::Instance::default())//this copy's lock, and what has reached it
 		.manage(locks::Locks::default())//the file locks this process holds for the page, kept open so they stay held
 		.manage(desktop::ExitFiles::default())//text to write on the way out, by path
-		.manage(window::Revealed::default())//whether the page has placed and shown the window yet
+		.manage(window::Revealed::default())//whether the page has placed the window yet
+		.manage(login::Login::default())//whether the system started this process at login
 		.invoke_handler(//register all the commands JS can invoke
 			tauri::generate_handler![
 				disk::disk_readdir,//functions we've written in disk.rs
@@ -56,6 +58,7 @@ pub fn run() {
 				locks::lock_release,
 				paths::paths_status,//and in paths.rs
 				registry::registry_get,//and in registry.rs
+				registry::registry_get_binary,
 				registry::registry_set,
 				registry::registry_delete,
 				registry::registry_delete_key,
@@ -63,6 +66,11 @@ pub fn run() {
 				registry::registry_opens,
 				launch::launch_opens,//and in launch.rs
 				launch::launch_claim,
+				login::login_launch,//and in login.rs
+				login::login_status,
+				login::login_register,
+				login::login_unregister,
+				login::login_settings,
 				window::window_revealed,//and in window.rs
 				window::window_webview_version,
 				instance::instance_status,//and in instance.rs
@@ -74,6 +82,7 @@ pub fn run() {
 			if let instance::Start::Leave = instance::start(app.handle(), &paths) {//another process is this copy, and now has what this launch carried
 				std::process::exit(0);//nothing has started yet, so there's nothing to stop: no engine, no lock, and no window, which is only built from the Ready event below
 			}
+			login::start(app.handle());//whether a login started this process, which the page reads to start hidden, worked out while the mac's opening apple event is still the current one
 			#[cfg(target_os = "windows")]
 			lifecycle::identity_install(app.handle());//which application this process is, said to the shell before the tray and the window exist, so the taskbar knows them as the shortcut's
 			app.manage(paths);//before the engine, which is told where everything is; the settings file inside the data folder is the page's to read, once it's up, and only the copy holding the lock has a page

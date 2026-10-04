@@ -8,7 +8,7 @@ The running program writes these entries, not the installer, when it offers itse
 
 The list holds the only thing that differs from one app to the next: its associations, the file types and link protocols it opens, as plain strings written the way a person sees them. A file extension begins with its dot, .torrent, and a protocol ends with its colon, magnet:, which is stripped for the registry; anything that is neither stops the build. The app's own two, the .ftorrent file and the ftorrent: link, are named for the executable's stem, which this file reads from Cargo.toml so that they can be written as the strings they are; brand.js in the page explains the stem and its sibling, brandName. Another app adopting the installer replaces the list with its own, and an app that opens no types of its own leaves it empty.
 
-Everything else is the same for every app, and the code below knows it: a ProgID for each extension and protocol named the way associate.js in the page names them, {brandName}.torrent for a file and {brandName}.url.magnet for a link; the app's listing in Settings under Default apps, the Capabilities key that listing points at, and whatever else the app kept under its own key beneath Software; its key under Applications, which names the executable; and its line under Run for starting with Windows. An extension's own key and a protocol's shared class are never taken whole, since another program may own them next: the extension's default goes only while it still names the app, the class only while its command still runs the app, and the extension's keys only when nothing else is left in them.
+Everything else is the same for every app, and the code below knows it: a ProgID for each extension and protocol named the way associate.js in the page names them, {brandName}.torrent for a file and {brandName}.url.magnet for a link; the app's listing in Settings under Default apps, the Capabilities key that listing points at, and whatever else the app kept under its own key beneath Software; its key under Applications, which names the executable; and its line under Run for starting with Windows, with the line of the same name under StartupApproved, where Windows keeps the user's switch for it. An extension's own key and a protocol's shared class are never taken whole, since another program may own them next: the extension's default goes only while it still names the app, the class only while its command still runs the app, and the extension's keys only when nothing else is left in them.
 */
 
 const brandStem = parseToml(readFileSync(new URL('../src-tauri/Cargo.toml', import.meta.url), 'utf8')).package.name//the stem of the executable's name, which is the crate's name, since Cargo names the executable from it
@@ -59,8 +59,9 @@ export function uninstallInstructions(brandName) {
 		add('delete-key-if', classes + protocol, {at: 'shell\\open\\command', equals: command})
 	}
 
-	//the executable's own entry under Applications, with the types it said it supports, and the value under Run that starts the app with Windows, which ftorrent does not write yet
+	//the executable's own entry under Applications, with the types it said it supports; the value under Run that starts the app with Windows, which login.js in the page writes while the user wants it; and the value of the same name under StartupApproved, which Windows writes when the user flips its switch in Task Manager or Settings and leaves behind once the app is gone
 	add('delete-key', classes + 'Applications\\' + brandStem + '.exe')
 	add('delete-value', 'Software\\Microsoft\\Windows\\CurrentVersion\\Run', {name: brandName})
+	add('delete-value', 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run', {name: brandName})
 	return found
 }

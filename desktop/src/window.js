@@ -14,7 +14,7 @@ Tauri turns CSS pixels into physical ones by the scale of the screen the window 
 
 A fresh place, which is also the first run, is five eighths of the primary screen wide and half as tall, though never more than three times as wide as it is tall, dropped at a random spot inside a field centered on the screen that's three quarters of it each way. The margin the field leaves, an eighth of the screen on every side, is deeper than any taskbar, menu bar, or dock, so the window misses the operating system's chrome without asking where it is, and the randomness keeps an installed copy and a portable one from opening exactly on top of each other.
 
-The window is placed while it's hidden, given its light or dark theme and its font, maximized if it was, and only then shown, so it appears once, where it belongs and in the right colors and type. Maximizing goes last, beside showing, because on Windows maximizing a hidden window shows it. Then the page tells Rust the window is revealed, which is what lets a second launch, the tray, or the Dock bring it forward from then on. A place that can't be worked out still ends in showing the window, wherever the builder left it, since a window that never appears is worse than one in the wrong spot.
+The window is placed while it's hidden, given its light or dark theme and its font, maximized if it was, and only then shown, so it appears once, where it belongs and in the right colors and type. Maximizing goes last, beside showing, because on Windows maximizing a hidden window shows it. Then the page tells Rust the window is revealed, which is what lets a second launch, the tray, or the Dock bring it forward from then on. A launch the system made at login is the exception: the window is placed and given its look the same way, but stays hidden, leaving only the icon near the clock, until the user asks for it there; and since maximizing would show it on Windows, a maximized window is maximized the first time it takes focus instead. A place that can't be worked out still ends in showing the window, wherever the builder left it, since a window that never appears is worse than one in the wrong spot.
 
 Recording and writing are separate on purpose. Every move and resize updates the store in memory, and hands the rendered file down to Rust to write when ftorrent exits, which is free; nothing touches the disk while the user drags. The file is written when the window is closed with its X, which in ftorrent hides it rather than quitting, and again by Rust at exit, which covers the user who quits from the tray or the File menu without ever closing the window, and a restart of Windows or a logout on the Mac, which reach the same exit. A user who parks the window just so and then loses power before either has lost the position and drags it once more; that's the trade for never debouncing.
 */
@@ -26,7 +26,7 @@ const heightFraction = 0.5   //and half as tall
 const widthLimit     = 3     //but never wider than three times its height, so a super wide monitor gets a window, not a banner. A 16:9 screen makes a window about 2.2 to 1 and a 21:9 one just under 3, so only the 32:9 screens meet this
 const fallbackScreen = {x: 0, y: 0, width: 1280, height: 800}//a screen to size against when none can be named, so there's still a window
 
-export async function revealWindow(store) {//place the hidden window where the settings remember or somewhere fresh, give it its theme and font, maximize it if it was, show it, and tell rust it's revealed; call once, after the settings have loaded, with the settings store, whose settings hold factory values when the file couldn't be read
+export async function revealWindow(store, hidden = false) {//place the hidden window where the settings remember or somewhere fresh, give it its theme and font, maximize it if it was, show it unless hidden, for a launch at login, and tell rust it's revealed; call once, after the settings have loaded, with the settings store, whose settings hold factory values when the file couldn't be read
 	let appWindow = getCurrentWindow()
 	let guest = portable(store)
 	try {
@@ -36,11 +36,22 @@ export async function revealWindow(store) {//place the hidden window where the s
 		await appWindow.setPosition(new LogicalPosition(place.x, place.y))//after the size, so the last word on where the window sits is its top left corner
 		await themeWindow(store.settings.appearance.mode)//while still hidden, so it appears in its colors and its type; after the place, so a look that fails to take still leaves the window where it belongs
 		await fontWindow(store.settings.appearance.font)
-		if (!guest && store.settings.window.maximized) await appWindow.maximize()//last, beside showing, since on windows maximizing a hidden window shows it
+		if (!guest && store.settings.window.maximized) {
+			if (hidden) await maximizeOnFocus(appWindow)
+			else await appWindow.maximize()//last, beside showing, since on windows maximizing a hidden window shows it
+		}
 	} finally {
-		await appWindow.show()//whatever happened above, a window that never appears is the worst outcome
-		await invoke('window_revealed')
+		if (!hidden) await appWindow.show()//whatever happened above, a window that never appears is the worst outcome, unless it's meant to stay hidden
+		await invoke('window_revealed')//placed, so bringing it forward from the tray, the menu bar icon, or a second launch shows it where it belongs
 	}
+}
+
+async function maximizeOnFocus(appWindow) {//maximize the window the first time it takes focus, which for a window kept hidden at login is when the user brings it forward
+	let stop = await appWindow.onFocusChanged(({payload: focused}) => {
+		if (!focused) return
+		stop()
+		appWindow.maximize()
+	})
 }
 
 async function replayPlace(s) {//the place the settings remember and the monitor it goes on, if a place was recorded and the screen it was recorded on is still there exactly as it was; or false, which means find a fresh place
@@ -87,6 +98,7 @@ export async function watchWindow(store) {//keep the settings store told where t
 }
 
 async function recordWindow(appWindow, store) {//the window's place and size and the screen it's on, into the store's [window] and [screen], in css pixels, and whether it's maximized
+	if (!await appWindow.isVisible()) return//a window kept hidden at login hasn't been placed by the user, and isn't maximized yet even if it's going to be, so there's nothing of theirs to record
 	if (await appWindow.isMinimized() || await appWindow.isFullscreen()) return//a minimized window reports a position like -32000, -32000 on windows, and a fullscreen one fills a screen it wasn't sized to. Fullscreen also isn't brought back, on purpose: on macOS it's a Space of its own, somewhere a user steps into for a while, and an application that opened into a new Space at launch would feel like it had taken over the screen. Maximized is different, the everyday way to work on Windows and zoom on the Mac, so that one is recorded below and comes back
 	let s = store.settings
 	s.window.maximized = await appWindow.isMaximized()

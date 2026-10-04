@@ -6,9 +6,11 @@ import {engineStatus} from '../engine.js'
 import {instanceStatus} from '../instance.js'
 import {brandName} from '../brand.js'
 import {useAssociationsStore} from '../stores/associations.js'
+import {useLoginStore} from '../stores/login.js'
 
 let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
 let associations = useAssociationsStore()//what registration did and what windows opens each of the four with, lines for the report on an installed copy
+let login = useLoginStore()//the login answer and what the system says, a line for the report on an installed copy
 
 //get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
 let prepared = ref(false)//true for a moment after the button, so it can say so
@@ -71,6 +73,7 @@ let report = computed(() => {
 	}
 	for (let problem of store.problems) lines.push(problem)
 	lines.push(...associations.report)
+	lines.push(...login.report)
 	let i = instance.value
 	if (i) {
 		if (i.held) lines.push(`lock: held, ${i.lock}`)

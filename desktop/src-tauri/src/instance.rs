@@ -13,7 +13,7 @@ Two halves do that. The lock says whether this copy is already running. It's an 
 
 The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, which Tauri hands over as its Opened event, at a cold start and while running alike, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, so an upgrade closes the running copy cleanly rather than ending its process.
+What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, so an upgrade closes the running copy cleanly rather than ending its process. And one argument never does: --login, which a Windows login registration adds so login.rs knows the system started this copy, is taken out of this copy's own command line, and a handoff carrying only it is dropped, leaving the window as it was.
 */
 
 const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
@@ -85,7 +85,8 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 			s.trouble.push_str(&format!("a second launch can't reach this copy: {e}"));
 		}
 	}
-	if !args.is_empty() { arrive(app, "launch", args, false) }
+	let carried: Vec<String> = args.into_iter().filter(|arg| arg != crate::login::ARGUMENT).collect();//the argument a login registration adds is no file or link, and login.rs has already read it
+	if !carried.is_empty() { arrive(app, "launch", carried, false) }
 	Start::Run
 }
 
@@ -189,6 +190,7 @@ mod handoff {
 					let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else { return };
 					let args: Vec<String> = value.get("args").and_then(|a| a.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
 					if args.len() == 1 && args[0] == "--exit" { crate::log::log("asked to exit by handoff"); app.exit(0); return }//the one request that isn't for the page: the setup program sends it before it replaces the files, and it reaches the same Exit run event as File, Exit, so the engine stops and the session is saved
+					if args.len() == 1 && args[0] == crate::login::ARGUMENT { crate::log::log("a login launch handed over, and changes nothing"); return }//windows started ftorrent at sign-in while this copy already runs, which is no request: the window stays as it is
 					super::arrive(&app, "handoff", args, true);
 				});
 			}

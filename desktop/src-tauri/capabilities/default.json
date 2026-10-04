@@ -15,7 +15,7 @@
 		"opener:allow-reveal-item-in-dir",
 		{
 			"identifier": "opener:allow-open-url",
-			"allow": [{"url": "ms-settings:defaultapps*"}, {"url": "https://ftorrent.com/*"}]
+			"allow": [{"url": "ms-settings:defaultapps*"}, {"url": "ms-settings:startupapps"}, {"url": "https://ftorrent.com/*"}]
 		},
 		"dialog:allow-open",
 		"dialog:allow-save"
