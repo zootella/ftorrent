@@ -19,7 +19,7 @@ let fontChoices        = [//the words in three parts, so the template can set th
 	['system',  systemFace ? {face: systemFace.face, trail: `, from ${systemFace.maker}, the system font`} : {lead: 'System font'}],//named on windows and the mac; linux's is whatever the desktop sets, so it isn't named
 	['inter',   {face: 'Inter', trail: ', by Rasmus Andersson, cross-platform'}],
 	['verdana', {face: 'Verdana', trail: ', vibing Windows XP'}],
-].filter(([value]) => fontsOffered.includes(value))//verdana only on windows; settings.js says why
+].filter(([value]) => fontsOffered.includes(value))//verdana on windows and the mac, not linux; settings.js says why
 
 //light or dark, and the typeface, each taking effect at once and written to the file, the way a setting picked from its answers is, with no Save to press
 async function chooseMode(mode) {

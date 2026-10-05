@@ -26,8 +26,8 @@ export const settingsName = onWindows ? 'Options' : 'Settings'
 
 //the words for starting at login, which say startup, the word people use for it, though the system starts ftorrent as each user logs in; and when the system differs from the answer, the link to its own page for it, by the name each platform gives that page
 export const loginWords = {question: `Run ${brandName} at startup`, confirm: onWindows ? 'Confirm in Startup Apps' : 'Confirm in Login Items & Extensions'}
-//the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered only on windows, where it's certainly installed
-export const fontsOffered = onWindows ? ['system', 'inter', 'verdana'] : ['system', 'inter']
+//the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered on windows and the mac, which both install it with the system, and not on linux, where it's only there if someone added it
+export const fontsOffered = platformName == 'Linux' ? ['system', 'inter'] : ['system', 'inter', 'verdana']
 
 //every setting ftorrent has, and the only place any of them is defined; a check, where the type alone isn't enough, has to accept the factory value or an ordinary file would report a problem against itself
 export const settingsSchema = [
@@ -65,8 +65,8 @@ export const settingsSchema = [
 		section: 'appearance',
 		key: 'font',
 		factory: 'system',
-		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, with IBM Plex Mono for fixed-width text, both carried by ${brandName}; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, with the same Plex Mono for fixed-width text, and is offered on Windows only`,
-		check: value => fontsOffered.includes(value),//so a portable copy's file carried from windows to a mac with verdana in it says so once and goes back to system, like any value this copy can't use
+		comment: `the typeface: "system" is the one the system sets its own menus and windows in, Segoe UI on Windows and San Francisco on a Mac; "inter" is Inter, with IBM Plex Mono for fixed-width text, both carried by ${brandName}; "verdana" is Verdana, which drawn today looks the way Tahoma did in Windows programs around 2000, with the same Plex Mono for fixed-width text, and is offered on Windows and the Mac`,
+		check: value => fontsOffered.includes(value),//so a portable copy's file carried to linux with verdana in it says so once and goes back to system, like any value this copy can't use
 	}, {
 		section: 'window',
 		key: 'x',
