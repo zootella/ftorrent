@@ -1,15 +1,19 @@
 <script setup>
+import {computed} from 'vue'
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {useLoginStore} from '../stores/login.js'
+import {useUpdateStore} from '../stores/update.js'
 import {brandName} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
 import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
+import {sayAgo} from '../time.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether this copy is installed, the only kind that may answer
 let login = useLoginStore()//whether the user wants ftorrent to start at login, and whether the system agrees
+let update = useUpdateStore()//the section that checks for a newer version
 
 //the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', 'Ask']]
@@ -33,6 +37,16 @@ async function chooseFont(font) {
 	await store.save()
 }
 
+async function chooseAutomatic(automatic) {
+	store.settings.update.automatic = automatic
+	await store.save()
+	update.tick()//turned on when a check is due checks now, as startup would
+}
+let lastChecked = computed(() => {//worked out when the page opens or a check lands, and not counting up while it stays open
+	let last = Date.parse(store.settings.update.last)
+	return isNaN(last) ? '' : sayAgo(Date.now() - last)
+})
+
 </script>
 
 <template>
@@ -48,6 +62,14 @@ async function chooseFont(font) {
 		<div v-if="platformName != 'Linux'"><!-- starting at login is a Windows and Mac feature, so linux doesn't show the question at all -->
 			<RadioGroup :choices="loginChoices" :chosen="login.wanted ? 'yes' : 'no'" :disabled="!login.installed" @choose="value => login.choose(value == 'yes')">{{ loginWords.question }}</RadioGroup><!-- the user's answer, which only a click here changes, and which sets the system to match; off at the factory, asked about nowhere else, and grayed for any copy the installer didn't place -->
 			<p v-if="login.differs"><a href="#" @click.prevent="login.openSettings">{{ loginWords.confirm }}</a></p><!-- the system says otherwise than the answer, whichever way, as when the user changed it in the system's own page; the link opens that page, Login Items & Extensions on a Mac and Startup Apps on Windows, and goes away once the two agree. Why they differ is in the log and the main page's report -->
+		</div>
+
+		<div v-if="update.shown"><!-- a Mac or Windows copy that isn't portable -->
+			<p><label class="flex w-fit items-center gap-2"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /><span>Check automatically</span></label></p><!-- clickable on the box and its words only, like RadioGroup's answers -->
+			<p><button :disabled="update.checking" @click="update.check">Check for Update</button></p>
+			<p v-if="update.found">{{ update.found.version }}, {{ update.found.date }}</p>
+			<p v-if="update.trouble">{{ update.trouble }}</p>
+			<p v-if="lastChecked">Last checked {{ lastChecked }}</p>
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>
