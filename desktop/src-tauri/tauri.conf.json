@@ -48,7 +48,7 @@
 		},
 		"macOS": {
 			"minimumSystemVersion": "15.0",
-			"signingIdentity": "-",
+			"signingIdentity": "ftorrent",
 			"infoPlist": "macos/Info.plist"
 		}
 	}

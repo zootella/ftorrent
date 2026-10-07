@@ -29,6 +29,7 @@ This workspace holds the ftorrent desktop client — a cross-platform BitTorrent
 - **Rust**, through rustup. `src-tauri/rust-toolchain.toml` pins 1.98.0, and cargo installs and uses it on the first build, so the Mac, the Windows box, and the Linux containers compile with the same compiler. Raising it is a deliberate edit that lands in a diff.
 - **[uv](https://docs.astral.sh/uv/)**, which installs the engine's pinned Python itself, so nothing depends on whatever Python the machine already has.
 - Tauri's own [prerequisites](https://tauri.app/start/prerequisites/) for the platform.
+- **On the Mac that publishes, the signing certificate.** `pnpm certificate` says whether the login keychain holds the identity `tauri.conf.json` names, and `pnpm certificate import <backup.p12>` brings the original onto a new Mac; the signing essay in `scripts.js` says why there's only ever one. `pnpm installer` signs with it, while `pnpm local` and `pnpm compile` don't sign and don't need it.
 
 Then `pnpm install` at the repository root, and `pnpm engine` once before any Rust build. The engine's freeze is a prerequisite, not an option: tauri-build copies resources at compile time and refuses a resource path that matches nothing, so until the freeze exists even `cargo check` stops with `glob pattern ../engine/dist/ftorrent-engine path not found`. That message is the build asking for `pnpm engine`. Run it again whenever `engine.py` or the engine's lockfile changes.
 
@@ -45,6 +46,7 @@ pnpm reveal       open the file manager on that installer, to install it as a pe
 pnpm hash         stage what is built under its published name and write its sidecar, building nothing
 pnpm upload       check what is staged against its sidecar, then send the package and its sidecar to ftorrent.com
 pnpm icons        regenerate every platform's icons from the SVG sources
+pnpm certificate  find, make, or import the Mac's signing identity
 ```
 
 `compile` never makes an installer, `installer` never hashes, `hash` never builds, and `upload` never builds. A name means the same thing on every machine while doing different work underneath: `installer` makes a `.dmg` on macOS and an `.exe` on Windows, and `hash` and `upload` act on whichever this machine can build. The Linux packages use the same vocabulary in the workspace nested at `linux/`, which has a guide of its own. Everything past calling tauri lives in `scripts.js`, reached by a verb, except the two installers Tauri doesn't make, the Mac's disk image and the Windows setup program, each described below.
