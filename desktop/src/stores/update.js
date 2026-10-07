@@ -2,13 +2,12 @@ import {ref, computed} from 'vue'
 import {defineStore} from 'pinia'
 import {getVersion} from '@tauri-apps/api/app'
 import {useSettingsStore} from './settings.js'
-import {platformName} from '../settings.js'
 import {isInstalled} from '../paths.js'
 import {brandHomepage} from '../brand.js'
 import {netGet} from '../net.js'
-import {updateFile, updateLimit, updateInstall} from '../update.js'
+import {updateFile, updateLimit, updateInstallable, updateClean, updateInstall} from '../update.js'
 import {Time, sayMoment} from '../time.js'
-import {log} from '../log.js'
+import {log, logPlace} from '../log.js'
 
 //the factory timing: how often a running copy looks at the clock, and the range the next check is picked from, at random so every copy doesn't ask at once after a release
 const updatePresets = {checkEvery: Time.hour, randomFrom: 24*Time.hour, randomTo: 48*Time.hour}
@@ -20,7 +19,7 @@ Checking for a newer version, and installing it on the user's click. A check rea
 
 The user's button checks at once. With update.automatic on, the clock checks whenever update.next has passed, looking at startup and every checkEvery after. A check that hears back writes update.last and a fresh random update.next to the file, so a restart doesn't pick again and a laptop waking after days checks on the next look; one that fails changes neither, and the clock tries again an hour later.
 
-When the version found is newer than this one, the page offers it, and nothing downloads until the user clicks; update.js has the steps from there, with every path.
+When the version found is newer than this one, the page offers it, but only in a copy that can replace itself, which update.js decides at startup, and nothing downloads until the user clicks; update.js has the steps from there, with every path, and why they go in that order.
 
 The sidecar is treated as coming from anywhere, though it comes from our own server: net.rs caps its size and time, and only version, date, bytes, and sha256 are read from it, each in exactly the shape pnpm hash writes, or the check fails. Nothing in it becomes an action or an address: the update's address is the sidecar's own without .json, its hash only decides whether the file that arrived is the one expected, and its bytes only have to fit under updateLimit.
 */
@@ -32,7 +31,7 @@ export const useUpdateStore = defineStore('update', () => {
 	let found = ref(null)//{version, date, bytes, sha256} from this session's latest check
 	let running = ref('')//this copy's version, to compare with what a check finds
 	let installing = ref(false)//from the click until this copy quits, or the install fails
-	let installable = ref(false)//whether this platform's half of installing is written; the mac's is
+	let installable = ref(false)//whether this copy can be replaced in place, which update.js decides at startup; true on the mac for an installed copy this user can write, and never yet on windows, whose half isn't tested. With it false, a newer version found turns the status line into a link to the web site
 	let newer = computed(() => !!found.value && !!running.value && isNewer(found.value.version, running.value))
 	const updateUrl = new URL(updateFile, brandHomepage).href
 	const sidecarUrl = updateUrl + '.json'
@@ -42,7 +41,10 @@ export const useUpdateStore = defineStore('update', () => {
 		if (!isInstalled(startPaths)) return
 		paths = startPaths
 		running.value = await getVersion()
-		installable.value = platformName == 'macOS'
+		await updateClean(paths)//the temporary folder a past update left, with the older version inside it
+		let v = await updateInstallable(paths)
+		installable.value = v.success
+		if (!v.success) log(`update: this copy checks but can't replace itself, ${v.outcome}`)
 		shown.value = true
 		tick()
 		setInterval(tick, updatePresets.checkEvery)
@@ -71,7 +73,7 @@ export const useUpdateStore = defineStore('update', () => {
 		checking.value = false
 	}
 
-	async function install() {//the user's click: read the sidecar again, then update.js downloads, checks, swaps, and restarts; on success this copy quits on the way
+	async function install() {//the user's click: read the sidecar again, then update.js downloads, checks, and hands over to the newer copy; on success this copy quits on the way
 		if (!newer.value || !installable.value || installing.value || checking.value) return
 		installing.value = true
 		let fresh = await _sidecarRead()//again, since the page may have sat open through a newer release, and the hash has to be the one beside the file downloaded now
@@ -81,7 +83,7 @@ export const useUpdateStore = defineStore('update', () => {
 			log(`update: did not install, ${fresh.success ? `${fresh.version} is no newer than ${running.value}` : fresh.outcome}`)
 			return
 		}
-		let v = await updateInstall(paths, updateUrl, found.value.sha256)
+		let v = await updateInstall(paths, updateUrl, found.value.sha256, logPlace(settings.settings.log.record, paths.home))//the newer copy logs into the same folder as this one, when logging is on
 		if (!v.success) {
 			installing.value = false
 			log(`update: could not install ${found.value.version}, ${v.outcome}`)

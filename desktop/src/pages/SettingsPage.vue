@@ -4,7 +4,8 @@ import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {useLoginStore} from '../stores/login.js'
 import {useUpdateStore} from '../stores/update.js'
-import {brandName} from '../brand.js'
+import {openUrl} from '@tauri-apps/plugin-opener'
+import {brandName, brandHomepage, brandHost} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
 import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
@@ -42,8 +43,9 @@ async function chooseAutomatic(automatic) {
 	await store.save()
 	update.tick()//turned on when a check is due checks now, as startup would
 }
-//the update section's one button and one line: the button checks, unless a check has found a version it can install, and then it updates
+//the update section's one button and one line: the button checks, unless a check has found a version it can install, and then it updates; a copy that can't replace itself is pointed at the web site instead
 let updateReady = computed(() => update.newer && update.installable)
+let updateElsewhere = computed(() => update.newer && !update.installable)//a newer version is out, and this copy can't put it in place of itself: a standard user's, one with its home folder on another drive, or windows for now
 let checkedHere = ref(false)//a check clicked since the page opened, which keeps the button gray until it opens again, so impatient clicks don't each ask the server
 let updateGray = computed(() => update.checking || update.installing || (checkedHere.value && !updateReady.value))
 async function updateClick() {
@@ -77,7 +79,8 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="flex w-fit items-center gap-2"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /><span>Check automatically</span></label></p><!-- clickable on the box and its words only, like RadioGroup's answers -->
 			<p><button :disabled="updateGray" @click="updateClick">{{ updateReady ? `Update ${brandName}` : 'Check for Update' }}</button></p>
-			<p v-if="updateStatus">{{ updateStatus }}</p>
+			<p v-if="updateElsewhere">Get the new version at <a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ brandHost }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About page's link does -->
+			<p v-else-if="updateStatus">{{ updateStatus }}</p>
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>

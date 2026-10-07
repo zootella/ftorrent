@@ -34,19 +34,22 @@ static LOG: Mutex<Log> = Mutex::new(Log::Waiting(Vec::new()));
 
 /// Start logging into a new file in this folder, named for now and this process, making the folder if it's missing, and write the lines that waited; a blank folder means don't log, and drops them. Answers the file's path, blank when not logging
 #[command]
-pub async fn log_start(folder: String) -> Result<String, String> {//on the blocking pool, since it makes a folder and opens a file; lib.rs has the rule. The log's mutex is held across both, so a line from any thread in that moment waits for them, microseconds on the local disk the page names
-	run_blocking(move || {
-		let mut log = LOG.lock().unwrap_or_else(|poisoned| poisoned.into_inner());//take the log even if a previous holder panicked; losing every line for that would be worse
-		let Log::Waiting(waiting) = &mut *log else { return Err("log: already started".to_string()) };
-		let waiting = std::mem::take(waiting);
-		if folder.is_empty() { *log = Log::Off; return Ok(String::new()) }
-		fs::create_dir_all(&folder).map_err(|e| format!("log: could not make {folder}, {e}"))?;
-		let path = Path::new(&folder).join(format!("{}-{}.log", stamp_date(), std::process::id()));
-		let mut file = fs::OpenOptions::new().create(true).append(true).open(&path).map_err(|e| format!("log: could not open {}, {e}", path.display()))?;
-		for line in &waiting { let _ = file.write_all(line.as_bytes()); }
-		*log = Log::On(file, waiting.len());
-		Ok(path.to_string_lossy().into_owned())
-	}).await
+pub async fn log_start(folder: String) -> Result<String, String> {//on the blocking pool, since it makes a folder and opens a file; lib.rs has the rule
+	run_blocking(move || start(&folder)).await
+}
+
+/// The same as a plain function, for install.rs, which has no page to ask and takes the folder from its command line. The log's mutex is held across making the folder and opening the file, so a line from any thread in that moment waits for them, microseconds on the local disk the page names
+pub fn start(folder: &str) -> Result<String, String> {
+	let mut log = LOG.lock().unwrap_or_else(|poisoned| poisoned.into_inner());//take the log even if a previous holder panicked; losing every line for that would be worse
+	let Log::Waiting(waiting) = &mut *log else { return Err("log: already started".to_string()) };
+	let waiting = std::mem::take(waiting);
+	if folder.is_empty() { *log = Log::Off; return Ok(String::new()) }
+	fs::create_dir_all(folder).map_err(|e| format!("log: could not make {folder}, {e}"))?;
+	let path = Path::new(folder).join(format!("{}-{}.log", stamp_date(), std::process::id()));
+	let mut file = fs::OpenOptions::new().create(true).append(true).open(&path).map_err(|e| format!("log: could not open {}, {e}", path.display()))?;
+	for line in &waiting { let _ = file.write_all(line.as_bytes()); }
+	*log = Log::On(file, waiting.len());
+	Ok(path.to_string_lossy().into_owned())
 }
 
 /// One line from the page; plain on purpose, though it touches the disk: it's one append to a local file, and lines sent through the pool could land out of order

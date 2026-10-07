@@ -16,3 +16,4 @@ export const brandName        = tauriConfiguration.productName            //the 
 export const brandStem        = parseToml(cargoManifest).package.name     //the name files carry, like ftorrent or fuji; read from Cargo.toml, derived from nothing
 export const brandDescription = tauriConfiguration.bundle.shortDescription//the one line the installers and the settings app show beside the name
 export const brandHomepage    = tauriConfiguration.bundle.homepage        //the project's web address, https://ftorrent.com/, which the about page links to
+export const brandHost        = new URL(brandHomepage).host                //the address the way a person says it, ftorrent.com, for a link's words and the settings file's comments

@@ -9,3 +9,4 @@ export function diskStat(path)                { return invoke('disk_stat',    {p
 export function diskCopy(source, destination) { return invoke('disk_copy',    {source, destination}) }
 export function diskRmtree(path)              { return invoke('disk_rmtree',  {path})                }//a folder and everything in it
 export function diskSpace(path)               { return invoke('disk_space',   {path})                }//bytes free for this user on the volume holding this path
+export function diskAccess(path)              { return invoke('disk_access',  {path})                }//whether this user may read, write, and execute it, as the permissions stand

@@ -9,8 +9,12 @@ A log carries paths and magnet links, which say what someone downloads, so ftorr
 
 export const logFolder = `${brandStem}-logs`//under the home folder, on every platform
 
+export function logPlace(record, home) {//the folder this process logs into, from the setting and the home folder, or blank when not logging
+	return record && home ? `${home}/${logFolder}` : ''
+}
+
 export async function logStart(record, home) {//say whether this process logs, once, after the settings are read; until then rust holds every line, the page's and its own, and this writes them out or drops them. Answers the file's path, blank when not logging
-	return await invoke('log_start', {folder: record && home ? `${home}/${logFolder}` : ''})
+	return await invoke('log_start', {folder: logPlace(record, home)})
 }
 
 export function log(text) {//one line, from anywhere in the page; dropped when not logging, and never a reason to stop what the caller is doing

@@ -13,7 +13,7 @@ Three things are true throughout. Our own service comes first in every list, bec
 
 - One table in the engine's program, `desktop/engine/engine.py`, holds the three lists below, with a comment on every entry.
 - The engine hands them to libtorrent when it creates its session, through libtorrent's own settings, and reports the whole table in its `ready` line, so the app can show it and anyone running the engine by hand sees the same list this page publishes.
-- The two that belong to the installer and the updater rather than the engine are set in `desktop/src-tauri/tauri.conf.json`.
+- The Windows installer's is set in `desktop/src-tauri/tauri.conf.json`, and the update check builds its addresses from the home page there; its own section below says how.
 
 The engine creates no session yet, so today none of these is contacted. The table is written ahead of the code that uses it, on purpose, so the list is decided in the open before the first connection is made.
 
@@ -60,11 +60,21 @@ Four candidates did not make the list. `wss://tracker.btorrent.xyz` and `udp://e
 
 **The Windows installer.** On a Windows machine without the WebView2 runtime, Tauri's installer fetches Microsoft's bootstrapper for it from Microsoft at install time, which is Tauri's default and is set by `webviewInstallMode` in the Tauri config. Windows 11 and updated Windows 10 already carry the runtime, so most installs fetch nothing. An offline mode that bundles the runtime exists and would make the installer far larger.
 
-**The operating system's own.** Names are resolved by whatever DNS the user's system is configured to use; the client never chooses a resolver. HTTPS trackers are checked against the system's trust roots. The web view that draws the window is the platform's, WebKit on macOS and Linux and WebView2 on Windows, and it updates the way the platform updates it.
+**The operating system's own.** Names are resolved by whatever DNS the user's system is configured to use; the client never chooses a resolver. HTTPS trackers are checked against the system's trust roots; the update check is the one exception, carrying its own, as its section says. The web view that draws the window is the platform's, WebKit on macOS and Linux and WebView2 on Windows, and it updates the way the platform updates it.
 
-### Planned
+### The update check
 
-The update check, when it lands, asks `ftorrent.com` for a version manifest on launch and once a day, and applies nothing without a click; a setting turns it off entirely, and the planning document describes it. Nothing else is planned to reach a server on its own.
+An installed copy on a Mac or Windows asks `ftorrent.com` which version is newest: on the Settings page's button, and, with the automatic check on, at startup and at random a day or two after each answer. It fetches one small file, `https://ftorrent.com/ftorrent.app.zip.json` on a Mac and `https://ftorrent.com/ftorrent.exe.json` on Windows, the sidecar published beside the file that platform updates from, over HTTPS checked against Mozilla's roots compiled into the client rather than the system's, following no redirect. The request carries three headers and nothing else:
+
+```
+User-Agent: ureq/3.4.2
+Accept: */*
+Accept-Encoding: gzip
+```
+
+That is the HTTP library's own user agent. Nothing in the request names the copy, its version, or the user, and the file's name is what tells the server the platform. The update itself, the same address without `.json`, downloads only on the user's click. A portable copy, or one not running from where the installer put it, never asks, and the Linux packages, which the package manager installs and updates, never ask. `automatic = false` under `[update]` in `ftorrent.toml` stops the check on its own and leaves the button. The addresses are built in `desktop/src/update.js` from `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` and the names the publishing script gives the files.
+
+Nothing else reaches a server on its own.
 
 ## What the client says about itself
 

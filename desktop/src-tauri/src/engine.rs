@@ -11,7 +11,7 @@ use crate::paths::Paths;
 use crate::queue::{Drained, Queue};
 
 /*
-The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches the process, and the page cannot start one at all: there is no shell plugin registered, so the only way a process is spawned is the Rust in this file, from a path this file computes.
+The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches this process, and no shell plugin is registered: the engine starts here, from a path this file computes, and any other program starts through process.rs, by a path the page names.
 
 The conversation is the one road between the page and libtorrent, and this module is the wire in the middle of it. In a plain Python program, libtorrent is one process and function calls: calls on the session and on a torrent's handle post requests to libtorrent's own network thread and return at once, and libtorrent reports everything back as alerts, which the program collects in batches. ftorrent puts a process boundary between the app and the engine, and that boundary is the only wire protocol ftorrent owns: newline-delimited JSON on the engine's own pipes. Pipes rather than a local socket, because a pipe between a parent and its child is reachable by no other process on the machine.
 

@@ -31,6 +31,14 @@ pub struct FileStat {
 	pub atime:      u128,//last access time, in milliseconds since the unix epoch; 0 when the filesystem has no answer
 	pub mtime:      u128,//last modification time, in milliseconds since the unix epoch; 0 when the filesystem has no answer
 	pub ctime:      u128,//creation time, in milliseconds since the unix epoch; 0 when the filesystem has no answer, which is common on linux
+	pub device:     u64,//the volume holding it, as a number the same for every path on one volume and different between volumes, so two paths can be compared; 0 on windows, where nothing asks yet
+}
+
+#[derive(Serialize)]
+pub struct Access {
+	pub read:    bool,//this user may read it
+	pub write:   bool,//this user may write it, or make and remove entries in it when it's a folder
+	pub execute: bool,//this user may run it, or enter it when it's a folder
 }
 
 /*
@@ -76,11 +84,36 @@ pub async fn disk_stat(path: String) -> Result<FileStat, String> {
 			atime:      millis(meta.accessed()),
 			mtime:      millis(meta.modified()),
 			ctime:      millis(meta.created()),
+			device:     device(&meta),
 		})
 	}).await
 }
 fn millis(time: std::io::Result<std::time::SystemTime>) -> u128 {//a timestamp as milliseconds since the unix epoch, or 0 when the filesystem can't say, so one missing date never fails the whole stat
 	time.ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_millis()).unwrap_or(0)
+}
+#[cfg(unix)]
+fn device(meta: &fs::Metadata) -> u64 { use std::os::unix::fs::MetadataExt; meta.dev() }//st_dev, the device number every path on a volume shares
+#[cfg(not(unix))]
+fn device(_meta: &fs::Metadata) -> u64 { 0 }//the volume's serial number is behind an unstable api on windows, and nothing there asks yet
+
+/// POSIX `access(2)`: what this user may do with the path as the permissions stand, each answered without trying it; a path that isn't there is an error rather than three noes
+#[command]
+pub async fn disk_access(path: String) -> Result<Access, String> {
+	run_blocking(move || access(&path)).await
+}
+
+#[cfg(unix)]
+fn access(path: &str) -> Result<Access, String> {
+	let c = std::ffi::CString::new(path).map_err(|e| e.to_string())?;//the path as the c library takes it, ending in a zero
+	let may = |mode: libc::c_int| unsafe { libc::access(c.as_ptr(), mode) } == 0;
+	if !may(libc::F_OK) { return Err(std::io::Error::last_os_error().to_string()) }
+	Ok(Access {read: may(libc::R_OK), write: may(libc::W_OK), execute: may(libc::X_OK)})
+}
+
+#[cfg(target_os = "windows")]
+fn access(path: &str) -> Result<Access, String> {
+	let meta = fs::metadata(path).map_err(|e| e.to_string())?;
+	Ok(Access {read: true, write: !meta.permissions().readonly(), execute: true})//the read-only attribute alone, which is what std offers; a real answer from the file's acl is GetEffectiveRightsFromAclW, for when something on windows asks
 }
 
 /// POSIX-like `open` + `read` + `close`

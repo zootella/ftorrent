@@ -13,11 +13,11 @@ Two halves do that. The lock says whether this copy is already running. It's an 
 
 The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, which Tauri hands over as its Opened event, at a cold start and while running alike, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, so an upgrade closes the running copy cleanly rather than ending its process. And one argument never does: --login, which a Windows login registration adds so login.rs knows the system started this copy, is taken out of this copy's own command line, and a handoff carrying only it is dropped, leaving the window as it was. --update, which the page puts on the command line of the copy it starts in place of this one after an update, is taken out too, after it has changed one thing: a launch carrying it that finds the lock held waits for it, since the holder is the old copy on its way out, rather than handing over to it and leaving.
+What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, so an upgrade closes the running copy cleanly rather than ending its process. And one argument never does: --login, which a Windows login registration adds so login.rs knows the system started this copy, is taken out of this copy's own command line, and a handoff carrying only it is dropped, leaving the window as it was. --update, which install.rs puts on the command line of the copy it opens once an update is in place, is taken out too, after it has changed one thing: a launch carrying it that finds the lock held waits for it, since the holder is the installer letting go, rather than handing over to it and leaving.
 */
 
-pub const UPDATE_ARGUMENT: &str = "--update";//on the command line of a copy an update started, from updateArgument in the page's update.js: the copy holding the lock is the one it replaced, on its way out, so wait
-const UPDATE_WAITS: u32 = 150;//tenths of a second a copy started by an update waits for the old copy to save, stop its engine, and let go of the lock: fifteen seconds, long past a normal quit
+pub const UPDATE_ARGUMENT: &str = "--update";//on the command line of the copy install.rs opens once an update is in place: the lock is held by the installer, which lets go of it by exiting a moment later, so wait
+const UPDATE_WAITS: u32 = 150;//tenths of a second a copy started by an update waits for the lock: fifteen seconds, where the installer holds it for milliseconds past open
 const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
 
 /// One launch's arguments, as they reached this copy
@@ -58,20 +58,19 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		status(&instance).trouble = "no data folder, so no lock".to_string();//the platform gave no data folder, and paths.rs has already said so
 		return Start::Run;
 	}
-	let data = Path::new(&paths.data);
 	let brand_stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js in the page says which name goes where
-	let lock_path = data.join(format!("{brand_stem}.lock"));//empty, and never written; it exists to be locked
+	let lock_path = lock_path(app, paths);
 	status(&instance).lock = lock_path.to_string_lossy().into_owned();
 
 	let mut taken = take(&lock_path);
-	if matches!(taken, Err(Taken::Busy)) && args.iter().any(|arg| arg == UPDATE_ARGUMENT) {//the copy holding the lock is the one this update replaced, saving and quitting; wait for it rather than handing over to it
+	if matches!(taken, Err(Taken::Busy)) && args.iter().any(|arg| arg == UPDATE_ARGUMENT) {//the installer that opened this copy still holds the lock, and lets go of it as it exits; wait for it rather than handing over to it
 		let mut waited = 0;
 		while waited < UPDATE_WAITS && matches!(taken, Err(Taken::Busy)) {
 			std::thread::sleep(std::time::Duration::from_millis(100));
 			waited += 1;
 			taken = take(&lock_path);
 		}
-		crate::log::log(&format!("waited {waited} tenths of a second for the copy this update replaced to let go of the lock"));
+		crate::log::log(&format!("waited {waited} tenths of a second for the installer to let go of the lock"));
 	}
 	match taken {
 		Ok(file) => {
@@ -100,6 +99,11 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	let carried: Vec<String> = args.into_iter().filter(|arg| arg != crate::login::ARGUMENT && arg != UPDATE_ARGUMENT).collect();//the arguments a login registration and an update add are no file or link, and have done their work
 	if !carried.is_empty() { arrive(app, "launch", carried, false) }
 	Start::Run
+}
+
+/// The lock file's path, brandStem.lock in the data folder: empty, never written, and there to be locked; install.rs waits on the same file
+pub fn lock_path(app: &AppHandle, paths: &Paths) -> std::path::PathBuf {
+	Path::new(&paths.data).join(format!("{}.lock", app.package_info().crate_name))
 }
 
 /// Why a lock couldn't be taken

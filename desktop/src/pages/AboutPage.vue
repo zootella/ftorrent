@@ -3,11 +3,9 @@ import {ref, computed, onMounted, version as vueVersion} from 'vue'
 import {getVersion, getTauriVersion} from '@tauri-apps/api/app'
 import {openUrl} from '@tauri-apps/plugin-opener'
 import {version as viteVersion} from 'vite/package.json'//a build tool, so its version is read as this copy is built, and is the vite that built it
-import {brandName, brandHomepage} from '../brand.js'
+import {brandName, brandHomepage, brandHost} from '../brand.js'
 import {windowWebviewVersion} from '../window.js'
 import {useIncomingStore} from '../stores/incoming.js'
-
-let homepageName = new URL(brandHomepage).host//ftorrent.com, the address the way a person says it
 
 //the parts ftorrent is made of, and the version of each, asked of the part itself wherever it can answer at runtime
 let incoming = useIncomingStore()//the engine's ready line names the libtorrent and python it runs on
@@ -40,7 +38,7 @@ let parts = computed(() => {
 	<!-- where ftorrent lives on the web, and the parts it's built from, each with its version -->
 	<main>
 		<h1 class="font-brand text-brand">About {{ brandName }}</h1>
-		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ homepageName }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent -->
+		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ brandHost }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent -->
 		<dl class="grid grid-cols-[auto_1fr] gap-x-4">
 			<template v-for="[name, version] in parts" :key="name">
 				<dt class="text-muted">{{ name }}</dt>

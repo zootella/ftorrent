@@ -1,6 +1,5 @@
 import {parse as parseToml} from 'smol-toml'
-import {brandName, brandStem, brandHomepage} from './brand.js'
-const brandHost = new URL(brandHomepage).host//ftorrent.com, for the words in the update section
+import {brandName, brandStem, brandHost} from './brand.js'
 
 /*
 The settings file, ftorrent.toml, and the only place a setting is defined. Everything about the file is here: the schema below, which names every setting with its factory value and the comment that explains it; parsing, which turns the file's text into a settings object and a list of anything it had to turn away; and rendering, which turns a settings object back into the complete text of the file. The store in stores/settings.js does the reading and writing around these, and the rest of the app reads settings from the store. Rust never learns what a setting is: it hands the page the file's path, writes bytes when asked, and holds the text to write once more when ftorrent exits. The window's size, place, and maximized flag are settings like the rest, and window.js reads them from the store to place the window before showing it.
