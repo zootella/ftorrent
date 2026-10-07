@@ -27,7 +27,8 @@ mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is expl
 mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to, and every panic's location among them
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
-mod net;//and net.rs: an https address fetched for the page, its body answered as text
+mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file
+mod update;//and update.rs: this copy replaced by a newer one the page downloaded, and restarted
 
 use tauri::Manager;//brings manage into scope, for handing the paths to tauri's shared state in setup
 
@@ -85,6 +86,8 @@ pub fn run() {
 				instance::instance_status,//and in instance.rs
 				instance::instance_take,
 				net::net_get,//and in net.rs
+				update::update_replace,//and in update.rs
+				update::update_restart,
 			]
 		)
 		.setup(|app| {//before any page exists

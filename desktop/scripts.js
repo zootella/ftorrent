@@ -29,6 +29,7 @@ const brandStem = parseToml(readFileSync(new URL('src-tauri/Cargo.toml', import.
 
 const targets = {
 	'dmg':       {source: 'bundle', folder: 'dmg',  suffix: '.dmg',       publish: `${brandStem}.dmg`},
+	'app-zip':   {source: 'bundle', folder: 'app-zip', suffix: '.app.zip', publish: `${brandStem}.app.zip`},//the same app as the dmg, zipped for a running copy to update itself from
 	'exe':       {source: 'bundle', folder: 'win-setup', suffix: '-setup.exe', publish: `${brandStem}.exe`},
 	'deb-arm64': {source: 'linux',  match: /_(arm64)\.deb$/, publish: `${brandStem}.arm64.deb`},
 	'deb-x64':   {source: 'linux',  match: /_(amd64)\.deb$/, publish: `${brandStem}.amd64.deb`},
@@ -60,7 +61,7 @@ Windows is untouched by this and has the same story in its own words: an install
 
 //which targets this computer stages and sends. Linux is deliberately absent: a Linux box can clone this repository and build the client for itself, and that is development and works, but a published package comes from the Mac, where all four are built together against one base image and one lockfile
 const machines = {
-	darwin: ['dmg', 'deb-arm64', 'deb-x64', 'rpm-x64', 'flatpak-x64'],
+	darwin: ['dmg', 'app-zip', 'deb-arm64', 'deb-x64', 'rpm-x64', 'flatpak-x64'],
 	win32:  ['exe'],
 }
 

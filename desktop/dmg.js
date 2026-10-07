@@ -25,6 +25,10 @@ Measured on macOS Sequoia in October 2026, with a checkerboard of 200-point squa
 dmgbuild is python, run through uvx, so nothing is installed and uv is the one requirement, on the mac that builds the installer and nowhere else — the same uv that freezes the engine. It is pinned, and so are ds_store and mac_alias, the two libraries that write the records and the alias measured above; dmgbuild itself asks only for some version or later of each, which would let a new release change the bytes of a dmg with nothing here changing.
 
 The extension of ftorrent.app is not hidden. Hiding it sets a FinderInfo attribute on the bundle, and codesign --verify --strict rejects a bundle carrying one. Tauri's dmg never managed to hide it either, and nothing is lost: the label follows each viewer's own Finder setting, ftorrent.app with every extension shown and ftorrent without, the same as every application in /Applications, none of which carries the flag.
+
+## The update
+
+Beside the dmg, this writes the same ftorrent.app as a zip, which hash publishes as ftorrent.app.zip with a sidecar of its own. The dmg is for a person installing by hand; the zip is for a running copy updating itself, which would otherwise have to mount a disk image to reach the app inside. ditto, the Mac's own archiver, makes it with --keepParent, so the zip holds the ftorrent.app folder itself, and the signature inside the bundle comes out of ditto -x exactly as it went in.
 */
 
 //every path is built from this file's own location, for the reason scripts.js gives
@@ -86,6 +90,16 @@ function main() {
 	if (run.error) throw run.error
 	if (run.status != 0) throw new Error(`dmgbuild exited ${run.status}`)
 	console.log('finished ' + join(folder, file))
+
+	//the same app zipped for the update, in a folder of its own beside dmg/, emptied first for the same reason
+	let zipFolder = join(bundled, 'app-zip')
+	let zipFile = `${brandName}_${configuration.version}_${arch}.app.zip`
+	rmSync(zipFolder, {recursive: true, force: true})
+	mkdirSync(zipFolder, {recursive: true})
+	let zip = spawnSync('ditto', ['-c', '-k', '--keepParent', join(bundled, `macos/${brandName}.app`), join(zipFolder, zipFile)], {stdio: 'inherit'})
+	if (zip.error) throw zip.error
+	if (zip.status != 0) throw new Error(`ditto exited ${zip.status}`)
+	console.log('finished ' + join(zipFolder, zipFile))
 }
 
 try { main() } catch (e) { console.error('🚧 Error:', e.message || e); process.exitCode = 1 }

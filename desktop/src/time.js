@@ -15,3 +15,9 @@ export function sayAgo(duration) {
 	}
 	return 'just now'//under a minute
 }
+
+//a day written 2026-10-07, as a sidecar dates a release, in the words a person reads, 2026-Oct-7; split rather than parsed, so no time zone moves it to the day before
+export function sayDay(date) {
+	let [year, month, day] = date.split('-').map(Number)
+	return `${year}-${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1]}-${day}`
+}

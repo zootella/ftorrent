@@ -1,5 +1,5 @@
 <script setup>
-import {computed} from 'vue'
+import {ref, computed} from 'vue'
 import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {useLoginStore} from '../stores/login.js'
@@ -8,7 +8,7 @@ import {brandName} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
 import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
-import {sayAgo} from '../time.js'
+import {sayAgo, sayDay} from '../time.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether this copy is installed, the only kind that may answer
@@ -42,9 +42,19 @@ async function chooseAutomatic(automatic) {
 	await store.save()
 	update.tick()//turned on when a check is due checks now, as startup would
 }
-let lastChecked = computed(() => {//worked out when the page opens or a check lands, and not counting up while it stays open
+//the update section's one button and one line: the button checks, unless a check has found a version it can install, and then it updates
+let updateReady = computed(() => update.newer && update.installable)
+let checkedHere = ref(false)//a check clicked since the page opened, which keeps the button gray until it opens again, so impatient clicks don't each ask the server
+let updateGray = computed(() => update.checking || update.installing || (checkedHere.value && !updateReady.value))
+async function updateClick() {
+	if (updateReady.value) return update.install()
+	await update.check()
+	checkedHere.value = true
+}
+let updateStatus = computed(() => {//the newest release this session has heard of, and what's happening to it, or else when the last check was, worked out when the page opens or a check lands, and not counting up while it stays open
+	if (update.found) return `${brandName} ${update.found.version} released ${sayDay(update.found.date)}${update.installing ? ', Downloading...' : ''}`
 	let last = Date.parse(store.settings.update.last)
-	return isNaN(last) ? '' : sayAgo(Date.now() - last)
+	return isNaN(last) ? '' : `Last checked ${sayAgo(Date.now() - last)}`
 })
 
 </script>
@@ -66,10 +76,8 @@ let lastChecked = computed(() => {//worked out when the page opens or a check la
 
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="flex w-fit items-center gap-2"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /><span>Check automatically</span></label></p><!-- clickable on the box and its words only, like RadioGroup's answers -->
-			<p><button :disabled="update.checking" @click="update.check">Check for Update</button></p>
-			<p v-if="update.found">{{ update.found.version }}, {{ update.found.date }}</p>
-			<p v-if="update.trouble">{{ update.trouble }}</p>
-			<p v-if="lastChecked">Last checked {{ lastChecked }}</p>
+			<p><button :disabled="updateGray" @click="updateClick">{{ updateReady ? `Update ${brandName}` : 'Check for Update' }}</button></p>
+			<p v-if="updateStatus">{{ updateStatus }}</p>
 		</div>
 
 		<RadioGroup :choices="appearanceChoices" :chosen="store.settings.appearance.mode" @choose="chooseMode">Appearance</RadioGroup>

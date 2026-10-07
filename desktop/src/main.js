@@ -39,7 +39,7 @@ async function startup() {
 	if (!store.paths?.settings) return//no data folder, which the platform should always give: no window place to record and no engine to tell, and the main page shows the trouble
 	await useAssociationsStore(pinia).start(store.paths)//an installed copy tells the system what it can open, and asks the user about being the default; any other copy returns at once
 	await useLoginStore(pinia).start(store.paths, launch.argument)//and reads whether the system starts it at login, to compare with the user's answer; any other copy returns at once
-	useUpdateStore(pinia).start(store.paths)//and checks for a newer version when it's time, now and every hour after; a portable copy or one on linux returns at once
+	useUpdateStore(pinia).start(store.paths)//and checks for a newer version when it's time, now and every hour after; any other copy returns at once
 	await watchWindow(store)//after load, so recording the window's place lands in settings that are already filled in from the file
 	try {
 		await store.lockFolders()//lock each download folder that exists, leaving any another copy holds to it, and hand the engine the ones this copy holds
