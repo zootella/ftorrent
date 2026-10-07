@@ -4,29 +4,29 @@ A note for the Windows session. It's public and committed, so it names nobody: i
 
 ## What's asked
 
-Write the Windows half of one-click update, which the Mac half already proves end to end. An installed copy finds a newer version, the user clicks one button, and the copy is replaced by the new one, which opens where the old window was. Everything platform-general is built and tested on the Mac: the check, the download, the hash, the button, and the status line. What's left is Windows-only, in `desktop/src-tauri/src/update.rs`, plus the one line in the page that turns the click on there.
+Finish and test the Windows half of one-click update, which the Mac already proves end to end. An installed copy finds a newer version, the user clicks one button, and the copy is replaced by the new one, which opens where the old window was. The check, the download, the hash, the button, and the status line are built and tested on the Mac. What's left touches Windows alone: the detached start in Rust, which only Windows can compile and run, and the test.
 
 ## What's already there
 
-Read the essays at the top of `desktop/src/stores/update.js` and `desktop/src-tauri/src/update.rs` first; they carry the design. In short:
+The essays at the top of `desktop/src/stores/update.js` and `desktop/src/update.js` carry the design, the second with the Mac's steps and paths from the click to the new window. Rust holds no update logic: it offers general commands, in `net.rs`, `disk.rs`, `process.rs`, and `lifecycle.rs`, and the page sequences them. The essay at the top of `desktop/src-tauri/src/lib.rs` is the rule for anything added down there.
 
-- **The check** reads `https://ftorrent.com/ftorrent.exe.json` on Windows, the sidecar `pnpm hash` writes beside the installer. Only an installed copy checks, by `isInstalled` in `desktop/src/paths.js`.
-- **The click** reads the sidecar again, downloads `ftorrent.exe` with `net_get`'s save path into the data folder, `%LOCALAPPDATA%\com.ftorrent.ftorrent\ftorrent.exe`, under a 50 MiB ceiling, and compares the SHA-256 `net_get` returns with the sidecar's. Then it calls `update_replace` with that path, then `update_restart`.
-- **On Windows both commands return an error today**, and the store sets `installable` only on macOS, so the button never offers the update there.
+On Windows:
 
-## The Windows half
+- **The check** reads `https://ftorrent.com/ftorrent.exe.json`, the sidecar `pnpm hash` writes beside the installer. Only an installed copy checks, by `isInstalled` in `desktop/src/paths.js`.
+- **The click** reads the sidecar again, makes a temporary folder in the data folder, `%LOCALAPPDATA%\com.ftorrent.ftorrent\update`, downloads `ftorrent.exe` into it with `net_get`'s save path under a 50 MiB ceiling, and compares the SHA-256 `net_get` returns with the sidecar's. A failure at any step removes the temporary folder.
+- **`updateInstall`** in `update.js` then calls `process_start` on that file with no arguments, and that's all: the setup program closes the running copy through the instance pipe with `--exit`, waits for its files to come free, writes over `%LOCALAPPDATA%\ftorrent` in place without uninstalling, and starts the new copy.
+- **`process_start`** in `process.rs` starts the program directly, never through a shell, with `DETACHED_PROCESS` and `CREATE_NO_WINDOW`, so setup outlives this copy and shows no console. That block is Windows-only, so it hasn't been compiled yet.
+- **The store** sets `installable` on macOS alone, so the button doesn't offer the update on Windows until this is tested.
 
-On Windows the update is the installer itself, and the setup program already does the hard part: it asks a running copy to exit through the instance pipe with `--exit`, waits for the files to come free, writes over `%LOCALAPPDATA%\ftorrent` in place without uninstalling, and starts the program when it's done. So the Windows `update_replace` only has to start the downloaded setup program, and `update_restart` has nothing left to do, since setup closes this copy and starts the new one. Whether `update_restart` simply returns, or quits this copy a moment ahead of setup's request, is yours to decide from what you see.
+Antivirus heuristics watch for an unsigned program that downloads an executable and runs it, which is why the shape is kept plain: the installer runs from ftorrent's own data folder rather than the system's temporary folder, nothing goes through `cmd`, `powershell`, or any other interpreter, and nothing else is started. Keep it that way through any fix.
 
-Antivirus heuristics watch for an unsigned program that downloads an executable and runs it, so keep the shape plain:
+The temporary folder stays after the update, since setup runs from it, and the next update's first step removes it. Clearing it sooner, from the page at startup with `disk_rmtree`, is fine if it's simple; leave it if not.
 
-- Start `ftorrent.exe` directly from the data folder where the page saved it, never from a temporary folder, and never through `cmd`, `powershell`, or any other interpreter.
-- Start it detached, with no console window, so it outlives this copy, which it's about to close.
-- Rust works out what to start, the path the page passed being the only input, the way the Mac half takes only the zip.
+## The changes
 
-The downloaded installer stays in the data folder after the update, since setup can't delete itself while it runs. The next update overwrites it, because `net_get` renames its `.part` file over the old one. Clearing it sooner, from the new copy at startup, is fine if it's simple; leave it if not.
-
-Then set `installable` in the store to Windows as well as macOS. The essay in `update.rs` shows the whole Mac update as a block of steps with the full path each one touches, from the click to the new window; give Windows the same block beside it, with the real paths, once it works, and replace the essay's "That half isn't written yet."
+- Compile `process.rs`, and the Windows half of `disk_space` in `disk.rs`, which answers through `GetDiskFreeSpaceExW`, and fix what the Windows build needs, keeping the commands general.
+- Set `installable` in `desktop/src/stores/update.js` to Windows as well as macOS.
+- In `update.js`'s essay, give Windows its own list of places beside the Mac's, in the same form, with the real paths and folders ending in a slash, and replace its last paragraph to describe the steps as they turned out.
 
 ## How to check it
 
@@ -35,13 +35,14 @@ Both copies need today's code, so the test takes two builds:
 - **The old copy:** change `version` in `desktop/src-tauri/tauri.conf.json` to `0.1.0` for this build only, `pnpm installer`, and install it from `pnpm reveal`.
 - **The release:** set `version` back to `0.1.1`, `pnpm installer`, `pnpm hash`, and `pnpm upload`. That publishes `ftorrent.exe` and its sidecar at 0.1.1, the version the Mac already published.
 
-Then, with the log on (`[log] record = true` in the old copy's `ftorrent.toml`, writing to `%USERPROFILE%\ftorrent-logs`):
+Then, with the log on, `[log] record = true` in the old copy's `ftorrent.toml`, writing to `%USERPROFILE%\ftorrent-logs`:
 
 - **The click:** in Settings, Check for Update turns into Update ftorrent, with `ftorrent 0.1.1 released` and the upload's date below it. Click it. The status line gains `, Downloading...`, the window goes, and the new one opens in the same place.
-- **What's installed:** `%LOCALAPPDATA%\ftorrent\ftorrent.exe` reports 0.1.1 in its properties, the Start menu shortcut and taskbar pin still open it, and the associations and the login entry are still in place.
+- **What's installed:** `%LOCALAPPDATA%\ftorrent\ftorrent.exe` reports 0.1.1 in its properties, the Start menu shortcut and a taskbar pin still open it, and the associations and the login entry are still in place.
 - **No prompts:** neither SmartScreen nor UAC appears. The downloaded file carries no `Zone.Identifier` stream, which `Get-Item <path> -Stream *` shows, and that's why SmartScreen stays quiet.
+- **No console:** no console window flashes as setup starts.
 - **Defender:** nothing in Windows Security's protection history during the download or the install.
-- **The logs:** the old copy's file shows the download, the hash, and setup starting; the new copy's shows it starting at 0.1.1.
+- **The logs:** the old copy's file shows the download and the hash; the new copy's shows it starting at 0.1.1.
 
 ## What changes on the page
 

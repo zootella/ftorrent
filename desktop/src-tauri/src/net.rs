@@ -9,8 +9,6 @@ use crate::run_blocking;
 Requests to the web for the page: net_get fetches one https address, and either answers its body as text or, given a path, saves the body to that file and answers its SHA-256. What to fetch, where to save it, and what the answer means, is the page's.
 
 ureq makes the request, a blocking call on run_blocking's pool like the disk commands, with its default TLS: rustls, checking certificates against Mozilla's roots compiled into the program. The answer is treated as coming from anywhere: https only, no redirect followed, the whole request bounded by the page's seconds, and the body by its limit, counted as it arrives and again after gzip is undone. A redirect comes back as its own body, which the page's check turns away; a 4xx or 5xx is an error.
-
-A saved body streams to disk as it arrives, never held whole in memory or carried across to the page, and is hashed on the way, so the page can compare the file with what it expected without reading it back. It's written beside the path under a .part name and renamed over the path only once the last byte is in, so the path never holds a partial download; a failure partway removes the .part.
 */
 
 /// Fetch this https address, giving up after seconds and refusing a body longer than limit bytes; with no save path, answer the body as text, and with one, write the body to that file and answer its SHA-256 in lowercase hex
@@ -34,7 +32,7 @@ pub async fn net_get(url: String, limit: u64, seconds: u64, save: Option<String>
 	}).await
 }
 
-/// Stream body into path through a .part file beside it, hashing as it goes, and answer the SHA-256 once the file is whole and in place
+/// Stream body into path through a .part file beside it, hashing as it goes, and answer the SHA-256 once the file is whole and in place; the body is never held whole in memory or carried to the page, and the path never holds a partial download
 fn save_body(body: &mut impl Read, path: &str, limit: u64) -> Result<String, String> {
 	let part = format!("{path}.part");
 	let written = (|| -> Result<String, String> {

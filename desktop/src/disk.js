@@ -7,3 +7,5 @@ export function diskHide(path)                { return invoke('disk_hide',    {p
 export function diskReadDir(path)             { return invoke('disk_readdir', {path})                }
 export function diskStat(path)                { return invoke('disk_stat',    {path})                }
 export function diskCopy(source, destination) { return invoke('disk_copy',    {source, destination}) }
+export function diskRmtree(path)              { return invoke('disk_rmtree',  {path})                }//a folder and everything in it
+export function diskSpace(path)               { return invoke('disk_space',   {path})                }//bytes free for this user on the volume holding this path

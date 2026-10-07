@@ -14,6 +14,12 @@ Focus is taken only when the user asks for the window. bring_forward shows the w
 Linux keeps closing as quitting for now. It has no tray here and no handoff yet, so a hidden window would be one nobody could get back. The page listens for the close too, to write the settings, where the window was among them, and in Tauri a page that listens decides whether the close goes ahead. It always declines, so that on macOS and Windows the hide is the only thing a close does. So on Linux, Rust turns the close into a quit, which reaches the same Exit run event, where the text the page handed down for that moment is written.
 */
 
+/// Quit, the way the tray's Exit and the File menu's do, for the page to ask; it reaches the Exit run event, which writes what the page left to write and stops the engine
+#[tauri::command]
+pub fn lifecycle_exit(app: AppHandle) {
+	app.exit(0);
+}
+
 /// Show the window, restore it if it's minimized, and give it focus; the tray, the Dock, and a second launch all bring ftorrent back this way
 pub fn bring_forward(app: &AppHandle) {
 	if !app.state::<crate::window::Revealed>().0.load(std::sync::atomic::Ordering::SeqCst) { return }//the page hasn't placed the window yet, and shows it itself in a moment; window.rs says why this waits

@@ -10,7 +10,7 @@ The design contract of this module: these commands hand the page the full, stand
 
 They take any path and hold no guard, on purpose: the page alone knows what a path means and whether writing it is right, and a guard here would be a second copy of that knowledge. lib.rs has the long version of why, and of what keeps this power in the right hands.
 
-Commands here are named for the POSIX call they stand on, disk_readdir, disk_stat, disk_read, so the next ones write themselves: disk_rename over fs::rename, disk_unlink over fs::remove_file, disk_rmdir over fs::remove_dir. Each is a line of std::fs and a map_err, which is why none of them is sitting here waiting.
+Commands here are named for the POSIX call they stand on, disk_readdir, disk_stat, disk_read, so the next ones write themselves: disk_rename over fs::rename, disk_unlink over fs::remove_file, disk_rmdir over fs::remove_dir. Each is a line of std::fs and a map_err, which is why none of them is sitting here waiting. disk_rmtree is the one with no POSIX call beneath it, and takes its name from the tool everyone knows for it.
 */
 
 #[derive(Serialize)]
@@ -124,6 +124,36 @@ pub async fn disk_write(path: String, data: Vec<u8>) -> Result<(), String> {//da
 #[command]
 pub async fn disk_mkdir(path: String) -> Result<(), String> {
 	run_blocking(move || fs::create_dir(&path).map_err(|e| e.to_string())).await
+}
+
+/// `rm -r`: remove a folder and everything in it, which has no single POSIX call, so this stands on fs::remove_dir_all and borrows its name from Python's shutil.rmtree; a link inside is removed rather than followed
+#[command]
+pub async fn disk_rmtree(path: String) -> Result<(), String> {
+	run_blocking(move || fs::remove_dir_all(&path).map_err(|e| e.to_string())).await
+}
+
+/// POSIX `statvfs(3)`: the bytes free for this user on the volume that holds this path, which has to exist
+#[command]
+pub async fn disk_space(path: String) -> Result<u64, String> {
+	run_blocking(move || space(&path)).await
+}
+
+#[cfg(unix)]
+fn space(path: &str) -> Result<u64, String> {
+	let c = std::ffi::CString::new(path).map_err(|e| e.to_string())?;//the path as the c library takes it, ending in a zero
+	let mut stat: libc::statvfs = unsafe { std::mem::zeroed() };
+	if unsafe { libc::statvfs(c.as_ptr(), &mut stat) } != 0 { return Err(std::io::Error::last_os_error().to_string()) }
+	Ok(stat.f_bavail as u64 * stat.f_frsize as u64)//blocks free to a user who isn't root, times the size of a block
+}
+
+#[cfg(target_os = "windows")]
+fn space(path: &str) -> Result<u64, String> {
+	use windows::core::PCWSTR;
+	use windows::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
+	let wide: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();//utf-16 ending in a zero, bound to a variable so the pointer below points into something that lives
+	let mut available: u64 = 0;//free to this user, which a quota can make less than free on the disk
+	unsafe { GetDiskFreeSpaceExW(PCWSTR(wide.as_ptr()), Some(&mut available as *mut u64), None, None) }.map_err(|e| e.to_string())?;
+	Ok(available)
 }
 
 /// Hide a file or folder from the file browser: on Windows, set its hidden attribute, keeping the ones it already has; on macOS and Linux, do nothing, since there a name that starts with a dot is what hides it
