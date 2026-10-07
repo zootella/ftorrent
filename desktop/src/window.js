@@ -1,5 +1,6 @@
 import {getCurrentWindow, currentMonitor, primaryMonitor, availableMonitors, LogicalPosition, LogicalSize} from '@tauri-apps/api/window'
 import {invoke} from '@tauri-apps/api/core'
+import {isPortable} from './paths.js'
 
 /*
 The window's size and place, both halves: where it opens, and remembering where the user left it. Rust makes the window hidden, at any size, and window.rs says why it's made in code; everything about where it goes is here, in one file, so the rule that records a place and the rule that replays it can't drift apart.
@@ -28,7 +29,7 @@ const fallbackScreen = {x: 0, y: 0, width: 1280, height: 800}//a screen to size 
 
 export async function revealWindow(store, hidden = false) {//place the hidden window where the settings remember or somewhere fresh, give it its theme and font, maximize it if it was, show it unless hidden, for a launch at login, and tell rust it's revealed; call once, after the settings have loaded, with the settings store, whose settings hold factory values when the file couldn't be read
 	let appWindow = getCurrentWindow()
-	let guest = portable(store)
+	let guest = isPortable(store.paths)//a portable copy is a guest on every desktop it runs on: it records no place, goes back to none, and never opens maximized
 	try {
 		let {monitor, place} = (!guest && await replayPlace(store.settings)) || await freshPlace()
 		if (monitor) await appWindow.setPosition(monitor.position)//first to the top left corner of the screen it's going to, in the physical pixels tauri measures screens in, so the two calls below convert by that screen's scale
@@ -84,14 +85,10 @@ function screenOf(monitor) {//a monitor as [screen] records it: its position amo
 	}
 }
 
-function portable(store) {//a portable copy is a guest on every desktop it runs on: it records no place, goes back to none, and never opens maximized
-	return store.paths?.mode == 'portable'
-}
-
 export async function watchWindow(store) {//keep the settings store told where the window is, and write the file when the window is closed; call once, after the store has loaded
 	let appWindow = getCurrentWindow()
 	await appWindow.onCloseRequested(event => { event.preventDefault(); return store.save() })//the x: lifecycle.rs hides the window, and this writes the settings. Without preventDefault, tauri's handler goes on to destroy the window once this returns
-	if (portable(store)) return//a guest records no place
+	if (isPortable(store.paths)) return//a guest records no place
 	await appWindow.onMoved(() => recordWindow(appWindow, store))
 	await appWindow.onResized(() => recordWindow(appWindow, store))
 	await recordWindow(appWindow, store)//once now, because the two events report only changes, and a window that's never moved still has a place worth remembering

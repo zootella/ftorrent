@@ -2,6 +2,7 @@ import {ref} from 'vue'
 import {defineStore} from 'pinia'
 import {useSettingsStore} from './settings.js'
 import {platformName} from '../settings.js'
+import {isInstalled} from '../paths.js'
 import {brandStem, brandHomepage} from '../brand.js'
 import {netGet} from '../net.js'
 import {Time, sayMoment} from '../time.js'
@@ -13,7 +14,7 @@ const sidecarLimit = 4*1024//bytes; a real sidecar is about 200
 const sidecarSeconds = 10
 
 /*
-Checking for a newer version. A check reads the sidecar pnpm hash publishes beside this platform's installer, ftorrent.dmg.json or ftorrent.exe.json, and the settings page shows its version and date; acting on a newer version comes later. Linux updates through its packages and a portable copy stays put, so neither checks.
+Checking for a newer version. A check reads the sidecar pnpm hash publishes beside this platform's installer, ftorrent.dmg.json or ftorrent.exe.json, and the settings page shows its version and date; acting on a newer version comes later. Only an installed copy checks, on a Mac or Windows, since that's the copy an update would write over.
 
 The user's button checks at once. With update.automatic on, the clock checks whenever update.next has passed, looking at startup and every checkEvery after. A check that hears back writes update.last and a fresh random update.next to the file, so a restart doesn't pick again and a laptop waking after days checks on the next look; one that fails changes neither, and the clock tries again an hour later.
 
@@ -29,7 +30,7 @@ export const useUpdateStore = defineStore('update', () => {
 	const sidecarUrl = new URL(`${brandStem}.${platformName == 'macOS' ? 'dmg' : 'exe'}.json`, brandHomepage).href
 
 	function start(paths) {//call once at startup, after the settings are read
-		if (platformName == 'Linux' || paths.mode == 'portable') return
+		if (!isInstalled(paths)) return
 		shown.value = true
 		tick()
 		setInterval(tick, updatePresets.checkEvery)

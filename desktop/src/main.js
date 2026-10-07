@@ -3,7 +3,7 @@ import {createPinia} from 'pinia'
 import App from './App.vue'
 import router from './router/index.js'
 import {revealWindow, watchWindow} from './window.js'
-import {pathsStatus} from './paths.js'
+import {pathsStatus, sayCopy} from './paths.js'
 import {useSettingsStore} from './stores/settings.js'
 import {useIncomingStore} from './stores/incoming.js'
 import {useAssociationsStore} from './stores/associations.js'
@@ -32,7 +32,7 @@ async function startup() {
 		launch = await loginLaunch()
 		await store.load(await pathsStatus())//where everything is, and then the settings file in the data folder, if there is one
 		let logPath = await logStart(store.settings.log.record, store.paths?.home)//as soon as the setting is known, so the lines rust and the page have said so far land in the file or go
-		if (logPath) log(`${store.paths.mode} ${brandName} ${await getVersion()} on ${platformName}, at ${store.paths.location}, logging to ${logPath}`)//the first line from the page, saying which copy this file is about
+		if (logPath) log(`${brandName} ${await getVersion()} on ${platformName}, ${sayCopy(store.paths)}, at ${store.paths.location}, logging to ${logPath}`)//the first line from the page, saying which copy this file is about
 	} finally {
 		await revealWindow(store, launch.login)//rust made the window hidden; place it where the settings remember, or somewhere fresh when they hold nothing, couldn't be read, or this copy is portable, and show it, whatever happened above, unless the system started this copy at login
 	}

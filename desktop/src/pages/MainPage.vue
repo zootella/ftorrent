@@ -4,6 +4,7 @@ import {useSettingsStore} from '../stores/settings.js'
 import {useIncomingStore} from '../stores/incoming.js'
 import {engineStatus} from '../engine.js'
 import {instanceStatus} from '../instance.js'
+import {sayCopy} from '../paths.js'
 import {brandName} from '../brand.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {useLoginStore} from '../stores/login.js'
@@ -64,7 +65,7 @@ let report = computed(() => {
 	let lines = [engineLine.value]
 	let p = paths.value
 	if (p) {
-		lines.push(`${brandName} is ${p.mode}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
+		lines.push(`${brandName} is ${sayCopy(p)}${pathsHeard.value ? ', and the engine has its paths' : ''}`)
 		lines.push(`program: ${p.location}`)
 		lines.push(`data: ${p.data}`)
 		lines.push(`settings: ${p.settings}${foldersHeard.value ? ', and the engine has its folders' : ''}`)

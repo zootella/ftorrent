@@ -3,7 +3,8 @@ import {defineStore} from 'pinia'
 import {getCurrentWindow} from '@tauri-apps/api/window'
 import {openUrl} from '@tauri-apps/plugin-opener'
 import {useSettingsStore} from './settings.js'
-import {installedCopy, thisCopy, register, whoOpens, typeNames, applicationName} from '../associate.js'
+import {thisCopy, register, whoOpens, typeNames, applicationName} from '../associate.js'
+import {isInstalled} from '../paths.js'
 import {platformName} from '../settings.js'
 import {log} from '../log.js'
 
@@ -54,7 +55,7 @@ export const useAssociationsStore = defineStore('associations', () => {
 
 	async function start(startPaths) {//call once at startup, after the settings are read; on anything but an installed copy this returns at once and nothing is ever shown
 		paths = startPaths
-		installed.value = installedCopy(paths)
+		installed.value = isInstalled(paths)//the one gate on everything here: what gets registered or claimed names this copy's path
 		if (!installed.value) return
 		await refresh()
 		await getCurrentWindow().onFocusChanged(({payload: focused}) => {//back from windows' Settings, or from anywhere a default might have changed

@@ -33,10 +33,6 @@ export const applicationName = brandName//the name under RegisteredApplications,
 const applicationDescription = brandDescription
 const documentIcon = 'torrent.ico'//what a .torrent wears: a file of its own, beside the executable where bundle.resources puts it, rather than the application's icon, which is made to stand out in a taskbar, the wrong thing for a document to do. The icon studio in the desktop workspace draws it, and with a ProgID per type another format can have another icon later, at no cost
 
-export function installedCopy(paths) {//whether this copy runs from the folder an install puts ftorrent in, %LOCALAPPDATA%\ftorrent on windows and /Applications on the mac, which paths.rs reports beside the program's own location; the one gate on everything here. What gets registered or claimed names this copy's path, so a copy anywhere else would point the system at a file that may move or vanish, a portable copy on a stick, a build in the repository's target folder, a copy on the Desktop, and none of them registers or needs to say why. The installer's folder is blank on linux, so never there
-	return !!paths?.installer && paths.location.toLowerCase() == paths.installer.toLowerCase()
-}
-
 export function thisCopy(paths) {//what the system names when this copy is what opens a type: on windows the executable, and on the mac the .app around it, which is how launch services knows an app
 	let bundle = paths.executable.lastIndexOf('.app/')
 	return platformName == 'macOS' && bundle >= 0 ? paths.executable.slice(0, bundle + '.app'.length) : paths.executable

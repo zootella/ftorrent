@@ -64,7 +64,7 @@ let lastChecked = computed(() => {//worked out when the page opens or a check la
 			<p v-if="login.differs"><a href="#" @click.prevent="login.openSettings">{{ loginWords.confirm }}</a></p><!-- the system says otherwise than the answer, whichever way, as when the user changed it in the system's own page; the link opens that page, Login Items & Extensions on a Mac and Startup Apps on Windows, and goes away once the two agree. Why they differ is in the log and the main page's report -->
 		</div>
 
-		<div v-if="update.shown"><!-- a Mac or Windows copy that isn't portable -->
+		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="flex w-fit items-center gap-2"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /><span>Check automatically</span></label></p><!-- clickable on the box and its words only, like RadioGroup's answers -->
 			<p><button :disabled="update.checking" @click="update.check">Check for Update</button></p>
 			<p v-if="update.found">{{ update.found.version }}, {{ update.found.date }}</p>

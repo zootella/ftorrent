@@ -3,13 +3,13 @@ import {defineStore} from 'pinia'
 import {getCurrentWindow} from '@tauri-apps/api/window'
 import {openUrl} from '@tauri-apps/plugin-opener'
 import {useSettingsStore} from './settings.js'
-import {installedCopy} from '../associate.js'
+import {isInstalled} from '../paths.js'
 import {loginRead, loginWrite, loginRemove, loginSettings} from '../login.js'
 import {platformName} from '../settings.js'
 import {log} from '../log.js'
 
 /*
-Whether ftorrent starts at login: the user's answer, in the login.start setting, beside what the system says, for the settings page to show; login.js is how each platform reads and writes, and why the two are kept apart. Off at the factory, asked about nowhere but the settings page, and only for an installed copy on Windows or the Mac, by the same test associations use, since the system would start whatever path the entry names.
+Whether ftorrent starts at login: the user's answer, in the login.start setting, beside what the system says, for the settings page to show; login.js is how each platform reads and writes, and why the two are kept apart. Off at the factory, asked about nowhere but the settings page, and only for an installed copy on Windows or the Mac, by isInstalled in paths.js, since the system would start whatever path the entry names.
 
 The answer changes only when the user clicks it, so the page's buttons always show what the user chose. A click saves the answer, reads the system, puts the entry there for a yes only if there's none, or takes it away for a no only if there is one, and reads again after. A read also runs at startup and whenever the window comes back into focus, as when the user returns from the system's settings. When the system differs from the answer, whichever way, the page shows a link to the system's own page for it, and the link goes away once they agree.
 */
@@ -46,7 +46,7 @@ export const useLoginStore = defineStore('login', () => {
 	async function start(startPaths, launchArgument) {//call once at startup, after the settings are read; any other copy returns at once
 		paths = startPaths
 		argument = launchArgument
-		installed.value = platformName != 'Linux' && installedCopy(paths)
+		installed.value = isInstalled(paths)
 		if (!installed.value) return
 		await refresh()
 		await getCurrentWindow().onFocusChanged(({payload: focused}) => { if (focused) refresh() })//back from the system's settings, perhaps having changed it there
