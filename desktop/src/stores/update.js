@@ -31,7 +31,7 @@ export const useUpdateStore = defineStore('update', () => {
 	let found = ref(null)//{version, date, bytes, sha256} from this session's latest check
 	let running = ref('')//this copy's version, to compare with what a check finds
 	let installing = ref(false)//from the click until this copy quits, or the install fails
-	let installable = ref(false)//whether this copy can be replaced in place, which update.js decides at startup; true on the mac for an installed copy this user can write, and never yet on windows, whose half isn't tested. With it false, a newer version found turns the status line into a link to the web site
+	let installable = ref(false)//whether this copy can be replaced in place, which update.js decides at startup: an installed copy, which on the mac this user can also write. With it false, a newer version found turns the status line into a link to the web site
 	let newer = computed(() => !!found.value && !!running.value && isNewer(found.value.version, running.value))
 	const updateUrl = new URL(updateFile, brandHomepage).href
 	const sidecarUrl = updateUrl + '.json'

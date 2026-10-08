@@ -32,7 +32,7 @@ So the prompt is about the file's origin and who vouches for it. Once you confir
 1. Download `ftorrent.exe`. Your browser may hold the download with a note that ftorrent.exe isn't commonly downloaded. In Microsoft Edge, open the **…** menu on the download, choose **Keep**, then **Show more**, then **Keep anyway**. Other browsers offer the same choice in a menu on the download itself.
 2. Run `ftorrent.exe`. SmartScreen shows a blue window titled **Windows protected your PC**, saying **Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.** The only button is **Don't run**. Click **More info**, and the window adds the file's name, **Publisher: Unknown publisher**, and a **Run anyway** button. Click **Run anyway**.
 3. The installer runs. It shows nothing, installs ftorrent for your Windows account alone, so it doesn't ask for an administrator password, and opens ftorrent when it's done, a second or two later.
-4. From then on, open ftorrent from the Start menu. The installer wrote the program to your disk, so the installed copy carries no mark and opens without a prompt, now and later.
+4. From then on, open ftorrent from the Start menu. The installer wrote the program to your disk, so the installed copy carries no mark and opens without a prompt, now and later. The same goes for the one-click update: when a newer version is out, ftorrent's Settings page offers it, and ftorrent downloads this same installer and runs it itself, which sets no mark, so the window in step 2 never comes back.
 
 You can also clear the mark yourself before step 2, which skips the SmartScreen window. Right-click `ftorrent.exe`, choose **Properties**, and on the **General** tab find the line **This file came from another computer and might be blocked to help protect this computer**. Check **Unblock** beside it and click **OK**. In PowerShell, this command does the same:
 
@@ -61,7 +61,7 @@ Microsoft Defender Antivirus is a separate mechanism, and it keeps scanning file
 2. Double-click ftorrent in **Applications**. macOS shows **"ftorrent" Not Opened**, saying **Apple could not verify "ftorrent" is free of malware that may harm your Mac or compromise your privacy**, with the buttons **Done** and **Move to Trash**. Click **Done**.
 3. Open **System Settings**, choose **Privacy & Security**, and scroll down to the **Security** section. It says **"ftorrent" was blocked to protect your Mac**, with an **Open Anyway** button beside it. Click **Open Anyway**.
 4. macOS asks once more, in a dialog with its own **Open Anyway** button, and then asks for your login password or Touch ID. Confirm, and ftorrent opens.
-5. macOS keeps this decision, so later launches open ftorrent directly.
+5. macOS keeps this decision, so later launches open ftorrent directly. The one-click update keeps it too: when a newer version is out, ftorrent's Settings page offers it, and the copy ftorrent downloads itself carries no quarantine mark, so steps 2 through 4 never come back.
 
 The **Open Anyway** button stays in System Settings for about an hour after step 2. If it's gone, double-click ftorrent again to bring it back. Older guides describe Control-clicking the app and choosing **Open**, which no longer works from macOS 15 Sequoia on. System Settings is the way through, as Apple's own page [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac) describes.
 

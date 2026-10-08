@@ -45,7 +45,7 @@ async function chooseAutomatic(automatic) {
 }
 //the update section's one button and one line: the button checks, unless a check has found a version it can install, and then it updates; a copy that can't replace itself is pointed at the web site instead
 let updateReady = computed(() => update.newer && update.installable)
-let updateElsewhere = computed(() => update.newer && !update.installable)//a newer version is out, and this copy can't put it in place of itself: a standard user's, one with its home folder on another drive, or windows for now
+let updateElsewhere = computed(() => update.newer && !update.installable)//a newer version is out, and this copy can't put it in place of itself: on a mac, a standard user's, or one with its home folder on another drive
 let checkedHere = ref(false)//a check clicked since the page opened, which keeps the button gray until it opens again, so impatient clicks don't each ask the server
 let updateGray = computed(() => update.checking || update.installing || (checkedHere.value && !updateReady.value))
 async function updateClick() {

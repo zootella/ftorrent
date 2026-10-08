@@ -30,7 +30,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> bool {
 	true
 }
 
-/// Nothing to do on other platforms: on Windows the setup program replaces the files, asking the running copy to exit through its pipe first
+/// Nothing to do on other platforms: on Windows the setup program is the whole installer, asking the running copy to exit through its pipe and writing the files over the install folder once it has gone, which the essay in update.js lays out, so no copy of the app ever runs in an installer mode there
 #[cfg(not(target_os = "macos"))]
 pub fn start(_app: &AppHandle, _paths: &Paths) -> bool { false }
 

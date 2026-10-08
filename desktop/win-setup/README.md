@@ -9,7 +9,7 @@ _ftorrent/desktop/win-setup/README.md_
 > <br>Visual Studio: 2026, with MSVC 14.51 and the Windows 11 SDK
 > <br>Node: 22
 
-ftorrent's installer for Windows is a small program of its own, written in this folder, rather than a script for an installer toolkit. A user double-clicks `ftorrent.exe`, and about a second later ftorrent is running, with nothing shown in between. The same program is the uninstaller. This guide says what it is and why it exists, introduces every file and folder that takes part, and then tells the two stories that are the whole of it: what happens when the pipeline builds the installer, and what happens when a user runs it. The design that decided it is in the desktop client planning document on [docs.ftorrent.com](https://docs.ftorrent.com/), and each file here carries its own essay at the top, which this guide points to rather than repeats.
+ftorrent's installer for Windows is a small program of its own, written in this folder, rather than a script for an installer toolkit. A user double-clicks `ftorrent.exe`, and about a second later ftorrent is running, with nothing shown in between. The same program is the uninstaller, and it is the one-click update too: when a newer version is out, ftorrent downloads this same file and runs it, and the install below happens over the running copy, which the installer asks to exit first. This guide says what it is and why it exists, introduces every file and folder that takes part, and then tells the two stories that are the whole of it: what happens when the pipeline builds the installer, and what happens when a user runs it. The design that decided it is in the desktop client planning document on [docs.ftorrent.com](https://docs.ftorrent.com/), and each file here carries its own essay at the top, which this guide points to rather than repeats.
 
 ## Why ftorrent has its own
 
@@ -160,7 +160,7 @@ The trailer is at the end rather than the beginning for one reason: the stub is 
 
 ### Installing
 
-The user downloads `ftorrent.exe` from ftorrent.com and double-clicks it in `Downloads`. The installer isn't signed, so a downloaded copy meets SmartScreen's blue window once, the same as any unsigned program, and the installing guide on docs.ftorrent.com walks through it. After that, nothing appears.
+The user downloads `ftorrent.exe` from ftorrent.com and double-clicks it in `Downloads`. The installer isn't signed, so a downloaded copy meets SmartScreen's blue window once, the same as any unsigned program, and the installing guide on docs.ftorrent.com walks through it. After that, nothing appears. The one-click update runs the same steps: ftorrent downloads the same file into its data folder and starts it, with no window of SmartScreen's, since a file a program writes for itself carries no mark of the web, and step 5 is where the two meet, the installer asking the copy that started it to exit.
 
 1. **Windows reads the manifest** before the program's first instruction, and runs the downloaded `ftorrent.exe` as the user, high-DPI aware, with long paths allowed.
 

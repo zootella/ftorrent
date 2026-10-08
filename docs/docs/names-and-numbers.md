@@ -58,7 +58,7 @@ Four candidates did not make the list. `wss://tracker.btorrent.xyz` and `udp://e
 
 ### Inherited, and the platform's
 
-**The Windows installer.** On a Windows machine without the WebView2 runtime, Tauri's installer fetches Microsoft's bootstrapper for it from Microsoft at install time, which is Tauri's default and is set by `webviewInstallMode` in the Tauri config. Windows 11 and updated Windows 10 already carry the runtime, so most installs fetch nothing. An offline mode that bundles the runtime exists and would make the installer far larger.
+**The Windows installer.** ftorrent's own setup program, `desktop/win-setup/setup.c`, fetches nothing. On a Windows machine without the WebView2 runtime, which every Windows 11 and updated Windows 10 has, it opens Microsoft's page for the runtime in the user's browser, `https://developer.microsoft.com/microsoft-edge/webview2/`, and says so in a dialog; that is the one address it knows, and the only time it is opened.
 
 **The operating system's own.** Names are resolved by whatever DNS the user's system is configured to use; the client never chooses a resolver. HTTPS trackers are checked against the system's trust roots; the update check is the one exception, carrying its own, as its section says. The web view that draws the window is the platform's, WebKit on macOS and Linux and WebView2 on Windows, and it updates the way the platform updates it.
 
@@ -72,7 +72,7 @@ Accept: */*
 Accept-Encoding: gzip
 ```
 
-That is the HTTP library's own user agent. Nothing in the request names the copy, its version, or the user, and the file's name is what tells the server the platform. The update itself, the same address without `.json`, downloads only on the user's click. A portable copy, or one not running from where the installer put it, never asks, and the Linux packages, which the package manager installs and updates, never ask. `automatic = false` under `[update]` in `ftorrent.toml` stops the check on its own and leaves the button. The addresses are built in `desktop/src/update.js` from `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` and the names the publishing script gives the files.
+That is the HTTP library's own user agent. Nothing in the request names the copy, its version, or the user, and the file's name is what tells the server the platform. The update itself, the same address without `.json`, downloads only on the user's click, the one click of the one-click update, with the same three headers; on Windows that file is the setup program, which the client then runs. A portable copy, or one not running from where the installer put it, never asks, and the Linux packages, which the package manager installs and updates, never ask. `automatic = false` under `[update]` in `ftorrent.toml` stops the check on its own and leaves the button. The addresses are built in `desktop/src/update.js` from `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` and the names the publishing script gives the files.
 
 Nothing else reaches a server on its own.
 
