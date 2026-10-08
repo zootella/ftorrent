@@ -25,3 +25,7 @@ Three checks from the update work can only run on a Mac. Run or drop each as you
 - **Sleep and wake.** A laptop waking past its `next` should check on the next hourly look.
 
 That's the whole list, and this letter is the only place it's written down.
+
+## The Mac's About
+
+A separate thing for the Mac to clean up. The ftorrent menu's About item opens a small window of its own, with the name, version, and copyright, which is AppKit's standard About panel: Tauri builds a default menu on macOS alone, only when the app sets none, and that menu's About is a predefined item that opens the panel. Windows sets its own menu in `lifecycle.rs`, with Help, About routing into the page, and Tauri adds no default there or on Linux, so this is the Mac's alone. The user wants the path a Mac user expects, About ftorrent at the top of the app menu, and for it to open our About page in the one window, never that panel. Setting a menu on macOS replaces Tauri's default whole, so the Mac's menu has to carry what a Mac app can't do without: About ftorrent routing into the page the way the Windows item emits its route, then the standard Hide, Hide Others, Show All, and Quit items, and an Edit menu with Undo, Redo, Cut, Copy, Paste, and Select All, since without those the keyboard shortcuts stop working in the web view; Tauri's predefined menu items cover all of them. A Window menu is optional. The words stay Apple's, as the menu bar icon's already are.
