@@ -22,8 +22,10 @@ async function prepareFolder() {
 </script>
 
 <template>
-	<main>
-		<h1>{{ brandName }}</h1>
+	<!-- ./src/pages/HomePage.vue -->
+	<!-- the page the window opens on -->
+	<main class="flex flex-col items-start gap-line">
+		<h1 class="text-heading font-semibold">{{ brandName }}</h1>
 
 		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
 	</main>

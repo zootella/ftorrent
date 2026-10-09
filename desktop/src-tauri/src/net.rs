@@ -1,12 +1,13 @@
 use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::net::UdpSocket;
 use std::time::Duration;
 use sha2::{Digest, Sha256};
 use tauri::command;
 use crate::run_blocking;
 
 /*
-Requests to the web for the page: net_get fetches one https address, and either answers its body as text or, given a path, saves the body to that file and answers its SHA-256. What to fetch, where to save it, and what the answer means, is the page's.
+Requests to the web for the page: net_get fetches one https address, and either answers its body as text or, given a path, saves the body to that file and answers its SHA-256. What to fetch, where to save it, and what the answer means, is the page's. And net_local answers this machine's own address on its network, which takes no request at all.
 
 ureq makes the request, a blocking call on run_blocking's pool like the disk commands, with its default TLS: rustls, checking certificates against Mozilla's roots compiled into the program. The answer is treated as coming from anywhere: https only, no redirect followed, the whole request bounded by the page's seconds, and the body by its limit, counted as it arrives and again after gzip is undone. A redirect comes back as its own body, which the page's check turns away; a 4xx or 5xx is an error.
 */
@@ -29,6 +30,16 @@ pub async fn net_get(url: String, limit: u64, seconds: u64, save: Option<String>
 		body.read_to_string(&mut text).map_err(|e| e.to_string())?;
 		if text.len() as u64 > limit { return Err(format!("the answer ran past {limit} bytes")) }//an error rather than a cut-off body
 		Ok(text)
+	}).await
+}
+
+/// The IPv4 address this machine sends from on its local network, like 192.168.1.23: the source address the system would give traffic to somewhere beyond it
+#[command]
+pub async fn net_local() -> Result<String, String> {
+	run_blocking(|| {
+		let socket = UdpSocket::bind("0.0.0.0:0").map_err(|e| e.to_string())?;//any free port, on no interface in particular until the connect below picks one
+		socket.connect("192.0.2.1:9").map_err(|e| e.to_string())?;//connecting a udp socket sends nothing; the system only looks up its route, which fixes the socket's source address, or fails with no route out, as with no network. 192.0.2.1 is an address set aside for documentation, RFC 5737, so it names no one, and any address beyond the local network gets the same answer, the default route's
+		Ok(socket.local_addr().map_err(|e| e.to_string())?.ip().to_string())
 	}).await
 }
 

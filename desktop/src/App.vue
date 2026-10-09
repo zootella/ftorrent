@@ -27,18 +27,23 @@ if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the sys
 
 <template>
 	<!-- ./src/App.vue -->
-	<!-- the shell every page sits inside: the banner when there's a question to ask, the navigation across the top, and the outlet the router fills with whichever page is current -->
-	<!-- the question names the two types people know, .torrent and magnet:, while the answer covers all four and the bar is up if any of the four opens with another app; the same stance for the whole group, on purpose, as associate.js says -->
-	<div v-if="associations.bannerUp" class="flex items-center gap-line px-line bg-line/40 border-b border-line">
-		<span class="flex-1">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}?</span>
-		<button type="button" @click="associations.choose('yes')">Yes</button>
-		<button type="button" @click="associations.choose('no')">No</button>
-		<button type="button" class="bg-transparent border-transparent hover:border-transparent text-heading leading-none" aria-label="Close" @click="associations.dismiss()">×</button><!-- a bare ×, so it reads as closing the bar rather than as a third answer -->
+	<!-- the shell every page sits inside: a column exactly as tall as the window, with the banner when there's a question to ask and the navigation across the top, each as tall as its contents, and the page the router shows filling the rest -->
+	<div class="h-screen flex flex-col">
+		<!-- the question names the two types people know, .torrent and magnet:, while the answer covers all four and the bar is up if any of the four opens with another app; the same stance for the whole group, on purpose, as associate.js says -->
+		<div v-if="associations.bannerUp" class="flex items-center gap-line px-line bg-line/40 border-b border-line">
+			<span class="flex-1">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}?</span>
+			<button type="button" @click="associations.choose('yes')">Yes</button>
+			<button type="button" @click="associations.choose('no')">No</button>
+			<button type="button" class="bg-transparent border-transparent hover:border-transparent text-heading leading-none" aria-label="Close" @click="associations.dismiss()">×</button><!-- a bare ×, so it reads as closing the bar rather than as a third answer -->
+		</div>
+		<nav class="flex gap-line px-line pt-line">
+			<router-link to="/" active-class="font-bold">Home</router-link>
+			<router-link to="/connection" active-class="font-bold">Connection</router-link>
+			<router-link to="/settings" active-class="font-bold">{{ settingsName }}</router-link>
+			<router-link to="/about" active-class="font-bold">About</router-link>
+		</nav>
+		<div class="flex-1 min-h-0 overflow-auto p-line"><!-- the page area, with the window's margin around the page. A box in a flex column won't shrink below its contents unless it's told to, and min-h-0 tells it, so a page can be h-full and fill exactly the space below the navigation. overflow-auto is only a safety net: a page that ever scrolls here has failed, as style.css says -->
+			<router-view />
+		</div>
 	</div>
-	<nav class="flex gap-line px-line pt-line">
-		<router-link to="/" active-class="font-bold">Main</router-link>
-		<router-link to="/settings" active-class="font-bold">{{ settingsName }}</router-link>
-		<router-link to="/about" active-class="font-bold">About</router-link>
-	</nav>
-	<router-view />
 </template>

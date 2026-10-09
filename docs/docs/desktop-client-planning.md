@@ -5,6 +5,8 @@ description: Design and planning notes for the ftorrent desktop client — stack
 
 # ftorrent Desktop Client
 
+_We wrote this document before we began developing the desktop client, as the governing design and vision for the application, and we refer to it as we plan each sprint. It's an article, not a sprint plan. Sprint plans live in documents of their own, where we brainstorm, rewrite as the work moves, and burn items down as they're done, the same way we fix code and comments as we run into things. This document doesn't change that way: we don't edit it as we go, brainstorm further in it, or burn it down._
+
 ftorrent is a desktop BitTorrent client for Windows, Mac, and Linux. The source lives at [github.com/zootella/ftorrent](https://github.com/zootella/ftorrent) in the `desktop` workspace — the project is "ftorrent," always lowercase, and the workspace is "desktop." The app participates in both traditional BitTorrent swarms (TCP/uTP) and browser-based WebTorrent swarms (WebRTC) through a single hybrid engine.
 
 The Rust filesystem module is ported from a separate Tauri app, Fuji, where it was written as `io.rs`. In ftorrent it is `disk.rs`, renamed to avoid ambiguity with network I/O.

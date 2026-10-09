@@ -10,6 +10,7 @@ import {webviewWords} from '../settings.js'
 import {processId, processOpen} from '../process.js'
 import {engineStatus} from '../engine.js'
 import {useIncomingStore} from '../stores/incoming.js'
+import KeyValues from '../components/KeyValues.vue'
 
 //the parts ftorrent is made of, and the version of each, asked of the part itself wherever it can answer at runtime; and for the two parts that are processes of ftorrent's own, this copy and the engine it started, the process id beside the version, so a running copy can be matched to the task manager and to its log file, which is named for the id
 let incoming = useIncomingStore()//the engine's ready line names the libtorrent and python it runs on
@@ -48,15 +49,10 @@ function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id
 <template>
 	<!-- ./src/pages/AboutPage.vue -->
 	<!-- where ftorrent lives on the web, and the parts it's built from, each with its version -->
-	<main>
-		<dl class="grid grid-cols-[auto_1fr] gap-x-line">
-			<template v-for="[name, version] in parts" :key="name">
-				<dt class="text-muted">{{ name }}</dt>
-				<dd>{{ version }}</dd>
-			</template>
-		</dl>
+	<main class="flex flex-col items-start gap-line">
+		<KeyValues :rows="parts" />
 		<a :href="homeLink" @click.prevent="processOpen(homeLink)" class="block w-fit">{{ homeLink }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
-		<h1 class="font-brand text-brand text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
+		<h1 class="font-brand text-brand font-semibold text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
 		<img :src="brandIcon" alt="" class="w-mark" /><!-- as wide as the theme says and half as tall, the pill and nothing around it -->
 	</main>
 </template>

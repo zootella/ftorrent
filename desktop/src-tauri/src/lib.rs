@@ -29,7 +29,7 @@ mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is expl
 mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to, and every panic's location among them
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
-mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file
+mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file, and this machine's address on its local network
 mod process;//and process.rs: other programs, run and waited for, started and let go, or asked to open a file or an address the way a double-click would, and this process's own id
 mod install;//and install.rs: a newer copy putting itself in place of this one, on a mac, in the moment before it would take the lock
 
@@ -89,6 +89,7 @@ pub fn run() {
 				window::window_webview_version,
 				instance::instance_take,//and in instance.rs
 				net::net_get,//and in net.rs
+				net::net_local,
 				process::process_id,//and in process.rs
 				process::process_run,
 				process::process_start,

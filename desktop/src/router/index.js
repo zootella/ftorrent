@@ -1,5 +1,5 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
-import MainPage from '../pages/MainPage.vue'
+import HomePage from '../pages/HomePage.vue'
 
 /*
 The router is this app's table of contents: every page the window can show is named once, here, and the rest of the code navigates by those names rather than by wiring components together by hand.
@@ -9,9 +9,10 @@ We run it in hash mode. A router's other mode, history mode, writes real paths l
 const router = createRouter({
 	history: createWebHashHistory(),
 	routes: [
-		{path: '/',      name: 'main',  component: MainPage},//the page the window opens on, so it's imported up front rather than fetched a moment later
-		{path: '/settings', name: 'settings', component: () => import('../pages/SettingsPage.vue')},//an arrow function instead of a component makes this a lazy route: the build gives the page its own chunk, and the app loads it the first time someone opens it
-		{path: '/about',    name: 'about',    component: () => import('../pages/AboutPage.vue')},//lazy the same way
+		{path: '/',            name: 'home',        component: HomePage},//the page the window opens on, so it's imported up front rather than fetched a moment later
+		{path: '/connection',  name: 'connection',  component: () => import('../pages/ConnectionPage.vue')},//an arrow function instead of a component makes this a lazy route: the build gives the page its own chunk, and the app loads it the first time someone opens it
+		{path: '/settings',    name: 'settings',    component: () => import('../pages/SettingsPage.vue')},//lazy the same way
+		{path: '/about',       name: 'about',       component: () => import('../pages/AboutPage.vue')},//lazy the same way
 		{path: '/:pathMatch(.*)*', redirect: '/'},//anything unrecognized goes home rather than matching no route at all; with no address bar the only ways to get here are a stale hash left in the webview by a development reload or a mistaken navigate in our own code, and either one would otherwise leave the navigation sitting above an empty page
 	],
 })

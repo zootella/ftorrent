@@ -58,7 +58,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 	}
 
-	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the main page's button until then
+	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the Home page's button until then
 		let state = await folderLock(path)
 		if (state == 'missing') {
 			try {

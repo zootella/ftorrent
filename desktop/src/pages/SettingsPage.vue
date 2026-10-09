@@ -65,8 +65,8 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 <template>
 	<!-- ./src/pages/SettingsPage.vue -->
 	<!-- the settings a user changes from inside ftorrent, each written to ftorrent.toml as it changes -->
-	<main>
-		<h1>{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
+	<main class="flex flex-col items-start gap-line">
+		<h1 class="text-heading font-semibold">{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
 			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This page only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
