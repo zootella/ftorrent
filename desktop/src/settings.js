@@ -18,7 +18,7 @@ const settingsHeader = `# ${brandStem}.toml — ${brandName} reads this file whe
 export const platformName = navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Macintosh') ? 'macOS' : 'Linux'
 const onWindows = platformName == 'Windows'
 
-//the web view the page runs in, for the about page: the engine, whose version tauri reports, and the system component that carries it. One per platform, since tauri has one web view on each: chromium through microsoft edge webview2 on windows, whose version is a chromium number like 141.0.3537.57; webkit through apple's wkwebview on a mac, whose version is the framework's build number like 20621.3.11.11.3; and webkit through webkitgtk on linux, whose version is that port's release like 2.46.3
+//the web view the page runs in, for the about page: the engine, whose version tauri reports, and the system component that carries it. One per platform, since tauri has one web view on each: chromium through microsoft edge webview2 on windows, whose version is the runtime's own, in edge's numbering like 141.0.3537.57, with chromium's major in front; webkit through apple's wkwebview on a mac, whose version is the framework's build number like 20621.3.11.11.3; and webkit through webkitgtk on linux, whose version is that port's release like 2.46.3
 export const webviewWords = {Windows: {engine: 'Chromium', host: 'Microsoft Edge WebView2'}, macOS: {engine: 'WebKit', host: 'Apple WKWebView'}, Linux: {engine: 'WebKit', host: 'WebKitGTK'}}[platformName]
 
 //the face the System Font choice draws in, and who made it, for its answer on the settings page; undefined on linux, where it's whatever the desktop is set to
