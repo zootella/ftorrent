@@ -15,7 +15,7 @@ This module never opens the settings file. It names it, because the portable dec
 const PORTABLE_NAME: &str = "portable";//the folder whose ftorrent.toml makes a copy portable
 const STATE_NAME: &str = "state";//libtorrent's session state, the DHT routing table among it
 
-/// Everything startup worked out about where things are, which the page shows and resolves settings against, and the engine is told
+/// Everything startup worked out about where things are, which the page resolves settings against, and the engine is told
 #[derive(Serialize, Clone, Default)]
 pub struct Paths {
 	pub mode: String,//installed or portable
@@ -26,7 +26,6 @@ pub struct Paths {
 	pub data: String,//the data folder
 	pub settings: String,//ftorrent.toml in the data folder
 	pub state: String,//the libtorrent state file in the data folder
-	pub trouble: String,//what went wrong, blank when nothing did; startup carries on rather than stopping
 }
 
 /// Find the program's location and the data folder; instance.rs locks the data folder next
@@ -40,7 +39,7 @@ pub fn locate(app: &AppHandle) -> Paths {
 
 	let location = match program_location() {
 		Ok(location) => location,
-		Err(trouble) => { paths.trouble = trouble; return paths }
+		Err(trouble) => { crate::log::log(&trouble); return paths }//startup carries on rather than stopping, here and below
 	};
 	paths.location = display(&location);
 
@@ -53,10 +52,10 @@ pub fn locate(app: &AppHandle) -> Paths {
 		paths.mode = "installed".to_string();
 		match app.path().app_local_data_dir() {//per user, named by the bundle identifier; Local rather than Roaming on Windows
 			Ok(data) => data,
-			Err(e) => { paths.trouble = format!("the platform gave no data folder: {e}"); return paths }
+			Err(e) => { crate::log::log(&format!("the platform gave no data folder: {e}")); return paths }
 		}
 	};
-	if let Err(e) = std::fs::create_dir_all(&data) { paths.trouble = format!("could not create the data folder: {e}") }//an installed copy's first launch; the lock and the settings file both go inside, so the folder has to exist before either
+	if let Err(e) = std::fs::create_dir_all(&data) { crate::log::log(&format!("could not create the data folder: {e}")) }//an installed copy's first launch; the lock and the settings file both go inside, so the folder has to exist before either
 	paths.data = display(&data);
 	paths.settings = display(&data.join(&settings_name));
 	paths.state = display(&data.join(STATE_NAME));

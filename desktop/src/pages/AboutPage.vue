@@ -24,7 +24,7 @@ onMounted(async () => {
 	pid.value = await processId()
 	tauri.value = await getTauriVersion()
 	webview.value = await windowWebviewVersion().catch(error => `could not tell, ${error}`)//the platform may not say, and that's an answer worth showing
-	let engine = await engineStatus()//asked once, as the page opens, like the versions; the main page is where the engine is watched
+	let engine = await engineStatus()//asked once, as the page opens, like the versions; the log is where the engine's starts and stops are kept
 	if (engine.running) enginePid.value = engine.pid
 })
 let parts = computed(() => {

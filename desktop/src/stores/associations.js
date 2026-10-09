@@ -24,8 +24,6 @@ export const useAssociationsStore = defineStore('associations', () => {
 	let opens = ref({})//what the system would open each of the four with, by name, as whoOpens answers; empty before the first pass
 	let bannerUp = ref(false)//worked out on every pass, by the rule in the essay
 	let closed = false//the user closed the bar in this run, which keeps it down until the next launch
-	let changed = ref(0)//values the last pass wrote or took back, for the main page
-	let trouble = ref('')//what went wrong in the last pass, blank when nothing did
 	let paths = null//where everything is, from startup
 	let returning = false//a yes given again sent the user to windows' Settings, and the first pass on coming back writes the legacy associations under it; in memory only, for that one trip
 
@@ -39,13 +37,10 @@ export const useAssociationsStore = defineStore('associations', () => {
 	async function pass(answering) {//renew the offer, write the answer the user just gave if there is one, then read where things stand and decide the bar
 		try {
 			log(`associations: pass, answer ${answer.value}${answering ? ', just given' : ''}`)
-			changed.value = await register(paths, answering)
-			let {found, problems} = await whoOpens()
-			opens.value = found
+			await register(paths, answering)//which logs every value it writes or takes back
+			opens.value = await whoOpens()
 			log(`associations: opens ${typeNames.map(name => `${name} with ${opens.value[name]?.executable || 'nothing'}`).join(', ')}`)
-			trouble.value = problems.join(', ')//blank when the system answered for all four
 		} catch (error) {
-			trouble.value = String(error)
 			log(`associations: trouble, ${error}`)
 		}
 		let up = !closed && answer.value != 'no' && !allOurs.value//the one rule for the bar
@@ -90,17 +85,9 @@ export const useAssociationsStore = defineStore('associations', () => {
 		try {
 			await processOpen(`ms-settings:defaultapps?registeredAppUser=${encodeURIComponent(applicationName)}`)//the name ftorrent registered under, escaped as Microsoft asks, since a fork's name may hold a space
 		} catch (error) {
-			trouble.value = `could not open Windows Settings, ${error}`
+			log(`associations: could not open Windows Settings, ${error}`)
 		}
 	}
 
-	let report = computed(() => {//lines for the main page's report, none for a copy that doesn't register
-		if (!installed.value) return []
-		let lines = [`associations: ${answer.value}, ${changed.value} values changed on the last pass${trouble.value ? ', ' + trouble.value : ''}`]//the last pass only, which after a focus has usually changed nothing
-		let found = typeNames.map(name => { let opener = opens.value[name]; return opener ? `${name} with ${opener.program}, ${opener.executable}` : `${name} with nothing` })
-		if (Object.keys(opens.value).length) lines.push(`opens: ${found.join('; ')}`)
-		return lines
-	})
-
-	return {installed, opens, bannerUp, answer, report, start, choose, dismiss}
+	return {installed, opens, bannerUp, answer, start, choose, dismiss}
 })

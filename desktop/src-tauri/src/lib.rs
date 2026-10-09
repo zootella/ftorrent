@@ -87,8 +87,7 @@ pub fn run() {
 				login::login_settings,
 				window::window_revealed,//and in window.rs
 				window::window_webview_version,
-				instance::instance_status,//and in instance.rs
-				instance::instance_take,
+				instance::instance_take,//and in instance.rs
 				net::net_get,//and in net.rs
 				process::process_id,//and in process.rs
 				process::process_run,

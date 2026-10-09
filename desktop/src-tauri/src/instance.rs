@@ -27,20 +27,10 @@ pub struct Request {
 	pub args: Vec<String>,
 }
 
-/// What the page sees about this copy's lock and handoff
-#[derive(Serialize, Clone, Default)]
-pub struct InstanceStatus {
-	pub lock: String,//the lock file's path
-	pub held: bool,//true once this copy holds it
-	pub handoff: String,//how a second launch reaches this copy
-	pub trouble: String,//why this copy runs without its lock or its handoff, blank when it has both
-}
-
 //managed by lib.rs; the lock file lives here so it stays open, and the lock stays held, for as long as the process runs
 #[derive(Default)]
 pub struct Instance {
 	lock: Mutex<Option<File>>,
-	status: Mutex<InstanceStatus>,
 	arrivals: Mutex<Queue<Request, ARRIVALS_WAITING>>,//what has reached this copy that the page hasn't taken yet
 }
 
@@ -55,12 +45,11 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	let instance = app.state::<Instance>();
 	let args: Vec<String> = std::env::args().skip(1).collect();//what the operating system launched this copy with, like a magnet link or the path of a .torrent file
 	if paths.data.is_empty() {
-		status(&instance).trouble = "no data folder, so no lock".to_string();//the platform gave no data folder, and paths.rs has already said so
+		crate::log::log("no data folder, so no lock");//the platform gave no data folder, and paths.rs has already said so
 		return Start::Run;
 	}
 	let brand_stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js in the page says which name goes where
 	let lock_path = lock_path(app, paths);
-	status(&instance).lock = lock_path.to_string_lossy().into_owned();
 
 	let mut taken = take(&lock_path);
 	if matches!(taken, Err(Taken::Busy)) && args.iter().any(|arg| arg == UPDATE_ARGUMENT) {//the installer that opened this copy still holds the lock, and lets go of it as it exits; wait for it rather than handing over to it
@@ -75,7 +64,6 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 	match taken {
 		Ok(file) => {
 			*instance.lock.lock().unwrap_or_else(|p| p.into_inner()) = Some(file);
-			status(&instance).held = true;
 			crate::log::log(&format!("took the lock, {}", lock_path.display()));
 		}
 		Err(Taken::Busy) => {
@@ -84,17 +72,13 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 			return Start::Leave;
 		}
 		Err(Taken::Unsupported(e)) => {
-			status(&instance).trouble = format!("running without a lock, because this folder couldn't be locked: {e}");//a volume that can't lock, where refusing to start would help nobody
+			crate::log::log(&format!("running without a lock, because this folder couldn't be locked: {e}"));//a volume that can't lock, where refusing to start would help nobody
 		}
 	}
 
 	match handoff::serve(app, &brand_stem, &lock_path) {
-		Ok(how) => status(&instance).handoff = how,
-		Err(e) => {
-			let mut s = status(&instance);
-			if !s.trouble.is_empty() { s.trouble.push_str("; ") }
-			s.trouble.push_str(&format!("a second launch can't reach this copy: {e}"));
-		}
+		Ok(how) => crate::log::log(&format!("handoff: {how}")),//how a second launch reaches this copy
+		Err(e) => crate::log::log(&format!("handoff: a second launch can't reach this copy, {e}")),
 	}
 	let carried: Vec<String> = args.into_iter().filter(|arg| arg != crate::login::ARGUMENT && arg != UPDATE_ARGUMENT).collect();//the arguments a login registration and an update add are no file or link, and have done their work
 	if !carried.is_empty() { arrive(app, "launch", carried, false) }
@@ -137,16 +121,6 @@ fn arrive(app: &AppHandle, from: &str, args: Vec<String>, forward: bool) {
 	crate::log::log(&format!("arrived by {from}: {}", args.join(" ")));
 	app.state::<Instance>().arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push(Request { from: from.to_string(), args });
 	if forward { crate::lifecycle::bring_forward(app) }//closing the window hides it, so it may be hidden, minimized, or behind something else
-}
-
-fn status(instance: &Instance) -> std::sync::MutexGuard<'_, InstanceStatus> {
-	instance.status.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
-/// This copy's lock and its handoff; the page asks
-#[command]
-pub fn instance_status(instance: State<'_, Instance>) -> InstanceStatus {
-	status(&instance).clone()
 }
 
 /// Everything that has reached this copy since the last take, oldest first, and how many were dropped because the page fell behind

@@ -66,16 +66,17 @@ fn engine_path(app: &AppHandle) -> Result<PathBuf, String> {
 	Ok(path)
 }
 
-/// Start the engine and send it init; called once from setup, before the page exists. Trouble is recorded rather than returned, because the page will ask
+/// Start the engine and send it init; called once from setup, before the page exists. Trouble goes to the log and the status rather than being returned, since there's nothing yet to return it to
 pub fn engine_start(app: &AppHandle) {
 	let engine = app.state::<Engine>();
 	let paths = app.state::<Paths>().inner().clone();
+	let fail = |trouble: String| { crate::log::log(&format!("engine: not started, {trouble}")); lock(&engine).status.trouble = trouble };
 	let path = match engine_path(app) {
 		Ok(path) => path,
-		Err(trouble) => { lock(&engine).status.trouble = trouble; return }
+		Err(trouble) => return fail(trouble),
 	};
 	lock(&engine).status.path = path.to_string_lossy().into_owned();
-	if !path.is_file() { lock(&engine).status.trouble = "the engine is not built; run pnpm engine in the desktop workspace".to_string(); return }
+	if !path.is_file() { return fail("the engine is not built; run pnpm engine in the desktop workspace".to_string()) }
 
 	let mut command = Command::new(&path);
 	command.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
@@ -86,7 +87,7 @@ pub fn engine_start(app: &AppHandle) {
 	}
 	let mut child = match command.spawn() {
 		Ok(child) => child,
-		Err(e) => { lock(&engine).status.trouble = format!("could not start the engine: {e}"); return }
+		Err(e) => return fail(format!("could not start the engine: {e}")),
 	};
 
 	let mut stdin = child.stdin.take().expect("stdin was piped");//moved into the writer thread below
@@ -113,6 +114,7 @@ pub fn engine_start(app: &AppHandle) {
 		inner.status.exit = String::new();
 		inner.status.trouble = String::new();
 	}
+	crate::log::log(&format!("engine: started, pid {pid}"));
 
 	//stdin: every line going down, in order, written here and nowhere else, so a write that waits on a full pipe waits on this thread alone
 	std::thread::spawn(move || {
@@ -130,6 +132,7 @@ pub fn engine_start(app: &AppHandle) {
 		}
 		let child = lock(&app_out.state::<Engine>()).child.take();//outside the lock below, because wait blocks, and engine_stop must be able to get in meanwhile
 		let exit = match child { Some(mut child) => child.wait().map(|s| s.to_string()).unwrap_or_else(|e| e.to_string()), None => String::new() };//none means engine_stop already has it and will record how it ended
+		if !exit.is_empty() { crate::log::log(&format!("engine: stopped on its own, {exit}")) }//nobody asked it to, so this is the line that says it crashed or quit
 		let engine = app_out.state::<Engine>();
 		let mut inner = lock(&engine);
 		inner.status.running = false;
@@ -167,6 +170,7 @@ pub fn engine_stop(app: &AppHandle) {
 			Err(e) => break e.to_string(),
 		}
 	};
+	crate::log::log(&format!("engine: stopped, {exit}"));
 	let mut inner = lock(&engine);
 	inner.status.running = false;
 	inner.status.exit = exit;
@@ -177,7 +181,7 @@ pub fn engine_stop(app: &AppHandle) {
 pub fn engine_send(engine: State<'_, Engine>, line: String) -> Result<(), String> {
 	if line.contains('\n') || line.contains('\r') { return Err("a line for the engine can't contain a line break".to_string()) }//it would arrive as two messages, the second a fragment
 	let inner = lock(&engine);
-	let Some(down) = inner.down.as_ref() else { return Err("the engine is not running".to_string()) };//not started, or already gone; the page shows the engine's own status beside this
+	let Some(down) = inner.down.as_ref() else { return Err("the engine is not running".to_string()) };//not started, or already gone; the log has the engine's own line saying which
 	down.send(line + "\n").map_err(|_| "the engine is not running".to_string())//onto the road down and back at once, without waiting on the pipe; this fails only once the writer thread has stopped, because the engine's pipe broke
 }
 

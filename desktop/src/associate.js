@@ -38,21 +38,18 @@ export function thisCopy(paths) {//what the system names when this copy is what 
 	return platformName == 'macOS' && bundle >= 0 ? paths.executable.slice(0, bundle + '.app'.length) : paths.executable
 }
 
-async function claimOnMac(paths, answering) {//the mac's half: when the user has just said yes, make this copy the default for each of the four that macOS opens with anything else; otherwise nothing, since the offer is the Info.plist and there's no default to give back. Answers how many it claimed
-	if (answering != 'yes') return 0
+async function claimOnMac(paths, answering) {//the mac's half: when the user has just said yes, make this copy the default for each of the four that macOS opens with anything else; otherwise nothing, since the offer is the Info.plist and there's no default to give back
+	if (answering != 'yes') return
 	let app = thisCopy(paths)
-	let changed = 0
 	for (let name of typeNames) {
 		let was = await launchOpens(name)
 		if (was == app) continue//already this copy's, so nothing to do
 		await launchClaim(name, app)
 		log(`associations: claimed ${name} from ${was || 'nothing'} for ${app}`)
-		changed++
 	}
-	return changed
 }
 
-export async function register(paths, answering) {//tell the system what this installed copy can open, and when the user has just answered, claim all four for a yes or give back the legacy associations for a no; answering is that answer, own to claim only ftorrent's own two, or blank on a pass that only renews the offer. Answers how many values changed. Only the copy holding the lock has a page to call this, so ten launches at once make one set of writes, not ten racing each other
+export async function register(paths, answering) {//tell the system what this installed copy can open, and when the user has just answered, claim all four for a yes or give back the legacy associations for a no; answering is that answer, own to claim only ftorrent's own two, or blank on a pass that only renews the offer. Only the copy holding the lock has a page to call this, so ten launches at once make one set of writes, not ten racing each other
 	if (platformName == 'macOS') return claimOnMac(paths, answering)//the mac has its own, much shorter pass, above
 	let executable = paths.executable
 	let file = executable.split('\\').pop()//ftorrent.exe, which is the key windows expects under Applications
@@ -104,22 +101,19 @@ export async function register(paths, answering) {//tell the system what this in
 	await set('Software\\RegisteredApplications', applicationName, capabilities)//the line that puts ftorrent in the settings app by name, and last on purpose: any write above can fail and stop the whole pass, so publishing ftorrent to Settings is the step that only happens once everything it points at is there. The next pass starts again from the top and finishes the job
 
 	if (changed > 0) await registryNotify()//only when something moved, because this runs often and almost always changes nothing
-	return changed
 }
 
-export async function whoOpens() {//what the system would open each of the four with right now, as found, by name, as {program, executable}, or null when nothing would, beside problems, a line for each type the system couldn't answer for. On windows that's registry_opens, the ProgID and the path it runs, the sealed association first and the legacy one after, the answer windows' own Settings shows; on the mac, launch services' answer
+export async function whoOpens() {//what the system would open each of the four with right now, as found, by name, as {program, executable}, or null when nothing would or the system couldn't say. On windows that's registry_opens, the ProgID and the path it runs, the sealed association first and the legacy one after, the answer windows' own Settings shows; on the mac, launch services' answer
 	let found = {}
-	let problems = []
 	for (let name of typeNames) {
 		try {
 			if (platformName != 'macOS') { found[name] = await registryOpens(name); continue }
 			let app = await launchOpens(name)//on the mac, the path of the .app, which stands in for both what windows calls the program and the executable it runs
 			found[name] = app ? {program: app.split('/').pop(), executable: app} : null
-		} catch (error) {//a lookup the system couldn't answer counts as nothing opening that type, so one odd answer leaves the other three read and the bar still decided on all four; problems says so, so the report doesn't take it for nothing
+		} catch (error) {//a lookup the system couldn't answer counts as nothing opening that type, so one odd answer leaves the other three read and the bar still decided on all four; the log says which lookup failed, so it isn't mistaken for nothing opening it
 			found[name] = null
-			problems.push(`could not ask what opens ${name}, ${error}`)
 			log(`associations: could not ask what opens ${name}, ${error}`)
 		}
 	}
-	return {found, problems}
+	return found
 }

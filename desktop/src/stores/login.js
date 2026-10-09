@@ -18,7 +18,6 @@ export const useLoginStore = defineStore('login', () => {
 	let settings = useSettingsStore()
 	let installed = ref(false)//an installed copy on windows or the mac, the only kind that may start at login; the question isn't shown on linux at all
 	let system = ref('')//on, off, or absent, as the last read found it; blank before the first, or when it couldn't be read
-	let trouble = ref('')//what went wrong in the last read or write, blank when nothing did, for the log and the main page's report
 	let paths = null//where everything is, from startup
 	let argument = ''//the argument a windows registration carries, from login.rs
 	let writing = ref(0)//clicks whose write and the read after it are still under way, while the answer has moved and the system hasn't been asked again yet; a count, so a second quick click keeps the link held back until both are done
@@ -32,16 +31,15 @@ export const useLoginStore = defineStore('login', () => {
 	async function read() {
 		try {
 			let found = await loginRead(paths, argument)
-			if (found != system.value) log(`login: the system says ${found}`)//a change, whoever made it, so the log shows a trip to the system's settings as well as a click here
+			if (found != system.value) log(`login: the system says ${found}, the answer is ${wanted.value ? 'yes' : 'no'}`)//a change, whoever made it, so the log shows a trip to the system's settings as well as a click here, and the first read at startup
 			system.value = found
 		} catch (error) {
 			system.value = ''//unknown, which shows no link rather than a wrong one
-			trouble.value = String(error)
 			log(`login: could not read, ${error}`)
 		}
 	}
 
-	function refresh() { return queue(async () => { trouble.value = ''; await read() }) }//read where things stand
+	function refresh() { return queue(read) }//read where things stand
 
 	async function start(startPaths, launchArgument) {//call once at startup, after the settings are read; any other copy returns at once
 		paths = startPaths
@@ -59,13 +57,11 @@ export const useLoginStore = defineStore('login', () => {
 		return queue(async () => {
 			log(`login: the user chose ${value ? 'yes' : 'no'}`)
 			await settings.save()
-			trouble.value = ''
 			try {
 				await read()//what the system says now, which may have changed since the last read, as when the user added ftorrent in System Settings a moment ago
 				if (value && system.value == 'absent') { await loginWrite(paths, argument); log('login: wrote the entry') }//only when there's no entry: one there already, on or switched off, is the system's to keep as it is
 				else if (!value && system.value != 'absent' && await loginRemove()) log('login: removed the entry')//and only when there is one
 			} catch (error) {
-				trouble.value = String(error)
 				log(`login: trouble, ${error}`)
 			}
 			await read()
@@ -79,15 +75,9 @@ export const useLoginStore = defineStore('login', () => {
 			if (platformName == 'macOS') await loginSettings()
 			else await processOpen('ms-settings:startupapps')
 		} catch (error) {
-			trouble.value = `could not open the system's settings, ${error}`
-			log(`login: ${trouble.value}`)
+			log(`login: could not open the system's settings, ${error}`)
 		}
 	}
 
-	let report = computed(() => {//a line for the main page's report, none for a copy that can't start at login
-		if (!installed.value) return []
-		return [`login: ${wanted.value ? 'yes' : 'no'}, the system says ${system.value || 'nothing yet'}${trouble.value ? ', ' + trouble.value : ''}`]
-	})
-
-	return {installed, wanted, differs, report, start, choose, openSettings}
+	return {installed, wanted, differs, start, choose, openSettings}
 })

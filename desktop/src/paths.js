@@ -2,7 +2,7 @@ import {invoke} from '@tauri-apps/api/core'
 
 //where everything is: paths.rs works it out once at startup, before the page exists, and is the long version
 
-export function pathsStatus() { return invoke('paths_status') }//installed or portable; the program's location, the home folder, the data folder and the files in it, and any trouble
+export function pathsStatus() { return invoke('paths_status') }//installed or portable; the program's location, the home folder, the data folder and the files in it
 
 //which copy this is, from the paths pathsStatus answered: each gate asks for the copies it works for, rather than turning away the ones it doesn't. The two aren't opposites, since a copy on the Desktop is neither. And isInstalled isn't paths.mode, which says only which data folder this copy uses, and calls every copy that isn't portable installed
 export function isInstalled(paths) {//whether this copy runs from the folder an install puts ftorrent in, %LOCALAPPDATA%\ftorrent on windows and /Applications on the mac, the only kind that registers its types, starts at login, or updates itself. Each of those names this copy's path to the system or writes over it, so a copy anywhere else, a portable copy on a stick, a build in the repository's target folder, a copy on the Desktop, would leave the system pointing at a file that may move or vanish. The installer's folder is blank on linux, so never there
@@ -11,7 +11,7 @@ export function isInstalled(paths) {//whether this copy runs from the folder an 
 export function isPortable(paths) {//whether this copy keeps everything in the portable folder beside it, which paths.rs found before the page existed
 	return paths?.mode == 'portable'
 }
-export function sayCopy(paths) {//which kind of copy this is, in words for the log and the main page's report
+export function sayCopy(paths) {//which kind of copy this is, in words for the log
 	if (isInstalled(paths)) return 'installed'
 	if (isPortable(paths))  return 'portable'
 	return 'not installed'

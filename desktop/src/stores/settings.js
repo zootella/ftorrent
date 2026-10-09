@@ -7,6 +7,7 @@ import {useIncomingStore} from './incoming.js'
 import {desktopExitHold} from '../desktop.js'
 import {resolveFolder} from '../paths.js'
 import {brandStem} from '../brand.js'
+import {log} from '../log.js'
 
 /*
 The live settings, and the reading and writing of ftorrent.toml around them. settings.js knows what a setting is; this store knows where the file is, what it last said, and when to write it. The rest of the app imports this store and reads settings.section.key, the way it reads any other store, and the one object is filled in at startup rather than replaced, so a component that grabbed it early is looking at the same thing as one that came later.
@@ -19,7 +20,6 @@ A file that can't be read is never written. A missing file is ordinary and gets 
 export const useSettingsStore = defineStore('settings', () => {
 	let settings = reactive(settingsFactory())//the live settings the rest of ftorrent reads, filled in by load and never replaced
 	let paths = ref(null)//where everything is, as paths.rs worked it out; load takes it, and the page and the folder resolution below read it from here
-	let problems = ref([])//what reading or writing the file had to say, for the page to show; empty when the file was fine
 	let folderStates = ref({})//how each resolved download folder stands, by path, as folderLock last answered: held, busy, missing, or trouble with the reason after a colon
 	let fileText = ''//what ftorrent last read from or wrote to the file, to tell when a write would change nothing
 	let heldText = ''//what rust is holding to write at exit, to tell when handing it down again would change nothing
@@ -51,7 +51,10 @@ export const useSettingsStore = defineStore('settings', () => {
 	}
 
 	async function lockFolders() {//take the lock on every download folder that exists, and tell the engine which ones this copy holds; at startup, never making a folder
-		for (let folder of resolvedFolders.value) folderStates.value[folder.path] = await folderLock(folder.path)
+		for (let folder of resolvedFolders.value) {
+			folderStates.value[folder.path] = await folderLock(folder.path)
+			log(`downloads: ${folder.setting} → ${folder.path}, ${folderStates.value[folder.path]}`)//the setting, where it points on this machine, and how it stands
+		}
 		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 	}
 
@@ -66,12 +69,13 @@ export const useSettingsStore = defineStore('settings', () => {
 			}
 		}
 		folderStates.value[path] = state
+		log(`downloads: prepared ${path}, ${state}`)
 		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 		return state
 	}
 
 	async function load(loadedPaths) {//read the settings file and leave it exactly as ftorrent would write it, unless it won't open or won't parse; call once, before anything reads a setting
-		paths.value = loadedPaths//first, and always, so the page can show where everything is, and explain a copy with no data folder
+		paths.value = loadedPaths//first, and always, so everything that asks where things are finds it here, a copy with no data folder included
 		let path = loadedPaths.settings
 		if (!path) { unreadable = true; return }//no data folder: no file to read, and none to write
 		let text = ''
@@ -79,16 +83,16 @@ export const useSettingsStore = defineStore('settings', () => {
 			text = new TextDecoder().decode(new Uint8Array(await diskRead(path)))
 		} catch (error) {
 			unreadable = !String(error).includes('os error 2')//both platforms number a missing file 2; anything else is a lock, a permission, or a disk saying no
-			problems.value.push(unreadable ? `settings: leaving alone ${path}, because reading it said: ${error}` : `settings: first run, so writing ${path} with every setting at its factory value`)//a missing file is the ordinary first run, and says so plainly; anything else is a file that's there and won't open
+			log(unreadable ? `settings: leaving alone ${path}, because reading it said: ${error}` : `settings: first run, so writing ${path} with every setting at its factory value`)//a missing file is the ordinary first run, and says so plainly; anything else is a file that's there and won't open
 		}
 		fileText = text
 
 		let {settings: found, problems: complaints, parsed} = settingsParse(text)
 		for (let section of Object.keys(found)) for (let key of Object.keys(found[section])) settings[section][key] = found[section][key]//fill the live object rather than replacing it, so importers keep theirs
-		for (let complaint of complaints) problems.value.push(`settings: ${complaint}`)
+		for (let complaint of complaints) log(`settings: ${complaint}`)
 		if (!parsed) {//a hand edit with a typo in it, most likely, and one keystroke from right; writing factory values over it would lose everything else in the file
 			unreadable = true
-			problems.value.push(`settings: leaving ${path} exactly as it is, and running on factory settings until it's fixed`)
+			log(`settings: leaving ${path} exactly as it is, and running on factory settings until it's fixed`)
 		}
 
 		if (unreadable) return//the settings in there are the user's, still there, and not ours to write over
@@ -117,14 +121,14 @@ export const useSettingsStore = defineStore('settings', () => {
 			await diskWrite(paths.value.settings, Array.from(new TextEncoder().encode(text)))//disk.rs speaks bytes because it mirrors posix, so this is where text becomes bytes
 			fileText = text
 		} catch (error) {
-			problems.value.push(`settings: writing ${paths.value.settings}: ${error}`)
+			log(`settings: writing ${paths.value.settings}: ${error}`)
 		}
 	}
 
 	function hold(text) {//hand the whole file down to rust, which writes it when ftorrent exits
 		heldText = text
-		desktopExitHold(paths.value.settings, text).catch(error => problems.value.push(`settings: handing the file down to rust: ${error}`))
+		desktopExitHold(paths.value.settings, text).catch(error => log(`settings: handing the file down to rust: ${error}`))
 	}
 
-	return {settings, paths, problems, folderStates, resolvedFolders, heldFolders, load, save, remember, lockFolders, prepareFolder}
+	return {settings, paths, folderStates, resolvedFolders, heldFolders, load, save, remember, lockFolders, prepareFolder}
 })
