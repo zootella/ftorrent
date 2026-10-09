@@ -7,7 +7,7 @@ Closing hides. The close button on Windows and the red button on macOS hide the 
 
 Quitting is on each platform's own terms. On macOS it's Quit in the app menu, ⌘Q, or Quit in the Dock icon's menu, all of which macOS provides, and Quit in the menu bar icon's menu, which ftorrent provides. That icon, the mark as a glyph near the clock, is there for as long as ftorrent runs, the way Dropbox's and Docker Desktop's are, and the Dock icon is there only while the window is: closing the window hides it and moves the app to the Accessory activation policy, the policy of an app that lives in the menu bar, which takes the Dock icon, the ⌘-Tab entry, and the app's menu bar away, so a running ftorrent costs the desktop one small glyph and nothing else; and bringing the window back sets the policy to Regular first, so the window returns as a Regular app's, with its Dock icon, its menu bar, and its place in ⌘-Tab. A Dock tile the user keeps stays through all of this, as a launcher without a dot, which the essay above dock explains, and clicking it, or launching ftorrent again from Spotlight or Launchpad, sends Reopen, which brings the window back. On Windows there's no Dock, so a tray icon stands in: clicking it brings the window back, and its menu has Show and Exit; its icon is the mark as a monochrome glyph, white on a dark taskbar and black on a light one, where Windows programs put their full-color icon, so that ftorrent reads as a glyph beside the system's own, which is on purpose; and the window has a File menu with Exit, the way a Windows client's File menu ends, for whoever never looks at the tray. On a fresh Windows the tray icon starts behind the taskbar's overflow chevron, where Windows puts every new icon until the user drags it out, and a program can't promote its own; so the way back a user finds first is launching ftorrent again, from the Start menu or a pinned button, and that works: the second launch runs for a moment, hands over through the pipe (instance.rs), and leaves, and this copy brings its window forward. Every way of quitting reaches the Exit run event in lib.rs, which stops the engine and, on Windows, takes the tray icon down before the process goes.
 
-The words follow each platform too, wherever its users already know one. Windows says Exit, and macOS says Quit. On Windows the window has the menu bar Windows programs have had since the 1990s, File with Exit, Tools with Options, and Help with About, each with an access key and none with a shortcut, and the tray's menu has Show and Exit; on macOS the app menu is the one macOS provides, and the menu bar icon's menu has Show ftorrent and Quit ftorrent, the words of Apple's own menus, where every app menu has Hide ftorrent, Show is its complement, and Quit ftorrent is the app menu's last item. What ftorrent calls its settings follows the same way: Options on Windows, the classic word, which qBittorrent uses too, and Settings everywhere else, the word macOS has used since Ventura. The menu's words are written here, since Rust builds the menu before any page exists, and the page's words for the same things, like the Options page's title, come from settings.js, where the page asks which platform it's on. Past these few words, the page reads the same on every platform.
+The words follow each platform too, wherever its users already know one. Windows says Exit, and macOS says Quit. On Windows the window has the menu bar Windows programs have had since the 1990s, File with Exit, Tools with Options, and Help with View Help and About, each with an access key, and F1 on View Help the one shortcut, since the system's own Alt+F4 is a close; View Help opens docs.ftorrent.com in the browser, the way Notepad's and WordPad's open theirs, and the tray's menu has Show and Exit; on macOS the menu bar is written out below in the shape Apple's menus take, and Tauri's default did: under the app's name, About ftorrent and Settings… with ⌘, open ftorrent's own pages, the way Help, About and Tools, Options do on Windows, so each platform reaches the same two pages from the place it keeps them, and the rest is the system's own, Services, Hide, Hide Others, Show All, and Quit, then File with Close Window, Edit with Undo through Select All, which is what gives the web view its ⌘C and ⌘V, View with Enter Full Screen, the Window menu, and Help, whose one item, ftorrent Help, opens docs.ftorrent.com in the browser, as Apple's apps open theirs; and the menu bar icon's menu has Show ftorrent and Quit ftorrent, the words of Apple's own menus, where every app menu has Hide ftorrent, Show is its complement, and Quit ftorrent is the app menu's last item. What ftorrent calls its settings follows the same way: Options on Windows, the classic word, which qBittorrent uses too, and Settings everywhere else, the word macOS has used since Ventura. The menu's words are written here, since Rust builds the menu before any page exists, and the page's words for the same things, like the Options page's title, come from settings.js, where the page asks which platform it's on. Past these few words, the page reads the same on every platform.
 
 Focus is taken only when the user asks for the window. bring_forward shows the window, restores it if it's minimized, and gives it focus, and it runs only for a second launch's handoff, the tray or menu bar icon, and the Dock, each of which begins with the user reaching for ftorrent; without the focus, a window brought back by a handoff on Windows can land behind whatever the user was just in. The app never takes focus on its own: at startup the page shows the window and leaves it to the operating system whether a newly launched app comes to the front, which it gets right for the Dock, Finder, Spotlight, and the Start menu, and holds back, on purpose, for a launch it didn't see the user make.
 
@@ -73,10 +73,10 @@ fn dock(app: &AppHandle, present: bool) {
 	if let Err(e) = app.set_activation_policy(if present { Regular } else { Accessory }) { crate::log::log(&format!("the activation policy did not change: {e}")) }//noted and nothing more: the window still hides and shows, with the Dock icon staying however it was
 }
 
-/// On Windows, the menu bar a Windows program has had since the 1990s: File with Exit, Tools with Options, and Help with About. The close button hides, so File, Exit is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Options and About each open a page, which the page's router does; Rust only says which item was picked. Called once from setup
+/// On Windows, the menu bar a Windows program has had since the 1990s: File with Exit, Tools with Options, and Help with View Help and About. The close button hides, so File, Exit is the in-window way to quit, the one that needs no tray icon and that keyboard users reach; µTorrent, qBittorrent, and Deluge all have it. Options and About each open a page, which the page's router does, and View Help opens the documentation site in the browser, which the page does too; Rust only says which item was picked. Called once from setup
 #[cfg(target_os = "windows")]
 pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
-	use tauri::menu::{Menu, MenuItem, Submenu};
+	use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 	use tauri::Emitter;//for emit, which hands the page an event
 	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;//the same id as the tray's Exit, so both reach one handler. The ampersand makes x its access key, underlined while Alt is held, so Alt, F, X quits, the way a Windows File menu does; and no shortcut, since the system's own Alt+F4 is a close, which now hides
@@ -84,11 +84,61 @@ pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 	let options = MenuItem::with_id(app, "settings", "&Options...", true, None::<&str>)?;//windows' classic word for settings, where qbittorrent has it too; the page's settings.js names its page Options on windows to match. The id is the name of the route it opens
 	let tools = Submenu::with_items(app, "&Tools", true, &[&options])?;
 	let about = MenuItem::with_id(app, "about", format!("&About {brand_name}"), true, None::<&str>)?;//the id the name of its route too
-	let help = Submenu::with_items(app, "&Help", true, &[&about])?;//last, the way a Windows menu bar ends
+	let view_help = MenuItem::with_id(app, "help", "&View Help", true, Some("F1"))?;//the words and the key Windows' own Notepad, Paint, and WordPad use for an app's help, which here is the documentation site; the id names what the page does with it
+	let help = Submenu::with_items(app, "&Help", true, &[&view_help, &PredefinedMenuItem::separator(app)?, &about])?;//last, the way a Windows menu bar ends, with About set apart at the bottom as Windows' own Help menus have it
 	app.set_menu(Menu::with_items(app, &[&file, &tools, &help])?)?;//on windows, a menu set on the app is the menu bar of its window
 	app.on_menu_event(|app, event| match event.id().as_ref() {//every menu event reaches this handler and the tray's both, as tauri documents, so each acts only on the ids it knows: the tray's Show falls through here, and exit, in both menus, runs twice, which is harmless, since the second finds nothing left to stop
 		"exit" => app.exit(0),//reaches the Exit run event, which stops the engine
-		route @ ("settings" | "about") => { let _ = app.emit("menu", route); }//the page opens the route of that name; a menu is only there to click once the page has shown the window, so the page is always listening by then
+		chosen @ ("settings" | "about" | "help") => { let _ = app.emit("menu", chosen); }//the page opens the route of that name, or for help, the documentation site; a menu is only there to click once the page has shown the window, so the page is always listening by then
+		_ => {}
+	});
+	Ok(())
+}
+
+/// On macOS, the menu bar, written out item by item in the shape of Tauri's default and Apple's own: under the app's name, About ftorrent and Settings… are ftorrent's, each opening a page, ftorrent Help under Help opens the project's documentation site in the browser, and everything else is a predefined item the system runs itself; called once from setup
+#[cfg(target_os = "macos")]
+pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
+	use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID, WINDOW_SUBMENU_ID};
+	use tauri::Emitter;//for emit, which hands the page an event
+	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
+	let application = Submenu::with_items(app, brand_name, true, &[//the app menu, under the app's name, in Apple's order: about, settings, services, hiding, quit
+		&MenuItem::with_id(app, "about", format!("About {brand_name}"), true, None::<&str>)?,//apple's own words, opening ftorrent's about page in place of the system's about panel; the id is the name of its route, as on windows
+		&PredefinedMenuItem::separator(app)?,
+		&MenuItem::with_id(app, "settings", "Settings…", true, Some("CmdOrCtrl+,"))?,//the word macOS has used since ventura, with the ellipsis and ⌘, every mac app gives it; the counterpart of windows' Tools, Options, opening the same page
+		&PredefinedMenuItem::separator(app)?,
+		&PredefinedMenuItem::services(app, None)?,
+		&PredefinedMenuItem::separator(app)?,
+		&PredefinedMenuItem::hide(app, None)?,
+		&PredefinedMenuItem::hide_others(app, None)?,
+		&PredefinedMenuItem::show_all(app, None)?,
+		&PredefinedMenuItem::separator(app)?,
+		&PredefinedMenuItem::quit(app, None)?,//⌘Q, which reaches the Exit run event like every other way of quitting
+	])?;
+	let file = Submenu::with_items(app, "File", true, &[
+		&PredefinedMenuItem::close_window(app, None)?,//⌘W, which the close handler above turns into a hide, the same as the red button
+	])?;
+	let edit = Submenu::with_items(app, "Edit", true, &[//the system's editing commands, which the web view answers in any text field
+		&PredefinedMenuItem::undo(app, None)?,
+		&PredefinedMenuItem::redo(app, None)?,
+		&PredefinedMenuItem::separator(app)?,
+		&PredefinedMenuItem::cut(app, None)?,
+		&PredefinedMenuItem::copy(app, None)?,
+		&PredefinedMenuItem::paste(app, None)?,
+		&PredefinedMenuItem::select_all(app, None)?,
+	])?;
+	let view = Submenu::with_items(app, "View", true, &[
+		&PredefinedMenuItem::fullscreen(app, None)?,//the system's Enter Full Screen, into a Space of its own, which the essay above window_event says the red button leaves first
+	])?;
+	let window = Submenu::with_id_and_items(app, WINDOW_SUBMENU_ID, "Window", true, &[//tauri's own id for its default Window menu: set_menu finds a submenu by it and tells macOS this is the Window menu, which then lists every open window under it and keeps the list itself
+		&PredefinedMenuItem::minimize(app, None)?,
+		&PredefinedMenuItem::maximize(app, None)?,//zoom, in the menu's own word; and no Close here, which tauri's default repeats from File and Apple's own apps don't
+	])?;
+	let help = Submenu::with_id_and_items(app, HELP_SUBMENU_ID, "Help", true, &[//and the id for its Help menu, so macOS gives it the search field that finds any menu item by name
+		&MenuItem::with_id(app, "help", format!("{brand_name} Help"), true, Some("CmdOrCtrl+Shift+/"))?,//apple's wording and shortcut for an app's own help, which here is the documentation site, opened in the browser by the page; the id names what the page does with it
+	])?;
+	app.set_menu(Menu::with_items(app, &[&application, &file, &edit, &view, &window, &help])?)?;
+	app.on_menu_event(|app, event| match event.id().as_ref() {//the menu bar icon's show and exit reach this handler too, as every menu event does, and are the tray's own
+		chosen @ ("about" | "settings" | "help") => { let _ = app.emit("menu", chosen); }//the page opens the route of that name, or for help, the documentation site
 		_ => {}
 	});
 	Ok(())
@@ -165,12 +215,12 @@ pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 /// On macOS, the menu bar icon that brings the window back and quits; called once from setup. It stands near the clock for as long as ftorrent runs, and it's the way back once the window is hidden and the Dock icon has gone with it, which is also why Quit is here: under the Accessory policy the app has no menu bar for ⌘Q to reach
 #[cfg(target_os = "macos")]
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
-	use tauri::menu::{Menu, MenuItem};
+	use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 	use tauri::tray::TrayIconBuilder;
 	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let show = MenuItem::with_id(app, "show", format!("Show {brand_name}"), true, None::<&str>)?;//Apple's word: every app menu has Hide ftorrent, and Show is its complement throughout the system's menus; no ellipsis, since nothing more is asked
 	let quit = MenuItem::with_id(app, "exit", format!("Quit {brand_name}"), true, None::<&str>)?;//the app menu's own last item, word for word; the id names the call, as the windows menus' does
-	let menu = Menu::with_items(app, &[&show, &quit])?;
+	let menu = Menu::with_items(app, &[&show, &PredefinedMenuItem::separator(app)?, &quit])?;//quit set apart by a line, as every menu bar extra's is
 	TrayIconBuilder::with_id("main")
 		.tooltip(brand_name)
 		.icon(tauri::include_image!("icons/tray-template.png"))//the glyph on an 18 point square at Retina, 36 pixels, decoded as the program is compiled; the path is from the crate's folder, where include_bytes! above counts from this file. tray-icon draws a status item's image 18 points tall whatever its size, so the file is drawn at exactly that and nothing is resized on the way to the menu bar

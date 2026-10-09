@@ -77,7 +77,7 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 		</div>
 
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
-			<p><label class="flex w-fit items-center gap-2"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /><span>Check automatically</span></label></p><!-- clickable on the box and its words only, like RadioGroup's answers -->
+			<p><label class="block w-fit"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /> Check automatically</label></p><!-- a row of text with the box inline in it; clickable on the box and its words only, like RadioGroup's answers -->
 			<p><button :disabled="updateGray" @click="updateClick">{{ updateReady ? `Update ${brandName}` : 'Check for Update' }}</button></p>
 			<p v-if="updateElsewhere">Get the new version at <a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ brandHost }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About page's link does -->
 			<p v-else-if="updateStatus">{{ updateStatus }}</p>

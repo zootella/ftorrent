@@ -3,8 +3,11 @@ import {ref, computed, onMounted, version as vueVersion} from 'vue'
 import {getVersion, getTauriVersion} from '@tauri-apps/api/app'
 import {openUrl} from '@tauri-apps/plugin-opener'
 import {version as viteVersion} from 'vite/package.json'//a build tool, so its version is read as this copy is built, and is the vite that built it
-import {brandName, brandHomepage, brandHost} from '../brand.js'
+import {version as tailwindVersion} from 'tailwindcss/package.json'//the same for tailwind, which the build compiled the stylesheet with
+import {brandName, brandHomepage} from '../brand.js'
+import brandIcon from '../../src-tauri/icons/app-icon-wide.svg'//the mark cropped to the pill, from the file the icon studio writes beside the application icon's sources; vite inlines a file this small as a data uri, which the content security policy allows for images
 import {windowWebviewVersion} from '../window.js'
+import {webviewWords} from '../settings.js'
 import {processId} from '../process.js'
 import {engineStatus} from '../engine.js'
 import {useIncomingStore} from '../stores/incoming.js'
@@ -16,6 +19,7 @@ let pid = ref(0)//and its process id
 let enginePid = ref(0)//the engine's, 0 until it's running
 let tauri = ref('')
 let webview = ref('')
+let homepageWords = brandHomepage.replace(/\/$/, '')//the link's words are the whole address, https://ftorrent.com, without the trailing slash tauri.conf.json writes
 onMounted(async () => {
 	app.value = await getVersion()
 	pid.value = await processId()
@@ -30,12 +34,13 @@ let parts = computed(() => {
 	if (libtorrent && r.webtorrent) libtorrent += ', with WebTorrent'
 	return [
 		[brandName,    withPid(app.value, pid.value)],
-		['Tauri',      tauri.value],
-		['Web view',   webview.value],
-		['Vue',        vueVersion],
-		['Vite',       viteVersion],
 		['libtorrent', withPid(libtorrent, enginePid.value)],//the engine's row, since the engine is the process that holds libtorrent
+		['Web view',   `${webviewWords.engine} ${webview.value}, ${webviewWords.host}`],//the engine and its version, then the system component that carries it, so the number has a name on every platform
 		['Python',     r.python ?? ''],
+		['Tauri',      tauri.value],
+		['Vite',       viteVersion],
+		['Vue',        vueVersion],
+		['Tailwind',   tailwindVersion],
 	]
 })
 function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id}` : version }//a version with its process id after it, once both are known
@@ -45,13 +50,14 @@ function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id
 	<!-- ./src/pages/AboutPage.vue -->
 	<!-- where ftorrent lives on the web, and the parts it's built from, each with its version -->
 	<main>
-		<h1 class="font-brand text-brand">About {{ brandName }}</h1>
-		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ brandHost }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent -->
-		<dl class="grid grid-cols-[auto_1fr] gap-x-4">
+		<dl class="grid grid-cols-[auto_1fr] gap-x-line">
 			<template v-for="[name, version] in parts" :key="name">
 				<dt class="text-muted">{{ name }}</dt>
 				<dd>{{ version }}</dd>
 			</template>
 		</dl>
+		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)" class="block w-fit">{{ homepageWords }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
+		<h1 class="font-brand text-brand text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
+		<img :src="brandIcon" alt="" class="w-mark" /><!-- as wide as the theme says and half as tall, the pill and nothing around it -->
 	</main>
 </template>

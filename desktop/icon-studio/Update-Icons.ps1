@@ -6,7 +6,7 @@ The one command: from brand.svg, donut.svg, glyph.svg, and the sheet, make favic
 What it does, in order:
 	1. Add-Donut.ps1 draws the donut onto every sheet size, sheet-<size>.png to torrent-<size>.png.
 	2. Join-Ico.ps1 packs those into torrent.ico, and a copy goes to src-tauri\icons\torrent.ico, which bundle.resources lands beside the executable for the .torrent file type's icon.
-	3. brand.svg is written out as favicon.svg, the same drawing, for the websites to link inline; and as the three sources the application icon pipeline reads, app-icon.svg, app-icon-mac.svg, and app-icon-tile.svg in src-tauri\icons, which differ only in viewBox: the same drawing seen full bleed, inset for the macOS Dock, and inset for the Windows Start menu tile.
+	3. brand.svg is written out as favicon.svg, the same drawing, for the websites to link inline; and as four files in src-tauri\icons that differ only in viewBox: app-icon.svg, app-icon-mac.svg, and app-icon-tile.svg, the sources the application icon pipeline reads, the same drawing seen full bleed, inset for the macOS Dock, and inset for the Windows Start menu tile; and app-icon-wide.svg, cropped to the pill, which the About page shows.
 	4. Draw-Tray.ps1 renders glyph.svg, the mark as a stencil with the nodes cut out, at every size the notification area draws at and in each of the tray's two colors, tray-white-<size>.png and tray-black-<size>.png, and Join-Ico.ps1 packs each set into its .ico, which go to src-tauri\icons for lifecycle.rs to compile into the program and choose between by the taskbar's theme.
 	5. pnpm icons, in the workspace above, generates every platform's application icon from the three app-icon sources. That is Tauri's own tool, and the only step here that isn't ours.
 	6. The .ico it wrote, src-tauri\icons\icon.ico, comes back here as ftorrent.ico, the Windows application and installer icon, kept beside the other outputs as the record of what shipped.
@@ -25,6 +25,7 @@ $viewBoxes = [ordered]@{
 	'app-icon.svg'      = '0 0 16 16'
 	'app-icon-mac.svg'  = '-1.184 -1.184 18.368 18.368'
 	'app-icon-tile.svg' = '-4.118 -4.118 24.237 24.237'
+	'app-icon-wide.svg' = '0 4 16 8' #the pill's own bounds, the one window that isn't square, so the page can show the mark with no clear space above or below it; the generator never reads this one
 }
 
 "donut onto the sheets"
@@ -39,7 +40,10 @@ $utf8 = New-Object Text.UTF8Encoding $false #plain utf-8, no byte order mark; po
 [IO.File]::WriteAllText((Join-Path $PSScriptRoot 'favicon.svg'), $brand, $utf8) #the brand as it is
 "wrote    favicon.svg"
 foreach ($name in $viewBoxes.Keys) {
-	[IO.File]::WriteAllText((Join-Path $icons $name), ($brand -replace 'viewBox="[^"]*"', ('viewBox="' + $viewBoxes[$name] + '"')), $utf8) #the same drawing with only its viewBox swapped
+	$box = $viewBoxes[$name] -split ' ' #the window's x, y, width, and height
+	$svg = $brand -replace 'viewBox="[^"]*"', ('viewBox="' + $viewBoxes[$name] + '"') #the same drawing with its viewBox swapped
+	$svg = ([regex]'height="[^"]*"').Replace($svg, ('height="' + [int](1024 * $box[3] / $box[2]) + '"'), 1) #and the file's height following the window's shape, so the square windows keep 1024 by 1024 and the wide one is 1024 by 512; without this an img would letterbox the wide view back into a square. The first match only, which is the root's: -replace would change every height in the file, the pill's rect among them
+	[IO.File]::WriteAllText((Join-Path $icons $name), $svg, $utf8)
 	"wrote    $name to src-tauri\icons"
 }
 

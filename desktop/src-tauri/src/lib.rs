@@ -111,8 +111,8 @@ pub fn run() {
 			engine::engine_start(app.handle());//so the engine is already up, or already known to have failed, by the time the page asks
 			#[cfg(any(target_os = "windows", target_os = "macos"))]
 			lifecycle::tray_install(app.handle())?;//the tray on windows and the menu bar icon on macos, where a hidden ftorrent is brought back and quit
-			#[cfg(target_os = "windows")]
-			lifecycle::menu_install(app.handle())?;//and the window's own File menu is the other way to quit, the one that needs no tray
+			#[cfg(any(target_os = "windows", target_os = "macos"))]
+			lifecycle::menu_install(app.handle())?;//on windows the window's own menu bar, whose File menu is the other way to quit, the one that needs no tray; on macos the menu bar in Apple's shape, with About ftorrent and Settings… opening ftorrent's own pages
 			Ok(())
 		})
 		.on_window_event(lifecycle::window_event)//the close button hides the window rather than closing it

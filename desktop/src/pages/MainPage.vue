@@ -102,7 +102,7 @@ async function copyReport() {
 		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
 
 		<div class="w-full">
-			<textarea readonly :value="report" :rows="report.split('\n').length * 2" class="block w-full mb-2 font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider; twice as many rows as lines, since the long ones wrap onto a second, so the box shows the whole report without scrolling -->
+			<textarea readonly :value="report" :rows="report.split('\n').length * 2" class="block w-full font-mono wrap-anywhere"></textarea><!-- wrap-anywhere because a path is one long word, and should wrap rather than push the window wider; twice as many rows as lines, since the long ones wrap onto a second, so the box shows the whole report without scrolling -->
 			<button type="button" @click="copyReport">{{ copied ? 'Copied' : 'Copy' }}</button>
 		</div>
 	</main>
