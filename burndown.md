@@ -30,6 +30,8 @@ At that point a lot is in the air at once. The items are related, all in one top
 
 **Claude runs the process.** The user doesn't track what's next or what's left. When the user resolves an item, Claude takes up the next one in that same turn: names it and starts on it. Claude never moves on before the user says the item is resolved, which rushes the gate. And Claude never leaves the next step unspoken, with everyone standing there and nobody stepping forward. Every turn ends with exactly what the item needs from the user: a decision, a test to run, or "is this one resolved?"
 
+**An item is something still to address, clean up, or change.** The standard process is not on the list: the smoke test, the diff and the review, the commit, a letter to the other box, the docs upload, the feedback to send. Those are known, and they happen in their order without being named. Neither is anything finished. A thing done and verified has stopped being an item, and it is not carried forward as a reminder, a handoff to watch, or a step that follows the commit. When the user asks what remains before some step, that step is not on the list either. The list holds only what still has to be worked, and when that is nothing, the burn-down is over and the process takes it from there.
+
 **It ends when nothing remains.** When the last item is resolved, Claude says so in a sentence, and the burn-down is over. Commits wait until then: the user reviews and commits once, at the end, so no commit message is proposed while items remain.
 
 ## Why it works

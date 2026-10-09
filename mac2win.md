@@ -1,53 +1,22 @@
-# Windows: one-click update
+# Windows: four clicks to confirm after the opener left
 
 A note for the Windows session. It's public and committed, so it names nobody: in anything written back here, say "the user." Git is read-only on both boxes, and the user makes every commit; report results exactly as they came out, failures included; never regenerate a lockfile.
 
-## What's asked
+## What changed
 
-The Windows half of one-click update. An installed copy finds a newer version, the user clicks one button, the window goes away, and it comes back updated. The Mac half is built, tested, and recorded. This letter says what it is and what it learned on the way, and leaves the Windows design to you: do the research first, the way the Mac did, reading how the established Windows updaters replace a running program before deciding how ours will, then build it, test it, and record it. The thinking should be fresh and Windows's own; what carries over is the priorities and the shape.
+The page no longer reaches the operating system through Tauri's plugins. The opener and dialog plugins are gone from `Cargo.toml`, `lib.rs`, `package.json`, and `capabilities/default.json`, which now holds `core:default` and the five window grants and nothing else. In their place `process.rs` has `process_open`, one command that opens a file or an address with the program the system has for it, the way a double-click does, through the `open` crate that the opener plugin was a wrapper over. Its `shellexecute-on-windows` feature is on, so on Windows that is a direct `ShellExecuteEx` call rather than the PowerShell process the plugin used to start. The essay in `lib.rs` and the README's plugins section say why.
 
-## The priorities
+Every link the page used to open through the plugin now goes through that command: View Help in the Help menu, the two Windows Settings pages, and the home page link on the About page and the Settings page. None of it has run on Windows yet, and the Windows half of the `open` crate has never compiled here.
 
-Reliability first, simplicity second, and the moment the user sees third. A user who waits a second with no window and then sees ftorrent back, updated, is fine. A user who meets a broken app or a strange system dialog is done with ftorrent. Where a smoother moment would cost a step that could fail strangely, the plain step wins, and one flow that always runs beats two that each run sometimes.
+## What to confirm
 
-## What the Mac learned
+- **It builds.** `cargo check` from `src-tauri`, then `pnpm compile`. The crate's Windows path with the feature on is the part that has never compiled on this side.
+- **View Help.** From the Help menu, and by F1 with the window focused, docs.ftorrent.com opens in the default browser, with no console flash. F1 was written on the Mac and has never been pressed on Windows.
+- **The two Settings pages.** On the Settings page, the start-at-sign-in control's link opens Windows Settings at Startup Apps. The associations bar's link, when the bar shows, opens Default apps at ftorrent's own page, with the name that carries a query string arriving intact.
+- **The home page.** The link at the foot of the About page opens ftorrent.com in the default browser.
 
-The first Mac version had the running copy move its own bundle aside, move the newer one into place, and then quit. It worked once, and then showed why the established updaters don't do it that way. A running program whose files move out from under it keeps running, but loses what the system tied to its location, which on the Mac is every privacy grant, for the rest of that process's life. The file manager, having watched files shuffled beneath it, kept a stale view and showed the user a dialog about an item named "". A fixed wait for the old copy to finish quitting could give up on a slow quit and leave nothing running. And how the new copy gets launched decides which process the system holds responsible for it afterward, which on the Mac decides whose name is on its privacy prompts.
-
-The rebuilt sequence follows Sparkle, the updater most Mac apps outside the App Store use, and each step is there for one of those reasons: the old copy quits before its files are touched, and the installer waits for the signal that it has truly ended, however long that takes; the switch is one atomic exchange under the same name, which happens whole or not at all, so a failure leaves the installed copy exactly where it was and the file manager sees a single replacement; the new copy is launched through the system's own launcher, by path, so it stands on its own; and whatever stops the installer, it opens whichever copy is at the installed path, the newer one or the old one, so a click never leaves nothing running. Two more rules shaped it. Refuse up front rather than fall back: a copy that can't replace itself never offers the button, and when a check finds a newer version, its status line says to get it at ftorrent.com, with a link that opens the browser. And stage in one place: the download and the unpack always happen in a temporary folder in ftorrent's own data folder, never the system's temporary folder, and the cases where that can't work are turned away before the download rather than handled after it.
-
-Expect each of these to have a Windows counterpart with a different mechanism underneath: what a running executable's files allow and refuse, what the shell keeps and when it notices a change, how a program should be started so the system treats it as the user's own and shows no console, what antivirus heuristics and SmartScreen make of an unsigned program that downloads an executable and runs it, what a launch from the Start menu does while the files are being replaced, and what an update has to leave intact, the shortcut, a taskbar pin, the associations, the login entry. Find out what the established Windows updaters do about each, and let that decide the design.
-
-## Where the Mac half lives
-
-`update.md` at the repository root is the what and the why. The essay at the top of `desktop/src/update.js` is the full sequence with every path it touches, and the reasons for the order; `desktop/src/stores/update.js` is the check, the button, and the status line. `desktop/src-tauri/src/install.rs` is the installer's half, the moment that runs before any page exists, and it's macOS only; its essay says how a startup-moment sequence fits the rule in `lib.rs` that Rust stays general.
-
-Everything else Rust offers is general commands, and the page sequences them: `net.rs` fetches an https address, or saves it to a file and answers its SHA-256; `disk.rs` has `disk_rmtree`, `disk_space`, `disk_access`, and a device number on `disk_stat`; `process.rs` runs a program and waits, or starts one and lets it go; `lifecycle.rs` quits the way the menus do; and `instance.rs` holds the lock, serves the pipe, and knows `--exit` and `--update`. The Windows halves of `process_start`, `disk_space`, and `disk_access` are written but have never compiled, since only Windows can; `disk_access` answers from the read-only attribute alone, and the device number is 0 there. Make real whichever of these Windows turns out to need, and keep every command general.
-
-On Windows today the platform-general part already runs: the check reads `https://ftorrent.com/ftorrent.exe.json`, and the click makes `%LOCALAPPDATA%\com.ftorrent.ftorrent\update`, downloads `ftorrent.exe` into it, checks the hash, and starts that file with no arguments, detached and with no console, after which the setup program in `win-setup/setup.c` is the orchestrator: it closes the running copy through the instance pipe with `--exit`, waits for the files to come free, writes over the install folder, and starts the new copy. Whether that is already the right shape, or needs changing in the light of the research, is yours to decide. `updateInstallable` in `update.js` turns Windows away for now, so the button is never offered there, and a newer version shows the ftorrent.com link instead.
-
-## What's yours to do
-
-- The research, with the sources named, written up in `update.md`'s Windows section the way its Mac section records Sparkle's rules, each tied to what would break without it.
-- The design and the build, in the same shape as the Mac's: the page sequences general commands, and Rust gains only what Windows alone can do. If Windows needs a startup-moment piece of its own, it lives beside `install.rs` by the same rule; if the setup program is the whole answer, say so.
-- One `update.js`, not two: Windows and Mac sections inside it where they differ, and its essay gains a Windows list of places beside the Mac's, in the same form, with the real paths and folders ending in a backslash, and Windows's own pitfalls beside the Mac's in the paragraph on why.
-- What `updateInstallable` checks on Windows, and turning it on there.
-- The test, and the record of it.
-
-## How to check it
-
-Both copies need today's code, so the test takes two builds, the old copy one version below the release: `pnpm installer` at the lower version and install it from `pnpm reveal`; then raise `version` in `desktop/src-tauri/tauri.conf.json`, `pnpm installer`, `pnpm hash`, and `pnpm upload`. Then, with the log on, `[log] record = true` in the old copy's `ftorrent.toml`, writing to `%USERPROFILE%\ftorrent-logs`:
-
-- **The click:** in Settings, Check for Update turns into Update ftorrent with the release named below it. Click it. The window goes, and the new one opens in the same place; the logs' timestamps say how long that took.
-- **What's installed:** `%LOCALAPPDATA%\ftorrent\ftorrent.exe` reports the release's version, and the Start menu shortcut, a taskbar pin, the associations, and the login entry are all still in place and still open it.
-- **No prompts, no console:** neither SmartScreen nor UAC appears, no console window flashes, and nothing lands in Windows Security's protection history during the download or the install.
-- **The logs:** the old copy's file shows the download and the hash; the new copy's shows it starting at the release's version and removing the temporary folder.
-- **The refusals:** make the replacement fail on purpose, by whatever Windows offers, and confirm the old copy comes back on its own; and make a copy that can't replace itself, and confirm the button stays away and the ftorrent.com link appears.
-
-## What changes on the page
-
-Nothing new: the button, its words, the status line, and the ftorrent.com link are written and approved, and errors go to the log, never to the page. If something looks like it needs new words on screen, ask the user first.
+If any of the four does nothing or opens the wrong thing, say exactly what happened. `ShellExecuteEx` prefers COM initialized on the calling thread and the crate doesn't do that, so a failure there is the first suspect; the fallback is the feature flag off in `Cargo.toml`, which takes the crate's PowerShell path, and that is a decision for the user, not a fix to make quietly.
 
 ## When it's done
 
-Rewrite the Windows section of `update.md` to say what's built and what the research settled, and shrink its Untested section to what's still open. A letter back to the Mac, `win2mac.md`, only if the Mac has something to do.
+A pass needs no letter back. A `win2mac.md` only if something failed or the Mac has something to do. This letter is spent either way.
