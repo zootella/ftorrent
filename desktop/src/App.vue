@@ -1,6 +1,6 @@
 <script setup>
 import {useAssociationsStore} from './stores/associations.js'
-import {brandName, brandDocs} from './brand.js'
+import {brandName, urlHelp} from './brand.js'
 import {settingsName} from './settings.js'
 import {listen} from '@tauri-apps/api/event'
 import {processOpen} from './process.js'
@@ -8,7 +8,7 @@ import {useRouter} from 'vue-router'
 
 let associations = useAssociationsStore()//the banner's question and answers; the store decides when it's up
 let router = useRouter()
-listen('menu', event => event.payload == 'help' ? processOpen(brandDocs) : router.push({name: event.payload}))//the menus' Options, Settings, and About, which rust passes up as the name of the route to open, and Help, which opens the documentation site in the system's browser; here in the shell, which lives as long as the app
+listen('menu', event => event.payload == 'help' ? processOpen(`https://${urlHelp}`) : router.push({name: event.payload}))//the menus' Options, Settings, and About, which rust passes up as the name of the route to open, and Help, which opens the documentation site in the system's browser; here in the shell, which lives as long as the app
 </script>
 
 <template>

@@ -11,7 +11,7 @@ Every link the page used to open through the plugin now goes through that comman
 ## What to confirm
 
 - **It builds.** `cargo check` from `src-tauri`, then `pnpm compile`. The crate's Windows path with the feature on is the part that has never compiled on this side.
-- **View Help.** From the Help menu, and by F1 with the window focused, docs.ftorrent.com opens in the default browser, with no console flash. F1 was written on the Mac and has never been pressed on Windows.
+- **View Help.** From the Help menu, and by F1 with the window focused, docs.ftorrent.com/help opens in the default browser and forwards to the documentation site, with no console flash. F1 was written on the Mac and has never been pressed on Windows.
 - **The two Settings pages.** On the Settings page, the start-at-sign-in control's link opens Windows Settings at Startup Apps. The associations bar's link, when the bar shows, opens Default apps at ftorrent's own page, with the name that carries a query string arriving intact.
 - **The home page.** The link at the foot of the About page opens ftorrent.com in the default browser.
 

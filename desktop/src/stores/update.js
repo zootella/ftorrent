@@ -3,7 +3,7 @@ import {defineStore} from 'pinia'
 import {getVersion} from '@tauri-apps/api/app'
 import {useSettingsStore} from './settings.js'
 import {isInstalled} from '../paths.js'
-import {brandHomepage} from '../brand.js'
+import {urlHome} from '../brand.js'
 import {netGet} from '../net.js'
 import {updateFile, updateLimit, updateInstallable, updateClean, updateInstall} from '../update.js'
 import {Time, sayMoment} from '../time.js'
@@ -33,7 +33,7 @@ export const useUpdateStore = defineStore('update', () => {
 	let installing = ref(false)//from the click until this copy quits, or the install fails
 	let installable = ref(false)//whether this copy can be replaced in place, which update.js decides at startup: an installed copy, which on the mac this user can also write. With it false, a newer version found turns the status line into a link to the web site
 	let newer = computed(() => !!found.value && !!running.value && isNewer(found.value.version, running.value))
-	const updateUrl = new URL(updateFile, brandHomepage).href
+	const updateUrl = `https://${urlHome}/${updateFile}`//the sidecar and the file both live at the apex
 	const sidecarUrl = updateUrl + '.json'
 	let paths = null
 

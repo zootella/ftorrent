@@ -3,7 +3,7 @@ import {ref, computed, onMounted, version as vueVersion} from 'vue'
 import {getVersion, getTauriVersion} from '@tauri-apps/api/app'
 import {version as viteVersion} from 'vite/package.json'//a build tool, so its version is read as this copy is built, and is the vite that built it
 import {version as tailwindVersion} from 'tailwindcss/package.json'//the same for tailwind, which the build compiled the stylesheet with
-import {brandName, brandHomepage} from '../brand.js'
+import {brandName, urlHome} from '../brand.js'
 import brandIcon from '../../src-tauri/icons/app-icon-wide.svg'//the mark cropped to the pill, from the file the icon studio writes beside the application icon's sources; vite inlines a file this small as a data uri, which the content security policy allows for images
 import {windowWebviewVersion} from '../window.js'
 import {webviewWords} from '../settings.js'
@@ -18,7 +18,7 @@ let pid = ref(0)//and its process id
 let enginePid = ref(0)//the engine's, 0 until it's running
 let tauri = ref('')
 let webview = ref('')
-let homepageWords = brandHomepage.replace(/\/$/, '')//the link's words are the whole address, https://ftorrent.com, without the trailing slash tauri.conf.json writes
+let homeLink = `https://${urlHome}`//the link's words are the whole address, https://ftorrent.com, and the same string is where it goes
 onMounted(async () => {
 	app.value = await getVersion()
 	pid.value = await processId()
@@ -55,7 +55,7 @@ function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id
 				<dd>{{ version }}</dd>
 			</template>
 		</dl>
-		<a :href="brandHomepage" @click.prevent="processOpen(brandHomepage)" class="block w-fit">{{ homepageWords }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
+		<a :href="homeLink" @click.prevent="processOpen(homeLink)" class="block w-fit">{{ homeLink }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
 		<h1 class="font-brand text-brand text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
 		<img :src="brandIcon" alt="" class="w-mark" /><!-- as wide as the theme says and half as tall, the pill and nothing around it -->
 	</main>
