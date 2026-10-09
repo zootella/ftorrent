@@ -17,4 +17,4 @@ export const brandStem        = parseToml(cargoManifest).package.name     //the 
 export const brandDescription = tauriConfiguration.bundle.shortDescription//the one line the installers and the settings app show beside the name
 export const brandHomepage    = tauriConfiguration.bundle.homepage        //the project's web address, https://ftorrent.com/, which the about page links to
 export const brandHost        = new URL(brandHomepage).host                //the address the way a person says it, ftorrent.com, for a link's words and the settings file's comments
-export const brandDocs        = `https://docs.${brandHost}/`                //the project's writing, docs.ftorrent.com, which the Help menu opens; a fork whose documentation lives elsewhere writes its own address here, and in the opener's scope in capabilities/default.json beside it
+export const brandDocs        = `https://docs.${brandHost}/`                //the project's writing, docs.ftorrent.com, which the Help menu opens; a fork whose documentation lives elsewhere writes its own address here

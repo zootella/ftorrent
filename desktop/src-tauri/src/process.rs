@@ -32,3 +32,9 @@ pub async fn process_start(program: String, args: Vec<String>) -> Result<(), Str
 		command.spawn().map(|_| ()).map_err(|e| format!("could not start {program}: {e}"))//dropping the child lets it run on; this process never waits on it
 	}).await
 }
+
+/// Open this file, folder, or address with the program the system has for it, the way a double-click in the file manager would, and let that program go: a .txt file opens in the text editor, an https address in the browser, an ms-settings address in Windows Settings; through ShellExecuteEx on windows, /usr/bin/open and launch services on a mac, and xdg-open on linux, each the system's own table of what opens what. Answered once the system has taken it, with no wait on the program, and on the blocking pool because taking it can mean starting a browser
+#[command]
+pub async fn process_open(target: String) -> Result<(), String> {
+	run_blocking(move || open::that_detached(&target).map_err(|e| format!("could not open {target}: {e}"))).await
+}

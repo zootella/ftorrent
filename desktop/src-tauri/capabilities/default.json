@@ -11,13 +11,6 @@
 		"core:window:allow-set-position",
 		"core:window:allow-set-size",
 		"core:window:allow-maximize",
-		"core:window:allow-set-theme",
-		"opener:allow-reveal-item-in-dir",
-		{
-			"identifier": "opener:allow-open-url",
-			"allow": [{"url": "ms-settings:defaultapps*"}, {"url": "ms-settings:startupapps"}, {"url": "https://ftorrent.com/*"}, {"url": "https://docs.ftorrent.com/*"}]
-		},
-		"dialog:allow-open",
-		"dialog:allow-save"
+		"core:window:allow-set-theme"
 	]
 }

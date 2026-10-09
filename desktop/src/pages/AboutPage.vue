@@ -1,14 +1,13 @@
 <script setup>
 import {ref, computed, onMounted, version as vueVersion} from 'vue'
 import {getVersion, getTauriVersion} from '@tauri-apps/api/app'
-import {openUrl} from '@tauri-apps/plugin-opener'
 import {version as viteVersion} from 'vite/package.json'//a build tool, so its version is read as this copy is built, and is the vite that built it
 import {version as tailwindVersion} from 'tailwindcss/package.json'//the same for tailwind, which the build compiled the stylesheet with
 import {brandName, brandHomepage} from '../brand.js'
 import brandIcon from '../../src-tauri/icons/app-icon-wide.svg'//the mark cropped to the pill, from the file the icon studio writes beside the application icon's sources; vite inlines a file this small as a data uri, which the content security policy allows for images
 import {windowWebviewVersion} from '../window.js'
 import {webviewWords} from '../settings.js'
-import {processId} from '../process.js'
+import {processId, processOpen} from '../process.js'
 import {engineStatus} from '../engine.js'
 import {useIncomingStore} from '../stores/incoming.js'
 
@@ -56,7 +55,7 @@ function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id
 				<dd>{{ version }}</dd>
 			</template>
 		</dl>
-		<a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)" class="block w-fit">{{ homepageWords }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
+		<a :href="brandHomepage" @click.prevent="processOpen(brandHomepage)" class="block w-fit">{{ homepageWords }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
 		<h1 class="font-brand text-brand text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
 		<img :src="brandIcon" alt="" class="w-mark" /><!-- as wide as the theme says and half as tall, the pill and nothing around it -->
 	</main>

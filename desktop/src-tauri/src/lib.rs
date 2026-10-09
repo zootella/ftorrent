@@ -5,13 +5,15 @@ The page above holds the application. It decides what a setting is, which folder
 
 This is safer, not only tidier. Logic that lives in one place stays true. Logic split across the boundary, half in the page and half down here, drifts apart as each half is edited alone, and the gap between the two halves is where bugs live; a rule or a guard in Rust that the page also knows is a second copy of the same knowledge, and second copies go stale. What makes it right for Rust to follow the page's commands without second-guessing them is that the page runs only ftorrent's own code: untrusted text, like file names, torrent metadata, and what peers send, reaches it only through Vue's escaping interpolation and never becomes script, and the Content-Security-Policy in tauri.conf.json keeps foreign script out of the web view even if that wall someday cracks. So the commands here hold no guards of their own.
 
+The commands here are also the page's only road into the machine. Tauri's plugins would give it a second one, each granted to the page in capabilities/default.json, and ftorrent registers none and grants none: that file holds Tauri's core set and the window's five grants, and nothing else, so what the page can ask of the system is read here, in one list, in code written to one rule, rather than in a permissions file in another language with scopes of its own, and widening the page's reach is a Rust change reviewed as code rather than an edit to a policy meant to be left alone. Where a plugin's Rust half does the work well, a command calls it, as process_open calls the open crate that Tauri's opener plugin is a wrapper over, and a file dialog will call the dialog plugin's builder the day a feature needs one.
+
 Rust grows when the operating system is the only one who can do the thing, or when the page can't be there yet. The instance lock and the handoff between launches run in setup, before any page exists, and so do starting the engine and the installer's half of an update, install.rs, which runs in a copy that never gets a page at all and takes what the page decided from its command line. The tray, the menus, and hiding the window instead of closing it are platform plumbing only Rust can reach. Registry calls, file locks, and process pipes need native calls. And some facts belong down here, because they're facts about the machine rather than decisions: where the program is, where the user's home is, whether two paths name the same file, whether a queue overflowed. In each case Rust offers the operation in general terms, the way registry_get and registry_set read and write the registry without knowing a single key ftorrent uses, and the page, or the moment of startup, decides what to do with it.
 
 The test for a new command is to describe it without naming a ftorrent feature. "Lock this folder" passes. "Lock the download folders in the settings, and let go of the ones no longer listed" fails, and the second half of it belongs to the page. A command that fails the test gets split: the general operation stays here, and the decision goes up.
 
 A command also takes one thing: one path, one lock, one value, one line. A list stays in the page, which calls down once per item and owns the order and how many are in flight, so no batch command grows here. The rule is about this boundary and nothing past it: engine_send carries one line, but that line is whatever the page built, and where libtorrent itself takes many things in a single call, the engine makes that call.
 
-A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, locks.rs, login.rs, net.rs, process_run and process_start, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
+A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, locks.rs, login.rs, net.rs, process_run, process_start, and process_open, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
 */
 
 mod disk;//compile disk.rs as a module named disk: file commands the page calls, thin wrappers over std::fs
@@ -28,7 +30,7 @@ mod log;//and log.rs: lines from anywhere, appended to a file as they happen, wh
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
 mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file
-mod process;//and process.rs: other programs, run and waited for, or started and let go, and this process's own id
+mod process;//and process.rs: other programs, run and waited for, started and let go, or asked to open a file or an address the way a double-click would, and this process's own id
 mod install;//and install.rs: a newer copy putting itself in place of this one, on a mac, in the moment before it would take the lock
 
 use tauri::Manager;//brings manage into scope, for handing the paths to tauri's shared state in setup
@@ -42,8 +44,6 @@ pub(crate) async fn run_blocking<T: Send + 'static>(body: impl FnOnce() -> Resul
 pub fn run() {
 	log::log_panics();//first of all, so every panic from here on leaves its location in the log, whichever thread it's on and whatever happens to the process next
 	tauri::Builder::default()
-		.plugin(tauri_plugin_opener::init())
-		.plugin(tauri_plugin_dialog::init())
 		.manage(engine::Engine::default())//the engine's process and status, shared state any command can reach
 		.manage(instance::Instance::default())//this copy's lock, and what has reached it
 		.manage(locks::Locks::default())//the file locks this process holds for the page, kept open so they stay held
@@ -93,6 +93,7 @@ pub fn run() {
 				process::process_id,//and in process.rs
 				process::process_run,
 				process::process_start,
+				process::process_open,
 				lifecycle::lifecycle_exit,//and in lifecycle.rs
 			]
 		)

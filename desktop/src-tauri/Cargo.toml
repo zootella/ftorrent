@@ -20,8 +20,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }#tray-icon for the windows tray and the mac menu bar icon lifecycle.rs builds
-tauri-plugin-opener = "2"
-tauri-plugin-dialog = "2"
+open = { version = "5", features = ["shellexecute-on-windows"] }#opens a file or an address with the program the system has for it, for process_open: ShellExecuteEx on windows, which the feature turns on in place of a powershell process, /usr/bin/open on a mac, and xdg-open on linux; tauri's opener plugin is a wrapper over this crate
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ureq = "3"#the https requests net.rs makes for the page, with its default TLS, rustls and Mozilla's roots compiled in

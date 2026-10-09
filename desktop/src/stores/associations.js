@@ -1,7 +1,7 @@
 import {ref, computed} from 'vue'
 import {defineStore} from 'pinia'
 import {getCurrentWindow} from '@tauri-apps/api/window'
-import {openUrl} from '@tauri-apps/plugin-opener'
+import {processOpen} from '../process.js'
 import {useSettingsStore} from './settings.js'
 import {thisCopy, register, whoOpens, typeNames, applicationName} from '../associate.js'
 import {isInstalled} from '../paths.js'
@@ -88,7 +88,7 @@ export const useAssociationsStore = defineStore('associations', () => {
 
 	async function openWindowsSettings() {//windows' own Default apps, at ftorrent's page on windows 11
 		try {
-			await openUrl(`ms-settings:defaultapps?registeredAppUser=${encodeURIComponent(applicationName)}`)//the name ftorrent registered under, escaped as Microsoft asks, since a fork's name may hold a space
+			await processOpen(`ms-settings:defaultapps?registeredAppUser=${encodeURIComponent(applicationName)}`)//the name ftorrent registered under, escaped as Microsoft asks, since a fork's name may hold a space
 		} catch (error) {
 			trouble.value = `could not open Windows Settings, ${error}`
 		}

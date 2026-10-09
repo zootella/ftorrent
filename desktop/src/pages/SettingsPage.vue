@@ -4,7 +4,7 @@ import {useSettingsStore} from '../stores/settings.js'
 import {useAssociationsStore} from '../stores/associations.js'
 import {useLoginStore} from '../stores/login.js'
 import {useUpdateStore} from '../stores/update.js'
-import {openUrl} from '@tauri-apps/plugin-opener'
+import {processOpen} from '../process.js'
 import {brandName, brandHomepage, brandHost} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
@@ -79,7 +79,7 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="block w-fit"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /> Check automatically</label></p><!-- a row of text with the box inline in it; clickable on the box and its words only, like RadioGroup's answers -->
 			<p><button :disabled="updateGray" @click="updateClick">{{ updateReady ? `Update ${brandName}` : 'Check for Update' }}</button></p>
-			<p v-if="updateElsewhere">Get the new version at <a :href="brandHomepage" @click.prevent="openUrl(brandHomepage)">{{ brandHost }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About page's link does -->
+			<p v-if="updateElsewhere">Get the new version at <a :href="brandHomepage" @click.prevent="processOpen(brandHomepage)">{{ brandHost }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About page's link does -->
 			<p v-else-if="updateStatus">{{ updateStatus }}</p>
 		</div>
 
