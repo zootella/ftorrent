@@ -115,7 +115,7 @@ pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 		&PredefinedMenuItem::quit(app, None)?,//⌘Q, which reaches the Exit run event like every other way of quitting
 	])?;
 	let file = Submenu::with_items(app, "File", true, &[
-		&PredefinedMenuItem::close_window(app, Some("Close"))?,//⌘W, which the close handler above turns into a hide, the same as the red button; Apple's word for it, where the menu library's own label on the mac is Close Window, Finder's word and nobody else's
+		&PredefinedMenuItem::close_window(app, None)?,//⌘W, which the close handler above turns into a hide, the same as the red button. Close Window, the library's own label, rather than Close: Finder, Safari, and Transmission say Close Window where something other than a window could be meant, and once Open… sits above this for a .torrent file, the window is what this closes
 	])?;
 	let edit = Submenu::with_items(app, "Edit", true, &[//the system's editing commands, which the web view answers in any text field
 		&PredefinedMenuItem::undo(app, None)?,
@@ -139,6 +139,7 @@ pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 		&MenuItem::with_id(app, "help", format!("{brand_name} Help"), true, Some("CmdOrCtrl+Shift+/"))?,//apple's wording and shortcut for an app's own help, which here is the documentation site, opened in the browser by the page; the id names what the page does with it
 	])?;
 	app.set_menu(Menu::with_items(app, &[&application, &file, &edit, &view, &window, &help])?)?;
+	if let Some(items) = menu_items("Edit") { for item in items.iter() { item.setEnabled(false) } }//every Edit item starts gray, and the page lights each one when something on it can answer, through menu_enable below; the menu library turns off AppKit's own asking of the window, and offers no switch for the system's items, so this reaches AppKit directly
 	app.on_menu_event(|app, event| match event.id().as_ref() {//the menu bar icon's show and exit reach this handler too, as every menu event does, and are the tray's own
 		chosen @ ("about" | "settings") => { bring_forward(app); let _ = app.emit("menu", chosen); }//the window first, shown, unminimized, and focused, so a page chosen from the menu bar while the window sits minimized in the Dock is seen; then the page opens the route of that name
 		"help" => { let _ = app.emit("menu", "help"); }//the page opens the documentation site in the browser, and the window stays where it is, minimized or not, as a mac app's help leaves it
@@ -213,6 +214,32 @@ pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 		if let (Some(tray), Some(icon)) = (handle.tray_by_id("main"), tray_icon(taskbar_light())) { let _ = tray.set_icon(Some(icon)); }//set_icon runs on the main thread whichever thread asks, which this one isn't
 	});
 	Ok(())
+}
+
+/// On macOS, the items of the menu bar menu with this title, from AppKit's own menu bar; none when there is no menu bar yet, or this isn't the main thread, where AppKit's menus live and where tauri runs a plain command
+#[cfg(target_os = "macos")]
+fn menu_items(menu: &str) -> Option<objc2::rc::Retained<objc2_foundation::NSArray<objc2_app_kit::NSMenuItem>>> {
+	let marker = objc2::MainThreadMarker::new()?;
+	let bar = objc2_app_kit::NSApplication::sharedApplication(marker).mainMenu()?;
+	Some(bar.itemWithTitle(&objc2_foundation::NSString::from_str(menu))?.submenu()?.itemArray())
+}
+
+/// Enable or disable one item of the menu bar, by the titles the bar shows for its menu and for it; the page says which of the Edit menu's items can answer right now, a text field's Cut and Paste, a selection's Copy, and one day a torrent list's. Plain, since AppKit answers from memory and asks to be called on the main thread. Only the Mac has a menu bar the page reaches this way: Windows' menu bar has nothing the page lights, and Linux has none
+#[tauri::command]
+pub fn menu_enable(menu: String, item: String, enabled: bool) -> Result<(), String> {
+	#[cfg(target_os = "macos")]
+	{
+		let items = menu_items(&menu).ok_or(format!("no menu {menu}"))?;
+		let title = objc2_foundation::NSString::from_str(&item);
+		let found = items.iter().find(|candidate| candidate.title().isEqualToString(&title)).ok_or(format!("no item {item} in {menu}"))?;
+		found.setEnabled(enabled);
+		Ok(())
+	}
+	#[cfg(not(target_os = "macos"))]
+	{
+		let _ = enabled;
+		Err(format!("no menu bar the page reaches for {item} in {menu}"))
+	}
 }
 
 /// On macOS, the menu bar icon that brings the window back and quits; called once from setup. It stands near the clock for as long as ftorrent runs, and it's the way back once the window is hidden and the Dock icon has gone with it, which is also why Quit is here: under the Accessory policy the app has no menu bar for ⌘Q to reach

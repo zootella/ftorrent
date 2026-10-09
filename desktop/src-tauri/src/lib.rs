@@ -13,7 +13,7 @@ The test for a new command is to describe it without naming a ftorrent feature. 
 
 A command also takes one thing: one path, one lock, one value, one line. A list stays in the page, which calls down once per item and owns the order and how many are in flight, so no batch command grows here. The rule is about this boundary and nothing past it: engine_send carries one line, but that line is whatever the page built, and where libtorrent itself takes many things in a single call, the engine makes that call.
 
-A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, locks.rs, login.rs, net.rs, process_run, process_start, and process_open, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
+A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, the menu bar's enabling, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, locks.rs, login.rs, net.rs, process_run, process_start, and process_open, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
 */
 
 mod disk;//compile disk.rs as a module named disk: file commands the page calls, thin wrappers over std::fs
@@ -95,6 +95,7 @@ pub fn run() {
 				process::process_start,
 				process::process_open,
 				lifecycle::lifecycle_exit,//and in lifecycle.rs
+				lifecycle::menu_enable,
 			]
 		)
 		.setup(|app| {//before any page exists
