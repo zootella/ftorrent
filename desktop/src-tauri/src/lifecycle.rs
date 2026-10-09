@@ -127,7 +127,7 @@ pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 		&PredefinedMenuItem::select_all(app, None)?,
 	])?;
 	let view = Submenu::with_items(app, "View", true, &[
-		&PredefinedMenuItem::fullscreen(app, None)?,//the system's Enter Full Screen, into a Space of its own, which the essay above window_event says the red button leaves first
+		&PredefinedMenuItem::fullscreen(app, None)?,//the system's own fullscreen action, into a Space of its own, which the essay above window_event says the red button leaves first; AppKit names it Enter Full Screen or Exit Full Screen and draws its current key, once the asking below is on, so the library's Toggle Full Screen label is never seen
 	])?;
 	let window = Submenu::with_id_and_items(app, WINDOW_SUBMENU_ID, "Window", true, &[//tauri's own id for its default Window menu: set_menu finds a submenu by it and tells macOS this is the Window menu, which then lists every open window under it and keeps the list itself
 		&PredefinedMenuItem::minimize(app, None)?,
@@ -136,10 +136,11 @@ pub fn menu_install(app: &AppHandle) -> tauri::Result<()> {
 		&PredefinedMenuItem::bring_all_to_front(app, None)?,//the item Apple's Window menus end with, ahead of the window list, bringing the app's windows in front of every other app's
 	])?;
 	let help = Submenu::with_id_and_items(app, HELP_SUBMENU_ID, "Help", true, &[//and the id for its Help menu, so macOS gives it the search field that finds any menu item by name
-		&MenuItem::with_id(app, "help", format!("{brand_name} Help"), true, Some("CmdOrCtrl+Shift+/"))?,//apple's wording and shortcut for an app's own help, which here is the documentation site, opened in the browser by the page; the id names what the page does with it
+		&MenuItem::with_id(app, "help", format!("{brand_name} Help"), true, None::<&str>)?,//apple's wording for an app's own help, which here is the documentation site, opened in the browser by the page; the id names what the page does with it. No shortcut: ⇧⌘/ is macOS's own Show Help menu in every app, which drops this menu open at its search field, and an item given that key is neither drawn with it nor hears it, as a build with it showed
 	])?;
 	app.set_menu(Menu::with_items(app, &[&application, &file, &edit, &view, &window, &help])?)?;
-	if let Some(items) = menu_items("Edit") { for item in items.iter() { item.setEnabled(false) } }//every Edit item starts gray, and the page lights each one when something on it can answer, through menu_enable below; the menu library turns off AppKit's own asking of the window, and offers no switch for the system's items, so this reaches AppKit directly
+	if let Some(view) = menu_submenu("View") { view.setAutoenablesItems(true) }//AppKit's own asking, back on for the View menu alone: its one item is the system's fullscreen action, and asking the window is what retitles it Enter Full Screen or Exit Full Screen, in Apple's words, in place of the library's Toggle Full Screen. The library turns the asking off on every menu it builds, and nothing of ours is in this menu to be asked about
+	if let Some(edit) = menu_submenu("Edit") { for item in edit.itemArray().iter() { item.setEnabled(false) } }//every Edit item starts gray, and the page lights each one when something on it can answer, through menu_enable below; the menu library turns off AppKit's own asking of the window, and offers no switch for the system's items, so this reaches AppKit directly
 	app.on_menu_event(|app, event| match event.id().as_ref() {//the menu bar icon's show and exit reach this handler too, as every menu event does, and are the tray's own
 		chosen @ ("about" | "settings") => { bring_forward(app); let _ = app.emit("menu", chosen); }//the window first, shown, unminimized, and focused, so a page chosen from the menu bar while the window sits minimized in the Dock is seen; then the page opens the route of that name
 		"help" => { let _ = app.emit("menu", "help"); }//the page opens the documentation site in the browser, and the window stays where it is, minimized or not, as a mac app's help leaves it
@@ -188,12 +189,12 @@ pub fn identity_install(app: &AppHandle) {
 /// On Windows, the tray icon that brings the window back and quits; called once from setup
 #[cfg(target_os = "windows")]
 pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
-	use tauri::menu::{Menu, MenuItem};
+	use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 	use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 	let brand_name = &app.package_info().name;//brandName, the product name from tauri.conf.json, which people read
 	let show = MenuItem::with_id(app, "show", format!("&Show {brand_name}"), true, None::<&str>)?;//access keys here too, S and x, so the menu works from the keyboard once it's open
 	let exit = MenuItem::with_id(app, "exit", "E&xit", true, None::<&str>)?;
-	let menu = Menu::with_items(app, &[&show, &exit])?;
+	let menu = Menu::with_items(app, &[&show, &PredefinedMenuItem::separator(app)?, &exit])?;//exit set apart by a line, as the tray menus of Steam, Discord, and Dropbox have it, and as the mac's menu bar icon menu does
 	let mut tray = TrayIconBuilder::with_id("main")
 		.tooltip(brand_name)
 		.menu(&menu)
@@ -216,12 +217,12 @@ pub fn tray_install(app: &AppHandle) -> tauri::Result<()> {
 	Ok(())
 }
 
-/// On macOS, the items of the menu bar menu with this title, from AppKit's own menu bar; none when there is no menu bar yet, or this isn't the main thread, where AppKit's menus live and where tauri runs a plain command
+/// On macOS, the menu bar menu with this title, from AppKit's own menu bar; none when there is no menu bar yet, or this isn't the main thread, where AppKit's menus live and where tauri runs a plain command
 #[cfg(target_os = "macos")]
-fn menu_items(menu: &str) -> Option<objc2::rc::Retained<objc2_foundation::NSArray<objc2_app_kit::NSMenuItem>>> {
+fn menu_submenu(menu: &str) -> Option<objc2::rc::Retained<objc2_app_kit::NSMenu>> {
 	let marker = objc2::MainThreadMarker::new()?;
 	let bar = objc2_app_kit::NSApplication::sharedApplication(marker).mainMenu()?;
-	Some(bar.itemWithTitle(&objc2_foundation::NSString::from_str(menu))?.submenu()?.itemArray())
+	bar.itemWithTitle(&objc2_foundation::NSString::from_str(menu))?.submenu()
 }
 
 /// Enable or disable one item of the menu bar, by the titles the bar shows for its menu and for it; the page says which of the Edit menu's items can answer right now, a text field's Cut and Paste, a selection's Copy, and one day a torrent list's. Plain, since AppKit answers from memory and asks to be called on the main thread. Only the Mac has a menu bar the page reaches this way: Windows' menu bar has nothing the page lights, and Linux has none
@@ -229,9 +230,8 @@ fn menu_items(menu: &str) -> Option<objc2::rc::Retained<objc2_foundation::NSArra
 pub fn menu_enable(menu: String, item: String, enabled: bool) -> Result<(), String> {
 	#[cfg(target_os = "macos")]
 	{
-		let items = menu_items(&menu).ok_or(format!("no menu {menu}"))?;
-		let title = objc2_foundation::NSString::from_str(&item);
-		let found = items.iter().find(|candidate| candidate.title().isEqualToString(&title)).ok_or(format!("no item {item} in {menu}"))?;
+		let submenu = menu_submenu(&menu).ok_or(format!("no menu {menu}"))?;
+		let found = submenu.itemWithTitle(&objc2_foundation::NSString::from_str(&item)).ok_or(format!("no item {item} in {menu}"))?;
 		found.setEnabled(enabled);
 		Ok(())
 	}

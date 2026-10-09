@@ -1,6 +1,6 @@
 # Menus
 
-An audit, not a plan: every menu ftorrent shows on each platform, read from the code on 2026-10-09, so it can be held against what a machine actually shows. The code is `menu_install` and `tray_install` in `desktop/src-tauri/src/lifecycle.rs`, one of each per platform, and the page's side of it in `App.vue`, which hears the `menu` event and opens the route it names. Items the operating system or Tauri's menu library adds on their own are marked **(system)**, with the label and shortcut the library gives them. Shortcuts are written the way each platform shows them. A line of dashes is a separator.
+An audit, not a plan: every menu ftorrent shows on each platform, read from the code on 2026-10-09 and, for the Mac, held against the screen the same day; Windows and Linux are from the code alone. The code is `menu_install` and `tray_install` in `desktop/src-tauri/src/lifecycle.rs`, one of each per platform, and the page's side of it in `App.vue`, which hears the `menu` event and opens the route it names. Items the operating system or Tauri's menu library adds on their own are marked **(system)**, with the label and shortcut the library gives them. Shortcuts are written the way each platform shows them. A line of dashes is a separator.
 
 What the items do, in every menu that has them: **About** and **Settings** open that page in the one window, and on the Mac bring the window forward first, since the menu bar is there while the window sits minimized. **Help** opens `https://docs.ftorrent.com/help` in the system's browser through `process_open`, and leaves the window where it is. **Show** brings the window back, restored and focused. **Exit** or **Quit** ends the process, which stops the engine and writes the settings.
 
@@ -23,6 +23,7 @@ Notification area icon                tooltip "ftorrent"; the glyph in black on 
   left click                        shows the window
   right click, the menu
     Show ftorrent                   access key S
+    ---
     Exit                            access key x
 
 Window's system menu (Alt+Space)      (system) Restore, Move, Size, Minimize, Maximize, Close Alt+F4; Close hides, like the close button
@@ -63,7 +64,7 @@ Menu bar, while ftorrent is active
     Start Dictation…        fn D    (system)
     Emoji & Symbols         fn      (system)
   View
-    Toggle Full Screen      ⌃⌘F     (system) the library's label on the system's own fullscreen action; macOS may show its own Enter Full Screen here as well, to confirm
+    Enter Full Screen       🌐F     (system) the system's own fullscreen action; Exit Full Screen inside a Space, retitled by macOS, which also draws its current key for it; one item, since macOS adds none beside an item carrying this action
   Window                            registered with macOS as the Window menu, so it keeps the list of windows below
     Minimize                ⌘M      (system)
     Zoom                            (system)
@@ -72,7 +73,7 @@ Menu bar, while ftorrent is active
     [window list]                   (system) ftorrent's window, and whatever arrangement items this macOS adds to a Window menu
   Help                              registered with macOS as the Help menu, which is what adds the search field
     [search field]                  (system) finds any menu item by name
-    ftorrent Help           ⇧⌘/     opens docs.ftorrent.com/help in the browser; the window stays where it is; how macOS draws the shortcut, ⇧⌘/ or ⌘?, to confirm
+    ftorrent Help                   opens docs.ftorrent.com/help in the browser; the window stays where it is. No shortcut: ⇧⌘/ is macOS's own Show Help menu in every app, opening this menu at its search field
 
 Menu bar icon, near the clock          tooltip "ftorrent"; a template glyph macOS paints in the bar's own color; present for as long as ftorrent runs, and the way back once the window is hidden
   click, either button, the menu

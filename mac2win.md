@@ -6,7 +6,7 @@ A note for the Windows session. It's public and committed, so it names nobody: i
 
 The page no longer reaches the operating system through Tauri's plugins. The opener and dialog plugins are gone from `Cargo.toml`, `lib.rs`, `package.json`, and `capabilities/default.json`, which now holds `core:default` and the five window grants and nothing else. In their place `process.rs` has `process_open`, one command that opens a file or an address with the program the system has for it, the way a double-click does, through the `open` crate that the opener plugin was a wrapper over. Its `shellexecute-on-windows` feature is on, so on Windows that is a direct `ShellExecuteEx` call rather than the PowerShell process the plugin used to start. The essay in `lib.rs` and the README's plugins section say why.
 
-Every link the page used to open through the plugin now goes through that command: View Help in the Help menu, the two Windows Settings pages, and the home page link on the About page and the Settings page. None of it has run on Windows yet, and the Windows half of the `open` crate has never compiled here.
+Every link the page used to open through the plugin now goes through that command: View Help in the Help menu, the two Windows Settings pages, and the home page link on the About page and the Settings page. None of it has run on Windows yet, and the Windows half of the `open` crate has never compiled here. One more Windows change rides along: the tray menu's Exit is now set apart from Show by a separator, as Steam's and Discord's are; it shows in any run.
 
 ## What to confirm
 
