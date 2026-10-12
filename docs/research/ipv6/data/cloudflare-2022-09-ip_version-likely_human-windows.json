@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"result":{"summary_0":{},"meta":{"dateRange":[{"startTime":"2022-09-01T00:00:00Z","endTime":"2022-09-30T23:00:00Z"}],"confidenceInfo":{"level":null,"annotations":[]},"normalization":"PERCENTAGE","lastUpdated":"2026-10-11T18:05:00Z","units":[{"name":"*","value":"requests"}]}}}

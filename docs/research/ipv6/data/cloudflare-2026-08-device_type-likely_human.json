@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"result":{"summary_0":{"mobile":"54.153182","desktop":"45.825113","other":"0.021704"},"meta":{"dateRange":[{"startTime":"2026-08-01T00:00:00Z","endTime":"2026-08-31T23:00:00Z"}],"confidenceInfo":{"level":null,"annotations":[]},"normalization":"PERCENTAGE","lastUpdated":"2026-10-11T19:50:00Z","units":[{"name":"*","value":"requests"}]}}}

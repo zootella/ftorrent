@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"result":{"summary_0":{"IPv4":"75.020803","IPv6":"24.979197"},"meta":{"dateRange":[{"startTime":"2023-05-01T00:00:00Z","endTime":"2023-05-31T23:00:00Z"}],"confidenceInfo":{"level":null,"annotations":[]},"normalization":"PERCENTAGE","lastUpdated":"2026-10-11T19:05:00Z","units":[{"name":"*","value":"requests"}]}}}

@@ -1,0 +1,7493 @@
+{
+	"latest": "2026-09",
+	"months": [
+		"2023-05",
+		"2023-06",
+		"2023-07",
+		"2023-08",
+		"2023-09",
+		"2023-10",
+		"2023-11",
+		"2023-12",
+		"2024-01",
+		"2024-02",
+		"2024-03",
+		"2024-04",
+		"2024-05",
+		"2024-06",
+		"2024-07",
+		"2024-08",
+		"2024-09",
+		"2024-10",
+		"2024-11",
+		"2024-12",
+		"2025-01",
+		"2025-02",
+		"2025-03",
+		"2025-04",
+		"2025-05",
+		"2025-06",
+		"2025-07",
+		"2025-08",
+		"2025-09",
+		"2025-10",
+		"2025-11",
+		"2025-12",
+		"2026-01",
+		"2026-02",
+		"2026-03",
+		"2026-04",
+		"2026-05",
+		"2026-06",
+		"2026-07",
+		"2026-08",
+		"2026-09"
+	],
+	"cloudflare": {
+		"2023-05": {
+			"month": "2023-05",
+			"date_range": {
+				"startTime": "2023-05-01T00:00:00Z",
+				"endTime": "2023-05-31T23:00:00Z"
+			},
+			"person": 70.693975,
+			"automated": 29.306025,
+			"open_of_person": 35.684375,
+			"closed_of_person": 64.315625,
+			"open_of_all": 25.22670314140625,
+			"closed_of_all": 45.46727185859374,
+			"all_ipv6": 28.831399,
+			"person_ipv6": 35.227914,
+			"automated_ipv6": 14.634353,
+			"open_ipv6": 26.511644788194804,
+			"closed_ipv6": 39.23489332567498,
+			"open_squared": 12.73374619140625,
+			"open_ipv6_squared": 7.0286730937541675,
+			"person_ipv6_squared": 12.41005924791396,
+			"open_ipv6_of_person": 9.46051474488739,
+			"open_ipv6_of_person_squared": 0.8950133923823174,
+			"cells": {
+				"automated_ipv6": 4.288747148768251,
+				"open_ipv6": 6.688013928622005,
+				"closed_ipv6": 17.839035611813895,
+				"automated_ipv4": 25.01727785123175,
+				"open_ipv4": 18.538689212784245,
+				"closed_ipv4": 27.628236246779846
+			},
+			"systems": {
+				"ANDROID": 43.061604,
+				"WINDOWS": 28.143509,
+				"IOS": 20.388251,
+				"MACOSX": 6.319216,
+				"LINUX": 1.22165,
+				"CHROMEOS": 0.790162,
+				"SMART_TV": 0.075608
+			},
+			"system_ipv6": {
+				"WINDOWS": 24.979197,
+				"MACOSX": 34.547051,
+				"LINUX": 20.250433,
+				"IOS": 45.681787,
+				"ANDROID": 36.511279,
+				"CHROMEOS": 21.821735,
+				"SMART_TV": 33.964699
+			},
+			"devices": {
+				"mobile": 56.81189,
+				"desktop": 43.068152,
+				"other": 0.119958
+			},
+			"device_ipv6": {
+				"desktop": 29.912365,
+				"mobile": 39.253823,
+				"other": 23.248629
+			},
+			"desktop_of_person": 43.068152,
+			"residual_systems": 0.5332323946214572,
+			"residual_devices": 0.016483841074688144,
+			"residual_bot_class": -0.3613608649497486
+		},
+		"2023-06": {
+			"month": "2023-06",
+			"date_range": {
+				"startTime": "2023-06-01T00:00:00Z",
+				"endTime": "2023-06-30T23:00:00Z"
+			},
+			"person": 70.611684,
+			"automated": 29.388316,
+			"open_of_person": 37.781759,
+			"closed_of_person": 62.218241,
+			"open_of_all": 26.67833627472156,
+			"closed_of_all": 43.93334772527844,
+			"all_ipv6": 29.860162,
+			"person_ipv6": 37.041379,
+			"automated_ipv6": 13.390444,
+			"open_ipv6": 26.434789632233322,
+			"closed_ipv6": 41.7000503544389,
+			"open_squared": 14.27461313134081,
+			"open_ipv6_squared": 6.987981029004303,
+			"person_ipv6_squared": 13.720637582216408,
+			"open_ipv6_of_person": 9.98752851100738,
+			"open_ipv6_of_person_squared": 0.9975072575818529,
+			"cells": {
+				"automated_ipv6": 3.93522599652304,
+				"open_ipv6": 7.052362071602436,
+				"closed_ipv6": 18.320228123831846,
+				"automated_ipv4": 25.45309000347696,
+				"open_ipv4": 19.625974203119124,
+				"closed_ipv4": 25.61311960144659
+			},
+			"systems": {
+				"ANDROID": 41.731928,
+				"WINDOWS": 29.400802,
+				"IOS": 19.784183,
+				"MACOSX": 7.108424,
+				"LINUX": 1.272533,
+				"CHROMEOS": 0.618845,
+				"SMART_TV": 0.083285
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.019989,
+				"MACOSX": 33.736675,
+				"LINUX": 18.33392,
+				"IOS": 46.375436,
+				"ANDROID": 39.652809,
+				"CHROMEOS": 31.433743,
+				"SMART_TV": 33.173864
+			},
+			"devices": {
+				"mobile": 56.857019,
+				"desktop": 43.067528,
+				"other": 0.075453
+			},
+			"device_ipv6": {
+				"desktop": 31.429571,
+				"mobile": 41.330322,
+				"other": 29.480166
+			},
+			"desktop_of_person": 43.067528,
+			"residual_systems": 1.1088126623464731,
+			"residual_devices": -0.015992992658048877,
+			"residual_bot_class": -0.23060548524539826
+		},
+		"2023-07": {
+			"month": "2023-07",
+			"date_range": {
+				"startTime": "2023-07-01T00:00:00Z",
+				"endTime": "2023-07-31T23:00:00Z"
+			},
+			"person": 70.655477,
+			"automated": 29.344523,
+			"open_of_person": 38.789328,
+			"closed_of_person": 61.210673,
+			"open_of_all": 27.40678472349456,
+			"closed_of_all": 43.24869298306021,
+			"all_ipv6": 30.005229,
+			"person_ipv6": 37.353066,
+			"automated_ipv6": 12.831896,
+			"open_ipv6": 26.361171356663,
+			"closed_ipv6": 41.99560164089449,
+			"open_squared": 15.046119666915837,
+			"open_ipv6_squared": 6.949113552953499,
+			"person_ipv6_squared": 13.952515396003559,
+			"open_ipv6_of_person": 10.22532122217806,
+			"open_ipv6_of_person_squared": 1.0455719409672501,
+			"cells": {
+				"automated_ipv6": 3.76545867305608,
+				"open_ipv6": 7.224749484312139,
+				"closed_ipv6": 18.162548820059452,
+				"automated_ipv4": 25.579064326943918,
+				"open_ipv4": 20.182035239182422,
+				"closed_ipv4": 25.086144163000757
+			},
+			"systems": {
+				"ANDROID": 41.271616,
+				"WINDOWS": 29.830043,
+				"IOS": 19.337186,
+				"MACOSX": 7.476205,
+				"LINUX": 1.48308,
+				"CHROMEOS": 0.515209,
+				"SMART_TV": 0.086662
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.240132,
+				"MACOSX": 32.983554,
+				"LINUX": 15.525857,
+				"IOS": 46.564793,
+				"ANDROID": 39.903101,
+				"CHROMEOS": 39.466084,
+				"SMART_TV": 34.019903
+			},
+			"devices": {
+				"mobile": 56.889797,
+				"desktop": 43.049214,
+				"other": 0.060988
+			},
+			"device_ipv6": {
+				"desktop": 31.807222,
+				"mobile": 41.581244,
+				"other": 33.957441
+			},
+			"desktop_of_person": 43.049214,
+			"residual_systems": 1.4219543830313768,
+			"residual_devices": -0.01588833202684725,
+			"residual_bot_class": -0.15221662948090042
+		},
+		"2023-08": {
+			"month": "2023-08",
+			"date_range": {
+				"startTime": "2023-08-01T00:00:00Z",
+				"endTime": "2023-08-31T23:00:00Z"
+			},
+			"person": 71.009542,
+			"automated": 28.990458,
+			"open_of_person": 39.671361,
+			"closed_of_person": 60.328639,
+			"open_of_all": 28.17045175126662,
+			"closed_of_all": 42.839090248733385,
+			"all_ipv6": 29.451336,
+			"person_ipv6": 36.609039,
+			"automated_ipv6": 12.365736,
+			"open_ipv6": 26.163960819982158,
+			"closed_ipv6": 41.240683994281405,
+			"open_squared": 15.73816883592321,
+			"open_ipv6_squared": 6.845528457895614,
+			"person_ipv6_squared": 13.402217365035213,
+			"open_ipv6_of_person": 10.37959934879368,
+			"open_ipv6_of_person_squared": 1.077360826414782,
+			"cells": {
+				"automated_ipv6": 3.58488350147088,
+				"open_ipv6": 7.370505959013376,
+				"closed_ipv6": 17.667133835505155,
+				"automated_ipv4": 25.40557449852912,
+				"open_ipv4": 20.799945792253244,
+				"closed_ipv4": 25.17195641322823
+			},
+			"systems": {
+				"ANDROID": 40.366762,
+				"WINDOWS": 30.887401,
+				"IOS": 19.238183,
+				"MACOSX": 7.446633,
+				"LINUX": 1.337327,
+				"CHROMEOS": 0.641067,
+				"SMART_TV": 0.082627
+			},
+			"system_ipv6": {
+				"WINDOWS": 24.689522,
+				"MACOSX": 33.735612,
+				"LINUX": 18.05695,
+				"IOS": 46.698828,
+				"ANDROID": 38.795203,
+				"CHROMEOS": 32.316727,
+				"SMART_TV": 34.369206
+			},
+			"devices": {
+				"mobile": 56.235557,
+				"desktop": 43.70653,
+				"other": 0.057912
+			},
+			"device_ipv6": {
+				"desktop": 31.730272,
+				"mobile": 40.360629,
+				"other": 34.319572
+			},
+			"desktop_of_person": 43.70653,
+			"residual_systems": 1.3494962831655144,
+			"residual_devices": 0.023938471848225618,
+			"residual_bot_class": -0.12945842597225976
+		},
+		"2023-09": {
+			"month": "2023-09",
+			"date_range": {
+				"startTime": "2023-09-01T00:00:00Z",
+				"endTime": "2023-09-30T23:00:00Z"
+			},
+			"person": 71.990028,
+			"automated": 28.009972,
+			"open_of_person": 39.584631,
+			"closed_of_person": 60.415368,
+			"open_of_all": 28.49698694059668,
+			"closed_of_all": 43.49304033950304,
+			"all_ipv6": 30.303789,
+			"person_ipv6": 37.287709,
+			"automated_ipv6": 12.720189,
+			"open_ipv6": 27.01598388052211,
+			"closed_ipv6": 41.72773963696939,
+			"open_squared": 15.66943011406161,
+			"open_ipv6_squared": 7.298633850326305,
+			"person_ipv6_squared": 13.90373242468681,
+			"open_ipv6_of_person": 10.69417753012416,
+			"open_ipv6_of_person_squared": 1.1436543304581246,
+			"cells": {
+				"automated_ipv6": 3.5629213772470805,
+				"open_ipv6": 7.69874139830609,
+				"closed_ipv6": 18.148662633069897,
+				"automated_ipv4": 24.447050622752922,
+				"open_ipv4": 20.79824554229059,
+				"closed_ipv4": 25.344377706433143
+			},
+			"systems": {
+				"ANDROID": 40.089426,
+				"WINDOWS": 30.667188,
+				"IOS": 19.308097,
+				"MACOSX": 7.246263,
+				"LINUX": 1.67118,
+				"CHROMEOS": 0.939168,
+				"SMART_TV": 0.078677
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.646659,
+				"MACOSX": 35.361188,
+				"LINUX": 15.959006,
+				"IOS": 47.030137,
+				"ANDROID": 39.614985,
+				"CHROMEOS": 23.519509,
+				"SMART_TV": 34.362253
+			},
+			"devices": {
+				"mobile": 55.752237,
+				"desktop": 44.193135,
+				"other": 0.054628
+			},
+			"device_ipv6": {
+				"desktop": 32.195648,
+				"mobile": 41.28962,
+				"other": 34.315807
+			},
+			"desktop_of_person": 44.193135,
+			"residual_systems": 1.3835640101189242,
+			"residual_devices": 0.020809977387841627,
+			"residual_bot_class": -0.1025645269056028
+		},
+		"2023-10": {
+			"month": "2023-10",
+			"date_range": {
+				"startTime": "2023-10-01T00:00:00Z",
+				"endTime": "2023-10-31T23:00:00Z"
+			},
+			"person": 72.316188,
+			"automated": 27.683812,
+			"open_of_person": 39.678435,
+			"closed_of_person": 60.321565,
+			"open_of_all": 28.6939316500578,
+			"closed_of_all": 43.6222563499422,
+			"all_ipv6": 30.26055,
+			"person_ipv6": 37.673053,
+			"automated_ipv6": 11.979112,
+			"open_ipv6": 27.233980807670694,
+			"closed_ipv6": 42.508324977433695,
+			"open_squared": 15.74378204049225,
+			"open_ipv6_squared": 7.416897106325758,
+			"person_ipv6_squared": 14.192589223408092,
+			"open_ipv6_of_person": 10.80601737268409,
+			"open_ipv6_of_person_squared": 1.1677001145875037,
+			"cells": {
+				"automated_ipv6": 3.31627484534944,
+				"open_ipv6": 7.814499838542888,
+				"closed_ipv6": 18.543090491722634,
+				"automated_ipv4": 24.36753715465056,
+				"open_ipv4": 20.879431811514912,
+				"closed_ipv4": 25.079165858219564
+			},
+			"systems": {
+				"ANDROID": 39.663218,
+				"WINDOWS": 30.96368,
+				"IOS": 19.59685,
+				"MACOSX": 7.212767,
+				"LINUX": 1.501988,
+				"CHROMEOS": 0.984445,
+				"SMART_TV": 0.077052
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.661133,
+				"MACOSX": 36.003759,
+				"LINUX": 17.544682,
+				"IOS": 47.750944,
+				"ANDROID": 40.4241,
+				"CHROMEOS": 22.738462,
+				"SMART_TV": 34.5993
+			},
+			"devices": {
+				"mobile": 55.332591,
+				"desktop": 44.61466,
+				"other": 0.052749
+			},
+			"device_ipv6": {
+				"desktop": 32.453528,
+				"mobile": 41.872277,
+				"other": 34.552448
+			},
+			"desktop_of_person": 44.61466,
+			"residual_systems": 1.225348745642009,
+			"residual_devices": 0.006779979202612196,
+			"residual_bot_class": -0.2994406781690806
+		},
+		"2023-11": {
+			"month": "2023-11",
+			"date_range": {
+				"startTime": "2023-11-01T00:00:00Z",
+				"endTime": "2023-11-30T23:00:00Z"
+			},
+			"person": 72.245334,
+			"automated": 27.754666,
+			"open_of_person": 39.806278999999996,
+			"closed_of_person": 60.193722,
+			"open_of_all": 28.758179216521857,
+			"closed_of_all": 43.487155505931476,
+			"all_ipv6": 29.56945,
+			"person_ipv6": 37.265936,
+			"automated_ipv6": 10.988693,
+			"open_ipv6": 26.982256068887576,
+			"closed_ipv6": 42.325683271771055,
+			"open_squared": 15.845398478258408,
+			"open_ipv6_squared": 7.280421425670204,
+			"person_ipv6_squared": 13.887499859560963,
+			"open_ipv6_of_person": 10.74063213127582,
+			"open_ipv6_of_person_squared": 1.1536117857939456,
+			"cells": {
+				"automated_ipv6": 3.04987503991538,
+				"open_ipv6": 7.759605556951534,
+				"closed_ipv6": 18.406235703343103,
+				"automated_ipv4": 24.70479096008462,
+				"open_ipv4": 20.998573659570322,
+				"closed_ipv4": 25.080919802588372
+			},
+			"systems": {
+				"ANDROID": 38.925286,
+				"WINDOWS": 30.684305,
+				"IOS": 20.257666,
+				"MACOSX": 7.51037,
+				"LINUX": 1.611604,
+				"CHROMEOS": 0.935529,
+				"SMART_TV": 0.075241
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.49309,
+				"MACOSX": 35.428534,
+				"LINUX": 15.974188,
+				"IOS": 47.884858,
+				"ANDROID": 39.889825,
+				"CHROMEOS": 23.90085,
+				"SMART_TV": 34.850249
+			},
+			"devices": {
+				"mobile": 55.137453,
+				"desktop": 44.810939,
+				"other": 0.051607
+			},
+			"device_ipv6": {
+				"desktop": 31.991198,
+				"mobile": 41.574595,
+				"other": 34.80622
+			},
+			"desktop_of_person": 44.810939,
+			"residual_systems": 1.047899745513817,
+			"residual_devices": -0.010755445169969846,
+			"residual_bot_class": -0.4033249713416218
+		},
+		"2023-12": {
+			"month": "2023-12",
+			"date_range": {
+				"startTime": "2023-12-01T00:00:00Z",
+				"endTime": "2023-12-31T23:00:00Z"
+			},
+			"person": 69.547193,
+			"automated": 30.452807,
+			"open_of_person": 39.166521,
+			"closed_of_person": 60.833479000000004,
+			"open_of_all": 27.239215951255527,
+			"closed_of_all": 42.30797704874447,
+			"all_ipv6": 28.409427,
+			"person_ipv6": 36.878915,
+			"automated_ipv6": 10.742237,
+			"open_ipv6": 26.316630728364284,
+			"closed_ipv6": 41.95135842039473,
+			"open_squared": 15.340163672434413,
+			"open_ipv6_squared": 6.925650528930873,
+			"person_ipv6_squared": 13.600543715772249,
+			"open_ipv6_of_person": 10.30730870071725,
+			"open_ipv6_of_person_squared": 1.0624061265188154,
+			"cells": {
+				"automated_ipv6": 3.2713127010925898,
+				"open_ipv6": 7.168443875193618,
+				"closed_ipv6": 17.748771092137133,
+				"automated_ipv4": 27.18149429890741,
+				"open_ipv4": 20.07077207606191,
+				"closed_ipv4": 24.559205956607336
+			},
+			"systems": {
+				"ANDROID": 39.761715,
+				"WINDOWS": 30.588204,
+				"IOS": 20.140764,
+				"MACOSX": 7.314275,
+				"LINUX": 1.264042,
+				"CHROMEOS": 0.853948,
+				"SMART_TV": 0.077052
+			},
+			"system_ipv6": {
+				"WINDOWS": 24.810352,
+				"MACOSX": 33.900663,
+				"LINUX": 18.882276,
+				"IOS": 47.61059,
+				"ANDROID": 39.481192,
+				"CHROMEOS": 24.240709,
+				"SMART_TV": 33.655392
+			},
+			"devices": {
+				"mobile": 55.540604,
+				"desktop": 44.406639,
+				"other": 0.052758
+			},
+			"device_ipv6": {
+				"desktop": 31.575344,
+				"mobile": 41.127098,
+				"other": 33.607877
+			},
+			"desktop_of_person": 44.406639,
+			"residual_systems": 1.0511354843971858,
+			"residual_devices": -0.0026035037077392076,
+			"residual_bot_class": -0.5101358924485346
+		},
+		"2024-01": {
+			"month": "2024-01",
+			"date_range": {
+				"startTime": "2024-01-01T00:00:00Z",
+				"endTime": "2024-01-31T23:00:00Z"
+			},
+			"person": 67.704058,
+			"automated": 32.295942,
+			"open_of_person": 40.06914,
+			"closed_of_person": 59.930859000000005,
+			"open_of_all": 27.1284337857012,
+			"closed_of_all": 40.575623537258224,
+			"all_ipv6": 28.318565,
+			"person_ipv6": 36.895615,
+			"automated_ipv6": 12.075321,
+			"open_ipv6": 26.55379973325292,
+			"closed_ipv6": 42.00749320876048,
+			"open_squared": 16.055359803395998,
+			"open_ipv6_squared": 7.051042802737028,
+			"person_ipv6_squared": 13.612864062282249,
+			"open_ipv6_of_person": 10.639879190436739,
+			"open_ipv6_of_person_squared": 1.1320702918708876,
+			"cells": {
+				"automated_ipv6": 3.89983866647382,
+				"open_ipv6": 7.203629978223221,
+				"closed_ipv6": 17.044802301825968,
+				"automated_ipv4": 28.396103333526177,
+				"open_ipv4": 19.92480380747798,
+				"closed_ipv4": 23.530821235432256
+			},
+			"systems": {
+				"ANDROID": 39.374509,
+				"WINDOWS": 31.486631,
+				"IOS": 19.594728,
+				"MACOSX": 7.039459,
+				"LINUX": 1.54305,
+				"CHROMEOS": 0.8833,
+				"SMART_TV": 0.078322
+			},
+			"system_ipv6": {
+				"WINDOWS": 24.986544,
+				"MACOSX": 35.57999,
+				"LINUX": 17.3565,
+				"IOS": 47.432799,
+				"ANDROID": 39.747362,
+				"CHROMEOS": 23.204652,
+				"SMART_TV": 32.977016
+			},
+			"devices": {
+				"mobile": 54.816205,
+				"desktop": 45.130032,
+				"other": 0.053762
+			},
+			"device_ipv6": {
+				"desktop": 31.638673,
+				"mobile": 41.223895,
+				"other": 32.936993
+			},
+			"desktop_of_person": 45.130032,
+			"residual_systems": 1.080284285186437,
+			"residual_devices": 0.001989372363233599,
+			"residual_bot_class": -0.5611022455305239
+		},
+		"2024-02": {
+			"month": "2024-02",
+			"date_range": {
+				"startTime": "2024-02-01T00:00:00Z",
+				"endTime": "2024-02-29T23:00:00Z"
+			},
+			"person": 69.371724,
+			"automated": 30.628276,
+			"open_of_person": 39.399161,
+			"closed_of_person": 60.60083899999999,
+			"open_of_all": 27.33187722723564,
+			"closed_of_all": 42.039846772764356,
+			"all_ipv6": 29.500033,
+			"person_ipv6": 37.424068,
+			"automated_ipv6": 13.054007,
+			"open_ipv6": 26.876639385211348,
+			"closed_ipv6": 42.19247019947925,
+			"open_squared": 15.52293887503921,
+			"open_ipv6_squared": 7.223537446426938,
+			"person_ipv6_squared": 14.005608656686238,
+			"open_ipv6_of_person": 10.589170422768829,
+			"open_ipv6_of_person_squared": 1.1213053024244217,
+			"cells": {
+				"automated_ipv6": 3.9982172930193203,
+				"open_ipv6": 7.3458900795728255,
+				"closed_ipv6": 17.737649821505343,
+				"automated_ipv4": 26.63005870698068,
+				"open_ipv4": 19.985987147662815,
+				"closed_ipv4": 24.302196951259013
+			},
+			"systems": {
+				"ANDROID": 39.889025,
+				"WINDOWS": 30.830005,
+				"IOS": 19.623134,
+				"MACOSX": 7.172068,
+				"LINUX": 1.397088,
+				"CHROMEOS": 1.018098,
+				"SMART_TV": 0.070582
+			},
+			"system_ipv6": {
+				"WINDOWS": 25.340011,
+				"MACOSX": 35.114227,
+				"LINUX": 18.497584,
+				"IOS": 47.016164,
+				"ANDROID": 40.39598,
+				"CHROMEOS": 20.277842,
+				"SMART_TV": 32.494414
+			},
+			"devices": {
+				"mobile": 54.998681,
+				"desktop": 44.953439,
+				"other": 0.047881
+			},
+			"device_ipv6": {
+				"desktop": 32.07025,
+				"mobile": 41.73755,
+				"other": 32.457508
+			},
+			"desktop_of_person": 44.953439,
+			"residual_systems": 1.2659066415217737,
+			"residual_devices": 0.03674476798151716,
+			"residual_bot_class": -0.4599054555516382
+		},
+		"2024-03": {
+			"month": "2024-03",
+			"date_range": {
+				"startTime": "2024-03-01T00:00:00Z",
+				"endTime": "2024-03-31T23:00:00Z"
+			},
+			"person": 71.503316,
+			"automated": 28.496684,
+			"open_of_person": 39.639881,
+			"closed_of_person": 60.360119999999995,
+			"open_of_all": 28.34382937345396,
+			"closed_of_all": 43.159487341579194,
+			"all_ipv6": 30.954016,
+			"person_ipv6": 38.062645,
+			"automated_ipv6": 14.2186,
+			"open_ipv6": 28.71999522169241,
+			"closed_ipv6": 42.6682734330829,
+			"open_squared": 15.713201656941612,
+			"open_ipv6_squared": 8.24838125534035,
+			"person_ipv6_squared": 14.487649443960251,
+			"open_ipv6_of_person": 11.38457192908456,
+			"open_ipv6_of_person_squared": 1.2960847800850013,
+			"cells": {
+				"automated_ipv6": 4.051829511224,
+				"open_ipv6": 8.140346441700627,
+				"closed_ipv6": 18.415408071221815,
+				"automated_ipv4": 24.444854488776,
+				"open_ipv4": 20.203482931753335,
+				"closed_ipv4": 24.74407927035738
+			},
+			"systems": {
+				"ANDROID": 39.714321,
+				"WINDOWS": 31.139339,
+				"IOS": 19.603246,
+				"MACOSX": 7.204361,
+				"LINUX": 1.296181,
+				"CHROMEOS": 0.974234,
+				"SMART_TV": 0.068319
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.162603,
+				"MACOSX": 35.108105,
+				"LINUX": 30.628614,
+				"IOS": 48.023808,
+				"ANDROID": 40.562181,
+				"CHROMEOS": 21.455765,
+				"SMART_TV": 32.745943
+			},
+			"devices": {
+				"mobile": 54.965755,
+				"desktop": 44.988687,
+				"other": 0.045557
+			},
+			"device_ipv6": {
+				"desktop": 33.442567,
+				"mobile": 41.821937,
+				"other": 32.716372
+			},
+			"desktop_of_person": 44.988687,
+			"residual_systems": 0.9234520247784843,
+			"residual_devices": 0.014625182338320997,
+			"residual_bot_class": -0.3138668435322032
+		},
+		"2024-04": {
+			"month": "2024-04",
+			"date_range": {
+				"startTime": "2024-04-01T00:00:00Z",
+				"endTime": "2024-04-30T23:00:00Z"
+			},
+			"person": 71.582327,
+			"automated": 28.417673,
+			"open_of_person": 39.871067,
+			"closed_of_person": 60.128932,
+			"open_of_all": 28.54063755832909,
+			"closed_of_all": 43.04168872584764,
+			"all_ipv6": 31.581436,
+			"person_ipv6": 38.27271,
+			"automated_ipv6": 15.700373,
+			"open_ipv6": 30.165850824022996,
+			"closed_ipv6": 42.60840530109546,
+			"open_squared": 15.897019837184887,
+			"open_ipv6_squared": 9.099785559372089,
+			"person_ipv6_squared": 14.648003307440996,
+			"open_ipv6_of_person": 12.02744659316626,
+			"open_ipv6_of_person_squared": 1.4465947155146668,
+			"cells": {
+				"automated_ipv6": 4.46168065892029,
+				"open_ipv6": 8.609526150070632,
+				"closed_ipv6": 18.339377180745075,
+				"automated_ipv4": 23.95599234107971,
+				"open_ipv4": 19.93111140825846,
+				"closed_ipv4": 24.702311545102567
+			},
+			"systems": {
+				"ANDROID": 39.469457,
+				"WINDOWS": 31.087687,
+				"IOS": 19.628131,
+				"MACOSX": 7.185736,
+				"LINUX": 1.597644,
+				"CHROMEOS": 0.960522,
+				"SMART_TV": 0.070822
+			},
+			"system_ipv6": {
+				"WINDOWS": 28.16449,
+				"MACOSX": 34.962939,
+				"LINUX": 47.533343,
+				"IOS": 48.221373,
+				"ANDROID": 40.363239,
+				"CHROMEOS": 20.825379,
+				"SMART_TV": 33.663522
+			},
+			"devices": {
+				"mobile": 54.729033,
+				"desktop": 45.224102,
+				"other": 0.046865
+			},
+			"device_ipv6": {
+				"desktop": 34.082084,
+				"mobile": 41.724384,
+				"other": 33.635261
+			},
+			"desktop_of_person": 45.224102,
+			"residual_systems": 0.6252843570536584,
+			"residual_devices": 0.008278514639940227,
+			"residual_bot_class": -0.2767410828819905
+		},
+		"2024-05": {
+			"month": "2024-05",
+			"date_range": {
+				"startTime": "2024-05-01T00:00:00Z",
+				"endTime": "2024-05-31T23:00:00Z"
+			},
+			"person": 70.958156,
+			"automated": 29.041844,
+			"open_of_person": 38.94699,
+			"closed_of_person": 61.05301,
+			"open_of_all": 27.6360659215044,
+			"closed_of_all": 43.322090078495606,
+			"all_ipv6": 30.995797,
+			"person_ipv6": 37.835223,
+			"automated_ipv6": 15.534262,
+			"open_ipv6": 28.095397667869996,
+			"closed_ipv6": 42.78023664938984,
+			"open_squared": 15.168680300601,
+			"open_ipv6_squared": 7.893513701157548,
+			"person_ipv6_squared": 14.31504099459729,
+			"open_ipv6_of_person": 10.94231172016556,
+			"open_ipv6_of_person_squared": 1.1973418578127255,
+			"cells": {
+				"automated_ipv6": 4.51143613659128,
+				"open_ipv6": 7.764462620401361,
+				"closed_ipv6": 18.533292657042256,
+				"automated_ipv4": 24.53040786340872,
+				"open_ipv4": 19.87160330110304,
+				"closed_ipv4": 24.78879742145335
+			},
+			"systems": {
+				"ANDROID": 39.94531,
+				"WINDOWS": 30.430874,
+				"IOS": 20.062408,
+				"MACOSX": 7.161578,
+				"LINUX": 1.354538,
+				"CHROMEOS": 0.97471,
+				"SMART_TV": 0.070582
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.176859,
+				"MACOSX": 35.193669,
+				"LINUX": 33.667766,
+				"IOS": 48.783777,
+				"ANDROID": 40.338606,
+				"CHROMEOS": 19.875644,
+				"SMART_TV": 34.443164
+			},
+			"devices": {
+				"mobile": 54.999665,
+				"desktop": 44.954072,
+				"other": 0.046263
+			},
+			"device_ipv6": {
+				"desktop": 32.879782,
+				"mobile": 41.793447,
+				"other": 34.417588
+			},
+			"desktop_of_person": 44.954072,
+			"residual_systems": 0.7742891202587998,
+			"residual_devices": 0.05224367558796672,
+			"residual_bot_class": -0.36281569587915996
+		},
+		"2024-06": {
+			"month": "2024-06",
+			"date_range": {
+				"startTime": "2024-06-01T00:00:00Z",
+				"endTime": "2024-06-30T23:00:00Z"
+			},
+			"person": 70.718895,
+			"automated": 29.281105,
+			"open_of_person": 38.158394,
+			"closed_of_person": 61.841607,
+			"open_of_all": 26.985194586546303,
+			"closed_of_all": 43.73370112064266,
+			"all_ipv6": 30.920845,
+			"person_ipv6": 38.210722,
+			"automated_ipv6": 14.617466,
+			"open_ipv6": 28.72665277027765,
+			"closed_ipv6": 43.15816939388411,
+			"open_squared": 14.560630326592362,
+			"open_ipv6_squared": 8.252205793841005,
+			"person_ipv6_squared": 14.600592757612837,
+			"open_ipv6_of_person": 10.96162934709446,
+			"open_ipv6_of_person_squared": 1.201573179430825,
+			"cells": {
+				"automated_ipv6": 4.280155567799301,
+				"open_ipv6": 7.751943148260917,
+				"closed_ipv6": 18.87466481186195,
+				"automated_ipv4": 25.0009494322007,
+				"open_ipv4": 19.233251438285386,
+				"closed_ipv4": 24.859036308780706
+			},
+			"systems": {
+				"ANDROID": 40.488694,
+				"WINDOWS": 29.799212,
+				"IOS": 20.647722,
+				"MACOSX": 7.0247,
+				"LINUX": 1.334482,
+				"CHROMEOS": 0.632188,
+				"SMART_TV": 0.073003
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.72238,
+				"MACOSX": 36.308788,
+				"LINUX": 33.570123,
+				"IOS": 48.723766,
+				"ANDROID": 40.559583,
+				"CHROMEOS": 28.728853,
+				"SMART_TV": 35.192997
+			},
+			"devices": {
+				"mobile": 55.759984,
+				"desktop": 44.192871,
+				"other": 0.047146
+			},
+			"device_ipv6": {
+				"desktop": 33.05296,
+				"mobile": 42.187267,
+				"other": 35.169342
+			},
+			"desktop_of_person": 44.192871,
+			"residual_systems": 0.5593871479454435,
+			"residual_devices": 0.06347575830179153,
+			"residual_bot_class": -0.38151093772119893
+		},
+		"2024-07": {
+			"month": "2024-07",
+			"date_range": {
+				"startTime": "2024-07-01T00:00:00Z",
+				"endTime": "2024-07-31T23:00:00Z"
+			},
+			"person": 70.646692,
+			"automated": 29.353308,
+			"open_of_person": 37.113475,
+			"closed_of_person": 62.886525,
+			"open_of_all": 26.219442373747,
+			"closed_of_all": 44.427249626252994,
+			"all_ipv6": 30.792191,
+			"person_ipv6": 38.399432,
+			"automated_ipv6": 13.980866,
+			"open_ipv6": 28.524964968769833,
+			"closed_ipv6": 43.46048596252985,
+			"open_squared": 13.774100265756251,
+			"open_ipv6_squared": 8.136736264695463,
+			"person_ipv6_squared": 14.745163779226239,
+			"open_ipv6_of_person": 10.586605742443151,
+			"open_ipv6_of_person_squared": 1.120762211459303,
+			"cells": {
+				"automated_ipv6": 4.10384665804728,
+				"open_ipv6": 7.479086752118126,
+				"closed_ipv6": 19.30829858735578,
+				"automated_ipv4": 25.249461341952717,
+				"open_ipv4": 18.740355621628876,
+				"closed_ipv4": 25.118951038897215
+			},
+			"systems": {
+				"ANDROID": 41.020569,
+				"WINDOWS": 29.103589,
+				"IOS": 21.316388,
+				"MACOSX": 6.859617,
+				"LINUX": 1.150269,
+				"CHROMEOS": 0.473501,
+				"SMART_TV": 0.076067
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.698465,
+				"MACOSX": 36.978439,
+				"LINUX": 24.326043,
+				"IOS": 48.562903,
+				"ANDROID": 40.895217,
+				"CHROMEOS": 37.371378,
+				"SMART_TV": 34.874501
+			},
+			"devices": {
+				"mobile": 56.938367,
+				"desktop": 43.012985,
+				"other": 0.048648
+			},
+			"device_ipv6": {
+				"desktop": 32.92488,
+				"mobile": 42.54967,
+				"other": 34.843456
+			},
+			"desktop_of_person": 43.012985,
+			"residual_systems": 0.4820368876090271,
+			"residual_devices": -0.006579602031784759,
+			"residual_bot_class": -0.43958411283672305
+		},
+		"2024-08": {
+			"month": "2024-08",
+			"date_range": {
+				"startTime": "2024-08-01T00:00:00Z",
+				"endTime": "2024-08-31T23:00:00Z"
+			},
+			"person": 70.640514,
+			"automated": 29.359486,
+			"open_of_person": 37.28413,
+			"closed_of_person": 62.71587,
+			"open_of_all": 26.3377010724282,
+			"closed_of_all": 44.30281292757179,
+			"all_ipv6": 30.821326,
+			"person_ipv6": 38.370316,
+			"automated_ipv6": 14.127946,
+			"open_ipv6": 28.402019176045737,
+			"closed_ipv6": 43.244090647930115,
+			"open_squared": 13.901063498568998,
+			"open_ipv6_squared": 8.066746932764698,
+			"person_ipv6_squared": 14.722811499398563,
+			"open_ipv6_of_person": 10.58944575222182,
+			"open_ipv6_of_person_squared": 1.1213636133924876,
+			"cells": {
+				"automated_ipv6": 4.14789232795756,
+				"open_ipv6": 7.480438909120661,
+				"closed_ipv6": 19.158348581982047,
+				"automated_ipv4": 25.21159367204244,
+				"open_ipv4": 18.85726216330754,
+				"closed_ipv4": 25.144464345589746
+			},
+			"systems": {
+				"ANDROID": 40.760188,
+				"WINDOWS": 29.246698,
+				"IOS": 21.261251,
+				"MACOSX": 6.902576,
+				"LINUX": 1.134856,
+				"CHROMEOS": 0.623983,
+				"SMART_TV": 0.070448
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.546147,
+				"MACOSX": 36.932932,
+				"LINUX": 24.342349,
+				"IOS": 48.474412,
+				"ANDROID": 40.753065,
+				"CHROMEOS": 28.741047,
+				"SMART_TV": 34.459616
+			},
+			"devices": {
+				"mobile": 56.991898,
+				"desktop": 42.963471,
+				"other": 0.044631
+			},
+			"device_ipv6": {
+				"desktop": 33.010605,
+				"mobile": 42.433188,
+				"other": 34.42679
+			},
+			"desktop_of_person": 42.963471,
+			"residual_systems": 0.6599625743401702,
+			"residual_devices": -0.01102994985268424,
+			"residual_bot_class": -0.43155477378180507
+		},
+		"2024-09": {
+			"month": "2024-09",
+			"date_range": {
+				"startTime": "2024-09-01T00:00:00Z",
+				"endTime": "2024-09-30T23:00:00Z"
+			},
+			"person": 70.20891,
+			"automated": 29.79109,
+			"open_of_person": 37.767817,
+			"closed_of_person": 62.232183,
+			"open_of_all": 26.516372646494702,
+			"closed_of_all": 43.6925373535053,
+			"all_ipv6": 30.268664,
+			"person_ipv6": 37.858203,
+			"automated_ipv6": 13.930879,
+			"open_ipv6": 28.044400619118548,
+			"closed_ipv6": 42.413635914053074,
+			"open_squared": 14.26408000945489,
+			"open_ipv6_squared": 7.864884060856168,
+			"person_ipv6_squared": 14.332435343892094,
+			"open_ipv6_of_person": 10.59175790457556,
+			"open_ipv6_of_person_squared": 1.1218533550913887,
+			"cells": {
+				"automated_ipv6": 4.150160700681099,
+				"open_ipv6": 7.4363577746413405,
+				"closed_ipv6": 18.53159371472738,
+				"automated_ipv4": 25.640929299318902,
+				"open_ipv4": 19.08001487185336,
+				"closed_ipv4": 25.160943638777923
+			},
+			"systems": {
+				"ANDROID": 40.779822,
+				"WINDOWS": 29.474494,
+				"IOS": 20.465027,
+				"MACOSX": 7.193809,
+				"LINUX": 1.099514,
+				"CHROMEOS": 0.921448,
+				"SMART_TV": 0.065886
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.172194,
+				"MACOSX": 36.192826,
+				"LINUX": 24.919499,
+				"IOS": 47.915165,
+				"ANDROID": 40.159432,
+				"CHROMEOS": 20.544376,
+				"SMART_TV": 34.649906
+			},
+			"devices": {
+				"mobile": 56.874085,
+				"desktop": 43.084254,
+				"other": 0.04166
+			},
+			"device_ipv6": {
+				"desktop": 32.821282,
+				"mobile": 41.708723,
+				"other": 34.623942
+			},
+			"desktop_of_person": 43.084254,
+			"residual_systems": 0.8715135764372093,
+			"residual_devices": -0.018480408608027687,
+			"residual_bot_class": -0.46132837256840276
+		},
+		"2024-10": {
+			"month": "2024-10",
+			"date_range": {
+				"startTime": "2024-10-01T00:00:00Z",
+				"endTime": "2024-10-31T23:00:00Z"
+			},
+			"person": 69.973908,
+			"automated": 30.026092,
+			"open_of_person": 39.591098,
+			"closed_of_person": 60.408901,
+			"open_of_all": 27.703438490709843,
+			"closed_of_all": 42.270468809551076,
+			"all_ipv6": 29.69165,
+			"person_ipv6": 38.032133,
+			"automated_ipv6": 12.480301,
+			"open_ipv6": 27.92901181239603,
+			"closed_ipv6": 43.21953419016382,
+			"open_squared": 15.67455040845604,
+			"open_ipv6_squared": 7.8002970081695695,
+			"person_ipv6_squared": 14.46443140529689,
+			"open_ipv6_of_person": 11.05740243707729,
+			"open_ipv6_of_person_squared": 1.2226614865548278,
+			"cells": {
+				"automated_ipv6": 3.74734666013692,
+				"open_ipv6": 7.73729660851022,
+				"closed_ipv6": 18.26909971948646,
+				"automated_ipv4": 26.27874533986308,
+				"open_ipv4": 19.966141882199622,
+				"closed_ipv4": 24.001369090064617
+			},
+			"systems": {
+				"ANDROID": 39.245725,
+				"WINDOWS": 30.913286,
+				"IOS": 20.097088,
+				"MACOSX": 7.530681,
+				"LINUX": 1.147131,
+				"CHROMEOS": 1.003848,
+				"SMART_TV": 0.06224
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.161675,
+				"MACOSX": 35.719616,
+				"LINUX": 24.412093,
+				"IOS": 48.407793,
+				"ANDROID": 41.205386,
+				"CHROMEOS": 18.718381,
+				"SMART_TV": 33.149575
+			},
+			"devices": {
+				"mobile": 54.743106,
+				"desktop": 45.218835,
+				"other": 0.038059
+			},
+			"device_ipv6": {
+				"desktop": 33.239225,
+				"mobile": 42.038654,
+				"other": 33.180801
+			},
+			"desktop_of_person": 45.218835,
+			"residual_systems": 0.866284941325496,
+			"residual_devices": -0.024150509274576848,
+			"residual_bot_class": -0.6682664159945588
+		},
+		"2024-11": {
+			"month": "2024-11",
+			"date_range": {
+				"startTime": "2024-11-01T00:00:00Z",
+				"endTime": "2024-11-30T23:00:00Z"
+			},
+			"person": 70.41985,
+			"automated": 29.58015,
+			"open_of_person": 39.332571,
+			"closed_of_person": 60.66743,
+			"open_of_all": 27.697937499343496,
+			"closed_of_all": 42.721913204855,
+			"all_ipv6": 29.742685,
+			"person_ipv6": 38.39893,
+			"automated_ipv6": 11.564158,
+			"open_ipv6": 27.9878349265435,
+			"closed_ipv6": 43.80613714875181,
+			"open_squared": 15.470511414700411,
+			"open_ipv6_squared": 7.833189038754482,
+			"person_ipv6_squared": 14.744778251448999,
+			"open_ipv6_of_person": 11.00833504384552,
+			"open_ipv6_of_person_squared": 1.2118344043755733,
+			"cells": {
+				"automated_ipv6": 3.4206952826370003,
+				"open_ipv6": 7.752053025373447,
+				"closed_ipv6": 18.71481989108949,
+				"automated_ipv4": 26.159454717362998,
+				"open_ipv4": 19.945884473970047,
+				"closed_ipv4": 24.00709331376551
+			},
+			"systems": {
+				"ANDROID": 38.771523,
+				"WINDOWS": 30.487891,
+				"IOS": 20.889273,
+				"MACOSX": 7.739821,
+				"LINUX": 1.104859,
+				"CHROMEOS": 0.947399,
+				"SMART_TV": 0.059235
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.088111,
+				"MACOSX": 35.919768,
+				"LINUX": 24.844297,
+				"IOS": 48.891965,
+				"ANDROID": 41.670262,
+				"CHROMEOS": 19.785116,
+				"SMART_TV": 32.484747
+			},
+			"devices": {
+				"mobile": 54.50433,
+				"desktop": 45.460271,
+				"other": 0.035399
+			},
+			"device_ipv6": {
+				"desktop": 33.811327,
+				"mobile": 42.258682,
+				"other": 32.488882
+			},
+			"desktop_of_person": 45.460271,
+			"residual_systems": 0.814537365731482,
+			"residual_devices": -0.016103113165947036,
+			"residual_bot_class": -0.7184791902419967
+		},
+		"2024-12": {
+			"month": "2024-12",
+			"date_range": {
+				"startTime": "2024-12-01T00:00:00Z",
+				"endTime": "2024-12-31T23:00:00Z"
+			},
+			"person": 69.988302,
+			"automated": 30.011698,
+			"open_of_person": 37.591449,
+			"closed_of_person": 62.408550999999996,
+			"open_of_all": 26.30961685229598,
+			"closed_of_all": 43.678685147704016,
+			"all_ipv6": 30.118535,
+			"person_ipv6": 39.124458,
+			"automated_ipv6": 11.389112,
+			"open_ipv6": 28.546684466314588,
+			"closed_ipv6": 44.261469588341065,
+			"open_squared": 14.131170379196007,
+			"open_ipv6_squared": 8.149131940193266,
+			"person_ipv6_squared": 15.307232137937637,
+			"open_ipv6_of_person": 10.73111233234557,
+			"open_ipv6_of_person_squared": 1.1515677188941915,
+			"cells": {
+				"automated_ipv6": 3.4180658983217604,
+				"open_ipv6": 7.510523307121262,
+				"closed_ipv6": 19.332827943238257,
+				"automated_ipv4": 26.59363210167824,
+				"open_ipv4": 18.79909354517472,
+				"closed_ipv4": 24.34585720446576
+			},
+			"systems": {
+				"ANDROID": 39.788197,
+				"WINDOWS": 29.211423,
+				"IOS": 21.745801,
+				"MACOSX": 7.285457,
+				"LINUX": 1.094569,
+				"CHROMEOS": 0.816114,
+				"SMART_TV": 0.058439
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.532776,
+				"MACOSX": 37.025725,
+				"LINUX": 25.856536,
+				"IOS": 49.389222,
+				"ANDROID": 41.936804,
+				"CHROMEOS": 21.790268,
+				"SMART_TV": 32.73203
+			},
+			"devices": {
+				"mobile": 55.166719,
+				"desktop": 44.798649,
+				"other": 0.034633
+			},
+			"device_ipv6": {
+				"desktop": 34.592658,
+				"mobile": 42.816725,
+				"other": 32.711113
+			},
+			"desktop_of_person": 44.798649,
+			"residual_systems": 0.7704038462651042,
+			"residual_devices": -0.004496642708460286,
+			"residual_bot_class": -0.6820747192249215
+		},
+		"2025-01": {
+			"month": "2025-01",
+			"date_range": {
+				"startTime": "2025-01-01T00:00:00Z",
+				"endTime": "2025-01-31T23:00:00Z"
+			},
+			"person": 70.662337,
+			"automated": 29.337663,
+			"open_of_person": 38.643585,
+			"closed_of_person": 61.356416,
+			"open_of_all": 27.306460261581446,
+			"closed_of_all": 43.35587744504191,
+			"all_ipv6": 30.474045,
+			"person_ipv6": 39.024723,
+			"automated_ipv6": 11.834194,
+			"open_ipv6": 28.848310587341054,
+			"closed_ipv6": 44.1123358273566,
+			"open_squared": 14.933266616522252,
+			"open_ipv6_squared": 8.32225023743694,
+			"person_ipv6_squared": 15.22929005226729,
+			"open_ipv6_of_person": 11.14802142288314,
+			"open_ipv6_of_person_squared": 1.2427838164506142,
+			"cells": {
+				"automated_ipv6": 3.47187595448622,
+				"open_ipv6": 7.877452466669878,
+				"closed_ipv6": 19.125290259454044,
+				"automated_ipv4": 25.86578704551378,
+				"open_ipv4": 19.42900779491157,
+				"closed_ipv4": 24.23058718558787
+			},
+			"systems": {
+				"ANDROID": 39.389724,
+				"WINDOWS": 29.839546,
+				"IOS": 21.008646,
+				"MACOSX": 7.65855,
+				"LINUX": 1.145489,
+				"CHROMEOS": 0.895282,
+				"SMART_TV": 0.062764
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.765405,
+				"MACOSX": 37.409716,
+				"LINUX": 25.867056,
+				"IOS": 49.574054,
+				"ANDROID": 41.723918,
+				"CHROMEOS": 21.7709,
+				"SMART_TV": 33.56012
+			},
+			"devices": {
+				"mobile": 54.810406,
+				"desktop": 45.151986,
+				"other": 0.037608
+			},
+			"device_ipv6": {
+				"desktop": 34.527326,
+				"mobile": 42.772162,
+				"other": 33.537743
+			},
+			"desktop_of_person": 45.151986,
+			"residual_systems": 0.8109532995669042,
+			"residual_devices": -0.0212589232595235,
+			"residual_bot_class": -0.5736122340627254
+		},
+		"2025-02": {
+			"month": "2025-02",
+			"date_range": {
+				"startTime": "2025-02-01T00:00:00Z",
+				"endTime": "2025-02-28T23:00:00Z"
+			},
+			"person": 71.169112,
+			"automated": 28.830888,
+			"open_of_person": 39.422638,
+			"closed_of_person": 60.577361999999994,
+			"open_of_all": 28.056741391574562,
+			"closed_of_all": 43.11237060842544,
+			"all_ipv6": 31.284505,
+			"person_ipv6": 40.086222,
+			"automated_ipv6": 11.520871,
+			"open_ipv6": 29.332689631981257,
+			"closed_ipv6": 44.32233555461937,
+			"open_squared": 15.541443868790438,
+			"open_ipv6_squared": 8.604066810461408,
+			"person_ipv6_squared": 16.06905194233284,
+			"open_ipv6_of_person": 11.563720049279503,
+			"open_ipv6_of_person_squared": 1.3371962137810873,
+			"cells": {
+				"automated_ipv6": 3.32156941463448,
+				"open_ipv6": 8.229796873238186,
+				"closed_ipv6": 19.10840956661742,
+				"automated_ipv4": 25.50931858536552,
+				"open_ipv4": 19.826944518336376,
+				"closed_ipv4": 24.003961041808015
+			},
+			"systems": {
+				"ANDROID": 38.699338,
+				"WINDOWS": 30.418827,
+				"IOS": 20.82793,
+				"MACOSX": 7.843213,
+				"LINUX": 1.160598,
+				"CHROMEOS": 0.989234,
+				"SMART_TV": 0.06086
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.170231,
+				"MACOSX": 38.233693,
+				"LINUX": 25.857748,
+				"IOS": 50.551124,
+				"ANDROID": 41.565625,
+				"CHROMEOS": 21.621707,
+				"SMART_TV": 34.567774
+			},
+			"devices": {
+				"mobile": 55.786672,
+				"desktop": 44.178128,
+				"other": 0.035201
+			},
+			"device_ipv6": {
+				"desktop": 34.924745,
+				"mobile": 44.134372,
+				"other": 34.636019
+			},
+			"desktop_of_person": 44.178128,
+			"residual_systems": 1.6732002949440172,
+			"residual_devices": 0.023833878278367138,
+			"residual_bot_class": -0.566072646383116
+		},
+		"2025-03": {
+			"month": "2025-03",
+			"date_range": {
+				"startTime": "2025-03-01T00:00:00Z",
+				"endTime": "2025-03-31T23:00:00Z"
+			},
+			"person": 70.322872,
+			"automated": 29.677128,
+			"open_of_person": 40.423131,
+			"closed_of_person": 59.576868999999995,
+			"open_of_all": 28.42670667152232,
+			"closed_of_all": 41.89616532847768,
+			"all_ipv6": 31.299948,
+			"person_ipv6": 40.338284,
+			"automated_ipv6": 11.939347,
+			"open_ipv6": 29.218099436799147,
+			"closed_ipv6": 44.640884273179694,
+			"open_squared": 16.34029519843161,
+			"open_ipv6_squared": 8.536973346986827,
+			"person_ipv6_squared": 16.271771560646563,
+			"open_ipv6_of_person": 11.81087061104758,
+			"open_ipv6_of_person_squared": 1.3949666459090744,
+			"cells": {
+				"automated_ipv6": 3.54325529155416,
+				"open_ipv6": 8.305743421892608,
+				"closed_ipv6": 18.702818679185754,
+				"automated_ipv4": 26.13387270844584,
+				"open_ipv4": 20.120963249629714,
+				"closed_ipv4": 23.193346649291925
+			},
+			"systems": {
+				"ANDROID": 37.673798,
+				"WINDOWS": 31.14373,
+				"IOS": 20.840801,
+				"MACOSX": 8.132779,
+				"LINUX": 1.146622,
+				"CHROMEOS": 1.008459,
+				"SMART_TV": 0.053811
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.033495,
+				"MACOSX": 37.983022,
+				"LINUX": 26.386785,
+				"IOS": 50.916971,
+				"ANDROID": 41.843577,
+				"CHROMEOS": 19.986535,
+				"SMART_TV": 34.409055
+			},
+			"devices": {
+				"mobile": 56.627085,
+				"desktop": 43.342642,
+				"other": 0.030273
+			},
+			"device_ipv6": {
+				"desktop": 34.980636,
+				"mobile": 44.561815,
+				"other": 34.413105
+			},
+			"desktop_of_person": 43.342642,
+			"residual_systems": 1.9317722450785553,
+			"residual_devices": -0.0677225676725115,
+			"residual_bot_class": -0.6103471158706455
+		},
+		"2025-04": {
+			"month": "2025-04",
+			"date_range": {
+				"startTime": "2025-04-01T00:00:00Z",
+				"endTime": "2025-04-30T23:00:00Z"
+			},
+			"person": 69.424096,
+			"automated": 30.575904,
+			"open_of_person": 40.262132,
+			"closed_of_person": 59.737868,
+			"open_of_all": 27.951621171326725,
+			"closed_of_all": 41.472474828673285,
+			"all_ipv6": 31.42658,
+			"person_ipv6": 40.789441,
+			"automated_ipv6": 12.262745,
+			"open_ipv6": 29.778398616844232,
+			"closed_ipv6": 45.05550400614667,
+			"open_squared": 16.210392731854242,
+			"open_ipv6_squared": 8.867530241836706,
+			"person_ipv6_squared": 16.637784970924805,
+			"open_ipv6_of_person": 11.9894181586,
+			"open_ipv6_of_person_squared": 1.437461477817674,
+			"cells": {
+				"automated_ipv6": 3.7494451389648003,
+				"open_ipv6": 8.323545172267897,
+				"closed_ipv6": 18.68563255788106,
+				"automated_ipv4": 26.8264588610352,
+				"open_ipv4": 19.62807599905883,
+				"closed_ipv4": 22.786842270792224
+			},
+			"systems": {
+				"ANDROID": 37.441915,
+				"WINDOWS": 30.97611,
+				"IOS": 21.278847,
+				"MACOSX": 8.124786,
+				"LINUX": 1.161236,
+				"CHROMEOS": 0.970428,
+				"SMART_TV": 0.046678
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.608703,
+				"MACOSX": 38.531963,
+				"LINUX": 26.409482,
+				"IOS": 51.403056,
+				"ANDROID": 42.110523,
+				"CHROMEOS": 19.954326,
+				"SMART_TV": 35.544102
+			},
+			"devices": {
+				"mobile": 57.512024,
+				"desktop": 42.461957,
+				"other": 0.026019
+			},
+			"device_ipv6": {
+				"desktop": 35.434007,
+				"mobile": 44.988235,
+				"other": 35.518779
+			},
+			"desktop_of_person": 42.461957,
+			"residual_systems": 1.8848253314733867,
+			"residual_devices": -0.1394179572014025,
+			"residual_bot_class": -0.6405658166681576
+		},
+		"2025-05": {
+			"month": "2025-05",
+			"date_range": {
+				"startTime": "2025-05-01T00:00:00Z",
+				"endTime": "2025-05-31T23:00:00Z"
+			},
+			"person": 69.8859,
+			"automated": 30.1141,
+			"open_of_person": 40.0965,
+			"closed_of_person": 59.903501000000006,
+			"open_of_all": 28.021799893500003,
+			"closed_of_all": 41.864100805359016,
+			"all_ipv6": 31.563308,
+			"person_ipv6": 40.364737,
+			"automated_ipv6": 13.416696,
+			"open_ipv6": 29.747715547991692,
+			"closed_ipv6": 45.32711391087462,
+			"open_squared": 16.0772931225,
+			"open_ipv6_squared": 8.849265803242266,
+			"person_ipv6_squared": 16.29311993079169,
+			"open_ipv6_of_person": 11.92779276470049,
+			"open_ipv6_of_person_squared": 1.4227224023764133,
+			"cells": {
+				"automated_ipv6": 4.040317250136,
+				"open_ipv6": 8.33584532374582,
+				"closed_ipv6": 18.97578865980846,
+				"automated_ipv4": 26.073782749864,
+				"open_ipv4": 19.68595456975418,
+				"closed_ipv4": 22.888312145550554
+			},
+			"systems": {
+				"ANDROID": 37.324907,
+				"WINDOWS": 30.822031,
+				"IOS": 21.526373,
+				"MACOSX": 8.109581,
+				"LINUX": 1.164888,
+				"CHROMEOS": 1.007373,
+				"SMART_TV": 0.044848
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.5566,
+				"MACOSX": 38.599909,
+				"LINUX": 26.096765,
+				"IOS": 51.664102,
+				"ANDROID": 42.399607,
+				"CHROMEOS": 18.750097,
+				"SMART_TV": 37.066392
+			},
+			"devices": {
+				"mobile": 56.963895,
+				"desktop": 43.011634,
+				"other": 0.024471
+			},
+			"device_ipv6": {
+				"desktop": 35.156119,
+				"mobile": 45.205832,
+				"other": 37.047474
+			},
+			"desktop_of_person": 43.011634,
+			"residual_systems": 1.2844161004275847,
+			"residual_devices": -0.516552794603399,
+			"residual_bot_class": -0.6862689852190016
+		},
+		"2025-06": {
+			"month": "2025-06",
+			"date_range": {
+				"startTime": "2025-06-01T00:00:00Z",
+				"endTime": "2025-06-30T23:00:00Z"
+			},
+			"person": 69.526393,
+			"automated": 30.473607,
+			"open_of_person": 40.313724,
+			"closed_of_person": 59.686276,
+			"open_of_all": 28.02867818117532,
+			"closed_of_all": 41.497714818824676,
+			"all_ipv6": 31.87783,
+			"person_ipv6": 40.781114,
+			"automated_ipv6": 13.987245,
+			"open_ipv6": 30.141203733698678,
+			"closed_ipv6": 45.88474858157915,
+			"open_squared": 16.25196342748176,
+			"open_ipv6_squared": 9.084921625163311,
+			"person_ipv6_squared": 16.630992590809964,
+			"open_ipv6_of_person": 12.15104168348098,
+			"open_ipv6_of_person_squared": 1.4764781399369227,
+			"cells": {
+				"automated_ipv6": 4.26241807142715,
+				"open_ipv6": 8.448180994450802,
+				"closed_ipv6": 19.041122111718416,
+				"automated_ipv4": 26.211188928572852,
+				"open_ipv4": 19.580497186724518,
+				"closed_ipv4": 22.45659270710626
+			},
+			"systems": {
+				"ANDROID": 37.33479,
+				"WINDOWS": 30.907654,
+				"IOS": 21.647346,
+				"MACOSX": 8.16772,
+				"LINUX": 1.23835,
+				"CHROMEOS": 0.663189,
+				"SMART_TV": 0.040951
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.836872,
+				"MACOSX": 39.479588,
+				"LINUX": 26.061727,
+				"IOS": 52.233408,
+				"ANDROID": 42.556825,
+				"CHROMEOS": 26.513519,
+				"SMART_TV": 37.642883
+			},
+			"devices": {
+				"mobile": 57.219587,
+				"desktop": 42.758543,
+				"other": 0.02187
+			},
+			"device_ipv6": {
+				"desktop": 36.221581,
+				"mobile": 45.387761,
+				"other": 37.617723
+			},
+			"desktop_of_person": 42.758543,
+			"residual_systems": 1.2431746362115987,
+			"residual_devices": -0.6856226759319952,
+			"residual_bot_class": -0.7382256608451705
+		},
+		"2025-07": {
+			"month": "2025-07",
+			"date_range": {
+				"startTime": "2025-07-01T00:00:00Z",
+				"endTime": "2025-07-31T23:00:00Z"
+			},
+			"person": 69.235218,
+			"automated": 30.764782,
+			"open_of_person": 41.300591,
+			"closed_of_person": 58.699408999999996,
+			"open_of_all": 28.59455421413838,
+			"closed_of_all": 40.64066378586162,
+			"all_ipv6": 30.883628,
+			"person_ipv6": 40.086992,
+			"automated_ipv6": 13.612133,
+			"open_ipv6": 29.925581967120667,
+			"closed_ipv6": 46.17056538409905,
+			"open_squared": 17.057388169492807,
+			"open_ipv6_squared": 8.955404560708576,
+			"person_ipv6_squared": 16.069669276080642,
+			"open_ipv6_of_person": 12.359442212610261,
+			"open_ipv6_of_person_squared": 1.5275581180685243,
+			"cells": {
+				"automated_ipv6": 4.18774304300006,
+				"open_ipv6": 8.557086759484738,
+				"closed_ipv6": 18.7640242457831,
+				"automated_ipv4": 26.577038956999942,
+				"open_ipv4": 20.037467454653644,
+				"closed_ipv4": 21.876639540078518
+			},
+			"systems": {
+				"ANDROID": 36.347846,
+				"WINDOWS": 31.454165,
+				"IOS": 21.827019,
+				"MACOSX": 8.419531,
+				"LINUX": 1.426895,
+				"CHROMEOS": 0.489403,
+				"SMART_TV": 0.035141
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.489146,
+				"MACOSX": 39.601911,
+				"LINUX": 26.537741,
+				"IOS": 52.233742,
+				"ANDROID": 42.703552,
+				"CHROMEOS": 33.768078,
+				"SMART_TV": 38.977028
+			},
+			"devices": {
+				"mobile": 57.008129,
+				"desktop": 42.973475,
+				"other": 0.018396
+			},
+			"device_ipv6": {
+				"desktop": 36.612973,
+				"mobile": 44.27812,
+				"other": 38.954278
+			},
+			"desktop_of_person": 42.973475,
+			"residual_systems": 0.6257007749650256,
+			"residual_devices": -0.8961685962674224,
+			"residual_bot_class": -1.0584313438426172
+		},
+		"2025-08": {
+			"month": "2025-08",
+			"date_range": {
+				"startTime": "2025-08-01T00:00:00Z",
+				"endTime": "2025-08-31T23:00:00Z"
+			},
+			"person": 69.701673,
+			"automated": 30.298327,
+			"open_of_person": 42.379173,
+			"closed_of_person": 57.620827,
+			"open_of_all": 29.53899258456429,
+			"closed_of_all": 40.16268041543571,
+			"all_ipv6": 31.072626,
+			"person_ipv6": 40.475479,
+			"automated_ipv6": 12.710212,
+			"open_ipv6": 30.39885874787835,
+			"closed_ipv6": 46.290578112928024,
+			"open_squared": 17.959943041639292,
+			"open_ipv6_squared": 9.2409061317346,
+			"person_ipv6_squared": 16.382644002794407,
+			"open_ipv6_of_person": 12.882784938789,
+			"open_ipv6_of_person_squared": 1.659661477790887,
+			"cells": {
+				"automated_ipv6": 3.85098159415324,
+				"open_ipv6": 8.979516631327959,
+				"closed_ipv6": 18.591536949952914,
+				"automated_ipv4": 26.44734540584676,
+				"open_ipv4": 20.55947595323633,
+				"closed_ipv4": 21.571143465482795
+			},
+			"systems": {
+				"ANDROID": 35.200371,
+				"WINDOWS": 32.143098,
+				"IOS": 21.735006,
+				"MACOSX": 8.77308,
+				"LINUX": 1.462995,
+				"CHROMEOS": 0.657553,
+				"SMART_TV": 0.027897
+			},
+			"system_ipv6": {
+				"WINDOWS": 28.03458,
+				"MACOSX": 39.704132,
+				"LINUX": 26.5433,
+				"IOS": 52.822206,
+				"ANDROID": 42.638035,
+				"CHROMEOS": 26.205896,
+				"SMART_TV": 39.574599
+			},
+			"devices": {
+				"mobile": 56.421419,
+				"desktop": 43.564376,
+				"other": 0.014205
+			},
+			"device_ipv6": {
+				"desktop": 37.150382,
+				"mobile": 44.439414,
+				"other": 39.557093
+			},
+			"desktop_of_person": 43.564376,
+			"residual_systems": 0.919680129460879,
+			"residual_devices": -0.7878201590616243,
+			"residual_bot_class": -0.990441611916907
+		},
+		"2025-09": {
+			"month": "2025-09",
+			"date_range": {
+				"startTime": "2025-09-01T00:00:00Z",
+				"endTime": "2025-09-30T23:00:00Z"
+			},
+			"person": 70.649476,
+			"automated": 29.350524,
+			"open_of_person": 43.139442,
+			"closed_of_person": 56.860558,
+			"open_of_all": 30.477789722323923,
+			"closed_of_all": 40.17168627767608,
+			"all_ipv6": 31.671664,
+			"person_ipv6": 40.448476,
+			"automated_ipv6": 13.57826,
+			"open_ipv6": 30.461191818531915,
+			"closed_ipv6": 46.43014135705562,
+			"open_squared": 18.61011456071364,
+			"open_ipv6_squared": 9.278842070053958,
+			"person_ipv6_squared": 16.36079210722576,
+			"open_ipv6_of_person": 13.140788177064321,
+			"open_ipv6_of_person_squared": 1.7268031391447343,
+			"cells": {
+				"automated_ipv6": 3.9852904600824,
+				"open_ipv6": 9.283897989365895,
+				"closed_ipv6": 18.651770724237917,
+				"automated_ipv4": 25.3652335399176,
+				"open_ipv4": 21.19389173295803,
+				"closed_ipv4": 21.519915553438164
+			},
+			"systems": {
+				"ANDROID": 35.194365,
+				"WINDOWS": 32.637326,
+				"IOS": 20.637663,
+				"MACOSX": 9.046212,
+				"LINUX": 1.455904,
+				"CHROMEOS": 0.990499,
+				"SMART_TV": 0.038031
+			},
+			"system_ipv6": {
+				"WINDOWS": 28.458366,
+				"MACOSX": 38.279167,
+				"LINUX": 26.782253,
+				"IOS": 52.945572,
+				"ANDROID": 43.379193,
+				"CHROMEOS": 19.407733,
+				"SMART_TV": 37.979052
+			},
+			"devices": {
+				"mobile": 56.042533,
+				"desktop": 43.937335,
+				"other": 0.020133
+			},
+			"device_ipv6": {
+				"desktop": 35.879973,
+				"mobile": 44.948864,
+				"other": 37.961961
+			},
+			"desktop_of_person": 43.937335,
+			"residual_systems": 0.90725036712508,
+			"residual_devices": -0.5143527568527944,
+			"residual_bot_class": -0.8902628040681648
+		},
+		"2025-10": {
+			"month": "2025-10",
+			"date_range": {
+				"startTime": "2025-10-01T00:00:00Z",
+				"endTime": "2025-10-31T23:00:00Z"
+			},
+			"person": 71.783408,
+			"automated": 28.216592,
+			"open_of_person": 42.781237000000004,
+			"closed_of_person": 57.218763,
+			"open_of_all": 30.70982990315696,
+			"closed_of_all": 41.073578096843036,
+			"all_ipv6": 31.025048,
+			"person_ipv6": 39.551921,
+			"automated_ipv6": 12.912968,
+			"open_ipv6": 30.617214334506645,
+			"closed_ipv6": 45.63549889599854,
+			"open_squared": 18.302342392501693,
+			"open_ipv6_squared": 9.374138136051192,
+			"person_ipv6_squared": 15.643544547902412,
+			"open_ipv6_of_person": 13.098423027243262,
+			"open_ipv6_of_person_squared": 1.7156868580061655,
+			"cells": {
+				"automated_ipv6": 3.6435994956505597,
+				"open_ipv6": 9.402494443211982,
+				"closed_ipv6": 18.7441322789319,
+				"automated_ipv4": 24.57299250434944,
+				"open_ipv4": 21.30733545994498,
+				"closed_ipv4": 22.329445817911136
+			},
+			"systems": {
+				"ANDROID": 36.053931,
+				"WINDOWS": 32.657392,
+				"IOS": 20.124382,
+				"MACOSX": 8.802871,
+				"LINUX": 1.320974,
+				"CHROMEOS": 0.991867,
+				"SMART_TV": 0.048583
+			},
+			"system_ipv6": {
+				"WINDOWS": 28.842334,
+				"MACOSX": 37.799476,
+				"LINUX": 26.634123,
+				"IOS": 52.691905,
+				"ANDROID": 42.435709,
+				"CHROMEOS": 19.178347,
+				"SMART_TV": 37.426208
+			},
+			"devices": {
+				"mobile": 55.650184,
+				"desktop": 44.32278,
+				"other": 0.027036
+			},
+			"device_ipv6": {
+				"desktop": 34.244939,
+				"mobile": 44.363215,
+				"other": 37.163165
+			},
+			"desktop_of_person": 44.32278,
+			"residual_systems": 0.34143001558771857,
+			"residual_devices": -0.3246461832092038,
+			"residual_bot_class": -1.0102683189182393
+		},
+		"2025-11": {
+			"month": "2025-11",
+			"date_range": {
+				"startTime": "2025-11-01T00:00:00Z",
+				"endTime": "2025-11-30T23:00:00Z"
+			},
+			"person": 71.684029,
+			"automated": 28.315971,
+			"open_of_person": 42.543246,
+			"closed_of_person": 57.456754,
+			"open_of_all": 30.49671280018134,
+			"closed_of_all": 41.18731619981865,
+			"all_ipv6": 31.027101,
+			"person_ipv6": 39.739286,
+			"automated_ipv6": 12.864982,
+			"open_ipv6": 31.131858825558112,
+			"closed_ipv6": 45.71724449212429,
+			"open_squared": 18.09927780216516,
+			"open_ipv6_squared": 9.691926339344805,
+			"person_ipv6_squared": 15.79210851789796,
+			"open_ipv6_of_person": 13.244503284529898,
+			"open_ipv6_of_person_squared": 1.7541686725392327,
+			"cells": {
+				"automated_ipv6": 3.6428445722752203,
+				"open_ipv6": 9.494193575388366,
+				"closed_ipv6": 18.829706046815406,
+				"automated_ipv4": 24.67312642772478,
+				"open_ipv4": 21.002519224792973,
+				"closed_ipv4": 22.357610153003247
+			},
+			"systems": {
+				"ANDROID": 35.891585,
+				"WINDOWS": 32.559767,
+				"IOS": 20.579589,
+				"MACOSX": 8.711782,
+				"LINUX": 1.271697,
+				"CHROMEOS": 0.939443,
+				"SMART_TV": 0.046137
+			},
+			"system_ipv6": {
+				"WINDOWS": 29.460585,
+				"MACOSX": 38.032801,
+				"LINUX": 26.647129,
+				"IOS": 52.772673,
+				"ANDROID": 42.350189,
+				"CHROMEOS": 20.169477,
+				"SMART_TV": 38.170391
+			},
+			"devices": {
+				"mobile": 55.822115,
+				"desktop": 44.152158,
+				"other": 0.025727
+			},
+			"device_ipv6": {
+				"desktop": 34.469312,
+				"mobile": 44.554668,
+				"other": 38.156397
+			},
+			"desktop_of_person": 44.152158,
+			"residual_systems": 0.2271380120517037,
+			"residual_devices": -0.3608336008373456,
+			"residual_bot_class": -1.1024648729081612
+		},
+		"2025-12": {
+			"month": "2025-12",
+			"date_range": {
+				"startTime": "2025-12-01T00:00:00Z",
+				"endTime": "2025-12-31T23:00:00Z"
+			},
+			"person": 70.002464,
+			"automated": 29.997536,
+			"open_of_person": 41.377610000000004,
+			"closed_of_person": 58.622389999999996,
+			"open_of_all": 28.965346544310407,
+			"closed_of_all": 41.0371174556896,
+			"all_ipv6": 30.43206,
+			"person_ipv6": 40.104309,
+			"automated_ipv6": 11.901544,
+			"open_ipv6": 31.58894239842825,
+			"closed_ipv6": 45.548171735121656,
+			"open_squared": 17.121066093121,
+			"open_ipv6_squared": 9.97861281851218,
+			"person_ipv6_squared": 16.08355600367481,
+			"open_ipv6_of_person": 13.07074938874629,
+			"open_ipv6_of_person_squared": 1.708444895834115,
+			"cells": {
+				"automated_ipv6": 3.57016994595584,
+				"open_ipv6": 9.149846635387343,
+				"closed_ipv6": 18.691656733861084,
+				"automated_ipv4": 26.42736605404416,
+				"open_ipv4": 19.815499908923066,
+				"closed_ipv4": 22.345460721828513
+			},
+			"systems": {
+				"ANDROID": 37.34383,
+				"WINDOWS": 31.764379,
+				"IOS": 20.408456,
+				"MACOSX": 8.190814,
+				"LINUX": 1.422417,
+				"CHROMEOS": 0.821867,
+				"SMART_TV": 0.048237
+			},
+			"system_ipv6": {
+				"WINDOWS": 30.076366,
+				"MACOSX": 38.173913,
+				"LINUX": 27.447949,
+				"IOS": 52.708939,
+				"ANDROID": 42.167879,
+				"CHROMEOS": 21.739366,
+				"SMART_TV": 38.510946
+			},
+			"devices": {
+				"mobile": 56.196198,
+				"desktop": 43.777026,
+				"other": 0.026776
+			},
+			"device_ipv6": {
+				"desktop": 34.70705,
+				"mobile": 44.84743,
+				"other": 38.495861
+			},
+			"desktop_of_person": 43.777026,
+			"residual_systems": 0.3321327388209312,
+			"residual_devices": -0.3022635147857642,
+			"residual_bot_class": -1.2121144161296051
+		},
+		"2026-01": {
+			"month": "2026-01",
+			"date_range": {
+				"startTime": "2026-01-01T00:00:00Z",
+				"endTime": "2026-01-31T23:00:00Z"
+			},
+			"person": 70.445556,
+			"automated": 29.554444,
+			"open_of_person": 41.482298,
+			"closed_of_person": 58.517703,
+			"open_of_all": 29.222435467676878,
+			"closed_of_all": 41.22312123677868,
+			"all_ipv6": 30.642528,
+			"person_ipv6": 39.857528,
+			"automated_ipv6": 12.505822,
+			"open_ipv6": 31.538546413656977,
+			"closed_ipv6": 45.406510378433325,
+			"open_squared": 17.20781047360804,
+			"open_ipv6_squared": 9.946799098863954,
+			"person_ipv6_squared": 15.886225382707842,
+			"open_ipv6_of_person": 13.0829138081815,
+			"open_ipv6_of_person_squared": 1.7116263371230616,
+			"cells": {
+				"automated_ipv6": 3.69602615972968,
+				"open_ipv6": 9.21633137317423,
+				"closed_ipv6": 18.717980822692063,
+				"automated_ipv4": 25.85841784027032,
+				"open_ipv4": 20.006104094502646,
+				"closed_ipv4": 22.50514041408662
+			},
+			"systems": {
+				"ANDROID": 37.453061,
+				"WINDOWS": 31.550886,
+				"IOS": 20.192161,
+				"MACOSX": 8.486668,
+				"LINUX": 1.444744,
+				"CHROMEOS": 0.818393,
+				"SMART_TV": 0.054088
+			},
+			"system_ipv6": {
+				"WINDOWS": 29.797241,
+				"MACOSX": 38.642128,
+				"LINUX": 27.83823,
+				"IOS": 52.562593,
+				"ANDROID": 42.060476,
+				"CHROMEOS": 22.46943,
+				"SMART_TV": 37.900285
+			},
+			"devices": {
+				"mobile": 55.500759,
+				"desktop": 44.469321,
+				"other": 0.02992
+			},
+			"device_ipv6": {
+				"desktop": 34.13198,
+				"mobile": 44.945791,
+				"other": 37.882265
+			},
+			"desktop_of_person": 44.469321,
+			"residual_systems": 0.20376730590271563,
+			"residual_devices": -0.2773212670974843,
+			"residual_bot_class": -1.131355367185364
+		},
+		"2026-02": {
+			"month": "2026-02",
+			"date_range": {
+				"startTime": "2026-02-01T00:00:00Z",
+				"endTime": "2026-02-28T23:00:00Z"
+			},
+			"person": 68.347797,
+			"automated": 31.652203,
+			"open_of_person": 42.735344000000005,
+			"closed_of_person": 57.264656,
+			"open_of_all": 29.208666164371685,
+			"closed_of_all": 39.13913083562832,
+			"all_ipv6": 30.558598,
+			"person_ipv6": 39.750667,
+			"automated_ipv6": 14.146739,
+			"open_ipv6": 30.424367825537942,
+			"closed_ipv6": 45.422129379564666,
+			"open_squared": 18.263096267983364,
+			"open_ipv6_squared": 9.256421575836283,
+			"person_ipv6_squared": 15.801155269448891,
+			"open_ipv6_of_person": 13.00195825006896,
+			"open_ipv6_of_person_squared": 1.690509183365363,
+			"cells": {
+				"automated_ipv6": 4.4777545461601695,
+				"open_ipv6": 8.886552030781885,
+				"closed_ipv6": 17.777826646196186,
+				"automated_ipv4": 27.17444845383983,
+				"open_ipv4": 20.3221141335898,
+				"closed_ipv4": 21.361304189432136
+			},
+			"systems": {
+				"ANDROID": 36.578394,
+				"WINDOWS": 32.483808,
+				"IOS": 19.676266,
+				"MACOSX": 8.893584,
+				"LINUX": 1.357952,
+				"CHROMEOS": 0.964846,
+				"SMART_TV": 0.04515
+			},
+			"system_ipv6": {
+				"WINDOWS": 28.639091,
+				"MACOSX": 37.608329,
+				"LINUX": 26.080641,
+				"IOS": 52.612921,
+				"ANDROID": 42.234351,
+				"CHROMEOS": 19.951954,
+				"SMART_TV": 38.571226
+			},
+			"devices": {
+				"mobile": 54.35134,
+				"desktop": 45.624169,
+				"other": 0.024491
+			},
+			"device_ipv6": {
+				"desktop": 33.811023,
+				"mobile": 45.314614,
+				"other": 38.564368
+			},
+			"desktop_of_person": 45.624169,
+			"residual_systems": 0.7378826128484022,
+			"residual_devices": -0.3138759983433488,
+			"residual_bot_class": -1.0878617334661627
+		},
+		"2026-03": {
+			"month": "2026-03",
+			"date_range": {
+				"startTime": "2026-03-01T00:00:00Z",
+				"endTime": "2026-03-31T23:00:00Z"
+			},
+			"person": 69.335212,
+			"automated": 30.664788,
+			"open_of_person": 43.551167,
+			"closed_of_person": 56.448831999999996,
+			"open_of_all": 30.19629396792404,
+			"closed_of_all": 39.138917338723836,
+			"all_ipv6": 30.997886,
+			"person_ipv6": 39.631736,
+			"automated_ipv6": 14.832943,
+			"open_ipv6": 29.70659780957047,
+			"closed_ipv6": 45.69199939329792,
+			"open_squared": 18.96704147061889,
+			"open_ipv6_squared": 8.824819534195772,
+			"person_ipv6_squared": 15.706744983736957,
+			"open_ipv6_of_person": 12.937570022064378,
+			"open_ipv6_of_person_squared": 1.6738071807581887,
+			"cells": {
+				"automated_ipv6": 4.54849052511084,
+				"open_ipv6": 8.970291602446784,
+				"closed_ipv6": 17.88335387295307,
+				"automated_ipv4": 26.116297474889162,
+				"open_ipv4": 21.226002365477257,
+				"closed_ipv4": 21.255563465770766
+			},
+			"systems": {
+				"ANDROID": 36.015673,
+				"WINDOWS": 33.006472,
+				"IOS": 19.428572,
+				"MACOSX": 9.099839,
+				"LINUX": 1.444856,
+				"CHROMEOS": 0.96358,
+				"SMART_TV": 0.041007
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.937903,
+				"MACOSX": 36.793274,
+				"LINUX": 25.478331,
+				"IOS": 52.79809,
+				"ANDROID": 42.579024,
+				"CHROMEOS": 19.02541,
+				"SMART_TV": 39.597992
+			},
+			"devices": {
+				"mobile": 54.015044,
+				"desktop": 45.962822,
+				"other": 0.022134
+			},
+			"device_ipv6": {
+				"desktop": 33.386336,
+				"mobile": 45.740096,
+				"other": 39.589622
+			},
+			"desktop_of_person": 45.962822,
+			"residual_systems": 0.9015660029718617,
+			"residual_devices": -0.4288619349776468,
+			"residual_bot_class": -1.0293526999911577
+		},
+		"2026-04": {
+			"month": "2026-04",
+			"date_range": {
+				"startTime": "2026-04-01T00:00:00Z",
+				"endTime": "2026-04-30T23:00:00Z"
+			},
+			"person": 68.041202,
+			"automated": 31.958798,
+			"open_of_person": 43.949298999999996,
+			"closed_of_person": 56.050701000000004,
+			"open_of_all": 29.903631310173978,
+			"closed_of_all": 38.13757068982602,
+			"all_ipv6": 31.039393,
+			"person_ipv6": 39.94096,
+			"automated_ipv6": 15.287079,
+			"open_ipv6": 29.556879998139223,
+			"closed_ipv6": 46.012527812715845,
+			"open_squared": 19.31540882591401,
+			"open_ipv6_squared": 8.736091552244025,
+			"person_ipv6_squared": 15.952802857215998,
+			"open_ipv6_of_person": 12.990041565453401,
+			"open_ipv6_of_person_squared": 1.6874117987220705,
+			"cells": {
+				"automated_ipv6": 4.88556669771042,
+				"open_ipv6": 8.83858042143411,
+				"closed_ipv6": 17.548060320750366,
+				"automated_ipv4": 27.07323130228958,
+				"open_ipv4": 21.06505088873987,
+				"closed_ipv4": 20.589510369075654
+			},
+			"systems": {
+				"ANDROID": 35.665663,
+				"WINDOWS": 33.446771,
+				"IOS": 19.431817,
+				"MACOSX": 9.065778,
+				"LINUX": 1.43675,
+				"CHROMEOS": 0.911469,
+				"SMART_TV": 0.041752
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.695436,
+				"MACOSX": 37.156953,
+				"LINUX": 24.934445,
+				"IOS": 52.451336,
+				"ANDROID": 43.209279,
+				"CHROMEOS": 18.711667,
+				"SMART_TV": 39.925954
+			},
+			"devices": {
+				"mobile": 54.503406,
+				"desktop": 45.47393,
+				"other": 0.022664
+			},
+			"device_ipv6": {
+				"desktop": 33.430878,
+				"mobile": 46.309288,
+				"other": 39.913758
+			},
+			"desktop_of_person": 45.47393,
+			"residual_systems": 1.1605740476993986,
+			"residual_devices": -0.5105593685678045,
+			"residual_bot_class": -1.0224829720496125
+		},
+		"2026-05": {
+			"month": "2026-05",
+			"date_range": {
+				"startTime": "2026-05-01T00:00:00Z",
+				"endTime": "2026-05-31T23:00:00Z"
+			},
+			"person": 67.365296,
+			"automated": 32.634704,
+			"open_of_person": 43.224927,
+			"closed_of_person": 56.775074000000004,
+			"open_of_all": 29.118600019333922,
+			"closed_of_all": 38.246696654319045,
+			"all_ipv6": 31.301191,
+			"person_ipv6": 40.718163,
+			"automated_ipv6": 15.071834,
+			"open_ipv6": 29.737166630064156,
+			"closed_ipv6": 46.63393232061917,
+			"open_squared": 18.68394314155329,
+			"open_ipv6_squared": 8.842990791842013,
+			"person_ipv6_squared": 16.579687980945685,
+			"open_ipv6_of_person": 12.853868567713592,
+			"open_ipv6_of_person_squared": 1.6522193715605547,
+			"cells": {
+				"automated_ipv6": 4.9186484132713595,
+				"open_ipv6": 8.659046608091222,
+				"closed_ipv6": 17.835938632647657,
+				"automated_ipv4": 27.71605558672864,
+				"open_ipv4": 20.4595534112427,
+				"closed_ipv4": 20.410758021671388
+			},
+			"systems": {
+				"ANDROID": 36.341143,
+				"WINDOWS": 32.918882,
+				"IOS": 19.460279,
+				"MACOSX": 8.831109,
+				"LINUX": 1.474936,
+				"CHROMEOS": 0.933029,
+				"SMART_TV": 0.040623
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.724582,
+				"MACOSX": 38.006279,
+				"LINUX": 25.144834,
+				"IOS": 52.971363,
+				"ANDROID": 43.979978,
+				"CHROMEOS": 18.103509,
+				"SMART_TV": 40.215811
+			},
+			"devices": {
+				"mobile": 54.80119,
+				"desktop": 45.176875,
+				"other": 0.021936
+			},
+			"device_ipv6": {
+				"desktop": 34.273534,
+				"mobile": 46.893997,
+				"other": 40.197423
+			},
+			"desktop_of_person": 45.176875,
+			"residual_systems": 1.387844848144951,
+			"residual_devices": -0.4728347145360843,
+			"residual_bot_class": -1.0473684439838387
+		},
+		"2026-06": {
+			"month": "2026-06",
+			"date_range": {
+				"startTime": "2026-06-01T00:00:00Z",
+				"endTime": "2026-06-30T23:00:00Z"
+			},
+			"person": 65.21156,
+			"automated": 34.78844,
+			"open_of_person": 43.567007,
+			"closed_of_person": 56.432992999999996,
+			"open_of_all": 28.410724910009197,
+			"closed_of_all": 36.8008350899908,
+			"all_ipv6": 30.387219,
+			"person_ipv6": 41.324847,
+			"automated_ipv6": 13.470537,
+			"open_ipv6": 29.85711207897467,
+			"closed_ipv6": 47.41326983886029,
+			"open_squared": 18.98084098938049,
+			"open_ipv6_squared": 8.91447141696455,
+			"person_ipv6_squared": 17.077429795734087,
+			"open_ipv6_of_person": 13.007850109444739,
+			"open_ipv6_of_person_squared": 1.6920416446978153,
+			"cells": {
+				"automated_ipv6": 4.686189681922801,
+				"open_ipv6": 8.48262197883062,
+				"closed_ipv6": 17.44847924417132,
+				"automated_ipv4": 30.1022503180772,
+				"open_ipv4": 19.92810293117858,
+				"closed_ipv4": 19.352355845819478
+			},
+			"systems": {
+				"ANDROID": 36.081607,
+				"WINDOWS": 32.964822,
+				"IOS": 19.70958,
+				"MACOSX": 8.938215,
+				"LINUX": 1.66397,
+				"CHROMEOS": 0.597514,
+				"SMART_TV": 0.044292
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.541067,
+				"MACOSX": 39.067262,
+				"LINUX": 26.266731,
+				"IOS": 53.572198,
+				"ANDROID": 44.414408,
+				"CHROMEOS": 25.867429,
+				"SMART_TV": 40.364786
+			},
+			"devices": {
+				"mobile": 54.915372,
+				"desktop": 45.06105,
+				"other": 0.023578
+			},
+			"device_ipv6": {
+				"desktop": 35.04504,
+				"mobile": 47.225269,
+				"other": 40.357181
+			},
+			"desktop_of_person": 45.06105,
+			"residual_systems": 1.5602696413201187,
+			"residual_devices": -0.410263562406854,
+			"residual_bot_class": -1.2475480782360044
+		},
+		"2026-07": {
+			"month": "2026-07",
+			"date_range": {
+				"startTime": "2026-07-01T00:00:00Z",
+				"endTime": "2026-07-31T23:00:00Z"
+			},
+			"person": 65.252365,
+			"automated": 34.747635,
+			"open_of_person": 43.032882,
+			"closed_of_person": 56.967118,
+			"open_of_all": 28.0799732326593,
+			"closed_of_all": 37.1723917673407,
+			"all_ipv6": 29.902562,
+			"person_ipv6": 40.989622,
+			"automated_ipv6": 12.669227,
+			"open_ipv6": 29.390776871235953,
+			"closed_ipv6": 47.24012812222912,
+			"open_squared": 18.518289332259243,
+			"open_ipv6_squared": 8.638177650947782,
+			"person_ipv6_squared": 16.80149111702884,
+			"open_ipv6_of_person": 12.64769832988226,
+			"open_ipv6_of_person_squared": 1.5996427304370653,
+			"cells": {
+				"automated_ipv6": 4.40225675528145,
+				"open_ipv6": 8.252922278313676,
+				"closed_ipv6": 17.560285496988698,
+				"automated_ipv4": 30.345378244718553,
+				"open_ipv4": 19.827050954345623,
+				"closed_ipv4": 19.612106270352
+			},
+			"systems": {
+				"ANDROID": 36.982279,
+				"WINDOWS": 32.240895,
+				"IOS": 19.510133,
+				"MACOSX": 8.80553,
+				"LINUX": 1.986457,
+				"CHROMEOS": 0.432029,
+				"SMART_TV": 0.042677
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.079851,
+				"MACOSX": 39.002494,
+				"LINUX": 24.291273,
+				"IOS": 53.661696,
+				"ANDROID": 44.015934,
+				"CHROMEOS": 33.892989,
+				"SMART_TV": 40.65003
+			},
+			"devices": {
+				"mobile": 54.635839,
+				"desktop": 45.34135,
+				"other": 0.022811
+			},
+			"device_ipv6": {
+				"desktop": 34.252924,
+				"mobile": 47.260101,
+				"other": 40.635247
+			},
+			"desktop_of_person": 45.34135,
+			"residual_systems": 1.4305841393762933,
+			"residual_devices": -0.37133815586456365,
+			"residual_bot_class": -1.246392514841748
+		},
+		"2026-08": {
+			"month": "2026-08",
+			"date_range": {
+				"startTime": "2026-08-01T00:00:00Z",
+				"endTime": "2026-08-31T23:00:00Z"
+			},
+			"person": 64.58036,
+			"automated": 35.41964,
+			"open_of_person": 43.46891599999999,
+			"closed_of_person": 56.531084,
+			"open_of_all": 28.072382440897595,
+			"closed_of_all": 36.5079775591024,
+			"all_ipv6": 29.166698,
+			"person_ipv6": 40.693644,
+			"automated_ipv6": 12.106656,
+			"open_ipv6": 29.118660402974236,
+			"closed_ipv6": 47.356683177429616,
+			"open_squared": 18.895466582150554,
+			"open_ipv6_squared": 8.478963836637398,
+			"person_ipv6_squared": 16.55972661998736,
+			"open_ipv6_of_person": 12.65756603089413,
+			"open_ipv6_of_person_squared": 1.6021397782644495,
+			"cells": {
+				"automated_ipv6": 4.2881339712384,
+				"open_ipv6": 8.174301709989141,
+				"closed_ipv6": 17.288967267151225,
+				"automated_ipv4": 31.1315060287616,
+				"open_ipv4": 19.898080730908454,
+				"closed_ipv4": 19.219010291951175
+			},
+			"systems": {
+				"ANDROID": 36.490063,
+				"WINDOWS": 32.841556,
+				"IOS": 19.464853,
+				"MACOSX": 8.799741,
+				"LINUX": 1.827619,
+				"CHROMEOS": 0.534948,
+				"SMART_TV": 0.04122
+			},
+			"system_ipv6": {
+				"WINDOWS": 26.929527,
+				"MACOSX": 38.357745,
+				"LINUX": 23.971524,
+				"IOS": 54.048732,
+				"ANDROID": 44.068708,
+				"CHROMEOS": 28.588705,
+				"SMART_TV": 41.499506
+			},
+			"devices": {
+				"mobile": 54.153182,
+				"desktop": 45.825113,
+				"other": 0.021704
+			},
+			"device_ipv6": {
+				"desktop": 33.70519,
+				"mobile": 47.410732,
+				"other": 41.490826
+			},
+			"desktop_of_person": 45.825113,
+			"residual_systems": 1.264831622459269,
+			"residual_devices": -0.4352225607319866,
+			"residual_bot_class": -1.4015377635567994
+		},
+		"2026-09": {
+			"month": "2026-09",
+			"date_range": {
+				"startTime": "2026-09-01T00:00:00Z",
+				"endTime": "2026-09-30T23:00:00Z"
+			},
+			"person": 63.849648,
+			"automated": 36.150352,
+			"open_of_person": 46.625735,
+			"closed_of_person": 53.374266,
+			"open_of_all": 29.7703676749128,
+			"closed_of_all": 34.07928096358368,
+			"all_ipv6": 29.505746,
+			"person_ipv6": 40.995266,
+			"automated_ipv6": 12.807815,
+			"open_ipv6": 29.336651321891654,
+			"closed_ipv6": 48.00142145135637,
+			"open_squared": 21.73959164290225,
+			"open_ipv6_squared": 8.606391107822473,
+			"person_ipv6_squared": 16.80611834410756,
+			"open_ipv6_of_person": 13.6784293032192,
+			"open_ipv6_of_person_squared": 1.870994282031657,
+			"cells": {
+				"automated_ipv6": 4.630070206008799,
+				"open_ipv6": 8.733628962034311,
+				"closed_ipv6": 16.35853928292166,
+				"automated_ipv4": 31.5202817939912,
+				"open_ipv4": 21.03673871287849,
+				"closed_ipv4": 17.720741680662016
+			},
+			"systems": {
+				"WINDOWS": 35.175712,
+				"ANDROID": 33.743201,
+				"IOS": 18.858613,
+				"MACOSX": 9.197708,
+				"LINUX": 2.252315,
+				"CHROMEOS": 0.733611,
+				"SMART_TV": 0.038841
+			},
+			"system_ipv6": {
+				"WINDOWS": 27.248762,
+				"MACOSX": 38.930662,
+				"LINUX": 22.765672,
+				"IOS": 54.428726,
+				"ANDROID": 44.976753,
+				"CHROMEOS": 22.284578,
+				"SMART_TV": 40.743772
+			},
+			"devices": {
+				"mobile": 53.949456,
+				"desktop": 46.029554,
+				"other": 0.020991
+			},
+			"device_ipv6": {
+				"desktop": 33.714533,
+				"mobile": 48.069719,
+				"other": 40.731569
+			},
+			"desktop_of_person": 46.029554,
+			"residual_systems": 1.6964303275527897,
+			"residual_devices": -0.4652850379602498,
+			"residual_bot_class": -1.2996572436724811
+		}
+	},
+	"verification": {
+		"unfiltered_ipv6": {
+			"WINDOWS": 23.484953,
+			"MACOSX": 30.296255,
+			"LINUX": 15.389195,
+			"IOS": 51.024195,
+			"ANDROID": 41.252348,
+			"CHROMEOS": 20.562114,
+			"SMART_TV": 18.135717
+		},
+		"human_ipv6": {
+			"WINDOWS": 27.248762,
+			"MACOSX": 38.930662,
+			"LINUX": 22.765672,
+			"IOS": 54.428726,
+			"ANDROID": 44.976753,
+			"CHROMEOS": 22.284578,
+			"SMART_TV": 40.743772
+		},
+		"share_among_ipv6_direct": {
+			"ANDROID": 39.406736,
+			"IOS": 26.130534,
+			"WINDOWS": 23.466584,
+			"MACOSX": 9.398306,
+			"LINUX": 1.105699,
+			"CHROMEOS": 0.444278,
+			"SMART_TV": 0.047864
+		},
+		"share_among_ipv6_predicted": {
+			"WINDOWS": 24.389898277331245,
+			"MACOSX": 9.111538680362083,
+			"LINUX": 1.3047578548651433,
+			"IOS": 26.11910154978693,
+			"ANDROID": 38.61843718363389,
+			"CHROMEOS": 0.415997351357152,
+			"SMART_TV": 0.04026910266355617
+		}
+	},
+	"google": {
+		"2008-09": {
+			"total": 0.15432144444444446,
+			"native": 0.049785333333333334,
+			"days": 27
+		},
+		"2008-10": {
+			"total": 0.15574890322580645,
+			"native": 0.055173806451612906,
+			"days": 31
+		},
+		"2008-11": {
+			"total": 0.15838606666666666,
+			"native": 0.06175393333333334,
+			"days": 30
+		},
+		"2008-12": {
+			"total": 0.18871996774193547,
+			"native": 0.06902916129032258,
+			"days": 31
+		},
+		"2009-01": {
+			"total": 0.19445187096774194,
+			"native": 0.06552745161290323,
+			"days": 31
+		},
+		"2009-02": {
+			"total": 0.19785382142857144,
+			"native": 0.06922407142857143,
+			"days": 28
+		},
+		"2009-03": {
+			"total": 0.20440374193548388,
+			"native": 0.07527345161290322,
+			"days": 31
+		},
+		"2009-04": {
+			"total": 0.21421143333333334,
+			"native": 0.08203636666666667,
+			"days": 30
+		},
+		"2009-05": {
+			"total": 0.21194041935483873,
+			"native": 0.08485890322580644,
+			"days": 31
+		},
+		"2009-06": {
+			"total": 0.20699373333333335,
+			"native": 0.08543053333333334,
+			"days": 30
+		},
+		"2009-07": {
+			"total": 0.19730316129032258,
+			"native": 0.07949983870967742,
+			"days": 31
+		},
+		"2009-08": {
+			"total": 0.20199090322580646,
+			"native": 0.0776004193548387,
+			"days": 31
+		},
+		"2009-09": {
+			"total": 0.2183274,
+			"native": 0.09138543333333334,
+			"days": 30
+		},
+		"2009-10": {
+			"total": 0.24851290322580646,
+			"native": 0.10724354838709677,
+			"days": 31
+		},
+		"2009-11": {
+			"total": 0.27348,
+			"native": 0.12042316666666666,
+			"days": 30
+		},
+		"2009-12": {
+			"total": 0.26959225806451614,
+			"native": 0.11367938709677419,
+			"days": 31
+		},
+		"2010-01": {
+			"total": 0.26530587096774194,
+			"native": 0.11342025806451612,
+			"days": 31
+		},
+		"2010-02": {
+			"total": 0.26290632142857145,
+			"native": 0.10945164285714284,
+			"days": 28
+		},
+		"2010-03": {
+			"total": 0.2611394193548387,
+			"native": 0.13219816129032258,
+			"days": 31
+		},
+		"2010-04": {
+			"total": 0.2429403,
+			"native": 0.13553246666666666,
+			"days": 30
+		},
+		"2010-05": {
+			"total": 0.2356637741935484,
+			"native": 0.13861606451612904,
+			"days": 31
+		},
+		"2010-06": {
+			"total": 0.22615216666666665,
+			"native": 0.1372474333333333,
+			"days": 30
+		},
+		"2010-07": {
+			"total": 0.21015645161290322,
+			"native": 0.12610009677419354,
+			"days": 31
+		},
+		"2010-08": {
+			"total": 0.21594248387096773,
+			"native": 0.13074709677419355,
+			"days": 31
+		},
+		"2010-09": {
+			"total": 0.24445736666666665,
+			"native": 0.1586642666666667,
+			"days": 30
+		},
+		"2010-10": {
+			"total": 0.26031964516129036,
+			"native": 0.17437964516129034,
+			"days": 31
+		},
+		"2010-11": {
+			"total": 0.2615302666666667,
+			"native": 0.1888797,
+			"days": 30
+		},
+		"2010-12": {
+			"total": 0.25182332258064516,
+			"native": 0.1953338064516129,
+			"days": 31
+		},
+		"2011-01": {
+			"total": 0.235975,
+			"native": 0.18872329032258064,
+			"days": 31
+		},
+		"2011-02": {
+			"total": 0.24642967857142858,
+			"native": 0.20343164285714285,
+			"days": 28
+		},
+		"2011-03": {
+			"total": 0.2634756129032258,
+			"native": 0.225698935483871,
+			"days": 31
+		},
+		"2011-04": {
+			"total": 0.28967550000000003,
+			"native": 0.2448833,
+			"days": 30
+		},
+		"2011-05": {
+			"total": 0.31462903225806454,
+			"native": 0.26831467741935483,
+			"days": 31
+		},
+		"2011-06": {
+			"total": 0.32620233333333337,
+			"native": 0.29193433333333335,
+			"days": 30
+		},
+		"2011-07": {
+			"total": 0.3029444838709678,
+			"native": 0.27417583870967743,
+			"days": 31
+		},
+		"2011-08": {
+			"total": 0.32301467741935486,
+			"native": 0.2970532258064516,
+			"days": 31
+		},
+		"2011-09": {
+			"total": 0.34509143333333336,
+			"native": 0.32779566666666665,
+			"days": 30
+		},
+		"2011-10": {
+			"total": 0.3510635483870968,
+			"native": 0.33368354838709674,
+			"days": 31
+		},
+		"2011-11": {
+			"total": 0.37210713333333334,
+			"native": 0.35638623333333336,
+			"days": 30
+		},
+		"2011-12": {
+			"total": 0.40432870967741935,
+			"native": 0.3889182258064516,
+			"days": 31
+		},
+		"2012-01": {
+			"total": 0.420881935483871,
+			"native": 0.40738851612903226,
+			"days": 31
+		},
+		"2012-02": {
+			"total": 0.45322620689655174,
+			"native": 0.43994606896551725,
+			"days": 29
+		},
+		"2012-03": {
+			"total": 0.4865212580645161,
+			"native": 0.47421290322580645,
+			"days": 31
+		},
+		"2012-04": {
+			"total": 0.5447388333333334,
+			"native": 0.5317494666666667,
+			"days": 30
+		},
+		"2012-05": {
+			"total": 0.5971212903225807,
+			"native": 0.5844947741935483,
+			"days": 31
+		},
+		"2012-06": {
+			"total": 0.6765312,
+			"native": 0.6639492333333333,
+			"days": 30
+		},
+		"2012-07": {
+			"total": 0.695388741935484,
+			"native": 0.6807289032258064,
+			"days": 31
+		},
+		"2012-08": {
+			"total": 0.735083870967742,
+			"native": 0.7184018064516129,
+			"days": 31
+		},
+		"2012-09": {
+			"total": 0.8113567333333334,
+			"native": 0.7985500666666667,
+			"days": 30
+		},
+		"2012-10": {
+			"total": 0.8736237419354839,
+			"native": 0.8624669677419354,
+			"days": 31
+		},
+		"2012-11": {
+			"total": 0.9190143333333334,
+			"native": 0.9090860333333333,
+			"days": 30
+		},
+		"2012-12": {
+			"total": 0.9978585806451613,
+			"native": 0.9883291935483871,
+			"days": 31
+		},
+		"2013-01": {
+			"total": 1.0008455483870968,
+			"native": 0.9916268387096774,
+			"days": 31
+		},
+		"2013-02": {
+			"total": 1.0596778214285714,
+			"native": 1.050184357142857,
+			"days": 28
+		},
+		"2013-03": {
+			"total": 1.1339382258064516,
+			"native": 1.1250812903225809,
+			"days": 31
+		},
+		"2013-04": {
+			"total": 1.2036859666666666,
+			"native": 1.1952441,
+			"days": 30
+		},
+		"2013-05": {
+			"total": 1.3034539677419354,
+			"native": 1.294807935483871,
+			"days": 31
+		},
+		"2013-06": {
+			"total": 1.4024101,
+			"native": 1.3938552333333334,
+			"days": 30
+		},
+		"2013-07": {
+			"total": 1.4692332258064515,
+			"native": 1.4610785806451614,
+			"days": 31
+		},
+		"2013-08": {
+			"total": 1.6562290322580646,
+			"native": 1.648176129032258,
+			"days": 31
+		},
+		"2013-09": {
+			"total": 1.7625662333333334,
+			"native": 1.7525810666666668,
+			"days": 30
+		},
+		"2013-10": {
+			"total": 1.9831523870967742,
+			"native": 1.9699666451612905,
+			"days": 31
+		},
+		"2013-11": {
+			"total": 2.1993596666666666,
+			"native": 2.1857947999999996,
+			"days": 30
+		},
+		"2013-12": {
+			"total": 2.467615612903226,
+			"native": 2.4523786774193552,
+			"days": 31
+		},
+		"2014-01": {
+			"total": 2.537073870967742,
+			"native": 2.5217162903225807,
+			"days": 31
+		},
+		"2014-02": {
+			"total": 2.665510464285714,
+			"native": 2.65058,
+			"days": 28
+		},
+		"2014-03": {
+			"total": 2.934951612903226,
+			"native": 2.918005419354839,
+			"days": 31
+		},
+		"2014-04": {
+			"total": 3.0979213999999997,
+			"native": 3.080011266666667,
+			"days": 30
+		},
+		"2014-05": {
+			"total": 3.2713020322580646,
+			"native": 3.2566527096774194,
+			"days": 31
+		},
+		"2014-06": {
+			"total": 3.4842488,
+			"native": 3.469835166666667,
+			"days": 30
+		},
+		"2014-07": {
+			"total": 3.734054935483871,
+			"native": 3.7205105483870966,
+			"days": 31
+		},
+		"2014-08": {
+			"total": 3.87048864516129,
+			"native": 3.857502387096774,
+			"days": 31
+		},
+		"2014-09": {
+			"total": 3.967484933333333,
+			"native": 3.9555912,
+			"days": 30
+		},
+		"2014-10": {
+			"total": 4.283576838709678,
+			"native": 4.272658419354839,
+			"days": 31
+		},
+		"2014-11": {
+			"total": 4.341935266666667,
+			"native": 4.332456166666666,
+			"days": 30
+		},
+		"2014-12": {
+			"total": 4.900385032258065,
+			"native": 4.890701387096774,
+			"days": 31
+		},
+		"2015-01": {
+			"total": 5.138899161290322,
+			"native": 5.1300091935483865,
+			"days": 31
+		},
+		"2015-02": {
+			"total": 5.068204000000001,
+			"native": 5.0596885714285715,
+			"days": 28
+		},
+		"2015-03": {
+			"total": 5.410864032258065,
+			"native": 5.403862903225806,
+			"days": 31
+		},
+		"2015-04": {
+			"total": 5.6108024,
+			"native": 5.603825066666667,
+			"days": 30
+		},
+		"2015-05": {
+			"total": 6.058517645161291,
+			"native": 6.051669032258065,
+			"days": 31
+		},
+		"2015-06": {
+			"total": 6.501217433333333,
+			"native": 6.494408066666667,
+			"days": 30
+		},
+		"2015-07": {
+			"total": 6.95075264516129,
+			"native": 6.944354677419354,
+			"days": 31
+		},
+		"2015-08": {
+			"total": 7.257509903225807,
+			"native": 7.251385419354839,
+			"days": 31
+		},
+		"2015-09": {
+			"total": 7.439009866666667,
+			"native": 7.433185,
+			"days": 30
+		},
+		"2015-10": {
+			"total": 7.781177838709677,
+			"native": 7.775586419354839,
+			"days": 31
+		},
+		"2015-11": {
+			"total": 8.168979733333334,
+			"native": 8.163389733333334,
+			"days": 30
+		},
+		"2015-12": {
+			"total": 8.83399677419355,
+			"native": 8.828494580645161,
+			"days": 31
+		},
+		"2016-01": {
+			"total": 8.918054161290323,
+			"native": 8.912821419354838,
+			"days": 31
+		},
+		"2016-02": {
+			"total": 8.836673551724138,
+			"native": 8.83186148275862,
+			"days": 29
+		},
+		"2016-03": {
+			"total": 9.188308935483871,
+			"native": 9.183036258064517,
+			"days": 31
+		},
+		"2016-04": {
+			"total": 9.700153666666667,
+			"native": 9.694726933333333,
+			"days": 30
+		},
+		"2016-05": {
+			"total": 10.176869225806453,
+			"native": 10.172040064516128,
+			"days": 31
+		},
+		"2016-06": {
+			"total": 10.723047033333334,
+			"native": 10.718642299999999,
+			"days": 30
+		},
+		"2016-07": {
+			"total": 11.419452774193548,
+			"native": 11.415323645161289,
+			"days": 31
+		},
+		"2016-08": {
+			"total": 11.510634161290323,
+			"native": 11.504007741935483,
+			"days": 31
+		},
+		"2016-09": {
+			"total": 11.725326233333334,
+			"native": 11.719659466666666,
+			"days": 30
+		},
+		"2016-10": {
+			"total": 12.498726838709677,
+			"native": 12.493330903225806,
+			"days": 31
+		},
+		"2016-11": {
+			"total": 12.992782733333334,
+			"native": 12.9874817,
+			"days": 30
+		},
+		"2016-12": {
+			"total": 14.021322064516129,
+			"native": 14.01569077419355,
+			"days": 31
+		},
+		"2017-01": {
+			"total": 14.150838129032257,
+			"native": 14.145000967741934,
+			"days": 31
+		},
+		"2017-02": {
+			"total": 14.032950678571428,
+			"native": 14.026652,
+			"days": 28
+		},
+		"2017-03": {
+			"total": 14.218571677419353,
+			"native": 14.208990258064516,
+			"days": 31
+		},
+		"2017-04": {
+			"total": 15.305464133333334,
+			"native": 15.2748897,
+			"days": 30
+		},
+		"2017-05": {
+			"total": 15.966607967741936,
+			"native": 15.927336774193547,
+			"days": 31
+		},
+		"2017-06": {
+			"total": 16.966733933333334,
+			"native": 16.928530433333332,
+			"days": 30
+		},
+		"2017-07": {
+			"total": 17.90140658064516,
+			"native": 17.868183870967744,
+			"days": 31
+		},
+		"2017-08": {
+			"total": 18.118137483870967,
+			"native": 18.091279096774194,
+			"days": 31
+		},
+		"2017-09": {
+			"total": 18.040998533333333,
+			"native": 18.015042100000002,
+			"days": 30
+		},
+		"2017-10": {
+			"total": 18.381719096774194,
+			"native": 18.353910096774193,
+			"days": 31
+		},
+		"2017-11": {
+			"total": 18.685029666666665,
+			"native": 18.65618226666667,
+			"days": 30
+		},
+		"2017-12": {
+			"total": 19.75158706451613,
+			"native": 19.719308419354842,
+			"days": 31
+		},
+		"2018-01": {
+			"total": 19.523671935483872,
+			"native": 19.491747193548385,
+			"days": 31
+		},
+		"2018-02": {
+			"total": 19.37280467857143,
+			"native": 19.34010842857143,
+			"days": 28
+		},
+		"2018-03": {
+			"total": 19.576528000000003,
+			"native": 19.543496387096774,
+			"days": 31
+		},
+		"2018-04": {
+			"total": 19.91961823333333,
+			"native": 19.876311433333335,
+			"days": 30
+		},
+		"2018-05": {
+			"total": 20.532998516129034,
+			"native": 20.481249483870968,
+			"days": 31
+		},
+		"2018-06": {
+			"total": 21.3120127,
+			"native": 21.3091846,
+			"days": 30
+		},
+		"2018-07": {
+			"total": 21.593264387096774,
+			"native": 21.590452903225806,
+			"days": 31
+		},
+		"2018-08": {
+			"total": 21.603131967741934,
+			"native": 21.60021606451613,
+			"days": 31
+		},
+		"2018-09": {
+			"total": 21.912870100000003,
+			"native": 21.910294266666664,
+			"days": 30
+		},
+		"2018-10": {
+			"total": 21.915757129032258,
+			"native": 21.913265387096775,
+			"days": 31
+		},
+		"2018-11": {
+			"total": 22.80153926666667,
+			"native": 22.79881956666667,
+			"days": 30
+		},
+		"2018-12": {
+			"total": 24.115703677419354,
+			"native": 24.11290058064516,
+			"days": 31
+		},
+		"2019-01": {
+			"total": 23.658870387096773,
+			"native": 23.656426387096772,
+			"days": 31
+		},
+		"2019-02": {
+			"total": 23.67395867857143,
+			"native": 23.67149157142857,
+			"days": 28
+		},
+		"2019-03": {
+			"total": 24.061614419354836,
+			"native": 24.059059677419356,
+			"days": 31
+		},
+		"2019-04": {
+			"total": 24.333384466666665,
+			"native": 24.330902433333335,
+			"days": 30
+		},
+		"2019-05": {
+			"total": 24.847798258064515,
+			"native": 24.845389967741934,
+			"days": 31
+		},
+		"2019-06": {
+			"total": 26.19954423333333,
+			"native": 26.197135933333335,
+			"days": 30
+		},
+		"2019-07": {
+			"total": 26.19243564516129,
+			"native": 26.19021664516129,
+			"days": 31
+		},
+		"2019-08": {
+			"total": 26.58066429032258,
+			"native": 26.57847706451613,
+			"days": 31
+		},
+		"2019-09": {
+			"total": 26.209321433333333,
+			"native": 26.207215166666668,
+			"days": 30
+		},
+		"2019-10": {
+			"total": 25.901152096774194,
+			"native": 25.899399806451612,
+			"days": 31
+		},
+		"2019-11": {
+			"total": 26.56929296666667,
+			"native": 26.567392333333334,
+			"days": 30
+		},
+		"2019-12": {
+			"total": 27.48515319354839,
+			"native": 27.483232741935485,
+			"days": 31
+		},
+		"2020-01": {
+			"total": 27.163112064516127,
+			"native": 27.161293322580644,
+			"days": 31
+		},
+		"2020-02": {
+			"total": 27.496844724137933,
+			"native": 27.49524796551724,
+			"days": 29
+		},
+		"2020-03": {
+			"total": 28.39267335483871,
+			"native": 28.390990741935486,
+			"days": 31
+		},
+		"2020-04": {
+			"total": 29.699553966666667,
+			"native": 29.697740433333333,
+			"days": 30
+		},
+		"2020-05": {
+			"total": 30.198876838709676,
+			"native": 30.196854129032257,
+			"days": 31
+		},
+		"2020-06": {
+			"total": 30.2142897,
+			"native": 30.20898856666667,
+			"days": 30
+		},
+		"2020-07": {
+			"total": 31.078653193548384,
+			"native": 31.07430093548387,
+			"days": 31
+		},
+		"2020-08": {
+			"total": 31.10811206451613,
+			"native": 31.106598806451615,
+			"days": 31
+		},
+		"2020-09": {
+			"total": 30.649784500000003,
+			"native": 30.648348533333333,
+			"days": 30
+		},
+		"2020-10": {
+			"total": 30.752631741935485,
+			"native": 30.751403258064517,
+			"days": 31
+		},
+		"2020-11": {
+			"total": 30.9247086,
+			"native": 30.923578766666665,
+			"days": 30
+		},
+		"2020-12": {
+			"total": 31.531816096774193,
+			"native": 31.530696258064516,
+			"days": 31
+		},
+		"2021-01": {
+			"total": 31.92937448387097,
+			"native": 31.92836487096774,
+			"days": 31
+		},
+		"2021-02": {
+			"total": 31.873880142857143,
+			"native": 31.873049392857144,
+			"days": 28
+		},
+		"2021-03": {
+			"total": 31.79480558064516,
+			"native": 31.794014999999998,
+			"days": 31
+		},
+		"2021-04": {
+			"total": 32.051335933333334,
+			"native": 32.0506033,
+			"days": 30
+		},
+		"2021-05": {
+			"total": 32.84278970967742,
+			"native": 32.84201112903226,
+			"days": 31
+		},
+		"2021-06": {
+			"total": 33.3825959,
+			"native": 33.38184593333333,
+			"days": 30
+		},
+		"2021-07": {
+			"total": 34.449884193548385,
+			"native": 34.449094225806455,
+			"days": 31
+		},
+		"2021-08": {
+			"total": 34.42412306451613,
+			"native": 34.42350393548387,
+			"days": 31
+		},
+		"2021-09": {
+			"total": 33.8992468,
+			"native": 33.898721466666665,
+			"days": 30
+		},
+		"2021-10": {
+			"total": 34.13959848387097,
+			"native": 34.13911480645161,
+			"days": 31
+		},
+		"2021-11": {
+			"total": 33.9654733,
+			"native": 33.964958333333335,
+			"days": 30
+		},
+		"2021-12": {
+			"total": 35.12715464516129,
+			"native": 35.126626903225805,
+			"days": 31
+		},
+		"2022-01": {
+			"total": 35.344661225806455,
+			"native": 35.34456141935484,
+			"days": 31
+		},
+		"2022-02": {
+			"total": 35.09119917857143,
+			"native": 35.09119917857143,
+			"days": 28
+		},
+		"2022-03": {
+			"total": 35.40514429032258,
+			"native": 35.40514429032258,
+			"days": 31
+		},
+		"2022-04": {
+			"total": 36.9551848,
+			"native": 36.9551848,
+			"days": 30
+		},
+		"2022-05": {
+			"total": 37.1242026451613,
+			"native": 37.1242026451613,
+			"days": 31
+		},
+		"2022-06": {
+			"total": 38.2988022,
+			"native": 38.2988022,
+			"days": 30
+		},
+		"2022-07": {
+			"total": 39.27313703225806,
+			"native": 39.27313703225806,
+			"days": 31
+		},
+		"2022-08": {
+			"total": 38.733006709677426,
+			"native": 38.733006709677426,
+			"days": 31
+		},
+		"2022-09": {
+			"total": 38.2324729,
+			"native": 38.2324729,
+			"days": 30
+		},
+		"2022-10": {
+			"total": 38.48824851612903,
+			"native": 38.48824851612903,
+			"days": 31
+		},
+		"2022-11": {
+			"total": 38.580234733333334,
+			"native": 38.580234733333334,
+			"days": 30
+		},
+		"2022-12": {
+			"total": 39.66087074193548,
+			"native": 39.66087074193548,
+			"days": 31
+		},
+		"2023-01": {
+			"total": 39.63342764516129,
+			"native": 39.63342764516129,
+			"days": 31
+		},
+		"2023-02": {
+			"total": 39.43001021428571,
+			"native": 39.43001021428571,
+			"days": 28
+		},
+		"2023-03": {
+			"total": 39.722399612903224,
+			"native": 39.722399612903224,
+			"days": 31
+		},
+		"2023-04": {
+			"total": 40.4772349,
+			"native": 40.4772349,
+			"days": 30
+		},
+		"2023-05": {
+			"total": 40.288820967741934,
+			"native": 40.288820967741934,
+			"days": 31
+		},
+		"2023-06": {
+			"total": 41.39288156666667,
+			"native": 41.39288156666667,
+			"days": 30
+		},
+		"2023-07": {
+			"total": 42.27428125806452,
+			"native": 42.27428125806452,
+			"days": 31
+		},
+		"2023-08": {
+			"total": 41.96101503225806,
+			"native": 41.96101503225806,
+			"days": 31
+		},
+		"2023-09": {
+			"total": 41.73106993333333,
+			"native": 41.73106993333333,
+			"days": 30
+		},
+		"2023-10": {
+			"total": 41.46899103225807,
+			"native": 41.46899103225807,
+			"days": 31
+		},
+		"2023-11": {
+			"total": 41.437908099999994,
+			"native": 41.437908099999994,
+			"days": 30
+		},
+		"2023-12": {
+			"total": 42.27287041935484,
+			"native": 42.27287041935484,
+			"days": 31
+		},
+		"2024-01": {
+			"total": 41.853209516129034,
+			"native": 41.853209516129034,
+			"days": 31
+		},
+		"2024-02": {
+			"total": 42.137862896551724,
+			"native": 42.137862896551724,
+			"days": 29
+		},
+		"2024-03": {
+			"total": 43.43298409677419,
+			"native": 43.43298409677419,
+			"days": 31
+		},
+		"2024-04": {
+			"total": 42.4165638,
+			"native": 42.4165638,
+			"days": 30
+		},
+		"2024-05": {
+			"total": 42.92541306451613,
+			"native": 42.92541306451613,
+			"days": 31
+		},
+		"2024-06": {
+			"total": 44.5824267,
+			"native": 44.5824267,
+			"days": 30
+		},
+		"2024-07": {
+			"total": 44.384494129032255,
+			"native": 44.384494129032255,
+			"days": 31
+		},
+		"2024-08": {
+			"total": 44.175065741935484,
+			"native": 44.175065741935484,
+			"days": 31
+		},
+		"2024-09": {
+			"total": 43.503008433333335,
+			"native": 43.503008433333335,
+			"days": 30
+		},
+		"2024-10": {
+			"total": 43.280729967741934,
+			"native": 43.280729967741934,
+			"days": 31
+		},
+		"2024-11": {
+			"total": 43.8210366,
+			"native": 43.8210366,
+			"days": 30
+		},
+		"2024-12": {
+			"total": 44.55431109677419,
+			"native": 44.55431109677419,
+			"days": 31
+		},
+		"2025-01": {
+			"total": 43.996153,
+			"native": 43.996153,
+			"days": 31
+		},
+		"2025-02": {
+			"total": 44.33358321428572,
+			"native": 44.33358321428572,
+			"days": 28
+		},
+		"2025-03": {
+			"total": 45.23887864516129,
+			"native": 45.23887864516129,
+			"days": 31
+		},
+		"2025-04": {
+			"total": 45.3846422,
+			"native": 45.3846422,
+			"days": 30
+		},
+		"2025-05": {
+			"total": 45.40495229032258,
+			"native": 45.40495229032258,
+			"days": 31
+		},
+		"2025-06": {
+			"total": 46.386853800000004,
+			"native": 46.386853800000004,
+			"days": 30
+		},
+		"2025-07": {
+			"total": 47.10432138709677,
+			"native": 47.10432138709677,
+			"days": 31
+		},
+		"2025-08": {
+			"total": 46.86180932258065,
+			"native": 46.86180932258065,
+			"days": 31
+		},
+		"2025-09": {
+			"total": 46.45015326666667,
+			"native": 46.45015326666667,
+			"days": 30
+		},
+		"2025-10": {
+			"total": 46.07993129032258,
+			"native": 46.07993129032258,
+			"days": 31
+		},
+		"2025-11": {
+			"total": 46.1023928,
+			"native": 46.1023928,
+			"days": 30
+		},
+		"2025-12": {
+			"total": 46.62259422580645,
+			"native": 46.62259422580645,
+			"days": 31
+		},
+		"2026-01": {
+			"total": 46.417949580645164,
+			"native": 46.417949580645164,
+			"days": 31
+		},
+		"2026-02": {
+			"total": 46.153954535714284,
+			"native": 46.153954035714285,
+			"days": 28
+		},
+		"2026-03": {
+			"total": 46.574509709677415,
+			"native": 46.5745094516129,
+			"days": 31
+		},
+		"2026-04": {
+			"total": 46.97281503333333,
+			"native": 46.97281476666667,
+			"days": 30
+		},
+		"2026-05": {
+			"total": 47.3686054516129,
+			"native": 47.3686054516129,
+			"days": 31
+		},
+		"2026-06": {
+			"total": 47.58047896666667,
+			"native": 47.58047896666667,
+			"days": 30
+		},
+		"2026-07": {
+			"total": 48.27328267741935,
+			"native": 48.27328267741935,
+			"days": 31
+		},
+		"2026-08": {
+			"total": 47.976347806451614,
+			"native": 47.976347806451614,
+			"days": 31
+		},
+		"2026-09": {
+			"total": 47.52600263333333,
+			"native": 47.52600263333333,
+			"days": 30
+		},
+		"2026-10": {
+			"total": 48.00833577777777,
+			"native": 48.00833577777777,
+			"days": 9
+		}
+	},
+	"apnic": {
+		"2013-10": {
+			"capable": 1.3286263775443778,
+			"preferred": 1.2227854717486262,
+			"samples": 3485818.033289536,
+			"days": 25
+		},
+		"2013-11": {
+			"capable": 1.8449892434773134,
+			"preferred": 1.725349706487764,
+			"samples": 2998092.4384209956,
+			"days": 30
+		},
+		"2013-12": {
+			"capable": 1.8200878474842226,
+			"preferred": 1.6893428475031167,
+			"samples": 5345473.173636051,
+			"days": 31
+		},
+		"2014-01": {
+			"capable": 1.646651086468577,
+			"preferred": 1.5422885182395614,
+			"samples": 7562787.9488042835,
+			"days": 31
+		},
+		"2014-02": {
+			"capable": 1.6871443651346467,
+			"preferred": 1.5752332333378407,
+			"samples": 8311475.112501895,
+			"days": 28
+		},
+		"2014-03": {
+			"capable": 2.028868220650985,
+			"preferred": 1.8690331154418622,
+			"samples": 8678948.34357214,
+			"days": 31
+		},
+		"2014-04": {
+			"capable": 2.0145829487081297,
+			"preferred": 1.8531472570367467,
+			"samples": 8192592.570442207,
+			"days": 30
+		},
+		"2014-05": {
+			"capable": 2.0304149309800787,
+			"preferred": 1.8695030726464703,
+			"samples": 8298692.087199022,
+			"days": 31
+		},
+		"2014-06": {
+			"capable": 2.2846851977488805,
+			"preferred": 2.087766422403031,
+			"samples": 8421905.436771361,
+			"days": 30
+		},
+		"2014-07": {
+			"capable": 2.2443826743783015,
+			"preferred": 2.0799268218441296,
+			"samples": 11772961.573674023,
+			"days": 31
+		},
+		"2014-08": {
+			"capable": 2.2761517530003874,
+			"preferred": 2.1123826492582634,
+			"samples": 7154907.219755876,
+			"days": 31
+		},
+		"2014-09": {
+			"capable": 2.427564669003773,
+			"preferred": 2.2412603953475347,
+			"samples": 6037280.034702387,
+			"days": 29
+		},
+		"2014-10": {
+			"capable": 2.589194488916615,
+			"preferred": 2.4071764577943413,
+			"samples": 12608380.246745761,
+			"days": 31
+		},
+		"2014-11": {
+			"capable": 2.8637271669979003,
+			"preferred": 2.6717904870578657,
+			"samples": 15456388.508514103,
+			"days": 30
+		},
+		"2014-12": {
+			"capable": 3.188955953665039,
+			"preferred": 2.9552743323248056,
+			"samples": 18059087.24390129,
+			"days": 31
+		},
+		"2015-01": {
+			"capable": 3.523142198645438,
+			"preferred": 3.157243534398996,
+			"samples": 12815987.6078859,
+			"days": 31
+		},
+		"2015-02": {
+			"capable": 3.3519251746377363,
+			"preferred": 3.1484293822428837,
+			"samples": 20189685.56676832,
+			"days": 28
+		},
+		"2015-03": {
+			"capable": 3.3867502703632013,
+			"preferred": 3.1759533669626743,
+			"samples": 17061043.57784042,
+			"days": 29
+		},
+		"2015-04": {
+			"capable": 3.151648200386993,
+			"preferred": 2.8363479146038504,
+			"samples": 38551112.02442066,
+			"days": 30
+		},
+		"2015-05": {
+			"capable": 3.827527676148814,
+			"preferred": 3.4339197772486276,
+			"samples": 41728093.23187652,
+			"days": 29
+		},
+		"2015-06": {
+			"capable": 4.4251526429355525,
+			"preferred": 3.260480268789961,
+			"samples": 53638539.65436387,
+			"days": 30
+		},
+		"2015-07": {
+			"capable": 4.593169432709381,
+			"preferred": 3.141342484862221,
+			"samples": 111745787.69571377,
+			"days": 30
+		},
+		"2015-08": {
+			"capable": 4.467903744670425,
+			"preferred": 3.087219066313253,
+			"samples": 125239995.52070446,
+			"days": 31
+		},
+		"2015-09": {
+			"capable": 4.872611288165984,
+			"preferred": 4.224075549239589,
+			"samples": 100464121.1796027,
+			"days": 30
+		},
+		"2015-10": {
+			"capable": 5.145228994121077,
+			"preferred": 4.72628918194513,
+			"samples": 229297912.91923633,
+			"days": 30
+		},
+		"2015-11": {
+			"capable": 5.385238624800491,
+			"preferred": 4.8601579160341455,
+			"samples": 200443044.50869766,
+			"days": 29
+		},
+		"2015-12": {
+			"capable": 5.674362488594443,
+			"preferred": 5.061885395075581,
+			"samples": 130609821.38157557,
+			"days": 31
+		},
+		"2016-01": {
+			"capable": 5.291591580107229,
+			"preferred": 4.760064596164813,
+			"samples": 249010125.09137332,
+			"days": 31
+		},
+		"2016-02": {
+			"capable": 5.2646778533792284,
+			"preferred": 4.641314043088473,
+			"samples": 196994646.06755877,
+			"days": 28
+		},
+		"2016-03": {
+			"capable": 5.467572521030351,
+			"preferred": 4.820560156068408,
+			"samples": 210447545.4679908,
+			"days": 31
+		},
+		"2016-04": {
+			"capable": 5.400708688992751,
+			"preferred": 4.771225400401501,
+			"samples": 214458907.32356074,
+			"days": 30
+		},
+		"2016-05": {
+			"capable": 6.062239828590281,
+			"preferred": 5.439695400999082,
+			"samples": 222049838.3851276,
+			"days": 31
+		},
+		"2016-06": {
+			"capable": 6.469028910031127,
+			"preferred": 5.807982430412804,
+			"samples": 197470419.32185522,
+			"days": 28
+		},
+		"2016-07": {
+			"capable": 6.556109211585864,
+			"preferred": 5.857038274236613,
+			"samples": 215230190.06706753,
+			"days": 31
+		},
+		"2016-08": {
+			"capable": 6.672668571838887,
+			"preferred": 5.843712652227655,
+			"samples": 208338986.56524906,
+			"days": 31
+		},
+		"2016-09": {
+			"capable": 6.679083128588943,
+			"preferred": 5.965669483167933,
+			"samples": 178856752.38269997,
+			"days": 30
+		},
+		"2016-10": {
+			"capable": 8.073324778072443,
+			"preferred": 7.51167298417459,
+			"samples": 200862662.77774715,
+			"days": 31
+		},
+		"2016-11": {
+			"capable": 8.388090239296085,
+			"preferred": 7.177106512482135,
+			"samples": 196159706.3622512,
+			"days": 29
+		},
+		"2016-12": {
+			"capable": 9.047570042608818,
+			"preferred": 8.054951987122628,
+			"samples": 175893147.5319154,
+			"days": 31
+		},
+		"2017-01": {
+			"capable": 9.552684167447595,
+			"preferred": 8.926248187990131,
+			"samples": 357881572.41835326,
+			"days": 31
+		},
+		"2017-02": {
+			"capable": 9.807400320123433,
+			"preferred": 9.17518013771886,
+			"samples": 232654793.64505112,
+			"days": 28
+		},
+		"2017-03": {
+			"capable": 11.493574172889264,
+			"preferred": 10.719837786009489,
+			"samples": 178805204.19274068,
+			"days": 31
+		},
+		"2017-04": {
+			"capable": 12.076399066821216,
+			"preferred": 11.352509145303285,
+			"samples": 111947631.97909763,
+			"days": 30
+		},
+		"2017-05": {
+			"capable": 11.290754418033673,
+			"preferred": 10.625700693452005,
+			"samples": 75611239.77089183,
+			"days": 31
+		},
+		"2017-06": {
+			"capable": 14.428495921036403,
+			"preferred": 13.763867929185972,
+			"samples": 71797110.64494134,
+			"days": 29
+		},
+		"2017-07": {
+			"capable": 15.785554610236913,
+			"preferred": 15.211858321704977,
+			"samples": 218009185.222197,
+			"days": 31
+		},
+		"2017-08": {
+			"capable": 15.646697414072703,
+			"preferred": 15.067936283990464,
+			"samples": 142857676.23230487,
+			"days": 31
+		},
+		"2017-09": {
+			"capable": 16.153456777533005,
+			"preferred": 15.466647660419124,
+			"samples": 127964692.71145506,
+			"days": 30
+		},
+		"2017-10": {
+			"capable": 15.886639947523461,
+			"preferred": 15.251307170676345,
+			"samples": 386309643.725886,
+			"days": 31
+		},
+		"2017-11": {
+			"capable": 16.228736821279515,
+			"preferred": 15.193082012469475,
+			"samples": 427660778.88069457,
+			"days": 30
+		},
+		"2017-12": {
+			"capable": 17.549837074061493,
+			"preferred": 16.908057696145264,
+			"samples": 259909511.70649064,
+			"days": 31
+		},
+		"2018-01": {
+			"capable": 17.009152701875916,
+			"preferred": 16.220305697288488,
+			"samples": 468340649.23709303,
+			"days": 31
+		},
+		"2018-02": {
+			"capable": 17.729238871326736,
+			"preferred": 17.025879162792638,
+			"samples": 200976156.7109748,
+			"days": 28
+		},
+		"2018-03": {
+			"capable": 17.73865520367905,
+			"preferred": 17.02744985779687,
+			"samples": 186590572.56462583,
+			"days": 31
+		},
+		"2018-04": {
+			"capable": 17.36559739733447,
+			"preferred": 16.646989597952263,
+			"samples": 168289607.57221857,
+			"days": 30
+		},
+		"2018-05": {
+			"capable": 17.70220366025346,
+			"preferred": 16.714729351835473,
+			"samples": 298485927.23991126,
+			"days": 31
+		},
+		"2018-06": {
+			"capable": 18.631288017010043,
+			"preferred": 17.908775572201606,
+			"samples": 222297810.30410367,
+			"days": 28
+		},
+		"2018-07": {
+			"capable": 17.69020571880328,
+			"preferred": 16.906619767777016,
+			"samples": 202677118.9589363,
+			"days": 31
+		},
+		"2018-08": {
+			"capable": 16.91617775708161,
+			"preferred": 16.29502650350924,
+			"samples": 168308632.51376146,
+			"days": 31
+		},
+		"2018-09": {
+			"capable": 16.023440896947402,
+			"preferred": 15.567442943399158,
+			"samples": 116442693.96798529,
+			"days": 30
+		},
+		"2018-10": {
+			"capable": 17.451703331951105,
+			"preferred": 16.921699875746796,
+			"samples": 150913140.66888767,
+			"days": 31
+		},
+		"2018-11": {
+			"capable": 18.417970876931697,
+			"preferred": 17.155482127626254,
+			"samples": 216085764.46168184,
+			"days": 30
+		},
+		"2018-12": {
+			"capable": 19.371544825782443,
+			"preferred": 18.474856497395617,
+			"samples": 166586334.39626673,
+			"days": 31
+		},
+		"2019-01": {
+			"capable": 18.951074928401585,
+			"preferred": 18.361372754948995,
+			"samples": 118334027.33791482,
+			"days": 30
+		},
+		"2019-02": {
+			"capable": 19.03259164727713,
+			"preferred": 18.50986344334615,
+			"samples": 111440636.02853625,
+			"days": 28
+		},
+		"2019-03": {
+			"capable": 20.316640375730245,
+			"preferred": 19.64184720473356,
+			"samples": 109575382.5581928,
+			"days": 31
+		},
+		"2019-04": {
+			"capable": 20.9682569311527,
+			"preferred": 20.198768057580203,
+			"samples": 99210070.78793871,
+			"days": 30
+		},
+		"2019-05": {
+			"capable": 19.87667939724331,
+			"preferred": 19.15405221563389,
+			"samples": 98422694.48609355,
+			"days": 30
+		},
+		"2019-06": {
+			"capable": 23.115488349637783,
+			"preferred": 22.385092275216483,
+			"samples": 271269167.3480629,
+			"days": 30
+		},
+		"2019-07": {
+			"capable": 23.262711296634144,
+			"preferred": 22.55758427971386,
+			"samples": 293798737.37178916,
+			"days": 31
+		},
+		"2019-08": {
+			"capable": 23.522787736885068,
+			"preferred": 22.716272277644777,
+			"samples": 294756718.35090613,
+			"days": 30
+		},
+		"2019-09": {
+			"capable": 21.556208532626798,
+			"preferred": 20.86694891094141,
+			"samples": 272067954.8273434,
+			"days": 30
+		},
+		"2019-10": {
+			"capable": 23.841959543571367,
+			"preferred": 23.093766289495125,
+			"samples": 215725779.8234822,
+			"days": 31
+		},
+		"2019-11": {
+			"capable": 23.886085311967918,
+			"preferred": 23.175298367470454,
+			"samples": 211769929.37340495,
+			"days": 30
+		},
+		"2019-12": {
+			"capable": 24.390272910281183,
+			"preferred": 23.630869239015723,
+			"samples": 198862869.43552765,
+			"days": 31
+		},
+		"2020-01": {
+			"capable": 24.488046515170414,
+			"preferred": 23.552759838938673,
+			"samples": 189985845.54810694,
+			"days": 29
+		},
+		"2020-02": {
+			"capable": 23.8459630982759,
+			"preferred": 22.601033079978063,
+			"samples": 185310811.68456167,
+			"days": 28
+		},
+		"2020-03": {
+			"capable": 24.377791752908088,
+			"preferred": 23.442745720102238,
+			"samples": 217072860.77302042,
+			"days": 29
+		},
+		"2020-04": {
+			"capable": 25.153785579328584,
+			"preferred": 24.120898887048536,
+			"samples": 236026275.56704405,
+			"days": 29
+		},
+		"2020-05": {
+			"capable": 25.83489966388275,
+			"preferred": 24.761874003053528,
+			"samples": 217957877.84185728,
+			"days": 29
+		},
+		"2020-06": {
+			"capable": 25.620117658789198,
+			"preferred": 24.475335095968777,
+			"samples": 233899022.47829217,
+			"days": 30
+		},
+		"2020-07": {
+			"capable": 25.775810961662252,
+			"preferred": 24.663776242369686,
+			"samples": 199205390.3695022,
+			"days": 30
+		},
+		"2020-08": {
+			"capable": 26.13782712364537,
+			"preferred": 24.988861856460836,
+			"samples": 239291392.50660664,
+			"days": 31
+		},
+		"2020-09": {
+			"capable": 26.5940896466522,
+			"preferred": 24.90608549356724,
+			"samples": 228308299.05695498,
+			"days": 29
+		},
+		"2020-10": {
+			"capable": 27.138344182367383,
+			"preferred": 25.319755929665067,
+			"samples": 233819460.5100608,
+			"days": 31
+		},
+		"2020-11": {
+			"capable": 27.32780648779675,
+			"preferred": 26.026932390221237,
+			"samples": 216275754.75055817,
+			"days": 27
+		},
+		"2020-12": {
+			"capable": 27.966147706626955,
+			"preferred": 26.589566671311267,
+			"samples": 224151028.56768924,
+			"days": 29
+		},
+		"2021-01": {
+			"capable": 28.054417657060803,
+			"preferred": 26.726354511892005,
+			"samples": 229814692.96543777,
+			"days": 29
+		},
+		"2021-02": {
+			"capable": 27.9442694803194,
+			"preferred": 26.29492240073965,
+			"samples": 237568021.58048218,
+			"days": 26
+		},
+		"2021-03": {
+			"capable": 28.64851986704465,
+			"preferred": 27.016850242195204,
+			"samples": 259643541.7539005,
+			"days": 31
+		},
+		"2021-04": {
+			"capable": 27.99982441759286,
+			"preferred": 25.982504210542167,
+			"samples": 240721232.9103478,
+			"days": 30
+		},
+		"2021-05": {
+			"capable": 27.96376308368894,
+			"preferred": 26.430414684905895,
+			"samples": 246260899.22784066,
+			"days": 31
+		},
+		"2021-06": {
+			"capable": 27.332251482387285,
+			"preferred": 25.8913519245689,
+			"samples": 242385957.05717677,
+			"days": 30
+		},
+		"2021-07": {
+			"capable": 27.477763697213156,
+			"preferred": 26.100133103978795,
+			"samples": 234190800.3160985,
+			"days": 29
+		},
+		"2021-08": {
+			"capable": 27.2551657338924,
+			"preferred": 25.965012085587453,
+			"samples": 238586758.53120062,
+			"days": 31
+		},
+		"2021-09": {
+			"capable": 27.89647908734117,
+			"preferred": 26.342955190501293,
+			"samples": 255774947.6343642,
+			"days": 30
+		},
+		"2021-10": {
+			"capable": 28.182081359939307,
+			"preferred": 26.59681830891734,
+			"samples": 290895322.7437862,
+			"days": 31
+		},
+		"2021-11": {
+			"capable": 28.73414840958702,
+			"preferred": 27.254103467784223,
+			"samples": 290208136.9825579,
+			"days": 29
+		},
+		"2021-12": {
+			"capable": 29.919572233544056,
+			"preferred": 28.273744526037092,
+			"samples": 317193643.97608966,
+			"days": 29
+		},
+		"2022-01": {
+			"capable": 28.153098886660267,
+			"preferred": 26.770869632136574,
+			"samples": 395225331.3512694,
+			"days": 31
+		},
+		"2022-02": {
+			"capable": 30.139244263323214,
+			"preferred": 28.754157517482,
+			"samples": 432189814.950295,
+			"days": 28
+		},
+		"2022-03": {
+			"capable": 29.64218788740724,
+			"preferred": 28.381946832783242,
+			"samples": 427797914.5647129,
+			"days": 29
+		},
+		"2022-04": {
+			"capable": 30.926902677080825,
+			"preferred": 29.648208858927276,
+			"samples": 480138105.04378563,
+			"days": 30
+		},
+		"2022-05": {
+			"capable": 31.213560071150095,
+			"preferred": 29.99370061744987,
+			"samples": 464457152.18226165,
+			"days": 31
+		},
+		"2022-06": {
+			"capable": 31.536986825109288,
+			"preferred": 30.205082915194602,
+			"samples": 437304113.2609546,
+			"days": 30
+		},
+		"2022-07": {
+			"capable": 31.97650351671203,
+			"preferred": 30.75012228065642,
+			"samples": 476346119.6951671,
+			"days": 31
+		},
+		"2022-08": {
+			"capable": 32.33574189322373,
+			"preferred": 31.23958417595658,
+			"samples": 640270898.7612797,
+			"days": 31
+		},
+		"2022-09": {
+			"capable": 32.87583381790664,
+			"preferred": 31.65732233515697,
+			"samples": 634121391.1095127,
+			"days": 30
+		},
+		"2022-10": {
+			"capable": 32.25425616383515,
+			"preferred": 31.301345532301028,
+			"samples": 579124058.8889098,
+			"days": 31
+		},
+		"2022-11": {
+			"capable": 30.25846970981688,
+			"preferred": 29.590714815076158,
+			"samples": 538186054.8278954,
+			"days": 30
+		},
+		"2022-12": {
+			"capable": 32.57169286479579,
+			"preferred": 31.80093140265669,
+			"samples": 580022075.6342334,
+			"days": 31
+		},
+		"2023-01": {
+			"capable": 33.32058652214007,
+			"preferred": 32.337404224186756,
+			"samples": 531541822.0993964,
+			"days": 31
+		},
+		"2023-02": {
+			"capable": 33.64835328829189,
+			"preferred": 32.40391249041403,
+			"samples": 741810899.1708341,
+			"days": 28
+		},
+		"2023-03": {
+			"capable": 34.82892298934922,
+			"preferred": 33.9177085918817,
+			"samples": 629665138.6701932,
+			"days": 31
+		},
+		"2023-04": {
+			"capable": 34.994475964259586,
+			"preferred": 33.932269916821035,
+			"samples": 682220108.3916849,
+			"days": 30
+		},
+		"2023-05": {
+			"capable": 35.35641940718659,
+			"preferred": 34.46617968948571,
+			"samples": 698941656.3614242,
+			"days": 31
+		},
+		"2023-06": {
+			"capable": 35.31277636106547,
+			"preferred": 34.398100558979316,
+			"samples": 622169826.5560415,
+			"days": 30
+		},
+		"2023-07": {
+			"capable": 35.68368986717579,
+			"preferred": 34.88825587109769,
+			"samples": 562341570.2485431,
+			"days": 30
+		},
+		"2023-08": {
+			"capable": 35.638409410107464,
+			"preferred": 34.85106956079826,
+			"samples": 568454101.0479149,
+			"days": 31
+		},
+		"2023-09": {
+			"capable": 35.39399468243836,
+			"preferred": 34.33192138413605,
+			"samples": 382580604.48108464,
+			"days": 30
+		},
+		"2023-10": {
+			"capable": 35.82950194635783,
+			"preferred": 34.85292049291671,
+			"samples": 535256717.1825091,
+			"days": 31
+		},
+		"2023-11": {
+			"capable": 36.66541015331744,
+			"preferred": 35.75958787693477,
+			"samples": 441750568.49485093,
+			"days": 30
+		},
+		"2023-12": {
+			"capable": 36.491294471440376,
+			"preferred": 35.66087724101204,
+			"samples": 424329220.54952836,
+			"days": 31
+		},
+		"2024-01": {
+			"capable": 37.05778452995402,
+			"preferred": 36.2622423694913,
+			"samples": 448306219.5786843,
+			"days": 31
+		},
+		"2024-02": {
+			"capable": 36.94345853533439,
+			"preferred": 36.148926650522995,
+			"samples": 436254712.532072,
+			"days": 29
+		},
+		"2024-03": {
+			"capable": 36.97356503152462,
+			"preferred": 36.12289958887023,
+			"samples": 527810529.3220937,
+			"days": 31
+		},
+		"2024-04": {
+			"capable": 37.14450753547048,
+			"preferred": 36.28068872285378,
+			"samples": 667027530.4740149,
+			"days": 30
+		},
+		"2024-05": {
+			"capable": 37.392975403117404,
+			"preferred": 36.189828505746426,
+			"samples": 691986485.9147593,
+			"days": 31
+		},
+		"2024-06": {
+			"capable": 37.937936301767685,
+			"preferred": 36.92581423226949,
+			"samples": 722550577.1336522,
+			"days": 30
+		},
+		"2024-07": {
+			"capable": 38.62844756361171,
+			"preferred": 37.28711385099573,
+			"samples": 682095957.188938,
+			"days": 31
+		},
+		"2024-08": {
+			"capable": 38.2830076318275,
+			"preferred": 36.93201461912567,
+			"samples": 802642487.8792278,
+			"days": 31
+		},
+		"2024-09": {
+			"capable": 38.686894751671424,
+			"preferred": 36.97208342920534,
+			"samples": 560704514.660113,
+			"days": 25
+		},
+		"2024-10": {
+			"capable": 40.00106793581566,
+			"preferred": 38.82389694878817,
+			"samples": 771057692.5060925,
+			"days": 31
+		},
+		"2024-11": {
+			"capable": 39.88706580034312,
+			"preferred": 38.70677502821933,
+			"samples": 766232143.6651376,
+			"days": 30
+		},
+		"2024-12": {
+			"capable": 39.63508567357838,
+			"preferred": 38.41538332097292,
+			"samples": 822671639.1923366,
+			"days": 31
+		},
+		"2025-01": {
+			"capable": 40.2166878275985,
+			"preferred": 38.968013115489136,
+			"samples": 909191687.431098,
+			"days": 31
+		},
+		"2025-02": {
+			"capable": 40.06590420371494,
+			"preferred": 38.58944397604462,
+			"samples": 862973045.6433902,
+			"days": 28
+		},
+		"2025-03": {
+			"capable": 40.49131053056184,
+			"preferred": 36.33395794664415,
+			"samples": 901832485.6775585,
+			"days": 31
+		},
+		"2025-04": {
+			"capable": 40.583685622899154,
+			"preferred": 39.08663550947798,
+			"samples": 924110676.3156214,
+			"days": 30
+		},
+		"2025-05": {
+			"capable": 40.01917395583883,
+			"preferred": 37.81762873000907,
+			"samples": 861002535.9460758,
+			"days": 30
+		},
+		"2025-06": {
+			"capable": 39.3640174426587,
+			"preferred": 37.27926439474338,
+			"samples": 949143592.1812325,
+			"days": 30
+		},
+		"2025-07": {
+			"capable": 39.813920021538465,
+			"preferred": 37.91385355242907,
+			"samples": 981023076.1927996,
+			"days": 31
+		},
+		"2025-08": {
+			"capable": 40.76675735576433,
+			"preferred": 39.36293824059008,
+			"samples": 1042338292.379989,
+			"days": 31
+		},
+		"2025-09": {
+			"capable": 41.386717185104295,
+			"preferred": 40.07810751558094,
+			"samples": 977579125.7051116,
+			"days": 30
+		},
+		"2025-10": {
+			"capable": 42.02581289208953,
+			"preferred": 40.71830941392118,
+			"samples": 966637063.7688657,
+			"days": 31
+		},
+		"2025-11": {
+			"capable": 43.05608631810756,
+			"preferred": 41.89828356197264,
+			"samples": 955227254.8928745,
+			"days": 30
+		},
+		"2025-12": {
+			"capable": 42.78253594970885,
+			"preferred": 41.33293408274564,
+			"samples": 1009387315.5609162,
+			"days": 31
+		},
+		"2026-01": {
+			"capable": 42.90878464909094,
+			"preferred": 41.479769870247964,
+			"samples": 1036842761.5618957,
+			"days": 31
+		},
+		"2026-02": {
+			"capable": 42.93850098833757,
+			"preferred": 41.40749687085155,
+			"samples": 951125422.5084759,
+			"days": 28
+		},
+		"2026-03": {
+			"capable": 43.05606740712567,
+			"preferred": 41.61686045071517,
+			"samples": 931536370.9428543,
+			"days": 31
+		},
+		"2026-04": {
+			"capable": 43.346084561020625,
+			"preferred": 41.77960339124117,
+			"samples": 966913483.9481461,
+			"days": 30
+		},
+		"2026-05": {
+			"capable": 43.455666971538925,
+			"preferred": 41.748600289860555,
+			"samples": 953194817.2203919,
+			"days": 31
+		},
+		"2026-06": {
+			"capable": 42.92514680566269,
+			"preferred": 41.2300435627974,
+			"samples": 831934117.216081,
+			"days": 27
+		},
+		"2026-07": {
+			"capable": 42.21953232126116,
+			"preferred": 40.007157819298904,
+			"samples": 947272499.0070093,
+			"days": 31
+		},
+		"2026-08": {
+			"capable": 43.63982306707708,
+			"preferred": 41.63755768739478,
+			"samples": 1028345242.8666759,
+			"days": 31
+		},
+		"2026-09": {
+			"capable": 43.72971108376922,
+			"preferred": 41.484248396641554,
+			"samples": 863488493.4760344,
+			"days": 26
+		},
+		"2026-10": {
+			"capable": 43.26315881287168,
+			"preferred": 40.11104209720087,
+			"samples": 255116624.0466908,
+			"days": 8
+		}
+	},
+	"statcounter": {
+		"2009-01": {
+			"desktop": 99.33,
+			"mobile": 0.67,
+			"tablet": 0.0,
+			"open": 99.36,
+			"closed": 0.6300000000000006,
+			"other": 0.01
+		},
+		"2009-02": {
+			"desktop": 99.31,
+			"mobile": 0.69,
+			"tablet": 0.0,
+			"open": 99.3,
+			"closed": 0.6800000000000028,
+			"other": 0.02
+		},
+		"2009-03": {
+			"desktop": 99.2,
+			"mobile": 0.8,
+			"tablet": 0.0,
+			"open": 99.19999999999999,
+			"closed": 0.7900000000000114,
+			"other": 0.01
+		},
+		"2009-04": {
+			"desktop": 99.14,
+			"mobile": 0.86,
+			"tablet": 0.0,
+			"open": 99.13,
+			"closed": 0.8600000000000045,
+			"other": 0.01
+		},
+		"2009-05": {
+			"desktop": 99.14,
+			"mobile": 0.86,
+			"tablet": 0.0,
+			"open": 99.12,
+			"closed": 0.8699999999999954,
+			"other": 0.01
+		},
+		"2009-06": {
+			"desktop": 99.06,
+			"mobile": 0.94,
+			"tablet": 0.0,
+			"open": 99.03,
+			"closed": 0.9499999999999988,
+			"other": 0.02
+		},
+		"2009-07": {
+			"desktop": 98.95,
+			"mobile": 1.05,
+			"tablet": 0.0,
+			"open": 99.05999999999999,
+			"closed": 0.9200000000000119,
+			"other": 0.02
+		},
+		"2009-08": {
+			"desktop": 98.88,
+			"mobile": 1.12,
+			"tablet": 0.0,
+			"open": 98.80999999999999,
+			"closed": 1.170000000000012,
+			"other": 0.02
+		},
+		"2009-09": {
+			"desktop": 98.88,
+			"mobile": 1.12,
+			"tablet": 0.0,
+			"open": 98.83,
+			"closed": 1.1500000000000017,
+			"other": 0.02
+		},
+		"2009-10": {
+			"desktop": 98.85,
+			"mobile": 1.15,
+			"tablet": 0.0,
+			"open": 98.8,
+			"closed": 1.1800000000000028,
+			"other": 0.02
+		},
+		"2009-11": {
+			"desktop": 98.79,
+			"mobile": 1.21,
+			"tablet": 0.0,
+			"open": 98.72,
+			"closed": 1.2600000000000011,
+			"other": 0.02
+		},
+		"2009-12": {
+			"desktop": 98.72,
+			"mobile": 1.28,
+			"tablet": 0.0,
+			"open": 98.64,
+			"closed": 1.3399999999999994,
+			"other": 0.02
+		},
+		"2010-01": {
+			"desktop": 98.44,
+			"mobile": 1.56,
+			"tablet": 0.0,
+			"open": 98.37,
+			"closed": 1.6099999999999954,
+			"other": 0.02
+		},
+		"2010-02": {
+			"desktop": 98.28,
+			"mobile": 1.72,
+			"tablet": 0.0,
+			"open": 98.22999999999999,
+			"closed": 1.7500000000000102,
+			"other": 0.02
+		},
+		"2010-03": {
+			"desktop": 98.04,
+			"mobile": 1.96,
+			"tablet": 0.0,
+			"open": 98.01,
+			"closed": 1.9699999999999949,
+			"other": 0.02
+		},
+		"2010-04": {
+			"desktop": 97.82,
+			"mobile": 2.18,
+			"tablet": 0.0,
+			"open": 97.8,
+			"closed": 2.180000000000003,
+			"other": 0.02
+		},
+		"2010-05": {
+			"desktop": 97.68,
+			"mobile": 2.32,
+			"tablet": 0.0,
+			"open": 97.67999999999999,
+			"closed": 2.3000000000000074,
+			"other": 0.02
+		},
+		"2010-06": {
+			"desktop": 97.43,
+			"mobile": 2.57,
+			"tablet": 0.0,
+			"open": 97.4,
+			"closed": 2.5799999999999943,
+			"other": 0.02
+		},
+		"2010-07": {
+			"desktop": 97.14,
+			"mobile": 2.86,
+			"tablet": 0.0,
+			"open": 97.02,
+			"closed": 2.950000000000004,
+			"other": 0.03
+		},
+		"2010-08": {
+			"desktop": 96.79,
+			"mobile": 3.21,
+			"tablet": 0.0,
+			"open": 96.64,
+			"closed": 3.3299999999999996,
+			"other": 0.03
+		},
+		"2010-09": {
+			"desktop": 96.5,
+			"mobile": 3.5,
+			"tablet": 0.0,
+			"open": 96.38,
+			"closed": 3.6000000000000045,
+			"other": 0.02
+		},
+		"2010-10": {
+			"desktop": 96.19,
+			"mobile": 3.81,
+			"tablet": 0.0,
+			"open": 96.03999999999999,
+			"closed": 3.940000000000008,
+			"other": 0.02
+		},
+		"2010-11": {
+			"desktop": 95.98,
+			"mobile": 4.02,
+			"tablet": 0.0,
+			"open": 95.8,
+			"closed": 4.170000000000003,
+			"other": 0.03
+		},
+		"2010-12": {
+			"desktop": 95.9,
+			"mobile": 4.1,
+			"tablet": 0.0,
+			"open": 95.63000000000001,
+			"closed": 4.33999999999999,
+			"other": 0.03
+		},
+		"2011-01": {
+			"desktop": 95.7,
+			"mobile": 4.3,
+			"tablet": 0.0,
+			"open": 95.35000000000001,
+			"closed": 4.619999999999991,
+			"other": 0.03
+		},
+		"2011-02": {
+			"desktop": 95.55,
+			"mobile": 4.45,
+			"tablet": 0.0,
+			"open": 95.22000000000001,
+			"closed": 4.759999999999987,
+			"other": 0.02
+		},
+		"2011-03": {
+			"desktop": 95.3,
+			"mobile": 4.7,
+			"tablet": 0.0,
+			"open": 94.95,
+			"closed": 5.029999999999998,
+			"other": 0.02
+		},
+		"2011-04": {
+			"desktop": 94.79,
+			"mobile": 5.21,
+			"tablet": 0.0,
+			"open": 94.39,
+			"closed": 5.59,
+			"other": 0.02
+		},
+		"2011-05": {
+			"desktop": 94.25,
+			"mobile": 5.75,
+			"tablet": 0.0,
+			"open": 93.83,
+			"closed": 6.150000000000002,
+			"other": 0.02
+		},
+		"2011-06": {
+			"desktop": 93.47,
+			"mobile": 6.53,
+			"tablet": 0.0,
+			"open": 93.0,
+			"closed": 6.98,
+			"other": 0.02
+		},
+		"2011-07": {
+			"desktop": 92.98,
+			"mobile": 7.02,
+			"tablet": 0.0,
+			"open": 92.39,
+			"closed": 7.59,
+			"other": 0.02
+		},
+		"2011-08": {
+			"desktop": 92.88,
+			"mobile": 7.12,
+			"tablet": 0.0,
+			"open": 92.19999999999999,
+			"closed": 7.780000000000012,
+			"other": 0.02
+		},
+		"2011-09": {
+			"desktop": 93.26,
+			"mobile": 6.74,
+			"tablet": 0.0,
+			"open": 92.49,
+			"closed": 7.500000000000005,
+			"other": 0.01
+		},
+		"2011-10": {
+			"desktop": 93.45,
+			"mobile": 6.55,
+			"tablet": 0.0,
+			"open": 92.5,
+			"closed": 7.48,
+			"other": 0.02
+		},
+		"2011-11": {
+			"desktop": 93.05,
+			"mobile": 6.95,
+			"tablet": 0.0,
+			"open": 91.97,
+			"closed": 8.000000000000002,
+			"other": 0.03
+		},
+		"2011-12": {
+			"desktop": 91.96,
+			"mobile": 8.04,
+			"tablet": 0.0,
+			"open": 90.69,
+			"closed": 9.270000000000003,
+			"other": 0.04
+		},
+		"2012-01": {
+			"desktop": 91.51,
+			"mobile": 8.49,
+			"tablet": 0.0,
+			"open": 89.93,
+			"closed": 10.019999999999992,
+			"other": 0.05
+		},
+		"2012-02": {
+			"desktop": 91.47,
+			"mobile": 8.53,
+			"tablet": 0.0,
+			"open": 89.87,
+			"closed": 10.079999999999995,
+			"other": 0.05
+		},
+		"2012-03": {
+			"desktop": 91.01,
+			"mobile": 8.99,
+			"tablet": 0.0,
+			"open": 89.33,
+			"closed": 10.590000000000002,
+			"other": 0.08
+		},
+		"2012-04": {
+			"desktop": 90.42,
+			"mobile": 9.58,
+			"tablet": 0.0,
+			"open": 88.42999999999999,
+			"closed": 11.440000000000007,
+			"other": 0.13
+		},
+		"2012-05": {
+			"desktop": 89.89,
+			"mobile": 10.11,
+			"tablet": 0.0,
+			"open": 87.82,
+			"closed": 12.060000000000008,
+			"other": 0.12
+		},
+		"2012-06": {
+			"desktop": 89.6,
+			"mobile": 10.4,
+			"tablet": 0.0,
+			"open": 87.24,
+			"closed": 12.630000000000004,
+			"other": 0.13
+		},
+		"2012-07": {
+			"desktop": 88.91,
+			"mobile": 11.09,
+			"tablet": 0.0,
+			"open": 86.53,
+			"closed": 13.319999999999999,
+			"other": 0.15
+		},
+		"2012-08": {
+			"desktop": 85.69,
+			"mobile": 11.44,
+			"tablet": 2.86,
+			"open": 86.08,
+			"closed": 13.780000000000001,
+			"other": 0.14
+		},
+		"2012-09": {
+			"desktop": 85.33,
+			"mobile": 11.66,
+			"tablet": 3.01,
+			"open": 85.74,
+			"closed": 14.120000000000005,
+			"other": 0.14
+		},
+		"2012-10": {
+			"desktop": 85.02,
+			"mobile": 11.92,
+			"tablet": 3.06,
+			"open": 85.45,
+			"closed": 14.419999999999996,
+			"other": 0.13
+		},
+		"2012-11": {
+			"desktop": 84.13,
+			"mobile": 12.66,
+			"tablet": 3.22,
+			"open": 84.57000000000001,
+			"closed": 15.299999999999992,
+			"other": 0.13
+		},
+		"2012-12": {
+			"desktop": 82.42,
+			"mobile": 14.04,
+			"tablet": 3.54,
+			"open": 82.93,
+			"closed": 16.979999999999993,
+			"other": 0.09
+		},
+		"2013-01": {
+			"desktop": 82.41,
+			"mobile": 13.56,
+			"tablet": 4.03,
+			"open": 82.89,
+			"closed": 17.06,
+			"other": 0.05
+		},
+		"2013-02": {
+			"desktop": 81.86,
+			"mobile": 13.71,
+			"tablet": 4.43,
+			"open": 82.36,
+			"closed": 17.59,
+			"other": 0.05
+		},
+		"2013-03": {
+			"desktop": 81.69,
+			"mobile": 13.79,
+			"tablet": 4.52,
+			"open": 82.27,
+			"closed": 17.680000000000003,
+			"other": 0.05
+		},
+		"2013-04": {
+			"desktop": 82.43,
+			"mobile": 13.31,
+			"tablet": 4.27,
+			"open": 82.99,
+			"closed": 16.960000000000004,
+			"other": 0.05
+		},
+		"2013-05": {
+			"desktop": 81.68,
+			"mobile": 13.98,
+			"tablet": 4.33,
+			"open": 82.27,
+			"closed": 17.690000000000005,
+			"other": 0.04
+		},
+		"2013-06": {
+			"desktop": 80.01,
+			"mobile": 15.33,
+			"tablet": 4.66,
+			"open": 80.62,
+			"closed": 19.339999999999996,
+			"other": 0.04
+		},
+		"2013-07": {
+			"desktop": 78.66,
+			"mobile": 16.51,
+			"tablet": 4.83,
+			"open": 79.3,
+			"closed": 20.660000000000004,
+			"other": 0.04
+		},
+		"2013-08": {
+			"desktop": 78.08,
+			"mobile": 17.14,
+			"tablet": 4.78,
+			"open": 78.72999999999999,
+			"closed": 21.23000000000001,
+			"other": 0.04
+		},
+		"2013-09": {
+			"desktop": 78.39,
+			"mobile": 16.98,
+			"tablet": 4.63,
+			"open": 79.03,
+			"closed": 20.939999999999998,
+			"other": 0.03
+		},
+		"2013-10": {
+			"desktop": 76.68,
+			"mobile": 18.78,
+			"tablet": 4.54,
+			"open": 77.55,
+			"closed": 22.42,
+			"other": 0.03
+		},
+		"2013-11": {
+			"desktop": 76.13,
+			"mobile": 19.08,
+			"tablet": 4.78,
+			"open": 76.65,
+			"closed": 23.319999999999993,
+			"other": 0.03
+		},
+		"2013-12": {
+			"desktop": 72.55,
+			"mobile": 22.18,
+			"tablet": 5.27,
+			"open": 72.94,
+			"closed": 27.03,
+			"other": 0.03
+		},
+		"2014-01": {
+			"desktop": 71.95,
+			"mobile": 22.39,
+			"tablet": 5.66,
+			"open": 72.2,
+			"closed": 27.779999999999998,
+			"other": 0.02
+		},
+		"2014-02": {
+			"desktop": 70.99,
+			"mobile": 23.25,
+			"tablet": 5.76,
+			"open": 71.94,
+			"closed": 28.040000000000003,
+			"other": 0.02
+		},
+		"2014-03": {
+			"desktop": 70.23,
+			"mobile": 23.93,
+			"tablet": 5.84,
+			"open": 71.39,
+			"closed": 28.59,
+			"other": 0.02
+		},
+		"2014-04": {
+			"desktop": 70.61,
+			"mobile": 23.56,
+			"tablet": 5.83,
+			"open": 71.78999999999999,
+			"closed": 28.19000000000001,
+			"other": 0.02
+		},
+		"2014-05": {
+			"desktop": 68.55,
+			"mobile": 25.41,
+			"tablet": 6.04,
+			"open": 69.74000000000001,
+			"closed": 30.23999999999999,
+			"other": 0.02
+		},
+		"2014-06": {
+			"desktop": 66.93,
+			"mobile": 26.66,
+			"tablet": 6.4,
+			"open": 68.16,
+			"closed": 31.820000000000004,
+			"other": 0.02
+		},
+		"2014-07": {
+			"desktop": 65.83,
+			"mobile": 27.51,
+			"tablet": 6.66,
+			"open": 67.1,
+			"closed": 32.88,
+			"other": 0.02
+		},
+		"2014-08": {
+			"desktop": 64.65,
+			"mobile": 28.57,
+			"tablet": 6.78,
+			"open": 66.0,
+			"closed": 33.98,
+			"other": 0.02
+		},
+		"2014-09": {
+			"desktop": 63.84,
+			"mobile": 29.36,
+			"tablet": 6.8,
+			"open": 64.95,
+			"closed": 35.029999999999994,
+			"other": 0.02
+		},
+		"2014-10": {
+			"desktop": 62.77,
+			"mobile": 30.67,
+			"tablet": 6.56,
+			"open": 63.77,
+			"closed": 36.209999999999994,
+			"other": 0.02
+		},
+		"2014-11": {
+			"desktop": 61.92,
+			"mobile": 31.54,
+			"tablet": 6.54,
+			"open": 63.019999999999996,
+			"closed": 36.96,
+			"other": 0.02
+		},
+		"2014-12": {
+			"desktop": 61.68,
+			"mobile": 31.82,
+			"tablet": 6.5,
+			"open": 62.78,
+			"closed": 37.199999999999996,
+			"other": 0.02
+		},
+		"2015-01": {
+			"desktop": 62.38,
+			"mobile": 31.06,
+			"tablet": 6.55,
+			"open": 63.41,
+			"closed": 36.56,
+			"other": 0.03
+		},
+		"2015-02": {
+			"desktop": 62.62,
+			"mobile": 30.81,
+			"tablet": 6.57,
+			"open": 63.589999999999996,
+			"closed": 36.39,
+			"other": 0.02
+		},
+		"2015-03": {
+			"desktop": 62.26,
+			"mobile": 31.58,
+			"tablet": 6.17,
+			"open": 63.26,
+			"closed": 36.71,
+			"other": 0.03
+		},
+		"2015-04": {
+			"desktop": 62.71,
+			"mobile": 31.56,
+			"tablet": 5.73,
+			"open": 63.720000000000006,
+			"closed": 36.25999999999999,
+			"other": 0.02
+		},
+		"2015-05": {
+			"desktop": 61.49,
+			"mobile": 32.82,
+			"tablet": 5.69,
+			"open": 62.52,
+			"closed": 37.449999999999996,
+			"other": 0.03
+		},
+		"2015-06": {
+			"desktop": 60.11,
+			"mobile": 34.21,
+			"tablet": 5.68,
+			"open": 61.24,
+			"closed": 38.73,
+			"other": 0.03
+		},
+		"2015-07": {
+			"desktop": 57.0,
+			"mobile": 37.15,
+			"tablet": 5.85,
+			"open": 58.199999999999996,
+			"closed": 41.760000000000005,
+			"other": 0.04
+		},
+		"2015-08": {
+			"desktop": 55.22,
+			"mobile": 39.18,
+			"tablet": 5.6,
+			"open": 56.54,
+			"closed": 43.43,
+			"other": 0.03
+		},
+		"2015-09": {
+			"desktop": 55.91,
+			"mobile": 38.78,
+			"tablet": 5.31,
+			"open": 57.14,
+			"closed": 42.83,
+			"other": 0.03
+		},
+		"2015-10": {
+			"desktop": 55.86,
+			"mobile": 39.01,
+			"tablet": 5.14,
+			"open": 56.96,
+			"closed": 43.01,
+			"other": 0.03
+		},
+		"2015-11": {
+			"desktop": 57.21,
+			"mobile": 37.62,
+			"tablet": 5.17,
+			"open": 58.14,
+			"closed": 41.83,
+			"other": 0.03
+		},
+		"2015-12": {
+			"desktop": 56.25,
+			"mobile": 38.62,
+			"tablet": 5.13,
+			"open": 57.05,
+			"closed": 42.910000000000004,
+			"other": 0.04
+		},
+		"2016-01": {
+			"desktop": 55.86,
+			"mobile": 38.88,
+			"tablet": 5.26,
+			"open": 56.46,
+			"closed": 43.51,
+			"other": 0.03
+		},
+		"2016-02": {
+			"desktop": 55.82,
+			"mobile": 38.96,
+			"tablet": 5.22,
+			"open": 56.4,
+			"closed": 43.57,
+			"other": 0.03
+		},
+		"2016-03": {
+			"desktop": 54.19,
+			"mobile": 40.6,
+			"tablet": 5.2,
+			"open": 54.95,
+			"closed": 45.019999999999996,
+			"other": 0.03
+		},
+		"2016-04": {
+			"desktop": 53.54,
+			"mobile": 41.32,
+			"tablet": 5.14,
+			"open": 54.22,
+			"closed": 45.75,
+			"other": 0.03
+		},
+		"2016-05": {
+			"desktop": 51.46,
+			"mobile": 43.5,
+			"tablet": 5.04,
+			"open": 51.99,
+			"closed": 47.98,
+			"other": 0.03
+		},
+		"2016-06": {
+			"desktop": 53.22,
+			"mobile": 41.61,
+			"tablet": 5.16,
+			"open": 53.61,
+			"closed": 46.36,
+			"other": 0.03
+		},
+		"2016-07": {
+			"desktop": 50.1,
+			"mobile": 44.75,
+			"tablet": 5.15,
+			"open": 50.339999999999996,
+			"closed": 49.63,
+			"other": 0.03
+		},
+		"2016-08": {
+			"desktop": 50.61,
+			"mobile": 44.41,
+			"tablet": 4.98,
+			"open": 50.73,
+			"closed": 49.24,
+			"other": 0.03
+		},
+		"2016-09": {
+			"desktop": 50.28,
+			"mobile": 44.91,
+			"tablet": 4.81,
+			"open": 50.05,
+			"closed": 49.92,
+			"other": 0.03
+		},
+		"2016-10": {
+			"desktop": 48.74,
+			"mobile": 46.53,
+			"tablet": 4.73,
+			"open": 48.419999999999995,
+			"closed": 51.550000000000004,
+			"other": 0.03
+		},
+		"2016-11": {
+			"desktop": 46.93,
+			"mobile": 48.25,
+			"tablet": 4.82,
+			"open": 47.21,
+			"closed": 52.769999999999996,
+			"other": 0.02
+		},
+		"2016-12": {
+			"desktop": 44.79,
+			"mobile": 50.31,
+			"tablet": 4.9,
+			"open": 45.42,
+			"closed": 54.559999999999995,
+			"other": 0.02
+		},
+		"2017-01": {
+			"desktop": 45.27,
+			"mobile": 49.6,
+			"tablet": 5.13,
+			"open": 45.809999999999995,
+			"closed": 54.17,
+			"other": 0.02
+		},
+		"2017-02": {
+			"desktop": 45.23,
+			"mobile": 49.73,
+			"tablet": 5.04,
+			"open": 45.77,
+			"closed": 54.209999999999994,
+			"other": 0.02
+		},
+		"2017-03": {
+			"desktop": 44.36,
+			"mobile": 50.75,
+			"tablet": 4.88,
+			"open": 45.120000000000005,
+			"closed": 54.85999999999999,
+			"other": 0.02
+		},
+		"2017-04": {
+			"desktop": 43.23,
+			"mobile": 51.95,
+			"tablet": 4.82,
+			"open": 43.92,
+			"closed": 56.059999999999995,
+			"other": 0.02
+		},
+		"2017-05": {
+			"desktop": 43.59,
+			"mobile": 51.7,
+			"tablet": 4.71,
+			"open": 44.15,
+			"closed": 55.83,
+			"other": 0.02
+		},
+		"2017-06": {
+			"desktop": 42.19,
+			"mobile": 53.03,
+			"tablet": 4.78,
+			"open": 42.88,
+			"closed": 57.099999999999994,
+			"other": 0.02
+		},
+		"2017-07": {
+			"desktop": 41.22,
+			"mobile": 53.99,
+			"tablet": 4.79,
+			"open": 41.92,
+			"closed": 58.059999999999995,
+			"other": 0.02
+		},
+		"2017-08": {
+			"desktop": 42.75,
+			"mobile": 52.64,
+			"tablet": 4.62,
+			"open": 43.18,
+			"closed": 56.8,
+			"other": 0.02
+		},
+		"2017-09": {
+			"desktop": 43.29,
+			"mobile": 52.29,
+			"tablet": 4.42,
+			"open": 43.56999999999999,
+			"closed": 56.410000000000004,
+			"other": 0.02
+		},
+		"2017-10": {
+			"desktop": 44.78,
+			"mobile": 50.87,
+			"tablet": 4.35,
+			"open": 45.1,
+			"closed": 54.85,
+			"other": 0.05
+		},
+		"2017-11": {
+			"desktop": 45.68,
+			"mobile": 50.02,
+			"tablet": 4.3,
+			"open": 45.989999999999995,
+			"closed": 53.84,
+			"other": 0.17
+		},
+		"2017-12": {
+			"desktop": 43.26,
+			"mobile": 52.48,
+			"tablet": 4.26,
+			"open": 43.54,
+			"closed": 56.2,
+			"other": 0.26
+		},
+		"2018-01": {
+			"desktop": 43.87,
+			"mobile": 51.92,
+			"tablet": 4.21,
+			"open": 43.94,
+			"closed": 55.78,
+			"other": 0.28
+		},
+		"2018-02": {
+			"desktop": 44.12,
+			"mobile": 51.82,
+			"tablet": 4.06,
+			"open": 43.89,
+			"closed": 55.86,
+			"other": 0.25
+		},
+		"2018-03": {
+			"desktop": 44.27,
+			"mobile": 51.56,
+			"tablet": 4.18,
+			"open": 43.96,
+			"closed": 55.96,
+			"other": 0.08
+		},
+		"2018-04": {
+			"desktop": 44.66,
+			"mobile": 51.2,
+			"tablet": 4.14,
+			"open": 44.580000000000005,
+			"closed": 55.41,
+			"other": 0.01
+		},
+		"2018-05": {
+			"desktop": 44.1,
+			"mobile": 52.0,
+			"tablet": 3.89,
+			"open": 43.93,
+			"closed": 56.06,
+			"other": 0.01
+		},
+		"2018-06": {
+			"desktop": 43.63,
+			"mobile": 52.52,
+			"tablet": 3.85,
+			"open": 43.58,
+			"closed": 56.410000000000004,
+			"other": 0.01
+		},
+		"2018-07": {
+			"desktop": 43.11,
+			"mobile": 52.95,
+			"tablet": 3.94,
+			"open": 42.93,
+			"closed": 57.06,
+			"other": 0.01
+		},
+		"2018-08": {
+			"desktop": 43.33,
+			"mobile": 52.54,
+			"tablet": 4.13,
+			"open": 42.910000000000004,
+			"closed": 57.08,
+			"other": 0.01
+		},
+		"2018-09": {
+			"desktop": 44.12,
+			"mobile": 51.7,
+			"tablet": 4.18,
+			"open": 43.52,
+			"closed": 56.47,
+			"other": 0.01
+		},
+		"2018-10": {
+			"desktop": 47.78,
+			"mobile": 48.2,
+			"tablet": 4.03,
+			"open": 46.14,
+			"closed": 53.85,
+			"other": 0.01
+		},
+		"2018-11": {
+			"desktop": 52.07,
+			"mobile": 44.19,
+			"tablet": 3.74,
+			"open": 47.72,
+			"closed": 52.27,
+			"other": 0.01
+		},
+		"2018-12": {
+			"desktop": 47.2,
+			"mobile": 49.06,
+			"tablet": 3.74,
+			"open": 44.6,
+			"closed": 55.39,
+			"other": 0.01
+		},
+		"2019-01": {
+			"desktop": 47.02,
+			"mobile": 49.11,
+			"tablet": 3.87,
+			"open": 44.22,
+			"closed": 55.77,
+			"other": 0.01
+		},
+		"2019-02": {
+			"desktop": 48.21,
+			"mobile": 47.96,
+			"tablet": 3.83,
+			"open": 45.309999999999995,
+			"closed": 54.68000000000001,
+			"other": 0.01
+		},
+		"2019-03": {
+			"desktop": 47.04,
+			"mobile": 48.98,
+			"tablet": 3.98,
+			"open": 45.81,
+			"closed": 54.18,
+			"other": 0.01
+		},
+		"2019-04": {
+			"desktop": 47.79,
+			"mobile": 48.32,
+			"tablet": 3.9,
+			"open": 46.44,
+			"closed": 53.550000000000004,
+			"other": 0.01
+		},
+		"2019-05": {
+			"desktop": 48.27,
+			"mobile": 47.9,
+			"tablet": 3.84,
+			"open": 46.68,
+			"closed": 53.31,
+			"other": 0.01
+		},
+		"2019-06": {
+			"desktop": 45.53,
+			"mobile": 50.71,
+			"tablet": 3.76,
+			"open": 43.89,
+			"closed": 56.1,
+			"other": 0.01
+		},
+		"2019-07": {
+			"desktop": 45.18,
+			"mobile": 51.11,
+			"tablet": 3.71,
+			"open": 43.269999999999996,
+			"closed": 56.720000000000006,
+			"other": 0.01
+		},
+		"2019-08": {
+			"desktop": 44.6,
+			"mobile": 51.65,
+			"tablet": 3.75,
+			"open": 42.87,
+			"closed": 57.13,
+			"other": 0.0
+		},
+		"2019-09": {
+			"desktop": 44.57,
+			"mobile": 51.78,
+			"tablet": 3.65,
+			"open": 43.2,
+			"closed": 56.8,
+			"other": 0.0
+		},
+		"2019-10": {
+			"desktop": 44.59,
+			"mobile": 52.48,
+			"tablet": 2.93,
+			"open": 43.300000000000004,
+			"closed": 56.699999999999996,
+			"other": 0.0
+		},
+		"2019-11": {
+			"desktop": 45.17,
+			"mobile": 52.03,
+			"tablet": 2.8,
+			"open": 43.91,
+			"closed": 56.09,
+			"other": 0.0
+		},
+		"2019-12": {
+			"desktop": 43.99,
+			"mobile": 53.29,
+			"tablet": 2.72,
+			"open": 42.800000000000004,
+			"closed": 57.199999999999996,
+			"other": 0.0
+		},
+		"2020-01": {
+			"desktop": 45.29,
+			"mobile": 52.02,
+			"tablet": 2.7,
+			"open": 44.230000000000004,
+			"closed": 55.769999999999996,
+			"other": 0.0
+		},
+		"2020-02": {
+			"desktop": 45.66,
+			"mobile": 51.69,
+			"tablet": 2.65,
+			"open": 44.620000000000005,
+			"closed": 55.379999999999995,
+			"other": 0.0
+		},
+		"2020-03": {
+			"desktop": 45.32,
+			"mobile": 52.03,
+			"tablet": 2.65,
+			"open": 44.37,
+			"closed": 55.63,
+			"other": 0.0
+		},
+		"2020-04": {
+			"desktop": 43.27,
+			"mobile": 53.81,
+			"tablet": 2.92,
+			"open": 42.349999999999994,
+			"closed": 57.650000000000006,
+			"other": 0.0
+		},
+		"2020-05": {
+			"desktop": 46.51,
+			"mobile": 50.48,
+			"tablet": 3.0,
+			"open": 45.57,
+			"closed": 54.43,
+			"other": 0.0
+		},
+		"2020-06": {
+			"desktop": 47.06,
+			"mobile": 50.13,
+			"tablet": 2.81,
+			"open": 46.19,
+			"closed": 53.81,
+			"other": 0.0
+		},
+		"2020-07": {
+			"desktop": 46.39,
+			"mobile": 50.88,
+			"tablet": 2.74,
+			"open": 45.42,
+			"closed": 54.58,
+			"other": 0.0
+		},
+		"2020-08": {
+			"desktop": 45.9,
+			"mobile": 51.33,
+			"tablet": 2.78,
+			"open": 44.730000000000004,
+			"closed": 55.269999999999996,
+			"other": 0.0
+		},
+		"2020-09": {
+			"desktop": 47.17,
+			"mobile": 50.21,
+			"tablet": 2.62,
+			"open": 45.949999999999996,
+			"closed": 54.050000000000004,
+			"other": 0.0
+		},
+		"2020-10": {
+			"desktop": 48.88,
+			"mobile": 48.62,
+			"tablet": 2.5,
+			"open": 47.38,
+			"closed": 52.62,
+			"other": 0.0
+		},
+		"2020-11": {
+			"desktop": 44.22,
+			"mobile": 52.95,
+			"tablet": 2.83,
+			"open": 41.72,
+			"closed": 58.28,
+			"other": 0.0
+		},
+		"2020-12": {
+			"desktop": 41.46,
+			"mobile": 55.73,
+			"tablet": 2.81,
+			"open": 40.11,
+			"closed": 59.89,
+			"other": 0.0
+		},
+		"2021-01": {
+			"desktop": 41.45,
+			"mobile": 55.68,
+			"tablet": 2.87,
+			"open": 39.93,
+			"closed": 60.07,
+			"other": 0.0
+		},
+		"2021-02": {
+			"desktop": 42.63,
+			"mobile": 54.46,
+			"tablet": 2.91,
+			"open": 40.95,
+			"closed": 59.05,
+			"other": 0.0
+		},
+		"2021-03": {
+			"desktop": 42.93,
+			"mobile": 54.22,
+			"tablet": 2.85,
+			"open": 41.07,
+			"closed": 58.93,
+			"other": 0.0
+		},
+		"2021-04": {
+			"desktop": 42.66,
+			"mobile": 54.57,
+			"tablet": 2.76,
+			"open": 40.599999999999994,
+			"closed": 59.400000000000006,
+			"other": 0.0
+		},
+		"2021-05": {
+			"desktop": 41.98,
+			"mobile": 55.3,
+			"tablet": 2.72,
+			"open": 39.53,
+			"closed": 60.47,
+			"other": 0.0
+		},
+		"2021-06": {
+			"desktop": 41.96,
+			"mobile": 55.4,
+			"tablet": 2.64,
+			"open": 39.5,
+			"closed": 60.5,
+			"other": 0.0
+		},
+		"2021-07": {
+			"desktop": 41.36,
+			"mobile": 55.89,
+			"tablet": 2.74,
+			"open": 38.88,
+			"closed": 61.12,
+			"other": 0.0
+		},
+		"2021-08": {
+			"desktop": 40.39,
+			"mobile": 56.86,
+			"tablet": 2.75,
+			"open": 38.81,
+			"closed": 61.19,
+			"other": 0.0
+		},
+		"2021-09": {
+			"desktop": 42.87,
+			"mobile": 54.61,
+			"tablet": 2.52,
+			"open": 40.81,
+			"closed": 59.19,
+			"other": 0.0
+		},
+		"2021-10": {
+			"desktop": 43.15,
+			"mobile": 54.37,
+			"tablet": 2.48,
+			"open": 41.01,
+			"closed": 58.99,
+			"other": 0.0
+		},
+		"2021-11": {
+			"desktop": 43.55,
+			"mobile": 53.98,
+			"tablet": 2.48,
+			"open": 41.15,
+			"closed": 58.85,
+			"other": 0.0
+		},
+		"2021-12": {
+			"desktop": 42.65,
+			"mobile": 54.86,
+			"tablet": 2.49,
+			"open": 40.03,
+			"closed": 59.97,
+			"other": 0.0
+		},
+		"2022-01": {
+			"desktop": 42.54,
+			"mobile": 54.98,
+			"tablet": 2.47,
+			"open": 40.480000000000004,
+			"closed": 59.519999999999996,
+			"other": 0.0
+		},
+		"2022-02": {
+			"desktop": 41.59,
+			"mobile": 55.98,
+			"tablet": 2.43,
+			"open": 39.58,
+			"closed": 60.42,
+			"other": 0.0
+		},
+		"2022-03": {
+			"desktop": 41.15,
+			"mobile": 56.45,
+			"tablet": 2.4,
+			"open": 39.07,
+			"closed": 60.93,
+			"other": 0.0
+		},
+		"2022-04": {
+			"desktop": 39.37,
+			"mobile": 58.16,
+			"tablet": 2.47,
+			"open": 37.239999999999995,
+			"closed": 62.760000000000005,
+			"other": 0.0
+		},
+		"2022-05": {
+			"desktop": 38.65,
+			"mobile": 59.02,
+			"tablet": 2.33,
+			"open": 36.64,
+			"closed": 63.36,
+			"other": 0.0
+		},
+		"2022-06": {
+			"desktop": 37.99,
+			"mobile": 59.74,
+			"tablet": 2.27,
+			"open": 36.18,
+			"closed": 63.82,
+			"other": 0.0
+		},
+		"2022-07": {
+			"desktop": 37.0,
+			"mobile": 60.73,
+			"tablet": 2.27,
+			"open": 35.02,
+			"closed": 64.97999999999999,
+			"other": 0.0
+		},
+		"2022-08": {
+			"desktop": 38.53,
+			"mobile": 59.25,
+			"tablet": 2.22,
+			"open": 36.31,
+			"closed": 63.69,
+			"other": 0.0
+		},
+		"2022-09": {
+			"desktop": 39.27,
+			"mobile": 58.64,
+			"tablet": 2.09,
+			"open": 37.16,
+			"closed": 62.84,
+			"other": 0.0
+		},
+		"2022-10": {
+			"desktop": 39.72,
+			"mobile": 58.27,
+			"tablet": 2.02,
+			"open": 37.98,
+			"closed": 62.02,
+			"other": 0.0
+		},
+		"2022-11": {
+			"desktop": 39.0,
+			"mobile": 59.02,
+			"tablet": 1.98,
+			"open": 37.06,
+			"closed": 62.94,
+			"other": 0.0
+		},
+		"2022-12": {
+			"desktop": 37.71,
+			"mobile": 60.29,
+			"tablet": 2.0,
+			"open": 35.72,
+			"closed": 64.28,
+			"other": 0.0
+		},
+		"2023-01": {
+			"desktop": 39.41,
+			"mobile": 58.52,
+			"tablet": 2.07,
+			"open": 37.21,
+			"closed": 62.79,
+			"other": 0.0
+		},
+		"2023-02": {
+			"desktop": 38.6,
+			"mobile": 59.36,
+			"tablet": 2.04,
+			"open": 36.0,
+			"closed": 64.0,
+			"other": 0.0
+		},
+		"2023-03": {
+			"desktop": 40.8,
+			"mobile": 57.18,
+			"tablet": 2.02,
+			"open": 37.66,
+			"closed": 62.330000000000005,
+			"other": 0.01
+		},
+		"2023-04": {
+			"desktop": 44.4,
+			"mobile": 53.61,
+			"tablet": 1.99,
+			"open": 39.29,
+			"closed": 60.7,
+			"other": 0.01
+		},
+		"2023-05": {
+			"desktop": 47.41,
+			"mobile": 50.71,
+			"tablet": 1.88,
+			"open": 42.019999999999996,
+			"closed": 57.980000000000004,
+			"other": 0.0
+		},
+		"2023-06": {
+			"desktop": 42.2,
+			"mobile": 55.87,
+			"tablet": 1.92,
+			"open": 39.42,
+			"closed": 60.57,
+			"other": 0.01
+		},
+		"2023-07": {
+			"desktop": 42.4,
+			"mobile": 55.67,
+			"tablet": 1.93,
+			"open": 39.94,
+			"closed": 60.06,
+			"other": 0.0
+		},
+		"2023-08": {
+			"desktop": 43.72,
+			"mobile": 54.41,
+			"tablet": 1.87,
+			"open": 41.08,
+			"closed": 58.910000000000004,
+			"other": 0.01
+		},
+		"2023-09": {
+			"desktop": 45.13,
+			"mobile": 53.03,
+			"tablet": 1.84,
+			"open": 42.07,
+			"closed": 57.92,
+			"other": 0.01
+		},
+		"2023-10": {
+			"desktop": 45.54,
+			"mobile": 52.69,
+			"tablet": 1.77,
+			"open": 42.550000000000004,
+			"closed": 57.44,
+			"other": 0.01
+		},
+		"2023-11": {
+			"desktop": 44.52,
+			"mobile": 53.66,
+			"tablet": 1.82,
+			"open": 41.96,
+			"closed": 58.03,
+			"other": 0.01
+		},
+		"2023-12": {
+			"desktop": 40.08,
+			"mobile": 57.97,
+			"tablet": 1.95,
+			"open": 37.99,
+			"closed": 62.0,
+			"other": 0.01
+		},
+		"2024-01": {
+			"desktop": 39.76,
+			"mobile": 58.21,
+			"tablet": 2.03,
+			"open": 37.78,
+			"closed": 62.21,
+			"other": 0.01
+		},
+		"2024-02": {
+			"desktop": 38.0,
+			"mobile": 59.9,
+			"tablet": 2.11,
+			"open": 35.68,
+			"closed": 64.30999999999999,
+			"other": 0.01
+		},
+		"2024-03": {
+			"desktop": 37.8,
+			"mobile": 60.01,
+			"tablet": 2.2,
+			"open": 35.38,
+			"closed": 64.62,
+			"other": 0.0
+		},
+		"2024-04": {
+			"desktop": 38.41,
+			"mobile": 59.57,
+			"tablet": 2.02,
+			"open": 36.16,
+			"closed": 63.84,
+			"other": 0.0
+		},
+		"2024-05": {
+			"desktop": 37.85,
+			"mobile": 60.08,
+			"tablet": 2.07,
+			"open": 35.75,
+			"closed": 64.25,
+			"other": 0.0
+		},
+		"2024-06": {
+			"desktop": 37.1,
+			"mobile": 60.74,
+			"tablet": 2.17,
+			"open": 34.9,
+			"closed": 65.1,
+			"other": 0.0
+		},
+		"2024-07": {
+			"desktop": 36.1,
+			"mobile": 61.74,
+			"tablet": 2.16,
+			"open": 33.93,
+			"closed": 66.07,
+			"other": 0.0
+		},
+		"2024-08": {
+			"desktop": 35.72,
+			"mobile": 62.15,
+			"tablet": 2.13,
+			"open": 33.53,
+			"closed": 66.47,
+			"other": 0.0
+		},
+		"2024-09": {
+			"desktop": 36.36,
+			"mobile": 61.66,
+			"tablet": 1.98,
+			"open": 34.51,
+			"closed": 65.49000000000001,
+			"other": 0.0
+		},
+		"2024-10": {
+			"desktop": 36.56,
+			"mobile": 61.59,
+			"tablet": 1.85,
+			"open": 34.7,
+			"closed": 65.3,
+			"other": 0.0
+		},
+		"2024-11": {
+			"desktop": 35.2,
+			"mobile": 62.96,
+			"tablet": 1.84,
+			"open": 33.17,
+			"closed": 66.83,
+			"other": 0.0
+		},
+		"2024-12": {
+			"desktop": 35.07,
+			"mobile": 63.07,
+			"tablet": 1.86,
+			"open": 32.91,
+			"closed": 67.09,
+			"other": 0.0
+		},
+		"2025-01": {
+			"desktop": 35.43,
+			"mobile": 62.69,
+			"tablet": 1.88,
+			"open": 33.01,
+			"closed": 66.99000000000001,
+			"other": 0.0
+		},
+		"2025-02": {
+			"desktop": 35.91,
+			"mobile": 62.23,
+			"tablet": 1.85,
+			"open": 33.37,
+			"closed": 66.63,
+			"other": 0.0
+		},
+		"2025-03": {
+			"desktop": 36.06,
+			"mobile": 62.21,
+			"tablet": 1.72,
+			"open": 33.8,
+			"closed": 66.2,
+			"other": 0.0
+		},
+		"2025-04": {
+			"desktop": 36.3,
+			"mobile": 62.01,
+			"tablet": 1.7,
+			"open": 33.93,
+			"closed": 66.07,
+			"other": 0.0
+		},
+		"2025-05": {
+			"desktop": 35.28,
+			"mobile": 63.07,
+			"tablet": 1.65,
+			"open": 32.73,
+			"closed": 67.27000000000001,
+			"other": 0.0
+		},
+		"2025-06": {
+			"desktop": 35.24,
+			"mobile": 63.13,
+			"tablet": 1.63,
+			"open": 32.66,
+			"closed": 67.34,
+			"other": 0.0
+		},
+		"2025-07": {
+			"desktop": 40.07,
+			"mobile": 58.36,
+			"tablet": 1.57,
+			"open": 37.27,
+			"closed": 62.73,
+			"other": 0.0
+		},
+		"2025-08": {
+			"desktop": 39.29,
+			"mobile": 59.16,
+			"tablet": 1.55,
+			"open": 35.63,
+			"closed": 64.37,
+			"other": 0.0
+		},
+		"2025-09": {
+			"desktop": 42.11,
+			"mobile": 56.52,
+			"tablet": 1.36,
+			"open": 37.230000000000004,
+			"closed": 62.769999999999996,
+			"other": 0.0
+		},
+		"2025-10": {
+			"desktop": 49.72,
+			"mobile": 48.99,
+			"tablet": 1.29,
+			"open": 43.019999999999996,
+			"closed": 56.980000000000004,
+			"other": 0.0
+		},
+		"2025-11": {
+			"desktop": 46.86,
+			"mobile": 51.71,
+			"tablet": 1.42,
+			"open": 42.760000000000005,
+			"closed": 57.239999999999995,
+			"other": 0.0
+		},
+		"2025-12": {
+			"desktop": 45.25,
+			"mobile": 53.43,
+			"tablet": 1.31,
+			"open": 40.41,
+			"closed": 59.59,
+			"other": 0.0
+		},
+		"2026-01": {
+			"desktop": 47.93,
+			"mobile": 50.7,
+			"tablet": 1.37,
+			"open": 43.2,
+			"closed": 56.8,
+			"other": 0.0
+		},
+		"2026-02": {
+			"desktop": 46.74,
+			"mobile": 51.62,
+			"tablet": 1.64,
+			"open": 41.45,
+			"closed": 58.55,
+			"other": 0.0
+		},
+		"2026-03": {
+			"desktop": 43.31,
+			"mobile": 55.0,
+			"tablet": 1.69,
+			"open": 37.28,
+			"closed": 62.72,
+			"other": 0.0
+		},
+		"2026-04": {
+			"desktop": 45.61,
+			"mobile": 52.8,
+			"tablet": 1.59,
+			"open": 39.62,
+			"closed": 60.38,
+			"other": 0.0
+		},
+		"2026-05": {
+			"desktop": 48.24,
+			"mobile": 50.29,
+			"tablet": 1.47,
+			"open": 42.349999999999994,
+			"closed": 57.650000000000006,
+			"other": 0.0
+		},
+		"2026-06": {
+			"desktop": 47.17,
+			"mobile": 51.47,
+			"tablet": 1.36,
+			"open": 40.59,
+			"closed": 59.41,
+			"other": 0.0
+		},
+		"2026-07": {
+			"desktop": 45.89,
+			"mobile": 52.61,
+			"tablet": 1.5,
+			"open": 38.25,
+			"closed": 61.75,
+			"other": 0.0
+		},
+		"2026-08": {
+			"desktop": 49.11,
+			"mobile": 49.34,
+			"tablet": 1.54,
+			"open": 41.62,
+			"closed": 58.38,
+			"other": 0.0
+		},
+		"2026-09": {
+			"desktop": 39.2,
+			"mobile": 59.06,
+			"tablet": 1.75,
+			"open": 37.06,
+			"closed": 62.94,
+			"other": 0.0
+		}
+	},
+	"wikimedia": {
+		"2015-07": {
+			"desktop_of_user": 57.49267628856985,
+			"mobile_web_of_user": 41.132109447107844,
+			"mobile_app_of_user": 1.3752142643223089,
+			"automated_of_all": 14.571477928935817,
+			"user_views": 15540018348,
+			"all_views": 18190667439
+		},
+		"2015-08": {
+			"desktop_of_user": 56.86409522319074,
+			"mobile_web_of_user": 41.758804358336825,
+			"mobile_app_of_user": 1.3771004184724385,
+			"automated_of_all": 13.926068787281555,
+			"user_views": 15765852881,
+			"all_views": 18316640891
+		},
+		"2015-09": {
+			"desktop_of_user": 58.353723865056324,
+			"mobile_web_of_user": 40.42434558059473,
+			"mobile_app_of_user": 1.2219305543489385,
+			"automated_of_all": 15.48795289703614,
+			"user_views": 15899101083,
+			"all_views": 18812822110
+		},
+		"2015-10": {
+			"desktop_of_user": 57.50695299425343,
+			"mobile_web_of_user": 41.29024247116273,
+			"mobile_app_of_user": 1.2028045345838403,
+			"automated_of_all": 16.956430034203418,
+			"user_views": 16236521761,
+			"all_views": 19551810896
+		},
+		"2015-11": {
+			"desktop_of_user": 56.96143006462892,
+			"mobile_web_of_user": 41.81901527480271,
+			"mobile_app_of_user": 1.2195546605683671,
+			"automated_of_all": 16.475804422915974,
+			"user_views": 16094462540,
+			"all_views": 19269221845
+		},
+		"2015-12": {
+			"desktop_of_user": 54.601970325110045,
+			"mobile_web_of_user": 44.087362534168,
+			"mobile_app_of_user": 1.310667140721957,
+			"automated_of_all": 18.483959203317667,
+			"user_views": 15498223133,
+			"all_views": 19012482674
+		},
+		"2016-01": {
+			"desktop_of_user": 54.2919418642653,
+			"mobile_web_of_user": 44.423554673075444,
+			"mobile_app_of_user": 1.284503462659259,
+			"automated_of_all": 17.656840155260646,
+			"user_views": 17181240644,
+			"all_views": 20865413322
+		},
+		"2016-02": {
+			"desktop_of_user": 55.26315728262747,
+			"mobile_web_of_user": 43.526526074068485,
+			"mobile_app_of_user": 1.2103166433040478,
+			"automated_of_all": 17.905409071852596,
+			"user_views": 16001612146,
+			"all_views": 19491676571
+		},
+		"2016-03": {
+			"desktop_of_user": 55.16938133949832,
+			"mobile_web_of_user": 43.545405554505855,
+			"mobile_app_of_user": 1.2852131059958225,
+			"automated_of_all": 17.854968217374722,
+			"user_views": 16472569725,
+			"all_views": 20053032262
+		},
+		"2016-04": {
+			"desktop_of_user": 55.427890661984904,
+			"mobile_web_of_user": 43.499920596089794,
+			"mobile_app_of_user": 1.072188741925299,
+			"automated_of_all": 20.485130315180445,
+			"user_views": 15902875523,
+			"all_views": 19999876232
+		},
+		"2016-05": {
+			"desktop_of_user": 54.608782135993586,
+			"mobile_web_of_user": 44.108067573090956,
+			"mobile_app_of_user": 1.2831502909154573,
+			"automated_of_all": 18.384455424995583,
+			"user_views": 16256244142,
+			"all_views": 19918073483
+		},
+		"2016-06": {
+			"desktop_of_user": 53.57345274702068,
+			"mobile_web_of_user": 45.09462633205215,
+			"mobile_app_of_user": 1.3319209209271743,
+			"automated_of_all": 19.533169728710686,
+			"user_views": 15252604626,
+			"all_views": 18955145337
+		},
+		"2016-07": {
+			"desktop_of_user": 53.498638993366605,
+			"mobile_web_of_user": 45.15094995712655,
+			"mobile_app_of_user": 1.3504110495068495,
+			"automated_of_all": 19.762627424715074,
+			"user_views": 15396084035,
+			"all_views": 19188170725
+		},
+		"2016-08": {
+			"desktop_of_user": 54.80255386207009,
+			"mobile_web_of_user": 43.98454047351788,
+			"mobile_app_of_user": 1.2129056644120275,
+			"automated_of_all": 18.90363337246963,
+			"user_views": 16274959281,
+			"all_views": 20068666400
+		},
+		"2016-09": {
+			"desktop_of_user": 53.66530633704151,
+			"mobile_web_of_user": 45.216160566050085,
+			"mobile_app_of_user": 1.1185330969084082,
+			"automated_of_all": 19.59962728733601,
+			"user_views": 15564838312,
+			"all_views": 19359161888
+		},
+		"2016-10": {
+			"desktop_of_user": 54.093570745535736,
+			"mobile_web_of_user": 44.97677956093581,
+			"mobile_app_of_user": 0.9296496935284551,
+			"automated_of_all": 18.889243405690948,
+			"user_views": 16573593158,
+			"all_views": 20433286353
+		},
+		"2016-11": {
+			"desktop_of_user": 54.0695772406734,
+			"mobile_web_of_user": 44.8924998179848,
+			"mobile_app_of_user": 1.037922941341805,
+			"automated_of_all": 17.906689590315494,
+			"user_views": 16859938058,
+			"all_views": 20537529762
+		},
+		"2016-12": {
+			"desktop_of_user": 51.969410850056946,
+			"mobile_web_of_user": 46.46659283921697,
+			"mobile_app_of_user": 1.5639963107260821,
+			"automated_of_all": 19.560789576532233,
+			"user_views": 16407069073,
+			"all_views": 20396854950
+		},
+		"2017-01": {
+			"desktop_of_user": 50.78513769199758,
+			"mobile_web_of_user": 46.83914122362892,
+			"mobile_app_of_user": 2.3757210843734966,
+			"automated_of_all": 17.874926244347733,
+			"user_views": 18035197895,
+			"all_views": 21960647425
+		},
+		"2017-02": {
+			"desktop_of_user": 50.7906834384563,
+			"mobile_web_of_user": 46.80246142693891,
+			"mobile_app_of_user": 2.4068551346047844,
+			"automated_of_all": 18.393637130055563,
+			"user_views": 16218545661,
+			"all_views": 19874118991
+		},
+		"2017-03": {
+			"desktop_of_user": 51.0238894097966,
+			"mobile_web_of_user": 46.757489175571685,
+			"mobile_app_of_user": 2.218621414631713,
+			"automated_of_all": 20.494943070808514,
+			"user_views": 17232663197,
+			"all_views": 21674927184
+		},
+		"2017-04": {
+			"desktop_of_user": 50.22267187764051,
+			"mobile_web_of_user": 48.3011389929465,
+			"mobile_app_of_user": 1.4761891294129934,
+			"automated_of_all": 23.1747466061073,
+			"user_views": 15878962074,
+			"all_views": 20668935503
+		},
+		"2017-05": {
+			"desktop_of_user": 51.47638425754532,
+			"mobile_web_of_user": 47.093929433232006,
+			"mobile_app_of_user": 1.4296863092226704,
+			"automated_of_all": 21.12628883977935,
+			"user_views": 16461082930,
+			"all_views": 20870176752
+		},
+		"2017-06": {
+			"desktop_of_user": 49.78629680330941,
+			"mobile_web_of_user": 48.69532555264988,
+			"mobile_app_of_user": 1.5183776440407062,
+			"automated_of_all": 19.60934424256946,
+			"user_views": 14803195034,
+			"all_views": 18414074241
+		},
+		"2017-07": {
+			"desktop_of_user": 48.05699860879707,
+			"mobile_web_of_user": 50.33369503854858,
+			"mobile_app_of_user": 1.6093063526543483,
+			"automated_of_all": 18.217777545947268,
+			"user_views": 14816414327,
+			"all_views": 18116913288
+		},
+		"2017-08": {
+			"desktop_of_user": 47.87381857971948,
+			"mobile_web_of_user": 50.562381784381564,
+			"mobile_app_of_user": 1.563799635898956,
+			"automated_of_all": 18.816380824172608,
+			"user_views": 14924164301,
+			"all_views": 18383221212
+		},
+		"2017-09": {
+			"desktop_of_user": 48.403273640116176,
+			"mobile_web_of_user": 50.10164313380988,
+			"mobile_app_of_user": 1.495083226073944,
+			"automated_of_all": 19.698930397793802,
+			"user_views": 14967297278,
+			"all_views": 18638976233
+		},
+		"2017-10": {
+			"desktop_of_user": 49.45118263201272,
+			"mobile_web_of_user": 49.10464542279579,
+			"mobile_app_of_user": 1.4441719451914938,
+			"automated_of_all": 19.390462517875772,
+			"user_views": 16035623166,
+			"all_views": 19892960147
+		},
+		"2017-11": {
+			"desktop_of_user": 49.40294162946813,
+			"mobile_web_of_user": 49.18131756239801,
+			"mobile_app_of_user": 1.4157408081338636,
+			"automated_of_all": 19.763014255188295,
+			"user_views": 15809078167,
+			"all_views": 19702981138
+		},
+		"2017-12": {
+			"desktop_of_user": 47.426550676929224,
+			"mobile_web_of_user": 51.03545434866726,
+			"mobile_app_of_user": 1.5379949744035126,
+			"automated_of_all": 21.198189361553776,
+			"user_views": 15278864945,
+			"all_views": 19388977006
+		},
+		"2018-01": {
+			"desktop_of_user": 47.2921262153394,
+			"mobile_web_of_user": 51.22056913253662,
+			"mobile_app_of_user": 1.4873046521239819,
+			"automated_of_all": 19.015406757684673,
+			"user_views": 17044313997,
+			"all_views": 21046366123
+		},
+		"2018-02": {
+			"desktop_of_user": 47.38860300532437,
+			"mobile_web_of_user": 51.15843390746846,
+			"mobile_app_of_user": 1.4529630872071622,
+			"automated_of_all": 20.11827375397399,
+			"user_views": 15205348088,
+			"all_views": 19034826615
+		},
+		"2018-03": {
+			"desktop_of_user": 47.30375685600028,
+			"mobile_web_of_user": 51.240210149660086,
+			"mobile_app_of_user": 1.456032994339638,
+			"automated_of_all": 18.26146467383294,
+			"user_views": 16537804908,
+			"all_views": 20232568203
+		},
+		"2018-04": {
+			"desktop_of_user": 46.79779464570339,
+			"mobile_web_of_user": 51.7327187738155,
+			"mobile_app_of_user": 1.4694865804811112,
+			"automated_of_all": 18.55094736768128,
+			"user_views": 15745012787,
+			"all_views": 19331118384
+		},
+		"2018-05": {
+			"desktop_of_user": 45.92740819020393,
+			"mobile_web_of_user": 52.55217409641069,
+			"mobile_app_of_user": 1.5204177133853851,
+			"automated_of_all": 20.202456115690204,
+			"user_views": 16367963870,
+			"all_views": 20511864242
+		},
+		"2018-06": {
+			"desktop_of_user": 44.81218709887163,
+			"mobile_web_of_user": 53.62008971887591,
+			"mobile_app_of_user": 1.567723182252458,
+			"automated_of_all": 19.10715922978553,
+			"user_views": 15229921309,
+			"all_views": 18827279601
+		},
+		"2018-07": {
+			"desktop_of_user": 43.83437460470215,
+			"mobile_web_of_user": 54.56322374724189,
+			"mobile_app_of_user": 1.6024016480559635,
+			"automated_of_all": 18.576730065510038,
+			"user_views": 15641883875,
+			"all_views": 19210581800
+		},
+		"2018-08": {
+			"desktop_of_user": 43.03286698268829,
+			"mobile_web_of_user": 55.358577411885435,
+			"mobile_app_of_user": 1.6085556054262808,
+			"automated_of_all": 19.816082659396884,
+			"user_views": 15484116319,
+			"all_views": 19310750625
+		},
+		"2018-09": {
+			"desktop_of_user": 44.0452390101784,
+			"mobile_web_of_user": 54.444400139981305,
+			"mobile_app_of_user": 1.5103608498402954,
+			"automated_of_all": 19.19040832744775,
+			"user_views": 15363588842,
+			"all_views": 19012085724
+		},
+		"2018-10": {
+			"desktop_of_user": 45.07160962312657,
+			"mobile_web_of_user": 53.457320864000856,
+			"mobile_app_of_user": 1.4710695128725753,
+			"automated_of_all": 19.42523800958672,
+			"user_views": 16247618954,
+			"all_views": 20164650261
+		},
+		"2018-11": {
+			"desktop_of_user": 44.748585533347615,
+			"mobile_web_of_user": 53.79754433535425,
+			"mobile_app_of_user": 1.453870131298132,
+			"automated_of_all": 19.238634259602748,
+			"user_views": 16137778124,
+			"all_views": 19982052032
+		},
+		"2018-12": {
+			"desktop_of_user": 42.37985811591934,
+			"mobile_web_of_user": 56.024951870992915,
+			"mobile_app_of_user": 1.595190013087743,
+			"automated_of_all": 22.40146227090616,
+			"user_views": 15769599166,
+			"all_views": 20322031352
+		},
+		"2019-01": {
+			"desktop_of_user": 42.65446142610491,
+			"mobile_web_of_user": 55.791408220082914,
+			"mobile_app_of_user": 1.5541303538121762,
+			"automated_of_all": 20.893735335087538,
+			"user_views": 17208898555,
+			"all_views": 21754153894
+		},
+		"2019-02": {
+			"desktop_of_user": 42.98705789749259,
+			"mobile_web_of_user": 55.51193914535012,
+			"mobile_app_of_user": 1.5010029571572938,
+			"automated_of_all": 20.888596037801598,
+			"user_views": 15312609206,
+			"all_views": 19355754593
+		},
+		"2019-03": {
+			"desktop_of_user": 42.401600282945616,
+			"mobile_web_of_user": 56.08680153618471,
+			"mobile_app_of_user": 1.5115981808696775,
+			"automated_of_all": 20.552507726145663,
+			"user_views": 16636644459,
+			"all_views": 20940427423
+		},
+		"2019-04": {
+			"desktop_of_user": 42.08771248709741,
+			"mobile_web_of_user": 56.406727001650616,
+			"mobile_app_of_user": 1.5055605112519679,
+			"automated_of_all": 20.71411088252769,
+			"user_views": 15979815969,
+			"all_views": 20154678401
+		},
+		"2019-05": {
+			"desktop_of_user": 41.744673384675416,
+			"mobile_web_of_user": 56.72114792725293,
+			"mobile_app_of_user": 1.5341786880716557,
+			"automated_of_all": 18.696933989316843,
+			"user_views": 16647673963,
+			"all_views": 20476071543
+		},
+		"2019-06": {
+			"desktop_of_user": 40.17139556301531,
+			"mobile_web_of_user": 58.2086641406077,
+			"mobile_app_of_user": 1.6199402963769889,
+			"automated_of_all": 19.821563220451964,
+			"user_views": 15126619700,
+			"all_views": 18866194338
+		},
+		"2019-07": {
+			"desktop_of_user": 39.60589599271523,
+			"mobile_web_of_user": 58.75533343568521,
+			"mobile_app_of_user": 1.6387705715995557,
+			"automated_of_all": 20.782285591317684,
+			"user_views": 15702692400,
+			"all_views": 19822198251
+		},
+		"2019-08": {
+			"desktop_of_user": 38.21468696744508,
+			"mobile_web_of_user": 60.11400217976315,
+			"mobile_app_of_user": 1.6713108527917755,
+			"automated_of_all": 21.90913347370621,
+			"user_views": 15713435688,
+			"all_views": 20121989148
+		},
+		"2019-09": {
+			"desktop_of_user": 39.018900148155886,
+			"mobile_web_of_user": 59.42037974249495,
+			"mobile_app_of_user": 1.5607201093491623,
+			"automated_of_all": 20.412461144516215,
+			"user_views": 15833041653,
+			"all_views": 19893870172
+		},
+		"2019-10": {
+			"desktop_of_user": 41.18266628221678,
+			"mobile_web_of_user": 57.3040441266329,
+			"mobile_app_of_user": 1.5132895911503172,
+			"automated_of_all": 20.47786341326796,
+			"user_views": 17015981112,
+			"all_views": 21397791662
+		},
+		"2019-11": {
+			"desktop_of_user": 40.14615284862087,
+			"mobile_web_of_user": 58.3080894405831,
+			"mobile_app_of_user": 1.5457577107960216,
+			"automated_of_all": 21.966574096410895,
+			"user_views": 16417533306,
+			"all_views": 21039103584
+		},
+		"2019-12": {
+			"desktop_of_user": 38.92360527498559,
+			"mobile_web_of_user": 59.35237626868851,
+			"mobile_app_of_user": 1.7240184563258973,
+			"automated_of_all": 25.117920069527766,
+			"user_views": 15817833388,
+			"all_views": 21123656558
+		},
+		"2020-01": {
+			"desktop_of_user": 39.17560730404774,
+			"mobile_web_of_user": 59.10618315689282,
+			"mobile_app_of_user": 1.7182095390594463,
+			"automated_of_all": 22.880781196822785,
+			"user_views": 17268839001,
+			"all_views": 22392393581
+		},
+		"2020-02": {
+			"desktop_of_user": 39.62294596522744,
+			"mobile_web_of_user": 58.70156459497545,
+			"mobile_app_of_user": 1.6754894397971078,
+			"automated_of_all": 22.398454619335485,
+			"user_views": 15889849060,
+			"all_views": 20476201836
+		},
+		"2020-03": {
+			"desktop_of_user": 40.13556430107426,
+			"mobile_web_of_user": 58.2640632580157,
+			"mobile_app_of_user": 1.6003724409100386,
+			"automated_of_all": 22.911943336901388,
+			"user_views": 17456434631,
+			"all_views": 22644797893
+		},
+		"2020-04": {
+			"desktop_of_user": 39.102575242049845,
+			"mobile_web_of_user": 59.297491766855266,
+			"mobile_app_of_user": 1.5999329910948943,
+			"automated_of_all": 22.6392552298302,
+			"user_views": 19924157810,
+			"all_views": 25754868143
+		},
+		"2020-05": {
+			"desktop_of_user": 36.82600716543254,
+			"mobile_web_of_user": 61.78849301863095,
+			"mobile_app_of_user": 1.3854998159365088,
+			"automated_of_all": 27.32468538495728,
+			"user_views": 18403416014,
+			"all_views": 25322788228
+		},
+		"2020-06": {
+			"desktop_of_user": 37.315424807147295,
+			"mobile_web_of_user": 62.40915068689919,
+			"mobile_app_of_user": 0.27542450595351936,
+			"automated_of_all": 28.38057997968133,
+			"user_views": 15425285725,
+			"all_views": 21537853449
+		},
+		"2020-07": {
+			"desktop_of_user": 35.257441751710004,
+			"mobile_web_of_user": 63.16442752776226,
+			"mobile_app_of_user": 1.5781307205277344,
+			"automated_of_all": 28.88248307448564,
+			"user_views": 15283869065,
+			"all_views": 21491004925
+		},
+		"2020-08": {
+			"desktop_of_user": 34.05171138989612,
+			"mobile_web_of_user": 64.15896785236423,
+			"mobile_app_of_user": 1.7893207577396588,
+			"automated_of_all": 27.60131348670075,
+			"user_views": 15325959128,
+			"all_views": 21168835881
+		},
+		"2020-09": {
+			"desktop_of_user": 36.426269480351195,
+			"mobile_web_of_user": 61.87082202277739,
+			"mobile_app_of_user": 1.702908496871416,
+			"automated_of_all": 26.821902297942923,
+			"user_views": 15254148504,
+			"all_views": 20845237828
+		},
+		"2020-10": {
+			"desktop_of_user": 38.58875234559171,
+			"mobile_web_of_user": 59.68511700492864,
+			"mobile_app_of_user": 1.72613064947965,
+			"automated_of_all": 24.777924565499276,
+			"user_views": 16655836746,
+			"all_views": 22142219089
+		},
+		"2020-11": {
+			"desktop_of_user": 38.623715242480536,
+			"mobile_web_of_user": 59.676192749275046,
+			"mobile_app_of_user": 1.700092008244421,
+			"automated_of_all": 24.692069479479695,
+			"user_views": 17085740630,
+			"all_views": 22687837140
+		},
+		"2020-12": {
+			"desktop_of_user": 37.05323987101159,
+			"mobile_web_of_user": 61.107280788357585,
+			"mobile_app_of_user": 1.8394793406308254,
+			"automated_of_all": 26.66064548998419,
+			"user_views": 16359501863,
+			"all_views": 22306580106
+		},
+		"2021-01": {
+			"desktop_of_user": 36.35306015772581,
+			"mobile_web_of_user": 61.818332131082876,
+			"mobile_app_of_user": 1.8286077111913157,
+			"automated_of_all": 25.441673297109922,
+			"user_views": 17567305991,
+			"all_views": 23561829735
+		},
+		"2021-02": {
+			"desktop_of_user": 39.10320197991302,
+			"mobile_web_of_user": 59.19375580745998,
+			"mobile_app_of_user": 1.7030422126270066,
+			"automated_of_all": 25.592824442883522,
+			"user_views": 16192957048,
+			"all_views": 21762628304
+		},
+		"2021-03": {
+			"desktop_of_user": 38.92873856289806,
+			"mobile_web_of_user": 59.4321096267171,
+			"mobile_app_of_user": 1.6391518103848401,
+			"automated_of_all": 24.286843747497976,
+			"user_views": 17813366410,
+			"all_views": 23527438680
+		},
+		"2021-04": {
+			"desktop_of_user": 37.16594774929726,
+			"mobile_web_of_user": 61.10550519716238,
+			"mobile_app_of_user": 1.7285470535403595,
+			"automated_of_all": 26.47241975826702,
+			"user_views": 16724248866,
+			"all_views": 22745545020
+		},
+		"2021-05": {
+			"desktop_of_user": 36.12145373122287,
+			"mobile_web_of_user": 62.133780938414574,
+			"mobile_app_of_user": 1.744765330362553,
+			"automated_of_all": 27.114657650393823,
+			"user_views": 16902212055,
+			"all_views": 23190138799
+		},
+		"2021-06": {
+			"desktop_of_user": 35.68390376394412,
+			"mobile_web_of_user": 62.58194224333084,
+			"mobile_app_of_user": 1.7341539927250378,
+			"automated_of_all": 28.160904143288292,
+			"user_views": 15111677746,
+			"all_views": 21035450914
+		},
+		"2021-07": {
+			"desktop_of_user": 35.77324345984131,
+			"mobile_web_of_user": 62.428726109718056,
+			"mobile_app_of_user": 1.798030430440637,
+			"automated_of_all": 28.656404184112848,
+			"user_views": 15533873914,
+			"all_views": 21773326304
+		},
+		"2021-08": {
+			"desktop_of_user": 35.56073392423501,
+			"mobile_web_of_user": 62.628217199197195,
+			"mobile_app_of_user": 1.8110488765677963,
+			"automated_of_all": 29.455508749860513,
+			"user_views": 15755582618,
+			"all_views": 22334249406
+		},
+		"2021-09": {
+			"desktop_of_user": 36.77402232589241,
+			"mobile_web_of_user": 61.49309646138145,
+			"mobile_app_of_user": 1.7328812127261406,
+			"automated_of_all": 29.132780047196427,
+			"user_views": 15119727254,
+			"all_views": 21335290511
+		},
+		"2021-10": {
+			"desktop_of_user": 37.17457248950079,
+			"mobile_web_of_user": 61.07958494938399,
+			"mobile_app_of_user": 1.745842561115222,
+			"automated_of_all": 28.39363588832391,
+			"user_views": 15604153494,
+			"all_views": 21791573539
+		},
+		"2021-11": {
+			"desktop_of_user": 38.01532810107322,
+			"mobile_web_of_user": 60.27130220586835,
+			"mobile_app_of_user": 1.7133696930584277,
+			"automated_of_all": 28.51866703477304,
+			"user_views": 15026448410,
+			"all_views": 21021500001
+		},
+		"2021-12": {
+			"desktop_of_user": 35.320336673122114,
+			"mobile_web_of_user": 62.77742249627204,
+			"mobile_app_of_user": 1.9022408306058487,
+			"automated_of_all": 28.948779529770043,
+			"user_views": 14890738199,
+			"all_views": 20957751465
+		},
+		"2022-01": {
+			"desktop_of_user": 35.71811200195124,
+			"mobile_web_of_user": 62.365686786701936,
+			"mobile_app_of_user": 1.9162012113468219,
+			"automated_of_all": 28.24881761209509,
+			"user_views": 16357832160,
+			"all_views": 22797996654
+		},
+		"2022-02": {
+			"desktop_of_user": 37.102003590663465,
+			"mobile_web_of_user": 61.07259111876953,
+			"mobile_app_of_user": 1.8254052905670057,
+			"automated_of_all": 29.525407622292366,
+			"user_views": 15080646387,
+			"all_views": 21398699699
+		},
+		"2022-03": {
+			"desktop_of_user": 37.54186045565333,
+			"mobile_web_of_user": 60.64219527049248,
+			"mobile_app_of_user": 1.8159442738541889,
+			"automated_of_all": 29.707171344117846,
+			"user_views": 16004400861,
+			"all_views": 22768184418
+		},
+		"2022-04": {
+			"desktop_of_user": 36.55601500358235,
+			"mobile_web_of_user": 61.555177315962354,
+			"mobile_app_of_user": 1.8888076804552933,
+			"automated_of_all": 31.183450639276302,
+			"user_views": 14913494842,
+			"all_views": 21671378441
+		},
+		"2022-05": {
+			"desktop_of_user": 36.42339273055023,
+			"mobile_web_of_user": 61.68362713751525,
+			"mobile_app_of_user": 1.8929801319345108,
+			"automated_of_all": 33.11064151502659,
+			"user_views": 14907391168,
+			"all_views": 22286640963
+		},
+		"2022-06": {
+			"desktop_of_user": 35.51389607518235,
+			"mobile_web_of_user": 62.54019341492257,
+			"mobile_app_of_user": 1.945910509895076,
+			"automated_of_all": 34.1021027678438,
+			"user_views": 13968279097,
+			"all_views": 21196851013
+		},
+		"2022-07": {
+			"desktop_of_user": 33.27485960481175,
+			"mobile_web_of_user": 64.7035260814384,
+			"mobile_app_of_user": 2.0216143137498555,
+			"automated_of_all": 35.26289836739961,
+			"user_views": 14235626056,
+			"all_views": 21989903312
+		},
+		"2022-08": {
+			"desktop_of_user": 33.09040682073024,
+			"mobile_web_of_user": 64.9484078910289,
+			"mobile_app_of_user": 1.961185288240857,
+			"automated_of_all": 35.441823231795965,
+			"user_views": 14870144588,
+			"all_views": 23033712122
+		},
+		"2022-09": {
+			"desktop_of_user": 33.5028576546209,
+			"mobile_web_of_user": 64.67995623135106,
+			"mobile_app_of_user": 1.817186114028053,
+			"automated_of_all": 34.61919609751324,
+			"user_views": 15467538896,
+			"all_views": 23657615038
+		},
+		"2022-10": {
+			"desktop_of_user": 34.48313014375054,
+			"mobile_web_of_user": 63.713966941365065,
+			"mobile_app_of_user": 1.8029029148843851,
+			"automated_of_all": 34.40934719979323,
+			"user_views": 16043576424,
+			"all_views": 24460156652
+		},
+		"2022-11": {
+			"desktop_of_user": 34.32915440756539,
+			"mobile_web_of_user": 63.94776766361971,
+			"mobile_app_of_user": 1.7230779288149027,
+			"automated_of_all": 34.709425716144246,
+			"user_views": 16195990810,
+			"all_views": 24806016776
+		},
+		"2022-12": {
+			"desktop_of_user": 33.524905123391044,
+			"mobile_web_of_user": 64.48375409301586,
+			"mobile_app_of_user": 1.991340783593101,
+			"automated_of_all": 32.713753510445734,
+			"user_views": 15385211287,
+			"all_views": 22865313626
+		},
+		"2023-01": {
+			"desktop_of_user": 33.539854625504056,
+			"mobile_web_of_user": 64.51974742626922,
+			"mobile_app_of_user": 1.9403979482267177,
+			"automated_of_all": 30.90396738039134,
+			"user_views": 16629672243,
+			"all_views": 24067477701
+		},
+		"2023-02": {
+			"desktop_of_user": 33.296151012980886,
+			"mobile_web_of_user": 64.85235090153147,
+			"mobile_app_of_user": 1.8514980854876415,
+			"automated_of_all": 34.321752705239795,
+			"user_views": 14846579273,
+			"all_views": 22605017467
+		},
+		"2023-03": {
+			"desktop_of_user": 33.6938836567269,
+			"mobile_web_of_user": 64.49313578304735,
+			"mobile_app_of_user": 1.8129805602257463,
+			"automated_of_all": 37.551001201289026,
+			"user_views": 16460954218,
+			"all_views": 26359036229
+		},
+		"2023-04": {
+			"desktop_of_user": 33.190264436989885,
+			"mobile_web_of_user": 64.86171116032506,
+			"mobile_app_of_user": 1.9480244026850502,
+			"automated_of_all": 36.93707694659313,
+			"user_views": 15119072153,
+			"all_views": 23974581927
+		},
+		"2023-05": {
+			"desktop_of_user": 32.2847145693211,
+			"mobile_web_of_user": 65.89263837762209,
+			"mobile_app_of_user": 1.8226470530568104,
+			"automated_of_all": 34.485935138720905,
+			"user_views": 16354594846,
+			"all_views": 24963486666
+		},
+		"2023-06": {
+			"desktop_of_user": 31.49090328740715,
+			"mobile_web_of_user": 66.67675150226782,
+			"mobile_app_of_user": 1.8323452103250306,
+			"automated_of_all": 35.26868731662298,
+			"user_views": 15498867757,
+			"all_views": 23943385534
+		},
+		"2023-07": {
+			"desktop_of_user": 29.885403491022473,
+			"mobile_web_of_user": 68.15006830256962,
+			"mobile_app_of_user": 1.9645282064079115,
+			"automated_of_all": 35.67806027442497,
+			"user_views": 15810249249,
+			"all_views": 24579870129
+		},
+		"2023-08": {
+			"desktop_of_user": 29.80331013679284,
+			"mobile_web_of_user": 68.24922290143974,
+			"mobile_app_of_user": 1.9474669617674212,
+			"automated_of_all": 35.221027956067886,
+			"user_views": 15989418055,
+			"all_views": 24683037644
+		},
+		"2023-09": {
+			"desktop_of_user": 31.108266015416575,
+			"mobile_web_of_user": 67.00738332815898,
+			"mobile_app_of_user": 1.8843506564244403,
+			"automated_of_all": 38.761500894736166,
+			"user_views": 15292265164,
+			"all_views": 24971652453
+		},
+		"2023-10": {
+			"desktop_of_user": 31.030861897902216,
+			"mobile_web_of_user": 67.1234058021337,
+			"mobile_app_of_user": 1.845732299964083,
+			"automated_of_all": 41.17571751394651,
+			"user_views": 16486064908,
+			"all_views": 28025951548
+		},
+		"2023-11": {
+			"desktop_of_user": 30.921351178795927,
+			"mobile_web_of_user": 67.20395876815812,
+			"mobile_app_of_user": 1.8746900530459571,
+			"automated_of_all": 38.79679951665338,
+			"user_views": 15746323480,
+			"all_views": 25727941277
+		},
+		"2023-12": {
+			"desktop_of_user": 29.416260947510416,
+			"mobile_web_of_user": 68.59433579014535,
+			"mobile_app_of_user": 1.9894032623442388,
+			"automated_of_all": 37.793345114728425,
+			"user_views": 15961150261,
+			"all_views": 25658268059
+		},
+		"2024-01": {
+			"desktop_of_user": 32.50192880537902,
+			"mobile_web_of_user": 65.63877367038405,
+			"mobile_app_of_user": 1.8592975242369267,
+			"automated_of_all": 38.92662547039018,
+			"user_views": 17949611649,
+			"all_views": 29390240489
+		},
+		"2024-02": {
+			"desktop_of_user": 31.40577210682572,
+			"mobile_web_of_user": 66.71155969062522,
+			"mobile_app_of_user": 1.8826682025490542,
+			"automated_of_all": 38.68118577379245,
+			"user_views": 15796654004,
+			"all_views": 25761512520
+		},
+		"2024-03": {
+			"desktop_of_user": 31.80856143219471,
+			"mobile_web_of_user": 66.29112461422444,
+			"mobile_app_of_user": 1.9003139535808413,
+			"automated_of_all": 37.17128951003134,
+			"user_views": 16693658298,
+			"all_views": 26570111288
+		},
+		"2024-04": {
+			"desktop_of_user": 31.666762915567734,
+			"mobile_web_of_user": 66.46933107295818,
+			"mobile_app_of_user": 1.863906011474075,
+			"automated_of_all": 37.29574728513393,
+			"user_views": 15911454396,
+			"all_views": 25375399127
+		},
+		"2024-05": {
+			"desktop_of_user": 32.483224539607185,
+			"mobile_web_of_user": 65.55767597410052,
+			"mobile_app_of_user": 1.9590994862922866,
+			"automated_of_all": 35.98210907668273,
+			"user_views": 15804594109,
+			"all_views": 24687776934
+		},
+		"2024-06": {
+			"desktop_of_user": 32.20249498482202,
+			"mobile_web_of_user": 65.74692613065345,
+			"mobile_app_of_user": 2.0505788845245396,
+			"automated_of_all": 35.09850376485901,
+			"user_views": 14604646681,
+			"all_views": 22502788885
+		},
+		"2024-07": {
+			"desktop_of_user": 30.877959551038014,
+			"mobile_web_of_user": 67.00456288751376,
+			"mobile_app_of_user": 2.11747756144823,
+			"automated_of_all": 34.40744201870722,
+			"user_views": 15049564293,
+			"all_views": 22944011876
+		},
+		"2024-08": {
+			"desktop_of_user": 30.41201542634637,
+			"mobile_web_of_user": 67.47612218514993,
+			"mobile_app_of_user": 2.111862388503696,
+			"automated_of_all": 36.171588766498175,
+			"user_views": 15265942457,
+			"all_views": 23917158773
+		},
+		"2024-09": {
+			"desktop_of_user": 32.26735871811101,
+			"mobile_web_of_user": 65.70086172719111,
+			"mobile_app_of_user": 2.0317795546978794,
+			"automated_of_all": 36.017770601469145,
+			"user_views": 14687879564,
+			"all_views": 22956185963
+		},
+		"2024-10": {
+			"desktop_of_user": 32.85213267345386,
+			"mobile_web_of_user": 65.1571070249686,
+			"mobile_app_of_user": 1.9907603015775364,
+			"automated_of_all": 33.95236485024585,
+			"user_views": 15538949805,
+			"all_views": 23526882938
+		},
+		"2024-11": {
+			"desktop_of_user": 32.35882256609226,
+			"mobile_web_of_user": 65.64678048137932,
+			"mobile_app_of_user": 1.9943969525284198,
+			"automated_of_all": 36.90911285199441,
+			"user_views": 15130890900,
+			"all_views": 23982688442
+		},
+		"2024-12": {
+			"desktop_of_user": 31.263465169887386,
+			"mobile_web_of_user": 66.62615207353998,
+			"mobile_app_of_user": 2.1103827565726294,
+			"automated_of_all": 35.20575204463475,
+			"user_views": 15428079574,
+			"all_views": 23810878374
+		},
+		"2025-01": {
+			"desktop_of_user": 32.051535111898744,
+			"mobile_web_of_user": 65.93732692489232,
+			"mobile_app_of_user": 2.0111379632089386,
+			"automated_of_all": 34.7805710012022,
+			"user_views": 16867398866,
+			"all_views": 25862536862
+		},
+		"2025-02": {
+			"desktop_of_user": 33.82043480417035,
+			"mobile_web_of_user": 64.22934582114326,
+			"mobile_app_of_user": 1.9502193746863954,
+			"automated_of_all": 34.88764251490212,
+			"user_views": 14864109226,
+			"all_views": 22828399708
+		},
+		"2025-03": {
+			"desktop_of_user": 34.09199800458318,
+			"mobile_web_of_user": 63.98377569464577,
+			"mobile_app_of_user": 1.9242263007710465,
+			"automated_of_all": 35.15433084435874,
+			"user_views": 16259626421,
+			"all_views": 25074344413
+		},
+		"2025-04": {
+			"desktop_of_user": 32.380582101960755,
+			"mobile_web_of_user": 65.54355990270174,
+			"mobile_app_of_user": 2.075857995337505,
+			"automated_of_all": 41.507285146033645,
+			"user_views": 14280753099,
+			"all_views": 24414584166
+		},
+		"2025-05": {
+			"desktop_of_user": 31.589993565315307,
+			"mobile_web_of_user": 66.37188659608002,
+			"mobile_app_of_user": 2.038119838604675,
+			"automated_of_all": 44.9991815680309,
+			"user_views": 14532202346,
+			"all_views": 26421792912
+		},
+		"2025-06": {
+			"desktop_of_user": 31.545956304590486,
+			"mobile_web_of_user": 66.41173261894599,
+			"mobile_app_of_user": 2.042311076463527,
+			"automated_of_all": 46.847935834530816,
+			"user_views": 13288114437,
+			"all_views": 25000185121
+		},
+		"2025-07": {
+			"desktop_of_user": 31.501572143820958,
+			"mobile_web_of_user": 66.45634625970062,
+			"mobile_app_of_user": 2.042081596478412,
+			"automated_of_all": 41.56630356994439,
+			"user_views": 14174219752,
+			"all_views": 24256928139
+		},
+		"2025-08": {
+			"desktop_of_user": 31.40459485990342,
+			"mobile_web_of_user": 66.49262622493286,
+			"mobile_app_of_user": 2.1027789151637175,
+			"automated_of_all": 43.74373088428312,
+			"user_views": 14410197088,
+			"all_views": 25615273310
+		},
+		"2025-09": {
+			"desktop_of_user": 33.65148660466467,
+			"mobile_web_of_user": 64.36467437131871,
+			"mobile_app_of_user": 1.9838390240166166,
+			"automated_of_all": 47.42686853705494,
+			"user_views": 14033875815,
+			"all_views": 26694007803
+		},
+		"2025-10": {
+			"desktop_of_user": 34.6018732114164,
+			"mobile_web_of_user": 63.393818146360424,
+			"mobile_app_of_user": 2.0043086422231853,
+			"automated_of_all": 39.701945929644566,
+			"user_views": 14447807633,
+			"all_views": 23960653218
+		},
+		"2025-11": {
+			"desktop_of_user": 38.74726994987169,
+			"mobile_web_of_user": 59.36098118618415,
+			"mobile_app_of_user": 1.8917488639441575,
+			"automated_of_all": 41.90506599792141,
+			"user_views": 14732930481,
+			"all_views": 25360095048
+		},
+		"2025-12": {
+			"desktop_of_user": 35.25333413692241,
+			"mobile_web_of_user": 62.63484360214149,
+			"mobile_app_of_user": 2.1118222609361053,
+			"automated_of_all": 48.97128886089739,
+			"user_views": 13684407033,
+			"all_views": 26817073619
+		},
+		"2026-01": {
+			"desktop_of_user": 35.83377974700137,
+			"mobile_web_of_user": 62.08252202335874,
+			"mobile_app_of_user": 2.0836982296398867,
+			"automated_of_all": 47.01791156221302,
+			"user_views": 14340426735,
+			"all_views": 27066556185
+		},
+		"2026-02": {
+			"desktop_of_user": 38.10951186003854,
+			"mobile_web_of_user": 59.895084174193286,
+			"mobile_app_of_user": 1.9954039657681741,
+			"automated_of_all": 42.224060905514484,
+			"user_views": 13074208104,
+			"all_views": 22629157239
+		},
+		"2026-03": {
+			"desktop_of_user": 37.88006543264507,
+			"mobile_web_of_user": 60.05572536198972,
+			"mobile_app_of_user": 2.0642092053652052,
+			"automated_of_all": 44.88424862095979,
+			"user_views": 13306784084,
+			"all_views": 24143341515
+		},
+		"2026-04": {
+			"desktop_of_user": 38.42817013731845,
+			"mobile_web_of_user": 59.48408234155059,
+			"mobile_app_of_user": 2.087747521130955,
+			"automated_of_all": 43.9524865508516,
+			"user_views": 12680693969,
+			"all_views": 22624900176
+		},
+		"2026-05": {
+			"desktop_of_user": 40.457928639981866,
+			"mobile_web_of_user": 57.5069434117282,
+			"mobile_app_of_user": 2.0351279482899303,
+			"automated_of_all": 43.61719897294548,
+			"user_views": 13646597121,
+			"all_views": 24203474947
+		},
+		"2026-06": {
+			"desktop_of_user": 39.740258533802646,
+			"mobile_web_of_user": 58.245463887776964,
+			"mobile_app_of_user": 2.01427757842039,
+			"automated_of_all": 47.73834492389866,
+			"user_views": 13176285674,
+			"all_views": 25212147711
+		},
+		"2026-07": {
+			"desktop_of_user": 37.91222634706295,
+			"mobile_web_of_user": 60.067820612931044,
+			"mobile_app_of_user": 2.019953040006014,
+			"automated_of_all": 47.757772518502925,
+			"user_views": 13665526452,
+			"all_views": 26158008781
+		},
+		"2026-08": {
+			"desktop_of_user": 36.59147019166757,
+			"mobile_web_of_user": 61.29791493812675,
+			"mobile_app_of_user": 2.110614870205684,
+			"automated_of_all": 48.550500095198615,
+			"user_views": 13210630463,
+			"all_views": 25676887992
+		},
+		"2026-09": {
+			"desktop_of_user": 39.67755367372325,
+			"mobile_web_of_user": 58.363380468908,
+			"mobile_app_of_user": 1.9590658573687487,
+			"automated_of_all": 50.68172762601976,
+			"user_views": 12923604893,
+			"all_views": 26204496368
+		}
+	}
+}
