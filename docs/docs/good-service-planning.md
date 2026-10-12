@@ -1,0 +1,285 @@
+---
+title: Good Service Planning
+description: The order of work for good.ftorrent.com and the desktop client's Connection tab, from the page as it stands to a full account of what a connection can do.
+---
+
+# Good Service Planning
+
+_Written 2026-10-09 at the start of the good sprint series, as the order of work for good's engineering spike: every measurement built, proven against real networks, and reported plainly in the two places a person meets good. What comes after, the articles, the visual design, the choosing and ordering of what a user sees, is out of scope here on purpose. The map comes first, then the two places and the rule between them, then ten milestones of roughly an evening each, every one opening with its tasks as boxes. The boxes are checked as the work lands and the prose beneath them stays as written; the roadmap-in-reverse records what each evening proved._
+
+## World Map
+
+The finished system, every part labeled, with the milestone that brings each part in parentheses. Six places, and the roads between them. The user is whoever has the page open in a browser tab and the desktop client running with its Connection tab showing; while we build, that is us, the first user. Read this first, then watch the milestones load the parts in and connect them.
+
+**By name.** Every domain and subdomain in the system, what runs at each, what it does, and where.
+
+- `good.ftorrent.com` is the page: a Vue app on Vite, static files, served from our main server by Caddy behind HAProxy. It runs in the user's browser tab, fetches the reflectors, asks the STUN servers, meets moon's peers, and shows its verdicts.
+- `ip.ftorrent.com` is the HTTP address reflector, go-ip, one static binary behind the proxy on our main server. It answers one line: the address the request came from, read from the last forwarded address.
+- `ip4.ftorrent.com` is the same reflector under a name with only an A record, so a browser is forced to reach it over IPv4, which nothing else in a browser can do.
+- `ip6.ftorrent.com` is the same reflector under a name with only a AAAA record, forcing IPv6 the same way.
+- `stun.ftorrent.com` is coturn in stun-only mode on UDP 3478, both families, on our main server, published by Docker DNAT so it sees the real source and counted by firewall rules. It answers a binding request with the address and port it saw it arrive from.
+- `open.ftorrent.com` is the tracker, Aquatic, over UDP, HTTP, and WebSocket, on our main server. It introduces peers, and the engine announces to it when it joins a swarm.
+- `moon.ftorrent.com` is the second vantage: a small paid server at another place on the internet, built from cloud-init, the moon to the main server's sun. It runs coturn for a second STUN answer; a Go service behind Caddy for a second reflector, UDP pokes and TCP dials back to whoever asks, and a signaling room; two NAT namespaces we shape, with a pion peer and a UDP peer behind each, to punch through; and a host firewall with counters.
+- `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com` are moon's reflector under single-family names, one record each, so the page's cross-check can force each family exactly as it does against the main server.
+- `stun.cloudflare.com` is Cloudflare's public STUN server: the second STUN answer until moon exists, then the fallback.
+- `ipv4only.arpa` is a name defined to have only A records, at the root of the internet's naming. A AAAA answer for it reveals DNS64 and names the NAT64 prefix.
+- `docs.ftorrent.com` is the documentation site, where this article lives, on our main server. Not part of good.
+- `ftorrent.com` is the home page and the installers, on our main server. Not part of good.
+
+The panel, the Rust commands, and the engine have no name of their own. They run on the user's machine, and the next section places them.
+
+**By place.** The same parts again, laid out where they run.
+
+**The user's page.** A browser tab navigated to `good.ftorrent.com`.
+
+- The browser, running the page: a Vue app on Vite, static files, no server of its own (Good2). It fetches the reflectors over HTTPS, asks STUN servers over UDP through the browser's ICE, meets moon's signaling room over HTTPS, and opens WebRTC data channels to moon's peers (Good8).
+
+**The user's panel.** The desktop client, running with its Connection tab showing, and the machine beneath it.
+
+- The desktop client, ftorrent, with the panel as its Connection tab: ConnectionPage.vue and a module beside it holding the logic, a list of facts above and the running-diagnosis box below, with Copy under both (Good1).
+- The client's Rust commands, general and named by operation: net_get and net_local, which exist today and grow a family (Good1); net_stun (Good2); net_interfaces and net_resolve (Good3); net_natpmp and the UPnP command on igd-next (Good5); net_punch (Good8); and process_run, which runs the platform's route, interface, and firewall tools so the panel can parse them (Good3, Good5).
+- The engine, Python on libtorrent, one loop and no threads: session, poll, stats, add, and stop (Good4). It listens on both families, joins the DHT, announces to the tracker, and hands every alert and counter to the panel.
+- The machine's own parts the panel reads: its interfaces and their addresses, its routing table and gateway, its system resolver, and its firewall, the alf preferences on macOS and netsh on Windows (Good3, Good5, changed with the user's say-so in Good9).
+
+**The user's network.**
+
+- The router: NAT and a firewall over IPv4, a firewall alone over IPv6. It answers NAT-PMP and PCP on port 5351 and UPnP over SSDP and SOAP (read in Good5, asked for mappings and pinholes in Good9).
+- Sometimes a carrier's translator above the router, and sometimes DNS64 with a NAT64 translator; the panel detects both (Good3, Good5).
+
+**Our main server, under `ftorrent.com`.**
+
+- `good.ftorrent.com`: the page's static files, served by Caddy behind HAProxy, uploaded by rsync.
+- `ip.ftorrent.com`, `ip4.ftorrent.com`, `ip6.ftorrent.com`: the HTTP address reflector, go-ip, one static binary behind the proxy, reading the last forwarded address. ip4 has only an A record and ip6 only a AAAA, which is how a browser is made to use one family.
+- `stun.ftorrent.com`: coturn in stun-only mode on UDP 3478, both families, published by Docker DNAT so it sees the real source. Counted by firewall rules from Good6 and guarded by the same rule with a drop target once the counts say what normal looks like.
+- `open.ftorrent.com`: the tracker, Aquatic. The engine announces to it when it joins a swarm (Good4).
+
+**moon, at `moon.ftorrent.com`.** A small paid server at another place on the internet, entirely ours, built from cloud-init with everything public in `moon/` and its secrets in a gitignored env file and a key pair of its own (Good6).
+
+- coturn in stun-only mode on 3478, both families: the second STUN vantage (Good6, used from Good7).
+- The Go service behind Caddy over HTTPS, which only ever sends to the address a request came from: the reflector, the UDP poke, and the TCP dial with a BitTorrent handshake (Good6), and the signaling room (Good8), all rate-limited per source. The reflector also answers at `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com`, one record each, so a browser can be made to use one family.
+- Two network namespaces with source-NAT rules we write, one shaped like a home router and one symmetric (Good8). Behind each, a pion WebRTC peer for the page and a tiny UDP peer for the panel (Good8).
+- The host firewall, with the STUN counters and the dry-run guard (Good6).
+
+**Elsewhere.**
+
+- `stun.cloudflare.com`: the second STUN vantage until moon exists, then the fallback (Good2).
+- The DHT and the swarm of a Creative Commons torrent: strangers who find the engine through the tracker and the DHT and dial in (Good4).
+- `ipv4only.arpa`: a name with only A records, whose AAAA answer reveals DNS64 (Good3).
+- Let's Encrypt, for moon's certificate, and the provider, for the box itself (Good6).
+
+**The roads.**
+
+- From the page: HTTPS to the three reflectors and to moon's; UDP binding requests to `stun.ftorrent.com`, Cloudflare's, and moon's; HTTPS to moon's signaling room; WebRTC through the NATs to moon's two peers.
+- From the panel: the same HTTPS and STUN roads from sockets it binds itself; UDP to the router on 5351 and multicast to 1900; reads of the machine; HTTPS to moon for pokes, dials, and the punch exchange; UDP straight to moon's UDP peers through the NATs; commands to the engine.
+- From the engine: announces to `open.ftorrent.com` and the DHT; listening sockets on both families that moon and strangers dial.
+- From moon, toward the user only: UDP pokes and TCP dials to the address a request came from.
+
+```
+the user                                              our main server, under ftorrent.com
+  the page, in a browser tab ──────── HTTPS ─────────► good.          the page's files
+  the panel, in the desktop client ── HTTPS ─────────► ip. ip4. ip6.  the reflector
+     rust commands ────────────────── UDP ───────────► stun.          coturn
+     the engine ───────────────────── TCP and UDP ───► open.          the tracker
+         ▲ dialed by moon and by strangers
+         │ through
+  the router: NAT, firewall,                          moon, at moon.ftorrent.com
+    NAT-PMP and PCP on 5351, UPnP ◄── reads, mappings   coturn          the second STUN
+    (a carrier's NAT above it, sometimes)               Go service      reflector, poke, dial, signaling
+                                                        two namespaces  cone and symmetric, each with
+                                                                        a pion peer and a UDP peer
+elsewhere: stun.cloudflare.com, the DHT and the swarm, ipv4only.arpa, Let's Encrypt, the provider
+```
+
+**What comes out.** The page's verdicts, the panel's facts and its box, and at the end of every run one self-describing document, each entry carrying its value, its method, and its vantage, labeled proven, inferred, or unknown (Good10).
+
+## The two places, and the rule between them
+
+A person meets good in two places. **The page** is `good.ftorrent.com`: a browser, a sandbox, and whatever can be learned between that sandbox and our servers. **The panel** is the Connection tab in the desktop client: a list of facts at the top, a text box that fills the window, and Copy underneath, so whatever the panel finds can be pasted into a message or an issue. The panel reaches the machine through Rust commands and reaches BitTorrent through the engine, so it can do everything the page can and a great deal the page cannot.
+
+They are separate code. The page is a Vue app on Vite in `good/page/`, scaffolded like `open/page/` rather than on Nuxt, since one page with no routes wants the lighter scaffold, and built and uploaded the way the tracker's dashboard is; the panel is `desktop/src/pages/ConnectionPage.vue` with a module beside the client's other modules holding its logic. The two happen to use the same tools, so they will look alike and we carry ideas across freely, but no file, component, or package is shared between them, and nothing links the two builds. What they share is the servers they call and the contract of each server's answer. An earlier plan had one frontend serving both; it is withdrawn, and it is unlikely to come back. A desktop client built with web tools does not have to be the web page's code, and trying to make it so would make a mess of both. The deeper reason is that the two are opposites in what they ask of their web view: the page exists to use and test everything the browser's own connectivity allows, while the panel's web view is deliberately sandboxed, closed to foreign script, and reaches the network through Rust. And a browser-tier check run inside the client's web view would be testing the wrong browser, since what a user wants to know is whether their browser can be a peer, not whether WebKit inside ftorrent can.
+
+The page stays plain static files with no server behind it, served by Caddy from the rsync target we own, so a new page goes up whenever we run the upload. The panel's Rust grows only general commands, named by operation and ignorant of good, per the lib.rs essay: a STUN binding to a server, the machine's interfaces, a name resolved, a packet sent to the gateway. The meaning of each answer is the panel's. The engine grows one dispatch entry per libtorrent call the panel needs, and the page polls it rather than the engine growing threads.
+
+## How the milestones are ordered, and why
+
+The order follows two instincts. First, the free work comes first: everything that runs on infrastructure already live on our server and on the development machine, because those evenings cost nothing but time and each one teaches something the later ones depend on. Second, moon sits in the middle rather than at either end. Standing up a second server before the clients exist would mean guessing at its API; leaving it to the end would stall the three milestones that need a second address. So moon arrives once the page and the panel have run every check a single vantage allows and know exactly what they want from a second one.
+
+Mutation comes after observation throughout. Nothing changes the router or the firewall until the panel can already measure what the change would do, so every change has a before and an after. Synthesis comes last, once every raw measurement exists to synthesize.
+
+Each evening starts by reading the prior art named in its section, since established tools have already met most of these questions. The best single piece of prior art for the panel as a whole is Tailscale's `netcheck`, which reports UDP, each family, whether the mapping varies, hairpinning, and which port-mapping protocols the router speaks, all in one run; nothing we build should be worse than it at the things it does. For the page the nearest prior art is the browser NAT checkers that ask two STUN servers and compare. For moon's active tests it is Transmission's port test, a server at the project's domain that tries to connect back to the port the client reports.
+
+Every evening ends the same way: smoke test from a second internet connection as well as the development machine's, since one connection teaches one connection's lesson, note what was learned, correct anything the evening proved wrong, and check the milestone's boxes here. When an evening changes the page or a service, the public guide in good/README.md is re-read whole and corrected the same night, with its last-reviewed date moved; the first such evening is Good2, which also rewrites the guide's what's-next section against this file and retires its paragraph on the reserved pion slot.
+
+## Good1: The page as it stands, and the panel's first facts
+
+- [ ] Good1a: Fetch `ip4.ftorrent.com` and `ip6.ftorrent.com` from the panel through net_get, time each, show both public addresses on the panel, and report a fetch that succeeds but takes seconds as present but unusable.
+- [ ] Good1b: Give net_local a family, so it binds a v6 socket toward a documentation address and answers the global v6 source address or that there is none.
+- [ ] Good1c: Make the text box the running diagnosis: a Run button, a header of date, version, and platform, one appended line per check with what it asked, what came back, and how long it took, and Copy taking the facts and the box together.
+
+The page does not change. It shows the two addresses and the four-way verdict, and it stays that way until Good2 moves it onto Vite.
+
+The panel catches up to the page and goes one step past it. It fetches `ip4.ftorrent.com` and `ip6.ftorrent.com` through the existing net_get command, which forces each family exactly as the browser does, because the forcing is in DNS; it times each fetch; and it reports the two public addresses on the panel beside the local address already there. Give the local address its IPv6 twin: the net_local command takes a family, binding a v6 socket and connecting it toward a documentation address to learn which global v6 address the system would send from, or that it has none. A fetch that succeeds but takes seconds is reported as present but unusable, a third answer beside yes and no, since a path that takes that long to open is dead for peer-to-peer and the page's budget alike.
+
+The text box becomes the running diagnosis. A Run button at the top starts it; each check appends what it asked, what came back, and how long it took, so the box reads as a report of one run, top to bottom. The first lines are the date, the client version, and the platform, so a pasted box is a complete report. The panel holds the quick facts above; the box holds the story; Copy takes both. That shape is settled here and every later milestone adds to it rather than redesigning it.
+
+What this proves: that each family reaches a web server over TCP from here. What it does not prove: anything about UDP, ports, or inbound, which is the gap the rest of this file closes.
+
+## Good2: STUN from both places
+
+- [ ] Good2a: Move the page onto Vite and Vue in `good/page/`, mirroring `open/page/`, with an upload script that rsyncs the build to the directory Caddy serves.
+- [ ] Good2b: Gather server-reflexive candidates on the page from our STUN server: create the peer connection, open a data channel to start gathering, and show the mapped v4 address and port and whether a v6 candidate arrives.
+- [ ] Good2c: Compare on the page, per family, the address STUN saw with the address the HTTP reflector saw, and name what a disagreement means.
+- [ ] Good2d: Add Cloudflare's STUN server to the same connection and derive the mapping verdict from the count of reflexive candidates per family, inconclusive when the machine has more than one interface in that family.
+- [ ] Good2e: Write net_stun in Rust: bind a UDP socket on a given port, send a binding request built by hand, parse the response by hand, and answer the mapped address, port, round trip, response size, or the error.
+- [ ] Good2f: Build the panel's mapping check: call net_stun against our server over v4 and v6, then against both servers from one local port, derive the mapping verdict, and show it with the HTTP-versus-STUN comparison on the panel.
+
+Both places learn their public address and port over UDP from `stun.ftorrent.com`, which has been up since July with nothing calling it.
+
+The page moves onto Vite and Vue in `good/page/`, mirroring `open/page/`, with an upload script that rsyncs the build to the static directory Caddy already serves. The reason is the shape of what follows: a dozen checks whose answers arrive at different moments, which is exactly what reactivity is for, and the product phase would have made the move anyway. The page then creates an RTCPeerConnection with our STUN server, opens a data channel to force gathering, and reads the server-reflexive candidates as they arrive: the public address and mapped port for IPv4, and for IPv6 when the v6 path carries UDP. A v6 srflx candidate is the cheapest large upgrade, moving the v6 claim from "reaches a web server" to "carries UDP," which is the claim a hole punch needs.
+
+The page also compares, per family, the address STUN saw with the address the HTTP reflector saw. They should agree. When they do not, something carries one path and not the other: a VPN, a proxy, or iCloud Private Relay. Our earlier reading was that Private Relay carries Safari's fetch and not its WebRTC by construction, but that rests on a 2021 finding Apple partly fixed, so the first experiment is to turn Private Relay on and see what Safari reports now, and the notes follow whatever it shows.
+
+Add a second STUN server to the same connection. The browser asks every configured STUN server from the same local socket, so two servers on different public addresses reporting different mapped ports for the same local port means the router assigns a port per destination: endpoint-dependent mapping, the symmetric case where hole punching fails. Same port from both means endpoint-independent mapping, with two caveats. The browser collapses two identical reflexive candidates into one, so a single srflx per family is the good answer and two with different ports is the bad one. And the page cannot tie them to a local port, because every mainstream browser now hides a page's local addresses: host candidates are published as mDNS names and the related address and port on reflexive candidates read 0.0.0.0 and 0, so the test counts reflexive candidates per family and is conclusive only when the machine has one interface in that family; a VPN adds a second, and then the page says it cannot tell and that the panel can. The panel's net_stun, with one explicit socket, is the authoritative form of this test. Until moon exists, the second server is `stun.cloudflare.com`, which the client's own server table already lists as its fallback; we settled it on the day this was written, Cloudflare's being a well-run public service and not Google's. moon takes over as the second vantage on our own infrastructure in Good7, and Cloudflare's stays where it already is, on the fallback list. The payoff is that the headline verdict, whether this connection can hole punch, exists at Good2 instead of Good7.
+
+The panel does the same in Rust with no browser in the way. A net_stun command takes a server and a local port, binds a UDP socket on that port, sends a binding request, and answers the mapped address and port and the round trip in milliseconds, or the error. The request and response are built and parsed by hand, since STUN's binding exchange is a twenty-byte header, a magic cookie, and one XOR-mapped attribute, and writing that out is the point of the exercise. The panel asks our server over v4 and over v6, then asks the two servers from the same local port in turn, which works because UDP has no lingering state and the NAT keys its mapping on the inside address and port. The mapping verdict and the HTTP-versus-STUN comparison land on the panel. The command also reports the size of the response in bytes, which settles a figure never measured: that size against the request's twenty bytes is the multiplier anyone reflecting off our server would get, and we write it in the notes.
+
+Experiments for the evening, each a line in the notes: a phone's hotspot, since carrier networks are where endpoint-dependent mapping and shared address space live; a VPN on; and Private Relay on.
+
+## Good3: What the machine knows about itself
+
+- [ ] Good3a: Write net_interfaces in Rust to list every interface with every address and its up and kind flags, through if-addrs or the libc and windows crates.
+- [ ] Good3b: Classify each address in the panel by the prefix table, and name the interface carrying the default route by matching the net_local answers against the list.
+- [ ] Good3c: Read the gateway's address through process_run and each platform's route command, with the parsing in the panel.
+- [ ] Good3d: Mark temporary v6 addresses apart from stable ones, reading the flag through process_run from ifconfig, the Windows network shell, or ip, and say which of the machine's addresses the reflector saw.
+- [ ] Good3e: Write net_resolve in Rust to resolve a name through the system resolver and answer every address it returns.
+- [ ] Good3f: Resolve `ipv4only.arpa` in the panel to expose DNS64 and the NAT64 prefix, and resolve the ip4 and ip6 names to show the single-family records in the box.
+- [ ] Good3g: Add the shared-address-space check, counted only on the interface carrying the default route.
+
+The panel alone, and a quiet evening: no server is involved. This is the small, almost purely educational feature, and it is where we finally answer the confusion about long colon-separated addresses.
+
+A net_interfaces command lists every interface with every address on it, with the flags that say whether it is up and which kind of interface it is; the if-addrs crate does this on all three platforms, or the libc and windows crates the client already carries do it directly. The panel classifies each address by a prefix table that is spec rather than convention: link-local, unique local, Teredo, 6to4, documentation, global unicast on the v6 side; the three private ranges, shared address space, link-local, and public on the v4 side. It names the interface that carries the default route by matching the net_local answers against the list, and it reads the gateway's address through process_run and the platform's route command, since Rust has no portable way to ask and the parsing belongs to the panel. From that point the panel can say, for the first time, "this fe80 address is normal and local only, this fd address is private to your network, and the address the world sees you on is none of them." On the v6 side it also marks temporary addresses apart from stable ones, the RFC 8981 addresses every consumer OS makes and replaces about daily, which if-addrs does not expose, so the flag comes from the platform's own tools through process_run beside the gateway lookup: ifconfig on macOS, the network shell on Windows, ip on Linux. With that the panel can say which of the machine's addresses the reflector saw, that it is the temporary one, and that it will be a different one tomorrow, the fact that decides which v6 address a peer could ever be given.
+
+A net_resolve command resolves a name through the system resolver and answers every address it returns. The panel resolves `ipv4only.arpa`, a name that has only A records by definition: a AAAA answer means the network synthesizes v6 for v4-only names, which is DNS64, and the prefix of that answer names the NAT64 translator. That turns a known false positive, a v6-only phone network passing the IPv4 check through its carrier's translator, into a labeled result. The panel also resolves the ip4 and ip6 names and shows the single-family records, so the trick the whole page rests on is visible in the box.
+
+The shared-address-space check belongs here, qualified: an address in 100.64.0.0/10 counts as a carrier-grade NAT signal only on the interface carrying the default route, never on a tunnel interface, because mesh VPNs borrow that range for their virtual interfaces and the people running them are exactly our users.
+
+## Good4: libtorrent wakes up
+
+- [ ] Good4a: Give the engine a session command that creates `lt.session` from session_settings plus the diagnostic's choices: listen on both families at one port, DHT on, UPnP and NAT-PMP off, and the alert mask.
+- [ ] Good4b: Give the engine poll and stats commands: poll pops the alerts that arrived and emits each as an event with its type, message, and fields; stats posts session stats and emits the counters as a dictionary.
+- [ ] Good4c: Show on the panel the listen results per family and transport, the DHT's bootstrap state and node count, and the session's peer-voted external address.
+- [ ] Good4d: Give the engine an add command, and join a well-seeded Creative Commons torrent in upload mode from the panel, counting incoming connections by alert and by the session stats gauge, with a Stop button that tears the session down.
+
+The engine creates its first session, and the panel is the first place in the client that talks to it beyond hello. No download and no seed; the session exists to listen, to join the DHT, and to report what the network does to it.
+
+Give the engine a session command that creates `lt.session` from session_settings plus the diagnostic's own choices: listen interfaces on both families at one port, DHT on, UPnP and NAT-PMP off for now, and an alert mask covering status, port mapping, DHT, peer, connect, and error. The engine stays a single loop with no threads: the panel sends a poll command on an interval, the engine pops the alerts that arrived and emits each as an event with its type, its message, and the fields that matter, and a stats command posts session stats and emits the counters as a dictionary. The panel shows the listen port and whether each socket bound (listen_succeeded_alert and listen_failed_alert, per family and per transport, since each port opens both a TCP and a UDP socket), the DHT's node count and whether bootstrap finished (dht_bootstrap_alert, dht_stats_alert), and the address the session believes is its external one (external_ip_alert, which is the majority vote of what peers and the DHT say they see, a third vantage on the public address beside HTTP and STUN).
+
+Then the first swarm. An add command puts the session into a well-seeded Creative Commons torrent in upload mode, the flag that announces and accepts connections without downloading a byte, so strangers find us through the tracker and the DHT and dial in. The panel counts them: incoming_connection_alert for each, with its socket type, and the session stats gauge that says whether any incoming connection has ever arrived, which is the fact behind the little connectivity icon in every mainstream client. Without a port mapping the expected count on a home NAT is zero, and seeing zero, with everything else working, is the lesson of the evening. A Stop button tears the session down. Names of alerts and counters are confirmed against the libtorrent build the engine freezes, not this file, with session_stats_metrics listing every counter the build has.
+
+This is also where the operating system first notices ftorrent listening. On macOS with the firewall on, the prompt to accept incoming connections names the engine binary, or does not appear at all if the default of allowing signed software covers it; on Windows the security alert appears, and a standard user who presses Cancel gets a block rule they never asked for. The evening records exactly what each OS did and did not do, because that is the ground Good5 stands on. Windows is checked on Windows.
+
+## Good5: The firewall and the router, read-only
+
+- [ ] Good5a: Read the macOS firewall: the global state from the alf preferences, and whether ftorrent and the engine are on the allow list from the command-line tool when it answers without sudo, unknown otherwise.
+- [ ] Good5b: Read the Windows firewall through netsh show: each profile's state, the current network's profile, and whether a rule names the engine; report unknown on Linux.
+- [ ] Good5c: Write net_natpmp in Rust: the two-byte public address request to the gateway on port 5351, answering the router's reported external address and epoch.
+- [ ] Good5d: Ask the router over UPnP through igd-next, behind a command that takes the action name: GetExternalIPAddress and a walk of the existing port mappings.
+- [ ] Good5e: Compute the carrier-grade NAT likelihood from the router's external address against the reflector's, combined with the shared-address-space signal and the mapping verdict, with its reasons listed.
+
+Observation only. The panel reports the standing of the machine's firewall and asks the router what it knows, and changes nothing.
+
+On macOS the global firewall state is a key in the alf preferences, readable without privilege, which is what Chromium reads on macOS 15 after Apple's command-line tool changed shape; whether ftorrent and its engine are on the allow list comes from that tool if it answers without sudo and reads as unknown if it does not. The firewall is off by default on macOS, and the panel says so when it is, since an off firewall is not a problem. On Windows the netsh show commands give each profile's state, which profile the current network is on, and whether a rule names the engine, all without elevation; adding one is Good9's business. Linux reports unknown, since ufw and nftables need root to read, and says so.
+
+The router is asked two ways, both reads. NAT-PMP's public address request is two bytes to the gateway on port 5351, written by hand in a net_natpmp command that takes the gateway and answers the router's reported external address and its epoch. UPnP is heavier: multicast discovery, the device description, a SOAP call for GetExternalIPAddress and another to walk the existing port mappings; the igd-next crate carries that, behind a command that takes the action name, because SSDP and SOAP teach little beyond their existence. PCP is left for Good9, since it has no pure read of the external address and a short-lived mapping is still a mapping. The panel records which protocols the router speaks at all, which is itself a fact about that router.
+
+The payoff is the carrier-grade NAT check that cannot be dodged: the router's own external address against the address the reflector saw. When they differ, a second translator sits above the home router, whatever address range the carrier chose. Combined with the shared-address-space signal from Good3 and the mapping verdict from Good2, the panel gives a likelihood with its reasons listed, with the note that address-plus-port sharing slips past all three beside it.
+
+## Good6: moon
+
+- [ ] Good6a: Choose the provider with the live prices in front of us, and create the box: the smallest droplet on Ubuntu 24.04 with Docker.
+- [ ] Good6b: Write the public files in `moon/`: the cloud-init file, the compose file, the coturn configuration, the Go service's source, the README, and the deploy script.
+- [ ] Good6c: Set up the secrets: the provider token, droplet id, and addresses in a gitignored env file beside the deploy script, and a key pair for moon alone in `.ssh`, named by a gitignored ssh config fragment.
+- [ ] Good6d: Swap the three parked names in DNS on the main server, `moon.ftorrent.com` with both records and `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com` with one each, to moon's real addresses, and have the same STUN counting rules on the main server by this evening at the latest, with a one-command read of the coturn container's network totals for a first number.
+- [ ] Good6e: Put the STUN counting rules in moon's host firewall from the first evening: the no-target request and reply counters per family, the hashlimit dry-run rule per family, and the hourly cron line.
+- [ ] Good6f: Bring up coturn in stun-only mode on moon, and Caddy with certificates for `moon.ftorrent.com` and the two single-family names, with the hardening block and unattended upgrades.
+- [ ] Good6g: Write the Go service's reflector, the same contract as `ip.ftorrent.com`.
+- [ ] Good6h: Write the Go service's UDP poke: a few small packets carrying a token to the requester's address at a port the requester names, from moon's own address and port.
+- [ ] Good6i: Write the Go service's TCP dial: connect to the requester's address at the named port, optionally send a BitTorrent handshake, and report what happened; rate-limit all three calls per source in Caddy.
+
+The second vantage, a small paid server at another place on the internet, entirely ours. This is the one milestone that is administration rather than measurement, and it is a new kind of work for this project.
+
+The provider is chosen on the evening, with the live prices in front of us. The lean is DigitalOcean: the smallest droplet is four dollars a month with a /124 of IPv6 included and an API behind a token, and Hetzner repriced twice in 2026 and by autumn had its cheapest tier marked unavailable, so the cheap Hetzner box first imagined may not be orderable. Whichever it is, the box is Ubuntu Server 24.04 with Docker, and it is the same shape as the main server's good stack: coturn in stun-only mode on 3478 over both families with the same forty-line configuration, and one Go service on scratch behind Caddy, which terminates TLS with Let's Encrypt certificates it fetches itself for `moon.ftorrent.com` and the two single-family names. The containers run with the same hardening block, except that moon's Go service must originate packets, since originating packets is its job.
+
+Everything that builds the box lives in `moon/` and is public: a cloud-init file that makes the box from nothing, the compose file, the coturn configuration, the Go source, a README in the usual shape for a reader with their own provider, and a deploy script. The secrets are the new part. The provider's API token, the droplet's id, and the box's addresses go in a gitignored env file beside the deploy script, in the pattern `upload.hide.env` already set for the installer uploads. A key pair made for moon alone lives in the home directory's `.ssh`, named by a gitignored ssh config fragment, so the key that opens moon opens nothing else and is never in the repository in any form. Nothing in the public files knows a secret, and the README says in words where a reader puts theirs.
+
+We administer moon directly over ssh: the deploy script, the compose commands, and whatever the evening needs on the box, saying what was done as we go. The process is lighter than the main server's on purpose. The main server carries everything else we run, so a change there goes through a stricter review. moon runs nothing else, has no one behind it, holds no secret but its own, and if it burns down it is rebuilt from cloud-init in minutes. So we give moon care and correctness, the hardening block, unattended upgrades, a host firewall admitting only what its services need, and nothing in the repository that could open it, without the ceremony the main server's stakes demand.
+
+The only thread back to the main server is DNS, and it goes early in the evening, since the certificate needs the name before anything else can be tested: moon's static v4 and v6 go into the zone under `moon.ftorrent.com`, replacing the documentation addresses parked there, with `ip4.moon.ftorrent.com` carrying only the A record and `ip6.moon.ftorrent.com` only the AAAA, the same single-family trick the page already rests on. All three names are parked ahead of time, so the evening's DNS step is an address swap and nothing new is named while the certificate waits. Nothing on the main server ever connects to moon.
+
+The STUN port on both boxes starts being counted the same night. Anything answering on UDP 3478 over IPv4 is swept into reflector lists within days of coming up, announced or not, so the counting starts before anything else does. The instrumentation is small. Four firewall rules with no target in DOCKER-USER, where Docker's DNAT'd traffic actually passes, one for requests and one for replies per family, count packets and bytes and change nothing; a fifth per family carries the hashlimit match and no target, counting only packets above a per-source rate, so it climbs only when something is using the server as a reflector, a dry run of the guard; and a cron line appends the counter lines to a file hourly, so a burst shows as a time series rather than vanishing into a total. On moon the rules go in the host firewall script from the first evening and we read them ourselves. On the main server they go in ahead of this evening if they can and with the DNS swap at the latest, with a one-command read of the coturn container's cumulative network I/O for a first number the day they land. The guard itself, the same hashlimit rule with a drop target on both families, waits on a week of those numbers from both boxes and takes its threshold from them. None of this keeps a byte about any user. It is counts. We write the guide an operator section on all of it once the guard is running.
+
+The Go service offers three things over HTTPS, and one rule governs all of them: moon only ever sends to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The first is the reflector, the same contract as `ip.ftorrent.com`, which gives both places a second HTTP vantage and a way to tell "our main server's v6 is down" from "the user has no v6," an embarrassing failure otherwise. The second is a UDP poke: on request, moon sends a few small packets carrying a token to the requester's address at a port the requester names, from moon's own address and a port of moon's choosing, and the requester reports whether they arrived. The third is a TCP dial: moon connects to the requester's address at the named port, optionally sends a BitTorrent handshake, and reports whether the connection opened and what came back. Caddy rate-limits all three per source address. The signaling room for the NAT peers is added in Good8.
+
+## Good7: Two vantages
+
+- [ ] Good7a: Replace Cloudflare's STUN with moon's as the page's second server, and fetch moon's reflector through `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com` as a cross-check on the main server's.
+- [ ] Good7b: Point the panel's second STUN server at moon.
+- [ ] Good7c: Build the panel's filtering check: after the socket speaks to moon's STUN, ask moon to poke the mapped address from an unrelated port, and after it speaks only to the main server's STUN, from moon's address; sort the result into the three filtering kinds, over v4 and over v6.
+- [ ] Good7d: Build the inbound proof: ask moon to poke the engine's listen port over UDP and dial it over TCP with a BitTorrent handshake, over v4 and v6, and watch the engine's alerts for what arrives.
+
+With a second public address, the proofs that have been waiting.
+
+On the page, moon's STUN server replaces Cloudflare's as the second entry, and the mapping verdict stands on our own infrastructure. The page also fetches moon's reflector over each family, through the two single-family names, as a cross-check on the main server's, so a failed v6 fetch to the main server with a successful one to moon is reported as our problem rather than the user's.
+
+The panel runs the full behavior-discovery flow without needing RFC 5780 machinery on coturn, because moon can originate packets. Mapping: the same local port asks the main server's STUN and moon's STUN, and the two mapped ports agree or disagree. Filtering, from the same socket: the panel asks moon to poke the mapped address from an unrelated port after the socket has spoken to moon's STUN, and from moon's address after the socket has spoken only to the main server's, and which pokes arrive sorts the filtering into endpoint-independent, address-dependent, or address-and-port-dependent, the three cone subtypes. The same flow runs over v6, where mapping is free and only filtering remains, which is the shape worth showing: the v6 result is one question where the v4 result is two.
+
+Then the proofs that matter most. With the engine's session listening and port mapping still off, the panel asks moon to poke the listen port over UDP and to dial it over TCP with a BitTorrent handshake, over v4 and over v6. The v4 attempts are expected to fail on any home NAT, and the panel watches the engine's alerts to see nothing arrive; the v6 attempts prove whether the router's firewall admits unsolicited inbound to a global address, which on many home routers it does not. An incoming_connection_alert that fires because moon dialed is the first time a stranger has reached this client on purpose, and it is the measurement Transmission's port test has offered its users for years, done with our own server and over both families.
+
+## Good8: Peers behind our own NAT
+
+- [ ] Good8a: Give moon two network namespaces with source-NAT rules we write: one with endpoint-independent mapping and port-restricted filtering, one symmetric.
+- [ ] Good8b: Write a pion peer in Go and run one behind each namespace, gathering through moon's STUN and reporting which candidate pair carried the data channel.
+- [ ] Good8c: Add a signaling room to moon's Go service over HTTPS.
+- [ ] Good8d: Build the page's punch check: try both peers and report the outcome, the home-router peer only, neither, or both.
+- [ ] Good8e: Write a tiny UDP peer in Go and run one behind each namespace.
+- [ ] Good8f: Write net_punch in Rust: bind a socket, learn its mapped address from STUN, exchange addresses with the peer through moon, send both ways at once, and report which direction's packets arrived.
+
+It is right to doubt that a WebRTC peer on a public address proves anything about hole punching: the user's own outbound packet opens the return path, so a public peer connects even to a user behind the worst NAT. The answer is to put the peer behind a NAT too, and since moon is ours, to build the NAT ourselves and shape it deliberately.
+
+Give moon two network namespaces, each with a source-NAT rule we write rather than leave to Docker, whose masquerade may randomize ports and would make the test symmetric by accident; the first thing the evening checks is what Docker's rule actually does. One namespace translates like a home router, keeping the same public port regardless of destination and admitting replies only from the address and port already spoken to: endpoint-independent mapping with port-restricted filtering, the common case. The other picks a fresh port per destination: the symmetric case. Behind each sits a pion peer in Go, which gathers its reflexive candidate through moon's own STUN, exchanges descriptions with the user through a signaling room in moon's Go service over HTTPS, and opens a data channel, reporting which candidate pair carried it.
+
+The page tries both peers. Connecting to the home-router peer and not the symmetric one is what endpoint-independent mapping with ordinary filtering looks like, and it is the hole punch demonstrated rather than inferred from STUN. Connecting to neither is the symmetric user. Connecting to both is a user whose NAT admits unsolicited inbound once any mapping exists, which is a thing the symmetric peer can teach that the first cannot. Each outcome also proves the user's browser can run WebRTC end to end, DTLS and SCTP included, which some networks and some privacy extensions prevent.
+
+The panel does the same punch by hand, with no WebRTC: a tiny UDP peer in Go behind each namespace, and a net_punch command in Rust that binds a socket, learns its mapped address from STUN, hands it to moon over HTTPS, receives the peer's mapped address back, and then both sides send to each other at once and report which direction's packets arrived. That is the technique the How Can Two Peers Connect? essay describes, in about a hundred lines on each side, and watching it succeed through one NAT and fail through the other is the evening's whole purpose.
+
+## Good9: Changing things, with the user's say-so
+
+- [ ] Good9a: Turn libtorrent's two mappers on through the port_mapping setting, and show the portmap alerts' protocol and external port.
+- [ ] Good9b: Send a hand-written NAT-PMP mapping request with a one-minute lifetime and delete it afterward.
+- [ ] Good9c: Send a PCP MAP request with a one-minute lifetime and delete it afterward, recording whether the router speaks PCP at all.
+- [ ] Good9d: Attempt a v6 pinhole over PCP and over UPnP's AddPinhole, by a hand-written request if igd-next does not carry it, expecting refusal and recording it.
+- [ ] Good9e: Add the Windows firewall rule through an elevated netsh run the user approves, for an installed copy only.
+- [ ] Good9f: On macOS report the firewall's standing and what the user can do by hand.
+- [ ] Good9g: Re-ask the facts the OS can change behind our back when the window comes forward.
+
+Now the panel changes the machine's standing, one thing at a time, and re-runs the proofs after each so every change shows its before and after.
+
+The router first. libtorrent's two mappers turn on through the port_mapping setting the desktop planning doc describes, and the portmap alerts report which protocol won and what external port it gave; moon then dials and pokes the listen port again, and a connection that failed an evening ago succeeds, or does not, and the panel says which. Beside libtorrent's mappers, the panel's own hand-written NAT-PMP mapping request and a PCP MAP request, with lifetimes of a minute and an explicit delete afterward, show the two protocols on the wire and whether the router speaks the newer one; PCP is thought to live mostly in carrier equipment and enterprise gear, and the evening finds out what the router at hand says. The same evening tries the v6 side, where the question is a firewall pinhole rather than a mapping: a PCP MAP request over v6 to the router, and UPnP's IPv6 firewall control action, AddPinhole, from the IGDv2 service, by a SOAP request the panel writes by hand if igd-next does not carry it. NAT-PMP has no v6 at all. The expected result on a home router is refusal or silence, and the refusal is the finding: an earlier draft of the essay called the v6 firewall the simpler problem, and it is for punching and is not for listening, which the panel proves here before moon dials the listen port over v6 once more.
+
+The firewall second. On Windows the panel adds the rule the desktop planning doc already specifies, through an elevated netsh run that the user approves, for an installed copy only, and re-runs the inbound proofs. On macOS the panel changes nothing, since there is no supported way to add an application to that firewall, and instead reports what the earlier evening found about the signed engine and what the user can do by hand; the proof re-runs after they do it. The facts the OS can change behind our back are re-asked when the window comes forward, as planned.
+
+Nothing here is required, and the panel keeps saying so: a user who declines runs outbound-only and the client keeps working, less well, with the panel showing exactly how much less.
+
+## Good10: In concert
+
+- [ ] Good10a: Label every result proven, inferred, or unknown.
+- [ ] Good10b: Cross-check the HTTP address, the STUN address, the router's external address, libtorrent's peer-voted address, and the interface list against each other, and name what a disagreement exposes.
+- [ ] Good10c: Apply the two axes, self-knowledge and reachability, as separate lines, and state one carrier-grade NAT likelihood with its reasons beside it.
+- [ ] Good10d: Produce one self-describing document per run from both places, each entry carrying its value, its method, and its vantage, the page's a subset of the panel's.
+- [ ] Good10e: Write the three-tier rating as one draft function over that document, not a screen.
+
+The last evening builds nothing new on the wire and instead reasons across everything the others measured.
+
+Label every result with what kind of claim it is: proven by a packet that arrived, inferred from a comparison, or unknown because the platform could not say. The cross-checks go in: the HTTP address, the STUN address, the router's reported external address, libtorrent's peer-voted external address, and the interface list, which between them expose a relay, a second translator, a translator the carrier runs, or nothing unusual. The two axes, self-knowledge and reachability, are applied explicitly so that "you have IPv6" and "a peer can reach you" stay separate lines, and NAT64, shared address space, mapping, and filtering feed one stated likelihood of carrier-grade NAT with its reasons beside it.
+
+Both places produce the same thing at the end of a run: one self-describing document per run, each entry carrying its value, how it was measured, and from which vantage, with the page's document a subset of the panel's. A three-tier rating, kept as a candidate, is written as one function over that document and left at that, a draft rule set rather than a screen, since deciding whether and how to show a rating is the product phase's question. The spike ends with the dossier: everything we can honestly tell a person about their connection, from both places, with the basis for every line stated. The articles, the design, and the presentation start from there.

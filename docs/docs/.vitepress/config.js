@@ -88,6 +88,13 @@ export default defineConfig({
 				]
 			},
 			{
+				text: 'Planning',
+				items: [
+					{ text: 'Desktop Client Planning', link: '/desktop-client-planning' },
+					{ text: 'Good Service Planning', link: '/good-service-planning' }
+				]
+			},
+			{
 				text: 'Repository Documentation',
 				items: [
 					{ text: 'Repository Overview', link: 'https://github.com/zootella/ftorrent/blob/master/README.md' },
@@ -108,8 +115,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Decentralized Infrastructure', link: '/decentralized-infrastructure' },
 					{ text: 'Magnet Link User Guide', link: '/magnet-link-user-guide' },
-					{ text: 'How the DHT Works', link: '/how-the-dht-works' },
-					{ text: 'Desktop Client Planning', link: '/desktop-client-planning' }
+					{ text: 'How the DHT Works', link: '/how-the-dht-works' }
 				]
 			},
 			{

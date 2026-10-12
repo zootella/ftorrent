@@ -102,6 +102,8 @@ The answer can't be faked, because the page never asks your computer what its ad
 
 On the server side the reflector is small: [`go-ip/main.go`](go-ip/main.go) is about sixty lines, a single static Go binary with no operating system in its container image, reading one header and writing one line. It runs behind a reverse proxy that terminates TLS — HAProxy in this deployment — so the address it reports comes from the `X-Forwarded-For` header rather than the socket. A client can write that header itself, so the proxy deletes whatever arrived and appends the address it actually accepted the connection from, which makes the **last** entry the trustworthy one. The first entry is the one a client could have forged.
 
+The STUN server takes the opposite path: nothing sits in front of it. Docker publishes UDP 3478 with kernel DNAT and the userland proxy off, the same way the tracker's UDP port is published, so coturn sees the client's real address and port on the packet itself and reports exactly those. The tracker guide in the `open` workspace explains the mechanism.
+
 ## What's running, and what's next
 
 - **Running.** The page, the three reflection names, and the dual-stack verdict they produce. A globally routable IPv6 address usually means a peer can reach you directly, without any of the port gymnastics IPv4 requires.
