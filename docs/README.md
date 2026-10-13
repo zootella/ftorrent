@@ -104,3 +104,11 @@ curl -sI -H 'Origin: https://docs.ftorrent.com' https://ftorrent.com/ftorrent.dm
 ```
 
 The download host is written once, as `origin` in `docs/.vitepress/config.js`. In development, `pnpm local` needs no header: the dev server answers sidecar requests itself, from what `pnpm hash` has staged in `desktop/release` and `desktop/linux/release`, and proxies anything not staged there to the download host.
+
+## Research
+
+The `research/` folder beside the site source holds what produced the articles in the site's Research section: one folder per report, each with the scripts, the data they pulled, the figures they drew, and a README on running them. VitePress builds pages only from `docs/`, so nothing in `research/` becomes a page.
+
+## Settings and plugins
+
+The site's settings live in `docs/.vitepress/config.js`, each with the reason beside it. Search is VitePress's local provider, an index built at build time and searched in the browser, with no outside service. The sitemap and each page's last-updated date are generated at build time, the date from git, so the build has to run inside the checkout; the line itself is the theme's own `LastUpdated.vue`, swapped in for VitePress's through an alias in the config, so the date reads one way for every reader, `2026-Oct-08 01:04 UTC`, rather than in the browser's locale. Every page carries a link to its source on GitHub. One markdown plugin is installed, `markdown-it-task-lists`, which draws the planning articles' `- [ ]` boxes as real checkboxes; VitePress renders them as literal brackets without it. The theme's overrides are in `docs/.vitepress/theme/style.css`, with a comment on each rule saying what it changes and why. Under every page, the theme's `CreativeCommons` component puts the Creative Commons badge and the line that licenses the page's text under CC BY 4.0; the badge is Creative Commons' first 88 by 31 button, from 2002, `somerights.gif`, served from `docs/public/`.

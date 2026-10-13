@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
-import { fetchSidecar, readableDate, saySize, copyText } from '../downloads.js'
+import { fetchSidecar, readableDate, saySize4, copyText } from '../downloads.js'
 
 /*
 One download: the outlined box that offers a file and says what is known about it. downloads.js has the system it belongs to, where a sidecar comes from, what is in one, and why the fetch happens on mount.
@@ -60,7 +60,7 @@ async function copyHash() {
 			@click="copyHash" @keyup.enter="copyHash"
 			@mouseenter="hintCopy" @mouseleave="unhintCopy"
 		>{{ sidecar.sha256 }}</code></div>
-		<div class="detail">{{ saySize(sidecar.bytes) }} · SHA-256 · {{ readableDate(sidecar.date) }} · ftorrent {{ sidecar.version }}<span v-if="status"> · {{ status }}</span></div>
+		<div class="detail">{{ saySize4(sidecar.bytes) }} · SHA-256 · {{ readableDate(sidecar.date) }} · ftorrent {{ sidecar.version }}<span v-if="status"> · {{ status }}</span></div>
 	</template>
 	<div v-else-if="loaded" class="detail">Not yet published</div>
 

@@ -283,3 +283,74 @@ No layer ever reaches another origin. Inter arrives inside the vitepress package
 .vp-doc tr:nth-child(2n) {
 	background-color: var(--vp-c-bg);
 }
+
+/* Blockquotes one step smaller than the body, 14px against its 16, so a quotation, and the research header under an article's title, read as set-off matter and not as the running text. VitePress sets them at the body's own 16px, in the secondary ink, and the ink alone did not separate them enough. Line height 1.7 keeps the lines near the body's 24px rhythm. VitePress puts the size on the blockquote's paragraph, so this rule does too. */
+.vp-doc blockquote > p {
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+/* A block quotation stands off from the prose by two lines above and below: a line of margin, 24px at the body's 16px on 1.5, and a line of padding inside the rule, so the rule runs a line past the text at each end rather than stopping at its first and last baseline. VitePress gives it 16px of margin and no vertical padding, a paragraph's own spacing, so it read as part of the running text. Inside the quote VitePress sets its paragraphs at margin 0, which ran a quotation into the attribution under it; the second rule puts half a line between a quotation's paragraphs, which is the usual setting for a source line under a quote. The research header under a page title is a blockquote too and takes the same spacing, with its one paragraph untouched by the second rule. */
+.vp-doc blockquote {
+	margin: 24px 0;
+	padding-top: 24px;
+	padding-bottom: 24px;
+}
+.vp-doc blockquote > p + p {
+	margin-top: 12px;
+}
+
+/* Figures and tables with captions are marked up as figure and figcaption, which markdown cannot write, so the research articles carry those few lines of HTML around each chart and table. The caption is set like a blockquote, 14px in the secondary ink, so set-off matter looks the same across the site. A table's caption comes first and sits above it; a chart's comes last and sits below; the two rules give each a half line of room on its own side. */
+.vp-doc figure {
+	margin: 24px 0;
+}
+.vp-doc figcaption {
+	font-size: 14px;
+	line-height: 1.3;/* the spacing the charts give their own footnotes, 18 units on 14, so a caption and the note inside the figure above it read as one kind of text, both tighter than the prose */
+	color: var(--vp-c-text-2);
+}
+.vp-doc figure > figcaption:first-child {
+	margin-bottom: 12px;
+}
+.vp-doc figure > figcaption:last-child {
+	margin-top: 12px;
+}
+
+/* A references list at the same 14px as the header and the captions, since the two ends of a research article are apparatus rather than prose. The selector is the ordered list directly under a heading named References, by the id VitePress gives that heading, so the markdown stays a plain list. The ink stays the body's: a reference is read and followed, not glanced at. */
+.vp-doc h2#references + ol {
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+/* Task lists, the planning articles' boxes, drawn by the markdown-it-task-lists plugin as a disabled checkbox at the head of each item. The plugin marks the list and its items with these classes; the list drops its bullets, since the box takes their place, and the box keeps a little room before its text. */
+.vp-doc ul.contains-task-list {
+	list-style: none;
+	padding-left: 0;
+}
+.vp-doc .task-list-item-checkbox {
+	margin-right: 8px;
+}
+
+/* The license line under every article, from the CreativeCommons component: the 88 by 31 badge with one sentence under it, stacked as blocks rather than side by side, which keeps the badge out of flex layout's reach. The sentence is the site's smallest text, 12px, fine print in the secondary ink, a good way below the previous and next links so it reads as the page's foot. The home page's footer carries the same badge and sentence through the config, stacked the same way. */
+.license-line {
+	margin-top: 48px;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--vp-c-text-2);
+}
+.license-line p {
+	margin: 8px 0 0;
+}
+.license-line img,
+.VPFooter .message img {
+	display: block;
+	width: 88px;
+	height: 31px;
+	image-rendering: pixelated;/* a GIF drawn for one-to-one screens, scaled by whole pixels on a high-density one rather than smoothed, so each of its pixels stays a crisp block */
+}
+.VPFooter .message img {
+	margin: 0 auto 8px;/* centered, like the footer's text */
+}
+.VPFooter .message {
+	font-size: 12px;
+}

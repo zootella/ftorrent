@@ -386,13 +386,6 @@
 		"bytes": 341,
 		"kept": true
 	},
-	"cloudflare-2022-09-ip_version-likely_human-windows.json": {
-		"url": "https://api.cloudflare.com/client/v4/radar/http/summary/IP_VERSION?dateStart=2022-09-01T00%3A00%3A00Z&dateEnd=2022-09-30T23%3A59%3A59Z&format=JSON&botClass=LIKELY_HUMAN&os=WINDOWS",
-		"fetched": "2026-10-11T18:49:52Z",
-		"status": 200,
-		"success": true,
-		"bytes": 304
-	},
 	"cloudflare-2023-05-bot_class.json": {
 		"url": "https://api.cloudflare.com/client/v4/radar/http/summary/BOT_CLASS?dateStart=2023-05-01T00%3A00%3A00Z&dateEnd=2023-05-31T23%3A59%3A59Z&format=JSON",
 		"fetched": "2026-10-11T19:50:13Z",

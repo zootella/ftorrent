@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 885" width="100%" role="img" aria-labelledby="title-mosaic-2026-09" style="--ink: var(--vp-c-text-1, #3d3d3d); --ink-2: var(--vp-c-text-2, #676767); --grid: var(--vp-c-divider, #e2e2e2); --soft: var(--vp-c-gray-1, #dddddd); --surface: var(--vp-c-bg, #ffffff); --orange: var(--vp-c-brand-1, #FF7900); font-family: var(--vp-font-family-base, system-ui, -apple-system, 'Segoe UI', sans-serif);">
+<title id="title-mosaic-2026-09">Web requests in 2026-09, by kind of device and kind of address</title>
+<desc>A square mosaic of the requests Cloudflare saw in 2026-09, automated requests set aside, each cell labeled as a percent of those requests. Two columns, on an open device 46.6% and on a closed device 53.4%; within each, requests from a v6 address on top, 29.3% and 48.0% of the column, and from a v4 address below. The v6 cells are orange and the v4 cells gray; the closed column is plain and the open column is striped, so the cell for an open device and a v6 address is striped orange. The two forces act on that cell from two sides: the closed column squeezes it from the right, and the rising v6 share makes it taller, so its area grows only if it gets taller faster than it gets narrower.</desc>
+<defs><pattern id="stripes-v6" patternUnits="userSpaceOnUse" width="11" height="11" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="11" stroke="var(--orange)" stroke-width="3"/></pattern><pattern id="stripes-v4" patternUnits="userSpaceOnUse" width="11" height="11" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="11" stroke="var(--soft)" stroke-width="3"/></pattern></defs>
+<text x="16" y="24" font-size="14" text-anchor="start" fill="var(--ink)" font-weight="700" >Web requests, September 2026</text>
+<text font-size="14" text-anchor="start" fill="var(--ink-2)"><tspan x="16" y="44">Of these requests: how many were made on a device the owner controls, and how many came</tspan><tspan x="16" y="62">from a v6 address</tspan></text>
+<text x="175.9" y="90" font-size="14" text-anchor="middle" fill="var(--ink)" font-weight="700" >Open devices, the owner holds root</text>
+<text x="175.9" y="108" font-size="14" text-anchor="middle" fill="var(--ink-2)" >47% of requests</text>
+<rect x="16" y="116" width="319.9" height="200.8" fill="url(#stripes-v6)" />
+<text x="175.9" y="206.4" font-size="36" text-anchor="middle" fill="var(--ink)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">14%</text>
+<text x="175.9" y="230.4" font-size="14" text-anchor="middle" fill="var(--ink)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">open device with v6 address</text>
+<text x="175.9" y="250.4" font-size="14" text-anchor="middle" fill="var(--ink-2)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">29% of open devices</text>
+<rect x="16" y="116" width="319.9" height="200.8" fill="transparent"><title>In September 2026, 13.7% of requests were made on an open device, a Windows, macOS, or Linux computer whose owner holds root, and came from a v6 address. That is 29.3% of the requests on open devices. This is the one cell the report is about: a person, an open device, and an address others can reach.</title></rect>
+<rect x="16" y="318.8" width="319.9" height="485.2" fill="url(#stripes-v4)" />
+<text x="175.9" y="551.4" font-size="36" text-anchor="middle" fill="var(--ink)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">33%</text>
+<text x="175.9" y="575.4" font-size="14" text-anchor="middle" fill="var(--ink)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">open device with v4 address</text>
+<text x="175.9" y="595.4" font-size="14" text-anchor="middle" fill="var(--ink-2)" paint-order="stroke" stroke="var(--surface)" stroke-width="10" stroke-linejoin="round">71% of open devices</text>
+<rect x="16" y="318.8" width="319.9" height="485.2" fill="transparent"><title>In September 2026, 32.9% of requests were made on an open device, a Windows, macOS, or Linux computer whose owner holds root, and came from a v4 address. That is 70.7% of the requests on open devices. These devices could run a peer, but on this connection they had no routable address to be reached at.</title></rect>
+<text x="520.9" y="90" font-size="14" text-anchor="middle" fill="var(--ink)" font-weight="700" >Closed devices, the vendor holds root</text>
+<text x="520.9" y="108" font-size="14" text-anchor="middle" fill="var(--ink-2)" >53% of requests</text>
+<rect x="337.9" y="116" width="366.1" height="329.2" fill="var(--orange)" />
+<text x="520.9" y="270.6" font-size="36" text-anchor="middle" fill="#ffffff" >26%</text>
+<text x="520.9" y="294.6" font-size="14" text-anchor="middle" fill="#ffffff" >closed device with v6 address</text>
+<text x="520.9" y="314.6" font-size="14" text-anchor="middle" fill="#ffffff" >48% of closed devices</text>
+<rect x="337.9" y="116" width="366.1" height="329.2" fill="transparent"><title>In September 2026, 25.6% of requests were made on a closed device, a phone, tablet, Chromebook, or TV where the vendor holds root, and came from a v6 address. That is 48.0% of the requests on closed devices.</title></rect>
+<rect x="337.9" y="447.2" width="366.1" height="356.8" fill="var(--soft)" />
+<text x="520.9" y="615.6" font-size="36" text-anchor="middle" fill="var(--ink)" >28%</text>
+<text x="520.9" y="639.6" font-size="14" text-anchor="middle" fill="var(--ink)" >closed device with v4 address</text>
+<text x="520.9" y="659.6" font-size="14" text-anchor="middle" fill="var(--ink-2)" >52% of closed devices</text>
+<rect x="337.9" y="447.2" width="366.1" height="356.8" fill="transparent"><title>In September 2026, 27.8% of requests were made on a closed device, a phone, tablet, Chromebook, or TV where the vendor holds root, and came from a v4 address. That is 52.0% of the requests on closed devices.</title></rect>
+<text font-size="14" text-anchor="start" fill="var(--ink-2)"><tspan x="16" y="842">Orange is v6 addresses and gray is v4. Plain cells are closed devices and striped cells are</tspan><tspan x="16" y="860">open devices. Each cell is a percent of the requests people made that month. Automated</tspan><tspan x="16" y="878">requests, 36% of all traffic, are set aside. Source: Cloudflare Radar.</tspan></text>
+</svg>

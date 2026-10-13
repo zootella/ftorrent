@@ -3,6 +3,7 @@ import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
 import DownloadLink from './components/DownloadLink.vue'
 import DownloadCommand from './components/DownloadCommand.vue'
+import CreativeCommons from './components/CreativeCommons.vue'
 import './style.css'
 
 /** @type {import('vitepress').Theme} */
@@ -11,6 +12,7 @@ export default {
 	Layout: () => {
 		return h(DefaultTheme.Layout, null, {
 			// https://vitepress.dev/guide/extending-default-theme#layout-slots
+			'doc-after': () => h(CreativeCommons),// the license badge and line under every article, after the previous and next links
 		})
 	},
 	enhanceApp({ app, router, siteData }) {

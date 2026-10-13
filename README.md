@@ -8,6 +8,7 @@ _ftorrent/README.md [ftorrent.com](https://ftorrent.com)_
 Workspaces and folders:
 - ䷱ `./site` Home page and website _[ftorrent.com](https://ftorrent.com/)_
 - ䷴ `./docs` ([VitePress](https://vitepress.dev/)) Documentation site _[docs.ftorrent.com](https://docs.ftorrent.com/)_
+  - `./docs/research` (Python) Scripts, data, and figures behind the research articles
 - ䷯ `./open` BitTorrent, WebTorrent, and WebRTC trackers, plus a DHT node _[open.ftorrent.com](https://open.ftorrent.com/)_
   - `./open/docker` [Aquatic](https://github.com/greatest-ape/aquatic) Dockerfiles, configs, seccomp profile, and compose file
   - `./open/gauge` (Python) Scrapes tracker and DHT stats, writes page.json and breaker.json

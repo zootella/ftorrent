@@ -47,7 +47,12 @@ export async function copyText(text) {
 	} catch (error) { return false }
 }
 
-//whole megabytes, counted by 1000 the way macOS and browsers do; the installers run from about 12 to 26 MB, where a megabyte is fine enough to tell them apart. whole, because a decimal point is a comma in half the world, and a number with no separator is right in both
-export function saySize(bytes) {
-	return Math.round(bytes / 1_000_000) + ' MB'
+//a size in four digits or less, like 5428 KB or 21 MB: the saySize4 the desktop client shows sizes with in its lists, said again here rather than imported across the workspace line, so a file is the same size on this page and in the client. whole numbers, because a decimal point is a comma in half the world and a number with no separator is right in both; by 1024, with MB meaning 1024 squared, the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here; and a thin space before the unit
+export function saySize4(n) {
+	let units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+	for (let u = 0; u < units.length; u++) {
+		let w = Math.floor(n / 1024 ** u)
+		if (w <= 9999) return w + '\u2009' + units[u]
+	}
+	return n + ''
 }

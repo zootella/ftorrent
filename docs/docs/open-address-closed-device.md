@@ -1,21 +1,22 @@
 ---
-title: IPv6 and the Open Device
+title: Open Address, Closed Device
 description: A measurement of the two forces acting on the ordinary web click, forty-one months of the web requests people made, cut by whether the device is one its owner controls and whether the address is one others can reach.
 ---
 
-# IPv6 and the Open Device
+# Open Address, Closed Device
 
-*A research report from ftorrent, October 2026*
+> Prepared by [Claude Code](https://claude.ai/code) using Fable 5.1
+> <br>Published: 2026 October 12
+> <br>Revised: 2026 October 12
+> <br>Period: 2023 May through 2026 September, monthly
+> <br>Code: [docs/research/ipv6](https://github.com/zootella/ftorrent/blob/master/docs/research/ipv6/README.md)
+> <br>Data: [docs/research/ipv6/data](https://github.com/zootella/ftorrent/tree/master/docs/research/ipv6/data)
+> <br>Cite as: ftorrent. *Open Address, Closed Device.* October 2026. https://docs.ftorrent.com/open-address-closed-device.html
+> <br>Keywords: IPv6 adoption, open and closed devices, web requests, Cloudflare Radar, peer-to-peer reachability
 
 ## Abstract
 
-Two things decide a person's standing on the internet, and most people see neither. One is the address: whether the connection they are on gives them an address others can reach, or a shared one that can only reach out. The other is the device: whether the computer in their hand will run what they choose, or only what its vendor allows. A person with both can be a citizen of the network, reachable and running software of their own choosing; a person with neither can visit it but not be visited. [Google's IPv6 adoption chart](https://www.google.com/intl/en/ipv6/statistics.html), the most widely cited measure of the first, has climbed since 2008 to nearly half of Google's users. No chart tracks the second, and none tracks the two together.
-
-This report measures both, on the same requests. Cloudflare serves a large share of the web and sorts every request it answers into two classes: the ones a person drove, by tapping, clicking, or typing, and the ones automation drove, crawlers, monitors, and programs calling programs. We keep the first class, month by month from May 2023 through September 2026, and cut it two ways. By device: an **open device** is a Windows, Mac, or Linux computer, where the owner holds root and can install anything; a **closed device** is a phone, tablet, Chromebook, or smart TV, where the vendor holds root and an app store decides what runs. The second cut exists because of a migration: twenty years ago nearly all of a person's computing happened on a PC, and today it is spread across a phone, a tablet, a laptop, and a television, most of which their owner does not control. By address: IPv4 or IPv6, which a server sees on every connection it accepts. The result is checked against Google, APNIC, StatCounter, and Wikimedia.
-
-In September 2026, 46.6% of requests were made on open devices and 41.0% came from IPv6 addresses. The two overlapped in 13.7%, up from 9.5% in May 2023, though about half of that rise is in how Cloudflare classifies operating systems rather than in people's devices. On open devices the IPv6 share was 29.3%, against 48.0% on closed devices, and over the forty-one months it rose 2.8 points on open devices and 8.8 on closed. No measure here shows the share of requests made on open devices falling. Two requests chosen at random from the web were both on open devices and from IPv6 addresses 1.9% of the time.
-
-So the IPv6 line is rising through phones and carriers, and slowest on the devices that could use a reachable address. And the migration to closed devices is not under way: it happened between about 2011 and 2017, and the share of activity on open devices has held near 45% since. Over these years the ordinary click gained a better address; the device it came from did not change.
+Two properties of a web request describe the standing of the person who made it: whether the device is one its owner controls, and whether the address is one others can reach. Google's IPv6 adoption chart, the most cited measure of the second, has climbed since 2008 to nearly half of Google's users; no series tracks the first, or the two together. This report measures both on the same requests. Cloudflare Radar classifies every HTTP request Cloudflare serves as likely human or likely automated. We take the human requests for each month from May 2023 through September 2026 and cut them two ways: by device, open (Windows, macOS, and Linux, where the owner holds root) against closed (iOS, Android, ChromeOS, and smart TV, where the vendor holds root), and by address family, IPv4 against IPv6. The joint table is built from the operating system shares and checked against Cloudflare's direct figures; the IPv6 share is cross-checked against Google and APNIC, and the open-device share against StatCounter and Wikimedia. In September 2026, 46.6% of requests were made on open devices and 41.0% came from IPv6 addresses; 13.7% were both, up from 9.5% in May 2023, about half of the rise reflecting Cloudflare's operating system classification rather than people's devices. The IPv6 share was 29.3% on open devices against 48.0% on closed, and over the 41 months it rose 2.8 points on open devices and 8.8 on closed. No measure shows the open-device share falling: the migration to closed devices happened between about 2011 and 2017, and the share has stayed between about 37% and 46% since. Two requests drawn at random were both on open devices and from IPv6 addresses 1.9% of the time. IPv6 is arriving through phones and carriers, and slowest on the devices that could use a reachable address.
 
 ## 1. Introduction
 
@@ -25,7 +26,7 @@ But the line counts users, not the devices they hold or the software those devic
 
 Those two things, the address and the device, set a person's standing on the internet, and the household noticed neither. The first decides whether others can reach them. For most of the web's life it was the limit: behind a shared IPv4 address a person could reach out but not be reached, and the IPv6 migration has been lifting that limit year by year. The second decides whether the device in their hand will run what they choose, and across the same years people replaced open devices with closed ones. They paid for them and own them, and the vendor holds root and decides what they may run.
 
-This report measures both forces together, on the same requests. For every month from May 2023 through September 2026, it asks what share of the web requests people made were made on a device whose owner can run software of their own choosing, and what share of those came from an IPv6 address — and so what share of the whole is both. The newest month is drawn as one picture, the whole of a month's requests as one square. The forty-one months are drawn as lines. And because the two forces have been watched separately for much longer than that, the report sets the lines beside the two longest records of each: Google's since 2008, and [StatCounter](https://gs.statcounter.com/)'s count of page views from desktop computers since 2009.
+This report measures both forces together, on the same requests. For every month from May 2023 through September 2026, it asks what share of the web requests people made were made on a device whose owner can run software of their own choosing, and what share of those came from an IPv6 address — and so what share of the whole is both. The newest month is drawn as one picture, the whole of a month's requests as one mosaic plot. The forty-one months are drawn as lines. And because the two forces have been watched separately for much longer than that, the report sets the lines beside the two longest records of each: Google's since 2008, and [StatCounter](https://gs.statcounter.com/)'s count of page views from desktop computers since 2009.
 
 ## 2. Definitions
 
@@ -47,7 +48,7 @@ Root is a proxy for the property that matters for peer-to-peer: whether the owne
 
 Android is the boundary case. Android lets its owner install software from outside the store, which is more than iOS allows, and [BitTorrent clients run on it today](https://f-droid.org/packages/org.proninyaroslav.libretorrent/). What the owner still does not hold is root: the vendor's signed system decides what an installed program may do, and background execution and network access are governed by policy the owner cannot override without unlocking the device in ways most hardware forbids or penalizes. So Android counts as closed here, with that explained rather than assumed. Chromebooks fall the same way: a closed, vendor-verified system with [a sandboxed container](https://chromeos.dev/en/linux) as the escape hatch.
 
-One more line, between the device and its browser. A closed device's browser can still be a peer of a narrower kind — a [WebRTC](https://webrtc.org/) connection from a phone's browser tab is real peer-to-peer, and [ftorrent's own browser work](https://docs.ftorrent.com/how-peers-connect.html) depends on it. This report measures the ability to run native software of the owner's choosing. It does not claim a closed device can do nothing; it claims the owner does not decide.
+One more line, between the device and its browser. A closed device's browser can still be a peer of a narrower kind — a [WebRTC](https://webrtc.org/) connection from a phone's browser tab is real peer-to-peer, and [ftorrent's own browser work](/how-peers-connect) depends on it. This report measures the ability to run native software of the owner's choosing. It does not claim a closed device can do nothing; it claims the owner does not decide.
 
 ### 2.3 From an IPv6 address, or an IPv4 one
 
@@ -57,7 +58,7 @@ The cut means one specific thing. A request from an IPv6 address shows the devic
 
 It understates what the devices could do, and the error runs one way. A device with both kinds of address resolves both and [races them](https://www.rfc-editor.org/rfc/rfc8305), with IPv6 given a short head start, so on a healthy connection nearly every request to a dual-stack site goes out from the IPv6 address. Such a device still lands in the IPv4 column three ways: the site it asked for is IPv4-only, so there was nothing to race; the IPv6 path was slow or broken at that moment and the race picked IPv4; or the app used an older networking library that only asks for IPv4. The reverse cannot happen. Nothing sends from an IPv6 address a device doesn't have, now that the old tunneling mechanisms have faded — [Google's data](https://www.google.com/intl/en_ALL/ipv6/statistics/data/adoption.js) shows native and total IPv6 identical in 2026. So every IPv6 figure in this report is a floor on IPv6 capability, and a Windows PC that reached an IPv4-only site is the clearest case: it counts as IPv4 here, while a BitTorrent client on it would use IPv6 for any peer that had it. The client-side part of this gap can be bounded, because [APNIC measures both](https://stats.labs.apnic.net/ipv6) whether a user *can* use IPv6 and whether they *prefer* it when offered both: in the world figures for September 2026 the two differ by about two points, so roughly one capable user in twenty ends up on IPv4 when both are offered. The site-side part cannot be measured from these sources, and it is why [Cloudflare's own adoption chart switched in January 2023](https://developers.cloudflare.com/radar/glossary/) to counting IPv6 requests only against requests for dual-stacked content. The API this report uses gives the plain share, IPv6 requests against every request, and the comparison to the user-weighted sources below brackets the difference.
 
-Having an address is not the same as being reachable, and this report leaves reachability outside its scope. Several things sit between an address and an inbound connection. Nearly every IPv6 home router runs [a stateful firewall](https://www.rfc-editor.org/rfc/rfc6092) that admits inbound traffic only on flows the inside device opened first; in practice [the simple hole-punching exchange](https://docs.ftorrent.com/how-peers-connect.html) works through that filter most of the time, because nothing is translating the address, only screening it. On the IPv4 side the picture runs the other way: a growing share of IPv4 connections sit behind [carrier-grade NAT](https://arxiv.org/abs/1605.05606), two layers of translation where hole punching often fails outright, and that translation is invisible from the server, so no source here can count it. Some IPv4 consumers hold a static public address, which is rare but makes them reachable with nothing in the way. All of it pushes in known directions: IPv6 tends to be more reachable than its address count suggests, IPv4 less. None of it is measured here. This report counts address families, and reachability would be a report of its own.
+Having an address is not the same as being reachable, and this report leaves reachability outside its scope. Several things sit between an address and an inbound connection. Nearly every IPv6 home router runs [a stateful firewall](https://www.rfc-editor.org/rfc/rfc6092) that admits inbound traffic only on flows the inside device opened first; in practice [the simple hole-punching exchange](/how-peers-connect) works through that filter most of the time, because nothing is translating the address, only screening it. On the IPv4 side the picture runs the other way: a growing share of IPv4 connections sit behind [carrier-grade NAT](https://arxiv.org/abs/1605.05606), two layers of translation where hole punching often fails outright, and that translation is invisible from the server, so no source here can count it. Some IPv4 consumers hold a static public address, which is rare but makes them reachable with nothing in the way. All of it pushes in known directions: IPv6 tends to be more reachable than its address count suggests, IPv4 less. None of it is measured here. This report counts address families, and reachability would be a report of its own.
 
 ## 3. Data
 
@@ -99,13 +100,16 @@ For the same months, the four other sources are reduced to the same calendar. Go
 
 ### 5.1 September 2026
 
-<!--@include: ./charts/cake-2026-09.svg-->
+<figure>
 
-*Figure 1. Web requests, September 2026, by kind of device and kind of address. Each cell is a percent of the month's requests; automated requests are not in the picture. Orange is v6 addresses and gray is v4; the closed column is plain and the open column is striped, so the striped orange cell is requests on open devices from v6 addresses, and the two forces act on it from two sides: the closed column squeezes it from the right, and the rising IPv6 share makes it taller. What matters is its area, and over time that grows only if the cell gets taller faster than it gets narrower. Source: Cloudflare Radar.*
+<!--@include: ../research/ipv6/charts/mosaic-2026-09.svg-->
 
-The square is every request Cloudflare saw in September 2026. Automated requests, 36.2% of all traffic, are left out of the figure, since they say nothing about people, and Table 1 still carries them. Each column is one kind of device, as wide as its share of the requests. Within each column, requests from IPv6 addresses are on top and requests from IPv4 addresses below, with the cut at that column's IPv6 share. The area of a cell is its share of the month's requests, and each is labeled with that share.
+<figcaption>Figure 1. Web requests, September 2026, by kind of device and kind of address, as a mosaic plot. Each cell is a percent of the month's requests; automated requests are not in the picture. Orange is v6 addresses and gray is v4; the closed column is plain and the open column is striped, so the striped orange cell is requests on open devices from v6 addresses, and the two forces act on it from two sides: the closed column squeezes it from the right, and the rising IPv6 share makes it taller. What matters is its area, and over time that grows only if the cell gets taller faster than it gets narrower. Source: Cloudflare Radar.</figcaption>
+</figure>
 
-The picture is a single month, but it reads best as one frame of a film. Run the film back to 2009 and the vertical line between the columns sits almost at the right edge: nearly every request came from a PC. Through the 2010s it slides left, as the phone, then the tablet, the Chromebook, and the streaming stick took over the clicks a household makes, and by about 2017 it stops near the middle and has sat there since, which is the migration Section 5.4 draws from StatCounter's longer record. Across the forty-one months this report measures, the line barely moves, and what motion it has is mostly Cloudflare's classifier.
+The mosaic is every request Cloudflare saw in September 2026. Automated requests, 36.2% of all traffic, are left out of the figure, since they say nothing about people, and Table 1 still carries them. Each column is one kind of device, as wide as its share of the requests. Within each column, requests from IPv6 addresses are on top and requests from IPv4 addresses below, with the cut at that column's IPv6 share. The area of a cell is its share of the month's requests, and each is labeled with that share.
+
+The picture is a single month. Drawn for 2009, it would have the vertical line between the columns almost at the right edge: nearly every request came from a PC. Through the 2010s the line slides left, as the phone, then the tablet, the Chromebook, and the streaming stick took over the clicks a household makes, and by about 2017 it stops near the middle and has sat there since, which is the migration Section 5.4 draws from StatCounter's longer record. Across the forty-one months this report measures, the line barely moves, and what motion it has is mostly Cloudflare's classifier.
 
 The orange cells grow upward, at different speeds, and the reasons are economic. On the right, the solid orange cell rises as mobile carriers hand out IPv6 addresses on their cellular networks. They had the strongest reason to: their subscriber counts grew by billions of handsets after 2007, each needing an address of its own with no home router to share through, and most of that growth came after the free pool of IPv4 addresses ran out, so the choice was IPv6 or carrier-grade NAT at a scale no one had run before. A carrier also controls the handset's connection end to end, so a rollout is a change in its own core network that depends on no equipment in the customer's home. The result is a reachable address delivered, by the billion, to devices whose owners do not choose what listens on it.
 
@@ -113,7 +117,8 @@ On the left, the striped orange cell rises more slowly, as fixed-line providers 
 
 Start with the striped orange cell. Only 13.7% of requests were made on an open device *and* came from an IPv6 address: a person, a device that runs what its owner chooses, and an address others can reach. The 32.9% below it are the same devices without a reachable address. The 53.4% beside it are people on devices where the vendor decides, nearly half of them with a reachable address, on a device whose owner does not decide what listens on it. Hovering any cell, here and on every figure that follows, gives a sentence saying what it is.
 
-*Table 1. All traffic, September 2026, automated requests included. The six cells are built from the operating system shares as Section 4 describes, and the bottom row is Cloudflare's direct figure, which the cells reproduce within a quarter of a point. Source: Cloudflare Radar.*
+<figure>
+<figcaption>Table 1. All traffic, September 2026, automated requests included. The six cells are built from the operating system shares as Section 4 describes, and the bottom row is Cloudflare's direct figure, which the cells reproduce within a quarter of a point. Source: Cloudflare Radar.</figcaption>
 
 | | share of all traffic | from a v4 address | from a v6 address | v6 share of the row |
 |---|---:|---:|---:|---:|
@@ -122,11 +127,15 @@ Start with the striped orange cell. Only 13.7% of requests were made on an open 
 | Requests on a closed device | 34.1% | 17.7% | 16.4% | 48.0% |
 | All traffic | 100% | 70.5% | 29.5% | 29.5% |
 
+
+</figure>
+
 Two figures in that table matter most. **Requests on an open device from an IPv6 address were 8.7% of all traffic in September 2026**, automated included, and 13.7% of requests. That is the slice of the web's activity that is both free to run software of its owner's choosing and directly addressable. And **of requests on open devices, 29.3% came from an IPv6 address**, which is the figure that matters to anyone running a peer-to-peer service: of the devices that could run a peer, somewhat under a third hold a routable address, and somewhat over two thirds do not. That figure carries an uncertainty. Weighted by their widths, the open and closed rates give 39.3% for all requests, not the 41.0% Cloudflare reports directly, because the operating system route places only the requests whose system it recognizes, and the ones it cannot place run more IPv6 than the rest. Cloudflare's device type route, which places nearly every request, puts the IPv6 share of requests from desktops at 33.7%, four points higher. The two routes draw the line between open and closed in different places, and the sources cannot say which sits nearer the truth, so the four points between them is the uncertainty on the figure this report quotes, and it quotes the lower.
 
 Now the closed column. Of requests on closed devices, 48.0% came from an IPv6 address, more than half again the figure on open devices, and the cell for closed devices and IPv6 addresses, at 16.4% of all traffic, is nearly twice the striped orange cell. Measured by where requests come from, the IPv6 internet is mostly a mobile internet.
 
-*Table 2. Requests, September 2026, by operating system. Source: Cloudflare Radar.*
+<figure>
+<figcaption>Table 2. Requests, September 2026, by operating system. Source: Cloudflare Radar.</figcaption>
 
 | Operating system | share of requests | v6 share of its requests |
 |---|---:|---:|
@@ -138,19 +147,26 @@ Now the closed column. Of requests on closed devices, 48.0% came from an IPv6 ad
 | ChromeOS | 0.7% | 22.3% |
 | Smart TV | under 0.1% | 40.7% |
 
-Windows is the largest single platform on the web and, among the major ones, the least on IPv6, for the reason the film gives: a Windows PC sits on fixed broadband at home or on an office network, where IPv6 has trailed the cellular carriers by years. An iPhone's address is usually the carrier's choice; a desktop's is usually the home or office router's.
+
+</figure>
+
+Windows is the largest single platform on the web and, among the major ones, the least on IPv6, for the reason given above: a Windows PC sits on fixed broadband at home or on an office network, where IPv6 has trailed the cellular carriers by years. An iPhone's address is usually the carrier's choice; a desktop's is usually the home or office router's.
 
 The automated column is counted and set aside, but its numbers explain one gap. Automated requests were 36.2% of all traffic, and only 12.8% of them came from an IPv6 address. Crawlers and scripts live in data centers, and data centers are IPv4 country. This is why the IPv6 share of all traffic, 29.5%, is so much lower than the IPv6 share of requests, 41.0%: the difference is the automated share.
 
 ### 5.2 Forty-one months
 
-<!--@include: ./charts/forces-monthly.svg-->
+<figure>
 
-*Figure 2. Of every 100 web requests each month, May 2023 through September 2026. Orange is v6 addresses, dashed is open devices, and dashed orange is both: requests on open devices from v6 addresses. The complements, v4 addresses and closed devices, are each 100 minus the line shown, and Table 3 lists them. Source: Cloudflare Radar.*
+<!--@include: ../research/ipv6/charts/forces-monthly.svg-->
+
+<figcaption>Figure 2. Of every 100 web requests each month, May 2023 through September 2026. Orange is v6 addresses, dashed is open devices, and dashed orange is both: requests on open devices from v6 addresses. The complements, v4 addresses and closed devices, are each 100 minus the line shown, and Table 3 lists them. Source: Cloudflare Radar.</figcaption>
+</figure>
 
 Figure 2 takes every 100 requests in a month and draws three lines, in the styles every figure in this report uses: orange for v6 addresses, dashed for open devices, and dashed orange for requests on open devices from v6 addresses, which runs lowest. The two complements are not drawn, since each is 100 minus its partner, and Table 3 carries them as the mirror rows. The dashed orange line divided by the open-device line is the share of open-device requests with v6 addresses, which Figure 3 draws directly. Table 3 reads the first and last months off the chart, rounded to whole percents, with the report's reading of each change, and the rest of this section uses the same two months and the same rounding.
 
-*Table 3. The three lines of Figure 2 and their two complements at the first and last month. Source: Cloudflare Radar.*
+<figure>
+<figcaption>Table 3. The three lines of Figure 2 and their two complements at the first and last month. Source: Cloudflare Radar.</figcaption>
 
 | Of every 100 requests | May 2023 | September 2026 | Change | What happened |
 |---|---:|---:|---:|---|
@@ -160,15 +176,24 @@ Figure 2 takes every 100 requests in a month and draws three lines, in the style
 | On a closed device | 64 | 53 | down 11 | The mirror of the line above. |
 | Open device with v6 address | 10 | 14 | up 4 | Both forces as measured: a better address picture on open devices, and a larger open share that is partly the classifier's. |
 
-<!--@include: ./charts/rates-monthly.svg-->
 
-*Figure 3. Share of requests with v6 addresses each month, on open devices and on closed devices. Source: Cloudflare Radar.*
+</figure>
+
+<figure>
+
+<!--@include: ../research/ipv6/charts/rates-monthly.svg-->
+
+<figcaption>Figure 3. Share of requests with v6 addresses each month, on open devices and on closed devices. Source: Cloudflare Radar.</figcaption>
+</figure>
 
 Figure 3 draws two lines, each the share of one group of requests that have v6 addresses: open devices, dashed, and closed devices, solid. Figure 2's v6 line, Cloudflare's direct figure for any device, runs between them, a little above their weighted mean for the reason Section 4 gives.
 
-<!--@include: ./charts/ipv6-by-system.svg-->
+<figure>
 
-*Figure 4. The share from a v6 address by operating system, each month. Open systems on the left, dashed; closed on the right, solid. Source: Cloudflare Radar.*
+<!--@include: ../research/ipv6/charts/ipv6-by-system.svg-->
+
+<figcaption>Figure 4. The share from a v6 address by operating system, each month. Open systems on the left, dashed; closed on the right, solid. Source: Cloudflare Radar.</figcaption>
+</figure>
 
 Figure 4 splits Figure 3's lines by operating system, one panel each on the same axis, open systems on the left and closed on the right. iOS went from 46% to 54%, crossing half in February 2025; Android from 37% to 45%; macOS from 35% to 39%; Linux from 20% to 23%; Windows, the largest system on the web, from 25% to 27%; and ChromeOS, a small share and a noisy series, stayed near 22%. The closed-device rise is iOS and Android together. The open-device figure is slow because Windows is slow, and Windows is most of it.
 
@@ -186,41 +211,58 @@ What is left, after both of those, is this: across these three years, no measure
 
 ### 5.3 The square
 
-<!--@include: ./charts/square-monthly.svg-->
+<figure>
 
-*Figure 5. Pick two requests at random, each month: the chance that the pair are both open, both v6, and both open and v6. Each line is a share from Figure 2, squared, in that line's style. Source: Cloudflare Radar.*
+<!--@include: ../research/ipv6/charts/square-monthly.svg-->
 
-<!--@include: ./charts/square-open.svg-->
+<figcaption>Figure 5. Pick two requests at random, each month: the chance that the pair are both open, both v6, and both open and v6. Each line is a share from Figure 2, squared, in that line's style. Source: Cloudflare Radar.</figcaption>
+</figure>
 
-*Figure 6. Pick two requests at random from open devices only, each month: the chance that the pair are both v6. This is Figure 3's open-device line squared, on the same axis as Figure 5. Source: Cloudflare Radar.*
+<figure>
+
+<!--@include: ../research/ipv6/charts/square-open.svg-->
+
+<figcaption>Figure 6. Pick two requests at random from open devices only, each month: the chance that the pair are both v6. This is Figure 3's open-device line squared, on the same axis as Figure 5. Source: Cloudflare Radar.</figcaption>
+</figure>
 
 For two peers to connect over IPv6, both must have it. If two requests are drawn at random from a group in which a share p has some property, the chance that both have it is p squared. Which group the pair is drawn from depends on who the two parties are, and that is the difference between the two figures.
 
-Figure 5 draws from the whole web. Picture a person who picks up whichever device is nearest in the moment, the phone in their lap or the PC in the next room, and a second person like them anywhere on earth. The chance that both happen to be on open devices, so that both can choose their own software, was 21.7% in September 2026. The chance that both have IPv6 addresses, addresses built to be reached, was 16.8%, the figure the IPv6 chart alone would give for reaching a peer, if the device did not matter. The chance that both are both, the dashed orange line, was 13.7% squared, 1.9%, up from 0.9% in May 2023: one pair in fifty. That is the figure for the web as a whole, and it is the figure that matters to peer-to-peer software that means to reach people who are mobile first or mobile only, for whom [a browser tab on WebRTC](https://docs.ftorrent.com/how-peers-connect.html) is the only peer their device will run. The distance from the solid orange line down to the dashed one is the cost of the closed device.
+Figure 5 draws from the whole web. Picture a person who picks up whichever device is nearest in the moment, the phone in their lap or the PC in the next room, and a second person like them anywhere on earth. The chance that both happen to be on open devices, so that both can choose their own software, was 21.7% in September 2026. The chance that both have IPv6 addresses, addresses built to be reached, was 16.8%, the figure the IPv6 chart alone would give for reaching a peer, if the device did not matter. The chance that both are both, the dashed orange line, was 13.7% squared, 1.9%, up from 0.9% in May 2023: one pair in fifty. That is the figure for the web as a whole, and it is the figure that matters to peer-to-peer software that means to reach people who are mobile first or mobile only, for whom [a browser tab on WebRTC](/how-peers-connect) is the only peer their device will run. The distance from the solid orange line down to the dashed one is the cost of the closed device.
 
 Figure 6 draws from open devices only, and it is the swarm's figure. The people in a BitTorrent swarm are already running a client, so they are on open devices by definition, and the only question left is the address. The chance that two of them both have IPv6 is the open-device IPv6 share squared, Figure 3's open-device line squared: 29.3% squared in September 2026, 8.6%. That is four times the web's figure, and still low: a random pair of peers can meet over IPv6 about one time in twelve. It is the figure a BitTorrent client or a tracker designs against.
 
-Both figures simplify, and both understate what can connect. The dashed orange line in Figure 5 is the assured case: an open device with an IPv6 address can run a peer and be reached, and nothing in the definitions stands in the way. Some closed devices can be peers of a kind, a phone running a BitTorrent client on Android, a browser tab on WebRTC, so the true share of pairs that could connect sits somewhere above that line, by an amount these sources cannot measure. And a device with IPv6 almost always has IPv4 as well, so the 8.6% of peer pairs that can use IPv6 between them are pairs that gain a better path, not the only pairs that can connect. IPv6 is an addition to a peer's reach for now, not a replacement, and any peer-to-peer software that means to connect the other eleven pairs in twelve has to carry IPv4 and [the whole apparatus of NAT traversal](https://docs.ftorrent.com/how-peers-connect.html) that comes with it for a long time yet.
+Both figures simplify, and both understate what can connect. The dashed orange line in Figure 5 is the assured case: an open device with an IPv6 address can run a peer and be reached, and nothing in the definitions stands in the way. Some closed devices can be peers of a kind, a phone running a BitTorrent client on Android, a browser tab on WebRTC, so the true share of pairs that could connect sits somewhere above that line, by an amount these sources cannot measure. And a device with IPv6 almost always has IPv4 as well, so the 8.6% of peer pairs that can use IPv6 between them are pairs that gain a better path, not the only pairs that can connect. IPv6 is an addition to a peer's reach for now, not a replacement, and any peer-to-peer software that means to connect the other eleven pairs in twelve has to carry IPv4 and [the whole apparatus of NAT traversal](/how-peers-connect) that comes with it for a long time yet.
 
 The square assumes the two peers are chosen independently, which is about right for a global swarm and less right for a local one. Two peers in the same country share that country's adoption rate, which may be far above or below the world's, so the square overstates the chance for low-adoption regions and understates it for high ones. The figure is a world average, stated as such.
 
 ### 5.4 The long view
 
-<!--@include: ./charts/history.svg-->
+<figure>
 
-*Figure 7. The two forces since 2008: the share of Google's users on v6, as monthly means of its daily figure, and the share of StatCounter's page views from a desktop. The shaded span is the forty-one months the Cloudflare data covers. Sources: Google, StatCounter.*
+<!--@include: ../research/ipv6/charts/history.svg-->
+
+<figcaption>Figure 7. The two forces since 2008: the share of Google's users on v6, as monthly means of its daily figure, and the share of StatCounter's page views from a desktop. The shaded span is the forty-one months the Cloudflare data covers. Sources: Google, StatCounter.</figcaption>
+</figure>
 
 Figure 7 draws the two forces since 2008, each from the source that has watched it longest. Google's line, orange, is the share of its users on v6. StatCounter's, dashed, is the share of page views from desktop computers, which is the closest long record of the share of a person's activity on open devices: laptops count as desktop, and the line includes the Chromebooks and consoles that this report counts as closed, so it runs slightly high as a measure of open devices, by two to eight points across 2026. The shaded span marks the months Cloudflare's data covers, where the joint table exists.
 
-*Table 4. The two forces in September of selected years, with StatCounter's mean for the year beneath its September figure, since its monthly series swings as much as ten points from one month to the next; the 2026 mean covers January through September. Sources: Google, StatCounter.*
+<figure>
+<figcaption>Table 4. The two forces in September of selected years, with StatCounter's mean for the year beside its September figure, since its monthly series swings as much as ten points from one month to the next; the 2026 mean covers January through September. Sources: Google, StatCounter.</figcaption>
 
-| September | 2009 | 2012 | 2015 | 2017 | 2020 | 2023 | 2026 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Users on v6, Google | 0.2% | 0.8% | 7.4% | 18.0% | 30.6% | 41.7% | 47.5% |
-| Page views from a desktop, StatCounter | 98.9% | 85.3% | 55.9% | 43.3% | 47.2% | 45.1% | 39.2% |
-| The same, mean of the year | 99.0% | 88.0% | 59.1% | 43.7% | 45.6% | 42.9% | 45.9% |
+| September | Users on v6, Google | Page views from a desktop, StatCounter | The same, mean of the year |
+|---|---:|---:|---:|
+| 2009 | 0.2% | 98.9% | 99.0% |
+| 2012 | 0.8% | 85.3% | 88.0% |
+| 2015 | 7.4% | 55.9% | 59.1% |
+| 2017 | 18.0% | 43.3% | 43.7% |
+| 2020 | 30.6% | 47.2% | 45.6% |
+| 2023 | 41.7% | 45.1% | 42.9% |
+| 2026 | 47.5% | 39.2% | 45.9% |
 
-The two lines have different shapes, and that difference is the result. The closing force was a migration, and it happened between about 2011 and 2017: desktop went from nearly all page views to under half in six years, as the smartphone arrived, and then stopped. From 2017 on, StatCounter's yearly mean has stayed between 37% and 46%, a band it has not left in nine years, with 2024 the low and 2026 back near the top. The opening force is not a migration but a slope, and it has not stopped: IPv6 went from nothing to nearly half of Google's users across the same seventeen years, and the last three added six points. Why a change announced with deadlines arrived as a slope that shallow is the subject of a companion essay, [*What Happened with IPv6*](./what-happened-with-ipv6).
+
+</figure>
+
+The two lines have different shapes, and that difference is the result. The closing force was a migration, and it happened between about 2011 and 2017: desktop went from nearly all page views to under half in six years, as the smartphone arrived, and then stopped. From 2017 on, StatCounter's yearly mean has stayed between 37% and 46%, a band it has not left in nine years, with 2024 the low and 2026 back near the top. The opening force is not a migration but a slope, and it has not stopped: IPv6 went from nothing to nearly half of Google's users across the same seventeen years, and the last three added six points. Why a change announced with deadlines arrived as a slope that shallow is the subject of a companion article, [Waiting for IPv6](/waiting-for-ipv6).
 
 So the two forces are not symmetric in time, and the picture this report set out to draw turns out to have a different shape than expected. A person's click did lose the liberty to choose its software, by about half, and it lost it a decade ago, one purchase at a time, as closed devices replaced open ones. Since then that share has held. Meanwhile the same click has been gaining a reachable address, steadily, and is still gaining one, though as the forty-one months show, more slowly on the devices that could use it than on the ones that can't.
 
@@ -228,15 +270,21 @@ One caution about reading the two long lines together. The share of requests tha
 
 ### 5.5 Cross-checks
 
-<!--@include: ./charts/check-ipv6.svg-->
+<figure>
 
-*Figure 8. The share on v6 by four sources over the same months: all traffic at Cloudflare with automated requests included, requests at Cloudflare, Google's users, and APNIC's users able to use v6. Sources: Cloudflare Radar, Google, APNIC.*
+<!--@include: ../research/ipv6/charts/check-ipv6.svg-->
+
+<figcaption>Figure 8. The share on v6 by four sources over the same months: all traffic at Cloudflare with automated requests included, requests at Cloudflare, Google's users, and APNIC's users able to use v6. Sources: Cloudflare Radar, Google, APNIC.</figcaption>
+</figure>
 
 Figure 8 has four panels, one line each, on one axis: top left, the IPv6 share of all traffic at Cloudflare, automated included; top right, the IPv6 share of requests at Cloudflare; bottom left, Google's users on IPv6; bottom right, APNIC's users able to use IPv6. The IPv6 share of requests tracks [APNIC's measure of users who prefer IPv6](https://data1.labs.apnic.net/ipv6-data-format.html) when offered both remarkably closely: within two points in most months and four at the widest, with Cloudflare's figure running one to three points above through most of 2024 and 2025, and one to two points below from late 2025 on. These are two entirely different measurements, one of requests to one network's sites, one of users sampled through advertisements, and they agree on the level and on the slope. Google's figure runs five to seven points above both, and the reasons are in what it counts: users rather than requests, and it counts every user who reached it over IPv6, which is closer to APNIC's capable measure than to its preferred one. The IPv6 share of all traffic runs well below the rest, six points under the figure for requests at the start of the series and twelve at the end, and that gap is the automated requests.
 
-<!--@include: ./charts/check-open.svg-->
+<figure>
 
-*Figure 9. The share on an open device or a desktop by four measures over the same months: Cloudflare by operating system, Cloudflare by device type, StatCounter's page views from a desktop, and Wikimedia's page views through the desktop site. Sources: Cloudflare Radar, StatCounter, Wikimedia.*
+<!--@include: ../research/ipv6/charts/check-open.svg-->
+
+<figcaption>Figure 9. The share on an open device or a desktop by four measures over the same months: Cloudflare by operating system, Cloudflare by device type, StatCounter's page views from a desktop, and Wikimedia's page views through the desktop site. Sources: Cloudflare Radar, StatCounter, Wikimedia.</figcaption>
+</figure>
 
 Figure 9 has four panels again: top left, the share of requests made on an open device, at Cloudflare by operating system; top right, the share made on a desktop, at Cloudflare by device type; bottom left, the share of page views from a desktop at StatCounter; bottom right, the share of page views through the desktop site at Wikimedia. In 2026 they agree within a few points, the two Cloudflare routes and StatCounter all in the middle forties, Wikimedia a little below. In 2023 they did not: Cloudflare's operating system route sat seven points below its own device type route, and Wikimedia sat ten to fifteen points below StatCounter. The convergence is partly classifiers improving and partly, the report suspects, automation counted as people by every source in the same years. What the four agree on is the thing the report most wanted to know: none of them shows the share on open devices falling across these three years.
 
@@ -264,7 +312,7 @@ And reachability is out of scope. A routable address is the precondition for bei
 
 ## 8. Reproducibility
 
-Three [Python](https://www.python.org/) scripts sit beside this report, with the data they pulled and the figures they drew, and [a README](./README.md) that walks through running them. `fetch.py` pulls every source and keeps a manifest of what came from where and when; `table.py` does the arithmetic and writes the tables, including every residual mentioned above, as JSON and CSV; `chart.py` draws the figures. They use only [Python's standard library](https://docs.python.org/3/library/), so there is nothing to install. The four keyless sources need an internet connection and nothing else; Cloudflare Radar needs [a free account](https://dash.cloudflare.com/sign-up) and a read-only token, and the README says how to make one. Running the two offline scripts against the frozen data reproduces this report's numbers exactly. Running the fetch again brings the series forward to whatever month has most recently ended, and Figure 1 redraws for it. The scripts and this report were written with [Claude Code](https://claude.com/claude-code), and the README's header says so, with the versions the work depends on.
+Three [Python](https://www.python.org/) scripts are in the repository, with [the data they pulled](https://github.com/zootella/ftorrent/tree/master/docs/research/ipv6/data) and [the figures they drew](https://github.com/zootella/ftorrent/tree/master/docs/research/ipv6/charts), and [a README](https://github.com/zootella/ftorrent/blob/master/docs/research/ipv6/README.md) that walks through running them. [`fetch.py`](https://github.com/zootella/ftorrent/blob/master/docs/research/ipv6/fetch.py) pulls every source and keeps a manifest of what came from where and when; [`table.py`](https://github.com/zootella/ftorrent/blob/master/docs/research/ipv6/table.py) does the arithmetic and writes the tables, including every residual mentioned above, as JSON and CSV; [`chart.py`](https://github.com/zootella/ftorrent/blob/master/docs/research/ipv6/chart.py) draws the figures. They use only [Python's standard library](https://docs.python.org/3/library/), so there is nothing to install. The four keyless sources need an internet connection and nothing else; Cloudflare Radar needs [a free account](https://dash.cloudflare.com/sign-up) and a read-only token, and the README says how to make one. Running the two offline scripts against the frozen data reproduces this report's numbers exactly. Running the fetch again brings the series forward to whatever month has most recently ended, and Figure 1 redraws for it. The scripts and this report were written with [Claude Code](https://claude.com/claude-code), and the README's header says so, with the versions the work depends on.
 
 The data is used under its sources' terms: Cloudflare Radar's API data under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/), StatCounter's under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), APNIC's with attribution as its files request, Wikimedia's under [CC0](https://creativecommons.org/publicdomain/zero/1.0/), and Google's by citation and link, since [its statistics page](https://www.google.com/intl/en/ipv6/statistics.html) states no license.
 

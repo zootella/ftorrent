@@ -46,6 +46,9 @@ importers:
 
   docs:
     devDependencies:
+      markdown-it-task-lists:
+        specifier: ^2.1.1
+        version: 2.1.1
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.50.2)(fuse.js@7.4.2)(lightningcss@1.33.0)(postcss@8.5.26)(search-insights@2.17.3)(terser@5.48.0)
@@ -3765,6 +3768,9 @@ packages:
 
   mark.js@8.11.1:
     resolution: {integrity: sha512-1I+1qpDt4idfgLQG+BNWmrqku+7/2bi5nLf4YwF8y8zXvmfiTBY3PV3ZibfrjBueCByROpuBjLLFCajqkgYoLQ==}
+
+  markdown-it-task-lists@2.1.1:
+    resolution: {integrity: sha512-TxFAc76Jnhb2OUu+n3yz9RMu4CwGfaT788br6HhEDlvWfdeJcLUsxk1Hgw2yJio0OXsxv7pyIPmvECY7bMbluA==}
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
@@ -8605,6 +8611,8 @@ snapshots:
       source-map-js: 1.2.1
 
   mark.js@8.11.1: {}
+
+  markdown-it-task-lists@2.1.1: {}
 
   mdast-util-to-hast@13.2.1:
     dependencies:

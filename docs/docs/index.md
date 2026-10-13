@@ -24,5 +24,8 @@ features:
   - title: Software Selections
     details: The software we run and ship, and how we chose it — fitness, provenance, and governance.
     link: /software-selections
+  - title: Open Address, Closed Device
+    details: Forty-one months of the web requests people made, cut by whether the device is one its owner controls and whether the address is one others can reach.
+    link: /open-address-closed-device
 ---
 

@@ -1,12 +1,15 @@
-> Prepared by Claude Code using Fable 5.1
-> Created: 2026-Oct
-> Last reviewed: 2026-Oct
-> Python: 3.14
-> Cloudflare Radar API: v4
 
-# IPv6 and the Open Device: the scripts
+_ftorrent/docs/research/ipv6/README.md [docs.ftorrent.com/open-address-closed-device](https://docs.ftorrent.com/open-address-closed-device.html)_
 
-This folder holds the report *IPv6 and the Open Device* and everything that produced it: three Python scripts, the data they pulled, the tables they computed, and the figures they drew. The report explains the question, the method, and the findings. This file explains how to run the scripts, so that you can reproduce the report's numbers from our frozen data, or pull fresh data and make the same measurement for a later month.
+# Open Address, Closed Device: the scripts
+
+> Prepared by [Claude Code](https://claude.ai/code) using Fable 5.1
+> <br>Created: 2026-Oct
+> <br>Last reviewed: 2026-Oct
+> <br>Python: 3.14
+> <br>Cloudflare Radar API: v4
+
+This folder holds the report *Open Address, Closed Device* and everything that produced it: three Python scripts, the data they pulled, the tables they computed, and the figures they drew. The report explains the question, the method, and the findings. This file explains how to run the scripts, so that you can reproduce the report's numbers from our frozen data, or pull fresh data and make the same measurement for a later month.
 
 ## What you need
 
@@ -28,7 +31,7 @@ python3 chart.py
 
 **`table.py` does the arithmetic.** It never touches the network. For every month with a complete set of Cloudflare pulls it builds the joint table: automated requests, and the requests people made on open and on closed devices, each by kind of address, and checks its own arithmetic against the totals Cloudflare reports directly, recording the residuals. It reduces the four other sources to monthly series on the same calendar. It writes `data/table.json`, which `chart.py` reads, and two spreadsheets: `data/table.csv`, one row per month of the joint table, and `data/history.csv`, one row per month of every source's long series. It prints the latest month's table so a run is checkable at a glance.
 
-**`chart.py` draws the figures.** It reads `data/table.json` and writes SVG files into the `charts` folder: the cake for the latest month, the two forces by month, the IPv6 rate within each category by month, the two squares by month, the long view since 2008, and two sets of small multiples for the cross-checks. Every point and cell carries a sentence that appears on hover. There is no plotting library; the SVG is written directly. Each file opens on its own in a browser, and each is written so a [VitePress](https://vitepress.dev/) page can include it inline, where it takes the site's colors.
+**`chart.py` draws the figures.** It reads `data/table.json` and writes SVG files into the `charts` folder: the mosaic plot for the latest month, the two forces by month, the IPv6 rate within each category by month, the two squares by month, the long view since 2008, and two sets of small multiples for the cross-checks. Every point and cell carries a sentence that appears on hover. There is no plotting library; the SVG is written directly. Each file opens on its own in a browser, and each is written so a [VitePress](https://vitepress.dev/) page can include it inline, where it takes the site's colors.
 
 ## The Cloudflare token
 
@@ -38,14 +41,14 @@ Then create a file named `.env` in this folder with one line, `RADAR_TOKEN=` fol
 
 ## What the data folder contains
 
-Every file is named by what it is, and the Cloudflare files are named by the question they asked: `cloudflare-2026-09-ip_version-likely_human-windows.json` is the IP version split of likely-human requests from Windows in September 2026. The sources, their formats, and their reuse terms are described in [the report](./ipv6-and-the-open-device.md) and in [`sources.md`](./sources.md).
+Every file is named by what it is, and the Cloudflare files are named by the question they asked: `cloudflare-2026-09-ip_version-likely_human-windows.json` is the IP version split of likely-human requests from Windows in September 2026. The sources, their formats, and their reuse terms are described in [the report](https://docs.ftorrent.com/open-address-closed-device.html) and in [`sources.md`](./sources.md).
 
 The frozen pulls in this folder are the ones the report's numbers come from. Running `table.py` and `chart.py` against them reproduces the report exactly. Running `fetch.py` again refreshes the four keyless sources, whose files carry their whole history, and pulls any Cloudflare months not already here.
 
 ## Adding a month
 
-To extend the series after a new month has ended, run `fetch.py` with the range ending at the new month, then `table.py` and `chart.py`. Only the new month's Cloudflare requests are made. The cake redraws for the newest month; the lines gain a point.
+To extend the series after a new month has ended, run `fetch.py` with the range ending at the new month, then `table.py` and `chart.py`. Only the new month's Cloudflare requests are made. The mosaic redraws for the newest month; the lines gain a point.
 
 ## Reuse
 
-Cloudflare Radar's API data is [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). StatCounter's is [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) and asks for a link. APNIC [permits reuse with attribution](https://data1.labs.apnic.net/ipv6-data-format.html). Wikimedia's is [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Google states no license on its statistics page; we cite it and link it. Our scripts and text are published under the repository's license.
+Cloudflare Radar's API data is [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). StatCounter's is [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) and asks for a link. APNIC [permits reuse with attribution](https://data1.labs.apnic.net/ipv6-data-format.html). Wikimedia's is [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Google states no license on its statistics page; we cite it and link it. Our scripts are published under the repository's license, GPL 3.0, and the report's text under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), like every page of docs.ftorrent.com.

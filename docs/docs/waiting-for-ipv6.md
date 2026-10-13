@@ -1,13 +1,16 @@
 ---
-title: What Happened with IPv6
+title: Waiting for IPv6
 description: The internet's address upgrade was specified in 1995, ordered by governments from 2003 on, and switched on with ceremony in 2012. In 2026 it carries about half of the web's users. Why not all of them? The forecasts, the deadlines, the switch-on days, the reasons, and a ten-year outlook.
 ---
 
-# What Happened with IPv6
+# Waiting for IPv6
 
-*A research report from ftorrent, October 2026*
+> Prepared by [Claude Code](https://claude.ai/code) using Fable 5.1
+> <br>Published: 2026 October 12
+> <br>Revised: 2026 October 12
+> <br>Cite as: ftorrent. *Waiting for IPv6.* October 2026. https://docs.ftorrent.com/waiting-for-ipv6.html
 
-You were at a conference in the middle 2000s. One session was about IPv6: the internet was running out of addresses, the new protocol had enough for every grain of sand, the changeover was coming, and the government had set a date. At drinks afterward someone said a single American university held more addresses than all of China. Then you never heard about it again. The question this essay answers is the one that memory leaves behind: the rise of IPv6, what happened with that? Why isn't it at ninety-nine percent right now?
+You were at a conference in the middle 2000s. One session was about IPv6: the internet was running out of addresses, the new protocol had enough for every grain of sand, the changeover was coming, and the government had set a date. At drinks afterward someone said a single American university held more addresses than all of China. Then you never heard about it again. The question this article answers is the one that memory leaves behind: the rise of IPv6, what happened with that? Why isn't it at ninety-nine percent right now?
 
 Two things are true. [Google's IPv6 chart](https://www.google.com/intl/en/ipv6/statistics.html), the one everyone cites, has climbed from a fraction of a percent in 2008 to about half of Google's users in 2026, and that is a real change in how the internet is built. And the transition, as it was announced, did not happen: the old protocol never went away, no deadline was met in the sense its authors meant, and the engineers who predicted when the addresses would run out, correctly, to the month, were wrong about what running out would force. What follows is the record, with the sources beside it, told in order: the addresses that were handed out, the forecast, the protocol, the promise, the deadlines, the switch-on days, the reasons, where it stands, and what we expect the next ten years to look like.
 
@@ -29,13 +32,13 @@ Two stopgaps came first, and both described themselves as stopgaps. Classless ro
 
 > This plan should be viable for at least three (3) years, after which time, deployment of a suitable long term solution is expected to occur.
 >
-> *RFC 1519, Classless Inter-Domain Routing, September 1993*
+> *[RFC 1519](https://www.rfc-editor.org/rfc/rfc1519.txt), Classless Inter-Domain Routing, September 1993*
 
 Address translation, [RFC 1631](https://www.rfc-editor.org/rfc/rfc1631.txt) in May 1994, let many machines share one address. It called itself "another short-term solution" offering "temporarily relief while other, more complex and far-reaching solutions are worked out," and ended with a warning:
 
 > NAT has several negative characteristics that make it inappropriate as a long term solution, and may make it inappropriate even as a short term solution.
 >
-> *RFC 1631, The IP Network Address Translator, May 1994*
+> *[RFC 1631](https://www.rfc-editor.org/rfc/rfc1631.txt), The IP Network Address Translator, May 1994*
 
 When that document was rewritten in 2001 as [RFC 3022](https://www.rfc-editor.org/rfc/rfc3022.txt), the words "short-term" and "temporary" were gone. NAT had become an ordinary mechanism.
 
@@ -65,7 +68,7 @@ In April 1997, Steve Deering, IPv6's co-author, gave an invited talk at a USENIX
 
 > There's going to be a whole new addressing system called IPv6 (vs. the current IPv4) that will solve that problem in spades.
 >
-> *Esther Dyson, ABC News chat from the ICANN meeting in Santiago, 26 August 1999*
+> *Esther Dyson, [ABC News chat from the ICANN meeting in Santiago](https://archive.icann.org/en/comments-mail/icann-current/msg00643.html), 26 August 1999*
 
 That same month Microsoft told a trade paper that "due to the experimental nature of IPv6, Microsoft will not support it in Windows 2000," [as The Register reported](https://www.theregister.com/2000/03/21/ms_volte_face_embraces_next/) when the company reversed itself with a preview release the following spring. Japan's cabinet put IPv6 into its national technology strategy in [January 2001](http://web.archive.org/web/2004id_/http://www.kantei.go.jp/foreign/it/network/0122full_e.html), and the [implementing program](http://web.archive.org/web/2004id_/http://www.kantei.go.jp/foreign/it/network/priority-all/3.html) that March promised that "an IPv6-based Internet environment will be realized by CY2005." In July 2003 Christian Huitema, by then Microsoft's networking architect and the author of the first book on the protocol, [told a conference](https://convergedigest.com/catalyst-keynote-microsoft-says-ipv6/) that "the Dream Network of the future requires IPv6," because "NAT is evil."
 
@@ -81,7 +84,7 @@ The European Commission's version is the fullest statement of the promise, and t
 
 > This is very much a case of a stitch in time saves nine. In the short term, businesses and public authorities might be tempted to try to squeeze their needs into the strait jacket of the old system, but this would mean Europe is badly placed to take advantage of the latest internet technology, and could face a crisis when the old system runs out of addresses. IPv6 provides more addresses in cyberspace than there are grains of sand on the world's beaches. If Europeans are to use the latest internet devices such as smart tags in shops, factories and airports, intelligent heating and lighting systems that save energy, and in-car networks and navigation systems, then we already face a thousand-fold increase in demand for IP addresses. I call on Member States to make sure that public authorities and industry have IPv6 widely sown up by 2010.
 >
-> *Viviane Reding, European Commission press release, 27 May 2008*
+> *Viviane Reding, [European Commission press release](https://ec.europa.eu/commission/presscorner/api/files/document/print/en/ip_08_803/IP_08_803_EN.pdf), 27 May 2008*
 
 Two months earlier the comparison that outdid the sand had appeared on [an electronics-industry blog](https://web.archive.org/web/20140101000000/http://www.edn.com/blog/980000298/post/820024082.html), where Steve Leibson passed along a note from a fellow museum docent, Dick Guertin: "we could assign an IPV6 address to EVERY ATOM ON THE SURFACE OF THE EARTH, and still have enough addresses left to do another 100+ earths." The note's arithmetic assumed a reserved first byte that IPv6 does not have and so computed two to the 120th power rather than the 128th; the claim is true anyway, by a wider margin. Both comparisons count addresses rather than networks, and since IPv6 hands every network a block of two to the 64th, the practical space is smaller than either suggests, which [network operators pointed out](https://lists.arin.net/pipermail/arin-ppml/2011-September/022992.html) at the time.
 
@@ -91,7 +94,8 @@ Then the measuring began. Google's chart starts on 4 September 2008 at 0.14% of 
 
 Here is what the dates became. The right-hand column is what a measurement found when the deadline arrived, or the nearest one available.
 
-*Table 1. IPv6 deadlines set by governments, and what was measured when they arrived. Sources are linked in the text and listed in the references.*
+<figure>
+<figcaption>Table 1. IPv6 deadlines set by governments, and what was measured when they arrived. Sources are linked in the text and listed in the references.</figcaption>
 
 | Who | Set | Required | By | What was measured |
 |---|---|---|---|---|
@@ -106,6 +110,9 @@ Here is what the dates became. The right-hand column is what a measurement found
 | China, State Council | November 2017 | 20% of users by 2018, 50% by 2020, the transition complete by 2025 | 2025 | Independent measurement put China at 3% to 7% at the end of 2018 and 21% at the end of 2020. For 2025 three figures exist: [China's own count](https://blog.apnic.net/2025/12/04/china-reports-major-ipv6-growth/) of 865 million users, 77%; APNIC's sample, about 50%; Google's, 7%, from the few users who reach Google from inside the country. |
 | US Office of Management and Budget | November 2020 | 80% of federal networked assets running IPv6 only | 30 September 2025 | No government-wide result has been published. |
 
+
+</figure>
+
 The pattern repeats across four continents and twenty years: a date set when adoption was under one percent, a deadline that passed with adoption still under one percent, and a new date. The United States alone did it four times. The 2003 order said 2008; the 2005 order said June 2008; the 2010 order said 2012 and 2014; the 2020 order said 2023, 2024, and 2025. Each was met in a narrow sense and missed in the plain one. The 2008 deadline was satisfied by agencies demonstrating that an IPv6 packet could cross their backbone, and the Pentagon's own auditors later [recorded](https://www.computerworld.com/article/1648396/the-pentagons-groundbreaking-ipv6-project-hasnt-broken-much-ground-yet.html) that the department demonstrated it in 2008 "but then turned it off."
 
 The dates also had something in common besides passing. None of the documents in Table 1 appropriated money for the work. They are memoranda, action plans, and roadmaps: the American ones direct agencies and set milestones; the European one "calls upon" content providers and "encourages" internet providers; the Indian one sets targets for private carriers; the Malaysian minister "directed." An audit of the American agencies in 2006 found their own cost estimates ranging from under a million dollars to over twenty million each, with no line in any budget to pay it. A deadline without a budget is a hope with a date on it, and in every case the people it addressed treated it as one.
@@ -118,7 +125,7 @@ On 3 February 2011, at a ceremony in Miami, the central registry handed its last
 
 > Deploying IPv6 is now a requirement, not an option.
 >
-> *Raúl Echeberría, chairman of the Number Resource Organization, 3 February 2011*
+> *Raúl Echeberría, chairman of the Number Resource Organization, [press release](https://www.nro.net/ipv4-free-pool-depleted), 3 February 2011*
 
 The Asia-Pacific registry reached its last block in April 2011, Europe's in September 2012, Latin America's in June 2014, and North America's [ran dry](https://www.arin.net/vault/about/media/releases/20150924/) on 24 September 2015. Each announcement used the imperative: "mandatory," "imperative," "as soon as possible." Each was addressed to an internet where, by Google's count, fewer than one user in a hundred could use the new protocol. The address market Huston had predicted in 1994 opened the next month, when Microsoft [paid 7.5 million dollars](https://www.theregister.com/2011/03/24/microsoft_ip_spend/) for 666,624 addresses from the bankrupt Nortel, 11.25 dollars each. That January, at a conference in Brisbane, Huston had put his own position [in one sentence](https://www.theregister.com/2011/01/25/ipv4_last_200_days/): "Vint Cerf is a professional optimist. I am not."
 
@@ -126,13 +133,13 @@ The content side had a reason for waiting, and it was the one Colitti had named 
 
 > World IPv6 day was pretty much a non-event, from a brokenness perspective. It was a wasted 37 hours of not sleeping, for me.
 >
-> *John Brzozowski, Comcast, June 2011*
+> *John Brzozowski, Comcast, [Multichannel News](https://www.nexttv.com/news/what-happened-world-ipv6-day-126912), June 2011*
 
 A year later came the launch, and the organizers were careful about the word. World IPv6 Launch, 6 June 2012, was [announced](https://www.internetsociety.org/news/press-releases/2012/world-ipv6-launch-solidifies-global-support-for-new-internet-protocol/) in January under the heading "This Time It is For Real," and its [commitments](https://web.archive.org/web/20120606id_/http://www.worldipv6launch.org/faq/) were three: websites would leave IPv6 on permanently; home-router makers would ship it enabled by default; and internet providers would enable it for enough customers that at least one percent of their residential subscribers reached the participating sites over IPv6. The organizers' own FAQ anticipated the obvious question: "Why only 1%? In many cases, users may need to upgrade or replace hardware and software, such as operating systems or home routers, to use IPv6. Over time, as users upgrade, IPv6 adoption will increase without any changes in the ISP's service or equipment." [Four router makers](https://www.theregister.com/2012/06/05/ipv6_launch_day/) made the default-on commitment. About [three thousand websites](https://arstechnica.com/information-technology/2012/06/world-ipv6-launch-gets-27-percent-of-page-views-on-ipv6/) took part, the four most visited among them. "IPv6 is no longer a lab experiment," said the Internet Society's Leslie Daigle, "it's here," and [in May](https://www.internetsociety.org/blog/2012/05/on-june-6th-world-ipv6-launch-will-change-the-world-forever/), "it's not just for a day — it's forever." Google's Erik Kline [wrote](https://web.archive.org/web/20120118004339id_/http://googleblog.blogspot.com/2012/01/ipv6-countdown-to-launch.html) the sentence that best catches the moment: "The original IPv6 specification was published more than 15 years ago, but for the entire career of most Internet engineers its deployment has always been in the future. Now it's finally here." Cerf wrote the launch post [on Google's blog](https://blog.google/inside-google/company-announcements/world-ipv6-launch-keeping-internet/):
 
 > Today we launch the 21st century Internet: you ain't seen nothin' yet.
 >
-> *Vint Cerf, Google, 5 June 2012*
+> *Vint Cerf, [Google's World IPv6 Launch post](https://blog.google/inside-google/company-announcements/world-ipv6-launch-keeping-internet/), 5 June 2012*
 
 Google's chart for launch day reads 0.65%. At the Amsterdam exchange, where much of Europe's traffic changes hands, IPv6 rose that day to [0.4% of the total](https://arstechnica.com/information-technology/2012/06/world-ipv6-launch-gets-27-percent-of-page-views-on-ipv6/). Akamai, [looking back ten years later](https://akamai.com/blog/trends/10-years-since-world-ipv6-launch), counted 3.9 billion IPv6 requests on launch day from about 0.6% of its clients, against more than four trillion a day in 2022. The chart crossed one percent that December, ten percent at the end of 2015, and twenty percent in 2017, and the Internet Society marked each anniversary with the figure: [twelve percent in 2016](https://www.internetsociety.org/blog/2016/06/happy-launchiversary-ipv6-celebrating-4-years-since-world-ipv6-launch/), over a quarter in 2018. The Register's headline for the sixth anniversary was ["Worst. Birthday. Ever."](https://www.theregister.com/2018/06/10/network_roundup_june_6_2018/), and Cerf's video message that day [said](https://www.theregister.com/2018/06/06/vint_cerf_ipv6_program/), "it's time to get with the program." The launch site [was archived](https://www.worldipv6launch.org/) and stopped updating. Huston had set a bar in June 2012, [in an interview](https://www.infoworld.com/article/2287740/leading-internet-prognosticator-still-pessimistic-about-ipv6-2.html): "If 20 percent of the users in America use IPv6, the future of IPv6 is assured." By his own test the future was assured within five years, and the transition still did not end.
 
@@ -146,7 +153,7 @@ An IPv6-only computer cannot send a packet to an IPv4 address, and an IPv4-only 
 
 > The IPv6 designers made a fundamental conceptual mistake: they designed the IPv6 address space as an alternative to the IPv4 address space, rather than an extension to the IPv4 address space.
 >
-> *D. J. Bernstein, "The IPv6 mess," about 2002*
+> *D. J. Bernstein, "[The IPv6 mess](https://cr.yp.to/djbdns/ipv6mess.html)," about 2002*
 
 The consequence, in his words: "Right now, public IPv6 addresses are practically useless," and making them useful meant convincing "millions of computer administrators to do something with no immediate benefit." Randy Bush, an operator who had chaired the IETF's transition working group, [put the same point on a slide](https://conference.apnic.net/24/program/plenaries/apnic/presentations/bush-ipv6-op-reality.pdf) at an APNIC meeting in 2007: "IPv6 is on-the-wire incompatible with IPv4," which "could have been avoided, e.g. if IPv6 had variable length addressing, IPv4 could have become the 32 bit variant." His slide titled "Why Is This Happening?" listed: "No transition plan. Declared victory before the hard part started. No real long term plan. No realistic estimation of costs. No support for the folk on the front lines. Victory will be next month." In 2009 the Internet Society's Daigle [conceded it on a panel](https://www.networkworld.com/article/789774/lan-wan-biggest-mistake-for-ipv6-it-s-not-backwards-compatible-developers-admit.html): "The lack of real backwards compatibility for IPv4 was the single critical failure," adding, "There were reasons at the time for doing that." Bradner, who had co-run the selection, named his regret [in 2012](https://chrisgrundemann.com/index.php/2012/chat-scott-bradner/): "did not do variable length addresses in IPv6 & punted on dealing with routing during the IPng process." Radia Perlman [went further](https://blog.lacnic.net/en/i-believe-in-making-things-more-user-friendly-more-than-i-believe-in-training-people/): the format proposed by the ISO in 1992, with twenty-byte addresses, had been technically better, and "the only reason it was not adopted is because standardization agencies compete with one another."
 
@@ -180,18 +187,34 @@ So the honest verdict is not failure. It is that the transition was planned for 
 
 ## 8. Where it stands, October 2026
 
-The companion report, *IPv6 and the Open Device*, measures the present in detail; here is the shape, with the sources.
+The companion report, [Open Address, Closed Device](/open-address-closed-device), measures the present in detail; here is the shape, with the sources.
 
 Set against what was promised, the record splits cleanly. Better than planned: the protocol itself, which performs comparably to IPv4, as [RIPE's measurements](https://labs.ripe.net/author/emileaben/measuring-world-ipv6-launch-comparing-ipv4-and-ipv6-performance/) found on launch day in 2012 and a [2014 study](https://faculty.cc.gatech.edu/~mbailey/publications/sigcomm14_ipv6.pdf) confirmed; the brokenness problem, which fell from about one user in a thousand to one in five thousand in two years and then stopped mattering; and the mobile networks, where one carrier could move a hundred million people in a year. Worse: the tunnels, every one of them; the home router, which held residential adoption back for a decade after the carriers were ready; the enterprise network, which has not moved; and the long tail of websites, which has no reason to. Faster than expected: India, France, the American carriers. Slower: fixed broadband nearly everywhere else, offices everywhere, and the content side as a whole. The hype, in the strict sense of claims that never came true at all, was narrower than memory suggests: the refrigerator, the 2005 deadline, the "new Internet." Most of what was promised arrived. It arrived for half the users, on the devices least able to use it, and twenty years late.
 
-Google's monthly average for September 2026 is 47.5% of its users. The chart shows single days above half, because weekends run about three points above weekdays, with people at home and on their phones rather than on office networks; the first day above 50% was [28 March 2026](https://pulse.internetsociety.org/en/blog/18-years-later-ipv6-reaches-majority/), a Saturday, and the highest so far, 51.7%, was Saturday 3 October 2026. The month is still under half. And the slope is flattening. Table 2 is computed from Google's daily data file, as the monthly mean for each December and the change from the December before, and the companion report's data folder reproduces it.
+Google's monthly average for September 2026 is 47.5% of its users. The chart shows single days above half, because weekends run about three points above weekdays, with people at home and on their phones rather than on office networks; the first day above 50% was [28 March 2026](https://pulse.internetsociety.org/en/blog/18-years-later-ipv6-reaches-majority/), a Saturday, and the highest so far, 51.7%, was Saturday 3 October 2026. The month is still under half. And the slope is flattening. Table 2 is computed from Google's daily data file, as the monthly mean for each December and the change from the December before, and [the companion report's data folder](https://github.com/zootella/ftorrent/tree/master/docs/research/ipv6/data) reproduces it.
 
-*Table 2. Google's users on IPv6, mean of each December, and the gain over the year. Source: Google's adoption data file.*
+<figure>
+<figcaption>Table 2. Google's users on IPv6, mean of each December, and the gain over the year. Source: Google's adoption data file.</figcaption>
 
-| December | 2012 | 2013 | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Share | 1.0% | 2.5% | 4.9% | 8.8% | 14.0% | 19.8% | 24.1% | 27.5% | 31.5% | 35.1% | 39.7% | 42.3% | 44.6% | 46.6% |
-| Gain in the year | 0.6 | 1.5 | 2.4 | 3.9 | 5.2 | 5.7 | 4.4 | 3.4 | 4.1 | 3.6 | 4.5 | 2.6 | 2.3 | 2.1 |
+| December | Share | Gain in the year |
+|---|---:|---:|
+| 2012 | 1.0% | 0.6 |
+| 2013 | 2.5% | 1.5 |
+| 2014 | 4.9% | 2.4 |
+| 2015 | 8.8% | 3.9 |
+| 2016 | 14.0% | 5.2 |
+| 2017 | 19.8% | 5.7 |
+| 2018 | 24.1% | 4.4 |
+| 2019 | 27.5% | 3.4 |
+| 2020 | 31.5% | 4.1 |
+| 2021 | 35.1% | 3.6 |
+| 2022 | 39.7% | 4.5 |
+| 2023 | 42.3% | 2.6 |
+| 2024 | 44.6% | 2.3 |
+| 2025 | 46.6% | 2.1 |
+
+
+</figure>
 
 The gain peaked at 5.7 points in 2017, the year Jio's subscribers arrived, and has run between two and three points a year since 2023. From December 2025 to September 2026 it was 0.9.
 
@@ -207,7 +230,7 @@ The forecasters have stopped giving dates. Howard, [in 2018](https://blog.lacnic
 
 > This is where we are, caught in a partial state of transition to IPv6 that is taking on an unfortunate air of permanence!
 >
-> *Geoff Huston, "The IPv6 Transition," October 2024*
+> *Geoff Huston, "[The IPv6 Transition](https://ispcol.potaroo.net/2024-10/ipv6-transition.html)," October 2024*
 
 His keynote that month was titled "Whatever Happened to IPv6?", and its abstract describes an internet that "has settled into a dual-stack state that is permanently 'in transition.'" The Internet Society's Mat Ford, marking the first day above half in [April 2026](https://pulse.internetsociety.org/en/blog/18-years-later-ipv6-reaches-majority/), wrote of the day every measure agrees: "I wouldn't like to predict when that will be!"
 
@@ -223,9 +246,9 @@ What follows is our prediction, reasoned from the record above and from the comp
 
 **What holds it where it is.** The same forces that held it for twenty years. Address sharing still works, and the sharing ratios keep rising without a visible crisis. IPv4 is cheap again, about twenty dollars to own and under five a year to lease, which is cheap next to re-engineering anything. Nothing switches off. Enterprises are shielded from scarcity and see cost without benefit. The content side stays on IPv4 because two thirds of hosts are IPv4-only, so no access network loses anything by waiting, and access networks that wait give content no reason to move. And measurement itself saturates: a country's share is bounded by its carrier mix, so once a carrier is at 95% its users contribute nothing further, and the world's figure becomes a weighted vote of the laggards.
 
-**What it means for a peer.** The companion report found that the IPv6 that has arrived has arrived first on closed devices, phones and tablets on cellular networks, and slowest on the open devices that could use a reachable address to be reached: 48% of requests from closed devices came from IPv6 addresses in September 2026, against 29% from open ones. We expect that gap to narrow but not close. Fixed-line and office networks are where the open devices live, and they are the slow half of every country's figure; France shows that a residential network can reach 87%, and we expect the rich countries' fixed lines to follow over the decade, but offices to lag them, and the world average for open devices to reach perhaps 40% by 2036. Two peers drawn at random from open devices would then both have IPv6 about one time in six, against one in twelve today. That is a better path for a growing minority of pairs, not a replacement for the IPv4 path, and peer-to-peer software should plan on carrying both, and the whole apparatus of traversal that IPv4 needs, for the entire ten years.
+**What it means for a peer.** The companion report found that the IPv6 that has arrived has arrived first on closed devices, phones and tablets on cellular networks, and slowest on the open devices that could use a reachable address to be reached: 48% of requests from closed devices came from IPv6 addresses in September 2026, against 29% from open ones. We expect that gap to narrow but not close. Fixed-line and office networks are where the open devices live, and they are the slow half of every country's figure; France shows that a residential network can reach 87%, and we expect the rich countries' fixed lines to follow over the decade, but offices to lag them, and the world average for open devices to reach perhaps 40% by 2036. Two peers drawn at random from open devices would then both have IPv6 about one time in six, against one in twelve today. That is a better path for a growing minority of pairs, not a replacement for the IPv4 path, and peer-to-peer software should plan on carrying both, and [the whole apparatus of traversal](/how-peers-connect) that IPv4 needs, for the entire ten years.
 
-The chart that opened this essay will keep rising, slowly, and the ceremonies will not be repeated, because the people who held them have learned what the deadlines taught. What the internet got, in place of the transition that was announced, is two protocols running side by side with no end in sight, in which the larger address space arrived first and most completely on the devices least able to use it. That is the condition the companion report measures, and the one this project builds for.
+The chart that opened this article will keep rising, slowly, and the ceremonies will not be repeated, because the people who held them have learned what the deadlines taught. What the internet got, in place of the transition that was announced, is two protocols running side by side with no end in sight, in which the larger address space arrived first and most completely on the devices least able to use it. That is the condition the companion report measures, and the one [this project](https://ftorrent.com) builds for.
 
 ## References
 
@@ -354,4 +377,4 @@ The chart that opened this essay will keep rising, slowly, and the ceremonies wi
 123. LACNIC Blog. Interview with Lee Howard, 28 June 2018. https://blog.lacnic.net/en?p=10809
 124. Huston, G. *The IPv6 Transition.* The ISP Column, October 2024. https://ispcol.potaroo.net/2024-10/ipv6-transition.html
 125. Huston, G. *BGP in 2025.* The ISP Column, January 2026. https://ispcol.potaroo.net/2026-01/bgp2025.html
-126. ftorrent. *IPv6 and the Open Device.* October 2026.
+126. ftorrent. *Open Address, Closed Device.* October 2026. https://docs.ftorrent.com/open-address-closed-device.html

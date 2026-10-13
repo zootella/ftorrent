@@ -1,6 +1,6 @@
 # Data sources
 
-Working notes from the source research on 2026-10-11, updated the same day with what running the Cloudflare API settled. The report and the README are the finished account; this note is the research trail behind them. Each entry records what a source measures, what its percentages are percentages of, how far back it goes, how to fetch it, and its reuse terms. Everything here was fetched and inspected, not taken from a description, except where marked "to verify."
+Working notes from the source research on 2026-10-11, updated the same day with what running the Cloudflare API settled. [The report](https://docs.ftorrent.com/open-address-closed-device.html) and [the README](./README.md) are the finished account; this note is the research trail behind them. Each entry records what a source measures, what its percentages are percentages of, how far back it goes, how to fetch it, and its reuse terms. Everything here was fetched and inspected, not taken from a description, except where marked "to verify."
 
 ## What the report needs
 
@@ -38,7 +38,7 @@ Each snapshot cuts requests three ways by who caused them (automated activity, a
 - Access: plain HTTPS, no key.
 - Reuse: Creative Commons Attribution-ShareAlike 3.0, and the FAQ asks for credit with a link.
 - Role: the closing force over the longest history, matching Google's horizon.
-- Caution: the platform series jumps about ten points between 2026-08 and 2026-09 (desktop 49.1% to 39.2%). That needs a look before the series is used as a trendline; StatCounter has had methodology discontinuities before.
+- Caution: the platform series jumps about ten points between 2026-08 and 2026-09 (desktop 49.1% to 39.2%). That needs a look before the series is used as a trendline; StatCounter has had methodology discontinuities before. The report reads the series as yearly means beside the monthly figure for this reason.
 
 ## Wikimedia pageviews
 
@@ -53,13 +53,13 @@ Each snapshot cuts requests three ways by who caused them (automated activity, a
 ## Cloudflare Radar
 
 - Docs: https://developers.cloudflare.com/radar/ and the API reference under https://developers.cloudflare.com/api/resources/radar/
-- Endpoint: `GET https://api.cloudflare.com/client/v4/radar/http/summary/{dimension}` with dimension `IP_VERSION`, `OS`, `DEVICE_TYPE`, or `BOT_CLASS`, and a matching `timeseries_groups` endpoint for time series. The older per-dimension paths the March draft used, such as `summary/ip_version`, are marked deprecated.
+- Endpoint: `GET https://api.cloudflare.com/client/v4/radar/http/summary/{dimension}` with dimension `IP_VERSION`, `OS`, `DEVICE_TYPE`, or `BOT_CLASS`, and a matching `timeseries_groups` endpoint for time series. The older per-dimension paths an earlier draft used, such as `summary/ip_version`, are marked deprecated.
 - Filters: `botClass` (`LIKELY_AUTOMATED`, `LIKELY_HUMAN`), `deviceType` (`DESKTOP`, `MOBILE`, `OTHER`), `os` (`WINDOWS`, `MACOSX`, `IOS`, `ANDROID`, `CHROMEOS`, `LINUX`, `SMART_TV`), `ipVersion`, `location`, `asn`, and dates as `dateRange` (relative, at most 364 days) or `dateStart` and `dateEnd` (absolute). Filters stack: bot class and operating system apply together in one request. The operating system filter takes one value per request, so a column spanning several systems is a weighted sum of separate pulls. Verified by running the API on 2026-10-11.
 - Measures: HTTP requests reaching Cloudflare's network. Request-weighted. Bot class is Cloudflare's bot score: 1 through 29 is likely automated, 30 through 99 is likely human. Omitting `botClass` returns all requests: the unfiltered IPv6 share sits between the human and automated figures, and every operating system's unfiltered rate is below its human-filtered one. Verified 2026-10-11.
 - IPv6 definition: Radar's own adoption chart has counted IPv6 requests over requests for dual-stacked content since 2023-01-23; before that it was IPv6 over all requests. The API's `IP_VERSION` summary is the plain share of all requests: IPv4 plus IPv6 sums to exactly 100 in every pull. Verified 2026-10-11.
 - Coverage: Radar's HTTP summaries hold data from May 2023 onward. The API refuses dates before 2021-12-27 and answers empty for every month before 2023-05, on the current and the deprecated endpoints alike, and a time series request may span at most 374 days. So the joint table exists for 41 months, May 2023 through September 2026. Verified 2026-10-11.
 - Dimensions: the only source found with IP version, operating system, device type, and bot class together, which makes it the only source for the joint distribution the report is built on.
-- Access: free, but every request needs an API token with the permission Account, then Radar, then Read, created at dash.cloudflare.com under My Profile, API Tokens, Create Custom Token. The March draft named a different permission; that was wrong.
+- Access: free, but every request needs an API token with the permission Account, then Radar, then Read, created at dash.cloudflare.com under My Profile, API Tokens, Create Custom Token. An earlier draft named a different permission; that was wrong.
 - Reuse: data from the API is CC BY-NC 4.0 with attribution. Graphs and images from radar.cloudflare.com are CC BY 4.0.
 - Role: the joint cut, for as many periods as the API allows, and the bridge between the two long marginal series.
 
