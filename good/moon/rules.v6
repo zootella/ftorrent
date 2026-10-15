@@ -1,0 +1,14 @@
+# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py.
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# ICMPv6 carries neighbor discovery, the router advertisements the box's address comes from, and path MTU discovery; IPv6 stops working without it.
+-A INPUT -p ipv6-icmp -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp --dport 443 -j ACCEPT
+-A INPUT -p udp --dport 443 -j ACCEPT
+COMMIT

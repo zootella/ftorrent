@@ -10,7 +10,7 @@
 		"dev": "nuxt dev",
 		"build": "nuxt generate",
 		"preview": "nuxt preview",
-		"upload": "nuxt generate && ./upload.hide.sh",
+		"upload": "nuxt generate && node --env-file-if-exists=../.env ../upload.js site",
 		"postinstall": "nuxt prepare"
 	},
 	"dependencies": {

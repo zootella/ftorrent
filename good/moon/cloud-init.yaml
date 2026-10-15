@@ -33,3 +33,16 @@ write_files:
       {
         "log-driver": "local"
       }
+  # moon's IPv6 address is the first in its /64. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64; the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one.
+  - path: /etc/netplan/60-moon.yaml
+    permissions: '0600'
+    content: |
+      network:
+        version: 2
+        ethernets:
+          ens2:
+            ipv6-address-token: "::1"
+
+# The drop-in above lands after the network is up, so apply it now rather than at the next reboot.
+runcmd:
+  - netplan apply

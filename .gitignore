@@ -270,9 +270,7 @@ credentials/
 # Claude Code
 .claude/
 
-# Cross-project notes and deployment scripts (not for public repo).
-# *.hide.* covers any file with a .hide. segment (upload.hide.sh, notes.hide.md).
-# hide/ is a private scratch dir alongside the workspaces — never tracked.
+# Working files kept out of the repository: any file with a .hide. segment in its name, and the hide/ folder.
 *.hide.*
 hide/
 

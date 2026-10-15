@@ -43,26 +43,10 @@ The built `dist/page.json` from `pnpm build` is never used in production — the
 
 ## Deployment
 
-The build output (`dist/`) is rsynced to the server where the reverse proxy serves it as static files. A `upload.hide.sh` script handles the rsync. This script is gitignored (via the `*.hide.*` pattern) because it contains your server's SSH details. Create your own:
-
-```bash
-#!/bin/bash
-rsync -avz --delete dist/ youruser@yourserver:/opt/open.ftorrent.com/static/ -e "ssh -p 22"
-```
-
-Replace `youruser`, `yourserver`, the path, and the SSH port with your own. Make it executable with `chmod +x upload.hide.sh`.
-
-Then build and deploy in one step:
+The build output (`dist/`) is rsynced to the server, where the reverse proxy serves it as static files. `pnpm upload` builds and then runs `upload.js` at the repository root, which mirrors the build into the server directory named in `.env` beside it. That file is gitignored, since it names your server; the essay atop `upload.js` lists the values to write in it.
 
 ```bash
 pnpm upload
-```
-
-Or separately:
-
-```bash
-pnpm build
-./upload.hide.sh
 ```
 
 The deployed files land in the static directory on the server. The reverse proxy serves them for any request to your tracker domain that isn't routed elsewhere — `/announce`, `/scrape`, `/page.json`, or a WebSocket upgrade.
@@ -109,12 +93,11 @@ open/page/
 │   ├── style.css      Tailwind import, @font-face declarations, base styles
 │   ├── App.vue        Root component
 │   └── components/    Vue components (Page, Panel, Space, Quote, Url)
-├── public/
-│   ├── page.json      Gauge data (written by the gauge container)
-│   ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
-│   ├── images/        Page images (sticker, social card)
-│   └── earth/         Twelve monthly Earth textures (jan.jpg–dec.jpg, 8K, see below)
-└── earth.hide.md      Research notes on the globe component (gitignored)
+└── public/
+    ├── page.json      Gauge data (written by the gauge container)
+    ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
+    ├── images/        Page images (sticker, social card)
+    └── earth/         Twelve monthly Earth textures (jan.jpg–dec.jpg, 8K, see below)
 ```
 
 ## Typography

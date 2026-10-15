@@ -84,17 +84,10 @@ A finished build:
     └── *.HASH.css
 ```
 
-The `.output/public/` directory is rsynced to the server, where the reverse proxy serves it as static files — the same pattern as the project's other front-end workspaces. A gitignored `upload.hide.sh` holds the rsync with your server's SSH details. Create your own:
+The `.output/public/` directory is rsynced to the server, where the reverse proxy serves it as static files — the same pattern as the project's other front-end workspaces. `pnpm upload` generates the site and then runs `upload.js` at the repository root, which mirrors it into the server directory named in the gitignored `.env` beside it; the essay atop `upload.js` lists the values to write there.
 
 ```bash
-#!/bin/bash
-rsync -avz --delete .output/public/ youruser@yourserver:/opt/ftorrent.com/static/ -e "ssh -p 22"
-```
-
-Then build and deploy in one step:
-
-```bash
-pnpm upload     # nuxt generate && ./upload.hide.sh
+pnpm upload     # nuxt generate, then node ../upload.js site
 ```
 
 ### The same idea in Next.js
@@ -117,12 +110,11 @@ Each is `pnpm add`-ed into this workspace and tree-shaken into the bundle, so th
 site/
 ├── nuxt.config.ts        ssr: false + the single-shell prerender setting
 ├── package.json          local / dev / build / preview / upload scripts
-├── app/
-│   ├── app.vue           the root component (<NuxtPage />)
-│   └── pages/
-│       ├── index.vue     the home page         → /
-│       └── about.vue     a demonstration route → /about
-└── upload.hide.sh        gitignored rsync deploy (your SSH details)
+└── app/
+    ├── app.vue           the root component (<NuxtPage />)
+    └── pages/
+        ├── index.vue     the home page         → /
+        └── about.vue     a demonstration route → /about
 ```
 
 Nuxt 4 keeps application code under `app/`. The scripts follow the workspace convention: `pnpm local` (and its alias `pnpm dev`) run the dev server, `pnpm build` generates the static site into `.output/public/`, `pnpm preview` serves a built copy, and `pnpm upload` builds and rsyncs.

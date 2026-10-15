@@ -8,7 +8,7 @@
 	"scripts": {
 		"local": "vitepress dev docs",
 		"build": "vitepress build docs",
-		"upload": "vitepress build docs && ./upload.hide.sh",
+		"upload": "vitepress build docs && node --env-file-if-exists=../.env ../upload.js docs",
 		"docs:dev": "vitepress dev docs",
 		"docs:build": "vitepress build docs",
 		"docs:preview": "vitepress preview docs"

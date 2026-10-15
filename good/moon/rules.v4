@@ -1,0 +1,21 @@
+# moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. INPUT is what reaches programs on the box itself; a packet to a port Docker publishes for a container is rewritten to the container before INPUT and crosses FORWARD, which Docker manages.
+*filter
+:INPUT DROP [0:0]
+# Docker sets FORWARD to DROP when it starts and admits its containers' traffic with its own chains; the file says the same, so the policy is the same before and after Docker starts.
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+# Everything on the loopback interface.
+-A INPUT -i lo -j ACCEPT
+# Replies to connections the box opened, and errors about them.
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# Ping, and the ICMP errors path MTU discovery depends on.
+-A INPUT -p icmp -j ACCEPT
+# DHCP replies: the provider assigns the box's IPv4 by DHCP, and a renewal's answer arrives on port 68.
+-A INPUT -p udp --dport 68 -j ACCEPT
+# ssh.
+-A INPUT -p tcp --dport 22 -j ACCEPT
+# Caddy: HTTP for certificate challenges and redirects, HTTPS over TCP, and HTTP/3 over UDP.
+-A INPUT -p tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp --dport 443 -j ACCEPT
+-A INPUT -p udp --dport 443 -j ACCEPT
+COMMIT

@@ -186,7 +186,7 @@ The installers go as an account with no shell at all: chrooted to the downloads 
 
 ## Running this against your own server
 
-The destination comes from upload.hide.env in this workspace, which is gitignored, so a fresh clone will not have one and readServer will say which values are missing and stop. Write it yourself, five values and no logic:
+The destination comes from .env at the repository root, which is gitignored, so a fresh clone will not have one and readServer will say which values are missing and stop. It is the one file that names the server: upload.js beside it reads the sites' values from the same file. Write it yourself, five values for the installers and no logic:
 
 	DEPLOY_HOST=files.example.com
 	DEPLOY_PORT=22
@@ -196,7 +196,7 @@ The destination comes from upload.hide.env in this workspace, which is gitignore
 
 DEPLOY_FILES_PATH is written as the chrooted account sees it: its own directory is its filesystem root. Write the absolute path the server shows everyone else instead, and scp fails with no such file or directory, since inside the chroot that path does not exist. Keep the trailing slash, which turns a missing directory into an error rather than a file written by that name. DEPLOY_FILES_KEY is a full path rather than one starting with ~, because scp is started from an argument array with no shell to expand the tilde; naming the key, with IdentitiesOnly beside it, means ssh offers that key and no other, not even one loaded in ssh-agent.
 
-The name is chosen so Vite never reads it. Vite loads .env, .env.local, and .env.[mode] from a workspace it builds, and copies any VITE_-prefixed value into the client bundle; this workspace is one Vite builds, and upload.hide.env is none of those names. Node does not read it on its own either: the package.json scripts pass --env-file-if-exists, which is why this runs as pnpm upload rather than node scripts.js. The tolerant spelling is deliberate, because plain --env-file makes node refuse to start when the file is absent, before readServer can say anything useful.
+The file sits above every workspace on purpose. Vite loads a .env from the workspace it builds and copies any VITE_-prefixed value into the client bundle, and Nuxt, VitePress and the Tauri CLI each read one from their own folder the same way; a .env above all of them is outside what any of them looks at. Node does not read it on its own: the package.json scripts pass --env-file-if-exists, which is why this runs as pnpm upload rather than node scripts.js. The tolerant spelling is deliberate, because plain --env-file makes node refuse to start when the file is absent, before readServer can say anything useful.
 */
 function upload() {
 	let {names, demanded} = chosenTargets()
@@ -228,7 +228,7 @@ function upload() {
 function readServer() {//gather the destination from the environment, naming whatever the script did not fill
 	let required = ['DEPLOY_HOST', 'DEPLOY_PORT', 'DEPLOY_FILES_USER', 'DEPLOY_FILES_PATH', 'DEPLOY_FILES_KEY']
 	let missing = required.filter(name => !process.env[name])
-	if (missing.length) throw new Error(`upload.hide.env in the desktop workspace is missing ${missing.join(', ')}; see the comment above upload in scripts.js, and run this as pnpm upload rather than node, so the env file is passed`)
+	if (missing.length) throw new Error(`.env at the repository root is missing ${missing.join(', ')}; see the comment above upload in scripts.js, and run this as pnpm upload rather than node, so the env file is passed`)
 	return {
 		host: process.env.DEPLOY_HOST,
 		port: process.env.DEPLOY_PORT,

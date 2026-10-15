@@ -1,6 +1,7 @@
-import {execFileSync} from 'node:child_process'
+import {execFileSync, spawn, spawnSync} from 'node:child_process'
 import {cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync} from 'node:fs'
 import {basename, join} from 'node:path'
+import {createInterface} from 'node:readline'
 import {fileURLToPath} from 'node:url'
 
 /*
@@ -24,11 +25,11 @@ Source is mounted read only. A container cannot write into the working tree on t
 
 ## The three containers, and the checks after them
 
-	ftorrent-tauri:arm64     .deb for aarch64            native on Apple Silicon, so it runs first and fails fast
+	ftorrent-tauri:arm64     .deb for aarch64            native on Apple Silicon, the fast leg
 	ftorrent-tauri:amd64     .deb and .rpm for x86_64    emulated, several times slower, the ones most users want
 	ftorrent-flatpak:amd64   .flatpak for x86_64         built from the amd64 .deb, engine and all
 
-The two Tauri containers are the same image at two architectures. The Flatpak container consumes what the amd64 one produces, which is why build runs them in that order: the Flatpak wraps the deb rather than compiling anything. The rpm comes out of the same emulated run as the amd64 deb, one more word in the bundles argument, so asking for it on its own would mean paying for that slow build twice; distro is the word for those two together.
+The two Tauri containers are the same image at two architectures, and they run at the same time: the native arm64 leg finishes under the emulated amd64 one, which is several times as long, and the two cargo builds cost each other a little for the minutes they share the cores. Each container's lines reach the terminal prefixed with its architecture, since two writers interleave otherwise, and a container that fails stops the other, so the fast leg keeps its job as the early warning: a wrong image, a broken lockfile, or an engine that will not freeze fails arm64 in a couple of minutes and the emulated leg is stopped rather than run on. The Flatpak container waits for the amd64 deb, which it wraps rather than compiling anything. The rpm comes out of the same emulated run as the amd64 deb, one more word in the bundles argument, so asking for it on its own would mean paying for that slow build twice; distro is the word for those two together.
 
 After them, containers that are not ours: a bare debian:12-slim unpacks each deb and a bare fedora:40 unpacks the rpm, with no toolchain and nothing of ours installed, and each runs the frozen engine from where the bundler put it. That answers the one question a build container cannot, whether the engine runs on a system that has only glibc and the base libraries, which is what the manylinux wheel and python-build-standalone both promise. The Flatpak gets a lighter check inside its own wrap, because its sandbox cannot start under Rosetta; none of these can show a window, so the app itself is still smoke tested only on a real Linux machine.
 
@@ -53,13 +54,56 @@ const images = {
 //what goes into a container, said positively. desktop is copied whole except for the names below, which are all things a build makes rather than things a build needs
 const whitelist = ['package.json', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', 'desktop']
 const leaveBehind = ['node_modules', 'target', 'dist', 'build', '.venv', 'release', '.stage', 'linux', '.DS_Store']
+function leftBehind(name) { return leaveBehind.includes(name) || name.includes('.hide.') }//by name, or by the .hide. segment that marks a private file anywhere in the repository, so a note or a deploy value beside the source never reaches a container
 
 function run(args, options = {}) {//one place that shells out, so every docker invocation looks the same
 	execFileSync('docker', args, {stdio: 'inherit', ...options})
 }
 
-//what a container runs is mounted rather than baked, so a change to a build step takes effect on the next run instead of on the next image build. It is also what keeps an image honestly the toolchain and nothing else
-function inside(script) { return ['--entrypoint', 'sh', '-v', `${join(here, script)}:/build.sh:ro`] }
+//what a container runs is mounted rather than baked, so a change to a build step takes effect on the next run instead of on the next image build. It is also what keeps an image honestly the toolchain and nothing else. The two scripts of ours are Python; the two bare-image checks are shell, because a bare image has no Python and putting one there would carry the libraries the check exists to find missing
+function inside(script) {
+	let python = script.endsWith('.py')
+	return ['--entrypoint', python ? 'python3' : 'sh', '-v', `${join(here, script)}:${entry(script)}:ro`]
+}
+function entry(script) { return script.endsWith('.py') ? '/build.py' : '/build.sh' }//where inside mounts a script, and the argument the container is started with
+
+//each step's wall time, printed when the command is done, so the figure in the README is a measurement. A leg is one of two containers that ran at the same time: its own time is shown under the step's, indented, and left out of the total, which is wall time
+const took = []
+async function timed(label, step, leg = false) {
+	let started = Date.now(), before = took.length
+	let result = await step()
+	let within = leg ? [] : took.splice(before)//legs timed inside this step, moved to sit under it rather than above it, since each finished before the step did; a leg gathers nothing, so two legs running at once leave each other alone
+	took.push({label, seconds: Math.round((Date.now() - started) / 1000), leg}, ...within)
+	return result
+}
+function clock(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` }
+function times() {
+	if (!took.length) return
+	say('')
+	say('time:')
+	for (let one of took) say('    ' + (one.leg ? '  ' + one.label : one.label).padEnd(26) + clock(one.seconds))
+	say('    ' + 'total'.padEnd(26) + clock(took.filter(one => !one.leg).reduce((sum, one) => sum + one.seconds, 0)))
+}
+
+//a container run beside another: started with a name, its lines prefixed so two containers can share a terminal, and resolved as a result rather than thrown, so the caller sees both outcomes
+function container(name, prefix, args) {
+	let child = spawn('docker', ['run', '--rm', '--name', name, ...args], {stdio: ['ignore', 'pipe', 'pipe']})
+	for (let stream of [child.stdout, child.stderr]) createInterface({input: stream}).on('line', line => process.stdout.write(`${prefix} | ${line}\n`))
+	return new Promise(resolve => {
+		child.on('error', e => resolve({success: false, outcome: `docker could not start: ${e.message}`}))
+		child.on('close', code => resolve(code == 0 ? {success: true} : {success: false, outcome: `${prefix} exited ${code}`}))
+	})
+}
+
+//two containers at once, and the other stopped as soon as one fails, so a failure found by the fast native leg never leaves the slow emulated one running on; both results come back, and a failure throws with both outcomes
+async function together(first, second) {
+	let names = [first.name, second.name]
+	let stopOthers = name => { for (let other of names) if (other != name) spawnSync('docker', ['stop', other], {stdio: 'ignore'}) }//stopping a container that has already exited is a harmless error
+	let watched = [first, second].map(one => timed(one.label, () => container(one.name, one.prefix, one.args), true).then(result => { if (!result.success) stopOthers(one.name); return result }))
+	let results = await Promise.all(watched)
+	let failed = results.filter(result => !result.success)
+	if (failed.length) throw new Error(failed.map(result => result.outcome).join('; '))
+}
 
 function say(line) { console.log(line) }
 
@@ -76,10 +120,10 @@ function stageSource() {
 		//a directory is copied one child at a time rather than whole, because this folder lives inside the desktop folder: node refuses to copy a directory into a descendant of itself, and skipping the child that holds the staging area is what makes the rest of the copy safe
 		mkdirSync(to, {recursive: true})
 		for (let child of readdirSync(from)) {
-			if (leaveBehind.includes(child)) continue
+			if (leftBehind(child)) continue
 			cpSync(join(from, child), join(to, child), {
 				recursive: true,
-				filter: source => !leaveBehind.includes(basename(source)),//node_modules and target are the two that matter most: both are large, and both hold binaries compiled for macOS that would be worse than useless to a Linux container
+				filter: source => !leftBehind(basename(source)),//node_modules and target are the two that matter most: both are large, and both hold binaries compiled for macOS that would be worse than useless to a Linux container
 			})
 		}
 	}
@@ -94,27 +138,27 @@ function buildImage(tag) {
 
 function buildImages() { for (let tag of Object.keys(images)) buildImage(tag) }
 
-//one tauri run. The bundle list is an argument rather than a change to tauri.conf.json, so what the Mac and the Windows box are told to build stays exactly as it was
-function tauri(tag, bundles) {
-	let image = images[tag]
+//one tauri run, described for together rather than started here. The bundle list is an argument rather than a change to tauri.conf.json, so what the Mac and the Windows box are told to build stays exactly as it was. The container's name carries this process's id, so a run killed partway leaves nothing for the next run to collide with
+function tauri(architecture, bundles) {
+	let tag = `ftorrent-tauri:${architecture}`
 	say(`==> ${tag}  --bundles ${bundles}`)
 	mkdirSync(release, {recursive: true})
-	run(['run', '--rm', '--platform', image.platform,
-		...inside('inside-tauri.sh'),
+	return {name: `ftorrent-${architecture}-${process.pid}`, prefix: architecture, label: `${architecture} ${bundles.replace(',', ' and ')}`, args: ['--platform', images[tag].platform,
+		...inside('inside-tauri.py'),
 		'-v', `${stage}:/src:ro`,
 		'-v', `${release}:/out`,
-		tag, '/build.sh', bundles])
+		tag, entry('inside-tauri.py'), bundles]}
 }
 
-//wrap the amd64 deb into a flatpak. --privileged is for one narrow thing: build-export validates the icon inside bubblewrap, which needs a namespace an ordinary container cannot make; inside-flatpak.sh carries the whole account, including why flatpak-builder is not what runs here
+//wrap the amd64 deb into a flatpak. --privileged is for one narrow thing: build-export validates the icon inside bubblewrap, which needs a namespace an ordinary container cannot make; inside-flatpak.py carries the whole account, including why flatpak-builder is not what runs here
 function flatpak() {
 	let deb = newestIn(release, /^ftorrent_.*_amd64\.deb$/)
 	if (!deb) throw new Error('the flatpak wraps the x86_64 deb and there is not one in release/ yet; run pnpm build-distro first')
 	say(`==> ftorrent-flatpak:amd64  wrapping ${deb}`)
 	run(['run', '--rm', '--platform', 'linux/amd64', '--privileged',
-		...inside('inside-flatpak.sh'),
+		...inside('inside-flatpak.py'),
 		'-v', `${release}:/out`,
-		'ftorrent-flatpak:amd64', '/build.sh', deb])
+		'ftorrent-flatpak:amd64', entry('inside-flatpak.py'), deb])
 }
 
 //unpack a built deb on a bare debian and run the engine from where the bundler put it; inside-check.sh says what that proves
@@ -125,7 +169,7 @@ function checkDeb(platform, arch) {
 	run(['run', '--rm', '--platform', platform,
 		...inside('inside-check.sh'),
 		'-v', `${release}:/out:ro`,
-		'debian:12-slim', '/build.sh', deb])
+		'debian:12-slim', entry('inside-check.sh'), deb])
 }
 
 //the same for the rpm on a bare fedora, the oldest one the glibc floor reaches, so the check reads the floor from the other side; inside-check-rpm.sh says how it unpacks without cpio
@@ -136,7 +180,7 @@ function checkRpm() {
 	run(['run', '--rm', '--platform', 'linux/amd64',
 		...inside('inside-check-rpm.sh'),
 		'-v', `${release}:/out:ro`,
-		'fedora:40', '/build.sh', rpm])
+		'fedora:40', entry('inside-check-rpm.sh'), rpm])
 }
 
 //find a build output in release/ by pattern, newest first. The patterns are anchored to the names tauri and the flatpak script write, ftorrent_ with an underscore and ftorrent- with a hyphen, which is what tells a build output from the published copy pnpm hash stages beside it under a dotted name
@@ -154,20 +198,20 @@ The steps build runs, in the order it runs them, each also reachable on its own 
 
 The images are rebuilt every time rather than being something a person has to remember. Docker's layer cache is what makes that free: with nothing changed it is a few seconds, and when a version inside a Dockerfile has moved, the affected image rebuilds itself and this build uses the new toolchain. Nobody has to know that happened, which is the point, because there is no way they could have.
 
-arm64 first on purpose: it runs native on Apple Silicon where amd64 runs emulated, so anything wrong with the image, the whitelist, a lockfile, or the engine surfaces in a couple of minutes rather than twenty. The rpm rides in the amd64 run because it comes from the same compile. The flatpak goes last among the builds because it consumes the amd64 deb.
+The two Tauri containers run together, the essay above says why, and the native arm64 leg still fails first and stops the other when something is wrong. The rpm rides in the amd64 run because it comes from the same compile. The flatpak goes after both because it consumes the amd64 deb, and the checks after everything.
 */
 const steps = {
-	images:  () => buildImages(),
-	distro:  () => { stageSource(); tauri('ftorrent-tauri:arm64', 'deb'); tauri('ftorrent-tauri:amd64', 'deb,rpm') },
-	flatpak: () => flatpak(),
-	check:   () => { checkDeb('linux/arm64', 'arm64'); checkDeb('linux/amd64', 'amd64'); checkRpm() },
+	images:  () => timed('images', buildImages),
+	distro:  async () => { stageSource(); await timed('both tauri containers', () => together(tauri('arm64', 'deb'), tauri('amd64', 'deb,rpm'))) },
+	flatpak: () => timed('flatpak', flatpak),
+	check:   () => timed('checks', () => { checkDeb('linux/arm64', 'arm64'); checkDeb('linux/amd64', 'amd64'); checkRpm() }),
 }
 
-function build() {
-	steps.images()
-	steps.distro()
-	steps.flatpak()
-	steps.check()
+async function build() {
+	await steps.images()
+	await steps.distro()
+	await steps.flatpak()
+	await steps.check()
 	report()
 }
 
@@ -195,9 +239,10 @@ const commands = {
 	'check':         () => steps.check(),
 }
 
-function main() {//one gate in, one gate out
+async function main() {//one gate in, one gate out
 	let command = commands[process.argv[2]]
 	if (!command) throw new Error('say which: ' + Object.keys(commands).join(', '))
-	command()
+	await command()
+	times()
 }
-try { main() } catch (e) { console.error('🚧 Error:', e.message || e); process.exitCode = 1 }
+main().catch(e => { console.error('🚧 Error:', e.message || e); process.exitCode = 1 })

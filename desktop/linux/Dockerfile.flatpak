@@ -2,7 +2,7 @@
 #
 # A Flatpak is less another package format than a different bargain: the application ships with its libraries and runs in a sandbox, so it does not care what the host has installed. That is what makes it the one package here that reaches SteamOS and Bazzite, whose root filesystems are read-only or atomic and where a .deb or an .rpm cannot be installed at all.
 #
-# This image is the odd one out. It needs no Rust, no Node, and no uv, because it consumes the .deb the Tauri image already made, engine and all, rather than compiling anything; and no flatpak-builder either, for the reason inside-flatpak.sh sets out. What it does need is the GNOME runtime and SDK to build against, and those are some five gigabytes, which is exactly why they are installed here, in the durable layer, rather than fetched again by every ephemeral build. It is by a wide margin the largest of the three images.
+# This image is the odd one out. It needs no Rust, no Node, and no uv, because it consumes the .deb the Tauri image already made, engine and all, rather than compiling anything; and no flatpak-builder either, for the reason inside-flatpak.py sets out. What it does need is the GNOME runtime and SDK to build against, and those are some five gigabytes, which is exactly why they are installed here, in the durable layer, rather than fetched again by every ephemeral build. It is by a wide margin the largest of the three images.
 FROM debian:12-slim
 
 # flatpak for the build commands, binutils for ar, which unpacks the .deb, and ca-certificates so flatpak can reach Flathub below.
@@ -17,5 +17,9 @@ ARG GNOME_VERSION=49
 RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo \
  && flatpak install -y --noninteractive flathub \
       "org.gnome.Platform//${GNOME_VERSION}" "org.gnome.Sdk//${GNOME_VERSION}"
+
+# python3 runs inside-flatpak.py. It has a layer of its own below the runtime rather than a word in the apt line above, because Docker rebuilds every layer after a changed one: added up there, it would have fetched the five gigabytes of runtime again, and so would any later change to it.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+ && rm -rf /var/lib/apt/lists/*
 
 # No script is baked in. What a container does is mounted at run time by build.js, because an image here is the toolchain and nothing else: editing a build step should not mean rebuilding one.

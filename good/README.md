@@ -5,7 +5,7 @@ _ftorrent/good/README.md [good.ftorrent.com](https://good.ftorrent.com)_
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 4.8
 > <br>Created: 2026-Jul
-> <br>Last reviewed: 2026-Jul
+> <br>Last reviewed: 2026-Oct
 > <br>Go: 1.24
 > <br>coturn: [coturn/coturn](https://hub.docker.com/r/coturn/coturn) 4.14.0 (STUN)
 > <br>Docker Engine: 29
@@ -109,7 +109,7 @@ The STUN server takes the opposite path: nothing sits in front of it. Docker pub
 - **Running.** The page, the three reflection names, and the dual-stack verdict they produce. A globally routable IPv6 address usually means a peer can reach you directly, without any of the port gymnastics IPv4 requires.
 - **Running, but our page doesn't call it yet.** `stun.ftorrent.com`. The server is up and anyone can point a WebRTC configuration at it today. Wiring the page to it is the next thing we build, and it needs no new infrastructure.
 - **Reserved.** The `pion` container. [`pion/Dockerfile`](pion/Dockerfile) is written and there's no Go source beside it yet, so the service can't build — [`docker-compose.yml`](docker-compose.yml) defines it anyway to hold its addressing steady until we write it. That's why you start the live services by name rather than all at once.
-- **Planned.** Telling you whether your router assigns a consistent port, which decides whether hole punching works. Answering that means comparing what two STUN servers in different places see, so we'll stand a second one up on a small VPS — a DigitalOcean droplet, a Hetzner box, or a Linode — and publish it as `hood.ftorrent.com`. That name already resolves to `192.0.2.1` and `2001:db8::1`, addresses the IETF reserved for documentation, so a name we haven't built behind can't be quietly claimed by somebody else.
+- **Planned.** Telling you whether your router assigns a consistent port, which decides whether hole punching works. Answering that means comparing what two STUN servers in different places see, so we'll stand a second one up on a small virtual server at another place on the internet, as `moon.ftorrent.com`.
 - **Planned.** The measurements only a desktop application can make: binding a real listener to prove that unsolicited packets arrive, asking the router directly for a port mapping, and reading the device's own network interfaces to explain the `fe80:` and `fd00:` addresses that lead so many people to believe they have working IPv6.
 
 We ship the part we can stand behind and grow from there.
