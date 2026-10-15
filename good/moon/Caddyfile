@@ -1,0 +1,5 @@
+# Caddy gets and renews a certificate for each name by itself, once the name's DNS points at this box.
+moon.ftorrent.com, ip4.moon.ftorrent.com, ip6.moon.ftorrent.com {
+	root * /var/www/moon
+	file_server
+}

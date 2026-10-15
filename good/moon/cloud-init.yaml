@@ -1,0 +1,35 @@
+#cloud-config
+# moon's user data, pasted into the provider's dashboard when creating the box.
+
+hostname: moon
+timezone: Etc/UTC
+ssh_pwauth: false
+disable_root: false
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+packages:
+  - caddy
+  - docker.io
+  - docker-compose-v2
+  - unattended-upgrades
+  - rsync
+
+write_files:
+  # Daily unattended upgrades from security and updates, and a restart at 04:00 UTC when one is needed. dpkg keeps our edited Caddyfile when a caddy update ships its own.
+  - path: /etc/apt/apt.conf.d/52moon
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+      Unattended-Upgrade::Allowed-Origins:: "${distro_id}:${distro_codename}-updates";
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+      Dpkg::Options:: "--force-confdef";
+      Dpkg::Options:: "--force-confold";
+  # The local log driver rotates container logs; the default one grows until the disk is full.
+  - path: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "local"
+      }

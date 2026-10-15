@@ -209,6 +209,16 @@ A number rather than 24px, because the spacing is a proportion of the text: if t
 	text-decoration-style: dotted;
 }
 
+/* The previous and next boxes at the foot of a page fill with 151C under the pointer, with their words in white, the way the brand button is drawn. VitePress only turns the box's border orange, a one pixel change that barely reads as an answer to the pointer. */
+.VPDocFooter .pager-link:hover {
+	border-color: var(--vp-c-brand-1);
+	background-color: var(--vp-c-brand-1);
+}
+.VPDocFooter .pager-link:hover .title,
+.VPDocFooter .pager-link:hover .desc {
+	color: var(--vp-c-white);
+}
+
 /* A line of facts under a download or an install command: the face, size and weight code is set in, without the chip the theme gives inline code, because a byte count is a fact rather than a token to type. DownloadLink.vue and DownloadCommand.vue both set it, which is why it is here rather than scoped in either. */
 .detail {
 	font-family: var(--vp-font-family-mono);
