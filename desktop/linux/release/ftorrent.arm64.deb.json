@@ -2,7 +2,7 @@
 	"file": "ftorrent.arm64.deb",
 	"version": "0.1.0",
 	"arch": "arm64",
-	"bytes": 25628554,
-	"sha256": "711a0c8c2c2c6c490cb1d47a3a54a823443d701b4ef8598ae7e3c657f57219ee",
-	"date": "2026-10-02"
+	"bytes": 25678616,
+	"sha256": "3a69cc8e82ed279424ef45de35b68d7fee5e69d9032cf6ae1b1d651ff1f85a39",
+	"date": "2026-10-16"
 }
