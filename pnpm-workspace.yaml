@@ -16,6 +16,7 @@ packages:
 
   # good.ftorrent.com — IPv4/IPv6 connectivity diagnostic tool
   - good
+  - good/page    # the page's workspace: a placeholder that uploads good/static/index.html until Good2a builds the page here
 
   # Desktop BitTorrent and WebTorrent client (Tauri) for Mac, Windows, and Linux
   - desktop

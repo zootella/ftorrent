@@ -1,0 +1,11 @@
+{
+	"name": "good-page",
+	"description": "The page at good.ftorrent.com; a placeholder workspace until Good2a builds the page here with Vite",
+	"homepage": "https://good.ftorrent.com/",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"upload": "mkdir -p dist && cp ../static/index.html dist/ && node --env-file-if-exists=../../.env ../../upload.js good"
+	}
+}

@@ -58,6 +58,8 @@ importers:
 
   good: {}
 
+  good/page: {}
+
   open/page:
     dependencies:
       three:

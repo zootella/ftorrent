@@ -122,6 +122,7 @@ good/
 ├── go-ip/               the ip reflector — Dockerfile, go.mod, main.go
 ├── coturn/              turnserver.conf — coturn in plain-STUN-only mode
 ├── pion/                a WebRTC peer, deferred: a Dockerfile only, until its Go source lands
+├── page/                the page's workspace: pnpm upload there ships the page, and Vite builds it there later
 └── static/index.html    the page good.ftorrent.com serves
 ```
 
@@ -129,4 +130,4 @@ good/
 
 Both running containers are hardened the same way as the rest of the ftorrent deployment, set in [`docker-compose.yml`](docker-compose.yml): an unprivileged user, a read-only root filesystem, every Linux capability dropped, and tight memory and process limits. The same posture and reasoning appear in the [tracker's guide](https://github.com/zootella/ftorrent/blob/master/open/README.md), which covers it in more depth. Both services are also stateless — they answer a request and keep nothing, so nothing has to survive a restart and there's no database to run.
 
-The page is plain static files with no build step, served directly by the proxy. Bring the live services up with `docker compose up -d go-ip coturn`; the pion slot stays down until its source arrives.
+The page is one static file with no build step, served directly by the proxy. `pnpm upload` in `page/` copies it into `page/dist` and mirrors that to the server through `upload.js` at the repository root, the same way the other sites ship. Bring the live services up with `docker compose up -d go-ip coturn`; the pion slot stays down until its source arrives.
