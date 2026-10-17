@@ -1,70 +1,52 @@
 ---
 title: Names and Numbers
-description: Where the ftorrent desktop client connects on its own, and what it says about itself when it gets there — every server it reaches, every field it sends, who runs what, and where each is set.
+description: Every name and number built into the ftorrent desktop client, the servers it contacts, the trackers it writes into new torrents, the names it calls itself, and the file each one is set in.
 ---
 
 # Names and Numbers
 
-A peer-to-peer client still needs a few servers, and it introduces itself wherever it goes. This page is the audit of both. The first half lists every server the desktop client reaches without the user naming it: who runs each one, why it is on the list, and where in the code it is written. The second half lists what the client says about itself on the way: the names it carries and every field a tracker or a peer receives. If a server is not on this page, the client does not contact it on its own; if a field is not on this page, the client does not send it.
+The desktop client is peer-to-peer, and it still carries a short list of fixed names: the servers it contacts, the trackers it writes into new torrents, the product's own names, and the way it introduces itself to trackers and peers. This page lists each one, the file it's set in, and what uses it.
 
-Three things are true throughout. Our own service comes first in every list, because we run public infrastructure and use it ourselves. Beside it stand either a well-known provider or the servers the BitTorrent world already treats as universal. And nothing is hidden: no analytics, no telemetry, no crash reporting, no fonts or scripts fetched from anyone. What the user adds, the trackers named in a torrent, the peers a swarm introduces, their own router, is theirs and is not listed here.
+- Renaming a fork? Start with the product's names: two files hold them, and the list under them names every file that spells one out by hand.
+- Checking what the client contacts? Read the servers. Today the update check and the Connection tab are the two in use, since the engine creates no libtorrent session yet.
 
-## Where the client connects
+## The product's names
 
-- One table in the engine's program, `desktop/engine/engine.py`, holds the three lists below, with a comment on every entry.
-- The engine hands them to libtorrent when it creates its session, through libtorrent's own settings, and reports the whole table in its `ready` line, so the app can show it and anyone running the engine by hand sees the same list this page publishes.
-- The Windows installer's is set in `desktop/src-tauri/tauri.conf.json`, and the update check builds its addresses from the home page there; its own section below says how.
+| Name | Value | Set in | Used for |
+|---|---|---|---|
+| `brandName` | `ftorrent` | `productName` in `desktop/src-tauri/tauri.conf.json` | what people read: the window title, the tray, the menus, the installer, the Start menu shortcut, the Windows ProgIDs, the install folder, the default downloads folder |
+| `brandStem` | `ftorrent` | `name` in `desktop/src-tauri/Cargo.toml` | what files carry: the executable, the engine `ftorrent-engine`, the settings file `ftorrent.toml`, the lock file, the log folder, the `.ftorrent` extension, the `ftorrent:` scheme, the published installers |
+| identifier | `com.ftorrent.ftorrent` | `identifier` in `desktop/src-tauri/tauri.conf.json` | the data folder, the Mac bundle, the Windows AppUserModelID, the Flatpak |
+| `urlHome` | `ftorrent.com` | `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` | the About and Settings links, the update check's addresses |
+| `urlHelp` | `docs.ftorrent.com/help` | `desktop/src/brand.js`, from `urlHome` | the Help menu |
 
-The engine creates no session yet, so today none of these is contacted. The table is written ahead of the code that uses it, on purpose, so the list is decided in the open before the first connection is made.
+The page reads the two source files when Vite builds it, in `desktop/src/brand.js`, and every other page file imports the names from there. The Rust core reads them from its package info, which Tauri fills from the same two files, and the engine receives `brandName` in the first message the app sends it. The build scripts read the two files themselves: `desktop/scripts.js` for the published names, `desktop/dmg.js` for the `.app` and the dmg, `desktop/win-setup/win-setup.js`, which compiles both names into the setup program, and `desktop/win-setup/registry.js` for the uninstall list.
 
-### STUN
+- The two names are the same string here, and the code keeps them apart because a fork's may differ: a product called Candy Crush may be `candycrush` or `candy-crush` inside, and nothing derives one from the other.
+- The identifier changes with the two names, and only before a fork's first release: it names the data folder and the Mac bundle, so changing it later leaves the old ones behind on every machine.
+- `docs.ftorrent.com/help` is a fixed route that forwards to whichever page help lives on, set in `docs/docs/help/index.md`, so a copy that never updates still reaches current help.
 
-WebTorrent connects browser peers over WebRTC, and WebRTC begins by asking a STUN server what public address the connection will appear from. libtorrent takes exactly one STUN server, so the first entry is the one it uses; the others are the order the engine will fall back through once it can test them, and the choices a settings page will offer.
+These files spell a name out by hand, because nothing can read the sources there:
 
-| Server | Run by | Why it is here |
-|---|---|---|
-| `stun.ftorrent.com:3478` | ftorrent, on our own infrastructure | ours; we eat our own cooking |
-| `stun.cloudflare.com:3478` | Cloudflare | a well-known provider with a public STUN service |
-| `stun.l.google.com:19302` | Google | libtorrent's own default, kept as the last resort |
+- `desktop/src-tauri/tauri.conf.json`: `publisher`, `copyright`, and the signing identity `ftorrent`. In `bundle.resources`, the engine's folder `ftorrent-engine`, on both sides of the entry, and the Start tile's `ftorrent.VisualElementsManifest.xml`, which Windows requires to match the executable's name, so rename the file in `desktop/src-tauri/icons/tile/` with it. The Linux desktop template `ftorrent.desktop.hbs` can keep its name, as long as the entries and the file agree.
+- `desktop/src-tauri/Cargo.toml`: the library `ftorrent_lib` under `[lib]`. Leave Tauri's `mainBinaryName` unset, so the crate's name stays the executable's.
+- `desktop/src-tauri/macos/Info.plist`: the type names `ftorrent File` and `ftorrent Link`, the type identifier `com.ftorrent.file`, the extension `ftorrent`, the scheme `ftorrent`, and the sentence macOS shows when the client first reaches the local network.
+- `desktop/engine/ftorrent-engine.spec`: `ftorrent-engine`, in the two `name=` lines and the `output` path. Rename the file with it, and the `engine` script in `desktop/package.json` that names it, and `name` in `desktop/engine/pyproject.toml`. `engine.rs` finds the engine by the crate's name and `-engine`, so a mismatch shows only when the engine fails to start.
+- `desktop/engine/engine.py`: the client code `FF`, in `fingerprint()`. Pick two letters that are in none of the tables at the end of this page.
+- `desktop/icon-studio/Update-Icons.ps1`: `ftorrent.ico`, the studio's own copy of the application icon.
+- `desktop/linux/build.js`, `inside-check.sh`, `inside-check-rpm.sh`, `inside-tauri.py`, and `inside-flatpak.py`: the image tags, the package name patterns, the engine's path, and the Flatpak identifier `com.ftorrent.ftorrent`.
+- `desktop/release/` and `desktop/linux/release/`: the sidecars of ftorrent's published files, named for them. A fork's first `pnpm hash` writes its own beside them, and the old ones can go.
 
-A STUN request carries no torrent and no content; it asks a server to reflect an address back.
-
-### DHT bootstrap
-
-A client with an empty routing table has to learn one node from somewhere, and the convention since BEP 5 is a short list of well-known nodes with high uptime. libtorrent takes the whole list. After the first start the client saves its routing table, and the bootstrap nodes are not needed again.
-
-| Node | Run by | Why it is here |
-|---|---|---|
-| `dht.ftorrent.com:51420` | ftorrent | ours; a bootstrap node run as public infrastructure |
-| `dht.libtorrent.org:25401` | libtorrent's author | libtorrent's own default |
-| `dht.transmissionbt.com:6881` | the Transmission project | an open-source client project's node, long established |
-
-Two nodes most clients also list are not here: `router.bittorrent.com` and `router.utorrent.com`, run by Rainberry, the company that was BitTorrent, Inc. and has been owned by the Tron Foundation since 2018. We prefer operators whose incentives sit with the network's users, and when we checked, neither answered.
-
-### Trackers
-
-These are added to a torrent that ftorrent creates, so a new torrent is reachable from its first minute. Whether they are also added to torrents the user brings is a decision for the add-torrent story, and this page will say what was decided.
-
-| Tracker | Run by | Why it is here |
-|---|---|---|
-| `udp://open.ftorrent.com:443/announce` | ftorrent | ours, on all three protocols |
-| `https://open.ftorrent.com/announce` | ftorrent | |
-| `wss://open.ftorrent.com` | ftorrent | |
-| `wss://tracker.webtorrent.dev` | the WebTorrent project | the reference implementation's own tracker, on Aquatic like ours |
-| `wss://tracker.openwebtorrent.com` | OpenWebTorrent | the longest-running WebTorrent tracker, the default in the browser clients |
-| `udp://tracker.opentrackr.org:1337/announce` | not publicly named | the most widely used open tracker, in nearly every client's list |
-
-Four candidates did not make the list. `wss://tracker.btorrent.xyz` and `udp://explodie.org` did not answer when we checked, nor did `exodus.desync.com` or `tracker.openbittorrent.com`; `tracker.torrent.eu.org` and `open.stealth.si` answered well but their operators are not named anywhere we could find, and one such entry is enough.
-
-### Inherited, and the platform's
-
-**The Windows installer.** ftorrent's own setup program, `desktop/win-setup/setup.c`, fetches nothing. On a Windows machine without the WebView2 runtime, which every Windows 11 and updated Windows 10 has, it opens Microsoft's page for the runtime in the user's browser, `https://developer.microsoft.com/microsoft-edge/webview2/`, and says so in a dialog; that is the one address it knows, and the only time it is opened.
-
-**The operating system's own.** Names are resolved by whatever DNS the user's system is configured to use; the client never chooses a resolver. HTTPS trackers are checked against the system's trust roots; the update check is the one exception, carrying its own, as its section says. The web view that draws the window is the platform's, WebKit on macOS and Linux and WebView2 on Windows, and it updates the way the platform updates it.
+## Servers
 
 ### The update check
 
-An installed copy on a Mac or Windows asks `ftorrent.com` which version is newest: on the Settings page's button, and, with the automatic check on, at startup and at random a day or two after each answer. It fetches one small file, `https://ftorrent.com/ftorrent.app.zip.json` on a Mac and `https://ftorrent.com/ftorrent.exe.json` on Windows, the sidecar published beside the file that platform updates from, over HTTPS checked against Mozilla's roots compiled into the client rather than the system's, following no redirect. The request carries three headers and nothing else:
+- `https://ftorrent.com/ftorrent.app.zip.json` on a Mac, `https://ftorrent.com/ftorrent.exe.json` on Windows: the sidecar, with the newest version's number, date, size, and hash.
+- The same addresses without `.json`: the update itself, downloaded only when the user clicks to install it.
+- Built in `desktop/src/update.js` and `desktop/src/stores/update.js` from `urlHome`.
+- Asked when the user presses the Settings page's button. With `automatic = true` under `[update]` in `ftorrent.toml`, the default, also asked at the first startup and then at a random moment one to two days after each answer, which the client looks for at startup and every hour.
+- Asked only by an installed copy on a Mac or Windows. A portable copy never asks, and neither do the Linux packages, which the package manager updates.
+- Sent over HTTPS, checked against Mozilla's roots compiled into the client, following no redirect, with these headers and no others:
 
 ```
 User-Agent: ureq/3.4.2
@@ -72,72 +54,73 @@ Accept: */*
 Accept-Encoding: gzip
 ```
 
-That is the HTTP library's own user agent. Nothing in the request names the copy, its version, or the user, and the file's name is what tells the server the platform. The update itself, the same address without `.json`, downloads only on the user's click, the one click of the one-click update, with the same three headers; on Windows that file is the setup program, which the client then runs. A portable copy, or one not running from where the installer put it, never asks, and the Linux packages, which the package manager installs and updates, never ask. `automatic = false` under `[update]` in `ftorrent.toml` stops the check on its own and leaves the button. The addresses are built in `desktop/src/update.js` from `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` and the names the publishing script gives the files.
+### The Connection tab
 
-Nothing else reaches a server on its own.
+- `https://ip4.ftorrent.com/` and `https://ip6.ftorrent.com/`: each answers the address the request arrived from. The first name has only an IPv4 record and the second only an IPv6 record, so each request travels over one family.
+- Built in `desktop/src/connection.js` from `urlHome`.
+- Asked only when the user presses Check on the Connection tab, both at once, each given four seconds to answer.
+- Sent over HTTPS, checked against Mozilla's roots compiled into the client, following no redirect, with the same three headers as the update check.
 
-## What the client says about itself
+### The Windows installer
 
-Everything in this half is a libtorrent setting or a protocol field, set in the same engine table as the lists above, and the engine reports the name it will use in its `ready` line.
+- `https://developer.microsoft.com/microsoft-edge/webview2/`, set in `desktop/win-setup/setup.c`: opened in the user's browser, with a dialog saying so, only on a Windows machine without the WebView2 runtime. The setup program fetches nothing itself.
 
-### The three names
+### The engine's table
 
-A BitTorrent client names itself in three places, and each reaches a different reader.
+The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands them to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The engine creates no session yet, so none of these is contacted today.
 
-**The peer id** is twenty bytes at the front of every connection, and by the convention of [BEP 20](https://www.bittorrent.org/beps/bep_0020.html) it begins with a two-letter client code and a version, then random bytes. Clients that read only the peer id look the code up in a table. Ours is `-FF0100-`: `FF` is ftorrent's own code, and the digits are the version, one character per part, built by the engine from the version the app sends it, the same way libtorrent makes its own `-LT2110-`. The code is not yet in any table. There is no single registry; a code is registered by adding a line to each table that matters, the relationship-first way, with a shipping client behind the request, and until those lines land, a client that reads only the peer id shows the raw code and version rather than a name. We checked every table below before choosing, and `FF` appeared in none; `FT` belongs to an older client. The tables:
+**STUN.** WebTorrent uses STUN to learn the public address its WebRTC connections appear from. libtorrent takes one server, in `webtorrent_stun_server`, and the engine gives it the first. The engine doesn't fall back to the other two yet.
 
-- [BEP 20](https://www.bittorrent.org/beps/bep_0020.html), the convention itself, with the original list
-- [the community wiki's peer_id section](https://wiki.theory.org/BitTorrentSpecification#peer_id), the fullest list and the one people check first
-- [libtorrent's table](https://github.com/arvidn/libtorrent/blob/RC_2_1/src/identify_client.cpp), which every libtorrent-based client inherits, qBittorrent and Deluge among them
-- [Transmission's table](https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc)
-- [bittorrent-peerid](https://github.com/webtorrent/bittorrent-peerid), the table the WebTorrent clients use
-
-**The handshake name** is a free-text field in the extension handshake, and libtorrent-based clients show it verbatim in their peer lists, ahead of the peer-id table. **The user agent** is the HTTP header sent to trackers and web seeds. Both say `ftorrent/0.1.0 libtorrent/2.1.1.0`: brand first, then lineage, the way a browser's user agent reads, so a narrow column shows the name and a wide one the whole truth. The engine builds that string when it starts, from the app's version, which the Rust core sends it in the first line of their conversation, and from the version libtorrent reports about itself, so neither number is written a second time anywhere.
-
-### What a tracker receives
-
-An HTTP announce is one request with these fields, and each says something about the sender:
-
-| Field | What it carries |
+| Server | Run by |
 |---|---|
-| `info_hash` | which torrent, as a hash; the tracker never sees a name |
-| `peer_id` | the client code and version, then random bytes for this session |
-| `port` | where the client listens for peers |
-| `uploaded`, `downloaded`, `left`, `corrupt` | how far along this torrent is, in bytes |
-| `event` | started, stopped, or completed, when one of those just happened |
-| `key` | a random value for this session, so the tracker can match a client whose address changed |
-| `numwant` | how many peers the client would like back |
-| `compact`, `no_peer_id`, `supportcrypto` | which reply format and features the client accepts |
-| `redundant`, `trackerid`, `ip`, `ipv4`, `ipv6` | only when there is something to say: wasted bytes if that reporting is on, the tracker's own id if it gave one, an address only when the client is told to announce one or has one of the other family |
+| `stun.ftorrent.com:3478` | ftorrent |
+| `stun.cloudflare.com:3478` | Cloudflare |
+| `stun.l.google.com:19302` | Google; libtorrent's own default |
 
-The tracker also sees the address the request came from, and the user agent header above. A UDP announce carries the same facts in one fixed binary packet, with no header and no user agent. A WebSocket announce, the WebTorrent form, carries the same fields as JSON plus one more thing: WebRTC offers, each naming the addresses the peer could be reached at, local ones included, because that is how WebRTC finds a path between two machines. The tracker relays offers and answers between peers and keeps neither. That exchange is inherent to WebTorrent and identical in every browser client.
+**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these. libtorrent takes all three, in `dht_bootstrap_nodes`.
 
-### What a peer receives
+| Node | Run by |
+|---|---|
+| `dht.ftorrent.com:51420` | ftorrent |
+| `dht.libtorrent.org:25401` | libtorrent's author; libtorrent's own default |
+| `dht.transmissionbt.com:6881` | the Transmission project |
 
-The handshake carries the peer id above. The extension handshake that follows carries the handshake name, the extensions the client supports, its listen port, how many requests it will queue, whether it is only uploading, and `yourip`, the address the other peer appears to have, which is a courtesy every libtorrent-based client extends. On the DHT, a client's node id is twenty bytes derived from its own address and a random value, the BEP 42 rule that keeps ids from being chosen freely, and it is new on every start. Every DHT message also carries a version tag, `v`, and there the client is not ftorrent: libtorrent writes `LT` and its own version into that field itself, from no setting, so DHT nodes see a libtorrent client and nothing more specific.
+**Trackers.** These are written into a torrent ftorrent creates. The client creates no torrents yet.
 
-## What answered when we checked
+| Tracker | Run by |
+|---|---|
+| `udp://open.ftorrent.com:443/announce` | ftorrent |
+| `https://open.ftorrent.com/announce` | ftorrent |
+| `wss://open.ftorrent.com` | ftorrent |
+| `wss://tracker.webtorrent.dev` | the WebTorrent project |
+| `wss://tracker.openwebtorrent.com` | OpenWebTorrent |
+| `udp://tracker.opentrackr.org:1337/announce` | not publicly named |
 
-Checked 2026-Sep-22 from an Apple Silicon Mac, with the wheel the engine is frozen against. Each bootstrap node was tried alone from an empty routing table, and the count is nodes learned within twelve seconds; each tracker was announced to at once for a Creative Commons torrent.
+### The system's own
 
-```
-dht.ftorrent.com:51420          10 nodes
-dht.libtorrent.org:25401         9 nodes
-dht.transmissionbt.com:6881      9 nodes
-router.bittorrent.com:6881       0, no answer
-router.utorrent.com:6881         0, no answer
-dht.aelitis.com:6881             0, no answer
+- Names resolve through the system's DNS. The client sets no resolver.
+- The web view is the platform's: WebKit on macOS and Linux, WebView2 on Windows.
+- The web view reaches no network itself. The content security policy in `desktop/src-tauri/tauri.conf.json` admits only the app's own files and its calls into Rust, so every request goes through `net_get` in `desktop/src-tauri/src/net.rs`. The fonts ship inside the app, in `desktop/public/fonts`.
 
-udp://open.ftorrent.com:443/announce         replied, 6 peers
-https://open.ftorrent.com/announce           replied, 2 peers
-wss://open.ftorrent.com                      replied
-wss://tracker.webtorrent.dev                 replied
-wss://tracker.openwebtorrent.com             replied
-udp://tracker.opentrackr.org:1337/announce   replied, 200 peers
-```
+## Addresses
 
-## Log
+- `192.0.2.1` and `2001:db8::1`, in `desktop/src/connection.js`: addresses set aside for documentation, by RFC 5737 and RFC 3849, which name no one. The Connection tab hands each to `net_local` in `desktop/src-tauri/src/net.rs`, which connects a UDP socket to it at port 9. Connecting sends nothing; the system picks a route, and the client reads the source address the system would send from.
 
-- **2026-Sep-22.** First record: the three server lists as written into the engine, ahead of the session that will use them.
-- **2026-Sep-22, later the same day.** The page widened from the servers alone to the client's own names and the fields it sends; the handshake name and user agent set to `ftorrent/0.1.0 libtorrent/2.1.1.0`, the peer id left as libtorrent's.
-- **2026-Sep-22, later still.** The peer id became ftorrent's own, `-FF0100-`, chosen after checking the four client tables and the community wiki for the code; registration in each is the next step, when the client has users.
+No other address is written in the client, apart from the unspecified `0.0.0.0` and `::` that `net_local` binds its socket to before connecting, and `localhost:1420` in `desktop/src-tauri/tauri.conf.json`, where a development build finds Vite.
+
+## What the client calls itself
+
+- **The peer id** begins `-FF0100-`, from `fingerprint()` in `desktop/engine/engine.py`. `FF` is ftorrent's two-letter client code, the digits are the version, one per part, and random bytes for the session follow. Clients that read only the peer id look the code up in a table, and the tables are listed at the end of this page.
+- **The client name** is `ftorrent/0.1.0 libtorrent/2.1.1.0`, from `client_name()` in `desktop/engine/engine.py`, built from `brandName`, the app's version, and libtorrent's. Trackers and web seeds see it as the `User-Agent`, in libtorrent's `user_agent` setting, and peers see it in the extension handshake, in `handshake_client_version`.
+- **The DHT version tag**, `v`, is `LT` and libtorrent's version, which libtorrent writes into every DHT message itself, from no setting.
+- **The update check** sends `ureq/3.4.2`, the HTTP library's own user agent. Nothing in the request names the copy, its version, or the user.
+
+The engine reports its table, its client name, and its peer id prefix in its `ready` line, so the app and anyone running the engine by hand see the same values this page lists.
+
+The tables of client codes, where `FF` isn't listed yet:
+
+- [BEP 20](https://www.bittorrent.org/beps/bep_0020.html), the convention, with the original list
+- [the community wiki's peer_id section](https://wiki.theory.org/BitTorrentSpecification#peer_id)
+- [libtorrent's table](https://github.com/arvidn/libtorrent/blob/RC_2_1/src/identify_client.cpp), which qBittorrent and Deluge inherit
+- [Transmission's table](https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc)
+- [bittorrent-peerid](https://github.com/webtorrent/bittorrent-peerid), the WebTorrent clients' table

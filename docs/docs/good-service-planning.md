@@ -112,9 +112,9 @@ Every evening ends the same way: smoke test from a second internet connection as
 
 ## Good1: The page as it stands, and the panel's first facts
 
-- [ ] Good1a: Fetch `ip4.ftorrent.com` and `ip6.ftorrent.com` from the panel through net_get, time each, show both public addresses on the panel, and report a fetch that succeeds but takes seconds as present but unusable.
-- [ ] Good1b: Give net_local a family, so it binds a v6 socket toward a documentation address and answers the global v6 source address or that there is none.
-- [ ] Good1c: Make the text box the running diagnosis: a Run button, a header of date, version, and platform, one appended line per check with what it asked, what came back, and how long it took, and Copy taking the facts and the box together.
+- [x] Good1a: Fetch `ip4.ftorrent.com` and `ip6.ftorrent.com` from the panel through net_get, time each, show both public addresses on the panel, and report a fetch that succeeds but takes seconds as present but unusable.
+- [x] Good1b: Give net_local a family, so it binds a v6 socket toward a documentation address and answers the global v6 source address or that there is none.
+- [x] Good1c: Make the text box the running diagnosis: a Run button, a header of date, version, and platform, one appended line per check with what it asked, what came back, and how long it took, and Copy taking the facts and the box together.
 
 The page does not change. It shows the two addresses and the four-way verdict, and it stays that way until Good2 moves it onto Vite.
 

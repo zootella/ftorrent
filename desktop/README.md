@@ -138,7 +138,7 @@ The Rust core follows one rule, which the essay at the top of `src-tauri/src/lib
 - `window.rs`: the one window, made hidden from Tauri's `Ready` event rather than declared in the config, and the browser habits turned off in a release build.
 - `disk.rs`, `locks.rs`, `registry.rs`, and `launch.rs`: the disk, exclusive file locks, the Windows registry, and the Mac's Launch Services, each as general commands that hold no guard.
 - `login.rs`: the Mac's login item, through SMAppService, and whether the system started this process at login, which keeps the window hidden.
-- `net.rs` and `process.rs`: an https address fetched for the page, its body answered as text or saved to a file with its SHA-256, and this machine's address on its local network; and other programs, run and waited for, started and let go, or asked to open a file or an address the way a double-click would, beside this process's own id.
+- `net.rs` and `process.rs`: an https address fetched for the page, its body answered as text or saved to a file with its SHA-256, and the address this machine would send from to reach another; and other programs, run and waited for, started and let go, or asked to open a file or an address the way a double-click would, beside this process's own id.
 - `install.rs`: on a Mac, the newer copy an update downloaded putting itself in place of the installed one, run in setup before the lock, the engine, or the window, by the sequence the essay in `src/update.js` lays out.
 - `engine.rs`: the engine's process, below.
 - `log.rs`, `desktop.rs`, and `queue.rs`: the log, which every panic's location lands in too, text the page hands down to be written as the app exits, and the drained queue that lines wait in until the page takes them.
@@ -163,11 +163,13 @@ Tauri copies that folder into the bundle and, during development, next to the de
 
 `src/main.js` wires the page together and starts it, and `src/router/index.js` names every page the window can show, meant to be read as the app's table of contents. The rest, each with an essay at the top of its file:
 
+- `src/brand.js`: the product's two names, `brandName` and `brandStem`, and its two addresses, `urlHome` and `urlHelp`, read from the files that hold them.
 - `src/window.js`: where the window opens, remembering where the user left it and opening it there, and what a fresh place is.
 - `src/settings.js` and `src/stores/settings.js`: the settings, defined once as a schema and kept in `ftorrent.toml`, and the two moments that write the file.
 - `src/associate.js` and `src/stores/associations.js`: whether ftorrent opens `.torrent` and `.ftorrent` files and `magnet:` and `ftorrent:` links, the policy and the flow around it, with `src-tauri/macos/Info.plist` and the uninstall list in `win-setup/registry.js` as the two platforms' halves.
 - `src/login.js` and `src/stores/login.js`: whether ftorrent starts at login, the user's answer beside what each system says, written to the system only when the user answers, and how each platform's entry is written, read, and taken away.
 - `src/stores/update.js` and `src/update.js`: checking ftorrent.com for a newer version, and on the user's click putting it in place of this copy, with every step and path of the update, and why they go in that order, walked through in the second.
+- `src/connection.js`: the Connection tab's checks, asked when the user presses Check, and how each run reads in the tab's box.
 - `src/stores/incoming.js`: what comes up from the Rust core several times a second, the engine's lines and the requests that reach this copy.
 - `src/style.css`: the one stylesheet, and how the page is styled.
 - `src/log.js`: the page's half of the log, off at the factory.
@@ -187,38 +189,6 @@ Five stores, each in the setup form, `defineStore` with a function that returns 
 Two alternatives are worth knowing. Wrapping the router outlet in `<KeepAlive>` would also keep a page's state alive across a trip to another page and back, and it's the common reflex, but it preserves the component rather than moving the state out, so a second component wanting the same fact still can't reach it. The honest competitor is a module-scope ref: an ES module is a singleton, so a ref exported from a plain file already outlives every component and is importable anywhere, a store in all but name. What Pinia adds over that is narrower than its reputation — `acceptHMRUpdate`, so editing a store during development doesn't wipe what it holds; `$patch` and `$subscribe`; the devtools timeline, which isn't set up in the Tauri window and is no part of the case for a store here; and a convention any Vue developer recognizes on sight, which in a workspace meant to be read and forked is most of the weight. We would rather spend a small dependency on a shape a reader already knows than grow a private one.
 
 Pinia 4.0.3 declares a runtime dependency on `nostics`, a small, dependency-free structured-diagnostics library published under `vercel-labs`, and a non-optional peer dependency on `@vue/devtools-api`. Vue Router 5's build-time tooling already brings both, so Pinia adds no other package to the tree; and Vue Router declares Pinia as an optional peer for its data loaders, which is why its resolution key in the lockfile names Pinia.
-
-**The product's two names** are read in `src/brand.js`, and the section below says where each one goes.
-
-## The two names
-
-The product has two names, and the code keeps them apart with two words used everywhere, in JavaScript, Rust, C, and TOML alike. The two are the same string for ftorrent, which is exactly why the code names them apart: a reader of any file sees which one a line means, and a fork whose names differ changes the two sources and a short list of files that write one of them out, below.
-
-- **`brandName`** is the name as people read it. Its source is `productName` in `src-tauri/tauri.conf.json`: `ftorrent` here, `Fuji` in a sibling project built from the same scaffold.
-- **`brandStem`** is the stem of the executable's name, `ftorrent` of `ftorrent.exe`. Its source is the crate's `name` in `src-tauri/Cargo.toml`, since Cargo names the executable from it: `ftorrent` here, `fuji` there. Stem is the word the languages use for a file name without its extension, as in Rust's `file_stem`, and the pair shares a prefix because `brand.js` already uses `brand` for everything that is the product's, its description among them.
-
-Two addresses go with the two names, bare, with no scheme, since https is the only one the client speaks, and the page writes `https://` in front where it links or fetches.
-
-- **`urlHome`** is the project's address as a person says it, `ftorrent.com`. Its source is `bundle.homepage` in `src-tauri/tauri.conf.json`, the one place the installers already read it for their package information. The About page and the Settings page link to it, the update check fetches sidecars from it, and `ftorrent.toml`'s comments say it bare.
-- **`urlHelp`** is where the Help menu sends a person, `docs.ftorrent.com/help`: a fixed route on the documentation site that forwards to whichever page help lives on. A copy in the field may never update, so the address it carries never changes, and the site decides where it leads, by editing `docs/docs/help/index.md` and uploading. `brand.js` derives it from `urlHome`, and a fork whose help lives elsewhere writes its own address there.
-
-Nothing derives one from the other, since a product called Candy Crush may be `candycrush` or `candy-crush` inside, and only the fork knows which. The identifier, `com.ftorrent.ftorrent`, is a third name with its own jobs, the data folder, the bundle identity, and the AppUserModelID, and it changes with the other two.
-
-**Where each goes.** People read `brandName`: the window title and the tray, every sentence on the page and in `ftorrent.toml`'s comments, the Mac's `.app` and the dmg, the Windows installer's dialogs, Start menu shortcut, and uninstall entry, the ProgIDs Windows' Settings shows beside a file type, the install folder under local application data, and the default downloads folder. Files carry `brandStem`: the executable, the engine's folder and executable, the settings file, the lock file, the pipe a second launch writes to, the log folder, the hidden session folder in each download folder, the custom `.ftorrent` extension and `ftorrent:` scheme, and the published names `ftorrent.exe`, `ftorrent.dmg`, and the Linux packages.
-
-**How each flows.** The page reads both files at build time in `src/brand.js` and exports the two names, and every other page file imports them from there. The Rust core reads both from its package info, `name` and `crate_name`, which Tauri fills from the same two files at compile time. The pipelines read the two files themselves: `scripts.js` for the published names and the prefix it looks for, `dmg.js` for the `.app` and the dmg, and `win-setup/win-setup.js` for the installer, which compiles both names into the setup program through its stamp header; `win-setup/registry.js` reads `brandStem` for itself and builds the uninstall list from it, `brandName`, and its list of the file extensions and link schemes ftorrent opens. The engine receives `brandName` in its `init` message for the client name peers and trackers see.
-
-**Renaming a fork.** Beyond the two sources, a handful of files write one of the names out, because nothing can read it there, and each is listed with what goes wrong if it is missed. Work down the list with the fork's two names in hand.
-
-1. `src-tauri/tauri.conf.json`: `productName` is `brandName`. Beside it, `identifier`, `publisher`, `copyright`, and `bundle.homepage` are the fork's own. In `bundle.resources`, the engine's folder is `brandStem-engine` on both sides of the entry, and the Start tile's manifest is `brandStem.VisualElementsManifest.xml`, a name Windows requires to match the executable's, so rename the file in `src-tauri/icons/tile/` to match. The `desktopTemplate` entries name `ftorrent.desktop.hbs`; the file can keep its name or take the fork's, as long as the two agree.
-2. `src-tauri/Cargo.toml`: `name` is `brandStem`, and the library's name under `[lib]` is `brandStem_lib`, a Cargo convention the scaffold's comment explains. The crate's name is the executable's because Cargo names it so and Tauri's `mainBinaryName` setting, which would rename it, stays unset; Tauri's own documentation says to change the crate's name instead. The crate's name is what `engine.rs` joins with `-engine` to find the engine, so a mismatch with the resource above is the one error that appears only when the engine fails to start.
-3. `engine/ftorrent-engine.spec`: the two `name=` lines and the `output` path are `brandStem-engine`; rename the file to match, and the `engine` script in `package.json`, which names it. `engine/pyproject.toml`'s `name` is `brandStem-engine` too.
-4. `engine/engine.py`: the two letters in `fingerprint()`, `FF`, are ftorrent's client code at the front of every peer id, which other clients look up in a table. A fork chooses two letters of its own, unused in the tables, as the comment there describes.
-5. `icon-studio/Update-Icons.ps1`: the studio keeps its copy of the application icon as `ftorrent.ico`; the name is the studio's own and changes with the fork's artwork.
-6. `linux/build.js` and the four `inside-*.sh` scripts: the Docker image tags, the package name patterns, the engine's path, and the Flatpak's identifier are written by hand as `ftorrent`, `ftorrent-engine`, and `com.ftorrent.ftorrent`, and a fork changes them by hand; a shell script has no cheap way to read the two files.
-7. `release/` and `linux/release/` hold the tracked sidecars of ftorrent's published files, named for them; a fork's first `pnpm hash` writes its own beside them, and the old ones are history to delete.
-
-Everything else follows from the two sources: the page, the Rust core, the engine's client name, the installers, and the published names.
 
 ## Packages and releases
 

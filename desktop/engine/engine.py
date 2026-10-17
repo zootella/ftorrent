@@ -9,7 +9,7 @@ import libtorrent as lt
 #
 # Two rules about the pipes, both because the other end is Rust reading lines. Every message is one line of JSON ending in a newline and flushed at once, so nothing sits in a buffer while the app waits. And a line that is not JSON, or JSON that is not a command the engine knows, gets an error line back rather than a crash, so a mistake on one side never takes the other side down.
 
-# The centralized servers the engine reaches on its own, and the one place they are written. Three lists, each in the same order: ours first, then the well-known providers or the servers universal to BitTorrent. The Names and Numbers document on docs.ftorrent.com is the public record of every entry, who runs it, why it is here, and what answered when we checked; a change here is a change there.
+# The centralized servers the engine reaches on its own, and the one place they are written. Three lists, each in the same order: ours first, then the well-known providers or the servers universal to BitTorrent. The Names and Numbers document on docs.ftorrent.com lists every entry and who runs it; a change here is a change there.
 centralized_servers = {
 	'stun': [#the STUN server WebTorrent uses to learn its own public address for WebRTC; libtorrent takes exactly one, so the first entry is the one used, and the rest are the order to fall back through once the engine can test them, and the choices a settings page will offer
 		'stun.ftorrent.com:3478',#ours

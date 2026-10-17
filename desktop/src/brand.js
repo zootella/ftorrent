@@ -11,7 +11,7 @@ brandStem is the stem of the executable's name, ftorrent of ftorrent.exe, which 
 
 The two addresses are the same idea for the web, and the page keeps them bare, with no scheme, since https is the only one the client speaks: urlHome, ftorrent.com, is read from bundle.homepage in tauri.conf.json, which the installers already write into their package information, and urlHelp, docs.ftorrent.com/help, is a fixed route on the documentation site that forwards to the page help lives on. A copy in the field may never update, so the address it carries never changes, and the site decides where it leads. The page writes https:// in front of each where it links or fetches.
 
-The rust core reads the same two names from its package info, name and crate_name, and the pipelines read the same two files. A few files have to write a name out rather than read it, because nothing can read it there, tauri.conf.json's resources and the engine's PyInstaller spec among them; the section The two names in the desktop README lists every one, with what goes wrong if a fork misses it.
+The rust core reads the same two names from its package info, name and crate_name, and the pipelines read the same two files. A few files have to write a name out rather than read it, because nothing can read it there, tauri.conf.json's resources and the engine's PyInstaller spec among them; the Names and Numbers document on docs.ftorrent.com lists every one, with what goes wrong if a fork misses it.
 */
 
 export const brandName        = tauriConfiguration.productName            //the name people read, like ftorrent or Fuji
