@@ -5,7 +5,7 @@ description: The order of work for good.ftorrent.com and the desktop client's Co
 
 # Good Service Planning
 
-_Written 2026-10-09 at the start of the good sprint series, as the order of work for good's engineering spike: every measurement built, proven against real networks, and reported plainly in the two places a person meets good. What comes after, the articles, the visual design, the choosing and ordering of what a user sees, is out of scope here on purpose. The map comes first, then the two places and the rule between them, then ten milestones of roughly an evening each, every one opening with its tasks as boxes. The boxes are checked as the work lands and the prose beneath them stays as written; the roadmap-in-reverse records what each evening proved._
+_Written 2026-10-09 at the start of the good sprint series, as the order of work for good's engineering spike: every measurement built, proven against real networks, and reported plainly in the two places a person meets good. What comes after, the articles, the visual design, the choosing and ordering of what a user sees, is out of scope here on purpose. The map comes first, then the two places and the rule between them, then ten milestones of roughly an evening each, every one opening with its tasks as boxes. We check the boxes as the work lands, and once a milestone is finished we rewrite the prose beneath its boxes from the plan into an introduction to what now exists: the new parts, how they work, what they're for, how to use them, and what they tell us about a connection. The roadmap-in-reverse records what each evening proved._
 
 ## World Map
 
@@ -108,7 +108,7 @@ Mutation comes after observation throughout. Nothing changes the router or the f
 
 Each evening starts by reading the prior art named in its section, since established tools have already met most of these questions. The best single piece of prior art for the panel as a whole is Tailscale's `netcheck`, which reports UDP, each family, whether the mapping varies, hairpinning, and which port-mapping protocols the router speaks, all in one run; nothing we build should be worse than it at the things it does. For the page the nearest prior art is the browser NAT checkers that ask two STUN servers and compare. For moon's active tests it is Transmission's port test, a server at the project's domain that tries to connect back to the port the client reports.
 
-Every evening ends the same way: smoke test from a second internet connection as well as the development machine's, since one connection teaches one connection's lesson, note what was learned, correct anything the evening proved wrong, and check the milestone's boxes here. When an evening changes the page or a service, the public guide in good/README.md is re-read whole and corrected the same night, with its last-reviewed date moved; the first such evening is Good2, which also rewrites the guide's what's-next section against this file and retires its paragraph on the reserved pion slot.
+Every evening ends the same way: smoke test on the development machine, and from a second internet connection whenever the result depends on the network, since one connection teaches one connection's lesson; note what was learned, correct anything the evening proved wrong, check the milestone's boxes here, and once the milestone is finished, rewrite its prose as an introduction to what now exists. When an evening changes the page or a service, the public guide in good/README.md is re-read whole and corrected the same night, with its last-reviewed date moved; the first such evening is Good2, which also rewrites the guide's what's-next section against this file and retires its paragraph on the reserved pion slot.
 
 ## Good1: The page as it stands, and the panel's first facts
 
@@ -116,13 +116,29 @@ Every evening ends the same way: smoke test from a second internet connection as
 - [x] Good1b: Give net_local a family, so it binds a v6 socket toward a documentation address and answers the global v6 source address or that there is none.
 - [x] Good1c: Make the text box the running diagnosis: a Run button, a header of date, version, and platform, one appended line per check with what it asked, what came back, and how long it took, and Copy taking the facts and the box together.
 
-The page does not change. It shows the two addresses and the four-way verdict, and it stays that way until Good2 moves it onto Vite.
+The page at `good.ftorrent.com` is one static file, as it was before this milestone: it fetches `ip4.ftorrent.com` and `ip6.ftorrent.com` at once and reports which families answered. The Connection tab in the desktop client asks the same questions and more, and it opens empty: nothing leaves the machine until the user presses Check.
 
-The panel catches up to the page and goes one step past it. It fetches `ip4.ftorrent.com` and `ip6.ftorrent.com` through the existing net_get command, which forces each family exactly as the browser does, because the forcing is in DNS; it times each fetch; and it reports the two public addresses on the panel beside the local address already there. Give the local address its IPv6 twin: the net_local command takes a family, binding a v6 socket and connecting it toward a documentation address to learn which global v6 address the system would send from, or that it has none. A fetch that succeeds but takes seconds is reported as present but unusable, a third answer beside yes and no, since a path that takes that long to open is dead for peer-to-peer and the page's budget alike.
+A run asks two questions of each family, IPv4 and IPv6, and the table at the top sets the answers side by side: the address the machine sends from, and the address the internet sees.
 
-The text box becomes the running diagnosis. A Run button at the top starts it; each check appends what it asked, what came back, and how long it took, so the box reads as a report of one run, top to bottom. The first lines are the date, the client version, and the platform, so a pasted box is a complete report. The panel holds the quick facts above; the box holds the story; Copy takes both. That shape is settled here and every later milestone adds to it rather than redesigning it.
+The first question goes to the operating system. A machine holds several addresses at once: a private IPv4 address its router handed out, one IPv6 address or several, and a link-local address on every interface. For each connection, the system picks one as the source by looking up the route to the destination. The `net_local` command asks for that choice without sending anything: it connects a UDP socket toward an address beyond the local network, and connecting a UDP socket only settles its route and its source address, so the system answers and no packet leaves. The two addresses it connects toward, `192.0.2.1` and `2001:db8::1`, are ones RFC 5737 and RFC 3849 set aside for documentation, so they name no one, and every address past the router gets the same answer, the default route's.
 
-What this proves: that each family reaches a web server over TCP from here. What it does not prove: anything about UDP, ports, or inbound, which is the gap the rest of this file closes.
+The second question goes to a server. The reflectors at `ip4.ftorrent.com` and `ip6.ftorrent.com` answer with the address the request arrived from, and each name has an address record in one family only, so a request to it can travel over that family and no other. The forcing lives in DNS, which is why the page and the panel can both rely on it: neither can tell its network stack which family to use, and neither can reach a name over a family the name has no address in.
+
+Side by side, the two answers show how the families differ. On IPv4 they differ: the machine holds a private address like `192.168.1.23`, and the router rewrites the source of every packet to the one public address its whole network shares, so a machine can learn its public IPv4 address only by asking something outside. On IPv6 they're usually the same address, since each device holds a globally routable address of its own and nothing translates it. The exception is the temporary address. Every consumer system makes a new IPv6 address for privacy about once a day and keeps the older ones for a while as deprecated, and in our measurement from a dual-stack connection, a Mac sent five of forty fetches from an address it had already deprecated, so the two IPv6 answers can differ with nothing translating between them.
+
+The panel times each check, and we give each four seconds. A fetch over HTTPS is four round trips, one each for the name, the connection, the encryption, and the request, and eighty of them from a dual-stack connection took a median of 190 milliseconds. Four seconds leaves room for a satellite in geostationary orbit, near two and a half seconds a fetch, and for a lost packet sent again. So a check ends one of three ways: an answer, with its time; a failure, with its reason, like no route, which comes back in milliseconds; or no answer in four seconds, which only a path that silently drops what it's sent produces.
+
+Beneath the table, the box keeps every run since the tab opened. Each run starts with when it ran, the client's version, and the platform, then a line per check with what it asked, how long it took, and what came back. Copy takes the table and the box together, so a whole report pastes into a message or an issue:
+
+```
+2026-10-17T16:00:00Z, ftorrent 0.1.0 on macOS
+route to 192.0.2.1                5 ms  192.168.1.23
+GET https://ip4.ftorrent.com/   245 ms  203.0.113.42
+route to 2001:db8::1              5 ms  2001:db8:4a2c:100:8d3e:22f1:9b07:5c1e
+GET https://ip6.ftorrent.com/   254 ms  2001:db8:4a2c:100:8d3e:22f1:9b07:5c1e
+```
+
+What these checks prove is that each family reaches a web server over TCP from this machine, and at which address the world sees it. They say nothing about UDP, which peer connections travel on, nothing about ports, and nothing about whether anyone outside can reach the machine; those are the questions the milestones after this one answer.
 
 ## Good2: STUN from both places
 
@@ -130,8 +146,8 @@ What this proves: that each family reaches a web server over TCP from here. What
 - [ ] Good2b: Gather server-reflexive candidates on the page from our STUN server: create the peer connection, open a data channel to start gathering, and show the mapped v4 address and port and whether a v6 candidate arrives.
 - [ ] Good2c: Compare on the page, per family, the address STUN saw with the address the HTTP reflector saw, and name what a disagreement means.
 - [ ] Good2d: Add Cloudflare's STUN server to the same connection and derive the mapping verdict from the count of reflexive candidates per family, inconclusive when the machine has more than one interface in that family.
-- [ ] Good2e: Write net_stun in Rust: bind a UDP socket on a given port, send a binding request built by hand, parse the response by hand, and answer the mapped address, port, round trip, response size, or the error.
-- [ ] Good2f: Build the panel's mapping check: call net_stun against our server over v4 and v6, then against both servers from one local port, derive the mapping verdict, and show it with the HTTP-versus-STUN comparison on the panel.
+- [x] Good2e: Write net_stun in Rust: bind a UDP socket on a given port, send a binding request built by hand, parse the response by hand, and answer the mapped address, port, round trip, response size, or the error.
+- [x] Good2f: Build the panel's mapping check: call net_stun against our server over v4 and v6, then against both servers from one local port, derive the mapping verdict, and show it with the HTTP-versus-STUN comparison on the panel.
 
 Both places learn their public address and port over UDP from `stun.ftorrent.com`, which has been up since July with nothing calling it.
 

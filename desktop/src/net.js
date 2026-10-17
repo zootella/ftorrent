@@ -1,6 +1,7 @@
 import {invoke} from '@tauri-apps/api/core'
 
-//requests to the web, and the address this machine sends from; net.rs is the long version
+//requests to the web, the address this machine sends from, and what STUN servers see; net.rs is the long version
 
 export function netGet(url, limit, seconds, save = '') { return invoke('net_get', {url, limit, seconds, save: save || null}) }//the body at this https address as text, or with a save path, the body written to that file and its sha-256 in lowercase hex; a rejection past seconds or limit bytes, or for a 4xx or 5xx; a redirect isn't followed, and comes back as its own body
 export function netLocal(toward) { return invoke('net_local', {toward}) }//the address this machine would send from to reach the address toward, ipv4 or ipv6, as text: like 192.168.1.23 toward an ipv4 address beyond a home network, and the machine's own global address toward an ipv6 one; nothing is sent, and a rejection when there's no route, as with no network or no ipv6
+export function netStun(servers, family, port, seconds) { return invoke('net_stun', {servers, family, port, seconds}) }//a stun binding request to each of servers, names and ports like stun.ftorrent.com:3478, all at once from one socket on local port, or the system's pick with 0, over family 4 or 6, each sent again until it answers or seconds pass; answers {local, servers: [{server, address, port, milliseconds, sends, bytes, error}]}: the local port, then for each server what it saw, the time from the first send, how many sends, the answer's size, and an error that's blank when it answered

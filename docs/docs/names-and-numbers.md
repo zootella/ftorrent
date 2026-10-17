@@ -56,10 +56,10 @@ Accept-Encoding: gzip
 
 ### The Connection tab
 
-- `https://ip4.ftorrent.com/` and `https://ip6.ftorrent.com/`: each answers the address the request arrived from. The first name has only an IPv4 record and the second only an IPv6 record, so each request travels over one family.
-- Built in `desktop/src/connection.js` from `urlHome`.
-- Asked only when the user presses Check on the Connection tab, both at once, each given four seconds to answer.
-- Sent over HTTPS, checked against Mozilla's roots compiled into the client, following no redirect, with the same three headers as the update check.
+- `https://ip4.ftorrent.com/` and `https://ip6.ftorrent.com/`: each answers the address the request arrived from. The first name has only an IPv4 record and the second only an IPv6 record, so each request travels over one family. Sent over HTTPS, checked against Mozilla's roots compiled into the client, following no redirect, with the same three headers as the update check.
+- `stun.ftorrent.com:3478` and `stun.cloudflare.com:3478`: a STUN binding request over UDP, over each family, to both at once from one local port, picked at random from 49152 to 65535 for each run. The request is STUN's twenty-byte header and nothing else, sent again half a second, a second and a half, and three and a half seconds after the first until an answer comes.
+- Built in `desktop/src/connection.js`, with ftorrent's names from `urlHome`.
+- Asked only when the user presses Check on the Connection tab, each given four seconds to answer.
 
 ### The Windows installer
 
@@ -106,7 +106,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 
 - `192.0.2.1` and `2001:db8::1`, in `desktop/src/connection.js`: addresses set aside for documentation, by RFC 5737 and RFC 3849, which name no one. The Connection tab hands each to `net_local` in `desktop/src-tauri/src/net.rs`, which connects a UDP socket to it at port 9. Connecting sends nothing; the system picks a route, and the client reads the source address the system would send from.
 
-No other address is written in the client, apart from the unspecified `0.0.0.0` and `::` that `net_local` binds its socket to before connecting, and `localhost:1420` in `desktop/src-tauri/tauri.conf.json`, where a development build finds Vite.
+No other address is written in the client, apart from the unspecified `0.0.0.0` and `::` that `net_local` and `net_stun` bind their sockets to, and `localhost:1420` in `desktop/src-tauri/tauri.conf.json`, where a development build finds Vite.
 
 ## What the client calls itself
 

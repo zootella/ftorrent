@@ -849,6 +849,7 @@ name = "ftorrent"
 version = "0.1.0"
 dependencies = [
  "block2",
+ "getrandom 0.3.4",
  "ico",
  "libc",
  "objc2",
