@@ -124,11 +124,10 @@ function _sayFact(r) {
 	return r.value
 }
 
-//the address and port a STUN server saw, ours or else the first that answered, so our server being down doesn't read as UDP being blocked, and a word when its network isn't the one the reflector saw over HTTPS
-function _sayUdp(stuns, reflect) {
-	let stun = stuns.find(r => r.success) ?? stuns[0]//?? because find answers undefined when none answered, and then ours says why
-	let said = _sayFact(stun)
-	if (stun.success && reflect.success && !_sameNetwork(stun.family, stun.value.address, reflect.value)) said += `, but HTTPS came from ${reflect.value}`
+//the address and port our STUN server saw, and a word when its network isn't the one the reflector saw over HTTPS
+function _sayUdp([ours], reflect) {
+	let said = _sayFact(ours)
+	if (ours.success && reflect.success && !_sameNetwork(ours.family, ours.value.address, reflect.value)) said += `, but HTTPS came from ${reflect.value}`
 	return said
 }
 

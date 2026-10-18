@@ -1,11 +1,25 @@
 {
 	"name": "good-page",
-	"description": "The page at good.ftorrent.com; a placeholder workspace until Good2a builds the page here with Vite",
+	"description": "Connection checker page at good.ftorrent.com",
 	"homepage": "https://good.ftorrent.com/",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"upload": "mkdir -p dist && cp ../static/index.html dist/ && node --env-file-if-exists=../../.env ../../upload.js good"
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"local": "vite",
+		"upload": "vite build && node --env-file-if-exists=../../.env ../../upload.js good"
+	},
+	"dependencies": {
+		"vue": "^3.5.42"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.3.3",
+		"@vitejs/plugin-vue": "^6.0.8",
+		"tailwindcss": "^4.3.3",
+		"vite": "^8.2.2",
+		"vite-plugin-vue-devtools": "^8.2.1"
 	}
 }

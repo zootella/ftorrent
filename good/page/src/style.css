@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+	color-scheme: light dark; /* so the browser's own parts, the box's scrollbar and the buttons, follow dark mode with the colors below */
+	--text: #333;
+	--text-muted: #888;
+	--line: #ccc;
+	--bg: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text: #ccc;
+		--text-muted: #888;
+		--line: #444;
+		--bg: #111;
+	}
+}
+
+body {
+	font-family: ui-monospace, monospace;
+	line-height: 1.6;
+	color: var(--text);
+	background: var(--bg);
+}

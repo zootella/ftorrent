@@ -7,6 +7,7 @@ _ftorrent/good/README.md [good.ftorrent.com](https://good.ftorrent.com)_
 > <br>Created: 2026-Jul
 > <br>Last reviewed: 2026-Oct
 > <br>Go: 1.24
+> <br>Vue: 3, on Vite 8
 > <br>coturn: [coturn/coturn](https://hub.docker.com/r/coturn/coturn) 4.14.0 (STUN)
 > <br>Docker Engine: 29
 > <br>Docker Compose: V2
@@ -33,7 +34,7 @@ Connection failure is normal. A BitTorrent client reaching out to fifty peers do
 
 **Whether your browser can be a peer.** Browser-based BitTorrent — [WebTorrent](https://webtorrent.io) — connects pages to each other over WebRTC, since a page can't open the raw sockets a desktop client uses. That path has its own requirements and its own failure modes, and a computer whose desktop client swarms happily may still have a browser that can't hold a single peer connection.
 
-Today the checker answers the first of those and reports the addresses behind it. The second and third are what it grows into, and the sections below say plainly which parts run now.
+Today the checker answers the first, and the second as far as a browser can, by asking two STUN servers in different places. The third is what it grows into, and the sections below say plainly which parts run now.
 
 ## Three ways to use it
 
@@ -61,7 +62,7 @@ GET https://ip4.ftorrent.com/   → your IPv4 (the name carries only an A record
 GET https://ip6.ftorrent.com/   → your IPv6 (only AAAA — the request is forced onto IPv6)
 ```
 
-Call the pair, and the two outcomes *are* your dual-stack verdict: both answer and you have both; one fails and you know which one you're missing. This is the same mechanism good.ftorrent.com's own page runs — see [`static/index.html`](static/index.html), which is the whole client.
+Call the pair, and the two outcomes *are* your dual-stack verdict: both answer and you have both; one fails and you know which one you're missing. This is the same mechanism good.ftorrent.com's own page runs — see [`page/src/connection.js`](page/src/connection.js), where every check the page makes lives.
 
 Every response carries `Access-Control-Allow-Origin: *`. That header is CORS, and it matters because a browser will *send* a request to another origin but won't let the page *read* the response unless the server permits it — permission the server grants, not something the caller can ask for. We set it in [`go-ip/main.go`](go-ip/main.go), on the same handler that writes the address.
 
@@ -98,7 +99,11 @@ The dual-stack check runs on **single-family DNS**. `ip4.ftorrent.com` publishes
 
 The answer can't be faked, because the page never asks your computer what its addresses are — it reports what actually arrived. A link-local `fe80:` address, a private `fd00:` one, or a dead [Teredo](https://en.wikipedia.org/wiki/Teredo_tunneling) tunnel can't complete a connection to a globally-routed host, so they produce a failure rather than a false positive.
 
-**What that check can't tell you** is the reason the STUN work comes next. Both fetches travel over HTTPS, which runs on TCP. Hole punching runs on UDP. Offices, schools, hotels, and some mobile networks allow outbound TCP on 443 while blocking UDP wholesale — often by blocking [QUIC](https://en.wikipedia.org/wiki/QUIC) and catching everything else with it. A visitor on such a network has genuinely working IPv6, passes this check, and still can't reach a peer. Asking our STUN server for a binding over each address family closes that gap, because it moves the finding from "IPv4 and IPv6 reach a web server" to "IPv4 and IPv6 carry UDP."
+**What that check can't tell you** is why the page asks STUN as well. Both fetches travel over HTTPS, which runs on TCP. Hole punching runs on UDP. Offices, schools, hotels, and some mobile networks allow outbound TCP on 443 while blocking UDP wholesale — often by blocking [QUIC](https://en.wikipedia.org/wiki/QUIC) and catching everything else with it. A visitor on such a network has genuinely working IPv6, passes this check, and still can't reach a peer. Asking our STUN server for a binding over each address family closes that gap, because it moves the finding from "IPv4 and IPv6 reach a web server" to "IPv4 and IPv6 carry UDP."
+
+A page has no socket of its own, so it asks STUN through WebRTC: it makes a peer connection naming the server, asks for a data channel, and reads the server-reflexive candidates the browser hands back, which are the public address and port the server saw. The page sets that address beside the one the reflector saw over HTTPS. They should agree, and when they don't, something sends the two out apart: over IPv4, a carrier's translator with more than one public address, or in either family a VPN, a proxy, or a relay such as iCloud Private Relay carrying one path and not the other. The table states both addresses, and a sentence under the verdict says what most likely put them apart.
+
+The page also asks whether your router keeps one public port for every destination, with two more gatherings: Cloudflare's server alone, and ours and Cloudflare's together, which the browser asks from the same sockets. When a socket keeps one port, both servers see the same address and port and the browser hands back one candidate for it; when it gets a new port per destination, two. A browser may gather from several sockets and never says how many, but asked by our server alone, each socket answers once, so that count is the number of sockets: the same count from both servers together is endpoint-independent mapping, the kind hole punching works through, and twice the count is endpoint-dependent, where it fails. The box under the verdict keeps everything the browser reported along the way, every candidate line, every error, and the browser's own record of each local candidate, so a run pasted into an issue holds all of it. The [ftorrent desktop client](https://github.com/zootella/ftorrent/tree/master/desktop) asks the same question from one socket it chooses itself, which is the authoritative form of the test.
 
 On the server side the reflector is small: [`go-ip/main.go`](go-ip/main.go) is about sixty lines, a single static Go binary with no operating system in its container image, reading one header and writing one line. It runs behind a reverse proxy that terminates TLS — HAProxy in this deployment — so the address it reports comes from the `X-Forwarded-For` header rather than the socket. A client can write that header itself, so the proxy deletes whatever arrived and appends the address it actually accepted the connection from, which makes the **last** entry the trustworthy one. The first entry is the one a client could have forged.
 
@@ -107,10 +112,10 @@ The STUN server takes the opposite path: nothing sits in front of it. Docker pub
 ## What's running, and what's next
 
 - **Running.** The page, the three reflection names, and the dual-stack verdict they produce. A globally routable IPv6 address usually means a peer can reach you directly, without any of the port gymnastics IPv4 requires.
-- **Running, but our page doesn't call it yet.** `stun.ftorrent.com`. The server is up and anyone can point a WebRTC configuration at it today. Wiring the page to it is the next thing we build, and it needs no new infrastructure.
-- **Reserved.** The `pion` container. [`pion/Dockerfile`](pion/Dockerfile) is written and there's no Go source beside it yet, so the service can't build — [`docker-compose.yml`](docker-compose.yml) defines it anyway to hold its addressing steady until we write it. That's why you start the live services by name rather than all at once.
-- **Planned.** Telling you whether your router assigns a consistent port, which decides whether hole punching works. Answering that means comparing what two STUN servers in different places see, so we'll stand a second one up on a small virtual server at another place on the internet, as `moon.ftorrent.com`.
-- **Planned.** The measurements only a desktop application can make: binding a real listener to prove that unsolicited packets arrive, asking the router directly for a port mapping, and reading the device's own network interfaces to explain the `fe80:` and `fd00:` addresses that lead so many people to believe they have working IPv6.
+- **Running.** `stun.ftorrent.com`, and the page's two STUN checks on it: your public address and port over UDP in each family, set beside what HTTPS saw, and the mapping verdict from ours and Cloudflare's asked from the same sockets.
+- **Started.** A second vantage of our own at `moon.ftorrent.com`, a small virtual server at another place on the internet, up and built from the files in [`moon/`](moon/). Next, its STUN server takes over from Cloudflare's as the page's second answer, its reflector cross-checks ours, and for the desktop client it sends a packet or opens a connection back, which proves a peer can reach you rather than inferring it.
+- **Planned.** WebRTC peers on moon behind translators we shape ourselves, one like a home router and one that maps a new port per destination, so the page can show a hole punch succeed or fail rather than predict it.
+- **Planned.** The measurements only a desktop application can make, in the desktop client's Connection tab, which already runs the same address and STUN checks from a socket it controls: reading the device's own network interfaces to explain the `fe80:` and `fd00:` addresses that lead so many people to believe they have working IPv6, binding a real listener to prove that unsolicited packets arrive, and asking the router for a port mapping.
 
 We ship the part we can stand behind and grow from there.
 
@@ -122,12 +127,12 @@ good/
 ├── go-ip/               the ip reflector — Dockerfile, go.mod, main.go
 ├── coturn/              turnserver.conf — coturn in plain-STUN-only mode
 ├── pion/                a WebRTC peer, deferred: a Dockerfile only, until its Go source lands
-├── page/                the page's workspace: pnpm upload there ships the page, and Vite builds it there later
-└── static/index.html    the page good.ftorrent.com serves
+├── moon/                the second vantage at moon.ftorrent.com: cloud-init, Caddy, the deploy and firewall scripts, and its runbook
+└── page/                the page good.ftorrent.com serves, a Vue app on Vite, with its checks in src/connection.js
 ```
 
 [`go-ip/`](go-ip/) is ours, built from source. [`coturn/turnserver.conf`](coturn/turnserver.conf) is forty lines of configuration we wrote for an image we pull unchanged from upstream, and nearly every line turns something off — `stun-only` refuses TURN allocations, and `no-tcp`, `no-tls`, `no-dtls`, `no-rfc5780`, and `no-cli` shut down listeners and interfaces we don't use.
 
 Both running containers are hardened the same way as the rest of the ftorrent deployment, set in [`docker-compose.yml`](docker-compose.yml): an unprivileged user, a read-only root filesystem, every Linux capability dropped, and tight memory and process limits. The same posture and reasoning appear in the [tracker's guide](https://github.com/zootella/ftorrent/blob/master/open/README.md), which covers it in more depth. Both services are also stateless — they answer a request and keep nothing, so nothing has to survive a restart and there's no database to run.
 
-The page is one static file with no build step, served directly by the proxy. `pnpm upload` in `page/` copies it into `page/dist` and mirrors that to the server through `upload.js` at the repository root, the same way the other sites ship. Bring the live services up with `docker compose up -d go-ip coturn`; the pion slot stays down until its source arrives.
+The page is static files with no server of its own behind them, served directly by the proxy. `pnpm upload` in `page/` builds it with Vite into `page/dist` and mirrors that to the server through `upload.js` at the repository root, the same way the other sites ship. Bring the live services up with `docker compose up -d go-ip coturn`; the pion slot stays down, since it has a Dockerfile and no source.

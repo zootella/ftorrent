@@ -31,7 +31,7 @@ const sites = {//each static workspace: what its build writes, and the env value
 	site: {built: 'site/.output/public',       path: 'DEPLOY_SITE_PATH'},
 	docs: {built: 'docs/docs/.vitepress/dist', path: 'DEPLOY_DOCS_PATH'},
 	open: {built: 'open/page/dist',            path: 'DEPLOY_OPEN_PATH'},
-	good: {built: 'good/page/dist',            path: 'DEPLOY_GOOD_PATH'},//today a copy of good/static/index.html that good/page's upload makes; Vite's output once Good2a builds the page there
+	good: {built: 'good/page/dist',            path: 'DEPLOY_GOOD_PATH'},
 }
 
 function say(line) { console.log(line) }
