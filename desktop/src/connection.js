@@ -439,13 +439,13 @@ const flagWords = {
 	},
 	Windows: {
 		'prefix dhcp':                 'from DHCP',
-		'prefix router-advertisement': `made from the network's prefix`,
+		'prefix router-advertisement': '',//made from the prefix the router advertises, as most IPv6 addresses are, so blank like a Mac's autoconf
 		'prefix manual':               'set by hand',
 		'prefix well-known':           '',
 		'prefix other':                '',
 		'suffix dhcp':                 '',
-		'suffix random':               'with a random suffix',
-		'suffix link-layer':           'made from the hardware address',
+		'suffix random':               'temporary',//only a temporary address has a random suffix origin, the one ipconfig labels Temporary IPv6 Address
+		'suffix link-layer':           'stable',//the stable address, ipconfig's plain IPv6 Address; Windows says link-layer even though by default it makes this suffix up at random rather than from the hardware address
 		'suffix manual':               '',
 		'suffix well-known':           '',
 		'suffix other':                '',

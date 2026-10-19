@@ -286,7 +286,7 @@ fn interfaces() -> Result<Vec<Interface>, String> {
 		list.push(Interface {
 			name: unsafe { a.FriendlyName.to_string() }.unwrap_or_default(),
 			description: unsafe { a.Description.to_string() }.unwrap_or_default(),
-			index: unsafe { a.Anonymous1.Anonymous.IfIndex },
+			index: match a.Ipv6IfIndex { 0 => unsafe { a.Anonymous1.Anonymous.IfIndex }, v6 => v6 },//the IPv6 index, which a link-local address is scoped by, or the IPv4 one on an adapter without IPv6; each is zero when its family is off
 			flags: vec![windows_kind(a.IfType), windows_word(a.OperStatus.0, &["0", "up", "down", "testing", "unknown", "dormant", "not-present", "lower-layer-down"])],//IF_OPER_STATUS, which counts from 1
 			addresses,
 			gateways,
