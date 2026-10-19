@@ -8,13 +8,15 @@ use tauri::command;
 use crate::run_blocking;
 
 /*
-Requests to the web for the page: net_get fetches one https address, and either answers its body as text or, given a path, saves the body to that file and answers its SHA-256. What to fetch, where to save it, and what the answer means, is the page's. net_local answers the address this machine would send from to reach another, which takes no request at all. And net_stun asks STUN servers what address and port requests from one socket on this machine arrived from.
+Requests to the web for the page: net_get fetches one https address, and either answers its body as text or, given a path, saves the body to that file and answers its SHA-256. What to fetch, where to save it, and what the answer means, is the page's. net_local answers the address this machine would send from to reach another, which takes no request at all. net_stun asks STUN servers what address and port requests from one socket on this machine arrived from. net_resolve asks the system's resolver for every address a name has. And net_interfaces lists the machine's network interfaces with every address on each.
+
+The interfaces come from a different call on each kind of system. A mac and linux list them through getifaddrs, one entry for each address on each interface and one more for each interface's hardware, which is how an interface with no address still makes the list. A mac shortens an IPv4 netmask to the bytes that aren't zero, so 255.255.255.0 arrives in a record seven bytes long, three of them the mask, and reading a whole sockaddr_in there reads past its end. Windows lists them through GetAdaptersAddresses, which also carries what getifaddrs doesn't: each adapter's gateways, and for each address where its prefix and its suffix came from and how long it lasts. On a mac and linux those come from the system's own tools, which the page runs and reads.
 
 ureq makes the request, a blocking call on run_blocking's pool like the disk commands, with its default TLS: rustls, checking certificates against Mozilla's roots compiled into the program. The answer is treated as coming from anywhere: https only, no redirect followed, the whole request bounded by the page's seconds, and the body by its limit, counted as it arrives and again after gzip is undone. A redirect comes back as its own body, which the page's check turns away; a 4xx or 5xx is an error.
 
 STUN is written out by hand, since a binding request is small enough to read whole, RFC 8489. The request is a twenty-byte header and nothing more: its type, the length of what follows, which is zero, the magic cookie, and twelve random bytes the answer has to repeat. The answer carries the same header and then attributes, each a type, a length, and a value padded to four bytes, and the one that matters is XOR-MAPPED-ADDRESS, the address and port the server saw, masked by the cookie, and for IPv6 by the transaction id as well, so a router rewriting addresses it finds inside packets can't mistake it for one. UDP keeps no promises, so the request goes out again at STUN's intervals, half a second and then doubling, until an answer comes or the page's seconds pass.
 
-net_stun asks every server it's given at once, from one socket, which is how Tailscale's netcheck asks its servers too, and it's the one command here that takes a list. A router keys the mapping it makes on the inside address and port, so the question of whether it keeps one public port for every destination can only be asked from one socket, and asking every server from that socket at the same moment answers it in one wait rather than one wait per server. Each request carries a transaction id of its own, which is how an answer finds the server it came from, and the socket stays unconnected, since it speaks to more than one address.
+net_stun asks every server it's given at once, from one socket, which is how Tailscale's netcheck asks its servers too, and it's the one command here that takes a list. A router keys the mapping it makes on the inside address and port, so the question of whether it keeps one public port for every destination can only be asked from one socket, and asking every server from that socket at the same moment answers it in one wait rather than one wait per server. Each request carries a transaction id of its own, which is how an answer finds the server it came from, and the socket stays unconnected, since it speaks to more than one address. Each answer also comes back whole, in hex beside the address it arrived from, so the page can show every attribute in it and not only the mapped address read here.
 */
 
 const STUN_COOKIE: u32 = 0x2112A442;//the magic cookie every STUN message since RFC 5389 carries in bytes 4 through 8
@@ -23,11 +25,14 @@ const STUN_COOKIE: u32 = 0x2112A442;//the magic cookie every STUN message since 
 #[derive(Serialize)]
 pub struct Binding {
 	pub server:       String,//the server, as the page named it
+	pub to:           String,//the address and port its name led to in the family asked for, like 162.159.207.0:3478, or blank when it has none
 	pub address:      String,//the address the server saw the request come from, like 203.0.113.42, or blank with no answer
 	pub port:         u16,//and the port, which a router may have changed from the local one
 	pub milliseconds: u64,//from the first send until this server's answer, or until giving up on it, including any wait before sending again
 	pub sends:        u32,//how many times the request went to this server, 1 when nothing was lost
 	pub bytes:        usize,//the size of the answer, against the request's 20
+	pub from:         String,//the address and port the answer arrived from, blank with no answer
+	pub answer:       String,//the whole answer in lowercase hex, header and attributes, blank with no answer
 	pub error:        String,//why there's no answer, blank when there is one
 }
 
@@ -36,6 +41,27 @@ pub struct Binding {
 pub struct Bindings {
 	pub local:   u16,//the one asked for, or the system's pick when that was 0
 	pub servers: Vec<Binding>,
+}
+
+/// One network interface, as net_interfaces answers it
+#[derive(Serialize)]
+pub struct Interface {
+	pub name:        String,//like en1 on a mac and wlan0 on linux, and on windows the name Settings shows, like Wi-Fi
+	pub description: String,//on windows the adapter's own name, often its hardware's; blank elsewhere
+	pub index:       u32,//the system's number for it, which a link-local address is scoped by
+	pub flags:       Vec<String>,//the system's words for what it is and its state: up, running, loopback and the rest of the interface flags on a mac and linux, and on windows its kind and its operational status
+	pub addresses:   Vec<Address>,
+	pub gateways:    Vec<String>,//on windows the gateways it routes through; empty elsewhere, where the route tools say
+}
+
+/// One address on an interface
+#[derive(Serialize)]
+pub struct Address {
+	pub address:   String,//like 192.168.1.23 or fe80::1c2b:3a4d:5e6f:7081, without the interface a link-local one is scoped to
+	pub prefix:    u8,//the length of the network it's on, like 24 or 64
+	pub flags:     Vec<String>,//on windows where its prefix and suffix came from and its state, like prefix router-advertisement, suffix random, and preferred; empty elsewhere, where the interface tools say
+	pub valid:     Option<u32>,//on windows the seconds it stays valid, 4294967295 for always; none elsewhere
+	pub preferred: Option<u32>,//and the seconds it stays preferred for new connections
 }
 
 /// One server's part in a net_stun: where it is, the request made for it, when it's next due, and what has come of it
@@ -90,11 +116,12 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 
 		let mut asks = Vec::new();
 		for server in &servers {
-			let mut binding = Binding {server: server.clone(), address: String::new(), port: 0, milliseconds: 0, sends: 0, bytes: 0, error: String::new()};
+			let mut binding = Binding {server: server.clone(), to: String::new(), address: String::new(), port: 0, milliseconds: 0, sends: 0, bytes: 0, from: String::new(), answer: String::new(), error: String::new()};
 			let to = match server.to_socket_addrs() {
 				Ok(mut addresses) => addresses.find(|address| address.is_ipv6() == (family == 6)),//the name's first address in the family asked for, so a name with records in both can be asked over either
 				Err(e) => { binding.error = e.to_string(); None }
 			};
+			if let Some(to) = to { binding.to = to.to_string() }
 			if to.is_none() && binding.error.is_empty() { binding.error = format!("{server} has no IPv{family} address") }
 			let mut request = [0u8; 20];
 			request[0..2].copy_from_slice(&0x0001u16.to_be_bytes());//a binding request, with bytes 2 and 3 left zero, since nothing follows the header
@@ -120,8 +147,8 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 			let left = next.min(deadline).saturating_duration_since(Instant::now());//listen until the next send is due
 			if left.is_zero() { continue }
 			socket.set_read_timeout(Some(left)).map_err(|e| e.to_string())?;
-			let count = match socket.recv_from(&mut answer) {
-				Ok((count, _)) => count,
+			let (count, source) = match socket.recv_from(&mut answer) {
+				Ok(received) => received,
 				Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => continue,//the read timed out, which unix says as would block and windows as timed out
 				Err(e) if matches!(e.kind(), std::io::ErrorKind::ConnectionReset | std::io::ErrorKind::ConnectionRefused) => continue,//windows reports an icmp refusal from any one server as an error on the whole socket, naming no server, so the asking goes on and that server runs out of time
 				Err(e) => return Err(e.to_string()),
@@ -129,9 +156,12 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 			for ask in asks.iter_mut().filter(|ask| !ask.done) {//the server whose transaction id the answer repeats; anything else, a stray packet or an answer to an earlier send already counted, matches none and is passed over
 				match stun_read(&answer[..count], &ask.request) {
 					Ok(None) => continue,
-					Ok(Some((address, mapped))) => { ask.binding.address = address.to_string(); ask.binding.port = mapped; ask.binding.bytes = count }
+					Ok(Some((address, mapped))) => { ask.binding.address = address.to_string(); ask.binding.port = mapped }
 					Err(e) => ask.binding.error = e,
 				}
+				ask.binding.bytes = count;//a refusal is an answer too, kept whole like a success
+				ask.binding.from = source.to_string();
+				ask.binding.answer = answer[..count].iter().map(|byte| format!("{byte:02x}")).collect();
 				ask.binding.milliseconds = start.elapsed().as_millis() as u64;
 				ask.done = true;
 				break
@@ -143,6 +173,157 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 		}
 		Ok(Bindings {local, servers: asks.into_iter().map(|ask| ask.binding).collect()})
 	}).await
+}
+
+/// Every address the system's resolver answers for this name, IPv4 and IPv6 alike, in the order it gives them
+#[command]
+pub async fn net_resolve(name: String) -> Result<Vec<String>, String> {
+	run_blocking(move || {
+		let addresses = (name.as_str(), 0).to_socket_addrs().map_err(|e| e.to_string())?;//getaddrinfo, the resolver every program on the machine asks; the port is a placeholder it requires
+		Ok(addresses.map(|address| address.ip().to_string()).collect())
+	}).await
+}
+
+/// Every network interface on this machine, with every address on each, in the order the system lists them
+#[command]
+pub async fn net_interfaces() -> Result<Vec<Interface>, String> {
+	run_blocking(interfaces).await
+}
+
+/// The interfaces from getifaddrs, gathered by name, since it lists each address as an entry of its own
+#[cfg(unix)]
+fn interfaces() -> Result<Vec<Interface>, String> {
+	let mut head: *mut libc::ifaddrs = std::ptr::null_mut();
+	if unsafe { libc::getifaddrs(&mut head) } != 0 { return Err(std::io::Error::last_os_error().to_string()) }
+	let mut list: Vec<Interface> = Vec::new();
+	let mut at = head;
+	while !at.is_null() {//nothing in here returns early, so the list is always freed below
+		let entry = unsafe { &*at };
+		at = entry.ifa_next;
+		let name = unsafe { std::ffi::CStr::from_ptr(entry.ifa_name) }.to_string_lossy().into_owned();
+		let i = match list.iter().position(|interface| interface.name == name) {
+			Some(i) => i,
+			None => {
+				let index = unsafe { libc::if_nametoindex(entry.ifa_name) };
+				list.push(Interface {name, description: String::new(), index, flags: unix_flags(entry.ifa_flags), addresses: Vec::new(), gateways: Vec::new()});
+				list.len() - 1
+			}
+		};
+		if let Some(address) = unix_address(entry.ifa_addr, entry.ifa_netmask) { list[i].addresses.push(address) }
+	}
+	unsafe { libc::freeifaddrs(head) };
+	Ok(list)
+}
+
+/// An interface's flags in the system's own words, the ones that say what it is and whether it's working
+#[cfg(unix)]
+fn unix_flags(flags: libc::c_uint) -> Vec<String> {
+	let words = [(libc::IFF_UP, "up"), (libc::IFF_RUNNING, "running"), (libc::IFF_LOOPBACK, "loopback"), (libc::IFF_POINTOPOINT, "point-to-point"), (libc::IFF_BROADCAST, "broadcast"), (libc::IFF_MULTICAST, "multicast")];
+	words.iter().filter(|(bit, _)| flags & *bit as libc::c_uint != 0).map(|(_, word)| word.to_string()).collect()
+}
+
+/// The IPv4 or IPv6 address in one getifaddrs entry with its prefix length, or None for an entry that holds a hardware address or nothing
+#[cfg(unix)]
+fn unix_address(address: *const libc::sockaddr, mask: *const libc::sockaddr) -> Option<Address> {
+	if address.is_null() { return None }
+	let ip = match unsafe { (*address).sa_family } as i32 {
+		libc::AF_INET => IpAddr::from(unsafe { (*(address as *const libc::sockaddr_in)).sin_addr.s_addr }.to_ne_bytes()),//s_addr holds the address in network order, the order its bytes lie in memory
+		libc::AF_INET6 => IpAddr::from(unsafe { (*(address as *const libc::sockaddr_in6)).sin6_addr.s6_addr }),
+		_ => return None,
+	};
+	Some(Address {address: ip.to_string(), prefix: mask_length(mask, ip.is_ipv6()), flags: Vec::new(), valid: None, preferred: None})
+}
+
+/// The number of one bits in a getifaddrs netmask, which is the prefix length
+#[cfg(unix)]
+fn mask_length(mask: *const libc::sockaddr, v6: bool) -> u8 {
+	if mask.is_null() { return 0 }
+	let (start, end) = if v6 { (8, 24) } else { (4, 8) };//where the address's bytes sit in a sockaddr_in6 and a sockaddr_in
+	#[cfg(target_os = "macos")]
+	let end = end.min(unsafe { (*mask).sa_len } as usize);//a mac keeps only the bytes up to the last one that isn't zero, and says how many in sa_len, the essay above has it
+	let bytes = unsafe { std::slice::from_raw_parts(mask as *const u8, end) };
+	bytes.get(start..).unwrap_or_default().iter().map(|byte| byte.count_ones() as u8).sum()
+}
+
+/// The interfaces from GetAdaptersAddresses, with each one's gateways, and where each address came from and how long it lasts
+#[cfg(windows)]
+fn interfaces() -> Result<Vec<Interface>, String> {
+	use windows::Win32::NetworkManagement::IpHelper::{GetAdaptersAddresses, GAA_FLAG_INCLUDE_GATEWAYS, IP_ADAPTER_ADDRESSES_LH};
+	use windows::Win32::Networking::WinSock::AF_UNSPEC;
+	let mut size: u32 = 15 * 1024;//the size Microsoft suggests starting with, which holds most machines' list
+	let mut buffer: Vec<u64>;//of u64, so the structures written into it are aligned
+	loop {
+		buffer = vec![0; (size as usize).div_ceil(8)];
+		let result = unsafe { GetAdaptersAddresses(AF_UNSPEC.0 as u32, GAA_FLAG_INCLUDE_GATEWAYS, None, Some(buffer.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH), &mut size) };
+		if result == 0 { break }//NO_ERROR
+		if result != 111 { return Err(format!("GetAdaptersAddresses failed with error {result}")) }//anything but ERROR_BUFFER_OVERFLOW, after which size holds the room it needs, so the loop asks again
+	}
+	let mut list = Vec::new();
+	let mut adapter = buffer.as_ptr() as *const IP_ADAPTER_ADDRESSES_LH;
+	while !adapter.is_null() {//a linked list inside buffer, which outlives it
+		let a = unsafe { &*adapter };
+		adapter = a.Next;
+		let mut addresses = Vec::new();
+		let mut unicast = a.FirstUnicastAddress;
+		while !unicast.is_null() {
+			let u = unsafe { &*unicast };
+			unicast = u.Next;
+			let Some(ip) = windows_ip(u.Address.lpSockaddr) else { continue };
+			let flags = vec![
+				format!("prefix {}", windows_word(u.PrefixOrigin.0, &["other", "manual", "well-known", "dhcp", "router-advertisement"])),//NL_PREFIX_ORIGIN
+				format!("suffix {}", windows_word(u.SuffixOrigin.0, &["other", "manual", "well-known", "dhcp", "link-layer", "random"])),//NL_SUFFIX_ORIGIN
+				windows_word(u.DadState.0, &["invalid", "tentative", "duplicate", "deprecated", "preferred"]),//NL_DAD_STATE
+			];
+			addresses.push(Address {address: ip.to_string(), prefix: u.OnLinkPrefixLength, flags, valid: Some(u.ValidLifetime), preferred: Some(u.PreferredLifetime)});
+		}
+		let mut gateways = Vec::new();
+		let mut gateway = a.FirstGatewayAddress;
+		while !gateway.is_null() {
+			let g = unsafe { &*gateway };
+			gateway = g.Next;
+			if let Some(ip) = windows_ip(g.Address.lpSockaddr) { gateways.push(ip.to_string()) }
+		}
+		list.push(Interface {
+			name: unsafe { a.FriendlyName.to_string() }.unwrap_or_default(),
+			description: unsafe { a.Description.to_string() }.unwrap_or_default(),
+			index: unsafe { a.Anonymous1.Anonymous.IfIndex },
+			flags: vec![windows_kind(a.IfType), windows_word(a.OperStatus.0, &["0", "up", "down", "testing", "unknown", "dormant", "not-present", "lower-layer-down"])],//IF_OPER_STATUS, which counts from 1
+			addresses,
+			gateways,
+		});
+	}
+	Ok(list)
+}
+
+/// A windows enumeration's value as the word for it, counting from 0, or as its number when the list has no word for it
+#[cfg(windows)]
+fn windows_word(value: i32, words: &[&str]) -> String {
+	usize::try_from(value).ok().and_then(|i| words.get(i)).map(|word| word.to_string()).unwrap_or_else(|| value.to_string())
+}
+
+/// An adapter's IANA interface type as a word, for the common ones
+#[cfg(windows)]
+fn windows_kind(kind: u32) -> String {
+	match kind {
+		6 => "ethernet".into(),
+		23 => "ppp".into(),
+		24 => "loopback".into(),
+		71 => "wifi".into(),
+		131 => "tunnel".into(),
+		243 | 244 => "mobile-broadband".into(),
+		other => format!("type {other}"),
+	}
+}
+
+/// The IPv4 or IPv6 address a windows socket address holds, or None for another kind
+#[cfg(windows)]
+fn windows_ip(address: *const windows::Win32::Networking::WinSock::SOCKADDR) -> Option<IpAddr> {
+	use windows::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
+	if address.is_null() { return None }
+	let family = unsafe { (*address).sa_family };
+	if family == AF_INET { return Some(IpAddr::from(unsafe { (*(address as *const SOCKADDR_IN)).sin_addr.S_un.S_addr }.to_ne_bytes())) }//network order, as it lies in memory
+	if family == AF_INET6 { return Some(IpAddr::from(unsafe { (*(address as *const SOCKADDR_IN6)).sin6_addr.u.Byte })) }
+	None
 }
 
 /// The address and port in a STUN answer to this request, None for a packet that isn't one, or the server's refusal as an error

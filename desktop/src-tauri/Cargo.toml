@@ -28,11 +28,11 @@ sha2 = "0.10"#the hash net.rs takes of a saved download, at the version rustls's
 getrandom = "0.3"#the random transaction id net.rs puts in a STUN request; tauri already brings this crate at this version
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2"#statvfs, which disk.rs asks how much room a volume has; tauri already brings this crate at this version
+libc = "0.2"#statvfs, which disk.rs asks how much room a volume has, and getifaddrs, which net.rs lists the interfaces through; tauri already brings this crate at this version
 
 [target.'cfg(windows)'.dependencies]
 tokio = { version = "1", features = ["net", "io-util"] }#the named pipe a second launch hands over through; tauri already brings tokio, and this turns on the part that speaks pipes
-windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem", "Win32_UI_WindowsAndMessaging"] }#the registry calls registry.rs makes and the shell notification after them, the hidden attribute disk.rs sets, and the small icon size lifecycle.rs asks for the tray; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_Security", "Win32_UI_Shell", "Win32_Storage_FileSystem", "Win32_UI_WindowsAndMessaging", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock"] }#the registry calls registry.rs makes and the shell notification after them, the hidden attribute disk.rs sets, the small icon size lifecycle.rs asks for the tray, and GetAdaptersAddresses, which net.rs lists the interfaces through, with the status and socket address types its answer is written in; tauri already brings this crate at this version, and Win32_Security is here because RegCreateKeyExW takes a security attributes pointer
 ico = "0.5"#reads the tray icons at startup, so lifecycle.rs can hand the shell the layer drawn for the system's scaling; tauri already brings this crate at this version, inside its code generator
 webview2-com = "0.38"#the web view's key event, which window.rs handles to turn off the browser's shortcut keys; tauri already brings this crate at this version, and the controller tauri hands over is its type
 

@@ -18,6 +18,30 @@ pub async fn process_run(program: String, args: Vec<String>) -> Result<i32, Stri
 	}).await
 }
 
+/// What process_output answers about a program that ran: its exit code and what it printed
+#[derive(serde::Serialize)]
+pub struct Output {
+	pub code: i32,//the exit code, -1 when a signal ended it
+	pub out:  String,//what it printed to standard output, as text, any bytes that aren't UTF-8 replaced
+	pub err:  String,//and to standard error
+}
+
+/// Run the program at this path with these arguments and wait for it to finish, like process_run, but answering what it printed as well as its exit code, for a tool whose output is the answer; on windows with no console window, which a console program run from a windowed one would otherwise open
+#[command]
+pub async fn process_output(program: String, args: Vec<String>) -> Result<Output, String> {
+	run_blocking(move || {
+		let mut command = std::process::Command::new(&program);
+		command.args(&args).stdin(std::process::Stdio::null());
+		#[cfg(target_os = "windows")]
+		{
+			use std::os::windows::process::CommandExt;
+			command.creation_flags(0x08000000);//CREATE_NO_WINDOW, from winbase.h
+		}
+		let output = command.output().map_err(|e| format!("could not run {program}: {e}"))?;//collects both outputs through pipes until the program exits
+		Ok(Output {code: output.status.code().unwrap_or(-1), out: String::from_utf8_lossy(&output.stdout).into_owned(), err: String::from_utf8_lossy(&output.stderr).into_owned()})
+	}).await
+}
+
 /// Start the program at this path with these arguments and answer once it has started, leaving it to outlive this process; directly, like process_run, and with no console
 #[command]
 pub async fn process_start(program: String, args: Vec<String>) -> Result<(), String> {

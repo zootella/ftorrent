@@ -58,6 +58,7 @@ Accept-Encoding: gzip
 
 - `https://ip4.ftorrent.com/` and `https://ip6.ftorrent.com/`: each answers the address the request arrived from. The first name has only an IPv4 record and the second only an IPv6 record, so each request travels over one family. Sent over HTTPS, checked against Mozilla's roots compiled into the client, following no redirect, with the same three headers as the update check.
 - `stun.ftorrent.com:3478` and `stun.cloudflare.com:3478`: a STUN binding request over UDP, over each family, to both at once from one local port, picked at random from 49152 to 65535 for each run. The request is STUN's twenty-byte header and nothing else, sent again half a second, a second and a half, and three and a half seconds after the first until an answer comes.
+- `ipv4only.arpa`, `ip4.ftorrent.com`, and `ip6.ftorrent.com`: resolved through the system's resolver. The first has only IPv4 addresses by definition, RFC 7050, so an IPv6 answer reveals DNS64; the other two show the single-family records the reflector checks rest on.
 - Built in `desktop/src/connection.js`, with ftorrent's names from `urlHome`.
 - Asked only when the user presses Check on the Connection tab, each given four seconds to answer.
 
@@ -100,6 +101,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 
 - Names resolve through the system's DNS. The client sets no resolver.
 - The web view is the platform's: WebKit on macOS and Linux, WebView2 on Windows.
+- The Connection tab runs the system's own tools through `process_output` in `desktop/src-tauri/src/process.rs`, for what the system's list of interfaces leaves out: on macOS `/sbin/ifconfig -L`, `/sbin/route -n get default` and its `-inet6` form, and `/usr/sbin/networksetup -listallhardwareports`, and on Linux `ip -o address` and `ip route show default` in each family. Each reads the machine and contacts no one. On Windows, `GetAdaptersAddresses` answers all of it, and no tool runs.
 - The web view reaches no network itself. The content security policy in `desktop/src-tauri/tauri.conf.json` admits only the app's own files and its calls into Rust, so every request goes through `net_get` in `desktop/src-tauri/src/net.rs`. The fonts ship inside the app, in `desktop/public/fonts`.
 
 ## Addresses
