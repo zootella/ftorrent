@@ -52,7 +52,7 @@ export function saySize4(n) {
 	let units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 	for (let u = 0; u < units.length; u++) {
 		let w = Math.floor(n / 1024 ** u)
-		if (w <= 9999) return w + '\u2009' + units[u]
+		if (w <= 9999) return w + ' ' + units[u]
 	}
 	return n + ''
 }
