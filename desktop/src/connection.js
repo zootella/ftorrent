@@ -1,7 +1,8 @@
 import {getVersion} from '@tauri-apps/api/app'
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
-import {Time, sayMoment} from './time.js'
+import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces} from './net.js'
 import {processOutput} from './process.js'
 

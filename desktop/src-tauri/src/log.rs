@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Mutex;
 use tauri::command;
+use zootella_ergo::{has_tick, tick_to_iso};
 use crate::run_blocking;
 
 /*
@@ -87,31 +88,19 @@ fn write(side: &str, text: &str) {
 	}
 }
 
+//now in UTC, in the iso form like 2026-10-01T01:14:05.123Z, which both stamps below are cut from
+fn stamp_iso() -> String {
+	let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |since| since.as_millis() as i64);//milliseconds since 1970, which is ergo's tick
+	tick_to_iso(if has_tick(now) { now } else { 0 })//a clock set before 1970 or past 9999 reads as the start of 1970 rather than panicking inside a log line
+}
+
 //the time of day in UTC to the millisecond, like 01:14:05.123
 fn stamp_clock() -> String {
-	let since = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();//a clock set before 1970 reads as midnight rather than panicking inside a log line
-	let seconds = since.as_secs() % 86_400;//seconds into today, since a unix day is exactly that long
-	format!("{:02}:{:02}:{:02}.{:03}", seconds / 3600, seconds / 60 % 60, seconds % 60, since.subsec_millis())
+	stamp_iso()[11..23].to_string()
 }
 
 //the date and time in UTC to the second, like 2026-10-01-011405, for a file name that sorts by when its process started
 fn stamp_date() -> String {
-	let seconds = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
-	let days = (seconds / 86_400) as i64;
-	let (year, month, day) = civil(days);
-	let time = seconds % 86_400;
-	format!("{year:04}-{month:02}-{day:02}-{:02}{:02}{:02}", time / 3600, time / 60 % 60, time % 60)
-}
-
-//days since 1970 as a year, month, and day, by Howard Hinnant's civil-from-days, which the standard library doesn't offer
-fn civil(days: i64) -> (i64, i64, i64) {
-	let z = days + 719_468;//counted from 0000-03-01, so a leap day ends the year rather than falling inside it
-	let era = z.div_euclid(146_097);//400-year eras
-	let day_of_era = z - era * 146_097;
-	let year_of_era = (day_of_era - day_of_era / 1460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-	let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-	let month_from_march = (5 * day_of_year + 2) / 153;
-	let day = day_of_year - (153 * month_from_march + 2) / 5 + 1;
-	let month = if month_from_march < 10 { month_from_march + 3 } else { month_from_march - 9 };
-	(year_of_era + era * 400 + if month <= 2 { 1 } else { 0 }, month, day)
+	let iso = stamp_iso();
+	format!("{}-{}{}{}", &iso[..10], &iso[11..13], &iso[14..16], &iso[17..19])//the date, then the hour, minute, and second without their colons
 }

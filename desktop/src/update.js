@@ -1,3 +1,4 @@
+import {Size, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {diskMkdir, diskStat, diskRmtree, diskSpace, diskAccess} from './disk.js'
 import {netGet} from './net.js'
 import {processRun, processStart} from './process.js'
@@ -9,9 +10,9 @@ import {platformName} from './settings.js'
 import {log} from './log.js'
 
 export const updateFile = `${brandStem}.${platformName == 'macOS' ? 'app.zip' : 'exe'}`//the published name of what this platform updates from, beside its sidecar on ftorrent.com
-export const updateLimit = 50*1024*1024//bytes; a comfortable ceiling on the update's download, where a real one is about 22 MB, so a download can't go on without end; the hash, not the size, is what says the file is the right one
+export const updateLimit = 50*Size.mb//a comfortable ceiling on the update's download, where a real one is about 22 MB, so a download can't go on without end; the hash, not the size, is what says the file is the right one
 const updateSeconds = 10*60//a 22 MB update in ten minutes is about 300 kilobits a second, slower than any connection a torrent client is useful on
-const updateSpace = 1024*1024*1024//bytes free on the data folder's volume, at the least, to start an update; the update needs about 140 MB at its peak on a mac, and on windows only the 15 MB download, since setup writes over the old files, and the rest is room for torrents that arrive while it runs, since a machine under a gigabyte free is in trouble already and an update shouldn't be what fills it
+const updateSpace = 1*Size.gb//free space on the data folder's volume, at the least, to start an update; the update needs about 140 MB at its peak on a mac, and on windows only the 15 MB download, since setup writes over the old files, and the rest is room for torrents that arrive while it runs, since a machine under a gigabyte free is in trouble already and an update shouldn't be what fills it
 const replaceArgument = '--replace'//on the newer copy's command line, followed by the bundle to replace; install.rs knows it as ARGUMENT
 const logArgument = '--log'//followed by the folder to log into, when logging is on; install.rs knows it as LOG_ARGUMENT
 
@@ -112,7 +113,7 @@ function _place(paths) {//every path the update touches, worked out from where t
 async function _download(place, url, sha256) {
 	await _step(diskRmtree(place.work))//one left from an update that stopped partway, or from setup on windows
 	let v = await _step(diskSpace(place.data))
-	if (v.success && v.value < updateSpace) return {success: false, outcome: `${v.value} bytes free, under updateSpace`}
+	if (v.success && v.value < updateSpace) return {success: false, outcome: `${saySize4(v.value)} free, under updateSpace`}
 	if (!v.success) return v
 	v = await _step(diskMkdir(place.work))
 	if (!v.success) return v

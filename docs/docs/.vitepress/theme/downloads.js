@@ -5,7 +5,7 @@ An installer is built where it can be, the exe on Windows and the dmg on a Mac, 
 
 	desktop/scripts.js              pnpm hash writes a sidecar, pnpm upload sends it to ftorrent.com
 	  ↓                             or, in development, .vitepress/config.js serves it
-	theme/downloads.js              this file: the fetch, two small readings and the clipboard call
+	theme/downloads.js              this file: the fetch, a date in words, and the clipboard call
 	  ↓
 	components/DownloadLink.vue     one download; installing-ftorrent.md places six
 	components/DownloadCommand.vue  the hash written into a fenced install command; installing-ftorrent.md places two
@@ -45,14 +45,4 @@ export async function copyText(text) {
 		await navigator.clipboard.writeText(text)
 		return true
 	} catch (error) { return false }
-}
-
-//a size in four digits or less, like 5428 KB or 21 MB: the saySize4 the desktop client shows sizes with in its lists, said again here rather than imported across the workspace line, so a file is the same size on this page and in the client. whole numbers, because a decimal point is a comma in half the world and a number with no separator is right in both; by 1024, with MB meaning 1024 squared, the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here; and a thin space before the unit
-export function saySize4(n) {
-	let units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-	for (let u = 0; u < units.length; u++) {
-		let w = Math.floor(n / 1024 ** u)
-		if (w <= 9999) return w + ' ' + units[u]
-	}
-	return n + ''
 }

@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
-import { fetchSidecar, readableDate, saySize4, copyText } from '../downloads.js'
+import { saySize4 } from '@zootella/ergo'//whole numbers in four digits or less, counted by 1024 the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here
+import { fetchSidecar, readableDate, copyText } from '../downloads.js'
 
 /*
 One download: the outlined box that offers a file and says what is known about it. downloads.js has the system it belongs to, where a sidecar comes from, what is in one, and why the fetch happens on mount.

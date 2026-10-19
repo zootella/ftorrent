@@ -1,18 +1,9 @@
 <script setup>
 
-// Time unit constants — milliseconds. Multiply for readable durations: 10 * time_minute, etc.
-const time_second = 1000
-const time_minute = 60 * time_second
-const time_hour   = 60 * time_minute
-const time_day    = 24 * time_hour
-
-// Byte size constants — bytes. Divide for readable units: bytes / size_mb, etc.
-const size_kb = 1024
-const size_mb = size_kb * size_kb
-
 const month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 import { inject, computed, reactive, ref, onMounted, onUnmounted } from 'vue'
+import { Time, saySize4 } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
 
 const page = inject('page')
 
@@ -20,8 +11,8 @@ const nbsp = '\u00A0' // non-breaking space (same as &nbsp;); used as digit grou
 
 const burst_quantity = 1_000     // counters with rate at or below this animate in discrete bursts
 const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop visibly
-const drum_duration  = time_second / 2  // colon-blink half-period; also our beat tempo
-const reset_duration = 10 * time_minute // how often counters snap back to the recorded total
+const drum_duration  = Time.second / 2  // colon-blink half-period; also our beat tempo
+const reset_duration = 10 * Time.minute // how often counters snap back to the recorded total
 
 // Per-service cool-down: read from page.coolDown. Older page.json files without this property
 // default each key to false (no cool-down). When true, that service shows coolDownText instead
@@ -40,10 +31,6 @@ function group(n) {
 	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
 }
 
-function mb(bytes) {
-	return group(Math.ceil(bytes / size_mb)) + nbsp + 'MB'
-}
-
 // Parse the 90-day downtime string into an array of per-day downtime minutes
 const history = computed(() => {
 	if (!page.downtimeDays) return []
@@ -55,7 +42,7 @@ const bar_one  = 97   // 1 minute downtime
 const bar_none = 3    // full day downtime
 
 function barHeight(downMinutes) {
-	const minutesPerDay = time_day / time_minute
+	const minutesPerDay = Time.day / Time.minute
 	if (downMinutes <= 0) return bar_all
 	if (downMinutes >= minutesPerDay) return bar_none
 	return bar_one - (downMinutes - 1) / (minutesPerDay - 1) * (bar_one - bar_none)
@@ -63,7 +50,7 @@ function barHeight(downMinutes) {
 
 // Format a day number as "2026 Apr 07"
 function dayToDate(dayNumber) {
-	const d = new Date(dayNumber * time_day)
+	const d = new Date(dayNumber * Time.day)
 	const year = d.getUTCFullYear()
 	const month = month_names[d.getUTCMonth()]
 	return `${year} ${month} ${String(d.getUTCDate()).padStart(2, '0')}`
@@ -88,7 +75,7 @@ const uptimePercent = computed(() => {
 	const postLaunch = bars.slice(li + 1) // exclude launch day (partial data)
 	if (postLaunch.length === 0) return ''
 	// All but the last are complete days; the last is today's partial day
-	const totalMinutes = (postLaunch.length - 1) * (time_day / time_minute) + (page.minute + 1)
+	const totalMinutes = (postLaunch.length - 1) * (Time.day / Time.minute) + (page.minute + 1)
 	const totalDown = postLaunch.reduce((sum, d) => sum + d, 0)
 	const pct = ((totalMinutes - totalDown) / totalMinutes) * 100
 	return (Math.floor(pct * 1000) / 1000).toFixed(3)
@@ -118,7 +105,7 @@ const barDown = computed(() => {
 // served is the live, animated copy.
 const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
 const recorded = Object.fromEntries(count_keys.map(k => [k, page.servedDay[k]]))
-const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / time_day])) // events per ms
+const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / Time.day])) // events per ms
 const served = reactive({ ...recorded })
 
 // Render one of the six counter services: either the cool-down message or the formatted live count.
@@ -253,22 +240,22 @@ onUnmounted(() => {
 			<div class="right">{{ service('udp4') }}</div>
 			<div class="right">{{ service('udp6') }}</div>
 			<div class="label">UDP announce</div>
-			<div class="right">{{ mb(page.memory.udp) }}</div>
+			<div class="right">{{ saySize4(page.memory.udp) }}</div>
 
 			<div class="right">{{ service('http4') }}</div>
 			<div class="right">{{ service('http6') }}</div>
 			<div class="label">HTTP announce</div>
-			<div class="right">{{ mb(page.memory.http) }}</div>
+			<div class="right">{{ saySize4(page.memory.http) }}</div>
 
 			<div class="right">{{ service('ws4') }}</div>
 			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">WebRTC offer</div>
-			<div class="right">{{ mb(page.memory.ws) }}</div>
+			<div class="right">{{ saySize4(page.memory.ws) }}</div>
 
 			<div></div>
 			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
 			<div class="label">DHT nodes</div>
-			<div class="right">{{ mb(page.memory.dht ?? 0) }}</div>
+			<div class="right">{{ saySize4(page.memory.dht ?? 0) }}</div>
 
 			<div></div>
 			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
@@ -338,13 +325,13 @@ onUnmounted(() => {
 			<div class="label right">Memory in use</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ mb(page.memory.udp) }}</div>
+			<div class="right">{{ saySize4(page.memory.udp) }}</div>
 			<div class="label">UDP</div>
-			<div class="right">{{ mb(page.memory.http) }}</div>
+			<div class="right">{{ saySize4(page.memory.http) }}</div>
 			<div class="label">HTTP</div>
-			<div class="right">{{ mb(page.memory.ws) }}</div>
+			<div class="right">{{ saySize4(page.memory.ws) }}</div>
 			<div class="label">WS</div>
-			<div class="right">{{ mb(page.memory.dht ?? 0) }}</div>
+			<div class="right">{{ saySize4(page.memory.dht ?? 0) }}</div>
 			<div class="label">DHT</div>
 		</div>
 
@@ -411,6 +398,7 @@ onUnmounted(() => {
 
 .right {
 	text-align: right;
+	white-space: nowrap; /* a value stays on one line, even where its space is an ordinary one, like 399 MB */
 }
 
 

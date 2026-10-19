@@ -26,6 +26,7 @@ serde_json = "1"
 ureq = "3"#the https requests net.rs makes for the page, with its default TLS, rustls and Mozilla's roots compiled in
 sha2 = "0.10"#the hash net.rs takes of a saved download, at the version rustls's dependencies already bring
 getrandom = "0.3"#the random transaction id net.rs puts in a STUN request; tauri already brings this crate at this version
+zootella-ergo = "0.1.2"#ergo's small helpers, the same in rust as in the page: log.rs writes its time stamps through tick_to_iso, asking has_tick first, which arrived in 0.1.2; its one dependency, getrandom, is one tauri already brings at this version
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"#statvfs, which disk.rs asks how much room a volume has, and getifaddrs, which net.rs lists the interfaces through; tauri already brings this crate at this version

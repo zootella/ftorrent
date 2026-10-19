@@ -1,5 +1,4 @@
-//lengths of time in milliseconds, the unit Date.now() and setInterval speak, so a duration reads as 24*Time.hour rather than a number to work out
-export const Time = {second: 1000, minute: 60*1000, hour: 60*60*1000, day: 24*60*60*1000, week: 7*24*60*60*1000, month: 30*24*60*60*1000, year: 365*24*60*60*1000}//a month and a year here are round, which is all a phrase like 2 months ago needs
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 //a moment as UTC text a person can read in a file, like 2026-10-08T14:22:00Z: toISOString without the milliseconds
 export function sayMoment(time) {

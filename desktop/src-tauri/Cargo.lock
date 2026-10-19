@@ -867,6 +867,7 @@ dependencies = [
  "ureq",
  "webview2-com",
  "windows",
+ "zootella-ergo",
 ]
 
 [[package]]
@@ -4698,3 +4699,12 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[package]]
+name = "zootella-ergo"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99643c4e049e8aa0f18a69bd6ea206a04dd57ef420322f95a1e0b67d554fb32e"
+dependencies = [
+ "getrandom 0.4.3",
+]

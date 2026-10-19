@@ -13,6 +13,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.11.1
         version: 2.11.1
+      '@zootella/ergo':
+        specifier: ^0.1.2
+        version: 0.1.2
       pinia:
         specifier: ^4.0.3
         version: 4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.41)
@@ -46,6 +49,9 @@ importers:
 
   docs:
     devDependencies:
+      '@zootella/ergo':
+        specifier: ^0.1.2
+        version: 0.1.2
       markdown-it-task-lists:
         specifier: ^2.1.1
         version: 2.1.1
@@ -82,6 +88,9 @@ importers:
 
   open/page:
     dependencies:
+      '@zootella/ergo':
+        specifier: ^0.1.2
+        version: 0.1.2
       three:
         specifier: ^0.183.2
         version: 0.183.2
@@ -2745,6 +2754,10 @@ packages:
 
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
+
+  '@zootella/ergo@0.1.2':
+    resolution: {integrity: sha512-vMxa6Aha+I4rjzWw/1hdnqvG7zyxo9KuUALt0RYEYOa2WIqg65GqiGZjToYJ8/N4+GHqyeAcU3IeK83jSJc/vA==}
+    engines: {node: '>=22'}
 
   abbrev@3.0.1:
     resolution: {integrity: sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg==}
@@ -7707,6 +7720,8 @@ snapshots:
       vue: 3.5.44
     transitivePeerDependencies:
       - typescript
+
+  '@zootella/ergo@0.1.2': {}
 
   abbrev@3.0.1: {}
 

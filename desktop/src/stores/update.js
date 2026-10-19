@@ -1,17 +1,18 @@
 import {ref, computed} from 'vue'
 import {defineStore} from 'pinia'
 import {getVersion} from '@tauri-apps/api/app'
+import {Size, Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {useSettingsStore} from './settings.js'
 import {isInstalled} from '../paths.js'
 import {urlHome} from '../brand.js'
 import {netGet} from '../net.js'
 import {updateFile, updateLimit, updateInstallable, updateClean, updateInstall} from '../update.js'
-import {Time, sayMoment} from '../time.js'
+import {sayMoment} from '../time.js'
 import {log, logPlace} from '../log.js'
 
 //the factory timing: how often a running copy looks at the clock, and the range the next check is picked from, at random so every copy doesn't ask at once after a release
-const updatePresets = {checkEvery: Time.hour, randomFrom: 24*Time.hour, randomTo: 48*Time.hour}
-const sidecarLimit = 12*1024//bytes; a real sidecar is about 200, and this leaves room for it to grow
+const updatePresets = {checkEvery: 1*Time.hour, randomFrom: 24*Time.hour, randomTo: 48*Time.hour}
+const sidecarLimit = 12*Size.kb//a real sidecar is about 200 bytes, and this leaves room for it to grow
 const sidecarSeconds = 10
 
 /*
