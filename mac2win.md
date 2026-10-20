@@ -14,6 +14,16 @@ The Connection tab now runs a libtorrent session, which is Good4 in `docs/docs/g
 
 While a session runs, the page also writes the whole panel, the table and then the box, to `%USERPROFILE%\ftorrent-logs\stick.txt` a second after anything changes, the first line saying when and which process. Read that file rather than asking the user to paste.
 
+## Ergo, and what only this box compiles
+
+The desktop workspace now takes ergo 0.1.3, the user's own helper library, from npm and crates.io, for its size and time constants, its SHA-256, and its base16. Before any other command, run `pnpm install --frozen-lockfile` at the repository root, which installs what the committed lockfile names and refuses to change it. These are the parts no machine has built yet:
+
+- **blake3 under MSVC.** Ergo 0.1.3 brings blake3, sha1, and sha2 0.11 into `Cargo.lock`. Nothing here calls blake3 or sha1; they compile because the crate is there. When the target is MSVC, blake3's build script assembles its x86-64 code from `.asm` files with `ml64.exe`, which comes with the Visual Studio Build Tools that give Rust its linker. A failure shows in blake3's build script during `cargo check`: report it in full and stop there, since the fix may belong in ergo, and that is the user's call.
+- **The Windows-only Rust.** Two lines behind `#[cfg(windows)]` now count bytes with ergo's `size::KB`: the longest request `instance.rs` reads from a second launch's pipe, and the first buffer `net.rs` hands `GetAdaptersAddresses`. Both keep their values, 64 KB and 15 KB. The Connection tab's interfaces should read as they did, and a second launch should still hand over to the running copy.
+- **`scripts.js` and `win-setup.js`.** `pnpm hash` hashes through ergo now, with an async `main` that ends at `main().catch(...)`. After `pnpm installer` and `pnpm hash`, compare the hash it prints for `ftorrent.exe` with PowerShell's `Get-FileHash -Algorithm SHA256` of the staged file; PowerShell prints it in capitals, so compare without case. `win-setup.js` counts its megabytes, kilobytes, and seconds through ergo's `Size` and `Time`, and its staged, cabinet, stub, and finished lines should read as they did.
+
+Put what each of these showed in `win2mac.md` with the rest.
+
 ## What to do
 
 - **Make it build.** Run `pnpm engine`, then `cargo check` from `src-tauri`, then `pnpm compile`. Report any error in full before changing anything.

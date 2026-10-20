@@ -13,7 +13,7 @@
 		"upload": "vite build && rm -f dist/page.json && node --env-file-if-exists=../../.env ../../upload.js open"
 	},
 	"dependencies": {
-		"@zootella/ergo": "^0.1.2",
+		"@zootella/ergo": "^0.1.3",
 		"three": "^0.183.2",
 		"vue": "^3.5.31"
 	},

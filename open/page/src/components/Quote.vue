@@ -1,4 +1,5 @@
 <script setup>
+import { Time } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 Between the fall of the Berlin Wall and the burst of the dot-com bubble, something remarkable happened: politicians, technologists, diplomats, dissidents, and engineers briefly shared a common vision. They believed that connection — between people, between nations, between ideas — would make the world gentler, more open, more free. They weren't naive. Many of them had lived through wars, dictatorships, and the threat of nuclear annihilation. They simply looked at what was emerging and allowed themselves to hope.
@@ -1307,7 +1308,7 @@ function squirrel3(i, seed = 0) {
 	return n >>> 0                // coerce to uint32
 }
 
-const day = Math.floor(Date.now() / 86_400_000)  // UTC day number
+const day = Math.floor(Date.now() / Time.day)  // UTC day number
 const quote = quoteList[spin(day)]
 
 </script>

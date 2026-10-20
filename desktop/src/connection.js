@@ -1,6 +1,6 @@
 import {reactive, ref, shallowRef, watch} from 'vue'
 import {getVersion} from '@tauri-apps/api/app'
-import {Time, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Data, Time, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
@@ -286,7 +286,7 @@ const stunAttributes = {
 
 //the attributes in a STUN answer from its hex, read past the twenty-byte header the way net.rs reads them for the mapped address: each a type, a length, and a value padded to four bytes; answered as {type, name, value, note} in the box's words
 function _attributes(hex) {
-	let bytes = (hex.match(/../g) || []).map(pair => parseInt(pair, 16))
+	let bytes = Data({base16: hex}).array()//the answer's bytes, from the lowercase base16 net.rs writes
 	let attributes = []
 	let at = 20//past the header
 	while (at + 4 <= bytes.length) {
@@ -301,10 +301,10 @@ function _attributes(hex) {
 
 //an attribute's value in the box's words: SOFTWARE and an error's reason as the text they are, everything else in hex
 function _sayValue(type, value) {
-	let text = bytes => new TextDecoder().decode(new Uint8Array(bytes))
+	let text = bytes => new TextDecoder().decode(bytes)
 	if (type == 0x8022) return text(value)
 	if (type == 0x0009 && value.length >= 4) return `${(value[2] & 7)*100 + value[3]} ${text(value.slice(4))}`//the hundreds in the low three bits of one byte and the rest in the next, then the reason
-	return _sayHex(value.map(byte => byte.toString(16).padStart(2, '0')).join(''))
+	return _sayHex(Data({array: value}).base16())
 }
 
 //hex in groups of four bytes, the way the RFCs print a STUN message

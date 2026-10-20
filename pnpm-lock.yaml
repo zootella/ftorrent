@@ -14,8 +14,8 @@ importers:
         specifier: ^2.11.1
         version: 2.11.1
       '@zootella/ergo':
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.3
+        version: 0.1.3
       pinia:
         specifier: ^4.0.3
         version: 4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.41)
@@ -45,13 +45,17 @@ importers:
         specifier: ^8.2.2
         version: 8.2.2(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)
 
-  desktop/linux: {}
+  desktop/linux:
+    dependencies:
+      '@zootella/ergo':
+        specifier: ^0.1.3
+        version: 0.1.3
 
   docs:
     devDependencies:
       '@zootella/ergo':
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.3
+        version: 0.1.3
       markdown-it-task-lists:
         specifier: ^2.1.1
         version: 2.1.1
@@ -66,6 +70,9 @@ importers:
 
   good/page:
     dependencies:
+      '@zootella/ergo':
+        specifier: ^0.1.3
+        version: 0.1.3
       vue:
         specifier: ^3.5.42
         version: 3.5.44
@@ -89,8 +96,8 @@ importers:
   open/page:
     dependencies:
       '@zootella/ergo':
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.3
+        version: 0.1.3
       three:
         specifier: ^0.183.2
         version: 0.183.2
@@ -974,6 +981,10 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@noble/hashes@2.4.0':
+    resolution: {integrity: sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==}
+    engines: {node: '>= 20.19.0'}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2755,8 +2766,8 @@ packages:
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
 
-  '@zootella/ergo@0.1.2':
-    resolution: {integrity: sha512-vMxa6Aha+I4rjzWw/1hdnqvG7zyxo9KuUALt0RYEYOa2WIqg65GqiGZjToYJ8/N4+GHqyeAcU3IeK83jSJc/vA==}
+  '@zootella/ergo@0.1.3':
+    resolution: {integrity: sha512-rGtA4PLgVa9uxH9XB8rtcuECMim1G47Ux0SYHAMp8kRW4N5u8PDesuAz2enCM9uvFE/0Nkac7LL1k9E1mc+mpw==}
     engines: {node: '>=22'}
 
   abbrev@3.0.1:
@@ -6114,6 +6125,8 @@ snapshots:
       '@tybys/wasm-util': 0.10.2
     optional: true
 
+  '@noble/hashes@2.4.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -7721,7 +7734,9 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@zootella/ergo@0.1.2': {}
+  '@zootella/ergo@0.1.3':
+    dependencies:
+      '@noble/hashes': 2.4.0
 
   abbrev@3.0.1: {}
 

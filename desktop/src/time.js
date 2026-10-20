@@ -1,8 +1,8 @@
-import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Time, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
-//a moment as UTC text a person can read in a file, like 2026-10-08T14:22:00Z: toISOString without the milliseconds
-export function sayMoment(time) {
-	return new Date(time).toISOString().replace(/\.\d+Z$/, 'Z')
+//a tick as UTC text a person can read in a file, like 2026-10-08T14:22:00Z: ergo's iso form without the milliseconds
+export function sayMoment(tick) {
+	return tickToIso(tick).replace(/\.\d+Z$/, 'Z')
 }
 
 //how long ago, from the milliseconds since, in round words to follow a phrase like last checked: just now, 5 minutes ago, 1 week ago, 2 months ago; a moment in the future, from a clock set back, reads as just now

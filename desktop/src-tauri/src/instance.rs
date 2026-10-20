@@ -137,9 +137,10 @@ mod handoff {
 	use tauri::AppHandle;
 	use tokio::io::AsyncReadExt;
 	use tokio::net::windows::named_pipe::ServerOptions;
+	use zootella_ergo::size;
 
 	const PATIENCE: Duration = Duration::from_secs(5);//how long a second launch keeps trying a copy that's still starting
-	const MOST: u64 = 64 * 1024;//the longest request read from the pipe; a launch's arguments are far shorter
+	const MOST: u64 = 64 * size::KB;//the longest request read from the pipe; a launch's arguments are far shorter
 	const ERROR_PIPE_BUSY: i32 = 231;//every instance of the pipe is taken for the moment, as when many launches arrive together
 
 	/// The pipe's name: brandStem and a hash of the lock file's path, so each copy has its own and a launch finds the right one; the windows installer computes the same name to ask a running copy to exit

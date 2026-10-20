@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
+import { Time } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
 
 const DRAG_ENABLED = false
 const TEST_HOUR = null // set to 0-24 to override, null for live UTC
@@ -10,7 +11,7 @@ const TIME_SCALE = 1 // 1 = real time, 10 = 10x faster, etc.
 const container = ref(null)
 let renderer, scene, camera, globe, rafId
 const startTime = Date.now()
-const startHours = new Date().getUTCHours() + new Date().getUTCMinutes() / 60 + new Date().getUTCSeconds() / 3600
+const startHours = (startTime % Time.day) / Time.hour // hours into the UTC day, fraction and all
 
 onMounted(() => {
 	scene = new THREE.Scene()
@@ -38,7 +39,7 @@ onMounted(() => {
 	container.value.appendChild(renderer.domElement)
 
 	// Globe — texture chosen by the current UTC month at load time, matching
-	// the rest of the page (clock, day number, launch day are all UTC).
+	// the rest of the page (the clock and the day number are UTC too).
 	// The URL is built at runtime from a string, so Vite has no compile-time
 	// reference to any of the twelve files: only the chosen month is fetched,
 	// and nothing in /earth/ is preloaded, prefetched, or bundled.
@@ -90,7 +91,7 @@ onMounted(() => {
 	}
 
 	// rAF loop, throttled to TARGET_FPS
-	const FRAME_MS = 1000 / TARGET_FPS
+	const FRAME_MS = Time.second / TARGET_FPS
 	let lastRender = 0
 	function tick(now) {
 		if (now - lastRender >= FRAME_MS) {
@@ -111,10 +112,10 @@ function updateRotation() {
 	if (TEST_HOUR !== null) {
 		hours = TEST_HOUR
 	} else {
-		const elapsed = (Date.now() - startTime) / 3600000 // real hours elapsed
+		const elapsed = (Date.now() - startTime) / Time.hour // real hours elapsed
 		hours = startHours + elapsed * TIME_SCALE
 	}
-	globe.rotation.y = Math.PI / 2 + (hours / 24) * Math.PI * 2
+	globe.rotation.y = Math.PI / 2 + (hours / (Time.day / Time.hour)) * Math.PI * 2
 }
 
 function render() {

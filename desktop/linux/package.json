@@ -14,5 +14,8 @@
 		"build-flatpak": "node build.js build-flatpak",
 		"stage": "node build.js stage",
 		"check": "node build.js check"
+	},
+	"dependencies": {
+		"@zootella/ergo": "^0.1.3"
 	}
 }

@@ -1,5 +1,6 @@
 <script setup>
 import {ref} from 'vue'
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {useSettingsStore} from '../stores/settings.js'
 import {brandName} from '../brand.js'
 import {log} from '../log.js'
@@ -17,7 +18,7 @@ async function prepareFolder() {
 		log(`engine: ${error}`)//the engine isn't running, most likely, and its own line in the log says why
 	}
 	prepared.value = true
-	setTimeout(() => { prepared.value = false }, 1500)
+	setTimeout(() => { prepared.value = false }, 1.5*Time.second)
 }
 </script>
 

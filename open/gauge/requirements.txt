@@ -1,0 +1,3 @@
+# ergo's Python edition, for its size and time constants and its tick; 0.1.3 and later also bring in a compiled BLAKE3 the gauge has no use for
+# the hash is of the release's wheel, so pip installs exactly that file or nothing
+zootella-ergo==0.1.2 --hash=sha256:ff015d2274b54b86d5cac6e257048debd48df38960945759b70b46e386a23c52

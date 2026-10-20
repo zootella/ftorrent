@@ -25,9 +25,8 @@ tauri-plugin-dialog = "2"#for its Rust half alone, the system's open box dialog.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ureq = "3"#the https requests net.rs makes for the page, with its default TLS, rustls and Mozilla's roots compiled in
-sha2 = "0.10"#the hash net.rs takes of a saved download, at the version rustls's dependencies already bring
 getrandom = "0.3"#the random transaction id net.rs puts in a STUN request; tauri already brings this crate at this version
-zootella-ergo = "0.1.2"#ergo's small helpers, the same in rust as in the page: log.rs writes its time stamps through tick_to_iso, asking has_tick first, which arrived in 0.1.2; its one dependency, getrandom, is one tauri already brings at this version
+zootella-ergo = "0.1.3"#ergo's small helpers, the same in rust as in the page: log.rs writes its time stamps through tick_to_iso, asking has_tick first; the size and time constants count out buffers and waits; and net.rs hashes a saved download with its Sha256 and writes bytes as text with Data's base16, both new in 0.1.3; its sha2 is a generation newer than the one tauri's code generator brings at build time, so the lockfile holds both, and it brings sha1, blake3, and unicode-normalization too, which nothing here calls
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"#statvfs, which disk.rs asks how much room a volume has, and getifaddrs, which net.rs lists the interfaces through; tauri already brings this crate at this version

@@ -1,10 +1,10 @@
 import {execFile, execFileSync} from 'node:child_process'
-import {createHash} from 'node:crypto'
 import {copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs'
 import {homedir, tmpdir} from 'node:os'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {parse as parseToml} from 'smol-toml'
+import {Data, sha256, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 The publishing pipeline for the desktop client, in one file, reached by a verb: reveal, hash, upload, icons-collect, certificate. Everything the package.json scripts do beyond calling tauri or docker is here.
@@ -147,13 +147,13 @@ Stage what this machine built and write a sidecar beside each, building nothing.
 
 Two things a sidecar must not lie about, and each is read rather than assumed: the version comes from tauri.conf.json, the file that named the bundle; the architecture comes out of the built file's own name, so it describes the file that exists rather than the computer that ran this. A target that has not been built yet is reported and skipped, because staging a dmg should not fail merely because nobody has run the Linux containers today; a target asked for by name is an instruction, so that one throws.
 */
-function hash() {
+async function hash() {
 	let {names, demanded} = chosenTargets()
 	let version = readVersion()
-	for (let name of names) hashOne(name, version, demanded)
+	for (let name of names) await hashOne(name, version, demanded)
 }
 
-function hashOne(name, version, demanded) {
+async function hashOne(name, version, demanded) {
 	let target = readTarget(name)
 	let built = findBuilt(target, version)
 	if (!built) {
@@ -171,13 +171,16 @@ function hashOne(name, version, demanded) {
 		version,
 		arch: built.arch,
 		bytes: bytes.length,
-		sha256: createHash('sha256').update(bytes).digest('hex'),
-		date: new Date().toISOString().slice(0, 10),
+		sha256: await hashBytes(bytes),
+		date: tickToIso(Date.now()).slice(0, 10),
 	}
 	writeFileSync(join(stage, target.publish + '.json'), JSON.stringify(sidecar, null, '\t') + '\n')
 	say(`${sidecar.sha256}  ${sidecar.bytes} bytes  ${target.publish}`)//the hash whole, because a cropped hash cannot check a download
 	return true
 }
+
+//the sha-256 of bytes in base16, from ergo over web crypto, which node has built in and which answers with a promise; all at once, since an installer is tens of megabytes at most
+async function hashBytes(bytes) { return (await sha256(Data({array: bytes}))).base16() }
 
 /*
 Send what this machine staged: every package it makes, and the sidecar beside each.
@@ -198,7 +201,7 @@ DEPLOY_FILES_PATH is written as the chrooted account sees it: its own directory 
 
 The file sits above every workspace on purpose. Vite loads a .env from the workspace it builds and copies any VITE_-prefixed value into the client bundle, and Nuxt, VitePress and the Tauri CLI each read one from their own folder the same way; a .env above all of them is outside what any of them looks at. Node does not read it on its own: the package.json scripts pass --env-file-if-exists, which is why this runs as pnpm upload rather than node scripts.js. The tolerant spelling is deliberate, because plain --env-file makes node refuse to start when the file is absent, before readServer can say anything useful.
 */
-function upload() {
+async function upload() {
 	let {names, demanded} = chosenTargets()
 	let version = readVersion()
 
@@ -214,7 +217,7 @@ function upload() {
 			continue
 		}
 		let sidecar = JSON.parse(readFileSync(join(stage, sidecarName), 'utf8'))
-		checkSidecar(name, stage, sidecar, sidecarName, version)
+		await checkSidecar(name, stage, sidecar, sidecarName, version)
 		sending.push({stage, file: sidecar.file, sidecarName})
 	}
 	if (!sending.length) throw new Error('nothing staged to upload; run pnpm hash first')
@@ -260,13 +263,13 @@ function reportTransport() {
 }
 
 //catch a sidecar left from a previous release, which would otherwise publish a hash describing a file nobody can download
-function checkSidecar(name, stage, sidecar, sidecarName, version) {
+async function checkSidecar(name, stage, sidecar, sidecarName, version) {
 	if (!existsSync(join(stage, sidecar.file))) throw new Error(`${name}: ${sidecarName} names ${sidecar.file}, which is not beside it`)
 	let bytes = readFileSync(join(stage, sidecar.file))
-	let sha256 = createHash('sha256').update(bytes).digest('hex')
+	let measured = await hashBytes(bytes)
 	if (sidecar.version != version)    throw new Error(`${name}: sidecar says version ${sidecar.version}, tauri.conf.json says ${version}; re-run pnpm hash`)
 	if (sidecar.bytes != bytes.length) throw new Error(`${name}: sidecar says ${sidecar.bytes} bytes, the file is ${bytes.length}; re-run pnpm hash`)
-	if (sidecar.sha256 != sha256)      throw new Error(`${name}: sidecar hash does not describe this file; re-run pnpm hash`)
+	if (sidecar.sha256 != measured)    throw new Error(`${name}: sidecar hash does not describe this file; re-run pnpm hash`)
 	say(`checked  ${sidecar.sha256}  ${bytes.length} bytes  ${sidecar.file}  ${sidecar.version} ${sidecar.arch}`)
 }
 
@@ -339,9 +342,9 @@ const commands = {
 	'certificate':   certificate,
 }
 
-function main() {//one gate in, one gate out
+async function main() {//one gate in, one gate out
 	let command = commands[process.argv[2]]
 	if (!command) throw new Error('say which: ' + Object.keys(commands).join(', '))
-	command()
+	await command()
 }
-try { main() } catch (e) { console.error('🚧 Error:', e.message || e); process.exitCode = 1 }
+main().catch(e => { console.error('🚧 Error:', e.message || e); process.exitCode = 1 })

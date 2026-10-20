@@ -3,6 +3,7 @@ import {cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFile
 import {dirname, join, relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {parse as parseToml} from 'smol-toml'
+import {Size, Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {uninstallInstructions} from './registry.js'
 
 /*
@@ -86,7 +87,7 @@ function main() {
 		`#define SETUP_HOMEPAGE ${quote(bundle.homepage || '')}`,
 		`#define SETUP_VERSION ${[...numbers, 0].join(',')}`,
 		`#define SETUP_VERSION_TEXT ${quote(version)}`,
-		`#define SETUP_SIZE_KB ${Math.ceil(bytes / 1024)}`,//what the uninstall entry reports as the installed size
+		`#define SETUP_SIZE_KB ${Math.ceil(bytes / Size.kb)}`,//what the uninstall entry reports as the installed size
 		`#define SETUP_UNINSTALL ${registry.map(instruction => 'L' + quote(instruction) + ', ').join('')}`,//the uninstall list as wide string literals, each followed by a comma, so setup.c can end the array with a null
 		'',
 	].join('\n'))
@@ -127,8 +128,8 @@ The three replacements run in that order on purpose: the first adds backslashes,
 Nothing else is escaped because nothing else can appear: paths, names, and registry keys carry no newlines or control characters, and registry.js checks each entry in its list against the few characters an extension or a scheme may hold. The one non-ASCII character the stamp carries, the copyright sign, passes through as it is, which is right, since build.cmd tells the C compiler and the resource compiler both to read the header as UTF-8.
 */
 function quote(text) { return '"' + text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\t/g, '\\t') + '"' }
-function megabytes(bytes) { return (bytes / 1048576).toFixed(1) }
-function kilobytes(bytes) { return (bytes / 1024).toFixed(0) }
-function seconds(since) { return ((Date.now() - since) / 1000).toFixed(1) }
+function megabytes(bytes) { return (bytes / Size.mb).toFixed(1) }
+function kilobytes(bytes) { return (bytes / Size.kb).toFixed(0) }
+function seconds(since) { return ((Date.now() - since) / Time.second).toFixed(1) }
 
 try { main() } catch (e) { console.error('🚧 Error:', e.message || e); process.exitCode = 1 }

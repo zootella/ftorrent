@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
-import { saySize4 } from '@zootella/ergo'//whole numbers in four digits or less, counted by 1024 the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here
+import { Time, saySize4 } from '@zootella/ergo'//saySize4 says whole numbers in four digits or less, counted by 1024 the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here
 import { fetchSidecar, readableDate, copyText } from '../downloads.js'
 
 /*
@@ -46,7 +46,7 @@ function unhintCopy() { if (status.value == 'Click to copy') status.value = '' }
 async function copyHash() {
 	clearTimeout(fade)
 	status.value = await copyText(sidecar.value.sha256) ? 'Copied' : 'Could not copy'
-	fade = setTimeout(() => { status.value = '' }, 1000)
+	fade = setTimeout(() => { status.value = '' }, 1*Time.second)
 }
 </script>
 

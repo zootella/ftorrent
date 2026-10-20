@@ -65,7 +65,7 @@ export const useUpdateStore = defineStore('update', () => {
 		if (v.success) {
 			let now = Date.now()
 			settings.settings.update.last = sayMoment(now)
-			settings.settings.update.next = sayMoment(now + updatePresets.randomFrom + Math.random()*(updatePresets.randomTo - updatePresets.randomFrom))
+			settings.settings.update.next = sayMoment(Math.round(now + updatePresets.randomFrom + Math.random()*(updatePresets.randomTo - updatePresets.randomFrom)))//rounded to a whole millisecond, since a tick is one
 			await settings.save()
 			log(`update: ${v.version} from ${v.date} is the newest, next check ${settings.settings.update.next}`)
 		} else {

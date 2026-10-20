@@ -5,14 +5,14 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 # Public Tracker Dashboard Back End
 
-> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.8
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 5.5
 > <br>Created: 2026-Apr
-> <br>Last reviewed: 2026-Jun
+> <br>Last reviewed: 2026-Oct
 > <br>Python: 3.12
 
 ## What this is and where it fits
 
-The [open.ftorrent.com](https://open.ftorrent.com/) deployment has three parts. The [Aquatic guide](../README.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/README.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
+The [open.ftorrent.com](https://open.ftorrent.com/) dashboard draws on three parts of the deployment. The [Aquatic guide](../README.md) sets up the tracker containers that serve BitTorrent and WebTorrent clients. The [page guide](../page/README.md) builds the Vue frontend that visitors see. This guide covers the piece in between: the gauge, which reads statistics from the trackers and produces the data file the frontend displays.
 
 The gauge is a Python script that runs in its own Docker container alongside the trackers. Once per minute it scrapes Prometheus metrics from the three Aquatic containers and health from the DHT node, reads all four containers' memory usage from cgroup files, and writes a single JSON file — `page.json` — that the reverse proxy serves as a static file. The Vue frontend fetches `page.json` and renders the dashboard. The gauge has no HTTP server and no listening ports. It only writes files.
 
@@ -34,9 +34,11 @@ When a tracker container restarts, its Prometheus counter resets to zero. On the
 
 Downtime is counted by walking the ring and checking each slot against two conditions: the slot must exist with the expected day number (today for slots at or before the current minute, yesterday for slots after), and the internet reachability probe must have been fresh when the slot was written. A minute is only "up" if both conditions were met — the gauge ran and the server could reach the internet. See the probe section below.
 
+The ring forgets a day as its slots are overwritten, so before that happens the gauge counts each finished day's up-minutes into a second private file, `days.json`, keyed by day number and trimmed to the last 90 days. The dashboard's 90-day history comes from there, and a day with no entry — no gauge was running to write one — counts as fully down.
+
 ## Internet reachability probe
 
-The gauge tracks whether it ran each minute, but that alone doesn't prove the server was reachable from the internet. The gauge could be ticking along happily while the ISP is down and no BitTorrent client can reach the tracker. To report honest downtime, the gauge needs an external signal: was the server actually online?
+The gauge tracks whether it ran each minute, but that alone doesn't prove the server was reachable from the internet. The gauge could be ticking along happily while the server's connection to the internet is down and no BitTorrent client can reach the tracker. To report honest downtime, the gauge needs an external signal: was the server actually online?
 
 A cron job on the host handles this. Every minute, `probe.py` pings one of four targets — Cloudflare and Google, each on both IPv4 and IPv6:
 
@@ -67,7 +69,7 @@ The gauge reads this file's mtime each tick. If the mtime is within the last 90 
 
 **Why this runs on the host, not in the container.** The gauge container is firewalled — the DOCKER-USER chain blocks all outbound traffic from the tracker network to the internet. This is a deliberate security constraint documented in the [Aquatic guide](../README.md). Punching a hole for the gauge to make outbound pings would weaken that guarantee. Running the probe on the bare-metal host avoids any firewall changes. The host already has unrestricted outbound, and the result is shared with the gauge through the existing bind mount — the probe writes to `/opt/open.ftorrent.com/data/probe` on the host, and the gauge sees it at `/gauge/probe`.
 
-**Why ping an external IP, not curl our own domain.** An earlier design had the probe curl `https://open.ftorrent.com/page.json` from the host, which would test more of the stack (DNS, the reverse proxy, TLS). The problem is hairpin NAT: many consumer routers successfully route requests from the LAN to the WAN IP back to the server, even when the ISP link is down. The probe would report "up" when the server was unreachable from the actual internet. Pinging an external IP tests real internet connectivity — if the ISP is down, the ping fails.
+**Why ping someone else's address, not fetch our own page.** Fetching `https://open.ftorrent.com/page.json` from the server would exercise more of the stack — DNS, the reverse proxy, TLS — but from the wrong place. A request from a machine to its own public name can be answered without ever crossing the internet, so it succeeds even when nothing outside can reach the machine. A ping to an address on another network has to go out and come back, and that round trip is the one fact the probe exists to learn.
 
 **What is cron.** Cron is the standard Linux job scheduler. It runs in the background on every Linux system (and macOS) and executes commands on a schedule you define. Each line in the crontab (cron table) specifies when to run and what to run. The format is five time fields followed by a command:
 
@@ -87,6 +89,10 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 
 ```json
 {
+	"title": "open.ftorrent.com live tracker performance record, fresh each minute",
+	"image": "https://open.ftorrent.com/images/open.ftorrent.com.jpg",
+	"epoch": 1779269280153,
+	"when": "2026-05-20T09:28:00.153Z",
 	"day": 20593,
 	"minute": 568,
 	"memory": { "udp": 129449984, "http": 62971904, "ws": 31092736, "dht": 50049024 },
@@ -94,40 +100,39 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 	"servedDay":    { "udp4": 3594247, "udp6": 454780, "http4": 3628188, "http6": 744186, "ws4": 0, "ws6": 0 },
 	"servedMinute": { "udp4":   43567, "udp6":  10291, "http4":   46195, "http6":  16119, "ws4": 0, "ws6": 0 },
 	"servedSecond": { "udp4":      41, "udp6":      5, "http4":      41, "http6":      8, "ws4": 0, "ws6": 0 },
+	"uptimePercent": 97.76041140690909,
 	"downtimeDay": 1,
 	"downtimeDays": "0,0,0,3,1440,1440,0,0,...,0,0",
 	"dht": { "nodes": 452, "status": "connected", "uptimeMinutes": 1234 }
 }
 ```
 
+- **title** and **image** — a human-readable description and the Open Graph card URL, for link previews and for anyone reading the file by hand
+- **epoch** — the moment of this tick, in milliseconds since 1970; `day` and `minute` are cut from it
+- **when** — the same moment as an ISO 8601 UTC string, to the millisecond
 - **day** — current UTC day number (`floor(epoch / 86_400_000)`), used by the frontend to compute dates for the 90-day history bars
 - **minute** — current ring slot index (0 = 00:00 UTC, 1439 = 23:59 UTC)
-- **memory** — current memory usage in bytes per container — the three Aquatic trackers and the DHT node — identified by matching their unique cgroup memory ceilings (a concession documented in the source — cgroup paths expose container IDs, not names)
-- **coolDown** — six booleans, one per service (`udp4`, `udp6`, `http4`, `http6`, `ws4`, `ws6`). `true` means that service is currently paused; the [circuit breaker](../breaker/README.md) translates these into 503s at the reverse proxy and DROP rules in iptables.
+- **memory** — current memory usage in bytes per container, the three Aquatic trackers and the DHT node; the memory section below says how the gauge reads and tells them apart
+- **coolDown** — six booleans, one per service (`udp4`, `udp6`, `http4`, `http6`, `ws4`, `ws6`). `true` means that service is currently paused. The [circuit breaker](../breaker/README.md) acts on the same decision, which it reads from the gauge's private `breaker.json`, with 503s at the reverse proxy and DROP rules in iptables; these booleans are for display.
 - **servedDay** — 24-hour totals split by protocol and IP version. UDP and HTTP count announce responses; WS counts WebRTC offers relayed (each offer is the tracker brokering a direct connection between two peers).
 - **servedMinute** — same six keys, for the most recent one-minute window. Useful for live-rate displays that need a recent number rather than a 24-hour total.
 - **servedSecond** — `floor(servedDay / 86_400)` per service: the per-second average rate as a whole number, written here once so every consumer reads the same value. Integer because a fractional request-per-second isn't a meaningful unit, and at typical traffic the numbers are large enough that floor's bias is invisible.
+- **uptimePercent** — the share of the last 90 days' minutes that were up, today counting only the minutes so far; the frontend derives the same figure from `downtimeDays`
 - **downtimeDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
-- **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Normally 90 entries (the 90-day window we show on the dashboard), though the array can be shorter while the gauge is still accumulating history. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart and computes the uptime percentage from it.
+- **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Always 90 entries, the 90-day window the dashboard shows. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart.
 - **dht** — the DHT bootstrap node's health, scraped from its Web API in one GET (`172.30.0.5` → `ftorrent-open-dht-1:8080/api/v2/transfer/info`): `nodes` (libtorrent's `dht.dht_nodes` counter, the nodes in its IPv4 and IPv6 routing tables added together), `status` (qBittorrent's `connection_status`, one of `connected` / `firewalled` / `disconnected`), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred to low thousands of nodes, holding roughly steady. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
-
-The file also carries a few metadata fields for social-media previews and human inspection: **title** (a human-readable description), **image** (the Open Graph card URL), **epoch** (the same instant as `day` and `minute`, in epoch milliseconds), **when** (the same instant as an ISO-8601 UTC string), and **uptimePercent** (a pre-computed 90-day percentage matching what the frontend derives from `downtimeDays`).
 
 All fields are always present. All numeric values are 0 or positive integers, except `uptimePercent`, which is a float between 0 and 100.
 
-## What the memory numbers mean
+## How the gauge reads memory
 
-Every Docker container runs inside a Linux **cgroup** (control group) — a kernel subsystem that tracks and limits resources per process group. The kernel maintains a file called `memory.current` for each cgroup: the number of bytes of physical RAM assigned to that group right now. Not a sample, not an average, not what the application thinks it allocated — the kernel's own live count of every physical page assigned to the container. The binary loaded into memory, the heap, thread stacks, io_uring buffers, shared libraries, allocator overhead, everything. The container can't hide memory usage and can't undercount it. This is the most honest number available on a Linux system.
+Every Docker container runs inside a Linux **cgroup** (control group) — a kernel subsystem that tracks and limits resources per process group. The kernel maintains a file called `memory.current` for each cgroup: the bytes of memory charged to that group right now. Not a sample, not an average, not what the application thinks it allocated — the kernel's own live count, covering the binary loaded into memory, the heap, thread stacks, io_uring buffers, shared libraries, and allocator overhead alike. The container can't hide memory usage and can't undercount it.
 
-Docker exposes cgroup files through the host filesystem at `/sys/fs/cgroup`. The gauge mounts this path read-only and reads `memory.current` from each tracker container and the DHT node once per minute. That raw byte count is what appears in the memory column on the dashboard.
+The gauge mounts the host's `/sys/fs/cgroup` read-only at `/host-cgroup` and, once a minute, reads `memory.current` for each container scope under `system.slice`. That raw byte count is what the dashboard's memory column shows.
 
-**What's in the number.** Each tracker's memory has a roughly-fixed component and a variable component. The roughly-fixed part is the Rust binary and the runtime's pre-allocated buffers — and, for the HTTP and WebSocket trackers, io_uring's registered memory, which glommio allocates at startup and then grows as it expands the ring under load. The variable part is the **peer table**: a hash map of IP:port entries keyed by torrent info hash. Every announce from a BitTorrent client adds or updates an entry. Each entry is small — roughly 18 to 50 bytes depending on IPv4 vs IPv6 and hash map overhead — but there can be millions. Aquatic periodically evicts expired peers (controlled by `max_peer_age` in the TOML config), so memory stabilizes at a level proportional to concurrent active peers, not total announces ever served.
+**Telling the containers apart.** The cgroup tree names each container's directory by its ID, as `docker-<id>.scope`, not by its name, and the ID changes on every restart. Mounting the Docker socket would answer the question but hand the gauge control of Docker itself, and passing the IDs in as environment variables would go stale at the first restart. So the gauge reads each scope's `memory.max` as well, and matches it against ceilings the compose files set deliberately unique: 2001, 2002, and 2003 MiB for the UDP, HTTP, and WebSocket trackers, and 512 MiB for the DHT node. A scope whose ceiling matches none of them, or that has no ceiling at all, isn't one of ours, and the gauge skips it.
 
-At idle with near-zero traffic, the three containers use roughly 5 MiB (UDP), 27 MiB (HTTP), and 34 MiB (WebSocket). The HTTP and WS numbers are higher because of io_uring's registered buffers, not because they're doing more work — and those buffers grow further as load rises.
-
-**How far does modest hardware go.** Consider a server with 16 GB of physical RAM — a used enterprise small form factor desktop, the kind that sells for around $50 on eBay (or around $500 new). It runs a handful of services: a reverse proxy, a few web applications, monitoring, the usual. The UDP tracker gets a 2001 MiB memory ceiling in the compose file. After subtracting the ~5 MiB fixed overhead, roughly 1,996 MiB is available for the peer table. At a conservative 50 bytes per peer entry, that's approximately **42 million concurrent peers**.
-
-This is peer-to-peer architecture doing what it does best. The tracker's job is small: answer "who else has this?" with a hash map lookup and a UDP response. Microseconds of work per request, a few tens of bytes of state per peer. The expensive part — actually moving the data — happens between the peers themselves, distributed across the network. The coordination service at the center stays tiny because the architecture was designed to keep it that way. One modest server can be a meaningful piece of global infrastructure, because the infrastructure was built so that modest servers are enough.
+For what these numbers come to on a busy public deployment, beside the processor, bandwidth, and connection tracking, see [Tracker Load](https://docs.ftorrent.com/tracker-load).
 
 ## Project structure
 
@@ -137,6 +142,7 @@ open/gauge/
 ├── compose-service.yml    Compose service entry (add to your docker-compose.yml)
 ├── probe.py               Internet reachability probe (runs on host via cron)
 ├── README.md              This document
+├── requirements.txt       The gauge's one dependency, ergo, pinned by version and hash
 └── src/
     └── gauge.py           The gauge script
 ```
@@ -148,8 +154,8 @@ Run the gauge and the Vite dev server side by side. The gauge writes `page.json`
 Locally there's no host cron touching the probe, and the gauge only ticks when the probe is fresh — so without it `tick()` treats every minute as offline and writes nothing. Stand in for the cron job with a third terminal that keeps the marker under 90 seconds old.
 
 ```bash
-# Terminal 1 — the gauge
-cd open/gauge && python src/gauge.py
+# Terminal 1 — the gauge, with ergo from requirements.txt
+cd open/gauge && uv run --with-requirements requirements.txt src/gauge.py
 
 # Terminal 2 — the Vite dev server
 cd open/page && pnpm dev
@@ -158,13 +164,15 @@ cd open/page && pnpm dev
 cd open/gauge && while true; do touch ../page/probe; sleep 30; done
 ```
 
-Locally, memory and served counts will be 0 (no cgroups or Prometheus endpoints on macOS). Downtime starts at 1439 and decreases each minute. The gauge also creates `ring.json` in `open/page/` — this is gitignored and should not be committed.
+On a development machine, memory and served counts will be 0, since there are no tracker containers to read. Downtime starts at 1439 and decreases each minute.
+
+The page workspace commits a stub `public/page.json`, with round numbers and a 90-day history, so the dashboard has something to draw with no gauge running at all. A local gauge run writes over it; `git restore open/page/public/page.json` puts it back. The gauge's private files, `ring.json`, `days.json`, and `breaker.json`, land in `open/page/` beside the probe marker, and git ignores all four.
 
 ## Deployment
 
-The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../README.md)). Copy the source to the server as `/opt/open.ftorrent.com/python-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up.
+The gauge follows the same container hardening model as the Aquatic trackers (see the [Aquatic guide](../README.md)). Copy this folder's `Dockerfile`, `requirements.txt`, and `src/` to the server as `/opt/open.ftorrent.com/python-gauge/`, add the service entry from `compose-service.yml` to your docker-compose.yml, and bring it up. The image fetches ergo from PyPI as it builds, the way the tracker images fetch their crates; once running, the container reaches nothing outside its network.
 
-Before the first run, create the data directory with the right ownership and install the reachability probe:
+Before the first run, create the data directory with the right ownership:
 
 ```bash
 sudo mkdir -p /opt/open.ftorrent.com/data/public
@@ -217,6 +225,6 @@ The `minute` field should match the current UTC minute. Memory fields should be 
 
 ## Security
 
-The gauge container runs on the `ftorrent-open` network (cafe 2) with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach the LAN or internet.
+The gauge container runs on the `ftorrent-open` network (cafe 2) with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach anything outside that network. Its one dependency beyond the standard library is installed at build time from a requirements file that pins both the version and the hash of the exact file, so pip refuses anything else.
 
 A compromised gauge can write wrong numbers to `page.json`. It cannot inject scripts into the HTML, JS, or CSS the browser executes — the frontend bundle sits in a separate host directory that the reverse proxy serves directly.

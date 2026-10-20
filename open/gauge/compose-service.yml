@@ -1,6 +1,5 @@
 # Compose service entry for the gauge container.
-# Add this to the services: section of docker-compose.yml alongside the
-# Aquatic tracker services.
+# Add this to the services: section of docker-compose.yml alongside the Aquatic tracker services.
 
   python-gauge:
     container_name: ftorrent-open-gauge-1
@@ -14,7 +13,7 @@
     environment:
       - GAUGE_DIR=/gauge
     volumes:
-      # Gauge working directory — writes page.json (public) and ring.json (private)
+      # Gauge working directory — writes public/page.json, and ring.json, days.json, and breaker.json beside it (private); reads the probe's file
       - /opt/open.ftorrent.com/data:/gauge
       # Host cgroup stats — reads container memory usage
       - /sys/fs/cgroup:/host-cgroup:ro

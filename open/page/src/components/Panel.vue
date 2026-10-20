@@ -56,27 +56,13 @@ function dayToDate(dayNumber) {
 	return `${year} ${month} ${String(d.getUTCDate()).padStart(2, '0')}`
 }
 
-// Launch day — days before this show "Before launch" instead of downtime.
-// Remove this after the 90-day window passes launch day entirely.
-const launch_day = 20551 // 2026 Apr 08
-
-// Index in the history array where launch day falls, or -1 if launch
-// is before the window entirely (all 90 days are post-launch)
-function launchIndex() {
-	const firstDay = page.day - (history.value.length - 1)
-	if (launch_day < firstDay) return -1
-	return launch_day - firstDay
-}
-
-// 90-day uptime percentage — only counts from launch day onward
+// 90-day uptime percentage
 const uptimePercent = computed(() => {
 	const bars = history.value
-	const li = launchIndex()
-	const postLaunch = bars.slice(li + 1) // exclude launch day (partial data)
-	if (postLaunch.length === 0) return ''
+	if (bars.length === 0) return ''
 	// All but the last are complete days; the last is today's partial day
-	const totalMinutes = (postLaunch.length - 1) * (Time.day / Time.minute) + (page.minute + 1)
-	const totalDown = postLaunch.reduce((sum, d) => sum + d, 0)
+	const totalMinutes = (bars.length - 1) * (Time.day / Time.minute) + (page.minute + 1)
+	const totalDown = bars.reduce((sum, d) => sum + d, 0)
 	const pct = ((totalMinutes - totalDown) / totalMinutes) * 100
 	return (Math.floor(pct * 1000) / 1000).toFixed(3)
 })
@@ -92,11 +78,7 @@ const barDate = computed(() => {
 
 const barDown = computed(() => {
 	if (hoveredBar.value === null) return ''
-	const i = hoveredBar.value
-	const li = launchIndex()
-	if (i < li) return 'Before launch'
-	if (i === li) return 'Launch day'
-	const down = history.value[i]
+	const down = history.value[hoveredBar.value]
 	return `${down} minutes downtime`
 })
 

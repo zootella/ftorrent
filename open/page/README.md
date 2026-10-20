@@ -32,7 +32,7 @@ pnpm preview # serves the built dist/ locally for testing
 ```
 Development (pnpm dev)
   Browser fetches    http://localhost:5173/page.json
-  Vite serves from   open/page/public/page.json        ← placeholder with zeroes, committed to repo
+  Vite serves from   open/page/public/page.json        ← stub data with round numbers, committed to repo
 
 Production (server)
   Browser fetches    https://open.ftorrent.com/page.json

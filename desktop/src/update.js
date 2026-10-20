@@ -1,4 +1,4 @@
-import {Size, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Size, Time, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {diskMkdir, diskStat, diskRmtree, diskSpace, diskAccess} from './disk.js'
 import {netGet} from './net.js'
 import {processRun, processStart} from './process.js'
@@ -11,7 +11,7 @@ import {log} from './log.js'
 
 export const updateFile = `${brandStem}.${platformName == 'macOS' ? 'app.zip' : 'exe'}`//the published name of what this platform updates from, beside its sidecar on ftorrent.com
 export const updateLimit = 50*Size.mb//a comfortable ceiling on the update's download, where a real one is about 22 MB, so a download can't go on without end; the hash, not the size, is what says the file is the right one
-const updateSeconds = 10*60//a 22 MB update in ten minutes is about 300 kilobits a second, slower than any connection a torrent client is useful on
+const updateSeconds = 10*Time.minute/Time.second//a 22 MB update in ten minutes is about 300 kilobits a second, slower than any connection a torrent client is useful on
 const updateSpace = 1*Size.gb//free space on the data folder's volume, at the least, to start an update; the update needs about 140 MB at its peak on a mac, and on windows only the 15 MB download, since setup writes over the old files, and the rest is room for torrents that arrive while it runs, since a machine under a gigabyte free is in trouble already and an update shouldn't be what fills it
 const replaceArgument = '--replace'//on the newer copy's command line, followed by the bundle to replace; install.rs knows it as ARGUMENT
 const logArgument = '--log'//followed by the folder to log into, when logging is on; install.rs knows it as LOG_ARGUMENT

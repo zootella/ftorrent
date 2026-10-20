@@ -1,5 +1,7 @@
 use tauri::AppHandle;
 use crate::paths::Paths;
+#[cfg(target_os = "macos")]
+use std::time::Duration;
 
 /*
 The newer copy putting itself in place of the old one, on a Mac. The page in the running copy downloads the update, checks it, unzips it into a folder of its own, starts the executable inside that newer bundle with --replace and the path of the bundle to replace, and quits; the essay in update.js has the whole sequence and every path. What runs here is that newer process, from setup, before it has a lock, an engine, or a window, and it never gets any of them: it waits for the old copy to finish quitting, exchanges the two bundles in one step, touches the new one, opens it, and exits. The old copy's bundle stays untouched until the old copy has gone, so every privacy grant it holds works through its last writes; the exchange is a single step the user never sees half of; and the copy that opens afterward is launched by Launch Services from its path, as its own process in the system's eyes for privacy prompts, rather than as a child of this one.
@@ -16,9 +18,9 @@ pub const ARGUMENT: &str = "--replace";//on this process's command line, from th
 #[cfg(target_os = "macos")]
 pub const LOG_ARGUMENT: &str = "--log";//followed by the folder to log into, there only when the user has logging on; the page decides that, and this process has no page to ask
 #[cfg(target_os = "macos")]
-const WAIT_EVERY_MILLIS: u64 = 50;//how often to try the lock while the old copy quits; a normal quit takes a few hundred milliseconds, and this is the most the wait adds past it
+const WAIT_EVERY: Duration = Duration::from_millis(50);//how often to try the lock while the old copy quits; a normal quit takes a few hundred milliseconds, and this is the most the wait adds past it
 #[cfg(target_os = "macos")]
-const WAIT_CEILING_MILLIS: u128 = 10 * 60 * 1000;//ten minutes, far past any quit, after which the old copy is taken to be stuck and left alone
+const WAIT_CEILING: Duration = Duration::from_mins(10);//far past any quit, after which the old copy is taken to be stuck and left alone
 
 /// If this launch carries --replace, do the whole job and answer true, for setup to exit on; otherwise false, and startup goes on. Called from setup right after paths::locate, before the lock, the engine, or the window
 #[cfg(target_os = "macos")]
@@ -55,7 +57,7 @@ fn replace(app: &AppHandle, paths: &Paths, target: &std::path::Path) {
 	let _lock = loop {//held until this process exits, so nothing starts the old bundle while the two are exchanged
 		match crate::instance::take(&lock_path) {
 			Ok(file) => break file,
-			Err(crate::instance::Taken::Busy) if started.elapsed().as_millis() < WAIT_CEILING_MILLIS => std::thread::sleep(std::time::Duration::from_millis(WAIT_EVERY_MILLIS)),
+			Err(crate::instance::Taken::Busy) if started.elapsed() < WAIT_CEILING => std::thread::sleep(WAIT_EVERY),
 			Err(crate::instance::Taken::Busy) => { crate::log::log("replace: the old copy never let go of the lock, so it's left as it is"); return }
 			Err(crate::instance::Taken::Unsupported(e)) => { crate::log::log(&format!("replace: couldn't take the lock, so can't tell when the old copy has gone: {e}")); return }//a volume that can't lock, which the boot volume isn't
 		}

@@ -3,8 +3,8 @@ use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs, UdpSocket};
 use std::time::{Duration, Instant};
 use serde::Serialize;
-use sha2::{Digest, Sha256};
 use tauri::command;
+use zootella_ergo::{size, Data, Sha256};
 use crate::run_blocking;
 
 /*
@@ -161,7 +161,7 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 				}
 				ask.binding.bytes = count;//a refusal is an answer too, kept whole like a success
 				ask.binding.from = source.to_string();
-				ask.binding.answer = answer[..count].iter().map(|byte| format!("{byte:02x}")).collect();
+				ask.binding.answer = Data::from_array(&answer[..count]).base16();
 				ask.binding.milliseconds = start.elapsed().as_millis() as u64;
 				ask.done = true;
 				break
@@ -250,7 +250,7 @@ fn mask_length(mask: *const libc::sockaddr, v6: bool) -> u8 {
 fn interfaces() -> Result<Vec<Interface>, String> {
 	use windows::Win32::NetworkManagement::IpHelper::{GetAdaptersAddresses, GAA_FLAG_INCLUDE_GATEWAYS, IP_ADAPTER_ADDRESSES_LH};
 	use windows::Win32::Networking::WinSock::AF_UNSPEC;
-	let mut size: u32 = 15 * 1024;//the size Microsoft suggests starting with, which holds most machines' list
+	let mut size: u32 = 15 * zootella_ergo::size::KB as u32;//the size Microsoft suggests starting with, which holds most machines' list
 	let mut buffer: Vec<u64>;//of u64, so the structures written into it are aligned
 	loop {
 		buffer = vec![0; (size as usize).div_ceil(8)];
@@ -363,18 +363,18 @@ fn save_body(body: &mut impl Read, path: &str, limit: u64) -> Result<String, Str
 	let written = (|| -> Result<String, String> {
 		let mut file = File::create(&part).map_err(|e| e.to_string())?;
 		let mut hasher = Sha256::new();
-		let mut buffer = vec![0u8; 64 * 1024];
+		let mut buffer = vec![0u8; 64 * size::KB as usize];
 		let mut total: u64 = 0;
 		loop {
 			let count = body.read(&mut buffer).map_err(|e| e.to_string())?;
 			if count == 0 { break }
 			total += count as u64;
 			if total > limit { return Err(format!("the answer ran past {limit} bytes")) }//take let one byte past limit through so this can tell
-			hasher.update(&buffer[..count]);
+			hasher.write_all(&buffer[..count]).map_err(|e| e.to_string())?;//ergo's hasher is a writer too, so the piece is hashed where it sits
 			file.write_all(&buffer[..count]).map_err(|e| e.to_string())?;
 		}
 		file.sync_all().map_err(|e| e.to_string())?;//on the disk before the rename makes it the real file
-		Ok(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
+		Ok(hasher.finalize().base16())
 	})();
 	match written {
 		Ok(hash) => fs::rename(&part, path).map(|_| hash).map_err(|e| { let _ = fs::remove_file(&part); e.to_string() }),

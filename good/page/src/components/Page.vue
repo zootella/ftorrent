@@ -1,5 +1,6 @@
 <script setup>
 import {ref, computed, nextTick, onMounted} from 'vue'
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {connectionRun, connectionFacts, sayRun, sayVerdict, sayApart} from '../connection.js'
 
 let run = ref(null)//the latest run, null until the first one comes back
@@ -29,7 +30,7 @@ async function copy() {
 	lines.push('', text.value)
 	await navigator.clipboard.writeText(lines.join('\n'))
 	copied.value = true
-	setTimeout(() => { copied.value = false }, 1500)
+	setTimeout(() => { copied.value = false }, 1.5*Time.second)
 }
 </script>
 

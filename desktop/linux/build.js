@@ -3,6 +3,7 @@ import {cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync} from 'node
 import {basename, join} from 'node:path'
 import {createInterface} from 'node:readline'
 import {fileURLToPath} from 'node:url'
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 ftorrent's Linux packages, built on a Mac through Docker.
@@ -73,16 +74,16 @@ async function timed(label, step, leg = false) {
 	let started = Date.now(), before = took.length
 	let result = await step()
 	let within = leg ? [] : took.splice(before)//legs timed inside this step, moved to sit under it rather than above it, since each finished before the step did; a leg gathers nothing, so two legs running at once leave each other alone
-	took.push({label, seconds: Math.round((Date.now() - started) / 1000), leg}, ...within)
+	took.push({label, milliseconds: Date.now() - started, leg}, ...within)
 	return result
 }
-function clock(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` }
+function clock(milliseconds) { return `${Math.floor(milliseconds / Time.minute)}:${String(Math.floor(milliseconds % Time.minute / Time.second)).padStart(2, '0')}` }
 function times() {
 	if (!took.length) return
 	say('')
 	say('time:')
-	for (let one of took) say('    ' + (one.leg ? '  ' + one.label : one.label).padEnd(26) + clock(one.seconds))
-	say('    ' + 'total'.padEnd(26) + clock(took.filter(one => !one.leg).reduce((sum, one) => sum + one.seconds, 0)))
+	for (let one of took) say('    ' + (one.leg ? '  ' + one.label : one.label).padEnd(26) + clock(one.milliseconds))
+	say('    ' + 'total'.padEnd(26) + clock(took.filter(one => !one.leg).reduce((sum, one) => sum + one.milliseconds, 0)))
 }
 
 //a container run beside another: started with a name, its lines prefixed so two containers can share a terminal, and resolved as a result rather than thrown, so the caller sees both outcomes

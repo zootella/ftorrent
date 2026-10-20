@@ -1,5 +1,6 @@
 <script setup>
 import {ref, computed, watch, nextTick, onMounted} from 'vue'
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import KeyValues from '../components/KeyValues.vue'
 import {connectionRun, connectionFacts, connectionText, sayRun, lastRun, box, boxAdd, session, sessionFacts, sessionOpen, sessionStart, sessionStop} from '../connection.js'
 
@@ -32,7 +33,7 @@ let copied = ref(false)//true for a moment after the button is pressed, so it ca
 async function copy() {
 	await navigator.clipboard.writeText(connectionText())
 	copied.value = true
-	setTimeout(() => { copied.value = false }, 1500)
+	setTimeout(() => { copied.value = false }, 1.5*Time.second)
 }
 </script>
 
