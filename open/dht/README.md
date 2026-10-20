@@ -158,7 +158,7 @@ which returns, among other fields:
 }
 ```
 
-`dht_nodes` is the routing-table size — the one number that proves the node is a real participant rather than just a listening socket. The scraper reaches the Web UI port over internal Docker DNS (allowed by the same intra-subnet `DOCKER-USER` rule the [gauge](../gauge/README.md) uses to scrape the Aquatic Prometheus endpoints), authenticating automatically because its address is the one host on the whitelist. The port is never published to the host, so nothing on the internet can reach it.
+`dht_nodes` is libtorrent's `dht.dht_nodes` counter, which qBittorrent passes through unchanged: the nodes in the routing tables of each DHT instance libtorrent runs, added together, here one on IPv4 and one on IPv6. It's the one number that proves the node is a real participant rather than just a listening socket. The scraper reaches the Web UI port over internal Docker DNS (allowed by the same intra-subnet `DOCKER-USER` rule the [gauge](../gauge/README.md) uses to scrape the Aquatic Prometheus endpoints), authenticating automatically because its address is the one host on the whitelist. The port is never published to the host, so nothing on the internet can reach it.
 
 ## Deployment
 

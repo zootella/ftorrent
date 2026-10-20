@@ -5,6 +5,8 @@ import {brandStem} from './brand.js'
 The page's half of the log; log.rs is the long version. log(text) hands one line down, from any file, and Rust stamps it with the time, this process's id, and page, and appends it to the file, beside Rust's own lines. Off at the factory: [log] record in ftorrent.toml turns it on, and then every process writes a file of its own into one folder, ftorrent-logs under the home folder, so a session with several copies running leaves one place to look. Turning it on is the permission to write there, which is why the folder is outside every copy's own, and a portable copy, which otherwise leaves nothing on the host, writes there too.
 
 A log carries paths and magnet links, which say what someone downloads, so ftorrent keeps none unless the user asks for it.
+
+stick(text) is the log's other half: where a log grows, a stick replaces. It flashes text onto stick.txt in the same folder, whole, over whatever was there, so the file always shows how something stands right now, and anyone outside ftorrent can read it while it runs. Both are scaffolding for the section being built, called while we work on it and by nothing that ships, and both work the same in every build, development or release, installed or portable, since some things only show up in one of those. So a stick has no setting: it's always on, and the way to turn it off is to stop calling it. log.rs has the rest.
 */
 
 export const logFolder = `${brandStem}-logs`//under the home folder, on every platform
@@ -19,4 +21,8 @@ export async function logStart(record, home) {//say whether this process logs, o
 
 export function log(text) {//one line, from anywhere in the page; dropped when not logging, and never a reason to stop what the caller is doing
 	invoke('log_line', {text}).catch(() => {})
+}
+
+export function stick(text) {//replace stick.txt with this text, from anywhere in the page; like log, never a reason to stop
+	invoke('log_stick', {text}).catch(() => {})
 }

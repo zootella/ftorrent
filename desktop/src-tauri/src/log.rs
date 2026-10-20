@@ -1,6 +1,6 @@
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::command;
 use zootella_ergo::{has_tick, tick_to_iso};
@@ -18,6 +18,10 @@ Lines are written as they arrive, not saved for the end, so a crash keeps everyt
 
 Whether to log, and where, is the page's to decide, since it's a setting, and the page reads settings. Rust starts logging before any page exists, so until the page says, its lines wait in memory: log_start with a folder writes them to the new file and keeps going, and log_start with a blank folder drops them and every line after. A process that leaves before it has a page, a second launch handing over what it carried, never logs.
 
+Beside the log, a stick: stick.txt in the log folder, which holds one piece of text and is replaced whole each time, where a log only grows. A log answers what happened, in order; a stick answers how things stand right now, a panel's readings as a session runs, say, so someone outside the program can read the current state at any moment without scrolling a log for it. stick here and stick in log.js write it, each replacing whatever was there, with a first line stamped like a log's but with the date, since the file's name has none, saying when, which process, and which side. It's written as a finished copy renamed over the old one, the way disk_write does, so a reader never meets half of one. Every process sticks to the one file, so with several running it shows whichever wrote last, and the stamp says which.
+
+Both are scaffolding for the section of ftorrent being built: code calls log and stick while we work on it, and what ships to people calls neither. While they're called, they work the same in every build, development or release, installed or portable, because some things behave differently in just one of those, file associations in an installed copy, say, and these are the only way to see them there. So a stick has no setting, unlike the log: it's always on, and the way to turn it off is to stop calling it. Setup tells it where the log folder is, and a stick before then waits, only the latest, since one replaced before anyone could read it was never worth keeping.
+
 Panics land here too. log_panics installs a hook that writes every panic's location and message as a line before rust unwinds, from whichever thread it's on, so a panic that goes on to abort the process, or to reach the page as an error without its location, has already said where it was.
 
 The state is a static rather than tauri's managed state, so that log(text) needs no handle to call. A Mutex, because log_start runs on the blocking pool, log_line on the window's thread, and Rust logs from threads of its own.
@@ -32,6 +36,13 @@ enum Log {
 }
 
 static LOG: Mutex<Log> = Mutex::new(Log::Waiting(Vec::new()));
+
+enum Stick {
+	Waiting(Option<String>),//the latest stick, from before setup said where the file goes
+	At(PathBuf),//the file's path
+}
+
+static STICK: Mutex<Stick> = Mutex::new(Stick::Waiting(None));//its own lock, so a stick never waits on a log line or the other way around
 
 /// Start logging into a new file in this folder, named for now and this process, making the folder if it's missing, and write the lines that waited; a blank folder means don't log, and drops them. Answers the file's path, blank when not logging
 #[command]
@@ -57,6 +68,12 @@ pub fn start(folder: &str) -> Result<String, String> {
 #[command]
 pub fn log_line(text: String) {
 	write("page", &text);
+}
+
+/// The page's stick, replacing stick.txt; plain like log_line, for the same reasons: it's one small write to a local file, and sticks sent through the pool could land out of order, leaving an older one as the last word
+#[command]
+pub fn log_stick(text: String) {
+	write_stick("page", &text);
 }
 
 /// Write every panic to the log, with where it happened, before rust unwinds; called once from run, before anything else. A panic in a plain command goes on to abort the process, since it unwinds into the web view's callback, and a panic in a body on the blocking pool reaches the page as an error without its location, so this line is what says where either was
@@ -86,6 +103,37 @@ fn write(side: &str, text: &str) {
 		}
 		Log::Off => {}
 	}
+}
+
+/// Say where stick.txt goes, once, from setup: the log folder under the home folder, named for the brand the way log.js names it, made if it's missing when the first stick lands; a blank home leaves it nowhere, and sticks wait unwritten
+pub fn stick_at(home: &str, stem: &str) {
+	if home.is_empty() { return }
+	let path = Path::new(home).join(format!("{stem}-logs")).join("stick.txt");
+	let mut stick = STICK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+	if let Stick::Waiting(Some(text)) = &*stick { flash(&path, text) }
+	*stick = Stick::At(path);
+}
+
+/// Replace the stick with this text, from Rust; callable from anywhere
+#[allow(dead_code)]//ready for Rust's first caller, the way log is; the page is the only one so far
+pub fn stick(text: &str) {
+	write_stick("rust", text);
+}
+
+fn write_stick(side: &str, text: &str) {
+	let stuck = format!("{} {} {side}\n{text}\n", stamp_iso(), std::process::id());
+	let mut stick = STICK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+	match &mut *stick {
+		Stick::Waiting(waiting) => *waiting = Some(stuck),
+		Stick::At(path) => flash(path, &stuck),//under the lock, so two sticks from two threads land in the order they took it
+	}
+}
+
+//write text to path as a finished copy renamed over what was there, so a reader never meets half of it, making the folder first if it's missing; a failure has nowhere to report, as with a log line
+fn flash(path: &Path, text: &str) {
+	if let Some(folder) = path.parent() { let _ = fs::create_dir_all(folder); }
+	let temporary = path.with_extension(format!("{}.tmp", std::process::id()));//beside it, named for this process, so two processes sticking at once never share one
+	if fs::write(&temporary, text).is_ok() && fs::rename(&temporary, path).is_err() { let _ = fs::remove_file(&temporary); }
 }
 
 //now in UTC, in the iso form like 2026-10-01T01:14:05.123Z, which both stamps below are cut from

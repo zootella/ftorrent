@@ -19,8 +19,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }#tray-icon for the windows tray and the mac menu bar icon lifecycle.rs builds
+tauri = { version = "~2.11", features = ["tray-icon"] }#held to 2.11, the minor the page's @tauri-apps/api and cli match, so a plugin can't pull the framework forward on its own; tray-icon for the windows tray and the mac menu bar icon lifecycle.rs builds
 open = { version = "5", features = ["shellexecute-on-windows"] }#opens a file or an address with the program the system has for it, for process_open: ShellExecuteEx on windows, which the feature turns on in place of a powershell process, /usr/bin/open on a mac, and xdg-open on linux; tauri's opener plugin is a wrapper over this crate
+tauri-plugin-dialog = "2"#for its Rust half alone, the system's open box dialog.rs puts up off the mac, where AppKit's is called directly; the page is granted none of it, and it brings rfd, the crate that talks to each system's box
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ureq = "3"#the https requests net.rs makes for the page, with its default TLS, rustls and Mozilla's roots compiled in
@@ -40,7 +41,7 @@ webview2-com = "0.38"#the web view's key event, which window.rs handles to turn 
 [target.'cfg(target_os = "macos")'.dependencies]
 tokio = { version = "1", features = ["time"] }#the timeout launch.rs puts on waiting for macOS's answer; tauri already brings tokio, and this turns on the part that keeps time
 objc2 = "0.6.4"#calling objective-c from rust, and Retained, the reference these calls hand back; tauri already brings this crate at this version
-objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSWorkspace", "block2", "objc2-uniform-type-identifiers", "NSApplication", "NSResponder", "NSMenu", "NSMenuItem"] }#NSApplication, with NSResponder above it, NSMenu, and NSMenuItem, through which lifecycle.rs reaches the menu bar for the page, graying and lighting the Edit menu's items and turning AppKit's own asking back on for the View menu; NSWorkspace, which launch.rs asks what opens a type or a link and tells which app should; tauri already brings this crate at this version
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSWorkspace", "block2", "objc2-uniform-type-identifiers", "NSApplication", "NSResponder", "NSMenu", "NSMenuItem", "NSWindow", "NSPanel", "NSSavePanel", "NSOpenPanel"] }#NSApplication, with NSResponder above it, NSMenu, and NSMenuItem, through which lifecycle.rs reaches the menu bar for the page, graying and lighting the Edit menu's items and turning AppKit's own asking back on for the View menu; NSWorkspace, which launch.rs asks what opens a type or a link and tells which app should; NSOpenPanel, with NSSavePanel, NSPanel, and NSWindow above it, the open box dialog.rs slides down from the window; tauri already brings this crate at this version
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString", "NSURL", "NSError", "NSAppleEventManager", "NSAppleEventDescriptor"] }#the strings, urls, and errors those calls take and give, and the apple event a launch arrives with, which login.rs reads to know a login item started this process; already in the tree too
 objc2-uniform-type-identifiers = { version = "0.3.2", default-features = false, features = ["std", "UTType"] }#the type a file extension names, which NSWorkspace takes for a file; one of the two crates here tauri doesn't already bring, both from the same family at the same version
 block2 = "0.6.2"#the completion handler NSWorkspace calls once a default is set; already in the tree

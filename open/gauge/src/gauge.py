@@ -491,15 +491,16 @@ def scrape_prometheus():
 # ---------------------------------------------------------------------------
 
 # The DHT node (qBittorrent-nox) exposes its health on its Web API: one GET
-# returns the routing-table size and connection state. The hostname resolves
+# returns the node count and connection state. The hostname resolves
 # via Docker's internal DNS on the ftorrent-open network, and the node's WebUI
 # whitelist trusts this scraper's address, so no credentials are needed.
 # Locally it won't resolve, so the scrape is skipped gracefully.
 DHT_ENDPOINT = "http://ftorrent-open-dht-1:8080/api/v2/transfer/info"
 
 
-# Scrape the DHT node's Web API. Returns (nodes, status): routing-table size as
-# an int and qBittorrent's connection_status string. On any failure
+# Scrape the DHT node's Web API. Returns (nodes, status): libtorrent's
+# dht.dht_nodes counter as an int, the nodes in its IPv4 and IPv6 routing
+# tables added together, and qBittorrent's connection_status string. On any failure
 # (unreachable, bad JSON, missing fields) returns (0, "disconnected"), so the
 # tick never crashes and page.json always carries the keys.
 def scrape_dht():

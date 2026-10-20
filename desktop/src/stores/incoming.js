@@ -5,7 +5,7 @@ import {instanceTake} from '../instance.js'
 import {log} from '../log.js'
 
 /*
-What comes up from below, and the page's side of the road down to the engine. Rust holds two drained queues, the lines the engine writes and the requests that reach this copy, and knows nothing about what's in either; this store takes them, several times a second, and is where they start to mean something. The engine's lines are JSON the engine wrote, so they're parsed here, and of the events the page cares about so far, ready is kept as the engine said it, for the About page, and every one of them goes to the log. The arrivals are kept as a list, each marked launch for this copy's own command line, handoff for one a second launch carried in, or open for files and links macOS opened with this copy. Adding a torrent will read that list.
+What comes up from below, and the page's side of the road down to the engine. Rust holds two drained queues, the lines the engine writes and the requests that reach this copy, and knows nothing about what's in either; this store takes them, several times a second, and is where they start to mean something. The engine's lines are JSON the engine wrote, so they're parsed here, and of the events the page cares about so far, ready is kept as the engine said it, for the About page, and every one of them goes to the log. Anything that asked to hear every event, as the Connection tab's session does, is handed each one as it's taken. The arrivals are kept as a list, each marked launch for this copy's own command line, handoff for one a second launch carried in, or open for files and links macOS opened with this copy. Adding a torrent will read that list.
 
 Taking runs from main.js for the life of the app, not from a page, so nothing waits in Rust just because a different page is showing. If a queue ever filled while the page wasn't taking, Rust drops the oldest and counts them, and the count ends up here, which says so in the log.
 */
@@ -16,6 +16,11 @@ const arrivalsKept = 100//the page's own history of arrivals, until adding a tor
 export const useIncomingStore = defineStore('incoming', () => {
 	let ready = ref(null)//the engine's ready event, once it has said it
 	let arrivals = ref([])//what has reached this copy, oldest first
+	let listeners = []//functions handed every engine event as it's taken, for the life of the app once each asks
+
+	function listen(listener) {//hear every engine event from now on, parsed
+		listeners.push(listener)
+	}
 
 	function send(message) {//a command down the road to the engine, as an object; it becomes one line of json here
 		return engineSend(JSON.stringify(message))
@@ -27,6 +32,9 @@ export const useIncomingStore = defineStore('incoming', () => {
 		for (let line of lines.items) {
 			let event
 			try { event = JSON.parse(line) } catch { continue }//a line that isn't json isn't anything the page can use
+			for (let listener of listeners) {
+				try { listener(event) } catch (error) { log(`engine: a listener failed on a ${event.event} event, ${error}`) }//one listener's mistake costs that one event, not the rest of the lines taken with it
+			}
 			if (event.event == 'ready') {
 				ready.value = event
 				log(`engine: ready, libtorrent ${event.libtorrent}, WebTorrent ${event.webtorrent ? 'on' : 'off'}, Python ${event.python}, data folder ${event.paths?.data || 'none'}`)//the data folder as the engine heard it from init, so it made the round trip
@@ -45,5 +53,5 @@ export const useIncomingStore = defineStore('incoming', () => {
 		setInterval(tick, takeEvery)
 	}
 
-	return {ready, arrivals, send, start}
+	return {ready, arrivals, listen, send, start}
 })

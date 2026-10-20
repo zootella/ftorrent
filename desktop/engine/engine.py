@@ -1,9 +1,12 @@
 import sys
 import json
 import platform
+import tempfile
 import libtorrent as lt
 
-# The engine is the process that will hold libtorrent, and this file is its whole program for now. It starts, answers a few lines of newline-delimited JSON on its pipes, and exits when told to or when its pipe closes. It opens no sockets and creates no libtorrent session yet. What it proves is the shape of things: the app can carry a frozen Python beside itself, start it, talk to it in both directions, and stop it without leaving a process behind. The torrent work arrives later on top of exactly this loop.
+# The engine is the process that holds libtorrent, and this file is its whole program. It starts, answers lines of newline-delimited JSON on its pipes, and exits when told to or when its pipe closes. It opens no sockets until the page asks for a session, which the desktop client's Connection tab does today, to see what the network does to a client that listens, joins the DHT, and sits in a swarm; the torrent work arrives later on top of exactly this loop.
+#
+# The loop has no threads, so the engine does work only when a line arrives, and the page sets the pace. libtorrent works on its own threads whether or not anyone asks, and reports what happens as alerts that wait in a queue inside the session; the page sends poll on an interval, and the engine answers with every alert waiting, each as a line. The queue holds 2,000 alerts by default and drops the rest, so a session nobody polls loses news, which is why the page keeps polling for as long as a session runs.
 #
 # The engine is the far end of the one road between the page and libtorrent. The page builds each command as a line of JSON, the app's Rust passes it down the engine's stdin without reading it, and every line the engine writes to stdout goes back up the same way, unread, until the page takes it. So this file is where JSON meets libtorrent: the dispatch table at the bottom has one entry per command, each entry translates what it's given into libtorrent's own terms and back, and the table is also the list of everything the page can ask the engine to do, on purpose, rather than a way to call any libtorrent method by name. Using a libtorrent call ftorrent hasn't used before means one new entry here and the page that sends it, and nothing in between.
 #
@@ -52,6 +55,10 @@ def session_settings():#the settings the engine will hand libtorrent when it cre
 		'peer_fingerprint': fingerprint(),#the client code and version at the front of the peer id, which clients reading only the peer id look up in a table; the DHT is separate, where libtorrent writes its own LT and version into every message from no setting at all
 	}
 
+alert_mask = lt.alert_category.error | lt.alert_category.status | lt.alert_category.port_mapping | lt.alert_category.dht | lt.alert_category.peer | lt.alert_category.connect | lt.alert_category.tracker#the kinds of alert the session posts: errors, status changes, port mapping, the DHT, peers, connections, and trackers, and none of libtorrent's logs, which would be many lines a second
+
+session = None#the one libtorrent session, once the page asks for one, and None again once it's stopped
+
 def ready():#what the engine reports about itself once it is up, and the first thing the app asks for
 	return {
 		'event': 'ready',
@@ -85,9 +92,113 @@ def command_folders(message):#the download folders the page holds the locks for,
 	folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
 	emit({'event': 'folders', 'folders': folders})#sent back as kept, so the page can see they arrived and notice if one was passed over; the engine uses them once it has a session
 
+def command_session(message):#start the session, listening on every address in both families at the port the page chose, with the DHT on and the router left alone; a session already running is replaced
+	global session
+	port = message.get('port')
+	if not isinstance(port, int) or not 0 < port < 65536:
+		emit({'event': 'error', 'message': 'a session needs a port from 1 to 65535', 'command': 'session'}); return
+	session = None#a session already running goes first, so the new one can have the port
+	settings = session_settings()
+	settings.update({
+		'listen_interfaces': f'0.0.0.0:{port},[::]:{port}',#every address of each family at one port, each with a TCP socket and a UDP one, the UDP one carrying uTP, the DHT, and UDP trackers
+		'enable_dht': True,
+		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two wait until the page can show what a mapping changes
+		'enable_natpmp': False,
+		'enable_lsd': False,#local service discovery, which multicasts each torrent's info-hash to find peers on the same network, off while the only session is the Connection tab's, which measures whether strangers on the internet get in; with a socket on every address the session hears its own announcements and dials itself. All three go back on for the session that downloads
+		'optimistic_disk_retry': 2**31 - 1,#how many seconds before libtorrent takes an auto-managed torrent out of upload mode, in case the disk error it assumes put it there has cleared, ten minutes by default; then it downloads, and a session left running fetched a whole torrent and seeded it. This is sixty-eight years, so the torrent stays in upload mode, while keeping libtorrent's usual start, in which auto-management resumes the torrent and its DHT lookups begin within seconds; adding it unmanaged and unpaused instead left it without a DHT lookup for thirteen minutes. It goes back to ten minutes for the session that downloads, with the three above
+		'alert_mask': alert_mask,
+	})
+	session = lt.session(settings)
+	emit({'event': 'session', 'port': port})
+
+def command_poll(message):#every alert that has arrived since the last poll, each as a line, oldest first; with no session there's nothing to say, which is the answer to a poll that crossed a stop on the road
+	if session is None: return
+	for alert in session.pop_alerts():
+		try:
+			emit(alert_event(alert))
+		except Exception as e:#a field this build of libtorrent spells differently, sent up as what it is rather than lost
+			emit({'event': 'alert', 'type': alert.what(), 'message': alert.message(), 'fault': f'{type(e).__name__}: {e}'})
+
+def command_stats(message):#ask libtorrent for its counters and the DHT for its routing table, both of which arrive as alerts on a later poll
+	if session is None: return
+	session.post_session_stats()
+	session.post_dht_stats()
+
+def command_read(message):#the torrent file at path, read without joining its swarm: its name, info-hashes, size, and files, so the page can show what was chosen
+	path = message.get('path')
+	try:
+		info = lt.torrent_info(path)
+	except Exception as e:#not a file, not a torrent, or not readable, each an ordinary answer
+		emit({'event': 'error', 'message': f'not a torrent file: {e}', 'command': 'read', 'path': path}); return
+	emit({'event': 'read', 'path': path, **describe(info)})
+
+def command_add(message):#join the swarm of the torrent file at path in upload mode, which announces and takes connections from peers but downloads nothing
+	if session is None:
+		emit({'event': 'error', 'message': 'no session to add a torrent to', 'command': 'add'}); return
+	path = message.get('path')
+	try:
+		info = lt.torrent_info(path)
+		params = lt.add_torrent_params()
+		params.ti = info
+		params.save_path = tempfile.gettempdir()#upload mode writes nothing, but libtorrent wants a place it could have
+		params.flags |= lt.torrent_flags.upload_mode#held there by the session's optimistic_disk_retry, which says why
+		session.add_torrent(params)
+	except Exception as e:
+		emit({'event': 'error', 'message': f'could not add the torrent: {e}', 'command': 'add', 'path': path}); return
+	emit({'event': 'added', 'path': path, **describe(info)})
+
+def command_stop(message):#tear the session down, its torrents, its sockets, and the DHT; letting go of the last reference destroys it, which waits while libtorrent closes its sockets and tells the trackers it's leaving
+	global session
+	if session is None: return
+	session = None
+	emit({'event': 'stopped'})
+
+def describe(info):#what the page shows about a torrent: its name, its info-hashes, blank for a version the torrent doesn't have, and its size and files
+	hashes = info.info_hashes()
+	return {
+		'name': info.name(),
+		'v1': str(hashes.v1) if hashes.has_v1() else '',#the SHA-1 hash of the info dictionary, the one every BitTorrent client knows a torrent by
+		'v2': str(hashes.v2) if hashes.has_v2() else '',#and BitTorrent v2's SHA-256, which a hybrid torrent has as well
+		'size': info.total_size(),
+		'files': info.num_files(),
+	}
+
+def alert_event(alert):#one alert as a line for the page: its type, libtorrent's own sentence about it, and the fields the page reads, as plain values
+	event = {'event': 'alert', 'type': alert.what(), 'message': alert.message()}
+	kind = type(alert).__name__
+	if kind in ('listen_succeeded_alert', 'listen_failed_alert'):
+		event.update({'address': alert.address, 'port': alert.port, 'socket': alert.socket_type.name})
+		if kind == 'listen_failed_alert': event['error'] = alert.error.message()
+	elif kind == 'external_ip_alert':
+		event['address'] = str(alert.external_address)
+	elif kind == 'incoming_connection_alert':
+		event.update({'address': str(alert.endpoint[0]), 'port': alert.endpoint[1], 'socket': alert.socket_type.name})
+	elif kind == 'peer_connect_alert':
+		event.update({'address': str(alert.endpoint[0]), 'outgoing': 'outgoing connection' in event['message']})#the binding leaves out libtorrent's direction field, so it's read from libtorrent's own sentence, which says incoming or outgoing
+	elif kind == 'dht_outgoing_get_peers_alert':
+		event['address'] = str(alert.endpoint[0])#the node the DHT asked
+	elif kind in ('tracker_reply_alert', 'dht_reply_alert'):
+		event['peers'] = alert.num_peers
+	elif kind == 'dht_stats_alert':
+		event.update({'nodes': sum(bucket['num_nodes'] for bucket in alert.routing_table), 'buckets': len(alert.routing_table), 'requests': len(alert.active_requests)})
+	elif kind == 'session_stats_alert':
+		event['values'] = dict(alert.values)#every counter by name, three hundred of them
+		del event['message']#which would be the same numbers again, as one long sentence
+	elif kind == 'session_stats_header_alert':
+		del event['message']#the counters' names, which the values above already carry
+	elif kind == 'alerts_dropped_alert':
+		event['dropped'] = sum(1 for dropped in alert.dropped_alerts if dropped)
+	return event
+
 commands = {#every command the engine understands, and the function that carries it out; quit is handled in the loop below, since it ends the loop
 	'init': command_init,
 	'folders': command_folders,
+	'session': command_session,
+	'poll': command_poll,
+	'stats': command_stats,
+	'read': command_read,
+	'add': command_add,
+	'stop': command_stop,
 }
 
 def main():
@@ -101,7 +212,11 @@ def main():
 		command = message.get('command') if isinstance(message, dict) else None
 		if command == 'quit': break
 		handler = commands.get(command)
-		if handler: handler(message)
+		if handler:
+			try:
+				handler(message)
+			except Exception as e:#a command that fails in a way nobody foresaw answers with an error line, rather than taking the engine down
+				emit({'event': 'error', 'message': f'{type(e).__name__}: {e}', 'command': command})
 		else: emit({'event': 'error', 'message': 'unknown command', 'command': command})
 
 if __name__ == '__main__':
