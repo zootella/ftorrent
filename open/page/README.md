@@ -30,16 +30,16 @@ pnpm preview # serves the built dist/ locally for testing
 **page.json in dev vs production.** The Vue app fetches `/page.json` on load for tracker statistics. The same URL resolves to different files depending on the environment:
 
 ```
-Development (pnpm dev)
-  Browser fetches    http://localhost:5173/page.json
-  Vite serves from   open/page/public/page.json        ← stub data with round numbers, committed to repo
+Development (pnpm dev and pnpm preview)
+  Browser fetches    http://localhost:5173/page.json   (4173 under pnpm preview)
+  Vite answers from  open/gauge/data/public/page.json  ← sample data, committed; a local gauge run writes over it
 
 Production (server)
   Browser fetches    https://open.ftorrent.com/page.json
   Proxy serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
 ```
 
-The built `dist/page.json` from `pnpm build` is never used in production — the reverse proxy serves the gauge's live copy from the shared data volume instead.
+The build carries no `page.json` at all. `vite.config.js` answers `/page.json` only while serving, reading the sample from the gauge's folder at request time, so the server's static files never hold one to serve in place of the gauge's live copy, and the upload is the same as every other site's.
 
 ## Deployment
 
@@ -87,14 +87,13 @@ The result:
 open/page/
 ├── index.html         Vite entry point
 ├── package.json       Dependencies and scripts
-├── vite.config.js     Vite + Vue plugin configuration
+├── vite.config.js     Vite + Vue plugin configuration, and the dev-only answer for /page.json
 ├── src/
 │   ├── main.js        Fetches page.json, then creates and mounts the Vue app
 │   ├── style.css      Tailwind import, @font-face declarations, base styles
 │   ├── App.vue        Root component
 │   └── components/    Vue components (Page, Panel, Space, Quote, Url)
 └── public/
-    ├── page.json      Gauge data (written by the gauge container)
     ├── fonts/         Self-hosted web fonts (Jura, Monaspace Krypton, Radon)
     ├── images/        Page images (sticker, social card)
     └── earth/         Twelve monthly Earth textures (jan.jpg–dec.jpg, 8K, see below)

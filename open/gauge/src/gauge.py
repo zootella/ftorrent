@@ -22,7 +22,7 @@ from zootella.ergo import Size, Time, tick_to_iso  # small helpers from the ergo
 # Paths
 # ---------------------------------------------------------------------------
 
-# The gauge's working directory. In Docker, this is /gauge (a bind mount to /opt/open.ftorrent.com/data on the host). Locally it defaults to the page workspace, so page.json lands where the Vite dev server can pick it up.
+# The gauge's working directory. In Docker, this is /gauge (a bind mount to /opt/open.ftorrent.com/data on the host). Locally it defaults to data/ beside src/, which stands in for that directory: it holds a committed sample page.json, a local run writes over it, and the page workspace's dev server answers /page.json from there.
 #
 # Inside this directory:
 #   public/page.json  — the public output, served by the reverse proxy
@@ -30,7 +30,7 @@ from zootella.ergo import Size, Time, tick_to_iso  # small helpers from the ergo
 #   days.json         — private 90-day uptime history, never served
 #   breaker.json      — private cool-down state, read by the host's breaker script
 #   probe             — touched by the host's reachability probe, read here
-GAUGE_DIR = Path(os.environ.get("GAUGE_DIR", "../page"))
+GAUGE_DIR = Path(os.environ.get("GAUGE_DIR", Path(__file__).resolve().parent.parent / "data"))  # from this file's own location, so a local run lands in data/ wherever it was started from
 PUBLIC_DIR = GAUGE_DIR / "public"
 RING_PATH = GAUGE_DIR / "ring.json"
 DAYS_PATH = GAUGE_DIR / "days.json"

@@ -275,10 +275,10 @@ credentials/
 hide/
 
 # Gauge working state (written during local development)
-open/page/ring.json
-open/page/days.json
-open/page/breaker.json
-open/page/probe
+open/gauge/data/ring.json
+open/gauge/data/days.json
+open/gauge/data/breaker.json
+open/gauge/data/probe
 
 # Deployment platforms
 .vercel/

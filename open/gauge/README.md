@@ -140,6 +140,7 @@ For what these numbers come to on a busy public deployment, beside the processor
 open/gauge/
 ├── Dockerfile             Container image definition
 ├── compose-service.yml    Compose service entry (add to your docker-compose.yml)
+├── data/                  Local stand-in for the server's data directory, with the sample page.json
 ├── probe.py               Internet reachability probe (runs on host via cron)
 ├── README.md              This document
 ├── requirements.txt       The gauge's one dependency, ergo, pinned by version and hash
@@ -149,7 +150,7 @@ open/gauge/
 
 ## Development
 
-Run the gauge and the Vite dev server side by side. The gauge writes `page.json` to the page workspace's `public/` directory (controlled by `GAUGE_DIR`, defaults to `../page`), and the dev server picks it up.
+Run the gauge and the Vite dev server side by side. The gauge writes `page.json` into `data/public/` in this folder (controlled by `GAUGE_DIR`, which defaults to `data/` here and is `/gauge` in the container), and the page workspace's dev server answers `/page.json` from there.
 
 Locally there's no host cron touching the probe, and the gauge only ticks when the probe is fresh — so without it `tick()` treats every minute as offline and writes nothing. Stand in for the cron job with a third terminal that keeps the marker under 90 seconds old.
 
@@ -161,12 +162,12 @@ cd open/gauge && uv run --with-requirements requirements.txt src/gauge.py
 cd open/page && pnpm dev
 
 # Terminal 3 — stand in for the host's probe cron
-cd open/gauge && while true; do touch ../page/probe; sleep 30; done
+cd open/gauge && while true; do touch data/probe; sleep 30; done
 ```
 
 On a development machine, memory and served counts will be 0, since there are no tracker containers to read. Downtime starts at 1439 and decreases each minute.
 
-The page workspace commits a stub `public/page.json`, with round numbers and a 90-day history, so the dashboard has something to draw with no gauge running at all. A local gauge run writes over it; `git restore open/page/public/page.json` puts it back. The gauge's private files, `ring.json`, `days.json`, and `breaker.json`, land in `open/page/` beside the probe marker, and git ignores all four.
+`data/` stands in for the server's data directory. It holds a committed sample, `data/public/page.json`, with round numbers and a 90-day history, so the dashboard has something to draw with no gauge running at all. A local gauge run writes over it, and `git restore open/gauge/data/public/page.json` puts it back. The gauge's private files, `ring.json`, `days.json`, and `breaker.json`, land in `data/` beside the probe marker, and git ignores all four. None of it reaches the server: the image copies only `src/`, and the page's build carries no `page.json`.
 
 ## Deployment
 

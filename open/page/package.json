@@ -10,7 +10,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"local": "vite",
-		"upload": "vite build && rm -f dist/page.json && node --env-file-if-exists=../../.env ../../upload.js open"
+		"upload": "vite build && node --env-file-if-exists=../../.env ../../upload.js open"
 	},
 	"dependencies": {
 		"@zootella/ergo": "^0.1.3",
