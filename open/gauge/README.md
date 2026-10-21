@@ -226,6 +226,6 @@ The `minute` field should match the current UTC minute. Memory fields should be 
 
 ## Security
 
-The gauge container runs on the `ftorrent-open` network (cafe 2) with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach anything outside that network. Its one dependency beyond the standard library is installed at build time from a requirements file that pins both the version and the hash of the exact file, so pip refuses anything else.
+The gauge container runs on the `ftorrent-open` network (cafe 2), at the pinned address `172.30.0.5` / `fd00:cafe:2::5` that the DHT node's Web API trusts, with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach anything outside that network. Its one dependency beyond the standard library is installed at build time from a requirements file that pins both the version and the hash of the exact file, so pip refuses anything else.
 
 A compromised gauge can write wrong numbers to `page.json`. It cannot inject scripts into the HTML, JS, or CSS the browser executes — the frontend bundle sits in a separate host directory that the reverse proxy serves directly.

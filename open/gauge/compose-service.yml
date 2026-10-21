@@ -4,6 +4,11 @@
   python-gauge:
     container_name: ftorrent-open-gauge-1
     build: ./python-gauge
+    networks:
+      # Join the same network as the Aquatic services, where the gauge reaches each tracker's Prometheus endpoint by its container name, at a PINNED address: the DHT node's Web API answers the gauge's scrape without credentials only from this one address, the whitelist in qBittorrent.conf, so the gauge's address never changes.
+      tracker:
+        ipv4_address: 172.30.0.5
+        ipv6_address: fd00:cafe:2::5
     user: "65534:65534"
     read_only: true
     cap_drop:

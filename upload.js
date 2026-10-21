@@ -52,6 +52,7 @@ function upload(name) {
 	let server = readServer(site)
 	execFileSync('rsync', [
 		'-avz', '--delete',
+		'--exclude=.DS_Store', '--delete-excluded',//Finder's own record of a folder, which macOS writes into any folder a window has shown, and which a build copies out of public/ with the rest: never sent, and deleted from the server where one already went up, which a plain exclude would leave in place
 		built + '/',//the slash sends the folder's contents rather than the folder
 		`${server.user}@${server.host}:${server.path}`,
 		'-e', `ssh -p ${server.port}`,//rsync spells the port inside the ssh command, lowercase -p

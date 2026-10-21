@@ -17,5 +17,5 @@ def moon(script): # runs shell on moon
 
 moon("mkdir -p /var/www/moon")
 run("rsync", "-t", "-e", " ".join(ssh), "Caddyfile", "moon:/etc/caddy/Caddyfile") # rsync takes the ssh command as one string
-run("rsync", "-rlt", "--delete", "-e", " ".join(ssh), "site/", "moon:/var/www/moon/")
+run("rsync", "-rlt", "--delete", "--exclude=.DS_Store", "--delete-excluded", "-e", " ".join(ssh), "site/", "moon:/var/www/moon/") # never Finder's .DS_Store, which macOS writes into any folder a window has shown, and none left on moon either
 moon("systemctl reload caddy")
