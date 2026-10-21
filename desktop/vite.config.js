@@ -17,10 +17,10 @@ export default defineConfig({
 	clearScreen: false,
 	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
-		port: 1420,
+		port: 7100,//rather than the 1420 every app from Tauri's template asks for, so ftorrent's dev server runs beside theirs
 		strictPort: true,
 		host: host || false,
-		hmr: host ? {protocol: "ws", host, port: 1421} : undefined,
+		hmr: host ? {protocol: "ws", host, port: 7101} : undefined,
 		watch: {
 			// 3. tell vite to ignore watching `src-tauri`
 			ignored: ["**/src-tauri/**", "**/engine/**", "**/linux/**"],//and the engine's freeze and the linux builds, which write thousands of files a page never imports

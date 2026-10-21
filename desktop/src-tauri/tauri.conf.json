@@ -5,7 +5,7 @@
 	"identifier": "com.ftorrent.ftorrent",
 	"build": {
 		"beforeDevCommand": "pnpm dev",
-		"devUrl": "http://localhost:1420",
+		"devUrl": "http://localhost:7100",
 		"beforeBuildCommand": "pnpm vite-build",
 		"frontendDist": "../dist"
 	},

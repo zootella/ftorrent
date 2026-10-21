@@ -108,7 +108,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 
 - `192.0.2.1` and `2001:db8::1`, in `desktop/src/connection.js`: addresses set aside for documentation, by RFC 5737 and RFC 3849, which name no one. The Connection tab hands each to `net_local` in `desktop/src-tauri/src/net.rs`, which connects a UDP socket to it at port 9. Connecting sends nothing; the system picks a route, and the client reads the source address the system would send from.
 
-No other address is written in the client, apart from the unspecified `0.0.0.0` and `::` that `net_local` and `net_stun` bind their sockets to, and `localhost:1420` in `desktop/src-tauri/tauri.conf.json`, where a development build finds Vite.
+No other address is written in the client, apart from the unspecified `0.0.0.0` and `::` that `net_local` and `net_stun` bind their sockets to, and `localhost:7100` in `desktop/src-tauri/tauri.conf.json`, where a development build finds Vite.
 
 ## What the client calls itself
 
