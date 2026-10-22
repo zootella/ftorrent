@@ -127,4 +127,5 @@ export async function fontWindow(font) {
 	document.documentElement.dataset.font = font
 }
 
+export function windowResizeDrag(edge) { return invoke('window_resize_drag', {edge}) }//start the system's own resize from an edge or corner, like 'SouthEast', while the button is still down: true when the system took it, and false where it can't, on a mac
 export function windowWebviewVersion() { return invoke('window_webview_version') }//the version of the web view the page runs in, WebView2's on Windows and WebKit's on the Mac, as the platform reports it

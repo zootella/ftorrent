@@ -90,6 +90,7 @@ pub fn run() {
 				login::login_settings,
 				window::window_revealed,//and in window.rs
 				window::window_webview_version,
+				window::window_resize_drag,
 				instance::instance_take,//and in instance.rs
 				net::net_get,//and in net.rs
 				net::net_local,

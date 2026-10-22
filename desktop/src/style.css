@@ -55,10 +55,12 @@ Every font list here is short on purpose: one face and a generic family, or a pl
 	--color-line:    light-dark(#d4d4d4, #5a5a5a);/* borders, and the bar across the top, at a fraction of its strength */
 	--color-accent:  light-dark(#396cd8, #6f9cf0);/* the one color: links, and a control under the mouse */
 	--color-title:   light-dark(#808080, #808080);/* the about page's title in jura, in the gray docs.ftorrent.com sets its headings in, the dark gray of the windows 95 palette; the same value in dark mode until one is chosen for it */
+	--color-grip:    light-dark(#a0a0a0, #808080);/* the size grip's dots in the window's corner, the gray Windows 10 draws its own in on a light status bar; the same idea in dark mode until one is chosen for it */
 
 	--spacing:      0.25rem;/* the step every padding, margin, gap, and width counts in, tailwind's own: a quarter of the root's text size, which is the system's */
 	--spacing-line: 1rlh;/* one blank row: the root's line height, which is the system font's, so a gap is the same height as a line of text beside it */
 	--spacing-mark: 8rem;/* the width of the mark on the about page, the one picture the pages show */
+	--spacing-grip: 1rlh;/* the size grip's square, one line of the root's text on a side, the system font's, the height of a status bar's row; size-grip sets both width and height from this one value, so it stays a square, and it follows the system's text size and scaling while a face chosen in the settings leaves it alone */
 	--radius-md:               0.375rem;/* a control's corners; this and the values below through text-heading are tailwind's own numbers, kept as they were */
 	--font-weight-semibold:    600;/* headings */
 	--font-weight-bold:        700;/* the current page in the navigation */

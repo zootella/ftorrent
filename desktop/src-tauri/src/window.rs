@@ -86,6 +86,24 @@ pub fn window_revealed(revealed: State<'_, Revealed>) {
 	revealed.0.store(true, Ordering::SeqCst);
 }
 
+/// Start the system's own resize of the window from the edge or corner named, as though the user had pressed on the window's border there, while the button the user pressed is still down, and answer whether the system took it. edge is one of Tauri's names for the eight, North, NorthEast, East, and around to NorthWest. On Windows, tao sends the window the message a press on its border sends, and Windows runs the same sizing loop the border would; on Linux, GTK asks the window manager to run one, or on Wayland the compositor. AppKit has no call that starts the drag a window's edge begins, so on a mac the answer is no. Plain, since it only hands the press to the system, which runs the drag on its own
+#[command]
+pub fn window_resize_drag(window: WebviewWindow, edge: String) -> Result<bool, String> {
+	resize_drag(&window, &edge)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn resize_drag(window: &WebviewWindow, edge: &str) -> Result<bool, String> {
+	let direction = serde_json::from_value(serde_json::Value::String(edge.to_string())).map_err(|_| format!("no edge named {edge}"))?;//tauri's ResizeDirection, which tauri takes but doesn't export, read from its name the way tauri's own startResizeDragging sends it from a page
+	window.as_ref().window().start_resize_dragging(direction).map_err(|e| e.to_string())?;
+	Ok(true)
+}
+
+#[cfg(target_os = "macos")]
+fn resize_drag(_window: &WebviewWindow, _edge: &str) -> Result<bool, String> {
+	Ok(false)//tao answers not supported here
+}
+
 /// The version of the web view the page runs in, as the platform reports it: WebView2's on Windows, and WebKit's on macOS and Linux
 #[command]
 pub fn window_webview_version() -> Result<String, String> {
