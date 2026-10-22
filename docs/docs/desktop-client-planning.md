@@ -180,7 +180,7 @@ A remaining theoretical vector is a compromised npm dependency importing `@tauri
 **Packages.** ftorrent ships four packages:
 
 - `ftorrent.exe` — setup program for Windows 10 and later.
-- `ftorrent.dmg` — macOS disk image, supporting Sequoia and Tahoe, Apple Silicon only.
+- `ftorrent.dmg` — macOS disk image, supporting Sequoia and later, Apple Silicon only.
 - `ftorrent.amd64.deb` and `ftorrent.arm64.deb` — Debian packages for Ubuntu Desktop and its derivatives (Mint, Pop!_OS, Zorin, elementary), which together account for the majority of desktop Linux users, and for Raspberry Pi OS on ARM.
 - `ftorrent.x86_64.rpm` — RPM package for Fedora, RHEL, Rocky, and AlmaLinux.
 - `ftorrent.x86_64.flatpak` — Flatpak bundle for any distribution, sandboxed, and the only package that installs on SteamOS and Bazzite, whose root filesystems are read-only or atomic. Arch users install the Flatpak.

@@ -1,6 +1,6 @@
 # Good5 bookmark
 
-_A working note for Good5 in `docs/docs/good-service-planning.md`, the milestone that reads the machine's firewall and asks the router what it knows. It holds the design questions still open before building, the reading they rest on, and the parts of Good5 that wait for the development Mac to run macOS 26 Tahoe, which from now on is the oldest macOS ftorrent supports. Running Tahoe will likely settle some of these. Delete each section once its decision is in the plan's boxes and the code._
+_A working note for Good5 in `docs/docs/good-service-planning.md`, the milestone that reads the machine's firewall and asks the router what it knows. It holds the design questions still open before building, the reading they rest on, and the parts of Good5 that wait for the development Mac to run macOS 27 Golden Gate. Running Golden Gate will likely settle some of these. Delete each section once its decision is in the plan's boxes and the code._
 
 ## What the reading found
 
@@ -34,8 +34,7 @@ The plan's Good5d puts igd-next behind a command that takes the action name, whi
 
 Good5b reads Windows' firewall over COM, through INetFwPolicy2, from a Windows-only module with two general commands: `firewall_profiles`, each profile's state and which profiles the current networks are on, and `firewall_rules`, every rule with its program path, direction, action, and profiles, from which the panel picks the ones naming ftorrent or the engine. The Mac can't compile the Windows target, so build it last within Good5, and check it whenever a Windows session can take it.
 
-## Waiting for Tahoe
+## Waiting for Golden Gate
 
-- Read the firewall again on Tahoe: whether the preferences file is back, and whether `socketfilterfw` still answers each read without sudo.
+- Read the firewall again on Golden Gate: whether the preferences file is back, and whether `socketfilterfw` still answers each read without sudo.
 - Find what the Local Network privilege does to a development build run from iTerm, a third-party terminal the Terminal exemption may not cover, and then to an installed copy.
-- Move the support floor from macOS 15 to 26: `minimumSystemVersion` in `desktop/src-tauri/tauri.conf.json`, the Mac paragraph of `docs/docs/installing-ftorrent.md`, and the wheel paragraph of `docs/docs/libtorrent-provenance.md`, which calls the wheel's macOS 15 tag the client's floor. Whether the floor then moves each September, to the current macOS and the one before it, is still open.

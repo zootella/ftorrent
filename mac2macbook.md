@@ -1,6 +1,6 @@
 # MacBook: the Connection tab on Tahoe
 
-A note for the session on a Mac running macOS 26, Tahoe. Good4 ran on macOS 15, and ftorrent supports the current macOS and the two before it, so a few things Good4 found there need checking here. It's public and committed, so it names nobody: in anything written back, say "the user." Git is read-only, and the user makes every commit; report results exactly as they came out, failures included; never regenerate a lockfile.
+A note for the session on a Mac running macOS 26, Tahoe. Good4 ran on macOS 15, and ftorrent runs on 15 and later, so a few things Good4 found there need checking here. It's public and committed, so it names nobody: in anything written back, say "the user." Git is read-only, and the user makes every commit; report results exactly as they came out, failures included; never regenerate a lockfile.
 
 ## What changed
 
