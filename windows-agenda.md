@@ -2,10 +2,6 @@
 
 The Windows session's burn-down for the Mac's letter in `mac2win.md`, Good4 in `docs/docs/good-service-planning.md` on Windows, and the ergo changes that only this box compiles. Each section is named for what it covers, and we call it by that name as we work. A section leaves this file when the user says it's resolved.
 
-## CleanBuild
-
-From the repository root, `pnpm install --frozen-lockfile`, then in `desktop` `pnpm engine`, `cargo check` from `src-tauri`, `pnpm compile`, `pnpm installer`, and `pnpm hash`, with the hash compared against PowerShell's `Get-FileHash -Algorithm SHA256` of `desktop/release/ftorrent.exe`, without case. All of it ran on the code as it came, with nothing to fix. What the letter reports from it is under WriteUp. The upload waits until SessionRun has passed, so the build published is one that ran here.
-
 ## ErgoWindows
 
 The two Windows-only lines that now count bytes with ergo's `size::KB`, both keeping their values.
