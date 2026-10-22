@@ -1,4 +1,5 @@
 import {invoke} from '@tauri-apps/api/core'
+import {documentDir, downloadDir} from '@tauri-apps/api/path'
 
 //where everything is: paths.rs works it out once at startup, before the page exists, and is the long version
 
@@ -32,6 +33,10 @@ export function resolveFolder(setting, location, home) {
 	let separator = windows ? '\\' : '/'
 	return [anchor, ...parts].join(separator)
 }
+
+//the user's Downloads and Documents folders, where the system keeps them: Windows' known folders, which a user can move and OneDrive often moves Documents into, the Mac's, and XDG's on Linux, rather than a guess under the home folder. Tauri's path functions ask, through the core set capabilities/default.json already grants, since these are the user's folders rather than ftorrent's, and paths_status is for ftorrent's own. Blank when the system can't say, which leaves a box's folder to the system
+export async function downloadsFolder() { try { return await downloadDir() } catch { return '' } }//where a browser saves the torrent files a person opens
+export async function documentsFolder() { try { return await documentDir() } catch { return '' } }
 
 function isAbsolute(setting) {//does a setting name one exact place, on any platform: C:/Games is absolute on a mac too, where it names a drive that isn't there, rather than a folder called C: beside the program
 	return setting.startsWith('/') || /^[A-Za-z]:/.test(setting)

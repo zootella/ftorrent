@@ -6,15 +6,13 @@ The Windows session's burn-down for the Mac's letter in `mac2win.md`, Good4 in `
 
 The rules naming ftorrent, listed through COM, `HNetCfg.FwPolicy2`, since `Get-NetFirewallRule` answers "Access is denied" from Claude's shell. Each listing gives each rule's direction, action, profiles, protocol, and program.
 
-- **At Check.** The development build is already allowed, so no alert is expected. List again after Check either way.
-- **At Start.** The engine at `target\debug\ftorrent-engine\ftorrent-engine.exe` has no rule, so its first listen should bring an alert. List while the alert is up and before anyone answers it, then have the user answer, then list once more.
+- **At Start.** Neither the installed copy's engine nor the development build's has a rule, so the first listen of whichever runs should bring an alert. List while the alert is up and before anyone answers it, then have the user answer, then list once more.
 - For each alert, note for the plan's paragraph what it names, which network boxes it shows and which are ticked, and the time it appeared and was answered.
 
 ## OpenBox
 
-The user presses Open… and chooses a well-seeded torrent file of their own.
+The user presses Open… on the Connection tab and chooses a well-seeded torrent file of their own.
 
-- The box is Windows' own open box, sits over ftorrent's window, and offers files.
 - The path and the info-hash appear in the table.
 - Open… again and Cancel changes nothing.
 
@@ -27,5 +25,5 @@ The user presses Open… and chooses a well-seeded torrent file of their own.
 ## WriteUp
 
 - **The plan.** Rewrite the Windows paragraph at the end of Good4 in `docs/docs/good-service-planning.md` in place, as what Windows did, in the plan's voice. The World Map in the same file says the Windows firewall is read through netsh, where Good5b says COM; bring it into line.
-- **The letter.** `win2mac.md`, only if something here needs a turn from the Mac: a question, or work for it to do.
+- **The letter.** `win2mac.md` has its first sections; add one only for what needs a turn from the Mac: a question, or work for it to do.
 - **Before pasting into either.** Leave out the torrent's name, its file name, its info-hash, and the info-hash's first six characters, which the box prints on many lines. Rewrite every public address into the documentation ranges, 192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24, and 2001:db8::/32. Leave out the host name and the user's folder names.

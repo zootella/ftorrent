@@ -6,11 +6,16 @@ import {listen} from '@tauri-apps/api/event'
 import {processOpen} from './process.js'
 import {menuEnable} from './menu.js'
 import {log} from './log.js'
+import {spikeBoxes, spikeRun} from './spike.js'
 import {useRouter} from 'vue-router'
 
 let associations = useAssociationsStore()//the banner's question and answers; the store decides when it's up
 let router = useRouter()
-listen('menu', event => event.payload == 'help' ? processOpen(`https://${urlHelp}`) : router.push({name: event.payload}))//the menus' Options, Settings, and About, which rust passes up as the name of the route to open, and Help, which opens the documentation site in the system's browser; here in the shell, which lives as long as the app
+listen('menu', event => {//the menus' choices, here in the shell, which lives as long as the app
+	if (event.payload == 'help') processOpen(`https://${urlHelp}`)//Help, which opens the documentation site in the system's browser
+	else if (event.payload == 'open') { router.push({name: 'home'}); spikeRun('File, Open…', spikeBoxes[0].box) }//File, Open…, the box for torrent files, answered for now on the home page's spike, since nothing adds a torrent yet
+	else router.push({name: event.payload})//Options, Settings, and About, which rust passes up as the name of the route to open
+})
 
 if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the system's own, Cut, Copy, Paste and the rest, answered by the web view: they start gray, and the page lights each one while something on it can answer, the way a mac app's Edit menu reads. The page decides rather than AppKit because the menu library turns off AppKit's own asking, and because a torrent list will one day light Paste for a magnet link and Select All for its rows, which only the page can know
 	let lit = {Undo: false, Redo: false, Cut: false, Copy: false, Paste: false, 'Select All': false}//as the menu starts, from lifecycle.rs

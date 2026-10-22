@@ -8,7 +8,7 @@ ftorrent's one window, made here in code rather than declared in tauri.conf.json
 
 The window is made hidden, at any size. Where it goes and how big it is are the page's to decide: window.js reads the place the settings file remembers, or picks a fresh one, moves and sizes the hidden window there, and shows it. Then it says so, through window_revealed, and that one flag is the only state here; a launch the system made at login is placed and left hidden, and says so all the same. It's for bring_forward in lifecycle.rs: a second launch, the tray, or the Dock can ask for the window in the first moment of startup, before the page has placed it, and showing it then would put it on screen at the builder's size and spot for an instant before the page moved it. Until the page has revealed it, bringing it forward waits, since the page is about to show it anyway.
 
-And the web view inside is a browser's, and on Windows it takes the keyboard for itself. While the page has focus, WebView2 gets each keystroke before the window's message loop, where Tauri checks every key against the menu, and it raises an event of its own for each key that isn't typing, a function key or a key with Ctrl or Alt held, which neither wry nor Tauri answers. So two kinds of key never reach the menu: F1, View Help's shortcut, and Alt with a letter, the chord that opens a menu by its underlined letter, Alt+F for File; tapping Alt alone gets through. And the browser keeps a browser's keys: F5 and Ctrl+R reload the page, Ctrl+P prints it, Ctrl+F opens a find bar, and Alt+Left goes back. None of that belongs in a desktop application, and a reload would run the page's startup again beside an engine that never stopped. So as the window is made, a handler goes on that event. In every build it hands the menu back its keys: F1 sends View Help's own event, and Alt with a letter posts the window the message Windows itself sends to open a menu by its letter. In a release build it also tells the browser to skip every other key it might take for its own, and which keys those are stays Microsoft's list rather than one of ours, while the page still receives every key. WebView2 also has a single setting that turns the browser's keys off, and it would be simpler, but it takes effect only at the next navigation: by the time Tauri hands the web view over, the first page is already loading, and ftorrent never navigates again. A development build keeps the browser's keys, for reloading and the developer tools. On macOS the menu hears its keys before the web view does, and the web views on macOS and Linux have no browser keys. The right-click menu is a browser's on every platform, and the page turns it away, in main.js, with the same code everywhere.
+And the web view inside is a browser's, and on Windows it takes the keyboard for itself. While the page has focus, WebView2 gets each keystroke before the window's message loop, where Tauri checks every key against the menu, and it raises an event of its own for each key that isn't typing, a function key or a key with Ctrl or Alt held, which neither wry nor Tauri answers. So the menu's shortcuts never reach it: F1, View Help's, Ctrl+O, Open's, and Alt with a letter, the chord that opens a menu by its underlined letter, Alt+F for File; tapping Alt alone gets through. And the browser keeps a browser's keys: F5 and Ctrl+R reload the page, Ctrl+P prints it, Ctrl+F opens a find bar, and Alt+Left goes back. None of that belongs in a desktop application, and a reload would run the page's startup again beside an engine that never stopped. So as the window is made, a handler goes on that event. In every build it hands the menu back its keys: F1 sends View Help's own event, Ctrl+O sends Open's, and Alt with a letter posts the window the message Windows itself sends to open a menu by its letter. In a release build it also tells the browser to skip every other key it might take for its own, and which keys those are stays Microsoft's list rather than one of ours, while the page still receives every key. WebView2 also has a single setting that turns the browser's keys off, and it would be simpler, but it takes effect only at the next navigation: by the time Tauri hands the web view over, the first page is already loading, and ftorrent never navigates again. A development build keeps the browser's keys, for reloading and the developer tools. On macOS the menu hears its keys before the web view does, and the web views on macOS and Linux have no browser keys. The right-click menu is a browser's on every platform, and the page turns it away, in main.js, with the same code everywhere.
 */
 
 /// Whether the page has placed the window yet, and shown it unless a login started this copy; managed by lib.rs
@@ -28,7 +28,7 @@ pub fn window_build(app: &AppHandle) {
 	}
 }
 
-/// Hand the menu back the keys WebView2 keeps from it, F1 and Alt with a letter, and in a release build turn off the browser's own shortcut keys, reload, print, find, back, and the rest; on Windows only, where WebView2 does both
+/// Hand the menu back the keys WebView2 keeps from it, F1, Ctrl+O, and Alt with a letter, and in a release build turn off the browser's own shortcut keys, reload, print, find, back, and the rest; on Windows only, where WebView2 does both
 #[cfg(target_os = "windows")]
 fn _keys(window: &WebviewWindow) {
 	use tauri::Emitter;
@@ -36,6 +36,7 @@ fn _keys(window: &WebviewWindow) {
 	use webview2_com::Microsoft::Web::WebView2::Win32::{ICoreWebView2AcceleratorKeyPressedEventArgs2, COREWEBVIEW2_KEY_EVENT_KIND, COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN, COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN};
 	use windows::core::Interface;//for cast, which asks the event's arguments for the newer interface that holds the switch
 	use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+	use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU, VK_SHIFT};
 	use windows::Win32::UI::WindowsAndMessaging::{PostMessageW, SC_KEYMENU, WM_SYSCOMMAND};
 	let Ok(hwnd) = window.hwnd() else { return };
 	let hwnd = hwnd.0 as isize;//the window's handle as a number, since a handle as it is can't cross to the main thread
@@ -53,6 +54,12 @@ fn _keys(window: &WebviewWindow) {
 			if kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && key == 0x70 {//F1
 				args.SetHandled(true)?;
 				if !repeat { let _ = app.emit("menu", "help"); }//View Help's own event, as lifecycle.rs's menu handler sends it, once per press
+				return Ok(())
+			}
+			let held = |key: VIRTUAL_KEY| GetKeyState(key.0 as i32) < 0;//whether a key was down as this one went down; the high bit, which makes the number negative, says so
+			if kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && key == 0x4f && held(VK_CONTROL) && !held(VK_MENU) && !held(VK_SHIFT) {//ctrl and O alone; ctrl with alt is AltGr, which types letters like the ó of a Polish keyboard, and is left to type
+				args.SetHandled(true)?;
+				if !repeat { let _ = app.emit("menu", "open"); }//File, Open's own event, as lifecycle.rs's menu handler sends it
 				return Ok(())
 			}
 			if kind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN && (0x41..=0x5a).contains(&key) {//a letter with alt held

@@ -2,6 +2,7 @@
 import {ref} from 'vue'
 import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {useSettingsStore} from '../stores/settings.js'
+import DialogSpike from '../components/DialogSpike.vue'
 import {brandName} from '../brand.js'
 import {log} from '../log.js'
 
@@ -29,5 +30,6 @@ async function prepareFolder() {
 		<h1 class="text-heading font-semibold">{{ brandName }}</h1>
 
 		<button type="button" @click="prepareFolder">{{ prepared ? 'Prepared' : 'Prepare download folder' }}</button>
+		<DialogSpike />
 	</main>
 </template>

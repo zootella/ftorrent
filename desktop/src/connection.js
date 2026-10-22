@@ -7,6 +7,7 @@ import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces} from './net.js'
 import {processOutput} from './process.js'
 import {dialogOpen} from './dialog.js'
+import {downloadsFolder} from './paths.js'
 import {useIncomingStore} from './stores/incoming.js'
 import {stick} from './log.js'
 
@@ -676,7 +677,7 @@ function _send(message) {
 //the system's open box, for a torrent file; the engine reads the one chosen, which stays chosen until the app quits
 export async function sessionOpen() {
 	_listen()
-	let path = await dialogOpen({files: true, folders: false})
+	let [path] = await dialogOpen({start: await downloadsFolder(), kind: 'Torrent files', extensions: ['torrent']})//one torrent file, from Downloads
 	if (!path) return//cancelled
 	session.torrent = {path}
 	_send({command: 'read', path})
