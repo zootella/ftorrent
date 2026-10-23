@@ -26,7 +26,7 @@ A check that asks once and waits for one answer gets checkSeconds to hear back. 
 
 A run asks every check at once and waits for the last, so it takes as long as its slowest check, at most checkSeconds. Then, for each STUN server whose name led somewhere, it asks the system which of the machine's addresses it would send from toward that server, which takes no packet, and over IPv6 can be a different one of the machine's addresses for each. That is the system's word and not a measurement: a Mac has sent HTTPS and STUN from a deprecated temporary address while saying, a moment later, that it would send from the current one, so the box gives both, and the address the server saw is on the line above. The box lists the checks in the same order every time, whatever order they finish in, so two runs line up line for line, and a family's one STUN call shows as a line for each server it asked, with everything net_stun saw of that server on the lines under it: where the request went, the address the system says it would send from, where the answer came from, the answer in hex, and each attribute in it by name with a few words on what it carries. An error is an answer like any other: the box shows its text, since a user on this tab is under the hood. The box keeps every run since the app started, oldest first, each starting with a line that says when it ran, which build, and on which platform, so a box pasted into a message or an issue says where its lines came from, and ends with every interface and every address on it, each with a few words on what it is.
 
-And the engine's session, which runs for as long as the user lets it rather than for four seconds. Start opens libtorrent's session at a random port from the dynamic range, the range Transmission picks its random port from, listening on every address in both families and joining the DHT through our bootstrap node and two others, with port mapping and local service discovery off. libtorrent reads every address as each address the machine has, loopback and link-local included, and opens a TCP socket and a UDP one on each; from each one that reaches beyond the machine it runs a DHT node with its own routing table, announces to the trackers, and learns the address peers see. With a torrent file opened, it also joins that swarm in upload mode, announcing and taking connections but downloading nothing, so strangers who find it through the trackers and the DHT dial in. While it runs, the page asks the engine once a second for the alerts libtorrent has posted and for its counters. A session in a busy swarm posts a hundred alerts a second, most of them peers tried and dropped and DHT lookups, so the box shows each kind of alert once, the first to arrive, timed from Start by when the page heard it, up to a second after it happened; the table counts every alert by kind, and the box gets the counts when the session stops. A connection in is the exception, and gets a line every time, saying whether the session had sent to that address first, through a DHT lookup or a connection it tried, or whether it's unsolicited. The DHT's routine messages, its bootstrap queries and pings, post no alert, so unsolicited means as far as the alerts show. The table keeps the readings too: which sockets opened, how many nodes the routing tables hold, the addresses peers say they see, and how many strangers connected in over each family and how many of those were unsolicited, counted by alert, and by libtorrent's own counter. Behind a home router with no port mapping, strangers still reach the session, over both families and over uTP, which shares the session's UDP port with the DHT: each DHT message the session sends opens the router for that node's replies, and a node also in the swarm connects in through the opening. Whether the router lets in a stranger who was never sent anything is its filtering, which these alerts can't settle and Good7 measures. The session lives in the engine, not the tab, so it keeps running while the user looks elsewhere, which is why the box, the last run, and the session's readings are kept here rather than in the page. For the same reason the whole panel as Copy takes it, the table and then the box, is stuck to stick.txt beside the log as it changes, at most once a second, so it can be read from outside ftorrent while a session runs, whichever tab is showing.
+And the engine's session, which runs for as long as the user lets it rather than for four seconds. Start opens libtorrent's session at a random port from the dynamic range, the range Transmission picks its random port from, listening on every address in both families and joining the DHT through our bootstrap node and two others, with port mapping and local service discovery off. libtorrent reads every address as each address the machine has, loopback and link-local included, and opens a TCP socket and a UDP one on each; from each one that reaches beyond the machine it runs a DHT node with its own routing table, announces to the trackers, and learns the address peers see. With a torrent file opened, it also joins that swarm in upload mode, announcing and taking connections but downloading nothing, so strangers who find it through the trackers and the DHT dial in. While it runs, the page asks the engine once a second for the alerts libtorrent has posted and for its counters. A session in a busy swarm posts a hundred alerts a second, most of them peers tried and dropped and DHT lookups, so the box shows each kind of alert once, the first to arrive, timed from Start by when the page heard it, up to a second after it happened; the table counts every alert by kind, and the box gets the counts when the session stops. A connection in is the exception, and gets a line every time, saying whether the session had sent to that address first, through a DHT lookup or a connection it tried, or whether it's unsolicited. The DHT's routine messages, its bootstrap queries and pings, post no alert, so unsolicited means as far as the alerts show. The table keeps the readings too: which sockets opened, how many nodes the routing tables hold, in all by libtorrent's counter and in each by asking each DHT node, with the address it runs from and its node ID, since libtorrent's own DHT stats describe only one table, the addresses peers say they see, and how many strangers connected in over each family and how many of those were unsolicited, counted by alert, and by libtorrent's own counter. Behind a home router with no port mapping, strangers still reach the session, over both families and over uTP, which shares the session's UDP port with the DHT: each DHT message the session sends opens the router for that node's replies, and a node also in the swarm connects in through the opening. Whether the router lets in a stranger who was never sent anything is its filtering, which these alerts can't settle and Good7 measures. The session lives in the engine, not the tab, so it keeps running while the user looks elsewhere, which is why the box, the last run, and the session's readings are kept here rather than in the page. For the same reason the whole panel as Copy takes it, the table and then the box, is stuck to stick.txt beside the log as it changes, at most once a second, so it can be read from outside ftorrent while a session runs, whichever tab is showing.
 */
 
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
@@ -650,8 +650,8 @@ export const session = reactive({
 	torrent: null,//the file chosen, {path, name, v1, v2, size, files} once the engine has read it, or {path, error}
 	sockets: [],//each listen result, {address, socket, error}
 	bootstrapped: false,//whether the DHT has said it has its first nodes
-	nodes: null,//how many nodes the largest routing table holds, from the last stats; libtorrent keeps a table for each address it runs the DHT from, and reports the one with the most buckets, the later one on a tie, so in the first seconds, with one bucket each, it can show an empty table while others have nodes
 	allNodes: null,//and how many all the tables hold together, libtorrent's dht.dht_nodes counter, which sums them
+	tables: [],//each DHT node the session runs, one for each address it runs the DHT from, as {address, id, nodes}: the address, the node's ID in hex, and how many live nodes its routing table holds, null until the first count arrives; the counts add up to allNodes
 	external: [],//each address peers and the DHT say they see, by libtorrent's vote, which it holds for each address it listens on
 	incoming: {ipv4: 0, ipv6: 0},//connections strangers opened to the session, counted by alert, by family
 	unsolicited: {ipv4: 0, ipv6: 0},//and those from an address no earlier alert shows the session sending to
@@ -687,12 +687,12 @@ export async function sessionOpen() {
 export function sessionStart() {
 	_listen()
 	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, RFC 6335, a new one each Start; a setting may later let a person choose one, with random staying the default
-	Object.assign(session, {running: true, port, started: Date.now(), sockets: [], bootstrapped: false, nodes: null, allNodes: null, external: [], incoming: {ipv4: 0, ipv6: 0}, unsolicited: {ipv4: 0, ipv6: 0}, hasIncoming: null, kinds: {}})
+	Object.assign(session, {running: true, port, started: Date.now(), sockets: [], bootstrapped: false, allNodes: null, tables: [], external: [], incoming: {ipv4: 0, ipv6: 0}, unsolicited: {ipv4: 0, ipv6: 0}, hasIncoming: null, kinds: {}})
 	contacted = new Set()
 	boxAdd(`${sayMoment(session.started)}, session on port ${port}`, 'session')
 	_send({command: 'session', port})
 	if (session.torrent?.v1 || session.torrent?.v2) _send({command: 'add', path: session.torrent.path})//only a file the engine has read as a torrent
-	poller = setInterval(() => { _send({command: 'stats'}); _send({command: 'poll'}) }, pollEvery)
+	poller = setInterval(() => { _send({command: 'stats'}); _send({command: 'tables'}); _send({command: 'poll'}) }, pollEvery)
 }
 
 //stop asking for news, take what's waiting, and stop the session
@@ -710,6 +710,8 @@ function _heard(event) {
 		boxAdd(`read ${event.path}: ${event.name}, ${event.files} file${event.files == 1 ? '' : 's'}, ${saySize4(event.size)}`, 'session')
 	} else if (event.event == 'added') {
 		boxAdd(`${_since()}  joined the swarm of ${event.name} in upload mode`, 'session')
+	} else if (event.event == 'tables') {
+		session.tables = event.tables.map(t => ({...t, nodes: session.tables.find(known => known.id == t.id)?.nodes ?? null}))//each table keeps its last count until this round's arrives on a later poll
 	} else if (event.event == 'stopped') {
 		let kinds = _sayKinds()
 		boxAdd(`${_since()}  session stopped${kinds ? `; alerts by kind, ${kinds}` : ''}`, 'session')
@@ -740,7 +742,7 @@ const alertWords = {
 function _alert(a) {
 	if (a.type == 'session_stats') { session.hasIncoming = a.values['net.has_incoming_connections']; session.allNodes = a.values['dht.dht_nodes']; return }
 	if (a.type == 'session_stats_header') return//the counters' names, once, which the values already carry
-	if (a.type == 'dht_stats') { session.nodes = a.nodes; return }
+	if (a.type == 'dht_live_nodes') { let t = session.tables.find(t => t.id == a.id); if (t) t.nodes = a.nodes; return }//one table's count, asked for every second like the stats
 	if (a.type == 'listen_succeeded') session.sockets.push({address: a.address, socket: a.socket})
 	if (a.type == 'listen_failed') session.sockets.push({address: a.address, socket: a.socket, error: a.error})
 	if (a.type == 'dht_bootstrap') session.bootstrapped = true
@@ -781,11 +783,20 @@ export function sessionFacts() {
 		['Info-hash',            t?.error || [t?.v1, t?.v2 && `v2 ${t.v2}`].filter(Boolean).join(', ')],
 		['Session',              session.running ? `running on port ${session.port}` : ran ? `stopped, last on port ${session.port}` : 'stopped'],
 		['Listening',            _saySockets()],
-		['DHT',                  ran ? `${session.allNodes ?? 0} nodes in all, ${session.nodes ?? 0} in the largest routing table, ${session.bootstrapped ? 'started' : 'starting'}` : ''],
+		['DHT',                  ran ? `${session.allNodes ?? 0} nodes in all, ${session.bootstrapped ? 'started' : 'starting'}` : ''],
+		...session.tables.map(t => ['DHT table', _sayTable(t)]),
 		['External address',     session.external.join(', ') || (session.running ? 'none yet' : '')],
 		['Incoming connections', ran ? _sayIncoming() : ''],
 		['Alerts',               _sayKinds()],
 	]
+}
+
+//one DHT node's table: the node's ID, how many live nodes it holds, and the address it runs from, with what kind of address that is when the last Check listed it; the ID and the count first, since they're the same width row to row, so the rows line up
+function _sayTable(t) {
+	let found = lastRun.value && _find(lastRun.value.machine, t.address)
+	let kinds = found ? `, ${found.a.kinds.join(', ')}` : ''
+	let nodes = t.nodes == null ? 'counting' : `${t.nodes} nodes`
+	return `ID ${t.id}, ${nodes}, ${t.address}${kinds}`
 }
 
 //each socket the session opened, by kind and address, and any that failed with why

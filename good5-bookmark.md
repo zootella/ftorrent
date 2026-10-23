@@ -14,10 +14,6 @@ Apple's technote TN3179 sets the rules for local network privacy. Sending to an 
 
 ## The decisions
 
-### NAT-PMP through a general command
-
-The plan's Good5c names `net_natpmp`. A general command passes the lib.rs test better: `net_udp`, which sends the bytes it's given to an address from a new socket, sends them again at doubling intervals until a reply comes or the time runs out, and answers the reply in hex with the address it came from and the round trip. The panel builds NAT-PMP's two bytes and reads the twelve that come back: the result code, the epoch, which counts seconds since the router's mapping table started, and the external address. The same command carries PCP's ANNOUNCE now, and both protocols' mapping requests in Good9, which then needs no new Rust for them. Recommended.
-
 ### PCP's ANNOUNCE in Good5
 
 The plan leaves PCP for Good9 because PCP has no request that reads the external address without making a mapping. ANNOUNCE asks for nothing and changes nothing: a router that speaks PCP answers it, and one that speaks only NAT-PMP is expected to answer unsupported version, which is itself a finding. With it, Good5 says which of the three protocols the router speaks. As its own box, Good5 reletters to NAT-PMP, PCP ANNOUNCE, UPnP, and the carrier-grade NAT check. Send ANNOUNCE over IPv4 for now; sending it to the IPv6 gateway means a link-local address and its interface scope, which can wait for Good9's pinhole. Recommended.

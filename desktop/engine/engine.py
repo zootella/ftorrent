@@ -1,5 +1,6 @@
 import sys
 import json
+import ipaddress
 import platform
 import tempfile
 import libtorrent as lt
@@ -119,10 +120,19 @@ def command_poll(message):#every alert that has arrived since the last poll, eac
 		except Exception as e:#a field this build of libtorrent spells differently, sent up as what it is rather than lost
 			emit({'event': 'alert', 'type': alert.what(), 'message': alert.message(), 'fault': f'{type(e).__name__}: {e}'})
 
-def command_stats(message):#ask libtorrent for its counters and the DHT for its routing table, both of which arrive as alerts on a later poll
+def command_stats(message):#ask libtorrent for its counters, which arrive as an alert on a later poll
 	if session is None: return
 	session.post_session_stats()
-	session.post_dht_stats()
+
+def command_tables(message):#each DHT node the session runs, one for each address it runs the DHT from, each with a routing table of its own: its address and node ID now, and a request to it for its live nodes, which arrive as alerts on a later poll; libtorrent's own post_dht_stats describes only one table, the one with the most buckets, so this asks every table instead
+	if session is None: return
+	flag = lt.save_state_flags_t.save_dht_state
+	state = lt.write_session_params(session.session_state(flag), flag)#the DHT's state as it would be saved, which is the one place this binding gives each node's address and ID; reading session_state's dht_state.nids directly fails, since the binding registers no Python type for it
+	tables = []
+	for entry in state.get(b'dht state', {}).get(b'node-id', []):#each entry is the node's 20-byte ID followed by its local address, 4 bytes for IPv4 and 16 for IPv6
+		tables.append({'address': str(ipaddress.ip_address(entry[20:])), 'id': entry[:20].hex()})
+		session.dht_live_nodes(lt.sha1_hash(entry[:20]))
+	emit({'event': 'tables', 'tables': tables})
 
 def command_read(message):#the torrent file at path, read without joining its swarm: its name, info-hashes, size, and files, so the page can show what was chosen
 	path = message.get('path')
@@ -179,8 +189,8 @@ def alert_event(alert):#one alert as a line for the page: its type, libtorrent's
 		event['address'] = str(alert.endpoint[0])#the node the DHT asked
 	elif kind in ('tracker_reply_alert', 'dht_reply_alert'):
 		event['peers'] = alert.num_peers
-	elif kind == 'dht_stats_alert':
-		event.update({'nodes': sum(bucket['num_nodes'] for bucket in alert.routing_table), 'buckets': len(alert.routing_table), 'requests': len(alert.active_requests)})
+	elif kind == 'dht_live_nodes_alert':
+		event.update({'id': str(alert.node_id), 'nodes': alert.num_nodes})#which DHT node, by the ID the tables command named it by, and how many live nodes its routing table holds
 	elif kind == 'session_stats_alert':
 		event['values'] = dict(alert.values)#every counter by name, three hundred of them
 		del event['message']#which would be the same numbers again, as one long sentence
@@ -196,6 +206,7 @@ commands = {#every command the engine understands, and the function that carries
 	'session': command_session,
 	'poll': command_poll,
 	'stats': command_stats,
+	'tables': command_tables,
 	'read': command_read,
 	'add': command_add,
 	'stop': command_stop,

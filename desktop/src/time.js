@@ -1,8 +1,9 @@
 import {Time, sayDuration, sayTick, textToTick} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
-//a tick as UTC text a person can read in a box or a file, like 2026-10-08T14:22:00Z: ergo's iso form without the milliseconds
+//a tick as text a person can read in a box or a file, like 2026oct23 Fri 12:53p 49.123s, on this computer's own clock: the minute as a person says it, with a and p for am and pm, then the seconds to the millisecond; the s at the end isn't a tag, since ergo has none for a lone s, so it's written as it is
 export function sayMoment(tick) {
-	return sayTick(tick, 'YYYY-MM-DDThh24:mm:ssZ')
+	let local = tick - new Date(tick).getTimezoneOffset()*Time.minute//shifted by this computer's offset from UTC at that moment, daylight saving included, since sayTick writes every tick as it falls in UTC
+	return sayTick(local, 'YYYYmmmD Ddd h12:mma ss.ttts')
 }
 
 //a tick read back from ergo's short form, like 2026oct22.1830, or a person's shorter 2026dec or 2027 in the settings file, or false for blank or anything else; a bottom gate, since textToTick throws on text that isn't exactly that form, and a file a person edits can hold anything

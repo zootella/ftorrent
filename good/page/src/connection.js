@@ -235,10 +235,16 @@ export function sayVerdict(run) {
 //the box's lines for one run: when, and in which browser, then a line per check with what it asked, how long it took, and what came back
 export function sayRun(run) {
 	let width = Math.max(...run.results.map(r => r.asked.length))//the asked column as wide as its longest entry, so the times line up under each other
-	let lines = [`${sayTick(run.moment, 'YYYY-MM-DDThh24:mm:ssZ')}, good.ftorrent.com`, run.browser]
+	let lines = [`${_sayMoment(run.moment)}, good.ftorrent.com`, run.browser]
 	for (let r of run.results) lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
 	for (let g of run.gatherings) lines.push('', ..._sayGathering(g))//then everything each peer connection reported
 	return lines.join('\n')
+}
+
+//a tick as the box writes it, like 2026oct23 Fri 12:53p 49.123s, on the visitor's own clock: the minute as a person says it, with a and p for am and pm, then the seconds to the millisecond; the s at the end isn't a tag, since ergo has none for a lone s, so it's written as it is
+function _sayMoment(tick) {
+	let local = tick - new Date(tick).getTimezoneOffset()*Time.minute//shifted by the browser's offset from UTC at that moment, daylight saving included, since sayTick writes every tick as it falls in UTC
+	return sayTick(local, 'YYYYmmmD Ddd h12:mma ss.ttts')
 }
 
 //what came back, in the box's words: the address or the error's text, and for STUN each reflexive candidate the browser handed back, then how many host candidates the gathering made
