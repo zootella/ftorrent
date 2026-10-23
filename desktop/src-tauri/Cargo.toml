@@ -26,6 +26,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ureq = "3"#the https requests net.rs makes for the page, with its default TLS, rustls and Mozilla's roots compiled in
 getrandom = "0.3"#the random transaction id net.rs puts in a STUN request; tauri already brings this crate at this version
+igd-next = "0.18"#UPnP's mechanics for net.rs: the search that finds a router, then its external address and its port mappings over SOAP, blocking through attohttpc by default; iroh's port mapper and libp2p build their UPnP on it too
+natpmp = { version = "0.5", default-features = false }#NAT-PMP's mechanics for net.rs: the public address request to a gateway, answered with the router's external address and its epoch; without its default tokio feature, since net.rs blocks on run_blocking's pool, and it brings netdev for a gateway lookup net.rs passes over, since the page names the gateway
 zootella-ergo = "0.2.0"#ergo's small helpers, the same in rust as in the page: log.rs writes its time stamps through say_tick's templates and tick_to_iso, asking has_tick first; the size constants count out buffers; and net.rs hashes a saved download with its Sha256 and writes bytes as text with Data's base16; its sha2 is a generation newer than the one tauri's code generator brings at build time, so the lockfile holds both, and it brings sha1, blake3, and unicode-normalization too, which nothing here calls
 
 [target.'cfg(unix)'.dependencies]
