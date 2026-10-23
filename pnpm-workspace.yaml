@@ -22,3 +22,7 @@ packages:
   - desktop
   # its Linux packages, built on a Mac in Docker containers; nested inside the desktop folder, so cd deeper only to make a release
   - desktop/linux
+
+# esbuild's install script only swaps its node launcher for the native binary, which arrives anyway as @esbuild/<platform>, so every workspace skips it on purpose, and naming it here keeps pnpm from asking
+ignoredBuiltDependencies:
+  - esbuild

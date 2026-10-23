@@ -76,9 +76,9 @@ run([files / 'lib/ftorrent/ftorrent-engine/ftorrent-engine'], input=b'{"command"
 
 #A sandboxed application starts with no way to draw, no network, and no way to reach a file. The first four are what any GUI needs: Wayland with an X11 fallback covers both kinds of session, dri is what makes the web engine's compositing hardware accelerated rather than software, and ipc is what X11 wants for shared memory.
 #
-#The last two are ftorrent's own. A torrent client is nothing without the network, so the sandbox shares it. And downloads have to land somewhere the user can find them: the client's default download location is a folder under Downloads, so the sandbox is given that folder and no more. When the client lets the user choose any folder, this widens, and the choice of how is made then
+#The last two are ftorrent's own. A torrent client is nothing without the network, so the sandbox shares it. And a torrent client is handed folders: one to download into, a folder under Downloads by default and anywhere the user points it after, a microSD card or a USB drive under /run/media among them, and one to make a torrent from, which it reads whole. The system's open and save boxes run inside the sandbox and see what it sees. So we give the sandbox the host filesystem, which shares /run/media with it, as qBittorrent, Transmission, and KTorrent do on Flathub, and the engine and the boxes reach the same folders the user does. A Flatpak asking for the host filesystem is flagged as weakening its own sandbox, which is true: the user's files are open to it, and the host's system folders stay out of reach
 say('==> build-finish')
-run(['flatpak', 'build-finish', 'build', '--socket=wayland', '--socket=fallback-x11', '--device=dri', '--share=ipc', '--share=network', '--filesystem=xdg-download', '--command=ftorrent'])
+run(['flatpak', 'build-finish', 'build', '--socket=wayland', '--socket=fallback-x11', '--device=dri', '--share=ipc', '--share=network', '--filesystem=host', '--command=ftorrent'])
 
 say('==> build-export')
 run(['flatpak', 'build-export', 'repo', 'build'])  #this repository is also, exactly, what a Flatpak remote of our own would serve, so a single-file bundle and a self-hosted repo are the same build with a different last step

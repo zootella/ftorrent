@@ -3,7 +3,7 @@ import {dialogOpen, dialogSave} from './dialog.js'
 import {documentsFolder, downloadsFolder} from './paths.js'
 
 /*
-A spike for the system's boxes: the home page's buttons and File, Open… each put one up a different way, and spikeStatus says what came back, so a person can check each platform's open, folder, and save boxes by eye. Scaffolding, like log and stick, for while the boxes are built and checked, gone once the features that need them use them.
+A spike for the system's boxes: the home page's buttons and File, Open… each put one up a different way, and spikeStatus says what came back, so a person can check each platform's open, folder, and save boxes by eye. Scaffolding, like log and stick, for while the boxes are built and checked, gone once the features that need them use them. We checked them by eye on Windows and the Mac in October 2026; Linux waits for a Linux machine, where the Flatpak's boxes should reach any folder, a microSD card under /run/media included.
 */
 
 export const spikeStatus = ref('')//what the last box answered, in words

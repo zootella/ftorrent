@@ -34,8 +34,3 @@ So we develop on the newest macOS, ahead of where Mac users are going rather tha
 Each macOS also tightens what an app may do, in privacy settings and the firewall above all, and ftorrent is signed with its own identity rather than one Apple issues, which some of those rules treat differently: local network privacy follows the code signature, which Apple says it tracks reliably only for Apple-issued identities. Developing on the newest shows us a tightening the year it arrives, not a year later.
 
 The cost is that once the development Mac is on 27, it no longer runs 15 or 26, while most Macs are still on 26. A change made after the upgrade could break on those versions without anyone seeing it, so anything that reads parts of macOS that change between versions says which version it was seen on.
-
-## Still open
-
-- Upgrade the development Mac to 27 through Software Update in System Settings.
-- Measure the disk image window's title bar on 27. `dmg.js` holds the measurement from Sequoia, where the title bar is 28 points, and Tahoe redrew window chrome.

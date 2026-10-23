@@ -15,7 +15,7 @@ All Finder ever contributed was that one .DS_Store, and dmgbuild writes it direc
 
 Measured on macOS Sequoia in October 2026, with a checkerboard of 200-point squares and a diamond touching each edge in the picture's place, so a clipped edge or an icon off its corner showed at a glance. Four things were learned that the code cannot say:
 
-- The window size is the frame, title bar included. Showing all 800 points of picture takes 828, because Sequoia's title bar is 28 with the toolbar hidden. Tahoe redrew window chrome, and if its title bar is another height the bottom of the picture is clipped or letterboxed by the difference.
+- The window size is the frame, title bar included. Sequoia's title bar is 28 with the toolbar hidden, so showing all 800 points of picture took 828 there. On macOS 27.0.1, every AppKit window's title bar is 32, with a toolbar hidden or none at all, so the window is 832: the whole picture shows there, and on Sequoia it shows with 4 points of the window's background below it. We size for the newer title bar, taking Tahoe's to be the same, because Mac users upgrade quickly and most are on Tahoe or later.
 - The picture is drawn at its own size from the top left of the area under the title bar, and never scaled to fit the window.
 - An icon's position is the center of its picture, measured from that same top left. The label hangs below and is not counted, so y 400 puts the icon's center on the middle line of the picture exactly.
 - The window's position runs from the bottom left of the screen to the bottom left of the frame, with y up — Cocoa's coordinates, not AppleScript's. So no number means the same place on every screen, and tools that take a position from the top, create-dmg among them, quietly convert it on the screen of the Mac that ran the build. A window whose top would run past the menu bar is clamped just beneath it, which is what happens on most screens.
@@ -23,6 +23,8 @@ Measured on macOS Sequoia in October 2026, with a checkerboard of 200-point squa
 ## The pins
 
 dmgbuild is python, run through uvx, so nothing is installed and uv is the one requirement, on the mac that builds the installer and nowhere else — the same uv that freezes the engine. It is pinned, and so are ds_store and mac_alias, the two libraries that write the records and the alias measured above; dmgbuild itself asks only for some version or later of each, which would let a new release change the bytes of a dmg with nothing here changing.
+
+dmgbuild makes, mounts and compresses the image with hdiutil, and macOS 27 has deprecated the options it calls. Under macOS 27.0.1 on 2026-10-22, every build printed three warnings from hdiutil, for create with -volname and -size, attach with -nobrowse and -owners, and convert with -format, each naming diskutil image as the replacement. They were warnings and nothing more: the dmg built, and hdiutil verify passed it. So if a later macOS removes those options, this is the step a build fails at, and the way forward is a dmgbuild release that calls diskutil image, or this file calling it directly.
 
 The extension of ftorrent.app is not hidden. Hiding it sets a FinderInfo attribute on the bundle, and codesign --verify --strict rejects a bundle carrying one. Tauri's dmg never managed to hide it either, and nothing is lost: the label follows each viewer's own Finder setting, ftorrent.app with every extension shown and ftorrent without, the same as every application in /Applications, none of which carries the flag.
 */
@@ -37,7 +39,7 @@ const dependencies = ['ds_store==1.3.3', 'mac_alias==2.2.3']
 
 //the window a mac user meets: the whole picture and nothing around it, with each icon centered in its half. every number is in CSS pixels, and the essay says how each was measured
 const layout = {
-	window:       {position: {x: 400, y: 400}, size: {width: 800, height: 828}},//800 of picture under a 28 title bar. the position is from the bottom left of the screen, so the top would sit 1228 up; on any screen shorter than that and the menu bar, which is most, macOS clamps it just beneath the menu bar, 400 from the left
+	window:       {position: {x: 400, y: 400}, size: {width: 800, height: 832}},//800 of picture under a 32 title bar, macOS 27's. the position is from the bottom left of the screen, so the top would sit 1232 up; on any screen shorter than that and the menu bar, which is most, macOS clamps it just beneath the menu bar, 400 from the left
 	iconSize:     128,//the label under it is 16, dmgbuild's default, which the json form of its settings cannot change
 	background:   join(tauri, 'dmg/ceiling.jpg'),//1600 pixels tagged at 144 dpi, so 800 CSS pixels on an sRGB panel and a Retina one alike
 	volumeIcon:   join(tauri, 'icons/mac/icon.icns'),//the dock icon, the same file tauri gave the volume

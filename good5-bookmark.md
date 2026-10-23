@@ -4,7 +4,7 @@ _A working note for Good5 in `docs/docs/good-service-planning.md`, the milestone
 
 ## What the reading found
 
-On macOS 15.7.4 the application firewall's preferences file isn't where the plan expected it: `/Library/Preferences/com.apple.alf.plist` doesn't exist, and the file of that name in `/usr/libexec/ApplicationFirewall/` is the factory template, not the live settings. `socketfilterfw` answers every read without sudo: `--getglobalstate`, `--getblockall`, `--getstealthmode`, `--getallowsigned`, `--listapps`, and `--getappblocked` with a program's path. Block-all, when on, overrides every program's allowance, and stealth mode leaves probes to closed ports unanswered.
+On macOS 15.7.4 the application firewall's preferences file isn't where the plan expected it: `/Library/Preferences/com.apple.alf.plist` doesn't exist, and the file of that name in `/usr/libexec/ApplicationFirewall/` is the factory template, not the live settings. `socketfilterfw` answers every read without sudo: `--getglobalstate`, `--getblockall`, `--getstealthmode`, `--getallowsigned`, `--listapps`, and `--getappblocked` with a program's path. macOS 27.0.1 is the same on both counts. Block-all, when on, overrides every program's allowance, and stealth mode leaves probes to closed ports unanswered.
 
 Tailscale's port-mapping probe asks the router three ways at once, from one IPv4 socket, and gives the answers 250 milliseconds. To the gateway's port 5351 it sends NAT-PMP's two-byte public address request and PCP's ANNOUNCE, 24 bytes: version 2, opcode 0, and the client's address written as an IPv4-mapped IPv6 address. To port 1900 it sends UPnP's SSDP search, unicast to the gateway first and then to the multicast address 239.255.255.250. It sorts the replies by the port they came from, and reads the external address from NAT-PMP's reply alone.
 
@@ -36,5 +36,4 @@ Good5b reads Windows' firewall over COM, through INetFwPolicy2, from a Windows-o
 
 ## Waiting for Golden Gate
 
-- Read the firewall again on Golden Gate: whether the preferences file is back, and whether `socketfilterfw` still answers each read without sudo.
 - Find what the Local Network privilege does to a development build run from iTerm, a third-party terminal the Terminal exemption may not cover, and then to an installed copy.
