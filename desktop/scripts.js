@@ -275,10 +275,10 @@ async function checkSidecar(name, stage, sidecar, sidecarName, version) {
 	say(`checked  ${sidecar.sha256}  ${saySize4(bytes.length)}  ${sidecar.file}  ${sidecar.version} ${sidecar.arch}`)
 }
 
-//the three tauri icon runs stay in package.json, where pnpm is what puts the tauri cli on the path; this is the part after them. Each run writes a folder of its own, and these are the files that have to come out from under a generated name and sit where tauri.conf.json and the Windows manifest expect them. The copying is JavaScript rather than cp because this repository is built on Windows too
+//the three tauri icon runs stay in package.json, where pnpm is what puts the tauri cli on the path; this is the part after them. Each run writes a folder of its own, and these are the files that have to come out from under a generated name and sit where tauri.conf.json and the Windows manifest expect them, and then the Mac's icon for Tahoe and later, compiled. The copying is JavaScript rather than cp because this repository is built on Windows too
 function iconsCollect() {
 	let copies = [
-		['.mac/icon.icns',              'mac/icon.icns'],        //the dock icon, inset to apple's grid, kept where the shared run cannot overwrite it
+		['.mac/icon.icns',              'mac/icon.icns'],        //the dock icon before tahoe, inset to apple's grid, kept where the shared run cannot overwrite it
 		['.tile/Square284x284Logo.png', 'tile/tile-medium.png'], //the start menu tile, renamed because the manifest attribute names the size and the file is just an asset
 		['.tile/Square142x142Logo.png', 'tile/tile-small.png'],
 	]
@@ -287,6 +287,24 @@ function iconsCollect() {
 		copyFileSync(join(icons, from), join(icons, to))
 		say('copied   ' + to)
 	}
+	iconsCompile()
+}
+
+//the icon Tahoe and later show, compiled from AppIcon.icon into mac/Assets.car by actool, which comes with Xcode and not the command line tools. A Mac that builds ftorrent keeps the command line tools as its active developer folder, which every other build uses, so the one command reaches Xcode through DEVELOPER_DIR; Assets.car is committed, so no build needs Xcode, only a change to the icon does, and anywhere without Xcode, Windows included, this says so and leaves the committed file as it is. The icon studio's README has the rest
+function iconsCompile() {
+	let xcode = '/Applications/Xcode.app/Contents/Developer'//where Xcode installs itself
+	if (process.platform != 'darwin' || !existsSync(xcode)) { say('skipped  mac/Assets.car, which only Xcode on a Mac compiles; the committed one stands'); return }
+	let minimum = JSON.parse(readFileSync(configurationFile, 'utf8')).bundle.macOS.minimumSystemVersion//the oldest macOS the app opens on, the one actool compiles for
+	let out = mkdtempSync(join(tmpdir(), 'actool-'))//actool writes Assets.car and two files nothing here wants: an icns, where tauri icon makes the one the bundle names, and a partial plist, saying what Info.plist already says
+	try {
+		let report = execFileSync('xcrun', ['actool', join(icons, 'AppIcon.icon'), '--compile', out, '--platform', 'macosx', '--target-device', 'mac', '--minimum-deployment-target', minimum,
+			'--app-icon', 'AppIcon',//the folder's name without .icon, or actool makes nothing and says nothing
+			'--output-partial-info-plist', join(out, 'partial.plist'),
+		], {env: {...process.env, DEVELOPER_DIR: xcode}, encoding: 'utf8'})//actool answers in a plist on standard output, its errors included, and exits 0 even when it makes nothing
+		if (!existsSync(join(out, 'Assets.car'))) throw new Error(`actool made no Assets.car from AppIcon.icon, and reported: ${report.trim()}`)
+		copyFileSync(join(out, 'Assets.car'), join(icons, 'mac/Assets.car'))
+	} finally { rmSync(out, {recursive: true, force: true}) }//the scratch folder goes whether or not actool made anything
+	say('compiled mac/Assets.car')
 }
 
 //the signing identity on the mac that publishes, which the signing essay above explains: with nothing after it, say whether the login keychain holds it; make writes a new certificate and its backup, once ever; import brings that backup onto another mac. Either way the identity goes in through the backup, so the first run proves the backup works

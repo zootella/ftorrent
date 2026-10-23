@@ -9,6 +9,8 @@ A file type on the Mac is known by a type identifier, a reverse-DNS string, and 
 -->
 <plist version="1.0">
 <dict>
+	<!-- The icon Tahoe and later show: AppIcon in the Assets.car that bundle.macOS.files in tauri.conf.json puts in Resources, compiled from icons/AppIcon.icon, the gasket on a white tile, drawn flat. Tauri's own CFBundleIconFile still names icon.icns, the free-standing pill, which macOS before Tahoe shows; each version reads the key it knows. -->
+	<key>CFBundleIconName</key><string>AppIcon</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
