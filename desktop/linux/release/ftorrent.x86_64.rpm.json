@@ -2,8 +2,8 @@
 	"file": "ftorrent.x86_64.rpm",
 	"version": "0.1.0",
 	"arch": "x86_64",
-	"size": 27379052,
-	"sha256": "fce5ece9a8fcd1fbb1f7aaf5e5fa4ef6346e18348422a82a5d784e8153a28897",
-	"tick": 1792713378000,
-	"date": "2026-10-22T23:56:18.000Z"
+	"size": 27383295,
+	"sha256": "ca534dea71de7dd54c139aac478b12b2dab512894e89f18b24fc6c0eaae2e0a6",
+	"tick": 1792719084616,
+	"date": "2026-10-23T01:31:24.616Z"
 }
