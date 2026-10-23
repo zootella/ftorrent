@@ -2,7 +2,8 @@
 	"file": "ftorrent.x86_64.flatpak",
 	"version": "0.1.0",
 	"arch": "x86_64",
-	"bytes": 19887704,
+	"size": 19887704,
 	"sha256": "5b908afd932a30e2d166a7c1ff5e72085cbc9b2791047acdd0bf7731bb29698f",
-	"date": "2026-10-22"
+	"tick": 1792713378000,
+	"date": "2026-10-22T23:56:18.000Z"
 }

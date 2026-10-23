@@ -2,7 +2,8 @@
 	"file": "ftorrent.exe",
 	"version": "0.1.0",
 	"arch": "x64",
-	"bytes": 15658661,
+	"size": 15658661,
 	"sha256": "cb9f842950b5d607faf88f8c8b175b70d87b3cbadc2c8bf3113b0001d609df28",
-	"date": "2026-10-22"
+	"tick": 1792699502000,
+	"date": "2026-10-22T20:05:02.000Z"
 }

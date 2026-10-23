@@ -2,7 +2,8 @@
 	"file": "ftorrent.dmg",
 	"version": "0.1.0",
 	"arch": "aarch64",
-	"bytes": 22585603,
-	"sha256": "4318d01b80a2e3e444dac4f42ac5b37bbaeb953bd04d2dff79ffd664bd4e55a9",
-	"date": "2026-10-22"
+	"size": 22583123,
+	"sha256": "f85042d3f8cc0664449b9c2bc0cb5c1ffaf17a9c9e6311930a6971ea5917db37",
+	"tick": 1792718046483,
+	"date": "2026-10-23T01:14:06.483Z"
 }

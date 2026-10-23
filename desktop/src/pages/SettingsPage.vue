@@ -9,7 +9,7 @@ import {brandName, urlHome} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
 import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
-import {sayAgo, sayDay} from '../time.js'
+import {readTick, sayAgo, sayDay} from '../time.js'
 
 let store = useSettingsStore()
 let associations = useAssociationsStore()//the answer to whether ftorrent opens torrents and magnets, and whether this copy is installed, the only kind that may answer
@@ -55,9 +55,9 @@ async function updateClick() {
 	checkedHere.value = true
 }
 let updateStatus = computed(() => {//the newest release this session has heard of, and what's happening to it, or else when the last check was, worked out when the page opens or a check lands, and not counting up while it stays open
-	if (update.found) return `${brandName} ${update.found.version} released ${sayDay(update.found.date)}${update.installing ? ', Downloading...' : ''}`
-	let last = Date.parse(store.settings.update.last)
-	return isNaN(last) ? '' : `Last checked ${sayAgo(Date.now() - last)}`
+	if (update.found) return `${brandName} ${update.found.version} released ${sayDay(update.found.tick)}${update.installing ? ', Downloading...' : ''}`
+	let last = readTick(store.settings.update.last)
+	return last === false ? '' : `Last checked ${sayAgo(Date.now() - last)}`//false for a blank last, before any check has heard back
 })
 
 </script>

@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
-import { Time } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
+import { Time, sayTick } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
 
 const DRAG_ENABLED = false
 const TEST_HOUR = null // set to 0-24 to override, null for live UTC
@@ -43,8 +43,7 @@ onMounted(() => {
 	// The URL is built at runtime from a string, so Vite has no compile-time
 	// reference to any of the twelve files: only the chosen month is fetched,
 	// and nothing in /earth/ is preloaded, prefetched, or bundled.
-	const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-	const monthName = MONTHS[new Date().getUTCMonth()]
+	const monthName = sayTick(Date.now(), 'mmm') // jan through dec, the month's short name in lowercase, as the twelve files are named
 	const geometry = new THREE.SphereGeometry(1, 64, 64)
 	const texture = new THREE.TextureLoader().load(`/earth/${monthName}.jpg`, () => {
 		render()

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
-import { Time, saySize4 } from '@zootella/ergo'//saySize4 says whole numbers in four digits or less, counted by 1024 the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here
-import { fetchSidecar, readableDate, copyText } from '../downloads.js'
+import { Time } from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import { fetchSidecar, sayDay, saySize, copyText } from '../downloads.js'
 
 /*
 One download: the outlined box that offers a file and says what is known about it. downloads.js has the system it belongs to, where a sidecar comes from, what is in one, and why the fetch happens on mount.
@@ -11,7 +11,7 @@ The installing page places six of these by hand rather than looping over a list,
 
 	<DownloadLink file="ftorrent.exe" platform="Windows" system="64-bit Intel and AMD" />
 
-The attributes are what a sidecar cannot say. A sidecar knows the version, the architecture token, the byte count and the build date, because the machine that built the installer wrote them down; it does not know that aarch64 on a Mac is what everyone calls Apple silicon. So the words come from the page and the numbers come from the build.
+The attributes are what a sidecar cannot say. A sidecar knows the version, the architecture token, the byte count and the moment it was hashed, because the machine that built the installer wrote them down; it does not know that aarch64 on a Mac is what everyone calls Apple silicon. So the words come from the page and the numbers come from the build.
 
 The layout lives in the template rather than in strings assembled here, and the template asks one question: did a sidecar arrive. Inside that branch every field reads straight off it with no second guard, so moving a fact from one line to another is moving markup and nothing else.
 
@@ -61,7 +61,7 @@ async function copyHash() {
 			@click="copyHash" @keyup.enter="copyHash"
 			@mouseenter="hintCopy" @mouseleave="unhintCopy"
 		>{{ sidecar.sha256 }}</code></div>
-		<div class="detail">{{ saySize4(sidecar.bytes) }} · SHA-256 · {{ readableDate(sidecar.date) }} · ftorrent {{ sidecar.version }}<span v-if="status"> · {{ status }}</span></div>
+		<div class="detail"><span v-if="saySize(sidecar.size)">{{ saySize(sidecar.size) }} · </span>SHA-256 · <span v-if="sayDay(sidecar.tick)">{{ sayDay(sidecar.tick) }} · </span>ftorrent {{ sidecar.version }}<span v-if="status"> · {{ status }}</span></div>
 	</template>
 	<div v-else-if="loaded" class="detail">Not yet published</div>
 

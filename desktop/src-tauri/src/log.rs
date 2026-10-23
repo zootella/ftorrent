@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::command;
-use zootella_ergo::{has_tick, tick_to_iso};
+use zootella_ergo::{has_tick, say_tick, tick_to_iso};
 use crate::run_blocking;
 
 /*
@@ -136,19 +136,23 @@ fn flash(path: &Path, text: &str) {
 	if fs::write(&temporary, text).is_ok() && fs::rename(&temporary, path).is_err() { let _ = fs::remove_file(&temporary); }
 }
 
-//now in UTC, in the iso form like 2026-10-01T01:14:05.123Z, which both stamps below are cut from
+//now, as ergo's tick, the milliseconds since 1970 each stamp below writes in UTC
+fn now() -> i64 {
+	let tick = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |since| since.as_millis() as i64);
+	if has_tick(tick) { tick } else { 0 }//a clock set before 1970 or past 9999 reads as the start of 1970 rather than panicking inside a log line
+}
+
+//the date and time to the millisecond in the iso form, like 2026-10-01T01:14:05.123Z, for the stick, whose file name carries no date
 fn stamp_iso() -> String {
-	let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |since| since.as_millis() as i64);//milliseconds since 1970, which is ergo's tick
-	tick_to_iso(if has_tick(now) { now } else { 0 })//a clock set before 1970 or past 9999 reads as the start of 1970 rather than panicking inside a log line
+	tick_to_iso(now())
 }
 
-//the time of day in UTC to the millisecond, like 01:14:05.123
+//the time of day to the millisecond, like 01:14:05.123, for a line in a file whose name carries the date
 fn stamp_clock() -> String {
-	stamp_iso()[11..23].to_string()
+	say_tick(now(), "hh24:mm:ss.ttt")
 }
 
-//the date and time in UTC to the second, like 2026-10-01-011405, for a file name that sorts by when its process started
+//the date and time to the second, like 2026-10-01-011405, for a file name that sorts by when its process started
 fn stamp_date() -> String {
-	let iso = stamp_iso();
-	format!("{}-{}{}{}", &iso[..10], &iso[11..13], &iso[14..16], &iso[17..19])//the date, then the hour, minute, and second without their colons
+	say_tick(now(), "YYYY-MM-DD-hh24mmss")
 }

@@ -1,5 +1,6 @@
 import {parse as parseToml} from 'smol-toml'
 import {brandName, brandStem, urlHome} from './brand.js'
+import {readTick} from './time.js'
 
 /*
 The settings file, ftorrent.toml, and the only place a setting is defined. Everything about the file is here: the schema below, which names every setting with its factory value and the comment that explains it; parsing, which turns the file's text into a settings object and a list of anything it had to turn away; and rendering, which turns a settings object back into the complete text of the file. The store in stores/settings.js does the reading and writing around these, and the rest of the app reads settings from the store. Rust never learns what a setting is: it hands the page the file's path, writes bytes when asked, and holds the text to write once more when ftorrent exits. The window's size, place, and maximized flag are settings like the rest, and window.js reads them from the store to place the window before showing it.
@@ -62,18 +63,18 @@ export const settingsSchema = [
 		section: 'update',
 		key: 'automatic',
 		factory: true,
-		comment: `whether ${brandName} asks ${urlHome} on its own which version is newest: true or false, on a Mac or Windows, and never in a portable copy. With false, it asks only when you press Check for Update. Below are when it last heard back and when it will next ask, dates and times in UTC; blank next means at the next start`,
+		comment: `whether ${brandName} asks ${urlHome} on its own which version is newest: true or false, on a Mac or Windows, and never in a portable copy. With false, it asks only when you press Check for Update. Below are when it last heard back and when it will next ask, in UTC, like 2026oct22.1830, which you can cut short to a month or a year, like 2026dec or 2027; blank next means at the next start`,
 		check: value => typeof value == 'boolean',
 	}, {
 		section: 'update',
 		key: 'last',
 		factory: '',
-		check: value => value == '' || !isNaN(Date.parse(value)),
+		check: value => value == '' || readTick(value) !== false,//ergo's short form of a tick, read back exactly, or blank; !== since 1970 reads as 0
 	}, {
 		section: 'update',
 		key: 'next',
 		factory: '',
-		check: value => value == '' || !isNaN(Date.parse(value)),
+		check: value => value == '' || readTick(value) !== false,
 	}, {
 		section: 'appearance',
 		key: 'mode',

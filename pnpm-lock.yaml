@@ -14,8 +14,8 @@ importers:
         specifier: ^2.11.1
         version: 2.11.1
       '@zootella/ergo':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       pinia:
         specifier: ^4.0.3
         version: 4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.41)
@@ -48,14 +48,14 @@ importers:
   desktop/linux:
     dependencies:
       '@zootella/ergo':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
 
   docs:
     devDependencies:
       '@zootella/ergo':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       markdown-it-task-lists:
         specifier: ^2.1.1
         version: 2.1.1
@@ -71,8 +71,8 @@ importers:
   good/page:
     dependencies:
       '@zootella/ergo':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       vue:
         specifier: ^3.5.42
         version: 3.5.44
@@ -96,8 +96,8 @@ importers:
   open/page:
     dependencies:
       '@zootella/ergo':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       three:
         specifier: ^0.183.2
         version: 0.183.2
@@ -2766,8 +2766,8 @@ packages:
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
 
-  '@zootella/ergo@0.1.3':
-    resolution: {integrity: sha512-rGtA4PLgVa9uxH9XB8rtcuECMim1G47Ux0SYHAMp8kRW4N5u8PDesuAz2enCM9uvFE/0Nkac7LL1k9E1mc+mpw==}
+  '@zootella/ergo@0.2.0':
+    resolution: {integrity: sha512-D5O9147uLYatuLWiV5Rlx2+nx56LAugmLdHSQoFrZ9lSlvkyIPH9KlQau0e/WIlHm+OvnxAz1nW3wrtVZb604Q==}
     engines: {node: '>=22'}
 
   abbrev@3.0.1:
@@ -7734,7 +7734,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@zootella/ergo@0.1.3':
+  '@zootella/ergo@0.2.0':
     dependencies:
       '@noble/hashes': 2.4.0
 

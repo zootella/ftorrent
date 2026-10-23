@@ -140,7 +140,7 @@ Both systems still leave the final decision with the person at the keyboard. **R
 
 ## Checking the hash
 
-The hash for each installer appears in its box at the top of this page. The page reads it from the installer's sidecar, a small JSON file published at the same address with `.json` added, such as `https://ftorrent.com/ftorrent.exe.json`, which also records the version, the architecture, the size in bytes, and the build date. The same sidecars are committed in the repository's [desktop/release](https://github.com/zootella/ftorrent/tree/master/desktop/release) folder, where git history dates each release.
+The hash for each installer appears in its box at the top of this page. The page reads it from the installer's sidecar, a small JSON file published at the same address with `.json` added, such as `https://ftorrent.com/ftorrent.exe.json`, which also records the version, the architecture, the size in bytes, and the moment it was hashed. The same sidecars are committed in the repository's [desktop/release](https://github.com/zootella/ftorrent/tree/master/desktop/release) folder, where git history dates each release.
 
 On Windows, in PowerShell:
 

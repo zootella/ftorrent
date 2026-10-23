@@ -1,4 +1,4 @@
-import {Time, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Time, sayTick} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 What a web page can learn about the connection it runs on, asked from inside the browser's sandbox. The desktop client's Connection tab asks many of the same questions from a real socket and can tell more; this page asks what any page can, which is what a browser peer has to work with.
@@ -235,7 +235,7 @@ export function sayVerdict(run) {
 //the box's lines for one run: when, and in which browser, then a line per check with what it asked, how long it took, and what came back
 export function sayRun(run) {
 	let width = Math.max(...run.results.map(r => r.asked.length))//the asked column as wide as its longest entry, so the times line up under each other
-	let lines = [`${tickToIso(run.moment).replace(/\.\d+Z$/, 'Z')}, good.ftorrent.com`, run.browser]
+	let lines = [`${sayTick(run.moment, 'YYYY-MM-DDThh24:mm:ssZ')}, good.ftorrent.com`, run.browser]
 	for (let r of run.results) lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
 	for (let g of run.gatherings) lines.push('', ..._sayGathering(g))//then everything each peer connection reported
 	return lines.join('\n')

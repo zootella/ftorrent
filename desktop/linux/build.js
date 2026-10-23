@@ -3,7 +3,7 @@ import {cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync} from 'node
 import {basename, join} from 'node:path'
 import {createInterface} from 'node:readline'
 import {fileURLToPath} from 'node:url'
-import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 ftorrent's Linux packages, built on a Mac through Docker.
@@ -77,7 +77,7 @@ async function timed(label, step, leg = false) {
 	took.push({label, milliseconds: Date.now() - started, leg}, ...within)
 	return result
 }
-function clock(milliseconds) { return `${Math.floor(milliseconds / Time.minute)}:${String(Math.floor(milliseconds % Time.minute / Time.second)).padStart(2, '0')}` }
+function clock(milliseconds) { return sayDuration(milliseconds, '#m #s') }//like 14m 41s, or 5s for a step under a minute
 function times() {
 	if (!took.length) return
 	say('')
@@ -223,7 +223,7 @@ function report() {
 	if (!existsSync(release)) return say('    nothing')
 	let names = readdirSync(release).sort()
 	if (!names.length) return say('    nothing')
-	for (let name of names) say('    ' + name.padEnd(36) + statSync(join(release, name)).size + ' bytes')
+	for (let name of names) say('    ' + name.padEnd(36) + saySize4(statSync(join(release, name)).size))
 }
 
 /*

@@ -2,7 +2,8 @@
 	"file": "ftorrent.app.zip",
 	"version": "0.1.0",
 	"arch": "aarch64",
-	"bytes": 22036307,
-	"sha256": "626dc95109b1ec259e946f237a65e4b407d72ce456652ec9fdbca564e514301b",
-	"date": "2026-10-22"
+	"size": 22043069,
+	"sha256": "b1fcf32217878337cf66c07f266772882e3eb2324f1eca51828c99c1d2f9e54f",
+	"tick": 1792718046509,
+	"date": "2026-10-23T01:14:06.509Z"
 }

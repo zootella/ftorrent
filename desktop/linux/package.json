@@ -16,6 +16,6 @@
 		"check": "node build.js check"
 	},
 	"dependencies": {
-		"@zootella/ergo": "^0.1.3"
+		"@zootella/ergo": "^0.2.0"
 	}
 }

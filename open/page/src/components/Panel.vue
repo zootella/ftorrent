@@ -1,9 +1,7 @@
 <script setup>
 
-const month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
 import { inject, computed, reactive, ref, onMounted, onUnmounted } from 'vue'
-import { Time, saySize4 } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
+import { Time, saySize4, sayTick } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
 
 const page = inject('page')
 
@@ -50,10 +48,7 @@ function barHeight(downMinutes) {
 
 // Format a day number as "2026 Apr 07"
 function dayToDate(dayNumber) {
-	const d = new Date(dayNumber * Time.day)
-	const year = d.getUTCFullYear()
-	const month = month_names[d.getUTCMonth()]
-	return `${year} ${month} ${String(d.getUTCDate()).padStart(2, '0')}`
+	return sayTick(dayNumber * Time.day, 'YYYY Mmm DD')
 }
 
 // 90-day uptime percentage
@@ -154,9 +149,8 @@ let mountedAt = null
 
 function updateClock() {
 	const now = Date.now()
-	const d = new Date(now)
-	clockHour.value = String(d.getUTCHours()).padStart(2, '0')
-	clockMinute.value = String(d.getUTCMinutes()).padStart(2, '0')
+	clockHour.value = sayTick(now, 'hh24')
+	clockMinute.value = sayTick(now, 'mm')
 
 	const beat = Math.floor(now / drum_duration)
 	colonOn.value = beat % 2 === 0

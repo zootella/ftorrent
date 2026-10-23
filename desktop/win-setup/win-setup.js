@@ -3,7 +3,7 @@ import {cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFile
 import {dirname, join, relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {parse as parseToml} from 'smol-toml'
-import {Size, Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Size, sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {uninstallInstructions} from './registry.js'
 
 /*
@@ -53,7 +53,7 @@ function main() {
 	for (let [source, destination] of Object.entries(bundle.resources || {})) cpSync(join(tauri, source), join(stage, destination), {recursive: true})
 	let files = list(stage)
 	let bytes = files.reduce((sum, file) => sum + statSync(join(stage, file)).size, 0)
-	say(`staged   ${files.length} files, ${megabytes(bytes)} MB`)
+	say(`staged   ${files.length} files, ${saySize4(bytes)}`)
 
 	//compress: a directive file tells makecab what goes in and where; LZX at its largest window is the best ratio it has, and the setup program unpacks it in well under a second
 	let directives = [
@@ -71,7 +71,7 @@ function main() {
 	try { execFileSync(makecab, ['/F', join(work, 'payload.ddf')], {cwd: work, stdio: ['ignore', 'pipe', 'pipe']}) }
 	catch (e) { throw new Error('makecab could not make the cabinet: ' + String(e.stdout || '').trim() + ' ' + String(e.stderr || '').trim()) }//makecab explains itself on standard output, so that is kept for the error rather than printed on every build
 	let cabinet = readFileSync(join(work, 'payload.cab'))
-	say(`cabinet  ${megabytes(cabinet.length)} MB in ${seconds(compressing)} s`)
+	say(`cabinet  ${saySize4(cabinet.length)} in ${seconds(compressing)}`)
 
 	//compile: the stamp header is everything the stub knows, as C defines; setup.rc reads the names for the version block and setup.c reads all of them, then build.cmd runs the compiler
 	let numbers = version.split(/[.+-]/).slice(0, 3).map(n => parseInt(n, 10) || 0)//a semantic version's three numbers, and a fourth of zero, which is what windows' four-part version wants
@@ -95,7 +95,7 @@ function main() {
 	let build = spawnSync(join(here, 'build.cmd'), [], {stdio: 'inherit', shell: true})//a batch file needs cmd, and shell: true hands it the path quoted whole, spaces and all
 	if (build.status != 0) throw new Error('build.cmd could not build setup.exe')
 	let stub = readFileSync(join(here, 'build/setup.exe'))
-	say(`stub     ${kilobytes(stub.length)} KB in ${seconds(compiling)} s, ${registry.length} uninstall instructions`)
+	say(`stub     ${saySize4(stub.length)} in ${seconds(compiling)}, ${registry.length} uninstall instructions`)
 
 	//append: the cabinet, then the trailer, whose layout is the Trailer struct in setup.c: the cabinet's offset and size as two eight-byte numbers, and the eight letters ENCLOSED, our own marker for a stub with something in it
 	let trailer = Buffer.alloc(24)
@@ -108,7 +108,7 @@ function main() {
 	rmSync(bundled, {recursive: true, force: true})
 	mkdirSync(bundled, {recursive: true})
 	writeFileSync(join(bundled, file), Buffer.concat([stub, cabinet, trailer]))
-	say(`finished ${join(bundled, file)}, ${megabytes(stub.length + cabinet.length + trailer.length)} MB in ${seconds(started)} s`)
+	say(`finished ${join(bundled, file)}, ${saySize4(stub.length + cabinet.length + trailer.length)} in ${seconds(started)}`)
 }
 
 //every file under a folder, as paths relative to it with backslashes, which is how the cabinet and the setup program spell them
@@ -128,8 +128,6 @@ The three replacements run in that order on purpose: the first adds backslashes,
 Nothing else is escaped because nothing else can appear: paths, names, and registry keys carry no newlines or control characters, and registry.js checks each entry in its list against the few characters an extension or a scheme may hold. The one non-ASCII character the stamp carries, the copyright sign, passes through as it is, which is right, since build.cmd tells the C compiler and the resource compiler both to read the header as UTF-8.
 */
 function quote(text) { return '"' + text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\t/g, '\\t') + '"' }
-function megabytes(bytes) { return (bytes / Size.mb).toFixed(1) }
-function kilobytes(bytes) { return (bytes / Size.kb).toFixed(0) }
-function seconds(since) { return ((Date.now() - since) / Time.second).toFixed(1) }
+function seconds(since) { return sayDuration(Date.now() - since, '#.# s') }//seconds to a tenth, rounded down, however many, like 6.2 s
 
 try { main() } catch (e) { console.error('🚧 Error:', e.message || e); process.exitCode = 1 }

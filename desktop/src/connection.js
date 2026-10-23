@@ -1,6 +1,6 @@
 import {reactive, ref, shallowRef, watch} from 'vue'
 import {getVersion} from '@tauri-apps/api/app'
-import {Data, Time, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Data, Time, sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
@@ -318,7 +318,7 @@ function _sayAnswer(r) {
 	if (!r.success) return r.outcome
 	if (r.kind == 'stun') {
 		let b = r.value//the binding net_stun answered
-		let said = `${_sayEndpoint(b.address, b.port)}, ${b.bytes} bytes`
+		let said = `${_sayEndpoint(b.address, b.port)}, ${saySize4(b.bytes)}`
 		if (b.sends > 1) said += `, sent ${b.sends} times`
 		return said
 	}
@@ -769,7 +769,7 @@ function _incoming(a) {
 
 //how long since Start, as the box's lines begin
 function _since() {
-	return `${((Date.now() - session.started)/Time.second).toFixed(1)} s`.padStart(8)
+	return sayDuration(Date.now() - session.started, '#.# s').padStart(8)//seconds to a tenth, rounded down, however many
 }
 
 //the table's rows for the session and the torrent file, which the alerts keep current while it runs, and which hold the last session's readings after Stop, until the next Start

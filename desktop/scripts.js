@@ -4,7 +4,7 @@ import {homedir, tmpdir} from 'node:os'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {parse as parseToml} from 'smol-toml'
-import {Data, sha256, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Data, saySize4, sha256, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 The publishing pipeline for the desktop client, in one file, reached by a verb: reveal, hash, upload, icons-collect, certificate. Everything the package.json scripts do beyond calling tauri or docker is here.
@@ -166,16 +166,18 @@ async function hashOne(name, version, demanded) {
 	let destination = join(stage, target.publish)
 	if (join(built.folder, built.file) != destination) copyFileSync(join(built.folder, built.file), destination)//copy first, then measure what landed, so every number describes the file the site will ship
 	let bytes = readFileSync(destination)
+	let hashed = Date.now()//the moment of hashing, kept twice: as ergo's tick, which an installed copy and the docs site read as a number, and as the date, its iso text, for a person opening the file
 	let sidecar = {
 		file: target.publish,
 		version,
 		arch: built.arch,
-		bytes: bytes.length,
+		size: bytes.length,
 		sha256: await hashBytes(bytes),
-		date: tickToIso(Date.now()).slice(0, 10),
+		tick: hashed,
+		date: tickToIso(hashed),
 	}
 	writeFileSync(join(stage, target.publish + '.json'), JSON.stringify(sidecar, null, '\t') + '\n')
-	say(`${sidecar.sha256}  ${sidecar.bytes} bytes  ${target.publish}`)//the hash whole, because a cropped hash cannot check a download
+	say(`${sidecar.sha256}  ${saySize4(sidecar.size)}  ${target.publish}`)//the hash whole, because a cropped hash cannot check a download, and the size for a person, since the exact count is in the sidecar
 	return true
 }
 
@@ -268,9 +270,9 @@ async function checkSidecar(name, stage, sidecar, sidecarName, version) {
 	let bytes = readFileSync(join(stage, sidecar.file))
 	let measured = await hashBytes(bytes)
 	if (sidecar.version != version)    throw new Error(`${name}: sidecar says version ${sidecar.version}, tauri.conf.json says ${version}; re-run pnpm hash`)
-	if (sidecar.bytes != bytes.length) throw new Error(`${name}: sidecar says ${sidecar.bytes} bytes, the file is ${bytes.length}; re-run pnpm hash`)
+	if (sidecar.size != bytes.length)  throw new Error(`${name}: sidecar says ${sidecar.size} bytes, the file is ${bytes.length}; re-run pnpm hash`)
 	if (sidecar.sha256 != measured)    throw new Error(`${name}: sidecar hash does not describe this file; re-run pnpm hash`)
-	say(`checked  ${sidecar.sha256}  ${bytes.length} bytes  ${sidecar.file}  ${sidecar.version} ${sidecar.arch}`)
+	say(`checked  ${sidecar.sha256}  ${saySize4(bytes.length)}  ${sidecar.file}  ${sidecar.version} ${sidecar.arch}`)
 }
 
 //the three tauri icon runs stay in package.json, where pnpm is what puts the tauri cli on the path; this is the part after them. Each run writes a folder of its own, and these are the files that have to come out from under a generated name and sit where tauri.conf.json and the Windows manifest expect them. The copying is JavaScript rather than cp because this repository is built on Windows too

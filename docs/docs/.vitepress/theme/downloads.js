@@ -1,11 +1,11 @@
 /*
 The desktop client's downloads, as the documentation site sees them: from the machine that built an installer to the page that offers it.
 
-An installer is built where it can be, the exe on Windows and the dmg on a Mac, and `pnpm hash` in the desktop workspace stages it under a published name and writes a small JSON sidecar beside it: file, version, arch, bytes, sha256, date. `pnpm upload` sends the pair to ftorrent.com, so an installer and its sidecar sit at the apex: ftorrent.com/ftorrent.dmg beside ftorrent.com/ftorrent.dmg.json. Nothing in this build knows a hash. A page fetches the sidecars when it opens, so publishing an installer changes what the site says without the site being rebuilt.
+An installer is built where it can be, the exe on Windows and the dmg on a Mac, and `pnpm hash` in the desktop workspace stages it under a published name and writes a small JSON sidecar beside it: file, version, arch, size, sha256, and the moment it was hashed, as tick, ergo's number, and as date, its iso text. `pnpm upload` sends the pair to ftorrent.com, so an installer and its sidecar sit at the apex: ftorrent.com/ftorrent.dmg beside ftorrent.com/ftorrent.dmg.json. Nothing in this build knows a hash. A page fetches the sidecars when it opens, so publishing an installer changes what the site says without the site being rebuilt.
 
 	desktop/scripts.js              pnpm hash writes a sidecar, pnpm upload sends it to ftorrent.com
 	  ↓                             or, in development, .vitepress/config.js serves it
-	theme/downloads.js              this file: the fetch, a date in words, and the clipboard call
+	theme/downloads.js              this file: the fetch, a day in words, and the clipboard call
 	  ↓
 	components/DownloadLink.vue     one download; installing-ftorrent.md places six
 	components/DownloadCommand.vue  the hash written into a fenced install command; installing-ftorrent.md places two
@@ -14,6 +14,7 @@ This site is docs.ftorrent.com and the sidecars live on ftorrent.com, so in prod
 
 **Fetch on mount, never at module scope.** VitePress prerenders components in Node at build time, and Node has fetch, so a module-scope call would run rather than fail loudly, but nothing is serving these files to a build, and every box would bake in as unpublished.
 */
+import { hasInt, hasTick, saySize4, sayTick } from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 //where a sidecar is fetched from. the one place development and production differ: production asks ftorrent.com, development asks its own server, which config.js arranges to answer
 function sidecarAddress(file, origin) {
@@ -32,11 +33,16 @@ export async function fetchSidecar(file, origin) {
 	} catch (error) { return false }//the network refused, the browser blocked the cross-origin read, or the body was not json
 }
 
-//"2026-09-22" as "2026 September 22". the parts go into Date as local numbers rather than through its string parser, which reads a bare date as UTC midnight and would render it as the day before for anyone west of Greenwich; the locale is fixed because the rest of the page is English
-export function readableDate(iso) {
-	let [year, month, day] = iso.split('-').map(Number)
-	if (!year || !month || !day) return iso//a date we did not expect shows exactly as it arrived
-	return year + ' ' + new Date(year, month - 1, day).toLocaleDateString('en', {month: 'long'}) + ' ' + day
+//the day a sidecar's tick falls on in UTC, like "2026 September 22", the same for every reader wherever they are; blank for a sidecar without a tick, so a malformed one shows the rest of its box
+export function sayDay(t) {
+	if (!hasTick(t)) return ''
+	return sayTick(t, 'YYYY Mmmm D')
+}
+
+//a sidecar's size in four digits or less, counted by 1024 the way BitTorrent clients and Windows count, so an installer the Mac's browser calls 22 MB reads 21 MB here; blank for a sidecar without a whole count, so a malformed one shows the rest of its box
+export function saySize(n) {
+	if (!hasInt(n) || n < 0) return ''//saySize4 throws on anything but a whole count
+	return saySize4(n)
 }
 
 //copy text to the clipboard, answering whether it worked. the clipboard needs a secure context, which https and localhost both are, so a false here is a browser refusing rather than a mistake to fix

@@ -4968,9 +4968,9 @@ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
 
 [[package]]
 name = "zootella-ergo"
-version = "0.1.3"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa91c008017e6d2d5c37939a0747e72a9722fa8f403fc34883043c0ffd692a19"
+checksum = "68d1b10c5e9128fc8ccb10c0133f910ba5d8facbad1b2aeb009713b649964271"
 dependencies = [
  "blake3",
  "getrandom 0.4.3",
