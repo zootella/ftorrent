@@ -30,5 +30,5 @@ Each line can drop while the one above it holds. A computer can be awake on a co
 	- macOS's power log, `pmset -g log`, lists every sleep and wake with its reason, days back.
 	- Windows' System event log holds Kernel-Power events for sleep and resume, and Power-Troubleshooter events naming what woke the computer; `powercfg /lastwake` reads the last one, and on a Modern Standby machine `powercfg /sleepstudy` reports the days before.
 	- Linux's journal lists each boot, `journalctl --list-boots`, and systemd's lines for each sleep and resume. Whether the Flatpak can read it is a question.
-- The router keeps its own clocks. NAT-PMP's epoch counts the seconds since the router's mapping table started, so it resets when the router restarts, and on a router that speaks UPnP, GetStatusInfo reports how long its internet connection has been up. Good5 reads both.
+- The router keeps its own clocks. NAT-PMP's epoch counts the seconds since the router's mapping table started, so it resets when the router restarts, and the Connection tab reads it by NAT-PMP and by PCP from a router that speaks either. On a router that speaks UPnP, GetStatusInfo reports how long its internet connection has been up, which is outside igd-next and waits for another crate.
 - Thirty days is 43,200 minutes. A few bits a minute for each line is a small file of its own in the data folder.
