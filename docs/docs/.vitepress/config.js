@@ -133,6 +133,12 @@ export default defineConfig({
 				]
 			},
 			{
+				text: 'Drafts',
+				items: [
+					{ text: 'Port Control', link: '/port-control' }
+				]
+			},
+			{
 				text: 'Repository Documentation',
 				items: [
 					{ text: 'Repository Overview', link: 'https://github.com/zootella/ftorrent/blob/master/README.md' },

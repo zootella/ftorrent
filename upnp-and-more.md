@@ -1,6 +1,8 @@
 # UPnP, NAT-PMP, and PCP
 
-The three protocols a program uses to ask a router to let traffic in from the internet: where each came from, what each looks like on the wire, where each stands today, and what ftorrent does with each. Started 2026-10-23 during Good5, which asks a router all three, as notes that may become a glossary article.
+The three protocols a program uses to ask a router to let traffic in from the internet: where each came from, what each looks like on the wire, where each stands today, and what ftorrent does with each. Started 2026-10-23 during Good5, which asks a router all three.
+
+These notes may grow into an article for the Research section of docs.ftorrent.com, called Port Control. The article would hold four historical accounts, each documented on its own and then woven into one narrative: the three protocols, and carrier-grade NAT, the thing the newest protocol was written to reach. Each protocol's account follows the same arc: the people who wrote it and the year, what they meant it to do, who sponsored the work, the standards body it went through and how, ratification, the reception that followed, and what reached the real world, measured where anyone has measured it and stated plainly where no one has. Carrier-grade NAT's account is the other side of the same years: how it came to be, what it does to a connection, and how a program can tell it's there, which is where the three protocols and the Connection tab's checks meet it. Setting the accounts side by side is the point. One of these protocols reached nearly every home router within a few years of one company shipping it in an operating system. One shipped in a single company's products and lives on in other people's firmware after that company left the market. The newest, the one that went through the IETF with the broadest intent, has reached the customers of one provider group in one country, a decade after its RFC, while the translator it was written to reach went into nearly every mobile network and a growing share of wired ones. Why a standard lands or doesn't is a question the decentralized web lives with too, and the article would ask it of these four with dates and sources rather than a thesis. Taking the notes forward means checking every date and name here against the primary record, the RFCs and the drafts and mailing lists behind them, the UPnP Forum's and the Open Connectivity Foundation's documents, and Apple's own; adding the people; and keeping each claim's source beside it, which the list at the end starts. The research articles' form, the header, the abstract, the numbered sections, and the references, comes when the writing does.
 
 ## The three
 
@@ -53,12 +55,41 @@ PCP was designed for a world with a carrier's NAT above the home router, which n
 
 ### Through a carrier's NAT, in practice
 
-Rarely. There's no measurement of how often, only provider documents and forum reports, and they point one way.
+Rarely, and the one confirmed case is in Germany. There's no measurement of how often, only provider documents, vendor documents, and forum reports, and they point one way.
 
-- **The equipment supports it.** Juniper's carrier-grade NAT implements PCP per RFC 6887, including for DS-Lite, the IPv6-only access design common in Germany, where the carrier translates IPv4 at its end.
-- **A few providers turn it on, mostly in Germany.** 1&1 is reported to use PCP, and a Drillisch DSL customer reports 20 ports for incoming IPv4 through it. The FRITZ!Box, AVM's home router and a common one on German lines, has spoken PCP to its provider since FRITZ!OS 6.50 and shows the provider's PCP server in its monitor. A program inside still asks only the home router, which does the PCP talking upstream.
-- **Elsewhere it mostly isn't there.** A Comcast customer behind carrier NAT found the provider didn't answer PCP. An OpenWrt user on a carrier-NAT line saw the router accept PCP mappings while the ports stayed blocked upstream. Nothing found shows a mobile carrier offering it.
+- **The standard asks for it.** RFC 6888, the IETF's requirements for carrier-grade NATs, says a carrier's NAT must implement a protocol for a subscriber's explicit control of its mappings, and recommends PCP.
+- **The equipment has it.** Juniper's carrier-grade NAT implements PCP, including for DS-Lite since 2018, the IPv6-only access design common in Germany, where the carrier translates IPv4 at its end; Huawei, F5, and Fortinet document it on their gear too. An operator that wanted to turn it on usually could.
+- **One provider group runs it toward its customers.** 1&1 and its Drillisch brands, on DS-Lite lines in Germany. In January 2024 a FRITZ!Box owner found the provider's PCP server named in the router's monitor, having never asked for it, with twenty fixed external ports assigned to that customer alone. In February 2025 an OpenWrt user on Maxxim, a Drillisch brand, opened ports on the shared IPv4 address with a PCP client, the provider handing back a random free port rather than the one asked for, and a regular on that forum called 1&1 the only provider in Germany doing it. In 2021 nobody on the FRITZ!Box forum knew of any provider using it; AVM had said the first DS-Lite providers might during that year.
+- **The FRITZ!Box is why it shows up there at all.** AVM's router has spoken PCP to its provider since FRITZ!OS 6.50 and shows the server in its monitor. A program inside still asks only the home router, which does the talking upstream.
+- **Most other home routers can't pass it on.** miniupnpd, the firmware most home routers run their UPnP, NAT-PMP, and PCP on, has no upstream proxy, so a PCP request from a program ends at the home router. The request to add one has been open since 2018.
+- **Implemented and withheld.** AT&T's DANOS design for its carrier-grade NAT restricts PCP to the operator's own web portal and says the subscriber is not to have direct control of the NAT. A carrier can support PCP in that sense with nothing reaching a customer's program.
+- **Elsewhere it mostly isn't there.** A Comcast customer behind carrier NAT found the provider didn't answer PCP. An OpenWrt user on a carrier-NAT line saw the router accept PCP mappings while the ports stayed blocked upstream. Nothing found shows a mobile carrier offering it, and Wikipedia's section on carriers offering PCP was still empty in March 2025, twelve years after the RFC.
 - **What providers offer instead** is a way out of the carrier NAT: an Australian provider opts customers out on request, for $2 a month for a dynamic public IPv4 address or $5 for a static one. Others have no IPv4 to give, and IPv6 is the way in.
+
+## Carrier-grade NAT
+
+A start. The history here is the dates on the standards, with the people and the sponsors still to be added from the primary record, and the identification is what the Connection tab reads today.
+
+### Identification
+
+A carrier's translator sits above the home router, where no program on the home network can see it directly, so every sign of it is indirect, and the Connection tab reads several.
+
+- **The router's external address isn't the one the internet sees.** The router reports its own external address by NAT-PMP or UPnP; a reflector reports the address a request arrived from. When they differ, something translates again above the router. This is the one sign a carrier's translator can't dodge, since the router can only report what it was given.
+- **An address in the shared address space.** RFC 6598 set aside 100.64.0.0/10 in 2012 for exactly this, the address a carrier hands a customer's router between the two translators. On the router's outside, or on the interface carrying the default route when there's no router, it says a carrier translates. On any other interface it's a mesh VPN's, like Tailscale's, which borrows the range.
+- **A private address on the router's outside.** A carrier can use the ordinary private ranges instead, which looks the same from inside as a second home router, like a provider's modem in front of the customer's own. The two can't be told apart from the address alone.
+- **The DS-Lite address.** RFC 6333 reserves 192.0.0.0/29 for the customer end of a DS-Lite tunnel, so a router whose outside address is 192.0.0.2 is on an IPv6-only line with IPv4 carried to the carrier's translator inside IPv6, the design common in Germany.
+- **Two public addresses for one connection.** On a phone on cellular data, the page has seen HTTPS and UDP leave from two different public IPv4 addresses in one block: a translator with a pool of public addresses, assigning them per flow.
+- **Ports rewritten and mappings per destination.** STUN shows whether the public port is the one the machine chose and whether it holds for every destination. A carrier's translator rewrites ports and often maps per destination, though some home routers do the same, so this is a reason beside the others rather than a sign on its own.
+
+What slips past all of these is address-plus-port sharing, where the carrier gives the router a real public address and a slice of its ports, as MAP-E and lightweight 4over6 do: every check sees a public address that matches, and only a connection in on a port outside the slice would show the difference.
+
+### History, as dates
+
+- **2011**: IANA hands out its last IPv4 blocks in February, and APNIC runs out in April. RFC 6264 describes an incremental carrier-grade NAT for the transition, and RFC 6333 defines DS-Lite in August.
+- **2012**: RFC 6598 sets aside the shared address space, 100.64.0.0/10, in April, so carriers have a range between the two translators that collides with neither public nor private addresses. RIPE runs out of IPv4 in September.
+- **2013**: RFC 6888 states the requirements for a carrier-grade NAT in April, and recommends PCP for a subscriber's control of it, in the same month PCP itself is published as RFC 6887 and NAT-PMP as RFC 6886.
+- **2015**: RFC 7597 defines MAP-E and RFC 7596 lightweight 4over6, the address-plus-port designs, in July. ARIN runs out of IPv4 in September.
+- **Mobile networks** went to carrier-grade NAT nearly everywhere as they grew, since no carrier had a public IPv4 address per phone; the wired share is smaller and growing, and measuring it is its own question.
 
 ## On the router
 
@@ -70,7 +101,7 @@ None of the three is extinct.
 
 - **UPnP is the workhorse.** It's the most likely to be on, and with PCP one of the two ways to ask for an IPv6 pinhole. When a provider ships a router with it off, nothing on the computer can turn it back on.
 - **NAT-PMP is replaced on paper and alive in practice.** PCP succeeded it and Apple's routers are gone, but miniupnpd answers it on a great many routers, and asking costs two bytes.
-- **PCP is the current standard and the least common on home routers.** It's the only one designed to reach a carrier's NAT, which matters more as carrier-grade NAT spreads, and on the few providers that run it, the only way a program can open a port there.
+- **PCP is the current standard and the least common on home routers.** It's the only one designed to reach a carrier's NAT, which matters more as carrier-grade NAT spreads, and behind the one provider group known to run it toward customers, the only way a program can open a port there.
 
 ## In ftorrent
 
@@ -96,3 +127,16 @@ The mechanics of all three are the world's, so they live low, in the engine's li
 - [Spintel: port forwarding with CGNAT](https://articles.spintel.net.au/print-512.html)
 - [crab_nat](https://docs.rs/crab_nat)
 - [pcp](https://github.com/Rimpampa/pcp)
+- [RFC 6888: Common Requirements for Carrier-Grade NATs](https://datatracker.ietf.org/doc/rfc6888)
+- [RFC 6264: An Incremental Carrier-Grade NAT for IPv6 Transition](https://datatracker.ietf.org/doc/rfc6264)
+- [RFC 6333: Dual-Stack Lite](https://datatracker.ietf.org/doc/rfc6333)
+- [RFC 6598: IANA-Reserved IPv4 Prefix for Shared Address Space](https://datatracker.ietf.org/doc/rfc6598)
+- [RFC 7597: Mapping of Address and Port with Encapsulation (MAP-E)](https://datatracker.ietf.org/doc/rfc7597)
+- [RFC 7596: Lightweight 4over6](https://datatracker.ietf.org/doc/rfc7596)
+- [RFC 7291: DHCP Options for the Port Control Protocol](https://www.rfc-editor.org/info/rfc7291/)
+- [OpenWrt forum: PCP ipv4 port forwarding on CGNAT/dslite VDSL](https://forum.openwrt.org/t/pcp-ipv4-port-forwarding-on-cgnat-dslite-vdsl/225000)
+- [miniupnp issue 299: Proxy support in miniupnpd](https://github.com/miniupnp/miniupnp/issues/299)
+- [DANOS: CGNAT and PCP](https://danosproject.atlassian.net/wiki/spaces/DAN/pages/421101573/CGNAT+and+PCP)
+- [Juniper: PCP support for DS-Lite for CGNAT Next Gen Services](https://apps.juniper.net/feature-explorer/feature/8250?fn=Port+Control+Protocol+Support+%28PCP%29+for+DS-Lite+for+CGNAT+Next+Gen+Services)
+- [Wikipedia: Port Control Protocol](https://en.wikipedia.org/wiki/Port_Control_Protocol)
+- [Wikipedia: Carrier-grade NAT](https://en.wikipedia.org/wiki/Carrier-grade_NAT)
