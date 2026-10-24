@@ -111,8 +111,8 @@ A file type on the Mac is known by a type identifier, a reverse-DNS string, and 
 		</dict>
 	</array>
 
-	<!-- the words macOS shows when ftorrent first reaches the local network, finding peers there and asking the router to forward its listening port -->
+	<!-- the sentence macOS shows under its own title the first time ftorrent reaches a device on the local network, like the router's UPnP search; by developers' reports an app without this key isn't asked at all, and its packets are refused silently. It's plain on purpose, in the shape other apps use, since a person answers a box they recognize quickly -->
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ftorrent finds peers on your local network and asks your router to forward its listening port, so other computers can connect to it directly.</string>
+	<string>ftorrent wants to access the local network.</string>
 </dict>
 </plist>
