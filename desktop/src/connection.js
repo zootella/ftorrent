@@ -4,7 +4,7 @@ import {Data, Time, sayDuration, saySize4} from '@zootella/ergo'//small helpers 
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
-import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netPcpAnnounce, netUpnpSearch, netUpnpExternal, netUpnpMappings, netUpnpFirewall} from './net.js'
+import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netPcpAnnounce, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall} from './net.js'
 import {processOutput} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
@@ -26,7 +26,7 @@ The resolver answers three names. ipv4only.arpa has only IPv4 addresses by defin
 
 And the machine's firewall, which stands between a connection that reaches the machine and the engine listening for it. On a Mac the panel runs socketfilterfw five times, one read each, all answered without sudo: whether the firewall is on; block all, which when on refuses every incoming connection whatever the list says; stealth mode, which leaves probes to closed ports unanswered; the allowance for signed software, built-in and downloaded; and the list of programs the firewall has been asked about, each by its path and allowed or blocked. ftorrent is signed ad hoc rather than with an Apple-issued identity, so the allowance for signed software doesn't cover it or its engine, and whether each is admitted comes from the list. The panel looks there for this copy's executable, or the bundle holding it, since the list writes some programs as the .app, and for the engine's path, which the firewall asks about and lists on its own, so a development build's engine and an installed copy's are two entries. The firewall ships off on a Mac, and off is not a problem. On Windows the panel reads the firewall through its COM interface, INetFwPolicy2, without elevation and in numbers, where netsh prints in the system's language: each of the three profiles, Domain, Private, and Public, whether the current network is in it, whether the firewall is on for it, block all, and what it does to an incoming connection no rule names; and every rule naming this copy's executable or the engine's by path, the block rules the security alert writes before anyone answers included, since a block rule overrides an allow. The current network's profile gets its own words, since Windows starts every new network as Public unless someone says otherwise, a home network included, and most people have never seen which theirs is. The box puts the firewall's standing after the checks and before the interfaces, with the whole list under it on a Mac and the rules naming ftorrent and its engine on Windows. On Linux the panel reads the firewall as unknown, since ufw and nftables need root to read.
 
-And the router, asked once the first wave of checks has named the gateway, since the question goes to that address. NAT-PMP, Apple's protocol from 2005, RFC 6886, is two bytes to the gateway's port 5351 asking for its external address, answered with the address and the seconds since the router's mapping table started. PCP, the IETF's successor from 2013, RFC 6887, listens on the same port, and its ANNOUNCE is a 24-byte header that asks for nothing: a router that speaks PCP answers it with a result code and its epoch, and a router that speaks only NAT-PMP answers, in NAT-PMP's own form, that the version is unsupported, which says what the router speaks as surely as a success would. A router that speaks neither refuses the port, and the refusal comes back on both. UPnP is the third way and the oldest, from 2001, with the widest support: its Internet Gateway Device profile describes a router, and a search multicast to 239.255.255.250 on port 1900 finds one, its device description gives the control address of its WAN connection service, and SOAP calls there read its external address and walk its port mappings by index until the router says the list has ended. The service type names the version, WANIPConnection:1 from 2001 or 2 from 2010, which added IPv6 firewall control as a service of its own, whose status read says whether the router's IPv6 firewall is on and admits pinholes; the panel reads that when the router offers the service and says when it doesn't. igd-next does all the talking in Rust and answers the gateway it found as plain data the page hands back for each read, so the search runs once and the page owns what follows. The three protocols are asked at once, once the gateway is known, and the three UPnP reads follow the search. Two readings sit on those facts. Which protocols the router speaks comes straight from what answered, with the firewall named when it may have held the search's answer back. And whether a carrier translates above the router rests on the external address the router reports, the one check a carrier's translator can't dodge: when it differs from the address the reflector saw, something between the router and the internet translates again, and when that address is in the shared address space, 100.64.0.0/10, it's a carrier's; a private one is more likely a second router, like a provider's modem. The shared address space on the default route and an endpoint-dependent mapping go in as reasons beside it. One case slips past all of them: address-plus-port sharing, where the carrier gives the router a public address and a slice of its ports, and the reading says so whenever it reads unlikely.
+And the router, asked once the first wave of checks has named the gateway, since the question goes to that address. NAT-PMP, Apple's protocol from 2005, RFC 6886, is two bytes to the gateway's port 5351 asking for its external address, answered with the address and the seconds since the router's mapping table started. PCP, the IETF's successor from 2013, RFC 6887, listens on the same port, and its ANNOUNCE is a 24-byte header that asks for nothing: a router that speaks PCP answers it with a result code and its epoch, and a router that speaks only NAT-PMP answers, in NAT-PMP's own form, that the version is unsupported, which says what the router speaks as surely as a success would. A router that speaks neither refuses the port, and the refusal comes back on both, where the machine's firewall lets it: Windows' admits only one kind of ICMP unreachable by default, not the port-unreachable a refusal is, so there a refused port reads as no answer, after the full four seconds. UPnP is the third way and the oldest, from 2001, with the widest support: its Internet Gateway Device profile describes a router, and a search multicast to 239.255.255.250 on port 1900 finds one, its device description gives the control address of its WAN connection service, and SOAP calls there read its external address and walk its port mappings by index until the router says the list has ended. The service type names the version, WANIPConnection:1 from 2001 or 2 from 2010, which added IPv6 firewall control as a service of its own, whose status read says whether the router's IPv6 firewall is on and admits pinholes; the panel reads that when the router offers the service and says when it doesn't. igd-next does all the talking in Rust and answers the gateway it found as plain data the page hands back for each read, so the search runs once and the page owns what follows. The description the search read those paths from also names the router, its friendly name, maker, and model, which igd-next keeps none of, so net_upnp_description fetches it again, over plain http on the local network as UPnP serves it, and the page reads the root device's fields into the UPnP row, in parentheses after the router's address. The three protocols are asked at once, once the gateway is known, and the four UPnP reads follow the search. Two readings sit on those facts. Which protocols the router speaks comes straight from what answered, with the firewall named when it may have held the search's answer back. And whether a carrier translates above the router rests on the external address the router reports, the one check a carrier's translator can't dodge: when it differs from the address the reflector saw, something between the router and the internet translates again, and when that address is in the shared address space, 100.64.0.0/10, it's a carrier's; a private one is more likely a second router, like a provider's modem. The shared address space on the default route and an endpoint-dependent mapping go in as reasons beside it. One case slips past all of them: address-plus-port sharing, where the carrier gives the router a public address and a slice of its ports, and the reading says so whenever it reads unlikely.
 
 A check that asks once and waits for one answer gets checkSeconds to hear back. One round trip is tens of milliseconds, and a fetch over https is four, the name, the connection, the encryption, and the request, so around 200 milliseconds on a typical connection and around 600 across an ocean. The slowest ordinary connection, a satellite in geostationary orbit, has a round trip of 600 milliseconds, which puts a fetch near two and a half seconds, and a lost packet is sent again after a second. Four seconds covers all of those, and only a path that silently drops what it's sent waits that long, since no route, or a name with no address, fails at once whatever the limit. A check that waits longer by design gets its own time when it arrives. So a check ends one of three ways: an answer, in milliseconds; a failure that came back with its reason, like no route; or no answer in checkSeconds.
 
@@ -38,6 +38,7 @@ And the engine's session, which runs for as long as the user lets it rather than
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
 const noAnswer = `no answer in ${checkSeconds} seconds`
 const reflectorLimit = 100//bytes; the reflector answers one address and a newline, at most 46
+const descriptionLimit = 64*1024//bytes; a router's UPnP device description is a few kilobytes, its list of icons included
 const stunServers = [`stun.${urlHome}:3478`, 'stun.cloudflare.com:3478']//ours, then Cloudflare's, on a separate network, as the second vantage until our own second server takes its place
 
 //192.0.2.1 and 2001:db8::1 are addresses set aside for documentation, by RFC 5737 and RFC 3849, so they name no one, and any address beyond the local network gets the same answer, the default route's
@@ -146,15 +147,33 @@ function _upnpSearch() {
 	return {kind: 'upnp', asked: `UPnP search to ${upnpSearch}`, ask: () => netUpnpSearch(checkSeconds), read: gateway => ({success: true, value: gateway})}
 }
 
-//the three UPnP reads of a gateway the search found: its external address, its port mappings, and its IPv6 firewall's status, each failing at once when there's no gateway to ask, and the last when the gateway offers no IPv6 firewall control service, so the box has the same lines whatever the router
+//the four UPnP reads of a gateway the search found: its device description, its external address, its port mappings, and its IPv6 firewall's status, each failing at once when there's no gateway to ask, and the last when the gateway offers no IPv6 firewall control service, so the box has the same lines whatever the router
 function _upnpReads(gateway) {
 	let none = () => Promise.reject('no gateway found by the search')//made only when asked, so a rejection nobody takes never exists
 	let where = gateway ? ` at ${gateway.address}` : ''
 	return [
+		{kind: 'upnp-description', asked: gateway ? `GET http://${gateway.address}${gateway.root}` : 'GET the UPnP device description', ask: () => gateway ? netUpnpDescription(gateway, descriptionLimit, checkSeconds) : none(), read: _readDevice},
 		{kind: 'upnp-external', asked: `UPnP GetExternalIPAddress${where}`, ask: () => gateway ? netUpnpExternal(gateway) : none(), read: address => _readAddress(4, address)},
 		{kind: 'upnp-mappings', asked: `UPnP GetGenericPortMappingEntry${where}`, ask: () => gateway ? netUpnpMappings(gateway) : none(), read: found => ({success: true, value: found})},
 		{kind: 'upnp-firewall', asked: `UPnP GetFirewallStatus${where}`, ask: () => !gateway ? none() : gateway.firewall ? netUpnpFirewall(gateway) : Promise.reject('the router offers no WANIPv6FirewallControl service'), read: status => ({success: true, value: status})},
 	]
+}
+
+//a UPnP device description, read for the root device's own fields, each blank where the description leaves it out: its friendly name, maker, model name, number, and description, and the address of its settings page; the devices nested inside it, like the WAN connection device, are passed over
+function _readDevice(text) {
+	let doc = new DOMParser().parseFromString(text, 'text/xml')
+	let device = [...doc.documentElement.children].find(e => e.localName == 'device')//the root device, a direct child of the document's root element
+	if (!device || doc.getElementsByTagName('parsererror').length) return {success: false, outcome: `not a device description: ${text.slice(0, 60)}`}
+	let field = name => [...device.children].find(e => e.localName == name)?.textContent.trim() || ''//a direct child only, so a nested device's fields don't stand in for the root's
+	return {success: true, value: {friendly: field('friendlyName'), manufacturer: field('manufacturer'), model: field('modelName'), number: field('modelNumber'), description: field('modelDescription'), url: field('presentationURL')}}
+}
+
+//a router in a few words from its description, like Cisco DOCSIS or NETGEAR R7000: its maker and model, a word the description repeats said once, and its friendly name where it gives no model; with details, the description's fields after that
+function _sayDevice(d, details) {
+	let words = [d.manufacturer, d.model || d.friendly, d.number].filter(Boolean).filter((word, i, all) => all.indexOf(word) == i)
+	let said = words.join(' ') || 'unnamed'
+	if (details) said += `; friendly name "${d.friendly}", model "${d.model}", number "${d.number}", description "${d.description}"${d.url ? `, settings page ${d.url}` : ''}`
+	return said
 }
 
 //PCP's result codes, RFC 6887, each with its name and a few words; a NAT-PMP answer carries its own, where 1 is also unsupported version
@@ -313,13 +332,13 @@ function _sayCarrier(run) {
 	return said
 }
 
-//what the router said to UPnP, for the table: the service and its version at the gateway's address, then its external address, how many mappings it holds, and its IPv6 firewall, or why the search found nothing
+//what the router said to UPnP, for the table: the service and its version at the gateway's address, with the router's maker and model from its description in parentheses, the way an interface's name follows an address; then its external address, how many mappings it holds, and its IPv6 firewall, or why the search found nothing
 function _sayUpnp(results) {
 	let result = kind => results.find(r => r.kind == kind)
 	let search = result('upnp')
 	if (!search.success) return search.outcome == noAnswer ? 'no answer' : `none, ${search.outcome}`
-	let external = result('upnp-external'), mappings = result('upnp-mappings'), firewall = result('upnp-firewall')
-	let said = [`${_sayService(search.value.service)} at ${search.value.address}`]
+	let description = result('upnp-description'), external = result('upnp-external'), mappings = result('upnp-mappings'), firewall = result('upnp-firewall')
+	let said = [`${_sayService(search.value.service)} at ${search.value.address}${description.success ? ` (${_sayDevice(description.value)})` : ''}`]
 	said.push(external.success ? `external address ${external.value}` : `external address ${_sayFact(external)}`)
 	said.push(mappings.success ? `${mappings.value.mappings.length} mappings` : `mappings ${_sayFact(mappings)}`)
 	said.push(!search.value.firewall ? 'no IPv6 firewall control' : firewall.success ? `IPv6 firewall ${firewall.value.enabled ? 'on' : 'off'}, pinholes ${firewall.value.pinholes ? 'allowed' : 'not allowed'}` : `IPv6 firewall ${_sayFact(firewall)}`)
@@ -496,7 +515,7 @@ function _sayAnswer(r) {
 	if (r.kind == 'interfaces') return `${r.value.length} interfaces, ${r.value.reduce((sum, i) => sum + i.addresses.length, 0)} addresses`
 	if (r.kind == 'tool') { let lines = r.value.trim().split('\n'); return lines.length <= 2 ? lines.join('; ') : `${lines.length} lines` }//what it printed, when that's a line or two, like each of the firewall's reads; the count when it's a screen, read into the interfaces below
 	if (r.kind == 'resolve') return `${r.value.join(', ')}; ${_sayResolved(r)}`
-	if (r.kind == 'firewall-profiles') return r.value.map(p => `${p.name}${p.current ? ', current,' : ''} ${p.enabled ? 'on' : 'off'}`).join('; ')
+	if (r.kind == 'firewall-profiles') return r.value.map(p => `${p.name} ${p.enabled ? 'on' : 'off'}${p.current ? ', current' : ''}`).join('; ')
 	if (r.kind == 'firewall-rules') return `${r.value.length} rules`//each on its own line in the firewall section below
 	if (r.kind == 'natpmp') return `external address ${r.value.address}, epoch ${r.value.epoch} seconds, ${_sayLifetime(r.value.epoch)} since the router's mapping table started`
 	if (r.kind == 'pcp') {
@@ -510,6 +529,7 @@ function _sayAnswer(r) {
 		let g = r.value
 		return `${g.service} at ${g.address}, description at ${g.root}, control at ${g.control}, ${Object.keys(g.actions).length} actions; IPv6 firewall control ${g.firewall ? `at ${g.firewall}` : 'not offered'}`
 	}
+	if (r.kind == 'upnp-description') return _sayDevice(r.value, true)
 	if (r.kind == 'upnp-mappings') return `${r.value.mappings.length} mappings; ${r.value.ended}`
 	if (r.kind == 'upnp-firewall') return `IPv6 firewall ${r.value.enabled ? 'on' : 'off'}, inbound pinholes ${r.value.pinholes ? 'allowed' : 'not allowed'}`
 	return r.value
@@ -919,7 +939,7 @@ function _sayFirewallLines(f) {
 		for (let [o, name] of ours) {
 			if (o.failed) lines.push(`  unknown   ${o.path}; ${name}, ${o.failed}`)
 			else if (!o.rules.length) lines.push(`  no rules  ${o.path}; ${name}`)
-			for (let r of o.rules) lines.push(`  ${r.action.padEnd(5)} ${r.direction.padEnd(3)} ${r.protocol.padEnd(3)} ${(r.ports || 'any ports').padEnd(11)} ${r.profiles.join(' and ').padEnd(26)} "${r.name}"${r.enabled ? '' : ', off'}; ${name}`)
+			for (let r of o.rules) lines.push(`  ${r.action.padEnd(5)} ${r.direction.padEnd(3)} ${r.protocol.padEnd(3)} ${(r.ports == '*' ? 'any ports' : r.ports || 'no ports').padEnd(11)} ${r.profiles.join(' and ').padEnd(26)} "${r.name}"${r.enabled ? '' : ', off'}; ${name}`)//the firewall writes * for any port, and nothing for a protocol without ports
 		}
 		return lines
 	}

@@ -369,6 +369,24 @@ pub async fn net_upnp_firewall(gateway: UpnpGateway) -> Result<Firewall, String>
 	}).await
 }
 
+/// This gateway's device description, the XML the search read its control paths from, fetched again and answered as text, since igd-next keeps none of what else it says: the router's friendly name, maker, model, and the address of its settings page. Over plain http, which net_get refuses: UPnP serves the description that way alone, on the local network, at the address the search's answer came from. A rejection past seconds or limit bytes
+#[command]
+pub async fn net_upnp_description(gateway: UpnpGateway, limit: u64, seconds: u64) -> Result<String, String> {
+	run_blocking(move || {
+		let agent: ureq::Agent = ureq::Agent::config_builder()
+			.max_redirects(0)//answer a redirect as it is, rather than following it somewhere else
+			.timeout_global(Some(Duration::from_secs(seconds)))//the whole request, connecting through the last byte
+			.build()
+			.into();
+		let mut response = agent.get(&format!("http://{}{}", gateway.address, gateway.root)).call().map_err(|e| e.to_string())?;//the description's path at the router's address and port, as the search's answer named them
+		let mut body = response.body_mut().with_config().limit(limit + 1).reader().take(limit + 1);//one past limit twice, as net_get counts it, so a body exactly limit long reads whole and a longer one is told apart
+		let mut text = String::new();
+		body.read_to_string(&mut text).map_err(|e| e.to_string())?;
+		if text.len() as u64 > limit { return Err(format!("the answer ran past {limit} bytes")) }//an error rather than a cut-off body
+		Ok(text)
+	}).await
+}
+
 /// Every address the system's resolver answers for this name, IPv4 and IPv6 alike, in the order it gives them
 #[command]
 pub async fn net_resolve(name: String) -> Result<Vec<String>, String> {

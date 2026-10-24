@@ -8,9 +8,9 @@ use windows::Win32::NetworkManagement::WindowsFirewall::INetFwPolicy2;
 /*
 The Windows firewall, read for the page through its COM interface, INetFwPolicy2, which answers without elevation and in numbers, where netsh prints its words in the system's language. Windows sorts every network it joins into one of three profiles, Domain, Private, and Public, keeps a firewall state for each, and tags every rule with the profiles it applies in, so what the firewall does right now is the current network's profile read against the rules that name it. The two commands here read and change nothing: the profiles, and the rules naming one program by its path. Adding a rule is another thing, an elevated run the user approves, and lives elsewhere when it comes.
 
-COM wants each thread that uses it initialized, and the window's thread already is, in a mode this code shouldn't assume, so both commands run on the blocking pool and initialize an apartment of their own there, apartment-threaded, which the firewall's objects accept, and uninitialize it before the thread goes back to the pool. The rules come as a COM collection whose one way to be walked is the enumerator every automation collection carries, IEnumVARIANT, which hands back each rule as a VARIANT holding an IDispatch, cast to the rule's own interface; the dispatch is taken out of the VARIANT by reading its union, which is what a VARIANT is for, and the one unsafe read here beyond the calls themselves. A machine holds hundreds of rules, most of them Windows' own, so the walk reads each one's application name and keeps the few naming the path asked about, compared without regard to case, since Windows paths have none.
+COM wants each thread that uses it initialized, and the window's thread already is, in a mode this code shouldn't assume, so both commands run on the blocking pool and initialize an apartment of their own there, apartment-threaded, which the firewall's objects accept, and uninitialize it before the thread goes back to the pool; a pool thread that already has an apartment in the other mode says so, and the read goes ahead in that one and leaves it as it found it. The rules come as a COM collection whose one way to be walked is the enumerator every automation collection carries, IEnumVARIANT, which hands back each rule as a VARIANT holding an IDispatch, cast to the rule's own interface. The dispatch is read out of the VARIANT's union, which is what a VARIANT is for, and the one unsafe read here beyond the calls themselves. It's copied out rather than moved: the crate's VARIANT clears itself when it goes out of scope, which releases the reference the enumerator put in it, so the copy's own reference is the one the rule lives on until the walk is done with it, and both are released once. Moving the enumerator's reference out instead would have the VARIANT clear a reference the walk had already released, and the next read crash on a rule already freed. A machine holds hundreds of rules, most of them Windows' own, so the walk reads each one's application name and keeps the few naming the path asked about, compared without regard to case, since Windows paths have none and the firewall writes the ones the security alert gives it in lowercase.
 
-On a Mac and Linux both commands answer an error, since no Windows firewall is there; the page asks only on Windows.
+Both reads answer without elevation: the policy object has no guard on reading, where PowerShell's Get-NetFirewallRule refuses an unelevated token. On a Mac and Linux both commands answer an error, since no Windows firewall is there; the page asks only on Windows.
 */
 
 /// One of the firewall's three profiles, as firewall_profiles answers each
@@ -32,7 +32,7 @@ pub struct Rule {
 	pub enabled:   bool,
 	pub profiles:  Vec<String>,//the profiles it applies in, from Domain, Private, and Public
 	pub protocol:  String,//TCP, UDP, any, or the protocol's number
-	pub ports:     String,//the local ports it covers, like 51413 or 1024-65535, blank for any
+	pub ports:     String,//the local ports it covers, as the firewall writes them: a list like 51413 or 1024-65535, * for any, and blank for a protocol that has no ports
 }
 
 /// Each of the firewall's three profiles: whether the machine's current network is in it, whether the firewall is on for it, whether it refuses every incoming connection, and what it does to one no rule names
@@ -65,14 +65,16 @@ pub async fn firewall_rules(path: String) -> Result<Vec<Rule>, String> {
 /// Run one read against the firewall's policy object, on a COM apartment this thread initializes for itself and leaves when the read is done, however it ends
 #[cfg(windows)]
 fn with_policy<T>(read: impl FnOnce(&INetFwPolicy2) -> windows::core::Result<T>) -> Result<T, String> {
+	use windows::Win32::Foundation::RPC_E_CHANGED_MODE;
 	use windows::Win32::NetworkManagement::WindowsFirewall::NetFwPolicy2;
 	use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED};
-	unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) }.ok().map_err(|e| e.to_string())?;//this thread's own apartment; a thread the pool has used for this before answers that it already is, which is fine
+	let initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };//this thread's own apartment: S_OK for a new one, S_FALSE for one this thread already has in this mode, each to be left below, and RPC_E_CHANGED_MODE for one it has in the other mode, which serves as well and isn't this read's to leave
+	if initialized.is_err() && initialized != RPC_E_CHANGED_MODE { return Err(initialized.message()) }
 	let answer = (|| {
 		let policy: INetFwPolicy2 = unsafe { CoCreateInstance(&NetFwPolicy2, None, CLSCTX_INPROC_SERVER) }?;//the firewall's policy object, HNetCfg.FwPolicy2
 		read(&policy)
 	})();
-	unsafe { CoUninitialize() };
+	if initialized.is_ok() { unsafe { CoUninitialize() } }
 	answer.map_err(|e| e.to_string())
 }
 
@@ -109,7 +111,7 @@ fn rules(policy: &INetFwPolicy2, path: &str) -> windows::core::Result<Vec<Rule>>
 		let mut fetched = 0u32;
 		unsafe { enumerator.Next(&mut item, &mut fetched) }.ok()?;//S_FALSE at the end, which ok accepts, with nothing fetched
 		if fetched == 0 { break }
-		let dispatch = unsafe { if item[0].Anonymous.Anonymous.vt == VT_DISPATCH { (*item[0].Anonymous.Anonymous.Anonymous.pdispVal).clone() } else { None } };//the rule, as the dispatch interface the VARIANT holds, read out of its union
+		let dispatch = unsafe { if item[0].Anonymous.Anonymous.vt == VT_DISPATCH { (*item[0].Anonymous.Anonymous.Anonymous.pdispVal).clone() } else { None } };//the rule, as the dispatch interface the VARIANT holds, copied out of its union with a reference of its own, since the VARIANT releases the enumerator's when it goes; the essay above says why not to take that one
 		let Some(dispatch) = dispatch else { continue };
 		let rule: INetFwRule = dispatch.cast()?;
 		let program = unsafe { rule.ApplicationName() }.map(|name| name.to_string()).unwrap_or_default();//blank for a rule naming a service or a port rather than a program
@@ -122,7 +124,7 @@ fn rules(policy: &INetFwPolicy2, path: &str) -> windows::core::Result<Vec<Rule>>
 			enabled: unsafe { rule.Enabled() }?.as_bool(),
 			profiles: kinds().into_iter().filter(|(kind, _)| profiles == NET_FW_PROFILE2_ALL.0 || profiles & kind.0 != 0).map(|(_, name)| name.to_string()).collect(),//the bitmask as names, where all is its own value rather than the three bits
 			protocol: match unsafe { rule.Protocol() }? { 6 => "TCP".into(), 17 => "UDP".into(), 256 => "any".into(), other => other.to_string() },
-			ports: unsafe { rule.LocalPorts() }.map(|ports| ports.to_string()).unwrap_or_default(),//blank for any, and for a protocol that has no ports
+			ports: unsafe { rule.LocalPorts() }.map(|ports| ports.to_string()).unwrap_or_default(),//* for any, as the firewall writes it, and blank for a protocol that has no ports
 		});
 	}
 	Ok(list)

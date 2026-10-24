@@ -75,7 +75,7 @@ pub fn engine_start(app: &AppHandle) {
 		Ok(path) => path,
 		Err(trouble) => return fail(trouble),
 	};
-	lock(&engine).status.path = path.to_string_lossy().into_owned();
+	lock(&engine).status.path = crate::paths::display(&path);//written the way paths.rs writes every path, without the \\?\ prefix tauri's resource directory carries, since the page hands this path to the firewall, which stores plain ones
 	if !path.is_file() { return fail("the engine is not built; run pnpm engine in the desktop workspace".to_string()) }
 
 	let mut command = Command::new(&path);

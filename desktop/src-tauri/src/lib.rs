@@ -31,7 +31,7 @@ mod lifecycle;//and lifecycle.rs: closing hides the window, and quitting is expl
 mod log;//and log.rs: lines from anywhere, appended to a file as they happen, when the page says to, and every panic's location among them
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
-mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file, the address this machine would send from to reach another, what STUN servers saw requests from one socket arrive from, every address a name resolves to, the machine's network interfaces, what a router answers NAT-PMP's public address request and PCP's announce, and a router found by UPnP with its external address, its port mappings, and its IPv6 firewall's status
+mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file, the address this machine would send from to reach another, what STUN servers saw requests from one socket arrive from, every address a name resolves to, the machine's network interfaces, what a router answers NAT-PMP's public address request and PCP's announce, and a router found by UPnP with its external address, its port mappings, its IPv6 firewall's status, and its device description
 mod dialog;//and dialog.rs: the system's boxes for opening files, choosing a folder, and saving a file
 mod process;//and process.rs: other programs, run and waited for, with or without what they printed, started and let go, or asked to open a file or an address the way a double-click would, and this process's own id
 mod install;//and install.rs: a newer copy putting itself in place of this one, on a mac, in the moment before it would take the lock
@@ -106,6 +106,7 @@ pub fn run() {
 				net::net_upnp_external,
 				net::net_upnp_mappings,
 				net::net_upnp_firewall,
+				net::net_upnp_description,
 				dialog::dialog_open,//and in dialog.rs
 				dialog::dialog_save,
 				process::process_id,//and in process.rs

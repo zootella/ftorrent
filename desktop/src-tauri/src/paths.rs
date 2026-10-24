@@ -84,9 +84,9 @@ fn installer_folder(app: &AppHandle) -> String {
 	std::env::var_os("LOCALAPPDATA").map(|local| display(&PathBuf::from(local).join(&app.package_info().name))).unwrap_or_default()//brandName, the product name, which is how windows names an install folder
 }
 
-/// A path as text, for the page and the engine
-fn display(path: &Path) -> String {
-	path.to_string_lossy().into_owned()
+/// A path as text, for the page and the engine, in the plain form: on windows a path that has been canonicalized carries the \\?\ prefix, which the firewall's rules, the registry, and a person never write, and dunce takes it off wherever the path reads the same without it
+pub(crate) fn display(path: &Path) -> String {
+	dunce::simplified(path).to_string_lossy().into_owned()
 }
 
 /// Where everything is, as startup worked it out; the page asks once, since none of it changes while the app runs
