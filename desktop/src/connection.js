@@ -1,6 +1,6 @@
 import {reactive, ref, shallowRef, watch} from 'vue'
 import {getVersion} from '@tauri-apps/api/app'
-import {Data, Time, sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Data, Size, Time, sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
@@ -38,7 +38,7 @@ And the engine's session, which runs for as long as the user lets it rather than
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
 const noAnswer = `no answer in ${checkSeconds} seconds`
 const reflectorLimit = 100//bytes; the reflector answers one address and a newline, at most 46
-const descriptionLimit = 64*1024//bytes; a router's UPnP device description is a few kilobytes, its list of icons included
+const descriptionLimit = 64*Size.kb//a router's UPnP device description is a few kilobytes, its list of icons included
 const stunServers = [`stun.${urlHome}:3478`, 'stun.cloudflare.com:3478']//ours, then Cloudflare's, on a separate network, as the second vantage until our own second server takes its place
 
 //192.0.2.1 and 2001:db8::1 are addresses set aside for documentation, by RFC 5737 and RFC 3849, so they name no one, and any address beyond the local network gets the same answer, the default route's
@@ -142,7 +142,7 @@ function _pcp(gateway) {
 
 const upnpSearch = '239.255.255.250:1900'//the SSDP multicast address and port, where every UPnP device on the local network listens for a search
 
-//a check that searches the local network for a router by UPnP, answering the gateway igd-next found, which the three reads below take back
+//a check that searches the local network for a router by UPnP, answering the gateway igd-next found, which the four reads below take back
 function _upnpSearch() {
 	return {kind: 'upnp', asked: `UPnP search to ${upnpSearch}`, ask: () => netUpnpSearch(checkSeconds), read: gateway => ({success: true, value: gateway})}
 }
@@ -911,7 +911,7 @@ function _sayFirewall(f) {
 
 //this copy of ftorrent and its engine as the firewall knows them, the engine by its file name: on a Mac each allowed, blocked, or not listed, and on Windows each rule naming it in a few words
 function _sayFirewallList(f) {
-	if (!f.known) return firewallUnknown
+	if (!f.known) return 'unknown'//the row above says why
 	let engineName = f.engine.path.split(/[\\/]/).pop()
 	if (f.profiles) return `${brandName} ${_sayRules(f.ftorrent)}, ${engineName} ${_sayRules(f.engine)}`
 	return `${brandName} ${_sayListed(f.ftorrent)}, ${engineName} ${_sayListed(f.engine)}`
