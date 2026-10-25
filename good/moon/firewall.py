@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Installs moon's host firewall: installs iptables-persistent, which loads /etc/iptables/rules.v4 and rules.v6 at every boot, copies the two files there, loads them now, and restarts Docker, since loading a rules file flushes the chains Docker keeps for its published ports. The package asks at install whether to save the live tables into those files; the script answers no, so the files stay the source. On Ubuntu, installing it removes ufw, which the images ship inactive. A rule that shut out ssh would be hard to undo from here, so before loading, the script starts a timer on the box that reopens INPUT after three minutes; a fresh ssh connection after the load proves the rules admit ssh, and stops the timer. ssh reads ssh.conf beside this script, as deploy.py does.
+# Installs moon's host firewall: installs iptables-persistent, which loads /etc/iptables/rules.v4 and rules.v6 at every boot, copies the two files there, and loads them now. The package asks at install whether to save the live tables into those files; the script answers no, so the files stay the source. A rule that shut out ssh would be hard to undo from here, so before loading, the script starts a timer on the box that reopens INPUT after three minutes; a fresh ssh connection after the load proves the rules admit ssh, and stops the timer. ssh reads ssh.conf beside this script, as deploy.py does.
 import os
 import subprocess
 import sys
@@ -27,7 +27,7 @@ mkdir -p /etc/iptables
 
 run("rsync", "-t", "-e", " ".join(ssh), "rules.v4", "rules.v6", "moon:/etc/iptables/") # rsync takes the ssh command as one string
 
-moon("iptables-restore < /etc/iptables/rules.v4; ip6tables-restore < /etc/iptables/rules.v6; systemctl restart docker")
+moon("iptables-restore < /etc/iptables/rules.v4; ip6tables-restore < /etc/iptables/rules.v6")
 
 # a fresh connection proves ssh still passes the new rules; it stops the timer and shows INPUT as loaded
 code = subprocess.run([*ssh, "-o", "ConnectTimeout=15", "moon", "systemctl stop firewall-revert.timer; iptables -S INPUT; ip6tables -S INPUT"]).returncode

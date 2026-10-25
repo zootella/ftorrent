@@ -1,7 +1,7 @@
-# moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. INPUT is what reaches programs on the box itself; a packet to a port Docker publishes for a container is rewritten to the container before INPUT and crosses FORWARD, which Docker manages.
+# moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT is the whole story until Good8's namespaces add FORWARD rules of their own.
 *filter
 :INPUT DROP [0:0]
-# Docker sets FORWARD to DROP when it starts and admits its containers' traffic with its own chains; the file says the same, so the policy is the same before and after Docker starts.
+# Nothing is forwarded yet; Good8's namespaces admit their own traffic here.
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 # Everything on the loopback interface.

@@ -1,5 +1,5 @@
 #cloud-config
-# moon's user data, pasted into the provider's dashboard when creating the box.
+# moon's user data, pasted into the provider's dashboard when creating the box. Debian 13, with every service a package and a systemd unit; the runbook says why there is no container runtime here.
 
 hostname: moon
 timezone: Etc/UTC
@@ -11,13 +11,11 @@ package_upgrade: true
 package_reboot_if_required: true
 packages:
   - caddy
-  - docker.io
-  - docker-compose-v2
   - unattended-upgrades
   - rsync
 
 write_files:
-  # Daily unattended upgrades from security and updates, and a restart at 04:00 UTC when one is needed. dpkg keeps our edited Caddyfile when a caddy update ships its own.
+  # Daily unattended upgrades from security and updates, and a restart at 04:00 UTC when one is needed. Debian's own file already names the security archive; this adds the updates archive. dpkg keeps our edited Caddyfile when a caddy update ships its own.
   - path: /etc/apt/apt.conf.d/52moon
     content: |
       APT::Periodic::Update-Package-Lists "1";
@@ -27,12 +25,6 @@ write_files:
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
       Dpkg::Options:: "--force-confdef";
       Dpkg::Options:: "--force-confold";
-  # The local log driver rotates container logs; the default one grows until the disk is full.
-  - path: /etc/docker/daemon.json
-    content: |
-      {
-        "log-driver": "local"
-      }
   # moon's IPv6 address is the first in its /64. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64; the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one.
   - path: /etc/netplan/60-moon.yaml
     permissions: '0600'
