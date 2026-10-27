@@ -1,9 +1,14 @@
-# moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT is the whole story until Good8's namespaces add FORWARD rules of their own.
+# moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT is the whole story, and FORWARD stays closed until something is built that needs it.
 *filter
 :INPUT DROP [0:0]
-# Nothing is forwarded yet; Good8's namespaces admit their own traffic here.
+# Nothing is forwarded; the network namespaces of later work admit their own traffic here when they come.
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
+# The STUN counters come first, so every packet passes them before any rule decides. A rule with no target only counts. stun4-in is binding requests arriving for coturn, and stun4-out, in OUTPUT below, the answers leaving. stun4-excess is the requests above 20 a second from one source address, after a burst of 40: the guard's own rule without its drop, a dry run that climbs only when something is using the server as a reflector. stuncount.py reads all three by their comments every hour, and a reboot starts them at zero.
+-A INPUT -p udp --dport 3478 -m comment --comment stun4-in
+-A INPUT -p udp --dport 3478 -m hashlimit --hashlimit-name stun4 --hashlimit-mode srcip --hashlimit-above 20/second --hashlimit-burst 40 -m comment --comment stun4-excess
+# coturn: STUN binding requests over UDP.
+-A INPUT -p udp --dport 3478 -j ACCEPT
 # Everything on the loopback interface.
 -A INPUT -i lo -j ACCEPT
 # Replies to connections the box opened, and errors about them.
@@ -18,4 +23,6 @@
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
+# The third STUN counter: coturn's answers, leaving from its port.
+-A OUTPUT -p udp --sport 3478 -m comment --comment stun4-out
 COMMIT

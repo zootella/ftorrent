@@ -62,7 +62,7 @@ GET https://ip4.ftorrent.com/   → your IPv4 (the name carries only an A record
 GET https://ip6.ftorrent.com/   → your IPv6 (only AAAA — the request is forced onto IPv6)
 ```
 
-Call the pair, and the two outcomes *are* your dual-stack verdict: both answer and you have both; one fails and you know which one you're missing. This is the same mechanism good.ftorrent.com's own page runs — see [`page/src/connection.js`](page/src/connection.js), where every check the page makes lives.
+Call the pair, and the two outcomes *are* your dual-stack verdict: both answer and you have both; one fails and you know which one you're missing. The same two names exist on our second server as `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com`, so a failed fetch to one server can be told from a connection with no IPv6 at all. This is the same mechanism good.ftorrent.com's own page runs — see [`page/src/connection.js`](page/src/connection.js), where every check the page makes lives.
 
 Every response carries `Access-Control-Allow-Origin: *`. That header is CORS, and it matters because a browser will *send* a request to another origin but won't let the page *read* the response unless the server permits it — permission the server grants, not something the caller can ask for. We set it in [`go-ip/main.go`](go-ip/main.go), on the same handler that writes the address.
 
@@ -89,7 +89,7 @@ Google's is the one most WebRTC tutorials paste in and is probably the most-quer
 
 **Why we run our own**, given three good ones already exist. First, to understand it — you learn a protocol properly by operating it, and everything in this checker rests on knowing what STUN really does. Second, so the [ftorrent desktop client](https://github.com/zootella/ftorrent/tree/master/desktop) has a first-party option: a desktop application, unlike a browser, gets to choose its own default, and we'd rather ours ask our server than route every user's first move through someone else's. Third, because the decentralized web needs more of this. Public STUN is infrastructure the whole peer-to-peer world depends on, and nearly all of it currently sits at three companies. One more operator is one more.
 
-Ours answers on 3478, the port [IANA registered for STUN](https://datatracker.ietf.org/doc/html/rfc8489); Google's answers on 19302. For a checker that difference matters, because a server on an unusual port can succeed on a network where a real peer connection would fail, and we'd rather reproduce the failure than hide it.
+Ours answers on 3478, the port [IANA registered for STUN](https://datatracker.ietf.org/doc/html/rfc8489), and so does its twin at `moon.ftorrent.com:3478`, on a second server at another place on the internet; Google's answers on 19302. For a checker that difference matters, because a server on an unusual port can succeed on a network where a real peer connection would fail, and we'd rather reproduce the failure than hide it.
 
 There's no TURN here — this is self-discovery, not a relay.
 
@@ -113,7 +113,7 @@ The STUN server takes the opposite path: nothing sits in front of it. Docker pub
 
 - **Running.** The page, the three reflection names, and the dual-stack verdict they produce. A globally routable IPv6 address usually means a peer can reach you directly, without any of the port gymnastics IPv4 requires.
 - **Running.** `stun.ftorrent.com`, and the page's two STUN checks on it: your public address and port over UDP in each family, set beside what HTTPS saw, and the mapping verdict from ours and Cloudflare's asked from the same sockets.
-- **Started.** A second vantage of our own at `moon.ftorrent.com`, a small virtual server at another place on the internet, up and built from the files in [`moon/`](moon/). Next, its STUN server takes over from Cloudflare's as the page's second answer, its reflector cross-checks ours, and for the desktop client it sends a packet or opens a connection back, which proves a peer can reach you rather than inferring it.
+- **Running.** A second vantage of our own at `moon.ftorrent.com`, a small virtual server at another place on the internet, built from the files in [`moon/`](moon/) and described in its own guide there: a second STUN server, a second reflector at `ip4.moon.ftorrent.com` and `ip6.moon.ftorrent.com`, and, for the desktop client, a poke and a dial, a few UDP packets or a TCP connection sent back to whoever asks, which prove a peer can reach you rather than infer it. Next, the page and the desktop client start asking it.
 - **Planned.** WebRTC peers on moon behind translators we shape ourselves, one like a home router and one that maps a new port per destination, so the page can show a hole punch succeed or fail rather than predict it.
 - **Running.** The measurements only a desktop application can make, in the desktop client's Connection tab: the same address and STUN checks from a socket it controls, with every STUN answer shown whole, and the device's own network interfaces, every address on each named for what it is, which explains the `fe80:` and `fd00:` addresses that lead so many people to believe they have working IPv6. It also asks the system's resolver whether the network makes up IPv6 addresses for IPv4-only names.
 - **Planned.** The rest of what only a desktop application can do: binding a real listener to prove that unsolicited packets arrive, and asking the router for a port mapping.
@@ -128,7 +128,7 @@ good/
 ├── go-ip/               the ip reflector — Dockerfile, go.mod, main.go
 ├── coturn/              turnserver.conf — coturn in plain-STUN-only mode
 ├── pion/                a WebRTC peer, deferred: a Dockerfile only, until its Go source lands
-├── moon/                the second vantage at moon.ftorrent.com: cloud-init, Caddy, the deploy and firewall scripts, and its runbook
+├── moon/                the second vantage at moon.ftorrent.com: cloud-init, the firewall and its counters, coturn, the Go service, Caddy, the deploy and firewall scripts, and its README
 └── page/                the page good.ftorrent.com serves, a Vue app on Vite, with its checks in src/connection.js
 ```
 

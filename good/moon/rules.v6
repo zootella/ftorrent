@@ -1,8 +1,11 @@
-# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py.
+# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py. The STUN counters are the same three rules under the stun6 names; rules.v4 says what each counts.
 *filter
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
+-A INPUT -p udp --dport 3478 -m comment --comment stun6-in
+-A INPUT -p udp --dport 3478 -m hashlimit --hashlimit-name stun6 --hashlimit-mode srcip --hashlimit-above 20/second --hashlimit-burst 40 -m comment --comment stun6-excess
+-A INPUT -p udp --dport 3478 -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 # ICMPv6 carries neighbor discovery, the router advertisements the box's address comes from, and path MTU discovery; IPv6 stops working without it.
@@ -11,4 +14,5 @@
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
+-A OUTPUT -p udp --sport 3478 -m comment --comment stun6-out
 COMMIT

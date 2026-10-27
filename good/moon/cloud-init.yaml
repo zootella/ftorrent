@@ -1,5 +1,5 @@
 #cloud-config
-# moon's user data, pasted into the provider's dashboard when creating the box. Debian 13, with every service a package and a systemd unit; the runbook says why there is no container runtime here.
+# moon's user data, pasted into the provider's dashboard when creating the box. Debian 13, with every service a package and a systemd unit; the README says why there is no container runtime here.
 
 hostname: moon
 timezone: Etc/UTC

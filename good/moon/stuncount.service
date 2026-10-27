@@ -1,0 +1,7 @@
+# Reads the six STUN counting rules in the host firewall and appends a row to /var/log/stuncount.csv; stuncount.timer runs it on the hour. firewall.py installs both beside the rules.
+[Unit]
+Description=append the STUN counters to stuncount.csv
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/stuncount.py

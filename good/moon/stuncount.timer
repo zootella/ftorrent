@@ -1,0 +1,9 @@
+# Runs stuncount.service on the hour. Debian's cloud image ships no cron, and a timer is a unit like every other service on moon.
+[Unit]
+Description=read the STUN counters hourly
+
+[Timer]
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target
