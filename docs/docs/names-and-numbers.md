@@ -8,7 +8,7 @@ description: Every name and number built into the ftorrent desktop client, the s
 The desktop client is peer-to-peer, and it still carries a short list of fixed names: the servers it contacts, the trackers it writes into new torrents, the product's own names, and the way it introduces itself to trackers and peers. This page lists each one, the file it's set in, and what uses it.
 
 - Renaming a fork? Start with the product's names: two files hold them, and the list under them names every file that spells one out by hand.
-- Checking what the client contacts? Read the servers. Today the update check and the Connection tab are the two in use, since the engine creates no libtorrent session yet.
+- Checking what the client contacts? Read the servers. Today the update check and the Connection tab are the two in use, and the tab's Start runs the engine's only libtorrent session so far.
 
 ## The product's names
 
@@ -63,6 +63,7 @@ Accept-Encoding: gzip
 - `239.255.255.250:1900`, the SSDP multicast address, over UDP: UPnP's search for an Internet Gateway Device, a few lines of text. A router answers from its own address with the location of its device description, which the client fetches over plain HTTP on the local network, then asks that description's WAN connection service by SOAP for GetExternalIPAddress and for GetGenericPortMappingEntry by index until the router says the list has ended, and, where the description offers IPv6 firewall control, GetFirewallStatus.
 - Built in `desktop/src/connection.js`, with ftorrent's names from `urlHome`.
 - Asked only when the user presses Check on the Connection tab, each given four seconds to answer.
+- Start, beside Check, opens a libtorrent session in the engine that runs until Stop, at a port picked at random from 49152 to 65535 for each Start. It joins the mainline DHT through the bootstrap nodes in the engine's table, below, and from them exchanges messages with DHT nodes across the internet over both families. With a torrent file chosen, it also announces to the trackers that torrent lists and takes connections from the peers they and the DHT name, in upload mode, which downloads nothing; for a WebSocket tracker, WebTorrent also asks the STUN server in the engine's table.
 
 ### The Windows installer
 
@@ -70,7 +71,7 @@ Accept-Encoding: gzip
 
 ### The engine's table
 
-The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands them to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The engine creates no session yet, so none of these is contacted today.
+The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands them to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The Connection tab's session contacts the bootstrap nodes at every Start, and the STUN server for a torrent with a WebSocket tracker; the trackers wait for the client to create torrents.
 
 **STUN.** WebTorrent uses STUN to learn the public address its WebRTC connections appear from. libtorrent takes one server, in `webtorrent_stun_server`, and the engine gives it the first. The engine doesn't fall back to the other two yet.
 
@@ -80,7 +81,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `stun.cloudflare.com:3478` | Cloudflare |
 | `stun.l.google.com:19302` | Google; libtorrent's own default |
 
-**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these. libtorrent takes all three, in `dht_bootstrap_nodes`.
+**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these, and every session starts empty today, since the engine doesn't save its routing table yet. libtorrent takes all three, in `dht_bootstrap_nodes`, in place of its own default, which is `dht.libtorrent.org:25401` alone. On 2026-10-27 all three answered a DHT query over IPv4, and ftorrent's and libtorrent's over IPv6 as well; the Transmission project's IPv6 address didn't answer.
 
 | Node | Run by |
 |---|---|

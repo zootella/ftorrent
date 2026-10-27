@@ -5,11 +5,11 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 # Running a Public BitTorrent DHT Bootstrap Node in Docker
 
-> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.8
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 5.5
 > <br>Created: 2026-Jun
-> <br>Last reviewed: 2026-Jun
-> <br>[qBittorrent-nox](https://www.qbittorrent.org/): from `debian:bookworm-slim` (apt)
-> <br>Engine: [libtorrent-rasterbar](https://www.libtorrent.org/) (the mainline DHT)
+> <br>Last reviewed: 2026-Oct
+> <br>[qBittorrent-nox](https://www.qbittorrent.org/): 4.5, from `debian:bookworm-slim` (apt)
+> <br>Engine: [libtorrent-rasterbar](https://www.libtorrent.org/) 2.0 (the mainline DHT)
 > <br>DHT port: 51420/udp
 > <br>Docker Engine: 29
 > <br>Docker Compose: V2
@@ -20,16 +20,15 @@ This node runs alongside the [Aquatic tracker](../README.md) on the same server,
 
 The [Aquatic tracker](../README.md) answers one question: "who else has this?" A client presents an info hash and the tracker returns a list of peers. The **distributed hash table (DHT)** answers the same question without a server, by spreading peer-discovery information across millions of participating clients. It is the mechanism behind trackerless magnet links: any client can look up "who has info hash X?" by querying its way through the table ([BEP 5](https://www.bittorrent.org/beps/bep_0005.html), a [Kademlia](https://en.wikipedia.org/wiki/Kademlia) network).
 
-The DHT has a cold-start problem. A fresh client knows the protocol but knows no nodes, so to join the table it must first contact *some* node already in it. That first contact is **bootstrapping**, and the whole network leans on a short list of well-known nodes hardcoded into client source:
+The DHT has a cold-start problem. A fresh client knows the protocol but knows no nodes, so to join the table it must first contact *some* node already in it. That first contact is **bootstrapping**, and the whole network leans on a short list of well-known nodes written into client source. These are the defaults in the newest releases of libtorrent, qBittorrent, and Transmission, in October 2026:
 
-| Bootstrap node | Operated by |
-|---|---|
-| `router.bittorrent.com:6881` | BitTorrent Inc / Rainberry |
-| `router.utorrent.com:6881` | BitTorrent Inc |
-| `dht.transmissionbt.com:6881` | the Transmission project |
-| `dht.libtorrent.org:25401` | Arvid Norberg (libtorrent's author) |
+| Bootstrap node | Operated by | Default in |
+|---|---|---|
+| `dht.libtorrent.org:25401` | Arvid Norberg (libtorrent's author) | libtorrent 2.1, qBittorrent 5.3 |
+| `dht.transmissionbt.com:6881` | the Transmission project | Transmission 4.1, qBittorrent 5.3 |
+| `router.bt.ouinet.work:6881` | the Ouinet project | qBittorrent 5.3 |
 
-There is nothing protocol-special about these. They are ordinary DHT nodes with high uptime, well-populated routing tables, and stable hostnames. `dht.ftorrent.com` adds one more independent entry point to that list — another well-connected node anyone can bootstrap from, run as public infrastructure and controlled by no single client project.
+There is nothing protocol-special about these. They are ordinary DHT nodes with high uptime, well-populated routing tables, and stable hostnames. The lists drift as nodes come and go, and a release keeps the list it shipped with: `router.bittorrent.com:6881`, `router.utorrent.com:6881`, and `dht.aelitis.com:6881` no longer answer, and qBittorrent listed the first through 5.2 and all three through 5.0. A DHT query from a dual-stack connection on 2026-10-27 reached `dht.libtorrent.org` over both families, `dht.transmissionbt.com` over IPv4 only, and `router.bt.ouinet.work`, which has IPv4 addresses alone, at three of its four; the three older names answered nothing. `dht.ftorrent.com` adds one more independent entry point to that list — another well-connected node anyone can bootstrap from, run as public infrastructure and controlled by no single client project.
 
 ## A bootstrap node is not a tracker
 
@@ -47,7 +46,7 @@ We use it as a **pure DHT citizen**: no torrents are ever added, nothing downloa
 
 A fair question: if a fresh DHT node knows no other nodes, how does *ours* get in — and does it start over on every restart? Two mechanisms answer it, and both are already handled, not something we configure.
 
-**Cold start.** On its very first run, with an empty routing table, the node bootstraps the way any client does. libtorrent ships with default bootstrap nodes built in — `dht.libtorrent.org:25401`, `router.bittorrent.com:6881`, `router.utorrent.com:6881` — and contacts them to enter the DHT. The list is part of the engine; there is nothing for us to supply. This is the quiet irony of running a bootstrap node: it bootstraps off the existing public ones to *become* one itself, and every node in the table above was, once, seeded by the others. It is also why the [outbound exception](#the-outbound-exception) is load-bearing — with no outbound UDP, the node can't reach those servers and never enters the network at all.
+**Cold start.** On its very first run, with an empty routing table, the node bootstraps the way any client does, from a list of bootstrap nodes. libtorrent's own default is `dht.libtorrent.org:25401` alone, and qBittorrent writes its own list in its place. qBittorrent 4.5, the version in Debian bookworm, sets five whenever the DHT is on, with no setting to change them: `dht.libtorrent.org:25401`, `router.bittorrent.com:6881`, `router.utorrent.com:6881`, `dht.transmissionbt.com:6881`, and `dht.aelitis.com:6881`. Two of the five still answer, and one answering node is all a cold start needs. qBittorrent 5.0 made the list a setting, `Session\DHTBootstrapNodes`, so a node built on a newer release can choose its own. This is the quiet irony of running a bootstrap node: it bootstraps off the existing public ones to *become* one itself, and every node in the table above was, once, seeded by the others. It is also why the [outbound exception](#the-outbound-exception) is load-bearing — with no outbound UDP, the node can't reach those servers and never enters the network at all.
 
 **Warm restart.** This is where a DHT node parts ways with a tracker. A tracker keeps its peer lists in memory and discards them on restart; clients simply re-announce and refill it within minutes, so a tracker persists nothing of its own. A DHT node is the reverse: its value *is* its routing table and its stable node ID, and it would be a poor citizen to forget them and re-hammer the public bootstrap servers on every restart. So libtorrent does what every good DHT implementation does — it saves its routing table (the known-good nodes and the node ID) on shutdown and reloads it on startup. That state lives in the writable `/config` volume, so a restart rejoins the DHT warm and immediately, right where it left off. The first launch is the only true cold start; every restart after it is a warm one.
 
@@ -208,6 +207,19 @@ docker exec ftorrent-open-gauge-1 python3 -c \
 A `dht_nodes` count climbing into the hundreds, with `connection_status: "connected"`, confirms the node is participating — both the inbound path and the outbound exception are working. If the count stays at or near zero, the outbound rule is the first thing to check.
 
 **IPv6 will be sparser and slower to fill.** The IPv6 DHT is a much smaller network, so the v6 routing table stays thinner and lookups take more hops. That is expected, not a fault — the node is a good citizen on both families; it is simply lonelier on v6.
+
+## Updating
+
+The image installs qBittorrent and libtorrent from Debian's archive once, when it's built, and the node runs those packages until the image is built again. The host's own updates never reach inside a container, and neither does a plain `docker compose up -d --build`: with the Dockerfile unchanged, Docker reuses its cached `apt-get install` layer and the base image it already holds. To bring in Debian's fixes, rebuild without the cache and pull the base image fresh:
+
+```bash
+docker compose build --pull --no-cache qbittorrent-dht
+docker compose up -d qbittorrent-dht
+```
+
+`--pull` fetches the current `debian:bookworm-slim`, with its base libraries' fixes, and `--no-cache` runs `apt-get install` again, so qBittorrent and libtorrent come from the archive as it stands that day. The routing table and node ID are in the `/config` volume, so the new container rejoins the DHT warm, as after any restart.
+
+libtorrent is the package that matters most here, since it parses every DHT message that reaches 51420/udp from the internet. Rebuild when Debian publishes a security update for [`libtorrent-rasterbar`](https://security-tracker.debian.org/tracker/source-package/libtorrent-rasterbar) or [`qbittorrent`](https://security-tracker.debian.org/tracker/source-package/qbittorrent), which Debian's security tracker lists by package, and now and then for the base libraries. Bookworm's regular security support ended on 12 July 2026, and Debian's long-term support team covers both packages until 30 June 2028.
 
 ## Using it
 

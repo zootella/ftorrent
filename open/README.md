@@ -609,6 +609,8 @@ The runtime image contains only the compiled binary, the config file, and a mini
 
 The Rust pin is also necessary for a specific reason: Aquatic v0.9.0 depends on an older version of the `metrics` crate that uses a lifetime pattern the Rust compiler accepted at the time but rejects in newer versions (1.93+). Building with the latest `rust:bookworm` image will fail with a compile error in the `metrics` crate. Pinning to Rust 1.85 avoids this. When a new Aquatic version is released with updated dependencies, the Rust pin can be updated or removed. See [rust-lang/rust#141402](https://github.com/rust-lang/rust/issues/141402) for details.
 
+**What the pins leave out.** The runtime base isn't pinned: `debian:bookworm-slim` is a tag its maintainers refresh with Debian's fixes, and Docker resolves it once and then reuses the copy it holds. So a rebuild brings the base up to date only when it pulls, with `docker compose build --pull`. The runtime stage installs no packages, so this refreshes glibc and the base files; Aquatic's own fixes arrive by moving its pin. The builder needs no refreshing: `rust:1.85-bookworm` stopped updating when Rust moved past 1.85, and only the binary leaves it.
+
 **Build dependencies.** The only system package installed in the builder stage is `cmake`, which is required by the `mimalloc` allocator (a default Aquatic feature that improves memory allocation performance). The `rust:bookworm` image already includes `gcc`, `g++`, and `make`.
 
 The three Dockerfiles differ only in which binary they build and which config file they copy:

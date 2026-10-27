@@ -40,7 +40,7 @@ What that chain lets us verify, and what it does not. PyPI publishes a SHA-256 d
 
 ### Python, from python-build-standalone
 
-The interpreter comes from [astral-sh/python-build-standalone](https://github.com/astral-sh/python-build-standalone), release 20260807, as the `install_only_stripped` build for each platform. uv downloads it and checks it against a list of hashes compiled into uv itself, so a substituted download fails to install. Two lines pin it: `.python-version` in the engine folder names 3.13.15 exactly, and the manifest sets uv's python preference to managed builds only, so no machine's own Python, whatever version it carries, is ever what the engine is frozen against.
+The interpreter comes from [astral-sh/python-build-standalone](https://github.com/astral-sh/python-build-standalone), release 20260807, as the `install_only_stripped` build for each platform. uv downloads it and checks it against a list of hashes compiled into uv itself, so a substituted download fails to install. Three things pin it. `.python-version` in the engine folder names 3.13.15 exactly. The manifest sets uv's python preference to managed builds only, so no machine's own Python, whatever version it carries, is ever what the engine is frozen against. And uv's own version picks the build: python-build-standalone builds the same Python again in later releases, and each uv release names one build for each version, so uv 0.12.3 fetches 3.13.15 from release 20260807 and uv 0.13.5 fetches it from release 20260929. uv reuses an interpreter a machine already holds rather than fetching it again, so a machine that installed the 20260807 build keeps freezing against it whatever uv it runs later.
 
 The wheels stop at Python 3.13, which is why the engine does not run on a newer interpreter, and it is also why the choice of interpreter is pinned rather than left to each machine.
 
@@ -50,7 +50,7 @@ The wheels stop at Python 3.13, which is why the engine does not run on a newer 
 
 ### uv, the tool that reads the lock
 
-[uv](https://docs.astral.sh/uv/) performs the fetches and the checks, at 0.12.3 everywhere: from Homebrew on the Mac, from Astral's installer on Windows, and copied out of Astral's published container image in the Linux containers. It is a build tool and ships nothing to users, so it is not pinned by hash here, but it is the component that enforces every hash above.
+[uv](https://docs.astral.sh/uv/) performs the fetches and the checks. It is a build tool and ships nothing to users, so it is not pinned by hash here, but it is the component that enforces every hash above, and its version picks the interpreter's build, as the Python section says. The Linux image pins it at 0.12.3, copied out of Astral's published container image. The Mac takes it from Homebrew and Windows from Astral's installer, each at whatever version that brings, and the checks recorded below ran on 0.12.3.
 
 ## The hashes
 
@@ -157,3 +157,4 @@ shasum -a 256 libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 - **2026-Sep-21, later the same day.** Linux, both architectures, frozen in Docker containers on the Mac and checked on a bare Debian 12. The Linux wheels compile OpenSSL in, at 3.5.0 from April 2025, older than the macOS wheel's 3.6.3. Windows still pending.
 - **2026-Sep-22.** Windows, frozen and installed on a Windows 10 22H2 machine. The Windows wheel compiles OpenSSL in, at 3.6.1 from January 2026. The frozen engine answered the same ready line as the Mac's, ran as the installed app's child, and drew no Windows Defender detection at any step. All three platforms are now built.
 - **2026-Sep-22, later the same day.** The Linux pipeline grew an rpm and a Flatpak. Neither adds a wheel: both carry the x86_64 engine the amd64 deb carries. Six packages, four wheels.
+- **2026-Oct-27.** The record now says that uv's version picks which build of the interpreter a machine fetches, that the Linux image pins uv at 0.12.3, and that the Mac and Windows take whatever version their installers bring. No engine changed.

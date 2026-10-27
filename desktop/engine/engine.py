@@ -20,7 +20,7 @@ centralized_servers = {
 		'stun.cloudflare.com:3478',#Cloudflare's public STUN
 		'stun.l.google.com:19302',#Google's public STUN, libtorrent's own default
 	],
-	'dht': [#the bootstrap nodes a fresh DHT routing table starts from; libtorrent takes them all, and after the first start the saved routing table makes them unnecessary
+	'dht': [#the bootstrap nodes a fresh DHT routing table starts from; libtorrent takes them all. The engine doesn't save its routing table yet, so every session starts from these; once it does, the saved table makes them unnecessary after the first start
 		'dht.ftorrent.com:51420',#ours
 		'dht.libtorrent.org:25401',#run by libtorrent's author, and libtorrent's own default
 		'dht.transmissionbt.com:6881',#run by the Transmission project
@@ -70,7 +70,7 @@ def ready():#what the engine reports about itself once it is up, and the first t
 		'client': client_name(),#the name peers and trackers will see
 		'fingerprint': fingerprint(),#and the front of the peer id they will see
 		'centralized_servers': centralized_servers,#so the app can show them, and so anyone running the engine by hand sees the same list the document publishes
-		'paths': paths,#the paths init carried, sent back unchanged, so the app can see they arrived; the engine uses them once it has a session
+		'paths': paths,#the paths init carried, sent back unchanged, so the app can see they arrived; the engine will use them once its session keeps state
 	}
 
 out = sys.stdout.buffer#bytes rather than text, so the newline is exactly one byte on every platform and nothing translates it
@@ -91,7 +91,7 @@ def command_folders(message):#the download folders the page holds the locks for,
 	listed = message.get('folders')
 	if not isinstance(listed, list): listed = []#anything but a list names no folders, rather than stopping the engine
 	folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
-	emit({'event': 'folders', 'folders': folders})#sent back as kept, so the page can see they arrived and notice if one was passed over; the engine uses them once it has a session
+	emit({'event': 'folders', 'folders': folders})#sent back as kept, so the page can see they arrived and notice if one was passed over; the engine will use them once its session downloads
 
 def command_session(message):#start the session, listening on every address in both families at the port the page chose, with the DHT on and the router left alone; a session already running is replaced
 	global session
