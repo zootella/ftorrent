@@ -1,48 +1,37 @@
 # Dockerfile for the open.ftorrent.com DHT bootstrap node.
 #
-# A headless qBittorrent (qbittorrent-nox) configured as a pure mainline-DHT
-# participant: no torrents, no seeding, no PeX — it only joins and bootstraps
-# the Kademlia DHT and reports its health over an internal Web API.
+# A small Python program, dht.py, holding libtorrent's DHT and nothing else, with each routing table's size answered on an internal port. libtorrent is the maintainers' own wheel, pinned by hash in uv.lock, the same Linux wheels the desktop client's engine is frozen against.
 #
-# Built FROM debian:bookworm-slim to match the Aquatic tracker containers'
-# runtime base — one Debian, one libc across the deployment — and to run
-# cleanly as nobody (65534) under a read-only root filesystem. qbittorrent-nox
-# comes from Debian's own repositories, vetted by the distribution's security
-# team (which backports fixes), rather than a community image whose s6/PUID
-# init model fights user:65534 + read_only.
+# Two stages. The first has uv, which fetches the wheel by the hash the lock records into a virtual environment. The second copies that environment and the program onto a clean copy of the same base, so uv never reaches the image that runs, and the environment's link to its Python resolves the same in both.
+#
+# python:3.13-slim-trixie because the wheel is built for Python 3.13, and trixie is Debian's current release. It isn't pinned by digest, so `docker compose build --pull` brings in the base's fixes; libtorrent's arrive by moving the pin in pyproject.toml and uv.lock.
 #
 # Build:
-#   docker build -t ftorrent-open-dht .
-#
-# Configuration is NOT baked in: qbittorrent-nox rewrites its own config file,
-# so it lives on a writable /config volume, seeded with qBittorrent.conf before
-# first start (see README.md). Everything writable is confined to /config (the
-# bind mount) and /tmp (a tmpfs); the rest of the filesystem stays read-only.
+#   docker build -t ftorrent-open-libtorrent-dht .
 
-FROM debian:bookworm-slim
+FROM python:3.13-slim-trixie AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    qbittorrent-nox \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# uv at the version the desktop client's Linux build image pins, copied out of Astral's published image
+COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /usr/local/bin/uv
 
-# Run as nobody (UID 65534), matching the tracker containers' hardening.
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+
+# The image's own Python, never one uv would download, and the wheel's files copied into the environment rather than linked to a cache this stage throws away
+ENV UV_PYTHON_PREFERENCE=only-system \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy
+RUN uv sync --frozen --no-dev
+
+FROM python:3.13-slim-trixie
+
+COPY --from=builder /app/.venv /app/.venv
+COPY dht.py /app/dht.py
+
+# Run as nobody (UID 65534), matching the tracker containers' hardening
 USER 65534:65534
-
-# Confine every writable path qBittorrent or Qt might touch to the /config
-# volume or the /tmp tmpfs, so the root filesystem can stay read-only:
-#   config + DHT state  -> /config  (persistent bind mount)
-#   cache + runtime     -> /tmp     (ephemeral tmpfs)
-ENV HOME=/config \
-    XDG_CONFIG_HOME=/config \
-    XDG_DATA_HOME=/config \
-    XDG_CACHE_HOME=/tmp \
-    XDG_RUNTIME_DIR=/tmp
 
 EXPOSE 51420/udp
 EXPOSE 8080/tcp
 
-# No CMD: the seeded qBittorrent.conf's [LegalNotice] Accepted=true records
-# acceptance non-interactively. Don't add --confirm-legal-notice — bookworm's
-# qbittorrent-nox rejects it as an unknown flag and the container crash-loops.
-ENTRYPOINT ["qbittorrent-nox"]
+ENTRYPOINT ["/app/.venv/bin/python", "/app/dht.py"]

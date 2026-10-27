@@ -1,0 +1,10 @@
+# The DHT node's manifest: the Python it runs on and the one package it needs. uv.lock beside this file pins the wheel for each platform by hash, and the Dockerfile's uv sync --frozen refuses anything the lock does not name.
+
+[project]
+name = "ftorrent-dht"
+version = "0.1.0"
+description = "The mainline DHT bootstrap node at dht.ftorrent.com: libtorrent's DHT and nothing else, with each routing table's size on an internal port"
+requires-python = "==3.13.*"
+dependencies = [
+	"libtorrent==2.1.1", # the maintainers' own wheel, the same Linux wheels the desktop client's engine is frozen against; libtorrent-provenance on docs.ftorrent.com is the record of where it comes from and how we checked
+]

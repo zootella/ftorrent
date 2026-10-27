@@ -7,7 +7,7 @@
 #
 # The container expects GAUGE_DIR to be set to the path of a writable volume, where it writes public/page.json and its private files beside it, and reads the probe's file.
 
-# python:3.12-slim-bookworm pins one Debian release and Python minor across the whole deployment: bookworm matches the Aquatic tracker containers (debian:bookworm-slim), and 3.12 matches the host's bare-metal scripts. One Debian, one libc, one Python to reason about. slim (not alpine) keeps us on glibc and the Debian security team; not digest-pinned, so upstream security rebuilds reach us on a periodic `docker build --pull`.
+# python:3.12-slim-bookworm matches the Debian release of the Aquatic tracker containers (debian:bookworm-slim) and the Python minor of the host's bare-metal scripts, 3.12. The DHT node is the one exception, on trixie and 3.13, the Python its libtorrent wheel is built for. slim (not alpine) keeps us on glibc and the Debian security team; not digest-pinned, so upstream security rebuilds reach us on a periodic `docker build --pull`.
 FROM python:3.12-slim-bookworm
 
 WORKDIR /app

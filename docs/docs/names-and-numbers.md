@@ -81,7 +81,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `stun.cloudflare.com:3478` | Cloudflare |
 | `stun.l.google.com:19302` | Google; libtorrent's own default |
 
-**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these, and every session starts empty today, since the engine doesn't save its routing table yet. libtorrent takes all three, in `dht_bootstrap_nodes`, in place of its own default, which is `dht.libtorrent.org:25401` alone. On 2026-10-27 all three answered a DHT query over IPv4, and ftorrent's and libtorrent's over IPv6 as well; the Transmission project's IPv6 address didn't answer.
+**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these, and every session starts empty today, since the engine doesn't save its routing table yet. libtorrent takes all three, in `dht_bootstrap_nodes`, in place of its own default, which is `dht.libtorrent.org:25401` alone. On 2026-10-27 all three answered a DHT query over IPv4, and ftorrent's and libtorrent's over IPv6 as well; the Transmission project's IPv6 address didn't answer. The list serves the DHT bootstrap node at `dht.ftorrent.com` too, which starts from the same nodes less its own entry, set in `open/dht/dht.py`, so a change to one is a change to both.
 
 | Node | Run by |
 |---|---|

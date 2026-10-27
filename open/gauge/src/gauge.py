@@ -50,7 +50,7 @@ CGROUP_SLICE = CGROUP_DIR / "system.slice"
 
 # We identify the four containers by their memory ceiling (memory.max from cgroup), which is deliberately unique per container.
 #
-# This is a concession: the cgroup tree only exposes container IDs, not names. We chose not to mount the Docker socket (too much privilege) or pass IDs as environment variables (they change on every restart). Matching by ceiling works because the limits are intentionally different and documented in the guide. The three Aquatic trackers get the same generous ~2 GiB ceiling for tracker state, told apart by 1 MiB offsets; the DHT node (qBittorrent, not Aquatic) sits far below at 512 MiB, so its ceiling is unique on its own.
+# This is a concession: the cgroup tree only exposes container IDs, not names. We chose not to mount the Docker socket (too much privilege) or pass IDs as environment variables (they change on every restart). Matching by ceiling works because the limits are intentionally different and documented in the guide. The three Aquatic trackers get the same generous ~2 GiB ceiling for tracker state, told apart by 1 MiB offsets; the DHT node (libtorrent, not Aquatic) sits far below at 512 MiB, so its ceiling is unique on its own.
 #
 # Each entry is (key, ceiling-in-bytes).
 MEMORY_TARGETS = [
@@ -361,11 +361,11 @@ def scrape_prometheus():
 # DHT bootstrap node
 # ---------------------------------------------------------------------------
 
-# The DHT node (qBittorrent-nox) exposes its health on its Web API: one GET returns the node count and connection state. The hostname resolves via Docker's internal DNS on the ftorrent-open network, and the node's WebUI whitelist trusts this scraper's address, so no credentials are needed. Locally it won't resolve, so the scrape is skipped gracefully.
-DHT_ENDPOINT = "http://ftorrent-open-dht-1:8080/api/v2/transfer/info"
+# The DHT node (dht.py on libtorrent) answers its health on an internal port: one GET returns each of its routing tables, the address it runs from, and how many live nodes it holds. libtorrent runs a table for each address the node listens on beyond the container itself, which in the container is one on IPv4 and one on IPv6. The hostname resolves via Docker's internal DNS on the ftorrent-open network. Locally it won't resolve, so the scrape is skipped gracefully.
+DHT_ENDPOINT = "http://ftorrent-open-dht-1:8080/"
 
 
-# Scrape the DHT node's Web API. Returns (nodes, status): libtorrent's dht.dht_nodes counter as an int, the nodes in its IPv4 and IPv6 routing tables added together, and qBittorrent's connection_status string. On any failure (unreachable, bad JSON, missing fields) returns (0, "disconnected"), so the tick never crashes and page.json always carries the keys.
+# Scrape the DHT node. Returns (nodes4, nodes6): the live nodes in its routing tables on each family, each table counted toward the family of the address it runs from, so a node running more than one table on a family still reports that family's whole. A table whose first count hasn't arrived reads as 0. On any failure (unreachable, bad JSON, missing fields) returns (0, 0), so the tick never crashes and page.json always carries the keys.
 def scrape_dht():
 	try:
 		# Explicit Connection: close (see scrape_prometheus) — urllib already forces it, so this is legibility, not a fix.
@@ -373,18 +373,19 @@ def scrape_dht():
 		with urllib.request.urlopen(req, timeout=5) as response:
 			data = json.loads(response.read(MAX_SCRAPE_BYTES).decode("utf-8"))
 	except (urllib.error.URLError, OSError, json.JSONDecodeError):
-		return 0, "disconnected"
-	if not isinstance(data, dict):
-		return 0, "disconnected"
-	nodes = data.get("dht_nodes", 0)
-	status = data.get("connection_status", "disconnected")
-	return (
-		int(nodes) if _is_number(nodes) else 0,
-		status if isinstance(status, str) else "disconnected",
-	)
+		return 0, 0
+	tables = data.get("tables") if isinstance(data, dict) else None
+	if not isinstance(tables, list):
+		return 0, 0
+	nodes = {4: 0, 6: 0}
+	for table in tables:
+		if not isinstance(table, dict) or not isinstance(table.get("address"), str) or not _is_number(table.get("nodes")):
+			continue
+		nodes[6 if ":" in table["address"] else 4] += int(table["nodes"])
+	return nodes[4], nodes[6]
 
 
-# How many minutes the node has been continuously in the DHT — a true count of accumulated uninterrupted minutes, held in memory rather than on disk. "In the DHT" means a non-empty routing table (nodes > 0). The count resets to 0 whenever the node drops out (0 nodes / unreachable), and also whenever the gauge itself restarts, since either is a break in uninterrupted observation.
+# How many minutes the node has been continuously in the DHT — a true count of accumulated uninterrupted minutes, held in memory rather than on disk. "In the DHT" means a non-empty routing table on either family (nodes > 0). The count resets to 0 whenever the node drops out (0 nodes / unreachable), and also whenever the gauge itself restarts, since either is a break in uninterrupted observation.
 _dht_session_start = None  # epoch ms the current session began, or None
 
 
@@ -466,8 +467,8 @@ def tick():
 
 	memory = read_container_memory()
 	served = scrape_prometheus()
-	dht_nodes, dht_status = scrape_dht()
-	dht_uptime_minutes = dht_uptime(dht_nodes, now)
+	dht_nodes4, dht_nodes6 = scrape_dht()
+	dht_uptime_minutes = dht_uptime(dht_nodes4 + dht_nodes6, now)
 	day = current_day(now)
 	minute = current_minute(now)
 
@@ -513,8 +514,9 @@ def tick():
 		"downtimeDay": downtime,
 		"downtimeDays": history,
 		"dht": {
-			"nodes": dht_nodes,
-			"status": dht_status,
+			"nodes4": dht_nodes4,
+			"nodes6": dht_nodes6,
+			"status": "connected" if dht_nodes4 + dht_nodes6 > 0 else "disconnected",  # the gauge's own word: connected when the node answered with nodes in its tables
 			"uptimeMinutes": dht_uptime_minutes,
 		},
 	}

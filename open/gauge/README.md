@@ -103,7 +103,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 	"uptimePercent": 97.76041140690909,
 	"downtimeDay": 1,
 	"downtimeDays": "0,0,0,3,1440,1440,0,0,...,0,0",
-	"dht": { "nodes": 452, "status": "connected", "uptimeMinutes": 1234 }
+	"dht": { "nodes4": 401, "nodes6": 341, "status": "connected", "uptimeMinutes": 1234 }
 }
 ```
 
@@ -120,7 +120,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 - **uptimePercent** — the share of the last 90 days' minutes that were up, today counting only the minutes so far; the frontend derives the same figure from `downtimeDays`
 - **downtimeDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
 - **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Always 90 entries, the 90-day window the dashboard shows. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart.
-- **dht** — the DHT bootstrap node's health, scraped from its Web API in one GET (`172.30.0.5` → `ftorrent-open-dht-1:8080/api/v2/transfer/info`): `nodes` (libtorrent's `dht.dht_nodes` counter, the nodes in its IPv4 and IPv6 routing tables added together), `status` (qBittorrent's `connection_status`, one of `connected` / `firewalled` / `disconnected`), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred to low thousands of nodes, holding roughly steady. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
+- **dht** — the DHT bootstrap node's health, read from its health port in one GET (`ftorrent-open-dht-1:8080/`): `nodes4` and `nodes6` (the live nodes in its IPv4 and IPv6 routing tables, each table counted toward the family of the address it runs from), `status` (the gauge's own word: `connected` when the node answered with nodes in its tables, `disconnected` otherwise), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred nodes on each family, holding roughly steady, with IPv6 the thinner. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
 
 All fields are always present. All numeric values are 0 or positive integers, except `uptimePercent`, which is a float between 0 and 100.
 
@@ -226,6 +226,6 @@ The `minute` field should match the current UTC minute. Memory fields should be 
 
 ## Security
 
-The gauge container runs on the `ftorrent-open` network (cafe 2), at the pinned address `172.30.0.5` / `fd00:cafe:2::5` that the DHT node's Web API trusts, with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach anything outside that network. Its one dependency beyond the standard library is installed at build time from a requirements file that pins both the version and the hash of the exact file, so pip refuses anything else.
+The gauge container runs on the `ftorrent-open` network (cafe 2), at the pinned address `172.30.0.5` / `fd00:cafe:2::5`, with the same constraints as the trackers: nobody user, read-only filesystem, all capabilities dropped, no-new-privileges, memory and PID limits. It can reach the Aquatic Prometheus endpoints and the DHT node's health port over internal Docker DNS (allowed by the intra-subnet DOCKER-USER rule) but cannot reach anything outside that network. Its one dependency beyond the standard library is installed at build time from a requirements file that pins both the version and the hash of the exact file, so pip refuses anything else.
 
 The data directory is where the gauge's writes meet the host: the probe, the breaker, and the reverse proxy each act on files inside it, so the design keeps the gauge itself out of reach rather than second-guessing what it writes. It has no listening ports, no route to the internet, and nothing to fetch but the trackers' metrics and the DHT node's health on the internal network, so reaching it would take breaking an internet-facing tracker or the DHT node first. The frontend bundle sits in a separate host directory the reverse proxy serves directly, so not even the gauge's own output can change the HTML, JS, or CSS a browser runs.

@@ -20,7 +20,7 @@ centralized_servers = {
 		'stun.cloudflare.com:3478',#Cloudflare's public STUN
 		'stun.l.google.com:19302',#Google's public STUN, libtorrent's own default
 	],
-	'dht': [#the bootstrap nodes a fresh DHT routing table starts from; libtorrent takes them all. The engine doesn't save its routing table yet, so every session starts from these; once it does, the saved table makes them unnecessary after the first start
+	'dht': [#the bootstrap nodes a fresh DHT routing table starts from; libtorrent takes them all. The engine doesn't save its routing table yet, so every session starts from these; once it does, the saved table makes them unnecessary after the first start. The DHT bootstrap node starts from the same list less its own entry, in open/dht/dht.py
 		'dht.ftorrent.com:51420',#ours
 		'dht.libtorrent.org:25401',#run by libtorrent's author, and libtorrent's own default
 		'dht.transmissionbt.com:6881',#run by the Transmission project
