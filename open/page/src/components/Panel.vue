@@ -1,117 +1,94 @@
 <script setup>
 
-import { inject, computed, reactive, ref, onMounted, onUnmounted } from 'vue'
-import { Time, saySize4, sayTick } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
+import {inject, computed, reactive, ref, onMounted, onUnmounted} from 'vue'
+import {Time, saySize4, sayTick} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 const page = inject('page')
 
-const nbsp = '\u00A0' // non-breaking space (same as &nbsp;); used as digit group separator so numbers never wrap
+const nbsp = '\u00A0'//a non-breaking space, the same as &nbsp;, which group() puts between digit groups so a number never wraps
 
-const burst_quantity = 1_000     // counters with rate at or below this animate in discrete bursts
-const beat_quantity  = 2_000_000 // sweet-spot rate: ones blur, tens still pop visibly
-const drum_duration  = Time.second / 2  // colon-blink half-period; also our beat tempo
-const reset_duration = 10 * Time.minute // how often counters snap back to the recorded total
+const burstQuantity = 1_000            //counters with rate at or below this animate in discrete bursts
+const beatQuantity  = 2_000_000        //sweet-spot rate: ones blur, tens still pop visibly
+const drumDuration  = Time.second / 2  //colon-blink half-period; also our beat tempo
+const resetDuration = 10 * Time.minute //how often counters snap back to the recorded total
 
-// Per-service cool-down: read from page.coolDown. Older page.json files without this property
-// default each key to false (no cool-down). When true, that service shows coolDownText instead
-// of an animated counter, and the per-frame and per-beat Poisson updates skip it.
-const coolDown = {
-	udp4:  page.coolDown?.udp4  ?? false,
-	udp6:  page.coolDown?.udp6  ?? false,
-	http4: page.coolDown?.http4 ?? false,
-	http6: page.coolDown?.http6 ?? false,
-	ws4:   page.coolDown?.ws4   ?? false,
-	ws6:   page.coolDown?.ws6   ?? false,
-}
+//per-service cool-down, true for a service whose breaker has tripped: it shows coolDownText instead of an animated counter, and the per-frame and per-beat Poisson updates skip it
+let coolDown = page.coolDown
 const coolDownText = 'cool down'
 
+//a count with its digits grouped by non-breaking spaces, so it never line-breaks
 function group(n) {
-	return n.toLocaleString('en-US').replace(/,/g, nbsp) // en-US gives commas every 3 digits; swap to nbsp so it never line-breaks
+	return n.toLocaleString('en-US').replace(/,/g, nbsp)//en-US groups digits in threes with commas, which become non-breaking spaces
 }
 
-// Parse the 90-day downtime string into an array of per-day downtime minutes
-const history = computed(() => {
-	if (!page.downtimeDays) return []
-	return page.downtimeDays.split(',').map(Number)
-})
+let history = page.downtimeDays.split(',').map(Number)//the 90-day downtime string as an array of per-day downtime minutes
 
-const bar_all  = 100  // 0 minutes downtime
-const bar_one  = 97   // 1 minute downtime
-const bar_none = 3    // full day downtime
+const barAll  = 100//0 minutes downtime
+const barOne  = 97 //1 minute downtime
+const barNone = 3  //full day downtime
 
 function barHeight(downMinutes) {
-	const minutesPerDay = Time.day / Time.minute
-	if (downMinutes <= 0) return bar_all
-	if (downMinutes >= minutesPerDay) return bar_none
-	return bar_one - (downMinutes - 1) / (minutesPerDay - 1) * (bar_one - bar_none)
+	let minutesPerDay = Time.day / Time.minute
+	if (downMinutes <= 0) return barAll
+	if (downMinutes >= minutesPerDay) return barNone
+	return barOne - (downMinutes - 1) / (minutesPerDay - 1) * (barOne - barNone)
 }
 
-// Format a day number as "2026 Apr 07"
+//a day number as a date, like 2026 Apr 07
 function dayToDate(dayNumber) {
 	return sayTick(dayNumber * Time.day, 'YYYY Mmm DD')
 }
 
-// 90-day uptime percentage
-const uptimePercent = computed(() => {
-	const bars = history.value
-	if (bars.length === 0) return ''
-	// All but the last are complete days; the last is today's partial day
-	const totalMinutes = (bars.length - 1) * (Time.day / Time.minute) + (page.minute + 1)
-	const totalDown = bars.reduce((sum, d) => sum + d, 0)
-	const pct = ((totalMinutes - totalDown) / totalMinutes) * 100
-	return (Math.floor(pct * 1000) / 1000).toFixed(3)
-})
+//90-day uptime percentage; all but the last are complete days, and the last is today's partial day
+let totalMinutes = (history.length - 1) * (Time.day / Time.minute) + (page.minute + 1)
+let totalDown = history.reduce((sum, d) => sum + d, 0)
+let uptimePercent = (Math.floor(((totalMinutes - totalDown) / totalMinutes) * 100 * 1000) / 1000).toFixed(3)
 
-// Hover state: index of hovered bar, or null
-const hoveredBar = ref(null)
+const hoveredBar = ref(null)//index of the hovered bar, or null
 
-// Text shown below the bars on hover
+//text shown below the bars on hover
 const barDate = computed(() => {
-	if (hoveredBar.value === null) return ''
-	return dayToDate(page.day - (history.value.length - 1 - hoveredBar.value))
+	if (hoveredBar.value == null) return ''
+	return dayToDate(page.day - (history.length - 1 - hoveredBar.value))
 })
 
 const barDown = computed(() => {
-	if (hoveredBar.value === null) return ''
-	const down = history.value[hoveredBar.value]
-	return `${down} minutes downtime`
+	if (hoveredBar.value == null) return ''
+	return `${history[hoveredBar.value]} minutes downtime`
 })
 
-// page.json is snapshotted once, before mount, and never changes during the
-// navigation. recorded is the initial display value and the reset target;
-// served is the live, animated copy.
-const count_keys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
-const recorded = Object.fromEntries(count_keys.map(k => [k, page.servedDay[k]]))
-const rates = Object.fromEntries(count_keys.map(k => [k, recorded[k] / Time.day])) // events per ms
-const served = reactive({ ...recorded })
+//page.json is read once, before mount, and never changes during the navigation. recorded is the initial display value and the reset target; served is the live, animated copy
+const countKeys = ['udp4', 'udp6', 'http4', 'http6', 'ws4', 'ws6']
+let recorded = Object.fromEntries(countKeys.map(k => [k, page.servedDay[k]]))
+let rates = Object.fromEntries(countKeys.map(k => [k, recorded[k] / Time.day]))//events per millisecond
+const served = reactive({...recorded})
 
-// Render one of the six counter services: either the cool-down message or the formatted live count.
+//one of the six counter services, as the cool-down message or the live count
 function service(key) {
-	if (coolDown[key]) return coolDownText  // cooled services show a static string, no number
-	return group(served[key])               // live services show the animated count, comma-grouped
+	if (coolDown[key]) return coolDownText//a cooled service shows a static string, no number
+	return group(served[key])//a live service shows the animated count, its digits grouped
 }
 
-// Knuth for λ < 20, Box-Muller normal approximation for λ ≥ 20.
-// Returns a non-negative integer.
+//a Poisson-distributed count with mean lambda, a non-negative integer: Knuth's method below 20, and Box-Muller's normal approximation from 20 up
 function poissonSample(lambda) {
-	if (lambda === 0) return 0
+	if (lambda == 0) return 0
 	if (lambda < 20) {
-		const L = Math.exp(-lambda)
-		let k = 0
-		let p = 1
+		let limit = Math.exp(-lambda)
+		let k = 0//arrivals so far
+		let p = 1//the running product of uniform draws
 		do {
 			k++
 			p *= Math.random()
-		} while (p > L)
+		} while (p > limit)
 		return k - 1
 	}
-	const u1 = Math.random()
-	const u2 = Math.random()
-	const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+	let u1 = Math.random()
+	let u2 = Math.random()
+	let gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
 	return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * gaussian))
 }
 
-// Idempotent start/stop. rAF auto-pauses when the tab is hidden.
+//start and stop are idempotent, and requestAnimationFrame pauses on its own while the tab is hidden
 let frameHandle = null
 
 function frameTick() {
@@ -120,57 +97,55 @@ function frameTick() {
 }
 
 function startFrames() {
-	if (frameHandle !== null) return
+	if (frameHandle != null) return
 	frameHandle = requestAnimationFrame(frameTick)
 }
 
 function stopFrames() {
-	if (frameHandle === null) return
+	if (frameHandle == null) return
 	cancelAnimationFrame(frameHandle)
 	frameHandle = null
 }
 
-// UTC HH:MM, 1Hz blinking colon. Re-derived from Date.now() each frame so the
-// visible state snaps to wall clock and no drift accumulates.
+//UTC HH:MM, with a colon that blinks once a second, derived from Date.now() each frame so the visible state snaps to the wall clock and no drift accumulates
 const clockHour = ref('00')
 const clockMinute = ref('00')
 const colonOn = ref(true)
 
-// Three brackets by recorded:
-//   recorded ≤ burst_quantity         → not animated
-//   burst_quantity < recorded ≤ beat  → per-frame Poisson step
-//   recorded > beat_quantity          → Poisson step once per drumbeat
-// lastBeat: most recent drumbeat number acted on.
-// lastFrameNow: previous frame's wall time, for per-frame dt.
-// mountedAt: anchor for the reset_duration window.
+/*
+Three brackets, by the recorded count:
+
+	recorded ≤ burstQuantity         → not animated
+	burstQuantity < recorded ≤ beat  → a Poisson step each frame
+	recorded > beatQuantity          → a Poisson step once per drumbeat
+
+lastBeat is the most recent drumbeat number acted on, lastFrameNow is the previous frame's wall time, for the time each frame covers, and mountedAt anchors the resetDuration window.
+*/
 let lastBeat = null
 let lastFrameNow = null
 let mountedAt = null
 
 function updateClock() {
-	const now = Date.now()
+	let now = Date.now()
 	clockHour.value = sayTick(now, 'hh24')
 	clockMinute.value = sayTick(now, 'mm')
 
-	const beat = Math.floor(now / drum_duration)
-	colonOn.value = beat % 2 === 0
+	let beat = Math.floor(now / drumDuration)
+	colonOn.value = beat % 2 == 0
 
-	if (lastBeat !== null && beat !== lastBeat && mountedAt !== null) {
-		if (now - mountedAt >= reset_duration) {
-			// Snap back to recorded and re-anchor both clocks so the per-frame
-			// block below adds nothing this frame.
+	if (lastBeat != null && beat != lastBeat && mountedAt != null) {
+		if (now - mountedAt >= resetDuration) {
+			//snap back to recorded and re-anchor both clocks, so the per-frame block below adds nothing this frame
 			mountedAt = now
 			lastFrameNow = now
-			for (const k of count_keys) served[k] = recorded[k]
+			for (let k of countKeys) served[k] = recorded[k]
 		} else {
-			// beatsSince > 1 means the tab was hidden across several beats.
-			// Sum of N independent Poisson(λ) is Poisson(N·λ), so one draw
-			// covers the whole gap.
-			const beatsSince = beat - lastBeat
-			for (const k of count_keys) {
+			//beatsSince over 1 means the tab was hidden across several beats; the sum of N independent Poisson(λ) draws is Poisson(N·λ), so one draw covers the whole gap
+			let beatsSince = beat - lastBeat
+			for (let k of countKeys) {
 				if (coolDown[k]) continue
-				if (recorded[k] > beat_quantity) {
-					const arrived = poissonSample(rates[k] * drum_duration * beatsSince)
+				if (recorded[k] > beatQuantity) {
+					let arrived = poissonSample(rates[k] * drumDuration * beatsSince)
 					if (arrived > 0) served[k] += arrived
 				}
 			}
@@ -178,12 +153,12 @@ function updateClock() {
 	}
 	lastBeat = beat
 
-	if (lastFrameNow !== null) {
-		const dt = now - lastFrameNow
-		for (const k of count_keys) {
+	if (lastFrameNow != null) {
+		let elapsed = now - lastFrameNow//milliseconds since the last frame
+		for (let k of countKeys) {
 			if (coolDown[k]) continue
-			if (recorded[k] > burst_quantity && recorded[k] <= beat_quantity) {
-				const arrived = poissonSample(rates[k] * dt)
+			if (recorded[k] > burstQuantity && recorded[k] <= beatQuantity) {
+				let arrived = poissonSample(rates[k] * elapsed)
 				if (arrived > 0) served[k] += arrived
 			}
 		}
@@ -228,10 +203,10 @@ onUnmounted(() => {
 			<div class="label">WebRTC offer</div>
 			<div class="right">{{ saySize4(page.memory.ws) }}</div>
 
-			<div></div>
-			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
+			<div class="right">{{ group(page.dht.nodes4) }}</div>
+			<div class="right">{{ group(page.dht.nodes6) }}</div>
 			<div class="label">DHT nodes</div>
-			<div class="right">{{ saySize4(page.memory.dht ?? 0) }}</div>
+			<div class="right">{{ saySize4(page.memory.dht) }}</div>
 
 			<div></div>
 			<div class="right">{{ group(page.downtimeDay) }}{{ page.downtimeDay ? ' minutes' : '' }}</div>
@@ -252,9 +227,9 @@ onUnmounted(() => {
 				</div>
 			</div>
 			<div class="legend">
-				<div v-if="hoveredBar === null" class="legend-default">
+				<div v-if="hoveredBar == null" class="legend-default">
 					<span>{{ history.length }} days ago</span>
-					<span>{{ uptimePercent ? uptimePercent + '% uptime' : '' }}</span>
+					<span>{{ uptimePercent }}% uptime</span>
 					<span>Today</span>
 				</div>
 				<div v-else>{{ barDate }} - {{ barDown }}</div>
@@ -292,11 +267,13 @@ onUnmounted(() => {
 			<div class="right">{{ service('ws6') }}</div>
 			<div class="label">IPv6</div>
 
-			<div class="label right">Mainline DHT</div>
+			<div class="label right">DHT nodes</div>
 			<div class="label">┐</div>
 
-			<div class="right">{{ group(page.dht?.nodes ?? 0) }}</div>
-			<div class="label">nodes</div>
+			<div class="right">{{ group(page.dht.nodes4) }}</div>
+			<div class="label">IPv4</div>
+			<div class="right">{{ group(page.dht.nodes6) }}</div>
+			<div class="label">IPv6</div>
 
 			<div class="label right">Memory in use</div>
 			<div class="label">┐</div>
@@ -307,12 +284,12 @@ onUnmounted(() => {
 			<div class="label">HTTP</div>
 			<div class="right">{{ saySize4(page.memory.ws) }}</div>
 			<div class="label">WS</div>
-			<div class="right">{{ saySize4(page.memory.dht ?? 0) }}</div>
+			<div class="right">{{ saySize4(page.memory.dht) }}</div>
 			<div class="label">DHT</div>
 		</div>
 
 		<div class="calendar-narrow">
-			<div class="legend">{{ hoveredBar === null ? '90 days' : barDate }}</div>
+			<div class="legend">{{ hoveredBar == null ? '90 days' : barDate }}</div>
 			<div class="cells" @mouseleave="hoveredBar = null">
 				<div
 					v-for="(down, i) in history"
@@ -322,7 +299,7 @@ onUnmounted(() => {
 					@mouseenter="hoveredBar = i"
 				></div>
 			</div>
-			<div class="legend">{{ hoveredBar === null ? (uptimePercent ? uptimePercent + '% uptime' : nbsp) : barDown }}</div>
+			<div class="legend">{{ hoveredBar == null ? uptimePercent + '% uptime' : barDown }}</div>
 		</div>
 	</div>
 </template>

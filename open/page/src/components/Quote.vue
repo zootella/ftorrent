@@ -1,5 +1,5 @@
 <script setup>
-import { Time } from '@zootella/ergo' // small helpers from the ergo project, the same in javascript, python, rust, and go
+import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
 Between the fall of the Berlin Wall and the burst of the dot-com bubble, something remarkable happened: politicians, technologists, diplomats, dissidents, and engineers briefly shared a common vision. They believed that connection — between people, between nations, between ideas — would make the world gentler, more open, more free. They weren't naive. Many of them had lived through wars, dictatorships, and the threat of nuclear annihilation. They simply looked at what was emerging and allowed themselves to hope.
@@ -1238,78 +1238,55 @@ https://en.wikipedia.org/wiki/Keith_Haring
 Haring-isms, 2020
 `
 
-function formatQuote(s) {
+//open and close are what a straight " becomes: curly singles in a quote, demoted so they nest inside the outer double quotes the page sets around it, and curly doubles in a byline, which isn't nested inside anything
+function typeset(s, open, close) {
 	return s
-		.replace(/\s*--\s*/g, ' \u2014 ') // -- → em-dash, space-padded so the monospaced glyph isn't crowded
-		.replace(/(^|[\s\u2014\u2026(\[{])"/g, '$1\u2018') // opening " → curly open single (demoted so it nests inside the outer double quotes)
-		.replace(/"/g, '\u2019') // remaining " → curly close single
-		.replace(/(^|[\s\u2014\u2026(\[{])'/g, '$1\u2018') // opening ' → curly open single
-		.replace(/'/g, '\u2019') // remaining ' → curly close single, also the apostrophe glyph
-		.replace(/\u2026/g, '...') // normalize Unicode ellipsis to three literal periods (wider in the monospace font)
+		.replace(/\s*--\s*/g, ' \u2014 ')//-- becomes an em dash, space-padded so the monospaced glyph isn't crowded
+		.replace(/(^|[\s\u2014\u2026(\[{])"/g, `$1${open}`)//an opening "
+		.replace(/"/g, close)//any remaining "
+		.replace(/(^|[\s\u2014\u2026(\[{])'/g, '$1\u2018')//an opening ' becomes a curly open single
+		.replace(/'/g, '\u2019')//any remaining ' becomes a curly close single, which is also the apostrophe
+		.replace(/\u2026/g, '...')//a Unicode ellipsis becomes three periods, which the monospaced font draws wider
 }
-function formatContext(s) {// byline version — " stays as a curly double because the byline isn't nested inside outer quote marks
-	return s
-		.replace(/\s*--\s*/g, ' \u2014 ')
-		.replace(/(^|[\s\u2014\u2026(\[{])"/g, '$1\u201C') // opening " → curly open double
-		.replace(/"/g, '\u201D') // remaining " → curly close double
-		.replace(/(^|[\s\u2014\u2026(\[{])'/g, '$1\u2018') // opening ' → curly open single
-		.replace(/'/g, '\u2019') // remaining ' → curly close single, also the apostrophe glyph
-		.replace(/\u2026/g, '...') // normalize Unicode ellipsis to three literal periods
-}
-// The opener set above (start-of-string, whitespace, em-dash, Unicode ellipsis,
-// ( [ { ) is what flags a " or ' as an opening quote rather than a closing one.
-// When adding quotes, eyeball the render; if you see two close-style glyphs
-// ('' or '') where an open/close pair belongs, the character before the
-// quote isn't in the opener set. Likely offenders:
-//   - three-period ellipsis with no trailing space:  ...'yes'
-//   - colon or semicolon with no space:              said:"yes"
-//   - triple-nested quotation                        (we only have two levels of glyphs)
-// Easiest fix: add a space in the source. Adding "." to the opener set would
-// mishandle closing-quote-after-period in normal dialogue ("Wait." she said.).
-// Ellipsis convention: write three ASCII periods ("...") in source, not the
-// Unicode "…" glyph. The monospaced font needs three separate periods to get
-// the correct wide appearance on screen. If a Unicode ellipsis slips in, it's
-// normalized to "..." at the end of both format functions.
 
+/*
+The opener set in typeset, the start of the string, whitespace, an em dash, a Unicode ellipsis, and ( [ {, is what flags a " or ' as an opening quote rather than a closing one. When adding quotes, eyeball the render: two close-style glyphs where an open and close pair belongs mean the character before the quote isn't in the opener set. The likely offenders are a three-period ellipsis with no trailing space, as in ...'yes', a colon or semicolon with no space, as in said:"yes", and a quotation nested three deep, since there are only two levels of glyphs. The easiest fix is a space in the source. Adding a period to the opener set would mishandle a closing quote after a period in ordinary dialogue, as in "Wait." she said.
+
+Write an ellipsis as three ASCII periods in the source, not the Unicode glyph. The monospaced font needs three separate periods for the right wide look on screen, and a Unicode ellipsis that slips in becomes three periods at the end of typeset.
+*/
 const quoteList = quoteBlock
 	.trim()
 	.split(/\n\s*\n/)
 	.map(block => {
-		const lines = block.split('\n').map(l => l.trim())
+		let lines = block.split('\n').map(line => line.trim())
 		return {
-			text: formatQuote(lines[0]),
+			text: typeset(lines[0], '\u2018', '\u2019'),
 			author: lines[1],
 			url: lines[2],
-			context: formatContext(lines[3]),
+			context: typeset(lines[3], '\u201C', '\u201D'),
 		}
 	})
 
-// Squirrel3 noise function — Squirrel Eiserloh, GDC 2017 "Math for Game
-// Programmers: Noise-Based RNG". Stateless, indexed pseudo-random: given
-// the same i, it always returns the same uint32, but small changes in i
-// produce wildly different outputs via the multiply/xor-shift avalanche
-// steps. The hex constants are large primes chosen for good bit mixing —
-// don't change them. squirrel3() accepts an optional seed for varying the
-// permutation; we don't pass one because adding or removing a quote
-// already changes quoteList.length, which reshuffles the modulo-pick.
-
+/*
+Squirrel3 is a noise function, from Squirrel Eiserloh's talk at GDC 2017, "Math for Game Programmers: Noise-Based RNG." It's stateless, indexed pseudo-randomness: the same i always gives the same unsigned 32-bit number, but small changes in i give wildly different ones, through the multiply and xor-shift avalanche steps. The hex constants are large primes chosen for good bit mixing, so leave them as they are. squirrel3 takes an optional seed to vary the permutation, and we don't pass one, because adding or removing a quote already changes quoteList.length, which reshuffles the pick.
+*/
 function spin(i) {
 	return squirrel3(i) % quoteList.length
 }
 function squirrel3(i, seed = 0) {
-	let n = i | 0                 // coerce index to int32
-	n = Math.imul(n, 0xB5297A4D)  // mix 1: multiply by large prime (Squirrel3 constant)
-	n = (n + seed) | 0            // fold seed into the state
-	n ^= n >>> 8                  // avalanche: xor high bits into low
-	n = (n + 0x68E31DA4) | 0      // mix 2: add large prime (Squirrel3 constant)
-	n ^= n << 8                   // avalanche: xor low bits into high
-	n = Math.imul(n, 0x1B56C4E9)  // mix 3: multiply by large prime (Squirrel3 constant)
-	n ^= n >>> 8                  // final avalanche
-	return n >>> 0                // coerce to uint32
+	let n = i | 0                 //coerce the index to a 32-bit integer
+	n = Math.imul(n, 0xB5297A4D)  //mix 1: multiply by a large prime, a Squirrel3 constant
+	n = (n + seed) | 0            //fold the seed into the state
+	n ^= n >>> 8                  //avalanche: xor high bits into low
+	n = (n + 0x68E31DA4) | 0      //mix 2: add a large prime, a Squirrel3 constant
+	n ^= n << 8                   //avalanche: xor low bits into high
+	n = Math.imul(n, 0x1B56C4E9)  //mix 3: multiply by a large prime, a Squirrel3 constant
+	n ^= n >>> 8                  //final avalanche
+	return n >>> 0                //coerce to an unsigned 32-bit integer
 }
 
-const day = Math.floor(Date.now() / Time.day)  // UTC day number
-const quote = quoteList[spin(day)]
+let day = Math.floor(Date.now() / Time.day)//the UTC day number, the same for every visitor until midnight UTC
+let quote = quoteList[spin(day)]
 
 </script>
 <template>

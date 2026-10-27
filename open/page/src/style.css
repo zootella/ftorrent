@@ -12,6 +12,7 @@
 	font-family: 'Monaspace Krypton';
 	font-style: normal;
 	font-weight: 100 900;
+	font-display: swap;
 	src: url('/fonts/monaspace-krypton.woff2') format('woff2');
 }
 
@@ -19,10 +20,12 @@
 	font-family: 'Monaspace Radon';
 	font-style: normal;
 	font-weight: 100 900;
+	font-display: swap;
 	src: url('/fonts/monaspace-radon.woff2') format('woff2');
 }
 
 :root {
+	color-scheme: light dark; /* the browser draws its own parts, like scrollbars, in the system's light or dark to match the page */
 	--text: #333;
 	--text-muted: #888;
 	--muted-weight: 500;
@@ -40,16 +43,21 @@
 body {
 	font-family: Verdana, sans-serif;
 	color: var(--text);
-	background: var(--bg);
 }
 
-@media (max-width: 480px) {
-	html, body {
-		background: #000;
-	}
-	#app {
-		background: var(--bg);
-	}
+/*
+Where a browser bounces at the ends of a page, as on a Mac trackpad or an iPhone, pulling past either end opens a gap the browser fills with one color for both ends, the root's background. So the page paints its own color on #app, and the root's color follows the reader: black in the top half of the scroll, so pulling down shows more of the space the globe turns in, and the strip behind an iPhone's Dynamic Island stays black; the page color in the bottom half, so pulling up shows more page below the footer. Page.vue switches it at the halfway point, well before either end. html and body both carry it, since browsers differ on which of the two the gap is drawn from.
+*/
+html, body {
+	background: #000;
+}
+html.lower, html.lower body {
+	background: var(--bg);
+}
+#app {
+	background: var(--bg);
+	min-height: 100vh; /* the page color reaches the bottom of the window even when the page is shorter than it, rather than ending at the footer above the black root */
+	display: flow-root; /* keeps the footer's bottom margin inside #app, so the root can't show as a band below it */
 }
 
 h1, h2, h3 {

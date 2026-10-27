@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import {ref} from 'vue'
 
 const props = defineProps({
 	href: String,
@@ -41,7 +41,6 @@ async function copy() {
 }
 
 .url-text {
-	overflow-wrap: break-word;
 	word-break: break-all;
 	font-variant-ligatures: none;
 }
@@ -66,9 +65,6 @@ async function copy() {
 
 @media (max-width: 480px) {
 	.url-row {
-		font-size: 1rem;
-	}
-	.url-copy {
 		font-size: 1rem;
 	}
 }

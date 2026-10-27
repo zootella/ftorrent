@@ -5,17 +5,17 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 # Public Tracker Dashboard Front End
 
-> Prepared by [Claude Code](https://claude.ai/code) using Opus 4.6
+> Prepared by [Claude Code](https://claude.ai/code) using Opus 5.5
 > <br>Created: 2026-Apr
-> <br>Last reviewed: 2026-Apr
+> <br>Last reviewed: 2026-Oct
 > <br>[Vue](https://vuejs.org/): 3.5
 > <br>[Vite](https://vite.dev/): 8.0
 > <br>Node: 22
 > <br>[three.js](https://threejs.org/): 0.183
 
-The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application that renders `page.json` — a small file the gauge container writes once a minute with uptime and performance statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) — as a panel of numbers. The page is built on a development machine and deployed as static files served by the reverse proxy on the host, so at request time nothing runs on the server except the proxy handing back pre-rendered HTML, JS, and the JSON. It's the service's public face — a quick check that the trackers are running, and a read of what they're doing.
+The dashboard at [open.ftorrent.com](https://open.ftorrent.com/) is a Vue + Vite single-page application that renders `page.json` — a small file the gauge container writes once a minute with uptime and performance statistics from the three Aquatic tracker containers (UDP, HTTP, WebSocket) and the size of the DHT bootstrap node's routing tables on IPv4 and IPv6 — as a panel of numbers. The page is built on a development machine and deployed as static files served by the reverse proxy on the host, so at request time nothing runs on the server except the proxy handing back pre-rendered HTML, JS, and the JSON. It's the service's public face — a quick check that the trackers are running, and a read of what they're doing.
 
-Three visual elements give the page its character. First, a view of the Earth from space uses NASA's public-domain [Blue Marble](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/) composites rendered on a sphere with [three.js](https://threejs.org/), without borders or labels; the globe turns at Earth's actual rate of one rotation per day, and the texture swaps each month so the season on screen is the season right now — what we're after is the view astronauts call the *overview effect*. Second, the counters — UDP, HTTP, and WebRTC on IPv4 and IPv6 — arrive from `page.json` as 24-hour totals and then advance from there in a *numeric rate animation*: each increment is computed from a Poisson process at the real traffic's average rate, so the digits move the way the server is responding to actual requests. The starting values are real; the pulse is simulated, and resets every 10 minutes. And third, a quote of the day, rotated deterministically so every visitor on a given day sees the same one. Drawn from a curated research pull, quotes span from antiquity to the present on themes of free expression, shared knowledge, open networks, and the interconnection of humanity — drawn from philosophers, inventors, activists, scientists, legal texts, and sacred traditions across every inhabited continent.
+Three visual elements give the page its character. First, a view of the Earth from space uses NASA's public-domain [Blue Marble](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/) composites rendered on a sphere with [three.js](https://threejs.org/), without borders or labels; the globe turns at Earth's actual rate of one rotation per day, leans with the seasons, and swaps its texture each month, so the season on screen is the season right now — what we're after is the view astronauts call the *overview effect*. Second, the counters — UDP, HTTP, and WebRTC on IPv4 and IPv6 — arrive from `page.json` as 24-hour totals and then advance from there in a *numeric rate animation*: each increment is computed from a Poisson process at the real traffic's average rate, so the digits move the way the server is responding to actual requests. The starting values are real; the pulse is simulated, and resets every 10 minutes. And third, a quote of the day, rotated deterministically so every visitor on a given day sees the same one. Drawn from a curated research pull, quotes span from antiquity to the present on themes of free expression, shared knowledge, open networks, and the interconnection of humanity — drawn from philosophers, inventors, activists, scientists, legal texts, and sacred traditions across every inhabited continent.
 
 ## Development
 
@@ -23,6 +23,7 @@ Three visual elements give the page its character. First, a view of the Earth fr
 pnpm install     # from the monorepo root, installs all workspaces
 cd open/page
 pnpm dev     # starts Vite dev server with hot reload
+pnpm dev --host  # the same, reachable from a phone on the local network
 pnpm build   # produces dist/ for deployment
 pnpm preview # serves the built dist/ locally for testing
 ```
@@ -39,7 +40,7 @@ Production (server)
   Proxy serves from  /opt/open.ftorrent.com/data/public/page.json   ← written by gauge container every minute
 ```
 
-The build carries no `page.json` at all. `vite.config.js` answers `/page.json` only while serving, reading the sample from the gauge's folder at request time, so the server's static files never hold one to serve in place of the gauge's live copy, and the upload is the same as every other site's.
+The build carries no `page.json` at all. `vite.config.js` answers `/page.json` only while serving, reading the sample from the gauge's folder at request time, so the server's static files never hold one to serve in place of the gauge's live copy, and the upload is the same as every other site's. If the fetch fails, the page mounts without its panel, keeping the globe, the announce URLs, and the quote, which need none of it.
 
 ## Deployment
 
@@ -76,7 +77,7 @@ After scaffolding, we cleaned up:
 
 - **Removed** `.gitignore` — the monorepo root's `.gitignore` already covers `node_modules/`, `dist/`, `.DS_Store`, and everything else the scaffolder's version included
 - **Removed** `README.md` — replaced by this guide
-- **Removed** `jsconfig.json` — editor convenience for the `@/` import alias; not needed for building or running
+- **Removed** `jsconfig.json` — editor convenience for the `@/` import alias; not needed for building or running. The alias itself left `vite.config.js` later, since nothing imports through it
 - **Removed** `.vscode/` — editor-specific settings
 - **Merged** `package.json` — combined the scaffolder's `dependencies` and `devDependencies` with our workspace metadata (`name: "open-page"`, `description`, `homepage`, `version: "0.1.0"`)
 - **Removed** `engines` field from `package.json` — the monorepo root already requires Node 22+, which satisfies Vite 8's minimum
@@ -89,7 +90,7 @@ open/page/
 ├── package.json       Dependencies and scripts
 ├── vite.config.js     Vite + Vue plugin configuration, and the dev-only answer for /page.json
 ├── src/
-│   ├── main.js        Fetches page.json, then creates and mounts the Vue app
+│   ├── main.js        Fetches page.json, then creates and mounts the Vue app, without the panel when the fetch fails
 │   ├── style.css      Tailwind import, @font-face declarations, base styles
 │   ├── App.vue        Root component
 │   └── components/    Vue components (Page, Panel, Space, Quote, Url)
@@ -137,9 +138,21 @@ magick world.topo.bathy.200404.3x21600x10800.jpg -resize 8192x4096! -quality 80 
 
 The same command was run for every month, writing `jan.jpg` through `dec.jpg` into `public/earth/`. Each result is around 3 MB — sharp on retina displays at the ISS-arc zoom level, well within WebGL texture size limits on all modern GPUs.
 
-What we're after is the view astronauts call the *overview effect* — the real Earth, seen from far enough away to take it in whole. Not Google Earth. You can't grab the globe and spin it. There's no zoom, no pin, no tooltip. It turns at its own pace — one full rotation per day, the same as the real Earth — and if you want to see the other side, you wait twelve hours. The texture swaps each month, so winter months show snow reaching further south and summer months show more green vegetation in the temperate bands; if you want to see the Sahara in January, you wait until January.
+**Drawing it.** `Space.vue` sets up the scene and keeps it current:
 
-The lighting makes the same point. The sun sits directly behind the viewer's head, which means the point at the center of the globe is wherever it's solar noon *right now*. A visitor in the western hemisphere who wants to see Asia in daylight doesn't click and drag — they come back in half a day, or they book a flight. The Earth has weight and rigidity: wait twelve hours, wait six months, travel thousands of miles. That's the opposite of the immediate gratification of a spinnable virtual globe, and it's the right centerpiece for a page about a service that runs on its own, at its own pace, doing its thing.
+- The spin and the tilt read one clock. The spin brings the longitude where it's noon to the front, and the tilt is the sun's declination, the latitude where it's overhead, from the U.S. Naval Observatory's formula for the sun's approximate position.
+- The globe is a sphere of 128 by 128 segments, so its outline stays within a pixel of a true circle even across a wide retina window, under one light from the upper right and a dim ambient fill.
+- The canvas draws at the screen's full pixel density, 3× on an iPhone, and refits on every resize and when the window moves to a screen of another density.
+- The texture uses the graphics card's anisotropic filtering, which keeps land and coastlines sharp near the globe's edge, where the surface turns away from the viewer and most of the banner is.
+- A few lines added to the globe's shader fade its outermost pixel into the black of space, smoothing the long, shallow arc where the renderer's own antialiasing leaves steps.
+- It redraws six times a second. Each redraw moves the surface a small fraction of a pixel; at once a second those shifts read as a pulse, and at six they're smooth. A sixth of a second is a whole number of display frames at 30, 60, 90, 120, and 144 Hz, so the cadence stays even.
+- Three constants at the top of the file help with testing: `testMoment` shows any date and time, `timeScale` runs the clock faster, and `dragEnabled` lets a drag turn the globe.
+
+**A known hairline.** All twelve files carry a bright stripe on their 180°E edge from the North Pole down to about 82°N, which shows on the globe as a short hairline down the date line from the pole; it's in the images, not a rendering setting, and we've left it.
+
+What we're after is the view astronauts call the *overview effect* — the real Earth, seen from far enough away to take it in whole. Not Google Earth. You can't grab the globe and spin it. There's no zoom, no pin, no tooltip. It turns at its own pace — one full rotation per day, the same as the real Earth — and if you want to see the other side, you wait twelve hours. It leans with the seasons, too: the tilt follows the latitude where the sun is overhead, so in June the view tips south toward the warm latitudes, and in December it looks down onto the Arctic ice. The texture swaps each month, so winter months show snow reaching further south and summer months show more green vegetation in the temperate bands; if you want to see Scandinavia green, you wait for June.
+
+The rotation makes the same point. The globe turns with the real Earth, so the point at the center is wherever it's noon *right now*; the light from the upper right is there to show the globe's shape, not to stand for the sun. A visitor in the western hemisphere who wants to see Asia in daylight doesn't click and drag — they come back in half a day, or they book a flight. The Earth has weight and rigidity: wait twelve hours, wait six months, travel thousands of miles. That's the opposite of the immediate gratification of a spinnable virtual globe, and it's the right centerpiece for a page about a service that runs on its own, at its own pace, doing its thing.
 
 ## Numeric Rate Animation
 
@@ -147,7 +160,7 @@ The six counters on the panel — UDP/HTTP/WebRTC over IPv4 and IPv6 — show 24
 
 ### Poisson, briefly
 
-Tracker events arrive independently, at a roughly constant average rate, with no memory of one another. That's the textbook setup for a Poisson process: the number of events in any window of length *t* is Poisson-distributed with mean λ = *rt*, where *r* is the long-run average rate. Each counter has its own *r*, derived from its 24-hour total: `rate = recorded / time_day` events per millisecond.
+Tracker events arrive independently, at a roughly constant average rate, with no memory of one another. That's the textbook setup for a Poisson process: the number of events in any window of length *t* is Poisson-distributed with mean λ = *rt*, where *r* is the long-run average rate. Each counter has its own *r*, derived from its 24-hour total: `recorded / Time.day` events per millisecond.
 
 To advance a counter by *t* milliseconds, we draw a sample from Poisson(λ = *r·t*) and add it. That's the whole simulation. The reason to draw rather than just add `r·t` is that `r·t` is a smooth average, and a smooth average looks dead — what makes activity feel alive is the variance, the runs and gaps that a real Poisson process actually produces.
 
@@ -156,7 +169,7 @@ Our `poissonSample` uses two algorithms depending on λ:
 - **λ < 20: Knuth's multiplication method.** Multiply uniform random numbers together until the product drops below `e^(-λ)`; the count of multiplications minus one is the sample. Exact, no approximation, but the loop length grows with λ — which is why we hand off to the next algorithm above 20.
 - **λ ≥ 20: normal approximation via Box-Muller.** A Poisson(λ) with large λ is well-approximated by a Normal(λ, λ), so we draw a standard normal (one Box-Muller transform of two uniforms) and rescale. Constant-time, and the approximation error is invisible at counter scale.
 
-In practice the per-frame bracket (1k–2M events per day, drawing every ~16 ms) always lands in Knuth's regime — λ stays under 1, so the loop fires zero or one time. The drumbeat bracket (>2M events per day, drawing every 500 ms) starts in Knuth's regime at λ ≈ 11.6 and crosses into Box-Muller around 3.4 million events per day, where λ for a 500 ms window hits 20. Counters busier than that get the approximation; everything else gets the exact draw.
+In practice the per-frame bracket (1k–2M events per day, drawing every 8 to 16 ms) always lands in Knuth's regime — λ stays under 1, so the loop fires zero or one time. The drumbeat bracket (>2M events per day, drawing every 500 ms) starts in Knuth's regime at λ ≈ 11.6 and crosses into Box-Muller around 3.4 million events per day, where λ for a 500 ms window hits 20. Counters busier than that get the approximation; everything else gets the exact draw.
 
 ### The three brackets
 
@@ -164,7 +177,7 @@ We pick how to animate each counter from its recorded daily total. Three regimes
 
 **Under 1,000 events per day — no animation.** At this scale a single simulated event is a visible jump on a number the viewer might read as a precise figure. Adding one would feel like an error rather than a sign of life. So we just print the recorded number and leave it.
 
-**1,000 to 2 million per day — per-frame Poisson.** This is the most pleasing range. Every animation frame (about 60 times a second) we draw a Poisson sample for the elapsed time and add it. The result looks like soap bubbles surfacing — bursts and gaps, brief flurries followed by held breaths, the hundreds digit settling for a beat and then turning over twice in a row. It's the mathematical signature of independent arrivals, and the eye recognizes it as alive in the same way it recognizes a campfire.
+**1,000 to 2 million per day — per-frame Poisson.** This is the most pleasing range. Every animation frame, 60 times a second on most displays and 120 on the fastest, we draw a Poisson sample for the elapsed time and add it. The result looks like soap bubbles surfacing — bursts and gaps, brief flurries followed by held breaths, the hundreds digit settling for a beat and then turning over twice in a row. It's the mathematical signature of independent arrivals, and the eye recognizes it as alive in the same way it recognizes a campfire.
 
 **Over 2 million per day — drumbeat Poisson.** Up here the per-frame draw would be so large each tick that the ones and tens digits would blur into a smear, and the counter would look like a slot machine spinning. So we slow the draw to once every 500 ms — the same half-second drumbeat the colon in the clock blinks to. Tens still pop visibly, the machine looks composed and in control, and the viewer's eye gets a moment to settle on each new number before it changes.
 
@@ -179,7 +192,7 @@ The animation runs on `requestAnimationFrame`, the browser's render-synchronized
 - **Tab-hidden pause.** When the tab loses focus, the browser stops calling our rAF handler. We do exactly zero work in a backgrounded tab — no timers firing, no battery drain, no wasted samples that nobody can see.
 - **Render-aligned updates.** Vue's reactivity batches DOM writes to animation frames anyway, so our once-per-frame number updates land at exactly the moment the browser is about to paint. No extra reflows, no jank.
 
-When a hidden tab is brought back to the foreground, we don't want to pretend nothing happened — that would visibly stall the counters for a moment. So on the first beat after thaw, we count how many drumbeats *should* have elapsed during the hide and draw a single Poisson(λ = *r · drum · beats_elapsed*) sample to cover the whole gap. This is statistically identical to having ticked each beat separately: the sum of N independent Poisson(λ) random variables is itself Poisson(N·λ). One draw, no loop, mathematically honest.
+When a hidden tab is brought back to the foreground, we don't want to pretend nothing happened — that would visibly stall the counters for a moment. So on the first beat after thaw, we count how many drumbeats *should* have elapsed during the hide and draw a single Poisson(λ = *r · drumDuration · beatsSince*) sample to cover the whole gap. This is statistically identical to having ticked each beat separately: the sum of N independent Poisson(λ) random variables is itself Poisson(N·λ). One draw, no loop, mathematically honest.
 
 Vue's DOM diffing handles the rest. The clock's hour and minute spans only update when those `ref`s actually change — so the hour repaints once an hour, the minute once a minute, and only the colon and counters repaint continuously. The result is a page that feels alive but costs almost nothing to run.
 

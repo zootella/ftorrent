@@ -1,8 +1,28 @@
 <script setup>
+import {inject, onMounted, onUnmounted} from 'vue'
 import Space from './Space.vue'
 import Url from './Url.vue'
 import Panel from './Panel.vue'
 import Quote from './Quote.vue'
+
+const page = inject('page')//null when page.json couldn't be read, which leaves out the panel
+
+//the root's color fills the gap when a browser bounces past either end of the page, black at the top and the page color at the bottom, and style.css says why it has to follow the reader. It switches at the halfway point of the scroll, well before either end
+function setRootColor() {
+	let root = document.documentElement
+	root.classList.toggle('lower', window.scrollY > (root.scrollHeight - window.innerHeight) / 2)//a toggle that matches the class already there changes nothing, so the root repaints only when the reader crosses the middle
+}
+
+onMounted(() => {
+	setRootColor()
+	window.addEventListener('scroll', setRootColor, {passive: true})//passive tells the browser this listener never cancels a scroll, so scrolling never waits on it
+	window.addEventListener('resize', setRootColor)//a resize moves the middle
+})
+
+onUnmounted(() => {
+	window.removeEventListener('scroll', setRootColor)
+	window.removeEventListener('resize', setRootColor)
+})
 </script>
 
 <template>
@@ -18,7 +38,7 @@ import Quote from './Quote.vue'
 	</div>
 
 	<div class="stack">
-		<Panel />
+		<Panel v-if="page" />
 		<div class="sticker">
 			<img src="/images/inside.png" alt="ftorrent sticker" />
 		</div>
@@ -27,8 +47,8 @@ import Quote from './Quote.vue'
 	<Quote />
 
 	<div class="footer">
-		<a href="https://ftorrent.com">www.ftorrent.com</a>
-		<a href="https://github.com/zootella/ftorrent/tree/master/open">we ♥{{ '\uFE0E' }} open source</a><!-- U+FE0E after the heart is Variation Selector-15: "render the previous glyph as text, not emoji." Without it, mobile browsers upgrade ♥ to a red color emoji. -->
+		<a href="https://ftorrent.com">ftorrent.com</a>
+		<a href="https://github.com/zootella/ftorrent/tree/master/open">Fork me on GitHub</a>
 	</div>
 </template>
 
