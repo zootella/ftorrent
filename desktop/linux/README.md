@@ -33,6 +33,7 @@ cd desktop/linux
 pnpm build           # the four packages: images, staging, three builds, three checks
 pnpm hash            # stage them under their published names and write the sidecars
 pnpm upload          # send each package and then its sidecar to ftorrent.com
+pnpm build-hash-upload  # all three in a row, stopping at the first that fails, for a build you're sure of
 ```
 
 On an Apple silicon Mac, `pnpm build` takes about seven minutes with nothing else running, measured 2026-10-15: the native arm64 build takes two and a quarter and finishes under the emulated x86-64 one, which takes six and a quarter, and the Flatpak and the checks add half a minute. Every command prints the time each step took when it finishes, so a slower run says where the time went.

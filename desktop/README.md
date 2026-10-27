@@ -45,6 +45,8 @@ pnpm installer    build the installer, all the way through the app to the dmg on
 pnpm reveal       open the file manager on that installer, to install it as a person would
 pnpm hash         stage what is built under its published name and write its sidecar, building nothing
 pnpm upload       check what is staged against its sidecar, then send the package and its sidecar to ftorrent.com
+pnpm installer-hash-upload-reveal
+                  installer, hash, upload, and reveal in a row, stopping at the first that fails, for a build you're sure of
 pnpm icons        regenerate every platform's icons from the SVG sources
 pnpm certificate  find, make, or import the Mac's signing identity
 ```

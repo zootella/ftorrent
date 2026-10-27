@@ -8,7 +8,7 @@
 		"build": "node build.js build",
 		"hash": "node ../scripts.js hash --source=linux",
 		"upload": "node --env-file-if-exists=../../.env ../scripts.js upload --source=linux",
-
+		"build-hash-upload": "pnpm build && pnpm hash && pnpm upload",
 		"build-images": "node build.js build-images",
 		"build-distro": "node build.js build-distro",
 		"build-flatpak": "node build.js build-flatpak",
