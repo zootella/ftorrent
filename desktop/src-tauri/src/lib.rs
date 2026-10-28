@@ -13,9 +13,9 @@ Rust grows when the operating system is the only one who can do the thing, or wh
 
 The test for a new command is to describe it without naming a ftorrent feature. "Lock this folder" passes. "Lock the download folders in the settings, and let go of the ones no longer listed" fails, and the second half of it belongs to the page. A command that fails the test gets split: the general operation stays here, and the decision goes up.
 
-A command also takes one thing: one path, one lock, one value, one line. A list stays in the page, which calls down once per item and owns the order and how many are in flight, so no batch command grows here. The rule is about this boundary and nothing past it: engine_send carries one line, but that line is whatever the page built, and where libtorrent itself takes many things in a single call, the engine makes that call. A command takes a list only on purpose. net_stun asks several STUN servers from one socket at once, because the socket is the one thing, and asking from it at the same moment is the measurement itself, which the page can't put together from calls that each open a socket of their own; net.rs has the long version. And dialog_open and dialog_save take the file extensions their box offers, because they are one setting of the one box, handed to the system whole.
+A command also takes one thing: one path, one lock, one value, one line. A list stays in the page, which calls down once per item and owns the order and how many are in flight, so no batch command grows here. The rule is about this boundary and nothing past it: engine_send carries one line, but that line is whatever the page built, and where libtorrent itself takes many things in a single call, the engine makes that call. A command takes a list only on purpose. net_stun asks several STUN servers from one socket at once, because the socket is the one thing, and asking from it at the same moment is the measurement itself, which the page can't put together from calls that each open a socket of their own; net.rs has the long version, and udp_stun takes a list for the same reason, from a socket the page holds open. And dialog_open and dialog_save take the file extensions their box offers, because they are one setting of the one box, handed to the system whole.
 
-A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, the menu bar's enabling, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, dialog.rs, locks.rs, login.rs, net.rs, firewall.rs, process_run, process_output, process_start, process_open, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line, log_stick, and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
+A command that waits runs its body on the blocking pool. Tauri runs a plain command on the thread that runs the window, so a command that answers from memory stays plain, and that is most of them: the engine's, the instance's, paths, window, desktop, the menu bar's enabling, udp_close, and the registry, which Windows serves from memory. A command that waits, on the disk, on the network, on a system daemon, or on another program, is an async fn that hands its body to run_blocking below, so a slow drive never holds the window, and a panic in it comes back to the page as an error rather than an abort or a promise that never settles. That is disk.rs, dialog.rs, locks.rs, login.rs, net.rs, udp.rs apart from udp_close, firewall.rs, process_run, process_output, process_start, process_open, log_start, and launch_opens; launch_claim is async on its own terms, waiting on a channel, and log_line, log_stick, and process_id stay plain; each file says why. The essay above disk_readdir in disk.rs has the whole case, and what it costs.
 */
 
 mod disk;//compile disk.rs as a module named disk: file commands the page calls, thin wrappers over std::fs
@@ -32,6 +32,7 @@ mod log;//and log.rs: lines from anywhere, appended to a file as they happen, wh
 mod locks;//and locks.rs: exclusive locks on files, taken and released for the page
 mod window;//and window.rs: the one window, made hidden for the page to place and show, and the version of the web view inside it
 mod net;//and net.rs: an https address fetched for the page, its body answered as text or saved to a file, the address this machine would send from to reach another, what STUN servers saw requests from one socket arrive from, every address a name resolves to, the machine's network interfaces, what a router answers NAT-PMP's public address request and PCP's announce, and a router found by UPnP with its external address, its port mappings, its IPv6 firewall's status, and its device description
+mod udp;//and udp.rs: udp sockets held open between commands, asked STUN from, sent from, and received on, for the page
 mod dialog;//and dialog.rs: the system's boxes for opening files, choosing a folder, and saving a file
 mod process;//and process.rs: other programs, run and waited for, with or without what they printed, started and let go, or asked to open a file or an address the way a double-click would, and this process's own id
 mod install;//and install.rs: a newer copy putting itself in place of this one, on a mac, in the moment before it would take the lock
@@ -52,6 +53,7 @@ pub fn run() {
 		.manage(engine::Engine::default())//the engine's process and status, shared state any command can reach
 		.manage(instance::Instance::default())//this copy's lock, and what has reached it
 		.manage(locks::Locks::default())//the file locks this process holds for the page, kept open so they stay held
+		.manage(udp::Sockets::default())//the udp sockets this process holds open for the page, by number
 		.manage(desktop::ExitFiles::default())//text to write on the way out, by path
 		.manage(window::Revealed::default())//whether the page has placed the window yet
 		.manage(login::Login::default())//whether the system started this process at login
@@ -107,6 +109,11 @@ pub fn run() {
 				net::net_upnp_mappings,
 				net::net_upnp_firewall,
 				net::net_upnp_description,
+				udp::udp_open,//and in udp.rs
+				udp::udp_stun,
+				udp::udp_send,
+				udp::udp_receive,
+				udp::udp_close,
 				dialog::dialog_open,//and in dialog.rs
 				dialog::dialog_save,
 				process::process_id,//and in process.rs

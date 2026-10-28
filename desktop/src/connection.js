@@ -5,6 +5,7 @@ import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netPcpAnnounce, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall} from './net.js'
+import {udpOpen, udpStun, udpReceive, udpClose} from './udp.js'
 import {processOutput} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
@@ -18,7 +19,9 @@ The Connection tab's checks: what this machine and the network say about its con
 
 For each family, IPv4 and IPv6, a run asks three things. The system says which of the machine's addresses it would send from to reach an address beyond the local network, which takes no packet at all. A reflector at ip4.ftorrent.com or ip6.ftorrent.com answers the address the request arrived from; each name has an address record of one family only, so the request can only travel over that family, and the pair of answers is which families reach the internet from here. Behind a home router the two IPv4 answers differ, since the router translates; on IPv6 they're usually the same address, since nothing does.
 
-And STUN, over UDP, which is what a peer connection travels on: our server and Cloudflare's, asked at once from one local port, the way Tailscale's netcheck asks its servers, each answering the address and port it saw the request arrive from. A router keys the mapping it makes on the inside address and port, so when both servers see the same public port, it keeps one mapping for every destination, endpoint-independent mapping, which hole punching needs; a new port for each server is endpoint-dependent, the symmetric case, where hole punching fails. The address STUN saw should be the one the reflector saw, and when it isn't, something carries one path and not the other, a VPN, a proxy, or a relay. On IPv6 these comparisons are of the /64, the network, since a machine can send from more than one of its temporary addresses, and a Mac sometimes from one it has already deprecated.
+And STUN, over UDP, which is what a peer connection travels on: our server, moon's, and Cloudflare's, three places on the internet, asked at once from one local port, the way Tailscale's netcheck asks its servers, each answering the address and port it saw the request arrive from. A router keys the mapping it makes on the inside address and port, so when every server sees the same public port, it keeps one mapping for every destination, endpoint-independent mapping, which hole punching needs; a new port for each server is endpoint-dependent, the symmetric case, where hole punching fails. The address STUN saw should be the one the reflector saw, and when it isn't, something carries one path and not the other, a VPN, a proxy, or a relay. On IPv6 these comparisons are of the /64, the network, since a machine can send from more than one of its temporary addresses, and a Mac sometimes from one it has already deprecated.
+
+And filtering, the other half of whether a hole punch can work: which outside addresses the router lets reach a port it has mapped. RFC 4787 names three kinds. Endpoint-independent filtering lets in anyone once the socket has sent anything; address-dependent lets in only an address the socket has sent to, from any port there; and address-and-port-dependent only the exact address and port. Telling them apart takes a socket that stays open across several steps, and a server that sends from somewhere the socket hasn't, which is moon. Each of two tests opens a socket of its own through udp_open, asks one STUN server from it which public address and port it has, then asks moon over HTTPS to poke that port, three small UDP packets carrying a token the panel makes up, while it receives on the socket. The first test's socket asks our STUN server alone, so moon's poke comes from an address it has never sent to, and arriving is endpoint-independent filtering. The second's asks moon's STUN server, so moon's poke comes from the address it just sent to, at another port: arriving there and not in the first test is address-dependent, and held back there too is address-and-port-dependent. moon pokes only the address the request for a poke came from, so nobody can aim it at anyone else, and that isn't always where the socket is: over IPv6 the request can leave from another of the machine's temporary addresses, and on cellular from another of the carrier's public IPv4 addresses. The poke's answer names where it went, and the reading sets that beside where STUN saw the socket, so a poke sent elsewhere reads as that and never as filtering. A firewall on this machine filters too, and the reading names it when it may be what held a poke back. The two tests need nothing from each other, so they run side by side, each family's beside the other's and beside every other check from the start of the run, and a receive that hears nothing waits its whole four seconds, so the run waits on the filtering last.
 
 And the machine itself, which takes no packet beyond a name lookup. net_interfaces lists every interface with every address on it, the ones a person finds in Settings and wonders about along with the rest, and each address gets a few words from the ranges the standards set aside: private, link-local, global, and the others. That one call says less than a person needs, so on a Mac and Linux the panel also runs the tools the system ships: ifconfig and ip for what kind each IPv6 address is, temporary, stable, from DHCPv6, or deprecated, and how long it lasts; route and ip route for the gateway in each family; and on a Mac networksetup for the name Settings gives each interface, like Wi-Fi. Windows says all of it through net_interfaces itself, which is just as well, since its tools print in the system's language. The interface carrying the default route is the one holding the address the system says it sends from, and the address the reflector saw over IPv6 is usually one of the machine's own, a temporary one.
 
@@ -30,7 +33,7 @@ And the router, asked once the first wave of checks has named the gateway, since
 
 A check that asks once and waits for one answer gets checkSeconds to hear back. One round trip is tens of milliseconds, and a fetch over https is four, the name, the connection, the encryption, and the request, so around 200 milliseconds on a typical connection and around 600 across an ocean. The slowest ordinary connection, a satellite in geostationary orbit, has a round trip of 600 milliseconds, which puts a fetch near two and a half seconds, and a lost packet is sent again after a second. Four seconds covers all of those, and only a path that silently drops what it's sent waits that long, since no route, or a name with no address, fails at once whatever the limit. A check that waits longer by design gets its own time when it arrives. So a check ends one of three ways: an answer, in milliseconds; a failure that came back with its reason, like no route; or no answer in checkSeconds.
 
-A run asks every check at once and waits for the last, so it takes as long as its slowest check, at most checkSeconds. Then, for each STUN server whose name led somewhere, it asks the system which of the machine's addresses it would send from toward that server, which takes no packet, and over IPv6 can be a different one of the machine's addresses for each. That is the system's word and not a measurement: a Mac has sent HTTPS and STUN from a deprecated temporary address while saying, a moment later, that it would send from the current one, so the box gives both, and the address the server saw is on the line above. The box lists the checks in the same order every time, whatever order they finish in, so two runs line up line for line, and a family's one STUN call shows as a line for each server it asked, with everything net_stun saw of that server on the lines under it: where the request went, the address the system says it would send from, where the answer came from, the answer in hex, and each attribute in it by name with a few words on what it carries. An error is an answer like any other: the box shows its text, since a user on this tab is under the hood. The box keeps every run since the app started, oldest first, each starting with a line that says when it ran, which build, and on which platform, so a box pasted into a message or an issue says where its lines came from, and ends with every interface and every address on it, each with a few words on what it is.
+A run asks its first wave of checks at once and waits for the last, so that wave takes as long as its slowest check, at most checkSeconds. Then, for each STUN server whose name led somewhere, it asks the system which of the machine's addresses it would send from toward that server, which takes no packet, and over IPv6 can be a different one of the machine's addresses for each. That is the system's word and not a measurement: a Mac has sent HTTPS and STUN from a deprecated temporary address while saying, a moment later, that it would send from the current one, so the box gives both, and the address the server saw is on the line above. The box lists the checks in the same order every time, whatever order they finish in, so two runs line up line for line, and a family's one STUN call shows as a line for each server it asked, with everything net_stun saw of that server on the lines under it: where the request went, the address the system says it would send from, where the answer came from, the answer in hex, and each attribute in it by name with a few words on what it carries. An error is an answer like any other: the box shows its text, since a user on this tab is under the hood. The box keeps every run since the app started, oldest first, each starting with a line that says when it ran, which build, and on which platform, so a box pasted into a message or an issue says where its lines came from, and ends with every interface and every address on it, each with a few words on what it is.
 
 And the engine's session, which runs for as long as the user lets it rather than for four seconds. Start opens libtorrent's session at a random port from the dynamic range, the range Transmission picks its random port from, listening on every address in both families and joining the DHT through our bootstrap node and two others, with port mapping and local service discovery off. libtorrent reads every address as each address the machine has, loopback and link-local included, and opens a TCP socket and a UDP one on each; from each one that reaches beyond the machine it runs a DHT node with its own routing table, announces to the trackers, and learns the address peers see. With a torrent file opened, it also joins that swarm in upload mode, announcing and taking connections but downloading nothing, so strangers who find it through the trackers and the DHT dial in. While it runs, the page asks the engine once a second for the alerts libtorrent has posted and for its counters. A session in a busy swarm posts a hundred alerts a second, most of them peers tried and dropped and DHT lookups, so the box shows each kind of alert once, the first to arrive, timed from Start by when the page heard it, up to a second after it happened; the table counts every alert by kind, and the box gets the counts when the session stops. A connection in is the exception, and gets a line every time, saying whether the session had sent to that address first, through a DHT lookup or a connection it tried, or whether it's unsolicited. The DHT's routine messages, its bootstrap queries and pings, post no alert, so unsolicited means as far as the alerts show. The table keeps the readings too: which sockets opened, how many nodes the routing tables hold, in all by libtorrent's counter and in each by asking each DHT node, with the address it runs from and its node ID, since libtorrent's own DHT stats describe only one table, the addresses peers say they see, and how many strangers connected in over each family and how many of those were unsolicited, counted by alert, and by libtorrent's own counter. Behind a home router with no port mapping, strangers still reach the session, over both families and over uTP, which shares the session's UDP port with the DHT: each DHT message the session sends opens the router for that node's replies, and a node also in the swarm connects in through the opening. Whether the router lets in a stranger who was never sent anything is its filtering, which these alerts can't settle and Good7 measures. The session lives in the engine, not the tab, so it keeps running while the user looks elsewhere, which is why the box, the last run, and the session's readings are kept here rather than in the page. For the same reason the whole panel as Copy takes it, the table and then the box, is stuck to stick.txt beside the log as it changes, at most once a second, so it can be read from outside ftorrent while a session runs, whichever tab is showing.
 */
@@ -39,7 +42,10 @@ const checkSeconds = 4//how long a check that asks once has to hear back, the es
 const noAnswer = `no answer in ${checkSeconds} seconds`
 const reflectorLimit = 100//bytes; the reflector answers one address and a newline, at most 46
 const descriptionLimit = 64*Size.kb//a router's UPnP device description is a few kilobytes, its list of icons included
-const stunServers = [`stun.${urlHome}:3478`, 'stun.cloudflare.com:3478']//ours, then Cloudflare's, on a separate network, as the second vantage until our own second server takes its place
+const moonStun = `moon.${urlHome}:3478`//moon's, our second STUN server, at another place on the internet
+const stunServers = [`stun.${urlHome}:3478`, moonStun, 'stun.cloudflare.com:3478']//ours, moon's, and Cloudflare's: three places on the internet, two of them ours
+const pokePackets = 3//how many packets moon sends in a poke, as its Go service sets it, so a receive can stop once they're all in
+const pokeLimit = 1*Size.kb//bytes; moon's account of a poke is one small JSON object
 
 //192.0.2.1 and 2001:db8::1 are addresses set aside for documentation, by RFC 5737 and RFC 3849, so they name no one, and any address beyond the local network gets the same answer, the default route's
 const beyond = {4: '192.0.2.1', 6: '2001:db8::1'}
@@ -113,6 +119,45 @@ function _reflect(family) {
 function _stun(family) {
 	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, RFC 6335, a new one each run, so a mapping the router made for the last run can't answer for this one
 	return {kind: 'stun', family, port, asked: `STUN from port ${port}`, ask: () => netStun(stunServers, family, port, checkSeconds), read: bindings => ({success: true, value: bindings})}//net_stun has read each answer's bytes into an address already
+}
+
+//the filtering check for one family, as two tests side by side, every step of each a result for the box: the first test's socket asks our STUN server alone, and moon pokes the public address and port it saw, from moon's own address, which that socket has never sent to; the second's asks moon's STUN server, and moon pokes it from that same address and another port. Neither needs anything from the other, so neither waits for the other. _sayFiltering reads which pokes arrived
+async function _filtering(family) {
+	let tests = await Promise.all([[1, stunServers[0]], [2, moonStun]].map(([test, server]) => _filterTest(family, test, server)))
+	return tests.flat()//the first test's steps, then the second's
+}
+
+//one filtering test, on a socket opened for it alone and kept open across its steps: ask one STUN server from it, then have moon poke the public address and port the server saw, while the socket listens
+async function _filterTest(family, test, server) {
+	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, a new one each run, as the STUN check's
+	let opened
+	try {
+		opened = await udpOpen(family, port)
+	} catch (error) {//the bottom gate, as in _ask: a port already taken, or a family the machine has no address in
+		return [{kind: 'filter-open', family, test, asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
+	}
+	let stun = await _ask({kind: 'filter-stun', family, test, asked: `STUN ${server} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [server], checkSeconds), read: _readBinding})
+	let url = stun.success ? `https://ip${family}.moon.${urlHome}/poke?port=${stun.value.port}&token=${Data({random: 4}).base16()}` : ''//the public port STUN saw, and a token of our own, so a packet that arrives says which poke it came from
+	let [poke, receive] = await Promise.all([//at once, so the socket is already listening when the poke's packets arrive
+		_ask({kind: 'poke', family, test, asked: `GET ${url || `https://ip${family}.moon.${urlHome}/poke`}`, ask: () => url ? netGet(url, pokeLimit, checkSeconds) : Promise.reject('no public port from STUN to poke'), read: _readPoke}),
+		_ask({kind: 'receive', family, test, asked: `receive on port ${port}`, ask: () => url ? udpReceive(opened.socket, pokePackets, checkSeconds) : Promise.reject('no poke to wait for'), read: list => ({success: true, value: list})}),
+	])
+	udpClose(opened.socket)
+	return [stun, poke, receive]
+}
+
+//what a held socket's STUN call answered for its one server, read like one server's binding from net_stun: the binding, with the local port, when the server answered, and its error when it didn't
+function _readBinding(bindings) {
+	let b = {...bindings.servers[0], local: bindings.local}
+	if (b.error) return {success: false, outcome: b.error}
+	return {success: true, value: b}
+}
+
+//moon's account of a poke, one JSON object, {to, token, packets, sent, from_port, bytes, error}: where it sent, the token the packets carry, how many it meant to send and did, the port they left from, each one's size, and what stopped it; a poke that sent nothing fails with moon's reason
+function _readPoke(text) {
+	let a = JSON.parse(text)
+	if (a.sent == 0) return {success: false, outcome: `moon sent nothing${a.error ? `, ${a.error}` : ''}`}
+	return {success: true, value: a}
 }
 
 //a check of the machine's interfaces and every address on each
@@ -208,6 +253,7 @@ function _readAddress(family, text) {
 //ask every check once, and answer the run: when it started, this copy's version, each check's result in the order the box lists them, and the machine's interfaces and its firewall put together from them
 export async function connectionRun() {
 	let moment = Date.now()
+	let filtering = Promise.all([4, 6].map(_filtering))//each family's two tests, on sockets of their own, beside every other check from the start, since a poke that never arrives waits its whole four seconds
 	let [version, paths, engine] = await Promise.all([getVersion(), pathsStatus(), engineStatus()])//this copy's version, and where this copy and its engine are, which the firewall lists programs by
 	let results = (await Promise.all(_checks(paths, engine).map(_ask))).flatMap(_perServer)//all at once; Promise.all keeps the order it was given, whatever order they finish in
 	await Promise.all(results.filter(r => r.binding?.to).map(async r => { r.source = await _source(r.binding.to) }))//then the address this machine sends from toward each STUN server whose name led somewhere
@@ -216,14 +262,14 @@ export async function connectionRun() {
 	results.push(...await Promise.all([_natpmp(gateway), _pcp(gateway), _upnpSearch()].map(_ask)))//then the router, at the gateway the tools named for the two on port 5351, and by search for UPnP, all three at once
 	let found = results.find(r => r.kind == 'upnp')
 	results.push(...await Promise.all(_upnpReads(found.success ? found.value : null).map(_ask)))//then the reads of the gateway the search found
+	results.push(...(await filtering).flat())//and last the filtering, IPv4's two tests and then IPv6's
 	return {moment, version, results, machine, firewall: _firewall(results, paths, engine)}
 }
 
 //the address the system would send from toward a server's address and port, like [2606:4700:49::]:3478, as {success, value or outcome}
 async function _source(to) {
-	let address = to.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')//the address alone, without the port or an IPv6 address's brackets
 	try {
-		return {success: true, value: await netLocal(address)}
+		return {success: true, value: await netLocal(_addressOf(to))}
 	} catch (error) {//the bottom gate, as in _ask
 		return {success: false, outcome: String(error)}
 	}
@@ -262,7 +308,7 @@ function _perServer(r) {
 const late = Symbol('late')
 function _late() { return new Promise(resolve => setTimeout(() => resolve(late), checkSeconds*Time.second + Time.second/4)) }
 
-//the table's rows for a run, five for each family, five about the machine, and five about the router, blank before the first run
+//the table's rows for a run, six for each family, five about the machine, and five about the router, blank before the first run
 export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
@@ -273,6 +319,7 @@ export function connectionFacts(run) {
 			[`Public IPv${family} address`,  run ? _sayPublic(reflect, run.machine) : ''],
 			[`Public IPv${family} over UDP`, run ? _sayUdp(stuns, reflect)          : ''],
 			[`IPv${family} mapping`,         run ? _sayMapping(stuns)               : ''],
+			[`IPv${family} filtering`,       run ? _sayFiltering(run, family)       : ''],
 			[`IPv${family} gateway`,         run ? _sayGateway(family, run.machine) : ''],
 		)
 	}
@@ -326,7 +373,7 @@ function _sayCarrier(run) {
 		else likely = 'likely'
 	}
 	if (run.machine.some(i => i.routes.includes(4) && i.addresses.some(a => a.shared))) { likely = 'likely'; reasons.push('an address on the default route is in the shared address space') }
-	if (_sayMapping(run.results.filter(r => r.kind == 'stun' && r.family == 4)) == 'endpoint-dependent') reasons.push(`the IPv4 mapping is endpoint-dependent, which fits a carrier's translator, though some home routers do the same`)
+	if (_sayMapping(run.results.filter(r => r.kind == 'stun' && r.family == 4)).startsWith('endpoint-dependent')) reasons.push(`the IPv4 mapping is endpoint-dependent, which fits a carrier's translator, though some home routers do the same`)
 	let said = `${likely || 'unknown'}: ${reasons.join('; ')}`
 	if (likely == 'unlikely') said += `; address-plus-port sharing, where the carrier gives the router a public address and a slice of its ports, would pass every check here`
 	return said
@@ -387,13 +434,71 @@ function _sayUdp([ours], reflect) {
 	return said
 }
 
-//whether the two STUN servers saw one public port for the one local port
-function _sayMapping([first, second]) {
-	if (!first.success || !second.success) return 'unknown'
-	let [a, b] = [first.value, second.value]
-	if (a.port != b.port || !_sameNetwork(first.family, a.address, b.address)) return 'endpoint-dependent'
-	if (a.port == a.local) return 'endpoint-independent, port kept'//the router left the port as the machine chose it, or nothing translates at all
-	return 'endpoint-independent'
+//whether the STUN servers that answered saw one public port for the one local port, which takes two answers at least, and says how many answered when one didn't
+function _sayMapping(stuns) {
+	let answered = stuns.filter(r => r.success)
+	if (answered.length < 2) return 'unknown'
+	let [a] = answered.map(r => r.value)//the first answer, which every other is set against
+	let said = 'endpoint-independent'
+	if (answered.some(r => r.value.port != a.port || !_sameNetwork(r.family, r.value.address, a.address))) said = 'endpoint-dependent'
+	else if (a.port == a.local) said = 'endpoint-independent, port kept'//the router left the port as the machine chose it, or nothing translates at all
+	if (answered.length < stuns.length) said += `, by ${answered.length} of ${stuns.length} servers`
+	return said
+}
+
+//which of moon's two pokes reached its socket, read as the filtering, RFC 4787's three kinds. The first came from an address its socket had never sent to, so its arriving is endpoint-independent filtering. The second came from the address its socket had just sent to, at another port, so its being held back is address-and-port-dependent, and its arriving where the first didn't is address-dependent. A poke moon sent somewhere other than where STUN saw the socket says nothing about the socket, and the reading says where it went; and a firewall on this machine filters too, so the reading names it when it may be what held a poke back
+function _sayFiltering(run, family) {
+	let steps = run.results.filter(r => r.family == family && ['filter-open', 'filter-stun', 'poke', 'receive'].includes(r.kind))
+	let [first, second] = [1, 2].map(test => _readPoked(steps.filter(r => r.test == test)))
+	let said = 'unknown'
+	if (first.arrived) said = 'endpoint-independent'
+	else if (second.arrived === false) said = 'address-and-port-dependent'//held back even from the address the socket had just sent to, whatever the first test said; strict, since undefined means the test couldn't say
+	else if (first.arrived === false && second.arrived) said = 'address-dependent'
+	else if (first.arrived === false) said = 'not endpoint-independent'
+	else if (second.arrived) said = 'endpoint-independent or address-dependent'
+	let notes = [first.why, second.why].filter(Boolean)
+	if (first.arrived && second.arrived === false) notes.push(`the second poke didn't arrive though the first did, which no kind of filtering does, so its packets were most likely lost`)
+	let holding = _sayHolding(run.firewall)
+	if (holding && said != 'endpoint-independent') notes.push(holding)
+	return [said, ...notes].join('; ')
+}
+
+//one poke's test, its STUN, poke, and receive steps, read as whether the poke's packets reached the socket: {arrived} true or false, or {why} when the test can't say, as when its socket didn't open and the test is that one step
+function _readPoked(steps) {
+	if (steps[0].kind == 'filter-open') return {why: `the socket ${steps[0].outcome}`}
+	let [stun, poke, receive] = steps
+	if (!stun.success) return {why: `STUN from the socket ${stun.outcome}`}
+	if (!poke.success) return {why: `the poke ${poke.outcome}`}
+	let to = _addressOf(poke.value.to)
+	if (!_same(to, stun.value.address)) return {why: `moon poked ${to}, where the request for the poke came from, but STUN saw the socket at ${stun.value.address}`}
+	if (!receive.success) return {why: `the receive ${receive.outcome}`}
+	return {arrived: receive.value.some(d => _datagramText(d).startsWith(`poke ${poke.value.token} `))}//a packet of this poke's, by its token, rather than one left over from the first poke or a STUN answer that came late
+}
+
+//a few words when a firewall on this machine may be what held a poke back: a Mac's when it's on and blocks all, or doesn't list ftorrent as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks ftorrent coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read
+function _sayHolding(f) {
+	if (!f.known) return ''
+	if (f.profiles) {
+		let current = f.profiles.filter(p => p.current && p.enabled)
+		if (!current.length) return ''
+		let names = current.map(p => p.name)
+		let rules = action => f.ftorrent.rules.filter(r => r.enabled && r.action == action && r.direction == 'in' && ['UDP', 'any'].includes(r.protocol) && r.profiles.some(name => names.includes(name)))
+		if (current.some(p => p.block_all)) return `the Windows firewall may be what held them back, since it blocks all incoming on ${names.join(' and ')}`
+		if (rules('block').length) return `the Windows firewall may be what held them back, since a rule blocks ${brandName} coming in on ${names.join(' and ')}`
+		if (!rules('allow').length) return `the Windows firewall may be what held them back, since no rule lets ${brandName} in on ${names.join(' and ')}`
+		return ''
+	}
+	if (f.on != 'on') return ''
+	if (f.blockAll == 'on') return 'the Mac firewall may be what held them back, since it blocks all incoming connections'
+	if (!f.ftorrent.listed?.allowed) return `the Mac firewall may be what held them back, since ${brandName} isn't allowed on its list`
+	return ''
+}
+
+//a datagram's bytes as text, blank for bytes that aren't all printable, like a STUN answer's
+function _datagramText(d) {
+	let bytes = Data({base16: d.data}).array()
+	if (!bytes.every(b => b >= 0x20 && b < 0x7f)) return ''
+	return new TextDecoder().decode(bytes)
 }
 
 //whether two addresses of a family are on one network: the same address for IPv4, and the same /64 for IPv6, where a machine holds several addresses in its network at once
@@ -426,6 +531,11 @@ function _same(a, b) {
 	return Boolean(a && b) && _key(a) == _key(b)
 }
 
+//the address alone from an address and port written the way a URL writes them, like 2606:4700:49:: from [2606:4700:49::]:3478
+function _addressOf(endpoint) {
+	return endpoint.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')//the port off the end, and then an IPv6 address's brackets
+}
+
 //an address and a port the way a URL writes them, with brackets around an IPv6 address so its colons don't run into the port's
 function _sayEndpoint(address, port) {
 	if (address.includes(':')) return `[${address}]:${port}`
@@ -439,10 +549,16 @@ export function sayRun(run) {
 	for (let r of run.results) {
 		lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
 		if (r.binding) lines.push(..._sayBinding(r))
+		if (r.kind == 'receive' && r.success) lines.push(..._sayReceived(r))
 		if (r.success && ['upnp', 'upnp-mappings'].includes(r.kind)) lines.push(..._sayUpnpLines(r))
 	}
 	lines.push(..._sayFirewallLines(run.firewall), ..._sayMachine(run.machine))
 	return lines.join('\n')
+}
+
+//each datagram a receive heard, on lines under its own: where it came from, when, its size, and what it carried, as text when it's all printable, like a poke's, and in hex when it isn't, like a STUN answer that came late
+function _sayReceived(r) {
+	return r.value.map(d => `  from ${d.from} at ${d.milliseconds} ms, ${saySize4(d.bytes)}: ${_datagramText(d) ? `"${_datagramText(d)}"` : _sayHex(d.data)}`)
 }
 
 //everything net_stun saw of one server, on lines under its own: where the request went, the address the system says it would send from, where the answer came from and what kind it is, the whole answer in hex, and each attribute in it
@@ -506,12 +622,14 @@ function _sayHex(hex) {
 //what came back, in the box's words: the address, the error's text, for STUN what the server saw and the answer's size, how many interfaces and lines a list or a tool gave, or a name's addresses with a few words on them
 function _sayAnswer(r) {
 	if (!r.success) return r.outcome
-	if (r.kind == 'stun') {
-		let b = r.value//the binding net_stun answered
+	if (r.kind == 'stun' || r.kind == 'filter-stun') {
+		let b = r.value//the binding net_stun or udp_stun answered
 		let said = `${_sayEndpoint(b.address, b.port)}, ${saySize4(b.bytes)}`
 		if (b.sends > 1) said += `, sent ${b.sends} times`
 		return said
 	}
+	if (r.kind == 'poke') return `${r.value.sent} of ${r.value.packets} packets to ${r.value.to} from port ${r.value.from_port}, carrying ${r.value.token}${r.value.error ? `, then ${r.value.error}` : ''}`
+	if (r.kind == 'receive') return r.value.length > 0 ? `${r.value.length} datagram${r.value.length == 1 ? '' : 's'}` : `nothing in ${checkSeconds} seconds`
 	if (r.kind == 'interfaces') return `${r.value.length} interfaces, ${r.value.reduce((sum, i) => sum + i.addresses.length, 0)} addresses`
 	if (r.kind == 'tool') { let lines = r.value.trim().split('\n'); return lines.length <= 2 ? lines.join('; ') : `${lines.length} lines` }//what it printed, when that's a line or two, like each of the firewall's reads; the count when it's a screen, read into the interfaces below
 	if (r.kind == 'resolve') return `${r.value.join(', ')}; ${_sayResolved(r)}`

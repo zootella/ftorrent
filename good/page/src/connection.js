@@ -3,11 +3,11 @@ import {Time, sayTick} from '@zootella/ergo'//small helpers from the ergo projec
 /*
 What a web page can learn about the connection it runs on, asked from inside the browser's sandbox. The desktop client's Connection tab asks many of the same questions from a real socket and can tell more; this page asks what any page can, which is what a browser peer has to work with.
 
-For each family, IPv4 and IPv6, the page asks two things. A reflector at ip4.ftorrent.com or ip6.ftorrent.com answers the address the request arrived from; each name has an address record in one family only, so the browser, which picks a family for itself, can only reach it over that one, and the pair of answers is which families reach the internet from here, over TCP.
+For each family, IPv4 and IPv6, the page asks two things. A reflector at ip4.ftorrent.com or ip6.ftorrent.com answers the address the request arrived from; each name has an address record in one family only, so the browser, which picks a family for itself, can only reach it over that one, and the pair of answers is which families reach the internet from here, over TCP. moon, our second server, at another place on the internet, runs the same reflector at ip4.moon.ftorrent.com and ip6.moon.ftorrent.com, and the page asks it too: a family that reaches either server reaches the internet, and a family that reaches one and not the other has found trouble on our side rather than the visitor's, which the page says.
 
 And STUN, over UDP, which is what a peer connection travels on. A page has no socket of its own, but WebRTC gives it one at a remove: the page makes a peer connection, names STUN servers, and asks for a data channel, which starts ICE (Interactive Connectivity Establishment), the dance by which two WebRTC peers find a path to each other. The page runs only its first step, gathering: the browser opens a socket on each network interface, sometimes two or three on one address, as Safari does, sends each server a binding request from each, and hands back candidates, the addresses a peer might reach this browser at. A host candidate is a local address, which every mainstream browser now writes as a made-up mDNS name ending in .local, so a page can't read its own local addresses; a server-reflexive candidate is what a STUN server saw, the public address and port, with its local address and port written 0.0.0.0 or :: and 0 for the same reason. The WebRTC project's Trickle ICE sample is the page that lists these candidates as they arrive, and browser NAT checkers build on the same stream.
 
-The page makes three peer connections at once. The first names our server alone, and its reflexive candidates are this browser's public address and port over UDP, which should match what the reflector saw over HTTPS; when it doesn't, something sends the two out apart: over IPv4, a carrier's translator with more than one public address of its own, or in either family a VPN, a proxy, or a relay such as iCloud Private Relay carrying one path and not the other. The second names Cloudflare's alone, which shows it answers from here. The third names both, and the browser asks both from the same sockets. A router keys the mapping it makes on the inside address and port, so when both servers see the same public port the two candidates are the same, and the browser, which drops a reflexive candidate that repeats one it already has, hands back one. The page can't see how many sockets the browser gathered from, but asking one server, each socket answers one candidate, so the first connection's count in a family is the number of sockets. When the third's count is the same, every socket kept one public port for both servers, endpoint-independent mapping, the kind a hole punch works through; when it's double, each got a new port for the second server, endpoint-dependent, the symmetric case, where it fails. The desktop client asks from one socket it chose itself, so it has no counting to do.
+The page makes four peer connections at once. The first names our server alone, and its reflexive candidates are this browser's public address and port over UDP, which should match what the reflector saw over HTTPS; when it doesn't, something sends the two out apart: over IPv4, a carrier's translator with more than one public address of its own, or in either family a VPN, a proxy, or a relay such as iCloud Private Relay carrying one path and not the other. The second names moon's alone and the third Cloudflare's alone, which shows each answers from here. The fourth names all three, and the browser asks all three from the same sockets. A router keys the mapping it makes on the inside address and port, so when every server sees the same public port the candidates are the same, and the browser, which drops a reflexive candidate that repeats one it already has, hands back one. The page can't see how many sockets the browser gathered from, but asking one server, each socket answers one candidate, so the first connection's count in a family is the number of sockets. When the fourth's count is the same, every socket kept one public port for every server, endpoint-independent mapping, the kind a hole punch works through; when it's one for each server that answered alone, three times the sockets with all three answering, each socket got a new port for each server, endpoint-dependent, the symmetric case, where it fails. The desktop client asks from one socket it chose itself, so it has no counting to do.
 
 The box keeps more than the verdicts need: every candidate line the browser wrote, every error a STUN server's silence raised, and the browser's own record of each local candidate, from getStats. What one browser writes and another leaves out is itself a finding at this stage, and it all fits in one paste.
 
@@ -16,13 +16,20 @@ Every check gets checkSeconds, the same four the desktop client gives its own: a
 
 const checkSeconds = 4//how long each check has to hear back, the essay above says why
 const noAnswer = `no answer in ${checkSeconds} seconds`
-const reflectors = {4: 'https://ip4.ftorrent.com/', 6: 'https://ip6.ftorrent.com/'}
-const stunOurs   = 'stun.ftorrent.com:3478'
-const stunSecond = 'stun.cloudflare.com:3478'//Cloudflare's, on a separate network, as the second vantage until our own second server takes its place
-const gatherings = [//the three peer connections, by what each asks
-	{which: 'ours',   servers: [stunOurs]},
-	{which: 'second', servers: [stunSecond]},
-	{which: 'both',   servers: [stunOurs, stunSecond]},
+const reflectors = [//the two reflectors in each family, ours and moon's, at the names with one address record each
+	{which: 'ours', family: 4, url: 'https://ip4.ftorrent.com/'},
+	{which: 'ours', family: 6, url: 'https://ip6.ftorrent.com/'},
+	{which: 'moon', family: 4, url: 'https://ip4.moon.ftorrent.com/'},
+	{which: 'moon', family: 6, url: 'https://ip6.moon.ftorrent.com/'},
+]
+const stunOurs       = 'stun.ftorrent.com:3478'
+const stunMoon       = 'moon.ftorrent.com:3478'//moon's, our second server, at another place on the internet
+const stunCloudflare = 'stun.cloudflare.com:3478'//Cloudflare's, on a network that is neither of ours
+const gatherings = [//the four peer connections, by what each asks
+	{which: 'ours',       servers: [stunOurs]},
+	{which: 'moon',       servers: [stunMoon]},
+	{which: 'cloudflare', servers: [stunCloudflare]},
+	{which: 'all',        servers: [stunOurs, stunMoon, stunCloudflare]},
 ]
 const statsSkip = ['id', 'timestamp', 'type', 'transportId', 'isRemote']//the bookkeeping on every getStats record, the same on each, which the box leaves out
 
@@ -35,22 +42,21 @@ const looksLike = {
 //ask everything once, and answer the run: when it started, the browser it ran in, each result in the order the box lists them, and each gathering in full
 export async function connectionRun() {
 	let moment = Date.now()
-	let [reflect4, reflect6, ...found] = await Promise.all([//all at once; Promise.all keeps the order it was given, whatever order they finish in
-		_reflect(4),
-		_reflect(6),
-		...gatherings.map(g => _gather(g.servers)),
+	let [reflected, found] = await Promise.all([//all at once; Promise.all keeps the order it was given, whatever order they finish in
+		Promise.all(reflectors.map(_reflect)),
+		Promise.all(gatherings.map(g => _gather(g.servers))),
 	])
-	let results = [reflect4, reflect6]
+	let results = [...reflected]
 	gatherings.forEach((g, i) => results.push(_reflexive(found[i], 4, g), _reflexive(found[i], 6, g)))
 	return {moment, browser: navigator.userAgent, results, gatherings: gatherings.map((g, i) => ({...g, ...found[i]}))}
 }
 
-//fetch a reflector, timed, as a result: {kind, family, asked, success, value or outcome, milliseconds}
-async function _reflect(family) {
+//fetch a reflector, timed, as a result: {kind, which, family, asked, success, value or outcome, milliseconds}
+async function _reflect({which, family, url}) {
 	let start = performance.now()
 	let v
 	try {
-		let response = await fetch(reflectors[family], {cache: 'no-store', signal: AbortSignal.timeout(checkSeconds*Time.second)})
+		let response = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(checkSeconds*Time.second)})
 		let text = (await response.text()).trim()//the reflector ends its answer with a newline
 		if (!response.ok) v = {success: false, outcome: `the reflector answered ${response.status}`}
 		else if (looksLike[family].test(text)) v = {success: true, value: text}
@@ -58,7 +64,7 @@ async function _reflect(family) {
 	} catch (error) {//the bottom gate: no route, a refused connection, or the timeout's abort, as an ordinary answer
 		v = {success: false, outcome: error.name == 'TimeoutError' ? noAnswer : `${error.name}: ${error.message}`}
 	}
-	return {kind: 'reflect', family, asked: `GET ${reflectors[family]}`, ...v, milliseconds: Math.round(performance.now() - start)}
+	return {kind: 'reflect', which, family, asked: `GET ${url}`, ...v, milliseconds: Math.round(performance.now() - start)}
 }
 
 //make a peer connection naming these STUN servers, and collect everything its browser reports until gathering finishes or checkSeconds pass; answers {candidates, errors, stats, late, error, milliseconds}: every candidate with its line and when it came, every error a server raised, the browser's record of each local candidate, whether time ran out first, why WebRTC couldn't start, blank when it could, and how long the gathering ran
@@ -145,11 +151,11 @@ export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
 		let mine = kind => run ? run.results.filter(r => r.kind == kind && r.family == family) : []//this family's results of one kind, in the order asked
-		let [reflect] = mine('reflect'), [ours, second, both] = mine('stun')
+		let [reflect, moon] = mine('reflect'), stuns = mine('stun'), [ours] = stuns
 		rows.push(
-			[`Public IPv${family} address`,  run ? _sayFact(reflect)                : ''],
-			[`Public IPv${family} over UDP`, run ? _sayUdp(ours, reflect)           : ''],
-			[`IPv${family} mapping`,         run ? _sayMapping(ours, second, both) : ''],
+			[`Public IPv${family} address`,  run ? _sayPublic(reflect, moon) : ''],
+			[`Public IPv${family} over UDP`, run ? _sayUdp(ours, reflect)    : ''],
+			[`IPv${family} mapping`,         run ? _sayMapping(stuns)        : ''],
 		)
 	}
 	return rows
@@ -161,6 +167,14 @@ function _sayFact(r) {
 	if (!r.success) return 'none'
 	if (r.kind == 'stun') return r.value[0]
 	return r.value
+}
+
+//the address our reflector saw, and moon's beside it when moon saw another network or only one of the two answered
+function _sayPublic(reflect, moon) {
+	if (reflect.success && moon.success && !_sameNetwork(reflect.family, reflect.value, moon.value)) return `${reflect.value}, but moon saw ${moon.value}`
+	if (!reflect.success && moon.success) return `${moon.value} by moon, ${_sayFact(reflect)} from ours`
+	if (reflect.success && !moon.success) return `${reflect.value}, ${_sayFact(moon)} from moon`
+	return _sayFact(reflect)//both saw the same network, or neither answered
 }
 
 //the address and port our STUN server saw, and a word when its network isn't the one the reflector saw over HTTPS
@@ -185,20 +199,25 @@ const apartMeaning = {
 export function sayApart(run) {
 	let sentences = []
 	for (let family of [4, 6]) {
-		let reflect = run.results.find(r => r.kind == 'reflect' && r.family == family)
+		let reflect = run.results.find(r => r.kind == 'reflect' && r.family == family && r.which == 'ours')
 		let ours = run.results.find(r => r.kind == 'stun' && r.family == family && r.which == 'ours')
 		if (_apart(ours, reflect)) sentences.push(apartMeaning[family])
 	}
 	return sentences.join(' ')
 }
 
-//whether the router keeps one public port for every destination, by count: our server alone gets one candidate from each socket the browser gathered from, and both servers asked from the same sockets get the same count when every socket kept its port, and twice as many when each got a new one
-function _sayMapping(ours, second, both) {
-	if (!ours.success || !second.success || !both.success) return 'unknown'//Cloudflare's has to answer on its own, or the same count could mean it never answered at all
+//whether the router keeps one public port for every destination, by count: our server alone gets one candidate from each socket the browser gathered from, and the servers asked together from the same sockets get the same count when every socket kept its port, and one for each server for each socket when each got a new one. A server counts only when it answered alone, or the same count could mean it never answered at all, and the verdict says how many did when one didn't
+function _sayMapping(stuns) {
+	let ours = stuns.find(r => r.which == 'ours'), all = stuns.find(r => r.which == 'all')
+	let alone = stuns.filter(r => r.which != 'all')
+	let answered = alone.filter(r => r.success).length//ours among them
+	if (!ours.success || !all.success || answered < 2) return 'unknown'
 	let sockets = ours.value.length
-	if (both.value.length == sockets)   return 'endpoint-independent'
-	if (both.value.length == 2*sockets) return 'endpoint-dependent'
-	return 'unknown'
+	let said = 'unknown'
+	if (all.value.length == sockets) said = 'endpoint-independent'
+	else if (all.value.length == answered*sockets) said = 'endpoint-dependent'
+	if (said != 'unknown' && answered < alone.length) said += `, by ${answered} of ${alone.length} servers`
+	return said
 }
 
 //whether two addresses of a family are on one network: the same address for IPv4, and the same /64 for IPv6, where a machine holds several addresses in its network at once
@@ -223,13 +242,24 @@ function _sayEndpoint(address, port) {
 	return `${address}:${port}`
 }
 
-//the dual-stack verdict from the two reflectors: which families reach the internet from here
+//the dual-stack verdict from the reflectors: which families reach the internet from here, by either server answering
 export function sayVerdict(run) {
-	let [v4, v6] = run.results.filter(r => r.kind == 'reflect').map(r => r.success)
+	let [v4, v6] = [4, 6].map(family => run.results.some(r => r.kind == 'reflect' && r.family == family && r.success))
 	if (v4 && v6) return 'You have dual-stack, both IPv4 and IPv6.'
 	if (v4) return 'You have IPv4 only.'
 	if (v6) return 'You have IPv6 only.'
 	return 'Neither family reached us. Something is blocking the connection.'
+}
+
+//a sentence for each family where one of our two servers answered and the other didn't, which puts the trouble on our side rather than the visitor's; blank when both or neither answered in every family
+export function sayServers(run) {
+	let sentences = []
+	for (let family of [4, 6]) {
+		let [reflect, moon] = run.results.filter(r => r.kind == 'reflect' && r.family == family)
+		if (moon.success && !reflect.success) sentences.push(`Over IPv${family}, moon answered and our main server didn't, so the trouble is ours, not your connection's.`)
+		if (reflect.success && !moon.success) sentences.push(`Over IPv${family}, our main server answered and moon didn't, so the trouble is moon's, not your connection's.`)
+	}
+	return sentences.join(' ')
 }
 
 //the box's lines for one run: when, and in which browser, then a line per check with what it asked, how long it took, and what came back

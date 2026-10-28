@@ -1,11 +1,12 @@
 <script setup>
 import {ref, computed, nextTick, onMounted} from 'vue'
 import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
-import {connectionRun, connectionFacts, sayRun, sayVerdict, sayApart} from '../connection.js'
+import {connectionRun, connectionFacts, sayRun, sayVerdict, sayServers, sayApart} from '../connection.js'
 
 let run = ref(null)//the latest run, null until the first one comes back
 let facts = computed(() => connectionFacts(run.value))
 let verdict = computed(() => run.value ? sayVerdict(run.value) : '')
+let servers = computed(() => run.value ? sayServers(run.value) : '')//where the trouble is when one of our two servers answered and the other didn't, blank when they agree
 let apart = computed(() => run.value ? sayApart(run.value) : '')//what it likely means when UDP and HTTPS left from different networks, blank when they didn't
 let text = ref('')//every run since the page opened, oldest first
 let running = ref(false)//so Check waits while a run is out
@@ -21,11 +22,12 @@ async function check() {
 }
 onMounted(check)//visiting the page is the request, so the first run starts as it opens
 
-//everything on the page as text, the facts, the verdict and the sentence under it, and the box, since it's most useful pasted into a message or an issue
+//everything on the page as text, the facts, the verdict and the sentences under it, and the box, since it's most useful pasted into a message or an issue
 let copied = ref(false)//true for a moment after the button is pressed, so it can say so
 async function copy() {
 	let lines = facts.value.map(([key, value]) => `${key}: ${value}`)
 	lines.push('', verdict.value)
+	if (servers.value) lines.push(servers.value)
 	if (apart.value) lines.push(apart.value)
 	lines.push('', text.value)
 	await navigator.clipboard.writeText(lines.join('\n'))
@@ -44,6 +46,7 @@ async function copy() {
 			</template>
 		</dl>
 		<p class="verdict">{{ verdict }}</p>
+		<p v-if="servers">{{ servers }}</p>
 		<p v-if="apart">{{ apart }}</p>
 		<button type="button" :disabled="running" @click="check">Check</button>
 		<textarea ref="box" readonly :value="text"></textarea>

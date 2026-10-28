@@ -17,7 +17,7 @@ ureq makes the request, a blocking call on run_blocking's pool like the disk com
 
 STUN is written out by hand, since a binding request is small enough to read whole, RFC 8489. The request is a twenty-byte header and nothing more: its type, the length of what follows, which is zero, the magic cookie, and twelve random bytes the answer has to repeat. The answer carries the same header and then attributes, each a type, a length, and a value padded to four bytes, and the one that matters is XOR-MAPPED-ADDRESS, the address and port the server saw, masked by the cookie, and for IPv6 by the transaction id as well, so a router rewriting addresses it finds inside packets can't mistake it for one. UDP keeps no promises, so the request goes out again at STUN's intervals, half a second and then doubling, until an answer comes or the page's seconds pass.
 
-net_stun asks every server it's given at once, from one socket, which is how Tailscale's netcheck asks its servers too, and it's the one command here that takes a list. A router keys the mapping it makes on the inside address and port, so the question of whether it keeps one public port for every destination can only be asked from one socket, and asking every server from that socket at the same moment answers it in one wait rather than one wait per server. Each request carries a transaction id of its own, which is how an answer finds the server it came from, and the socket stays unconnected, since it speaks to more than one address. Each answer also comes back whole, in hex beside the address it arrived from, so the page can show every attribute in it and not only the mapped address read here.
+net_stun asks every server it's given at once, from one socket, which is how Tailscale's netcheck asks its servers too, and it's the one command here that takes a list. A router keys the mapping it makes on the inside address and port, so the question of whether it keeps one public port for every destination can only be asked from one socket, and asking every server from that socket at the same moment answers it in one wait rather than one wait per server. Each request carries a transaction id of its own, which is how an answer finds the server it came from, and the socket stays unconnected, since it speaks to more than one address. Each answer also comes back whole, in hex beside the address it arrived from, so the page can show every attribute in it and not only the mapped address read here. The asking itself is stun_ask, which net_stun runs on a socket it opens and closes, and udp_stun in udp.rs on a socket the page holds open.
 
 net_natpmp asks a router for its external address by NAT-PMP, RFC 6886, through the natpmp crate: a two-byte request to the gateway on port 5351, answered with the address and an epoch, the seconds since the router's mapping table started, which a program watches to learn that the router restarted and its mappings are gone. The crate binds a socket connected to the gateway, so a router refusing the port comes back as a refusal on the socket rather than as silence, and that refusal is itself a finding, since PCP listens on the same port. The crate's socket is nonblocking and its own, with nothing to wait on, so the command polls it every few milliseconds until the deadline, as the crate's own examples do.
 
@@ -190,67 +190,74 @@ pub async fn net_stun(servers: Vec<String>, family: u8, port: u16, seconds: u64)
 	run_blocking(move || {
 		let any: IpAddr = if family == 6 { Ipv6Addr::UNSPECIFIED.into() } else { Ipv4Addr::UNSPECIFIED.into() };//no interface in particular, in the family asked for
 		let socket = UdpSocket::bind((any, port)).map_err(|e| e.to_string())?;
-		let local = socket.local_addr().map_err(|e| e.to_string())?.port();
-
-		let mut asks = Vec::new();
-		for server in &servers {
-			let mut binding = Binding {server: server.clone(), to: String::new(), address: String::new(), port: 0, milliseconds: 0, sends: 0, bytes: 0, from: String::new(), answer: String::new(), error: String::new()};
-			let to = match server.to_socket_addrs() {
-				Ok(mut addresses) => addresses.find(|address| address.is_ipv6() == (family == 6)),//the name's first address in the family asked for, so a name with records in both can be asked over either
-				Err(e) => { binding.error = e.to_string(); None }
-			};
-			if let Some(to) = to { binding.to = to.to_string() }
-			if to.is_none() && binding.error.is_empty() { binding.error = format!("{server} has no IPv{family} address") }
-			let mut request = [0u8; 20];
-			request[0..2].copy_from_slice(&0x0001u16.to_be_bytes());//a binding request, with bytes 2 and 3 left zero, since nothing follows the header
-			request[4..8].copy_from_slice(&STUN_COOKIE.to_be_bytes());
-			getrandom::fill(&mut request[8..20]).map_err(|e| e.to_string())?;//the transaction id, a new one for each server
-			asks.push(StunAsk {to, request, next: Instant::now(), wait: Duration::from_millis(500), done: to.is_none(), binding});
-		}
-
-		let start = Instant::now();
-		let deadline = start + Duration::from_secs(seconds);
-		for ask in asks.iter_mut() { ask.next = start }//every server is due its first send now, together
-		let mut answer = [0u8; 1500];//more than any binding answer, which fits in one unfragmented packet
-		while Instant::now() < deadline {
-			let now = Instant::now();
-			for ask in asks.iter_mut().filter(|ask| !ask.done && ask.next <= now) {//every server due a send, its first or again
-				let Some(to) = ask.to else { continue };
-				match socket.send_to(&ask.request, to) {
-					Ok(_) => { ask.binding.sends += 1; ask.next = now + ask.wait; ask.wait *= 2 }
-					Err(e) => { ask.binding.error = e.to_string(); ask.binding.milliseconds = start.elapsed().as_millis() as u64; ask.done = true }
-				}
-			}
-			let Some(next) = asks.iter().filter(|ask| !ask.done).map(|ask| ask.next).min() else { break };//every server has answered or failed
-			let left = next.min(deadline).saturating_duration_since(Instant::now());//listen until the next send is due
-			if left.is_zero() { continue }
-			socket.set_read_timeout(Some(left)).map_err(|e| e.to_string())?;
-			let (count, source) = match socket.recv_from(&mut answer) {
-				Ok(received) => received,
-				Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => continue,//the read timed out, which unix says as would block and windows as timed out
-				Err(e) if matches!(e.kind(), std::io::ErrorKind::ConnectionReset | std::io::ErrorKind::ConnectionRefused) => continue,//windows reports an icmp refusal from any one server as an error on the whole socket, naming no server, so the asking goes on and that server runs out of time
-				Err(e) => return Err(e.to_string()),
-			};
-			for ask in asks.iter_mut().filter(|ask| !ask.done) {//the server whose transaction id the answer repeats; anything else, a stray packet or an answer to an earlier send already counted, matches none and is passed over
-				match stun_read(&answer[..count], &ask.request) {
-					Ok(None) => continue,
-					Ok(Some((address, mapped))) => { ask.binding.address = address.to_string(); ask.binding.port = mapped }
-					Err(e) => ask.binding.error = e,
-				}
-				ask.binding.bytes = count;//a refusal is an answer too, kept whole like a success
-				ask.binding.from = source.to_string();
-				ask.binding.answer = Data::from_array(&answer[..count]).base16();
-				ask.binding.milliseconds = start.elapsed().as_millis() as u64;
-				ask.done = true;
-				break
-			}
-		}
-		for ask in asks.iter_mut().filter(|ask| !ask.done) {
-			ask.binding.error = format!("no answer in {seconds} seconds");
-			ask.binding.milliseconds = start.elapsed().as_millis() as u64;
-		}
-		Ok(Bindings {local, servers: asks.into_iter().map(|ask| ask.binding).collect()})
+		stun_ask(&socket, &servers, seconds)
 	}).await
+}
+
+/// Send a STUN binding request to each of servers from this socket, all at once, in the socket's family, sending each again at STUN's intervals until it answers or seconds pass, and answer what each server saw; the body of net_stun, which opens a socket for it, and of udp_stun, which hands it one the page holds open
+pub(crate) fn stun_ask(socket: &UdpSocket, servers: &[String], seconds: u64) -> Result<Bindings, String> {
+	let bound = socket.local_addr().map_err(|e| e.to_string())?;
+	let family = if bound.is_ipv6() { 6 } else { 4 };
+	let local = bound.port();
+
+	let mut asks = Vec::new();
+	for server in servers {
+		let mut binding = Binding {server: server.clone(), to: String::new(), address: String::new(), port: 0, milliseconds: 0, sends: 0, bytes: 0, from: String::new(), answer: String::new(), error: String::new()};
+		let to = match server.to_socket_addrs() {
+			Ok(mut addresses) => addresses.find(|address| address.is_ipv6() == bound.is_ipv6()),//the name's first address in the socket's family, so a name with records in both can be asked over either
+			Err(e) => { binding.error = e.to_string(); None }
+		};
+		if let Some(to) = to { binding.to = to.to_string() }
+		if to.is_none() && binding.error.is_empty() { binding.error = format!("{server} has no IPv{family} address") }
+		let mut request = [0u8; 20];
+		request[0..2].copy_from_slice(&0x0001u16.to_be_bytes());//a binding request, with bytes 2 and 3 left zero, since nothing follows the header
+		request[4..8].copy_from_slice(&STUN_COOKIE.to_be_bytes());
+		getrandom::fill(&mut request[8..20]).map_err(|e| e.to_string())?;//the transaction id, a new one for each server
+		asks.push(StunAsk {to, request, next: Instant::now(), wait: Duration::from_millis(500), done: to.is_none(), binding});
+	}
+
+	let start = Instant::now();
+	let deadline = start + Duration::from_secs(seconds);
+	for ask in asks.iter_mut() { ask.next = start }//every server is due its first send now, together
+	let mut answer = [0u8; 1500];//more than any binding answer, which fits in one unfragmented packet
+	while Instant::now() < deadline {
+		let now = Instant::now();
+		for ask in asks.iter_mut().filter(|ask| !ask.done && ask.next <= now) {//every server due a send, its first or again
+			let Some(to) = ask.to else { continue };
+			match socket.send_to(&ask.request, to) {
+				Ok(_) => { ask.binding.sends += 1; ask.next = now + ask.wait; ask.wait *= 2 }
+				Err(e) => { ask.binding.error = e.to_string(); ask.binding.milliseconds = start.elapsed().as_millis() as u64; ask.done = true }
+			}
+		}
+		let Some(next) = asks.iter().filter(|ask| !ask.done).map(|ask| ask.next).min() else { break };//every server has answered or failed
+		let left = next.min(deadline).saturating_duration_since(Instant::now());//listen until the next send is due
+		if left.is_zero() { continue }
+		socket.set_read_timeout(Some(left)).map_err(|e| e.to_string())?;
+		let (count, source) = match socket.recv_from(&mut answer) {
+			Ok(received) => received,
+			Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => continue,//the read timed out, which unix says as would block and windows as timed out
+			Err(e) if matches!(e.kind(), std::io::ErrorKind::ConnectionReset | std::io::ErrorKind::ConnectionRefused) => continue,//windows reports an icmp refusal from any one server as an error on the whole socket, naming no server, so the asking goes on and that server runs out of time
+			Err(e) => return Err(e.to_string()),
+		};
+		for ask in asks.iter_mut().filter(|ask| !ask.done) {//the server whose transaction id the answer repeats; anything else, a stray packet or an answer to an earlier send already counted, matches none and is passed over
+			match stun_read(&answer[..count], &ask.request) {
+				Ok(None) => continue,
+				Ok(Some((address, mapped))) => { ask.binding.address = address.to_string(); ask.binding.port = mapped }
+				Err(e) => ask.binding.error = e,
+			}
+			ask.binding.bytes = count;//a refusal is an answer too, kept whole like a success
+			ask.binding.from = source.to_string();
+			ask.binding.answer = Data::from_array(&answer[..count]).base16();
+			ask.binding.milliseconds = start.elapsed().as_millis() as u64;
+			ask.done = true;
+			break
+		}
+	}
+	for ask in asks.iter_mut().filter(|ask| !ask.done) {
+		ask.binding.error = format!("no answer in {seconds} seconds");
+		ask.binding.milliseconds = start.elapsed().as_millis() as u64;
+	}
+	Ok(Bindings {local, servers: asks.into_iter().map(|ask| ask.binding).collect()})
 }
 
 /// Send NAT-PMP's public address request, two bytes, to this gateway on port 5351, sending it again at NAT-PMP's intervals until the router answers or seconds pass, and answer the router's external address and epoch; an error when the router refuses the port, answers a result code, or doesn't answer in time
