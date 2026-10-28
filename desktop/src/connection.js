@@ -23,6 +23,8 @@ And STUN, over UDP, which is what a peer connection travels on: our server, moon
 
 And filtering, the other half of whether a hole punch can work: which outside addresses the router lets reach a port it has mapped. RFC 4787 names three kinds. Endpoint-independent filtering lets in anyone once the socket has sent anything; address-dependent lets in only an address the socket has sent to, from any port there; and address-and-port-dependent only the exact address and port. Telling them apart takes a socket that stays open across several steps, and a server that sends from somewhere the socket hasn't, which is moon. Each of two tests opens a socket of its own through udp_open, asks one STUN server from it which public address and port it has, then asks moon over HTTPS to poke that port, three small UDP packets carrying a token the panel makes up, while it receives on the socket. The first test's socket asks our STUN server alone, so moon's poke comes from an address it has never sent to, and arriving is endpoint-independent filtering. The second's asks moon's STUN server, so moon's poke comes from the address it just sent to, at another port: arriving there and not in the first test is address-dependent, and held back there too is address-and-port-dependent. moon pokes only the address the request for a poke came from, so nobody can aim it at anyone else, and that isn't always where the socket is: over IPv6 the request can leave from another of the machine's temporary addresses, and on cellular from another of the carrier's public IPv4 addresses. The poke's answer names where it went, and the reading sets that beside where STUN saw the socket, so a poke sent elsewhere reads as that and never as filtering. A firewall on this machine filters too, and the reading names it when it may be what held a poke back. The two tests need nothing from each other, so they run side by side, each family's beside the other's and beside every other check from the start of the run, and a receive that hears nothing waits its whole four seconds, so the run waits on the filtering last.
 
+And, while a session listens, the inbound proof: whether a stranger can reach the engine at all, unasked, which is the question every number above leads to. moon probes the session's port in each family three ways at once, all to the address the request came from. A DHT ping, which the engine's DHT node answers with a pong that says where it saw moon; a uTP connection request, uTP being BitTorrent's transport over UDP, which the engine accepts with a torrent loaded and turns away without one, either way an answer; and a TCP dial with a BitTorrent handshake carrying the chosen torrent's info-hash, which the engine answers with its own handshake, or closes without a torrent, which still proves the connection opened. A plain UDP poke would prove nothing here, since libtorrent drops a packet it can't read without an alert or a reply. moon hears each answer itself and says so, and the engine posts an incoming connection for the dial and, with a torrent, for the uTP request, so the run waits one more poll of the engine and counts the connections in from moon's address. Nothing back from all three, with nothing refused, is a translator or a firewall dropping a stranger's packets, the measurement Transmission's port test has offered for years, here over both families and both transports.
+
 And the machine itself, which takes no packet beyond a name lookup. net_interfaces lists every interface with every address on it, the ones a person finds in Settings and wonders about along with the rest, and each address gets a few words from the ranges the standards set aside: private, link-local, global, and the others. That one call says less than a person needs, so on a Mac and Linux the panel also runs the tools the system ships: ifconfig and ip for what kind each IPv6 address is, temporary, stable, from DHCPv6, or deprecated, and how long it lasts; route and ip route for the gateway in each family; and on a Mac networksetup for the name Settings gives each interface, like Wi-Fi. Windows says all of it through net_interfaces itself, which is just as well, since its tools print in the system's language. The interface carrying the default route is the one holding the address the system says it sends from, and the address the reflector saw over IPv6 is usually one of the machine's own, a temporary one.
 
 The resolver answers three names. ipv4only.arpa has only IPv4 addresses by definition, RFC 7050, so an IPv6 answer for it means the network makes up IPv6 addresses for names that have none, DNS64, so an IPv6-only network can reach them through a translator, NAT64; where the IPv4 address sits inside the answer names the translator's prefix. ip4.ftorrent.com and ip6.ftorrent.com show the single-family records the reflector checks rest on. And an IPv4 address in the shared address space, 100.64.0.0/10, RFC 6598, on the interface carrying the default route says a carrier translates above the router; on any other interface it's a mesh VPN's, like Tailscale's, which borrows the range.
@@ -39,13 +41,15 @@ And the engine's session, which runs for as long as the user lets it rather than
 */
 
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
-const noAnswer = `no answer in ${checkSeconds} seconds`
+const noAnswer = _sayNoAnswer(checkSeconds)
 const reflectorLimit = 100//bytes; the reflector answers one address and a newline, at most 46
 const descriptionLimit = 64*Size.kb//a router's UPnP device description is a few kilobytes, its list of icons included
 const moonStun = `moon.${urlHome}:3478`//moon's, our second STUN server, at another place on the internet
 const stunServers = [`stun.${urlHome}:3478`, moonStun, 'stun.cloudflare.com:3478']//ours, moon's, and Cloudflare's: three places on the internet, two of them ours
 const pokePackets = 3//how many packets moon sends in a poke, as its Go service sets it, so a receive can stop once they're all in
-const pokeLimit = 1*Size.kb//bytes; moon's account of a poke is one small JSON object
+const reportLimit = 8*Size.kb//bytes; moon's account of a poke, a ping, or a dial is one small JSON object, a ping's whole answer in hex among it
+const pingSeconds = checkSeconds + 3//moon waits three seconds for a ping's answer, on top of the request's own time
+const dialSeconds = checkSeconds + 6//and up to three to connect a dial and three more to hear back
 
 //192.0.2.1 and 2001:db8::1 are addresses set aside for documentation, by RFC 5737 and RFC 3849, so they name no one, and any address beyond the local network gets the same answer, the default route's
 const beyond = {4: '192.0.2.1', 6: '2001:db8::1'}
@@ -139,7 +143,7 @@ async function _filterTest(family, test, server) {
 	let stun = await _ask({kind: 'filter-stun', family, test, asked: `STUN ${server} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [server], checkSeconds), read: _readBinding})
 	let url = stun.success ? `https://ip${family}.moon.${urlHome}/poke?port=${stun.value.port}&token=${Data({random: 4}).base16()}` : ''//the public port STUN saw, and a token of our own, so a packet that arrives says which poke it came from
 	let [poke, receive] = await Promise.all([//at once, so the socket is already listening when the poke's packets arrive
-		_ask({kind: 'poke', family, test, asked: `GET ${url || `https://ip${family}.moon.${urlHome}/poke`}`, ask: () => url ? netGet(url, pokeLimit, checkSeconds) : Promise.reject('no public port from STUN to poke'), read: _readPoke}),
+		_ask({kind: 'poke', family, test, asked: `GET ${url || `https://ip${family}.moon.${urlHome}/poke`}`, ask: () => url ? netGet(url, reportLimit, checkSeconds) : Promise.reject('no public port from STUN to poke'), read: _readPoke}),
 		_ask({kind: 'receive', family, test, asked: `receive on port ${port}`, ask: () => url ? udpReceive(opened.socket, pokePackets, checkSeconds) : Promise.reject('no poke to wait for'), read: list => ({success: true, value: list})}),
 	])
 	udpClose(opened.socket)
@@ -158,6 +162,17 @@ function _readPoke(text) {
 	let a = JSON.parse(text)
 	if (a.sent == 0) return {success: false, outcome: `moon sent nothing${a.error ? `, ${a.error}` : ''}`}
 	return {success: true, value: a}
+}
+
+//the inbound proof for one family, while a session listens: moon pings the engine's port with a DHT ping and with a uTP connection request, and dials it over TCP with a BitTorrent handshake carrying the chosen torrent's info-hash, or a random one with no torrent, all three at once, each a result for the box; _sayInbound reads them
+function _inbound(family, port, infohash) {
+	let base = `https://ip${family}.moon.${urlHome}`
+	let probe = (kind, path, seconds) => ({kind, family, asked: `GET ${base}${path}`, ask: () => netGet(base + path, reportLimit, seconds), read: text => ({success: true, value: JSON.parse(text)}), seconds})//moon's report, whatever it found, is the answer; only the request failing is a failure
+	return Promise.all([
+		_ask(probe('ping-dht', `/ping?port=${port}&kind=dht`, pingSeconds)),
+		_ask(probe('ping-utp', `/ping?port=${port}&kind=utp`, pingSeconds)),
+		_ask(probe('dial', `/dial?port=${port}${infohash ? `&infohash=${infohash}` : ''}`, dialSeconds)),
+	])
 }
 
 //a check of the machine's interfaces and every address on each
@@ -254,6 +269,7 @@ function _readAddress(family, text) {
 export async function connectionRun() {
 	let moment = Date.now()
 	let filtering = Promise.all([4, 6].map(_filtering))//each family's two tests, on sockets of their own, beside every other check from the start, since a poke that never arrives waits its whole four seconds
+	let probing = session.running ? Promise.all([4, 6].map(family => _inbound(family, session.port, session.torrent?.v1))) : null//and with a session listening, moon's probes of its port, also from the start
 	let [version, paths, engine] = await Promise.all([getVersion(), pathsStatus(), engineStatus()])//this copy's version, and where this copy and its engine are, which the firewall lists programs by
 	let results = (await Promise.all(_checks(paths, engine).map(_ask))).flatMap(_perServer)//all at once; Promise.all keeps the order it was given, whatever order they finish in
 	await Promise.all(results.filter(r => r.binding?.to).map(async r => { r.source = await _source(r.binding.to) }))//then the address this machine sends from toward each STUN server whose name led somewhere
@@ -263,7 +279,13 @@ export async function connectionRun() {
 	let found = results.find(r => r.kind == 'upnp')
 	results.push(...await Promise.all(_upnpReads(found.success ? found.value : null).map(_ask)))//then the reads of the gateway the search found
 	results.push(...(await filtering).flat())//and last the filtering, IPv4's two tests and then IPv6's
-	return {moment, version, results, machine, firewall: _firewall(results, paths, engine)}
+	let inbound = false//whether the inbound proof ran, which takes a session listening
+	if (probing) {
+		results.push(...(await probing).flat())//and the inbound proof, IPv4's three probes and then IPv6's
+		await new Promise(resolve => setTimeout(resolve, pollEvery + Time.second/4))//one more poll of the engine, so the alerts the probes caused are in before they're counted
+		inbound = true
+	}
+	return {moment, version, results, machine, inbound, arrivals: arrivals.filter(a => a.moment >= moment), firewall: _firewall(results, paths, engine)}//the connections in since the run began, which the inbound proof looks for moon's among
 }
 
 //the address the system would send from toward a server's address and port, like [2606:4700:49::]:3478, as {success, value or outcome}
@@ -277,18 +299,18 @@ async function _source(to) {
 
 //one check, timed, as what the check says about itself, like its kind and what it asked, then {success, value or outcome, milliseconds}
 async function _ask(check) {
-	let {ask, read, ...about} = check
+	let {ask, read, seconds = checkSeconds, ...about} = check//a check that waits longer by design names its own seconds
 	let start = performance.now()
 	let v
 	try {
-		let answer = await Promise.race([ask(), _late()])
-		if (answer === late) v = {success: false, outcome: noAnswer}//strict, since the answer may be text, an object, or this
+		let answer = await Promise.race([ask(), _late(seconds)])
+		if (answer === late) v = {success: false, outcome: _sayNoAnswer(seconds)}//strict, since the answer may be text, an object, or this
 		else v = read(answer)
 	} catch (error) {//the bottom gate: rust's refusal becomes an ordinary answer, with its text kept for the box
 		v = {success: false, outcome: String(error)}
 	}
 	let milliseconds = Math.round(performance.now() - start)
-	if (!v.success && milliseconds >= checkSeconds*Time.second) v.outcome = noAnswer//rust gave up at checkSeconds, whatever words it chose for it; the clock here started first, so it reads at least as long
+	if (!v.success && milliseconds >= seconds*Time.second) v.outcome = _sayNoAnswer(seconds)//rust gave up at its seconds, whatever words it chose for it; the clock here started first, so it reads at least as long
 	return {...about, ...v, milliseconds}
 }
 
@@ -304,11 +326,14 @@ function _perServer(r) {
 	})
 }
 
-//what a check's answer is when it hasn't come a quarter second past checkSeconds: rust gives up at checkSeconds itself, so this only ever wins when a call stalls before its own clock starts, as a stuck name lookup would, and it keeps the run from waiting on it
+//what a check's answer is when it hasn't come a quarter second past its seconds: rust gives up at those seconds itself, so this only ever wins when a call stalls before its own clock starts, as a stuck name lookup would, and it keeps the run from waiting on it
 const late = Symbol('late')
-function _late() { return new Promise(resolve => setTimeout(() => resolve(late), checkSeconds*Time.second + Time.second/4)) }
+function _late(seconds) { return new Promise(resolve => setTimeout(() => resolve(late), seconds*Time.second + Time.second/4)) }
 
-//the table's rows for a run, six for each family, five about the machine, and five about the router, blank before the first run
+//no answer in some seconds, the words noAnswer is for checkSeconds
+function _sayNoAnswer(seconds) { return `no answer in ${seconds} seconds` }
+
+//the table's rows for a run, seven for each family, five about the machine, and five about the router, blank before the first run
 export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
@@ -320,6 +345,7 @@ export function connectionFacts(run) {
 			[`Public IPv${family} over UDP`, run ? _sayUdp(stuns, reflect)          : ''],
 			[`IPv${family} mapping`,         run ? _sayMapping(stuns)               : ''],
 			[`IPv${family} filtering`,       run ? _sayFiltering(run, family)       : ''],
+			[`IPv${family} inbound`,         run ? _sayInbound(run, family)         : ''],
 			[`IPv${family} gateway`,         run ? _sayGateway(family, run.machine) : ''],
 		)
 	}
@@ -458,7 +484,7 @@ function _sayFiltering(run, family) {
 	else if (second.arrived) said = 'endpoint-independent or address-dependent'
 	let notes = [first.why, second.why].filter(Boolean)
 	if (first.arrived && second.arrived === false) notes.push(`the second poke didn't arrive though the first did, which no kind of filtering does, so its packets were most likely lost`)
-	let holding = _sayHolding(run.firewall)
+	let holding = _sayHolding(run.firewall, 'ftorrent')
 	if (holding && said != 'endpoint-independent') notes.push(holding)
 	return [said, ...notes].join('; ')
 }
@@ -475,23 +501,50 @@ function _readPoked(steps) {
 	return {arrived: receive.value.some(d => _datagramText(d).startsWith(`poke ${poke.value.token} `))}//a packet of this poke's, by its token, rather than one left over from the first poke or a STUN answer that came late
 }
 
-//a few words when a firewall on this machine may be what held a poke back: a Mac's when it's on and blocks all, or doesn't list ftorrent as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks ftorrent coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read
-function _sayHolding(f) {
+//a few words when a firewall on this machine may be what held a packet back from one of this copy's two programs, which is ftorrent, whose socket the filtering test listens on, or engine, whose port the inbound proof probes: a Mac's when it's on and blocks all, or doesn't list the program as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks the program coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read
+function _sayHolding(f, which) {
 	if (!f.known) return ''
+	let program = f[which]
+	let name = which == 'engine' ? program.path.split(/[\\/]/).pop() : brandName//the engine by its file name, as the firewall lists it
 	if (f.profiles) {
 		let current = f.profiles.filter(p => p.current && p.enabled)
 		if (!current.length) return ''
 		let names = current.map(p => p.name)
-		let rules = action => f.ftorrent.rules.filter(r => r.enabled && r.action == action && r.direction == 'in' && ['UDP', 'any'].includes(r.protocol) && r.profiles.some(name => names.includes(name)))
+		let ruled = (action, protocol) => program.rules.some(r => r.enabled && r.action == action && r.direction == 'in' && [protocol, 'any'].includes(r.protocol) && r.profiles.some(profile => names.includes(profile)))//whether a rule of this action covers this protocol coming in on the current profile
+		let protocols = which == 'engine' ? ['UDP', 'TCP'] : ['UDP']//the filtering test listens over UDP alone, and the inbound proof reaches the engine over both
 		if (current.some(p => p.block_all)) return `the Windows firewall may be what held them back, since it blocks all incoming on ${names.join(' and ')}`
-		if (rules('block').length) return `the Windows firewall may be what held them back, since a rule blocks ${brandName} coming in on ${names.join(' and ')}`
-		if (!rules('allow').length) return `the Windows firewall may be what held them back, since no rule lets ${brandName} in on ${names.join(' and ')}`
+		if (protocols.some(protocol => ruled('block', protocol))) return `the Windows firewall may be what held them back, since a rule blocks ${name} coming in on ${names.join(' and ')}`
+		let unallowed = protocols.filter(protocol => !ruled('allow', protocol))
+		if (unallowed.length) return `the Windows firewall may be what held them back, since no rule lets ${name} in over ${unallowed.join(' or ')} on ${names.join(' and ')}`
 		return ''
 	}
 	if (f.on != 'on') return ''
 	if (f.blockAll == 'on') return 'the Mac firewall may be what held them back, since it blocks all incoming connections'
-	if (!f.ftorrent.listed?.allowed) return `the Mac firewall may be what held them back, since ${brandName} isn't allowed on its list`
+	if (!program.listed?.allowed) return `the Mac firewall may be what held them back, since ${name} isn't allowed on its list`
 	return ''
+}
+
+//whether a stranger reached the engine over this family, from moon's three probes of its port while a session listened: a pong, a uTP answer, or a connection the dial opened each proves it; a refusal says the packets reached a machine where nothing took them; and nothing back from all three is a translator or a firewall dropping them unasked. Then how many connections in the engine counted from moon's address while the probes ran, and a firewall on this machine named when it may be what dropped them
+function _sayInbound(run, family) {
+	if (!run.inbound) return 'unknown, no session listening'
+	let probe = kind => run.results.find(r => r.kind == kind && r.family == family)
+	let dht = probe('ping-dht'), utp = probe('ping-utp'), dial = probe('dial')
+	let failed = [dht, utp, dial].filter(r => !r.success)
+	if (failed.length) return `unknown, ${failed.map(r => r.outcome).join('; ')}`//a request to moon failed, so a probe never went out
+	let reached = []
+	if (dht.value.answered) reached.push('DHT ping answered')
+	if (utp.value.answered) reached.push(utp.value.utp == 'STATE' ? 'uTP accepted' : `uTP turned away with ${utp.value.utp}`)
+	if (dial.value.connected) reached.push(dial.value.handshake ? 'handshake exchanged' : 'TCP connection opened')
+	let said = ''
+	if (reached.length) said = `reachable: ${reached.join(', ')}`
+	else if (dht.value.refused || utp.value.refused || /refused/.test(dial.value.error || '')) said = 'not reachable: refused, the packets reached a machine where nothing took them'
+	else said = 'not reachable: nothing came back to either ping, and the dial opened no connection'
+	let moon = run.results.filter(r => r.kind == 'stun' && r.binding?.server == moonStun && r.binding.from).map(r => _addressOf(r.binding.from))//moon's own addresses, where its STUN answers came from, which its probes leave from too
+	let fromMoon = run.arrivals.filter(a => moon.some(address => _same(address, a.address)) && a.address.includes(':') == (family == 6))
+	let notes = [`the engine counted ${fromMoon.length} connection${fromMoon.length == 1 ? '' : 's'} in from moon${fromMoon.length ? `, over ${[...new Set(fromMoon.map(a => a.socket))].join(' and ')}` : ''}`]
+	let holding = _sayHolding(run.firewall, 'engine')
+	if (!reached.length && holding) notes.push(holding)
+	return [said, ...notes].join('; ')
 }
 
 //a datagram's bytes as text, blank for bytes that aren't all printable, like a STUN answer's
@@ -554,6 +607,26 @@ export function sayRun(run) {
 	}
 	lines.push(..._sayFirewallLines(run.firewall), ..._sayMachine(run.machine))
 	return lines.join('\n')
+}
+
+//moon's report of a ping, in the box's words: where it went and from which of moon's ports, then the answer, a pong with the node's id and where the node saw moon, or a uTP packet's type; a refusal; an error; or how many sends went unanswered
+function _sayPing(v) {
+	let said = `${v.to} from moon's port ${v.from_port}: `
+	if (v.answered && v.dht) return said + `pong in ${v.milliseconds} ms from node ${v.dht.id}, which saw moon at ${v.dht.saw}`
+	if (v.answered) return said + `${v.utp} in ${v.milliseconds} ms, ${v.utp == 'STATE' ? 'accepted, and moon reset it' : 'turned away'}`
+	if (v.refused) return said + `refused, after ${v.sent} send${v.sent == 1 ? '' : 's'}`
+	if (v.error) return said + v.error
+	return said + `no answer to ${v.sent} send${v.sent == 1 ? '' : 's'} in ${v.milliseconds} ms`
+}
+
+//moon's report of a dial, in the box's words: where it went, then the handshake that came back and the client it names, a close with nothing, what else came back, or why no connection opened
+function _sayDial(v) {
+	let said = `${v.to}: `
+	if (!v.connected) return said + `no connection in ${v.milliseconds} ms, ${v.error}`
+	said += `connected in ${v.milliseconds} ms from moon's port ${v.from_port}, `
+	if (v.handshake) return said + `handshake back from peer id ${v.handshake.peer_id}${v.handshake.infohash == v.infohash ? '' : ', for another torrent'}`
+	if (v.closed) return said + `then closed with ${v.received} bytes back, which a client without the torrent does`
+	return said + `${v.received} bytes back${v.error ? `, then ${v.error}` : ''}`
 }
 
 //each datagram a receive heard, on lines under its own: where it came from, when, its size, and what it carried, as text when it's all printable, like a poke's, and in hex when it isn't, like a STUN answer that came late
@@ -629,6 +702,8 @@ function _sayAnswer(r) {
 		return said
 	}
 	if (r.kind == 'poke') return `${r.value.sent} of ${r.value.packets} packets to ${r.value.to} from port ${r.value.from_port}, carrying ${r.value.token}${r.value.error ? `, then ${r.value.error}` : ''}`
+	if (r.kind == 'ping-dht' || r.kind == 'ping-utp') return _sayPing(r.value)
+	if (r.kind == 'dial') return _sayDial(r.value)
 	if (r.kind == 'receive') return r.value.length > 0 ? `${r.value.length} datagram${r.value.length == 1 ? '' : 's'}` : `nothing in ${checkSeconds} seconds`
 	if (r.kind == 'interfaces') return `${r.value.length} interfaces, ${r.value.reduce((sum, i) => sum + i.addresses.length, 0)} addresses`
 	if (r.kind == 'tool') { let lines = r.value.trim().split('\n'); return lines.length <= 2 ? lines.join('; ') : `${lines.length} lines` }//what it printed, when that's a line or two, like each of the firewall's reads; the count when it's a screen, read into the interfaces below
@@ -1102,6 +1177,7 @@ export const session = reactive({
 })
 let poller = 0//the interval asking a running session for its news
 let contacted = new Set()//every address the session's alerts show it sending to, a DHT lookup or a connection it tried, since Start
+let arrivals = []//every connection in since Start, as {address, socket, moment}, for the inbound proof to find moon's among
 let listening = false//whether this module has asked to hear every engine event yet
 
 //hear every engine event from now on, once
@@ -1131,6 +1207,7 @@ export function sessionStart() {
 	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, RFC 6335, a new one each Start; a setting may later let a person choose one, with random staying the default
 	Object.assign(session, {running: true, port, started: Date.now(), sockets: [], bootstrapped: false, allNodes: null, tables: [], external: [], incoming: {ipv4: 0, ipv6: 0}, unsolicited: {ipv4: 0, ipv6: 0}, hasIncoming: null, kinds: {}})
 	contacted = new Set()
+	arrivals = []
 	boxAdd(`${sayMoment(session.started)}, session on port ${port}`, 'session')
 	_send({command: 'session', port})
 	if (session.torrent?.v1 || session.torrent?.v2) _send({command: 'add', path: session.torrent.path})//only a file the engine has read as a torrent
@@ -1205,6 +1282,7 @@ function _incoming(a) {
 	if (!a.address) return ''//an alert whose fields the engine couldn't read, which its line says, and which isn't counted
 	let family = a.address.includes(':') ? 'ipv6' : 'ipv4'
 	session.incoming[family]++
+	arrivals.push({address: a.address, socket: a.socket, moment: Date.now()})
 	if (session.sockets.some(s => s.address == a.address)) return 'the session itself, from another of its addresses'
 	if (contacted.has(a.address)) return 'the session had sent to this address first'
 	session.unsolicited[family]++
