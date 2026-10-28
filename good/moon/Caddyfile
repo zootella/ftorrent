@@ -1,4 +1,4 @@
-# Caddy gets and renews a certificate for each name by itself, once the name's DNS points at this box, and proxies the three names to the Go service on the loopback address. It sets X-Forwarded-For to the address it accepted each connection from and ignores one the client sent, which is the header the service's reflector reads.
-moon.ftorrent.com, ip4.moon.ftorrent.com, ip6.moon.ftorrent.com {
-	reverse_proxy 127.0.0.1:8100
+# Caddy gets and renews a certificate for each name by itself, once the name's DNS points at this box, and proxies the three names to the Go service on the loopback address. It sets X-Forwarded-For to the address it accepted each connection from and ignores one the client sent, which is the header the service's reflector reads. A comment at the end of a line needs a space before its #, or Caddy reads the # as part of what comes before it.
+moon.ftorrent.com, ip4.moon.ftorrent.com, ip6.moon.ftorrent.com { #the three names this site answers, each with a certificate of its own, and plain HTTP to any of them sent on to HTTPS
+	reverse_proxy 127.0.0.1:8100 #hand every request to the Go service, which listens on the loopback address alone
 }

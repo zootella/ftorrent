@@ -1,9 +1,12 @@
-# Runs stuncount.service on the hour. Debian's cloud image ships no cron, and a timer is a unit like every other service on moon.
+# Runs stuncount.service on the hour. Debian's cloud image ships no cron, and a timer is a unit like every other service on moon. A timer starts the service of its own name, so stuncount.timer starts stuncount.service. A comment is a line of its own, starting with #.
 [Unit]
+#the name systemctl list-timers shows
 Description=read the STUN counters hourly
 
 [Timer]
+#at the top of every hour, by the box's clock, which is UTC
 OnCalendar=hourly
 
 [Install]
+#systemctl enable hooks the timer into boot, through the target every timer belongs to
 WantedBy=timers.target

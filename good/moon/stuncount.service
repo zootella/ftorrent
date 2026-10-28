@@ -1,7 +1,10 @@
-# Reads the six STUN counting rules in the host firewall and appends a row to /var/log/stuncount.csv; stuncount.timer runs it on the hour. firewall.py installs both beside the rules.
+# Reads the six STUN counting rules in the host firewall and appends a row to /var/log/stuncount.csv; stuncount.timer runs it on the hour. firewall.py installs both beside the rules. It has no [Install] section, since nothing enables it on its own: the timer is what starts it. A comment is a line of its own, starting with #.
 [Unit]
+#the name systemctl status shows
 Description=append the STUN counters to stuncount.csv
 
 [Service]
+#a job that runs to its end and exits, rather than a service that stays up
 Type=oneshot
+#the script, run as root, which reading the firewall's counters needs
 ExecStart=/usr/local/bin/stuncount.py

@@ -1,18 +1,25 @@
-# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py. The STUN counters are the same three rules under the stun6 names; rules.v4 says what each counts.
+# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py, in the form ip6tables-restore reads. rules.v4 explains that form and says what each STUN counter counts; the comments here say what each rule is for, and where IPv6 differs.
+#the filter table, the one that decides whether a packet is accepted or dropped
 *filter
+#dropped coming in unless a rule below accepts it, nothing forwarded, everything sent let out
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
+#the STUN counters, first so every packet passes them: requests arriving, and the dry run of the guard, which matches a source past 20 a second after a burst of 40
 -A INPUT -p udp --dport 3478 -m comment --comment stun6-in
 -A INPUT -p udp --dport 3478 -m hashlimit --hashlimit-name stun6 --hashlimit-mode srcip --hashlimit-above 20/second --hashlimit-burst 40 -m comment --comment stun6-excess
+#coturn
 -A INPUT -p udp --dport 3478 -j ACCEPT
+#loopback, and replies to connections the box opened
 -A INPUT -i lo -j ACCEPT
 -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-# ICMPv6 carries neighbor discovery, the router advertisements the box's address comes from, and path MTU discovery; IPv6 stops working without it.
+#ICMPv6 carries neighbor discovery, the router advertisements the box's address comes from, and path MTU discovery; IPv6 stops working without it, which is why there's no DHCP rule here, since the address arrives this way
 -A INPUT -p ipv6-icmp -j ACCEPT
+#ssh, then Caddy's HTTP, HTTPS, and HTTP/3
 -A INPUT -p tcp --dport 22 -j ACCEPT
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
+#the answers coturn sends, counted
 -A OUTPUT -p udp --sport 3478 -m comment --comment stun6-out
 COMMIT

@@ -1,23 +1,23 @@
 #cloud-config
-# moon's user data, pasted into the provider's dashboard when creating the box. Debian 13, with every service a package and a systemd unit; the README says why there is no container runtime here.
+# moon's user data, pasted into the provider's dashboard when creating the box; cloud-init runs it once, on the first boot, and the first line, exactly #cloud-config, is what tells cloud-init this is its configuration rather than a script. Debian 13, with every service a package and a systemd unit; the README says why there is no container runtime here. In YAML a comment at the end of a line needs a space before its #, or the # becomes part of the value.
 
-hostname: moon
-timezone: Etc/UTC
-ssh_pwauth: false
-disable_root: false
+hostname: moon #the name the box calls itself, in its prompt and its logs
+timezone: Etc/UTC #UTC, so the logs, the counters' rows, and the 04:00 restart below all read in one clock
+ssh_pwauth: false #no password logins over ssh, ever; the key the dashboard puts on the box is the only way in
+disable_root: false #cloud-init's default refuses root over ssh and points to a default user; moon is run as root with that key, so root stays open
 
-package_update: true
-package_upgrade: true
-package_reboot_if_required: true
-packages:
-  - caddy
-  - unattended-upgrades
-  - rsync
+package_update: true #apt-get update on the first boot, so the lists are current
+package_upgrade: true #then upgrade everything the image shipped with
+package_reboot_if_required: true #and reboot once if an upgrade asks for it, the one reboot the first boot takes
+packages: #installed on the first boot, from Debian's own archive
+  - caddy #the web server in front of the Go service, which gets its certificates itself
+  - unattended-upgrades #applies security fixes and updates each day, on the policy below
+  - rsync #what deploy.py and firewall.py copy files to the box with
 
-write_files:
-  # Daily unattended upgrades from security and updates, and a restart at 04:00 UTC when one is needed. Debian's own file already names the security archive; this adds the updates archive. dpkg keeps our edited Caddyfile when a caddy update ships its own.
-  - path: /etc/apt/apt.conf.d/52moon
-    content: |
+write_files: #files cloud-init writes early in the first boot, before the packages are configured
+  #the apt policy: daily unattended upgrades from security and updates, and a restart at 04:00 UTC when one is needed. Debian's own file already names the security archive, and this adds the updates archive. Line by line in the content below: refresh the package lists every day; run unattended-upgrade every day; allow the updates archive too, ${distro_id} and ${distro_codename} being apt's own placeholders, which it fills in as Debian and trixie; restart when an upgrade needs one; at 04:00; and the two Dpkg options, which take the default answer to a package's questions and keep our edited Caddyfile when a caddy update ships its own
+  - path: /etc/apt/apt.conf.d/52moon #apt reads every file in apt.conf.d in name order, so 52 lands after Debian's 50unattended-upgrades and adds to it
+    content: | #the | keeps every line below exactly as written, as the file's text
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
       Unattended-Upgrade::Allowed-Origins:: "${distro_id}:${distro_codename}-updates";
@@ -25,9 +25,9 @@ write_files:
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
       Dpkg::Options:: "--force-confdef";
       Dpkg::Options:: "--force-confold";
-  # moon's IPv6 address is the first in its /64. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64; the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one.
-  - path: /etc/netplan/60-moon.yaml
-    permissions: '0600'
+  #moon's IPv6 address is the first in its /64. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64, and the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one
+  - path: /etc/netplan/60-moon.yaml #netplan merges every file in /etc/netplan in name order, so this adds the token to the provider's 50-cloud-init.yaml
+    permissions: '0600' #readable by root alone, which netplan asks of its files
     content: |
       network:
         version: 2
@@ -35,6 +35,6 @@ write_files:
           ens2:
             ipv6-address-token: "::1"
 
-# The drop-in above lands after the network is up, so apply it now rather than at the next reboot.
-runcmd:
-  - netplan apply
+#the drop-in above lands after the network is up, so apply it now rather than at the next reboot
+runcmd: #commands run once, at the end of the first boot
+  - netplan apply #renders the merged netplan files for networkd and applies them, which forms the ::1 address

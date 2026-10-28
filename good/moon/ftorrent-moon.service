@@ -1,44 +1,53 @@
-# The Go service, ftorrent-moon, built on the box from go-moon/ by deploy.py and installed at /usr/local/bin/ftorrent-moon. It listens on the loopback address alone, and Caddy proxies the three names to it. The hardening is the main server's compose block for its Go reflector written as systemd directives, the same set coturn's drop-in carries, less the state folder coturn needs and the netlink socket it opens; this program keeps no state and enumerates no interfaces.
+# The Go service, ftorrent-moon, built on the box from go-moon/ by deploy.py and installed at /usr/local/bin/ftorrent-moon. It listens on the loopback address alone, and Caddy proxies the three names to it. The hardening is the main server's compose block for its Go reflector written as systemd directives, the same set coturn's drop-in carries, less the state folder coturn needs and the netlink socket it opens; this program keeps no state and enumerates no interfaces. coturn.service.d/hardening.conf has a line on each shared directive, and a comment here is a line of its own, starting with #.
 [Unit]
+#the name systemctl status shows
 Description=the Go service of moon.ftorrent.com: the reflector, the poke, and the dial
+#start once the network is up, and pull in the target that waits for it
 After=network-online.target
 Wants=network-online.target
 
 [Service]
+#the program, which serves in the foreground until it's stopped
 ExecStart=/usr/local/bin/ftorrent-moon
+#started again if it crashes or exits with a failing code
 Restart=on-failure
-# A user made for this run and gone after it, with no home, no login, and no file of its own anywhere.
+#a user made for this run and gone after it, with no home, no login, and no file of its own anywhere
 DynamicUser=yes
-# The filesystem read-only throughout, a private /tmp, and no view of home folders, devices, or other processes.
+#the filesystem read-only throughout, with nowhere at all to write, home folders hidden, and a private /tmp, empty and gone with the service
 ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
+#a private /dev with only the harmless devices, and other processes hidden in /proc
 PrivateDevices=yes
 ProtectProc=invisible
+#the kernel's tunables, modules, log, control groups, clock, and hostname all out of reach
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
 ProtectControlGroups=yes
 ProtectClock=yes
 ProtectHostname=yes
-# No capabilities, and no way to gain any: 8100 is above the privileged ports.
+#no capabilities, and no way to gain any, nor to make a file setuid: 8100 is above the privileged ports
 CapabilityBoundingSet=
 AmbientCapabilities=
 NoNewPrivileges=yes
 RestrictSUIDSGID=yes
-# Sockets of the two internet families only, and the system calls an ordinary service uses; anything else fails with a permission error rather than killing the process.
+#sockets of the two internet families only, which is all the listener, the poke, and the dial use
 RestrictAddressFamilies=AF_INET AF_INET6
+#the system calls an ordinary service uses, a call outside them failing with a permission error, and the box's own instruction set only
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
+#no new namespaces, no realtime scheduling, no switching personality, and no memory both writable and executable
 RestrictNamespaces=yes
 RestrictRealtime=yes
 LockPersonality=yes
 MemoryDenyWriteExecute=yes
-# The compose file's limits for the main server's reflector: 64 MB, a quarter of a core, 32 tasks.
+#the compose file's limits for the main server's reflector: 64 MB, a quarter of a core, and 32 tasks, which counts the threads Go runs its goroutines on
 MemoryMax=64M
 CPUQuota=25%
 TasksMax=32
 
 [Install]
+#systemctl enable hooks it into the normal boot, the target every service that runs at startup belongs to
 WantedBy=multi-user.target

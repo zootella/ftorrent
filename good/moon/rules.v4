@@ -1,28 +1,35 @@
 # moon's IPv4 host firewall. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT is the whole story, and FORWARD stays closed until something is built that needs it.
+# The file is in the form iptables-restore reads, which replaces a whole table at once. A comment has to be a line of its own, since a # after a rule would be read as part of the rule, so each comment here sits on the line above what it describes. Rules in a chain are checked in order, and the first whose target decides a packet's fate ends the check; a rule with no target only counts, and the packet moves on to the next.
+#the filter table, the one that decides whether a packet is accepted or dropped; the other tables, for translating addresses and marking packets, go unused here
 *filter
+#each chain's policy, what happens to a packet no rule accepted: dropped coming in, and [0:0] starts the chain's packet and byte counters at zero
 :INPUT DROP [0:0]
-# Nothing is forwarded; the network namespaces of later work admit their own traffic here when they come.
+#nothing is forwarded; the network namespaces of later work admit their own traffic here when they come
 :FORWARD DROP [0:0]
+#everything the box sends is let out
 :OUTPUT ACCEPT [0:0]
-# The STUN counters come first, so every packet passes them before any rule decides. A rule with no target only counts. stun4-in is binding requests arriving for coturn, and stun4-out, in OUTPUT below, the answers leaving. stun4-excess is the requests above 20 a second from one source address, after a burst of 40: the guard's own rule without its drop, a dry run that climbs only when something is using the server as a reflector. stuncount.py reads all three by their comments every hour, and a reboot starts them at zero.
+#the STUN counters come first, so every packet passes them before any rule decides. stun4-in is binding requests arriving for coturn, and stun4-out, in OUTPUT below, the answers leaving. stun4-excess is the requests above 20 a second from one source address, after a burst of 40: the guard's own rule without its drop, a dry run that climbs only when something is using the server as a reflector. stuncount.py reads all three by their comments every hour, and a reboot starts them at zero
+#-A INPUT appends to INPUT; -p udp --dport 3478 matches UDP to port 3478; -m comment loads the match that carries a label, which stuncount.py finds the rule by; and there's no -j, so it only counts
 -A INPUT -p udp --dport 3478 -m comment --comment stun4-in
+#-m hashlimit keeps a token bucket for each source address, --hashlimit-mode srcip, in a kernel table named stun4, and matches the packets that arrive once a source is past 20 a second after a burst of 40; the same rule with -j DROP is the guard
 -A INPUT -p udp --dport 3478 -m hashlimit --hashlimit-name stun4 --hashlimit-mode srcip --hashlimit-above 20/second --hashlimit-burst 40 -m comment --comment stun4-excess
-# coturn: STUN binding requests over UDP.
+#coturn: STUN binding requests over UDP; -j ACCEPT lets the packet in and ends the check
 -A INPUT -p udp --dport 3478 -j ACCEPT
-# Everything on the loopback interface.
+#everything on the loopback interface, -i lo, which is how Caddy reaches the Go service at 127.0.0.1
 -A INPUT -i lo -j ACCEPT
-# Replies to connections the box opened, and errors about them.
+#replies to connections the box opened, and errors about them: conntrack is the kernel's record of every connection, ESTABLISHED a packet belonging to one, and RELATED one tied to it, like an ICMP error
 -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-# Ping, and the ICMP errors path MTU discovery depends on.
+#ping, and the ICMP errors path MTU discovery depends on
 -A INPUT -p icmp -j ACCEPT
-# DHCP replies: the provider assigns the box's IPv4 by DHCP, and a renewal's answer arrives on port 68.
+#DHCP replies: the provider assigns the box's IPv4 by DHCP, and a renewal's answer arrives on port 68
 -A INPUT -p udp --dport 68 -j ACCEPT
-# ssh.
+#ssh
 -A INPUT -p tcp --dport 22 -j ACCEPT
-# Caddy: HTTP for certificate challenges and redirects, HTTPS over TCP, and HTTP/3 over UDP.
+#Caddy: HTTP for certificate challenges and redirects, HTTPS over TCP, and HTTP/3 over UDP
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
-# The third STUN counter: coturn's answers, leaving from its port.
+#the third STUN counter: coturn's answers, leaving from its port, --sport 3478
 -A OUTPUT -p udp --sport 3478 -m comment --comment stun4-out
+#apply the table: nothing above takes effect until this line, and then all of it at once
 COMMIT
