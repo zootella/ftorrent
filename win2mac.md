@@ -1,29 +1,111 @@
 # Windows to Mac
 
-A letter from the Windows session to the Mac session, written 2026-10-24 at the end of Good5's Windows side on the good roadmap, `docs/docs/good-service-planning.md`. The Good5b box is checked and the Windows paragraph of the Good5 section is rewritten as what was built; the diff carries the rest.
+A letter from the Windows session to the Mac session, written 2026-10-28 during Good7 on the good roadmap, `docs/docs/good-service-planning.md`. The Good7d and Good7f boxes are checked. Nothing in `udp.rs` or `connection.js` needed a change to run here. The lines below are as Copy gives them, with two addresses rewritten in the documentation ranges and one path shortened: the router's public IPv4 address reads 203.0.113.184, the machine's temporary IPv6 address reads 2001:db8:1:a000:aaaa:bbbb:cccc:dddd, and the installed engine's path starts at %LOCALAPPDATA%.
 
-## Good5b as built
+## udp.rs on Windows
 
-The draft of `desktop/src-tauri/src/firewall.rs` compiled and read the real firewall correctly as written, the VARIANT read included. Three things changed in it. The COM apartment: a pool thread that already has an apartment in the other mode answers RPC_E_CHANGED_MODE, and the read now goes ahead in that one and leaves it alone, closing only an apartment it opened. The local ports: the firewall answers `*` for any port, not blank, so Rust passes `*` through as the firewall's own word and the panel says any ports. And the VARIANT's reference: a copy, as the draft had it, is right, because the crate's VARIANT clears itself when dropped and releases the reference the enumerator put in it; moving that reference out instead crashed on the second rule, and the essay now says so.
+`udp.rs` compiled here with no warnings, and its two tests pass. `receive_nothing` ends on the clock through the `TimedOut` arm, which is how Windows says a read timed out. Every receive in every Check below ended the same way, at about 4,010 milliseconds, with no error. None met `ConnectionReset`, though none was likely to: every server these sockets sent to answered, so nothing was refused, and the Windows firewall drops inbound ICMP refusals by default anyway, as Good5 found.
 
-The module was verified before the app ran it, through a scratch crate outside the repository that compiles the repository's `firewall.rs` by path with a stand-in for Tauri's command attribute, and runs the two commands against this machine; the walk covers 651 rules in about fifteen milliseconds. Then it ran in the app, where the user pressed Check three times: twice in the development build, and once in an installed copy built by `pnpm installer` with everything in this letter in it.
+## How the Checks ran
 
-## The panel beside the system
+The first Check ran in the development build against the six rules Good5 left, where the development build's ftorrent was allowed in on Public. Both filtering rows read address-and-port-dependent with no note, which was right.
 
-The panel's Firewall rows and section, as Copy gives them, from the installed copy's Check:
+Then every rule naming ftorrent or its engine was deleted, eight in all, so the installed copy would start where a new user does. Four Checks followed in an installed copy built by `pnpm installer`, which is also the release uploaded today. Each program's security alert was caught twice, once while it stood and once after Allow access.
+
+The alert writes two Block rules for the current profile, one for UDP and one for TCP, the moment it appears and before anyone answers. So a Check while it stands reads "a rule blocks", and the "no rule lets in" branch of `_sayHolding` never ran here. Allow access turns the two Block rules into Allow rules under the same name.
+
+### No session, with ftorrent's alert standing
 
 ```
+IPv4 filtering: address-and-port-dependent; the Windows firewall may be what held them back, since a rule blocks ftorrent coming in on Public
+IPv4 inbound: unknown, no session listening
+IPv6 filtering: address-and-port-dependent; the Windows firewall may be what held them back, since a rule blocks ftorrent coming in on Public
+IPv6 inbound: unknown, no session listening
 Firewall: Public on, the current network's profile; Domain on; Private on
+Firewall rules: ftorrent block in UDP on Public, block in TCP on Public, ftorrent-engine.exe no rules
+```
+
+```
+Windows firewall rules for ftorrent.exe                             25 ms  2 rules
+Windows firewall rules for ftorrent-engine.exe                      24 ms  0 rules
+STUN stun.ftorrent.com:3478 from port 53643, kept open              73 ms  203.0.113.184:53643, 40 bytes
+GET https://ip4.moon.ftorrent.com/poke?port=53643&token=b61cb27a   446 ms  3 of 3 packets to 203.0.113.184:53643 from port 55902, carrying b61cb27a
+receive on port 53643                                             4012 ms  nothing in 4 seconds
+STUN moon.ftorrent.com:3478 from port 64129, kept open             108 ms  203.0.113.184:64129, 40 bytes
+GET https://ip4.moon.ftorrent.com/poke?port=64129&token=b1ad23e3   403 ms  3 of 3 packets to 203.0.113.184:64129 from port 60622, carrying b1ad23e3
+receive on port 64129                                             4021 ms  nothing in 4 seconds
+STUN stun.ftorrent.com:3478 from port 51332, kept open              70 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:51332, 52 bytes
+GET https://ip6.moon.ftorrent.com/poke?port=51332&token=2acbf9c0   407 ms  3 of 3 packets to [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:51332 from port 50343, carrying 2acbf9c0
+receive on port 51332                                             4012 ms  nothing in 4 seconds
+STUN moon.ftorrent.com:3478 from port 59690, kept open             111 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:59690, 52 bytes
+GET https://ip6.moon.ftorrent.com/poke?port=59690&token=b29d9200   399 ms  3 of 3 packets to [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:59690 from port 52046, carrying b29d9200
+receive on port 59690                                             4017 ms  nothing in 4 seconds
+
+Firewall Public on, the current network's profile; Domain on; Private on
+  block in  UDP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
+  block in  TCP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
+  no rules  %LOCALAPPDATA%\ftorrent\ftorrent-engine\ftorrent-engine.exe; this copy's engine
+```
+
+Each socket's STUN answer still arrived while the Block rules stood, since it comes back from the address and port the socket sent to.
+
+### No session, after Allow access
+
+```
+IPv4 filtering: address-and-port-dependent
+IPv6 filtering: address-and-port-dependent
+Firewall rules: ftorrent allow in UDP on Public, allow in TCP on Public, ftorrent-engine.exe no rules
+```
+
+This Check took about five seconds, from the run's first line to the stick that followed it.
+
+### A session, with the engine's alert standing
+
+```
+IPv4 filtering: address-and-port-dependent
+IPv4 inbound: not reachable: nothing came back to either ping, and the dial opened no connection; the engine counted 0 connections in from moon; the Windows firewall may be what held them back, since a rule blocks ftorrent-engine.exe coming in on Public
+IPv6 filtering: address-and-port-dependent
+IPv6 inbound: not reachable: nothing came back to either ping, and the dial opened no connection; the engine counted 0 connections in from moon; the Windows firewall may be what held them back, since a rule blocks ftorrent-engine.exe coming in on Public
+Firewall rules: ftorrent allow in UDP on Public, allow in TCP on Public, ftorrent-engine.exe block in UDP on Public, block in TCP on Public
+Session: running on port 64337
+```
+
+```
+GET https://ip4.moon.ftorrent.com/ping?port=64337&kind=dht        3334 ms  203.0.113.184:64337 from moon's port 33823: no answer to 3 sends in 3000 ms
+GET https://ip4.moon.ftorrent.com/ping?port=64337&kind=utp        3320 ms  203.0.113.184:64337 from moon's port 47774: no answer to 3 sends in 3000 ms
+GET https://ip4.moon.ftorrent.com/dial?port=64337                 3321 ms  203.0.113.184:64337: no connection in 3000 ms, dial tcp 203.0.113.184:64337: i/o timeout
+GET https://ip6.moon.ftorrent.com/ping?port=64337&kind=dht        3326 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337 from moon's port 36039: no answer to 3 sends in 3000 ms
+GET https://ip6.moon.ftorrent.com/ping?port=64337&kind=utp        3327 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337 from moon's port 54745: no answer to 3 sends in 3000 ms
+GET https://ip6.moon.ftorrent.com/dial?port=64337                 3323 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337: no connection in 3000 ms, dial tcp [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337: i/o timeout
+
+Firewall Public on, the current network's profile; Domain on; Private on
+  allow in  UDP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
+  allow in  TCP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
+  block in  UDP any ports   Public                     "ftorrent-engine.exe"; this copy's engine
+  block in  TCP any ports   Public                     "ftorrent-engine.exe"; this copy's engine
+```
+
+The filtering lines in both session Checks read like the first installed Check's: each STUN answered, moon sent three of three packets, and every receive heard nothing in four seconds.
+
+### A session, after Allow access
+
+```
+IPv4 filtering: address-and-port-dependent
+IPv4 inbound: not reachable: nothing came back to either ping, and the dial opened no connection; the engine counted 0 connections in from moon
+IPv6 filtering: address-and-port-dependent
+IPv6 inbound: not reachable: nothing came back to either ping, and the dial opened no connection; the engine counted 0 connections in from moon
 Firewall rules: ftorrent allow in UDP on Public, allow in TCP on Public, ftorrent-engine.exe allow in UDP on Public, allow in TCP on Public
+Session: running on port 64337
 ```
 
 ```
-Windows firewall profiles                                37 ms  Domain on; Private on; Public on, current
-Windows firewall rules for ftorrent.exe                  49 ms  2 rules
-Windows firewall rules for ftorrent-engine.exe           49 ms  2 rules
-```
+GET https://ip4.moon.ftorrent.com/ping?port=64337&kind=dht        3293 ms  203.0.113.184:64337 from moon's port 33860: no answer to 3 sends in 3000 ms
+GET https://ip4.moon.ftorrent.com/ping?port=64337&kind=utp        3303 ms  203.0.113.184:64337 from moon's port 34675: no answer to 3 sends in 3000 ms
+GET https://ip4.moon.ftorrent.com/dial?port=64337                 3292 ms  203.0.113.184:64337: no connection in 3000 ms, dial tcp 203.0.113.184:64337: i/o timeout
+GET https://ip6.moon.ftorrent.com/ping?port=64337&kind=dht        3302 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337 from moon's port 38103: no answer to 3 sends in 3001 ms
+GET https://ip6.moon.ftorrent.com/ping?port=64337&kind=utp        3297 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337 from moon's port 58921: no answer to 3 sends in 3000 ms
+GET https://ip6.moon.ftorrent.com/dial?port=64337                 3302 ms  [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337: no connection in 3000 ms, dial tcp [2001:db8:1:a000:aaaa:bbbb:cccc:dddd]:64337: i/o timeout
 
-```
 Firewall Public on, the current network's profile; Domain on; Private on
   allow in  UDP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
   allow in  TCP any ports   Public                     "ftorrent.exe"; this copy of ftorrent
@@ -31,31 +113,14 @@ Firewall Public on, the current network's profile; Domain on; Private on
   allow in  TCP any ports   Public                     "ftorrent-engine.exe"; this copy's engine
 ```
 
-The development build's Checks showed that copy's two rules, named `ftorrent` after the program's description, and no rules for its engine, with the engine's path on the no-rules line, which is where the `\\?\` prefix below first showed.
+After the last Check, `netsh advfirewall firewall show rule` listed the same four rules the panel did, each inbound, enabled, Allow, Public only, and any port.
 
-The system's side came from `netsh advfirewall`, which reads the same policy store Windows Security shows, since PowerShell's `Get-NetFirewallRule` answered access denied from the unelevated shell the session runs in. `show currentprofile` named Public, with the firewall on and the policy BlockInbound, AllowOutbound, and `show allprofiles state` had all three on. `show rule name=all verbose` held six rules naming ftorrent, every one inbound, Allow, enabled, Public only, local port Any, and edge traversal deferred to the user:
+## What the rows say
 
-| Rule name | Program | Protocol |
-|---|---|---|
-| ftorrent | the development build, `desktop\src-tauri\target\debug\ftorrent.exe` | UDP |
-| ftorrent | the same | TCP |
-| ftorrent.exe | the installed copy, `%LOCALAPPDATA%\ftorrent\ftorrent.exe` | UDP |
-| ftorrent.exe | the same | TCP |
-| ftorrent-engine.exe | the installed copy's engine, `%LOCALAPPDATA%\ftorrent\ftorrent-engine\ftorrent-engine.exe` | UDP |
-| ftorrent-engine.exe | the same | TCP |
+The firewall note was right every time. It appeared while a Block rule stood, and it was gone once Allow access replaced the rule. With both programs allowed, the router is what holds a stranger back here, over both families and both transports. On this router the Windows firewall's filtering and the router's read alike, both address-and-port-dependent, so telling the two layers apart needs a network whose router lets more in.
 
-The user then read the same off the console itself, Windows Defender Firewall with Advanced Security, which Windows Security's Firewall & network protection page opens through its Advanced settings link: the Overview's three profiles, each on with inbound blocked by default and Public marked active, and under Inbound Rules, sorted by name, the six rows, each Public, enabled, Allow, with the program paths in lowercase in the Program column. Both agree with the panel's rows. netsh prints each program path in lowercase too, which is how the firewall stores the path the security alert gave it, so the case-insensitive match in `rules` is what makes the walk find them. The installed copy's four are the ones in the panel's paste above, and the development build's engine has no rules, as its panel said.
+## What the release found
 
-## One read the user asked for here
+The installer takes the engine from `desktop/engine/dist`, and `pnpm installer` doesn't rebuild it. This box's engine was built on 2026-10-22, before the engine gained its `tables` command, so the Windows release of 2026-10-24 shipped an engine without it. `pnpm engine` rebuilt it before today's release, and the session's table now shows a DHT row for each of six routing tables, one for each address it listens on.
 
-The UPnP row now names the router. The search's description, which igd-next reads for the control paths and keeps nothing else of, also carries the root device's friendly name, maker, model name and number, and settings page, so `net_upnp_description` in `net.rs` fetches it again from the gateway the page hands back, over plain http on the local network as UPnP serves it, with a limit and a time like net_get's, and answers the text; `net_get` itself still refuses plain http. The page reads the root device's direct children with DOMParser in `_readDevice`, says the maker and model in `_sayDevice` with a word the description repeats said once, and puts them in parentheses after the router's address in the UPnP row, the way an interface's name follows an address; the box's line for the GET has the rest of the fields. It's a fourth UPnP read after the search, platform-general, and registered in `lib.rs`. The router here describes itself as `Cisco DOCSIS` in every field, so the row reads `WANIPConnection:1 at 192.168.1.1:49154 (Cisco DOCSIS)`. The Good5 section's router paragraph and the world map say so; the router's uptime still waits. This read has run only on Windows so far. Nothing in it is platform-specific, so a Check on the Mac against this same router should put `(Cisco DOCSIS)` in its UPnP row too, and that Check is the confirmation to make there.
-
-## What Windows did that the plan didn't expect
-
-The engine's path arrived with the `\\?\` prefix. Tauri's current_exe canonicalizes the executable's path to resolve links, which on Windows puts the verbatim prefix on, and engine.rs built the engine's path from Tauri's resource directory, so engine_status answered `\\?\C:\...`, which matches no rule, since the firewall stores plain paths. paths.rs reads `std::env::current_exe` itself, so ftorrent's own path was plain and its rules matched, which is why the first Check looked right apart from the engine's line in the box. The fix is in `paths.rs`: `display` is now `pub(crate)` and writes every path through `dunce::simplified`, and engine.rs writes the engine's path through it. dunce is a new direct dependency in `Cargo.toml`, already in the tree through Tauri at the same version, so `Cargo.lock` gained one line. The installed copy's Check above, with its engine's two rules found, is the fix at work; before it, that line would have read no rules.
-
-The Windows firewall drops the router's refusal of port 5351. The router answers NAT-PMP and PCP with an ICMP port-unreachable, which the Mac's socket hears in milliseconds, but the one inbound ICMPv4 rule the firewall has on by default admits only type 3 code 4, fragmentation needed, so the refusal never reaches the socket, both reads say no answer after four seconds, and Check takes four seconds here where the Mac's ends in milliseconds. A Python socket sent the same two bytes to the gateway, connected and unconnected, and timed out both ways. On Windows, no answer on port 5351 is also what a refused port looks like; the Good5 section and the essay in `connection.js` say so.
-
-A page that throws at startup leaves ftorrent invisible. The first development run's page failed on its first import, since this box's `desktop/node_modules` still held ergo 0.1.3 against the lockfile's 0.2.0, and the window never appeared: window.rs leaves showing the window to the page, and bring_forward in lifecycle.rs waits for the page to have placed it, so the tray's click and its Show did nothing while Exit still worked. `pnpm install --frozen-lockfile` brought ergo to 0.2.0 and left the lockfile unchanged, and the next run was whole. The tray's gate is working as designed; that a broken page leaves no way to see the app is noted for a later task, not changed here.
-
-The window pass on Windows was clean: close hides the window, a left click on the tray icon brings it back, and Show from the tray's menu does the same. `pnpm compile` passes end to end with everything above in.
+The engine's security alert shows PyInstaller's default Python icon beside `ftorrent-engine.exe`, since `ftorrent-engine.spec` sets no icon. It's the first time a new user meets the engine, and it waits for a task of its own.

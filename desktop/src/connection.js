@@ -228,7 +228,7 @@ function _readDevice(text) {
 	return {success: true, value: {friendly: field('friendlyName'), manufacturer: field('manufacturer'), model: field('modelName'), number: field('modelNumber'), description: field('modelDescription'), url: field('presentationURL')}}
 }
 
-//a router in a few words from its description, like Cisco DOCSIS or NETGEAR R7000: its maker and model, a word the description repeats said once, and its friendly name where it gives no model; with details, the description's fields after that
+//a router in a few words from its description, like NETGEAR R7000 or ASUS RT-AX88U: its maker and model, a word the description repeats said once, and its friendly name where it gives no model; with details, the description's fields after that
 function _sayDevice(d, details) {
 	let words = [d.manufacturer, d.model || d.friendly, d.number].filter(Boolean).filter((word, i, all) => all.indexOf(word) == i)
 	let said = words.join(' ') || 'unnamed'
