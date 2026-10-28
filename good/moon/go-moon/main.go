@@ -1,7 +1,7 @@
 /*
-The Go service on moon, the second vantage of good.ftorrent.com, answering at moon.ftorrent.com, ip4.moon.ftorrent.com, and ip6.moon.ftorrent.com: the reflector, the UDP poke, and the TCP dial, and later the signaling room for peers behind NATs of our own, each an endpoint on this one small server.
+The Go service on moon, the second vantage of good.ftorrent.com, answering behind Caddy at moon.ftorrent.com, ip4.moon.ftorrent.com, and ip6.moon.ftorrent.com: the reflector, the UDP poke, and the TCP dial, and later the signaling room for peers behind NATs of our own, each an endpoint on this one small server. The root of moon.ftorrent.com is the one path that never reaches it: Caddy answers there itself, with a page linking to moon's guide.
 
-	GET /                          -> the caller's IP, as text
+	GET /                          -> the caller's IP, as text, at ip4.moon and ip6.moon
 	GET /?format=json              -> {"ip":"..."}
 	GET /poke?port=N[&token=T]     -> three small UDP packets carrying T to the caller's address at port N, and a JSON account of them
 	GET /dial?port=N[&infohash=H]  -> a TCP connection to the caller's address at port N with a BitTorrent handshake, and a JSON account of what came back

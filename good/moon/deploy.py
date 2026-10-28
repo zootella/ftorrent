@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Deploys moon's services from the files beside this script, each step the same the second time, so running it again after an edit is how a change goes up. coturn: Debian's package, our stun-only configuration at /etc/turnserver.conf, the hardening drop-in beside its unit, then a restart. The Go service: Debian's Go, the source copied to the box and built there into /usr/local/bin/ftorrent-moon, its unit, then a restart. And last the Caddyfile to /etc/caddy and a Caddy reload, which keeps its running config if the new one doesn't parse, so Caddy proxies to a service already up. ssh reads a Host block named moon from ssh.conf beside this script.
+# Deploys moon's services from the files beside this script, each step the same the second time, so running it again after an edit is how a change goes up. coturn: Debian's package, our stun-only configuration at /etc/turnserver.conf, the hardening drop-in beside its unit, then a restart. The Go service: Debian's Go, the source copied to the box and built there into /usr/local/bin/ftorrent-moon, its unit, then a restart. The page in site/, which Caddy serves at the root of moon.ftorrent.com, to /var/www/moon. And last the Caddyfile to /etc/caddy and a Caddy reload, which keeps its running config if the new one doesn't parse, so Caddy proxies to a service already up. ssh reads a Host block named moon from ssh.conf beside this script.
 import os#the folder this script is in
 import subprocess#running ssh and rsync
 import sys#exiting with a failed command's code
@@ -28,6 +28,10 @@ moon("cd /usr/local/src/ftorrent-moon && go build -trimpath -ldflags='-s -w' -o 
 run('rsync', '-t', '-e', ' '.join(ssh), 'ftorrent-moon.service', 'moon:/etc/systemd/system/ftorrent-moon.service')
 moon('systemctl daemon-reload; systemctl enable --quiet ftorrent-moon; systemctl restart ftorrent-moon; systemctl is-active ftorrent-moon')#enable starts it at every boot from here on, and restart now, onto the new binary
 
-#Caddy last, so its new config proxies to a service already answering
+#the page moon.ftorrent.com answers at its root, which Caddy serves itself
+moon('mkdir -p /var/www/moon')
+run('rsync', '-t', '-e', ' '.join(ssh), 'site/index.html', 'moon:/var/www/moon/index.html')#a new file takes the box's usual mode, readable by the caddy user Caddy runs as
+
+#Caddy last, so its new config proxies to a service already answering, and serves a page already in place
 run('rsync', '-t', '-e', ' '.join(ssh), 'Caddyfile', 'moon:/etc/caddy/Caddyfile')
 moon('systemctl reload caddy')#reload rather than restart: Caddy reads the new file while it keeps serving, and keeps the old config if the new one has an error

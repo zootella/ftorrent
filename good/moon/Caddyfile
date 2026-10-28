@@ -1,4 +1,14 @@
-# Caddy gets and renews a certificate for each name by itself, once the name's DNS points at this box, and proxies the three names to the Go service on the loopback address. It sets X-Forwarded-For to the address it accepted each connection from and ignores one the client sent, which is the header the service's reflector reads. A comment at the end of a line needs a space before its #, or Caddy reads the # as part of what comes before it.
-moon.ftorrent.com, ip4.moon.ftorrent.com, ip6.moon.ftorrent.com { #the three names this site answers, each with a certificate of its own, and plain HTTP to any of them sent on to HTTPS
-	reverse_proxy 127.0.0.1:8100 #hand every request to the Go service, which listens on the loopback address alone
+# Caddy gets and renews a certificate for each name by itself, once the name's DNS points at this box, and sends plain HTTP to any of them on to HTTPS. At the root of moon.ftorrent.com it answers itself with the page in /var/www/moon, a link to moon's guide, and it proxies everything else at the three names to the Go service on the loopback address, the reflector at the root of the two single-family names among it. It sets X-Forwarded-For to the address it accepted each connection from and ignores one the client sent, which is the header the service's reflector reads. A comment at the end of a line needs a space before its #, or Caddy reads the # as part of what comes before it.
+moon.ftorrent.com { #the name with both records
+	handle / { #the root alone, since a path of / matches nothing under it
+		root * /var/www/moon #the folder the page is in
+		file_server #answers / with the index.html there
+	}
+	handle { #every other path, the poke, the dial, and the health check among them
+		reverse_proxy 127.0.0.1:8100 #hand it to the Go service, which listens on the loopback address alone
+	}
+}
+
+ip4.moon.ftorrent.com, ip6.moon.ftorrent.com { #the single-family names, one record each, where the reflector answers at the root
+	reverse_proxy 127.0.0.1:8100 #every request to the Go service
 }

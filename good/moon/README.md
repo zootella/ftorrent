@@ -33,7 +33,8 @@ Nothing else runs there, no account is needed to use any of it, and nothing is l
 - `cloud-init.yaml`: the user data that creates the box.
 - `ssh.conf`: a Host block named moon: the box's address, root, the key, and a known hosts file of its own.
 - `firewall.py`: installs the host firewall from `rules.v4` and `rules.v6`, and the hourly read of its STUN counters, `stuncount.py` under `stuncount.service` and `stuncount.timer`. Runs from anywhere.
-- `deploy.py`: installs coturn with `turnserver.conf` and the drop-in in `coturn.service.d/`, builds and installs the Go service from `go-moon/` with `ftorrent-moon.service`, and puts `Caddyfile` in place. Runs from anywhere, and again after any edit.
+- `deploy.py`: installs coturn with `turnserver.conf` and the drop-in in `coturn.service.d/`, builds and installs the Go service from `go-moon/` with `ftorrent-moon.service`, copies the page in `site/`, and puts `Caddyfile` in place. Runs from anywhere, and again after any edit.
+- `site/index.html`: the page at the root of `moon.ftorrent.com`, a link to this guide.
 - `README.md`: this guide.
 
 ## Standing it up
@@ -87,12 +88,13 @@ Run `good/moon/firewall.py`. It installs iptables-persistent, which loads `/etc/
 
 ### The deploy
 
-Run `good/moon/deploy.py`. It installs coturn from Debian's package and restarts it under the configuration and drop-in here; installs Debian's Go, copies the Go service's source to the box, builds it there, and starts it under its unit; and last puts the Caddyfile in place and reloads Caddy, so Caddy proxies to a service already answering. Caddy then requests a certificate for each of the three names, one after another over some seconds. Every step is the same the second time, so running the script again after an edit is how a change goes up.
+Run `good/moon/deploy.py`. It installs coturn from Debian's package and restarts it under the configuration and drop-in here; installs Debian's Go, copies the Go service's source to the box, builds it there, and starts it under its unit; copies the page in `site/` to `/var/www/moon`; and last puts the Caddyfile in place and reloads Caddy, so Caddy proxies to a service already answering. Caddy then requests a certificate for each of the three names, one after another over some seconds. Every step is the same the second time, so running the script again after an edit is how a change goes up.
 
 ### Checking it from outside
 
 From a machine elsewhere:
 
+- `curl https://moon.ftorrent.com/`: the page, a link to this guide.
 - `curl https://ip4.moon.ftorrent.com/` and `curl https://ip6.moon.ftorrent.com/`: that machine's address in each family. With `-H 'X-Forwarded-For: 192.0.2.1'` added, still that address, since Caddy ignores the forged header.
 - A STUN binding request to the first name over each family: an answer of 40 bytes over IPv4 and 52 over IPv6, carrying XOR-MAPPED-ADDRESS and FINGERPRINT. coturn's own `turnutils_stunclient` sends one, and the ftorrent desktop client's Connection tab shows the whole answer in hex.
 - `curl 'https://ip4.moon.ftorrent.com/poke?port=9'`: a JSON report of three packets sent to that machine's address at port 9, which it has no way to receive; the report proves the service, and a listener on a port of your choosing proves the packets.
@@ -143,7 +145,7 @@ The drop-in in `coturn.service.d/` gives the package's unit, which already runs 
 
 ### The Go service
 
-The Go service is one small program, `ftorrent-moon`, standard library only, that answers over HTTPS behind Caddy at the three names:
+The Go service is one small program, `ftorrent-moon`, standard library only, that answers over HTTPS behind Caddy at the three names, at every path but the root of `moon.ftorrent.com`, which Caddy answers itself with the page:
 
 ```
 GET https://ip4.moon.ftorrent.com/                → your IPv4, plain text; ?format=json for {"ip":"..."}
