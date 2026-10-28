@@ -5,11 +5,12 @@ The Go service on moon, the second vantage of good.ftorrent.com, answering behin
 	GET /?format=json              -> {"ip":"..."}
 	GET /poke?port=N[&token=T]     -> three small UDP packets carrying T to the caller's address at port N, and a JSON account of them
 	GET /dial?port=N[&infohash=H]  -> a TCP connection to the caller's address at port N with a BitTorrent handshake, and a JSON account of what came back
+	GET /ping?port=N&kind=K        -> one UDP packet a BitTorrent client answers, a DHT ping for kind=dht or a uTP connection request for kind=utp, to the caller's address at port N, and a JSON account of the answer
 	GET /health                    -> ok
 
-One rule governs the poke and the dial: moon sends only to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. Both are rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
+One rule governs the poke, the dial, and the ping: moon sends only to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. All three are rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
 
-The reflector is the same contract as ip.ftorrent.com on the main server, and DNS does the same work here: ip4.moon.ftorrent.com carries only an A record and ip6.moon.ftorrent.com only a AAAA, so a request to one of them travels over that family alone, and moon.ftorrent.com carries both. The same names choose the poke's and the dial's family, since moon sends to the address the request arrived from. The service runs as a systemd unit on the box itself, listening on the loopback address alone; Caddy terminates TLS for the three names and proxies to it. Nothing here logs a request or an address.
+The reflector is the same contract as ip.ftorrent.com on the main server, and DNS does the same work here: ip4.moon.ftorrent.com carries only an A record and ip6.moon.ftorrent.com only a AAAA, so a request to one of them travels over that family alone, and moon.ftorrent.com carries both. The same names choose the family of the poke, the dial, and the ping, since moon sends to the address the request arrived from. The service runs as a systemd unit on the box itself, listening on the loopback address alone; Caddy terminates TLS for the three names and proxies to it. Nothing here logs a request or an address.
 
 A few things about Go run through the whole file, and a reader coming from JavaScript meets them on every screen. A function hands back its error as a second value rather than throwing one, so a call reads value, err := f(), and the line after it checks err != nil. := declares a variable and assigns it at once, and _ throws away a value a call returns. Go's net/http runs each request's handler on a goroutine of its own, a lightweight thread, so two requests can be inside the same handler at the same moment, and anything they share, like the rate limiter's map, needs a lock. defer schedules a call for when the surrounding function returns, by whichever return, which is how a socket or a lock gets let go. Text is a string and bytes are a []byte, a slice, Go's growable array, and append answers the slice it grew.
 
@@ -20,7 +21,9 @@ The program uses Go's standard library alone, so go.mod lists no dependencies, a
 package main
 
 import (
-	"crypto/rand"//random bytes from the operating system, for a token or an info-hash the caller didn't give
+	"bytes"//finding a byte in bencode
+	"crypto/rand"//random bytes from the operating system, for a token, an info-hash, a node id, or a transaction id
+	"encoding/binary"//numbers written into a uTP header, most significant byte first
 	"encoding/hex"//bytes to and from hex text
 	"encoding/json"//values to JSON, for the poke's and the dial's reports
 	"errors"//errors.Is, to tell which error a read ended with
@@ -32,6 +35,7 @@ import (
 	"strconv"//numbers to and from text
 	"strings"//splitting and trimming text
 	"sync"//the lock the rate limiter takes
+	"syscall"//ECONNREFUSED, the error a connected UDP socket reads when the other end refused the port
 	"time"//moments, and Durations in nanoseconds
 )
 
@@ -39,7 +43,8 @@ const (
 	pokePackets = 3//how many packets a poke sends, since UDP keeps no promises and one lost packet shouldn't read as a closed door
 	pokeGap     = 50 * time.Millisecond//the pause between them, so they don't leave in one burst; a Duration, which counts nanoseconds, so this is 50,000,000 of them
 	dialTimeout = 3 * time.Second//to connect, and then to hear back; a peer that answers at all answers within this
-	limitBurst  = 10//pokes and dials one source may make at once
+	pingTimeout = 3 * time.Second//to hear an answer to a ping, across every send of it
+	limitBurst  = 10//pokes, dials, and pings one source may make at once
 	limitRate   = 10.0 / 60//and may make steadily, in tokens a second: ten a minute; written 10.0 so Go keeps the fraction, since 10 / 60 between two whole numbers is 0
 	handshake   = "\x13BitTorrent protocol"//the first twenty bytes of every BitTorrent connection: a length byte, hex 13 for 19, then the protocol's 19-character name
 	peerPrefix  = "-FF0000-"//the eight characters at the front of the peer id moon dials with: FF is ftorrent's client code, and 0000 a version no client has, since this is a prober
@@ -58,7 +63,7 @@ func clientIP(r *http.Request) string {//r points at the request net/http parsed
 	return host
 }
 
-//limiter holds a token bucket for each source address: each poke or dial spends a token, the bucket refills at limitRate up to limitBurst, and a source with an empty bucket is answered 429 and sent nothing. The map is pruned of full buckets when it grows large, so a day of distinct sources doesn't hold memory
+//limiter holds a token bucket for each source address: each poke, dial, or ping spends a token, the bucket refills at limitRate up to limitBurst, and a source with an empty bucket is answered 429 and sent nothing. The map is pruned of full buckets when it grows large, so a day of distinct sources doesn't hold memory
 type limiter struct {
 	mu      sync.Mutex//the lock allow takes before touching buckets, since two requests can be in allow at once on two goroutines
 	buckets map[string]*bucket//each source's bucket, by its address as text; a map is Go's dictionary, and *bucket a pointer, so changing a bucket changes the one in the map
@@ -106,11 +111,16 @@ func portParam(w http.ResponseWriter, r *http.Request) (int, bool) {//two return
 	return port, true
 }
 
-//randomHex answers n random bytes as lowercase hex, 2n characters, for a token or an info-hash the caller didn't supply
-func randomHex(n int) string {
+//randomBytes answers n random bytes, for a node id, a transaction id, or a connection id
+func randomBytes(n int) []byte {
 	b := make([]byte, n)//make builds a slice of n zero bytes
 	rand.Read(b)//fills it from the operating system's random source; since Go 1.24 this never fails, so there's no error to read
-	return hex.EncodeToString(b)
+	return b
+}
+
+//randomHex answers n random bytes as lowercase hex, 2n characters, for a token or an info-hash the caller didn't supply
+func randomHex(n int) string {
+	return hex.EncodeToString(randomBytes(n))
 }
 
 //writeJSON answers v as JSON, which is every poke's and dial's whole report
@@ -140,6 +150,75 @@ func isToken(s string) bool {
 	}
 	return true
 }
+
+//bdecode reads one value from the front of b in bencode, the encoding BitTorrent writes DHT messages and torrent files in: an integer, i42e; a string of bytes, its length, a colon, and the bytes, 4:spam; a list, l, its values, then e; or a dictionary, d, keys and values alternating, then e, every key a string. It answers the value, as an int64, a string, a []any, or a map[string]any, and how many bytes it took, or an error for bytes that aren't bencode; a ping's answer is all it reads, so it holds the whole message in memory and recurses into what it holds
+func bdecode(b []byte) (any, int, error) {
+	if len(b) == 0 {
+		return nil, 0, errors.New("bencode ended early")
+	}
+	switch {
+	case b[0] == 'i'://an integer, the digits between i and e
+		end := bytes.IndexByte(b, 'e')//the position of the first e, or -1 for none
+		if end < 0 {
+			return nil, 0, errors.New("an integer with no end")
+		}
+		n, err := strconv.ParseInt(string(b[1:end]), 10, 64)//base 10, into 64 bits
+		return n, end + 1, err
+	case b[0] >= '0' && b[0] <= '9'://a string, its length written out first
+		colon := bytes.IndexByte(b, ':')
+		if colon < 0 {
+			return nil, 0, errors.New("a string with no colon")
+		}
+		size, err := strconv.Atoi(string(b[:colon]))
+		if err != nil || size > len(b)-colon-1 {//compared to what's left rather than added to the colon's position, so a length near the largest int can't wrap the sum negative and slip past
+			return nil, 0, errors.New("a string that runs past the end")
+		}
+		return string(b[colon+1 : colon+1+size]), colon + 1 + size, nil//a Go string holds any bytes, not only text, so a node id fits in one
+	case b[0] == 'l' || b[0] == 'd'://a list or a dictionary: values one after another until an e
+		var values []any//a nil slice, which append grows
+		at := 1//past the l or the d
+		for at < len(b) && b[at] != 'e' {
+			v, n, err := bdecode(b[at:])
+			if err != nil {
+				return nil, 0, err
+			}
+			values = append(values, v)
+			at += n
+		}
+		if at >= len(b) {
+			return nil, 0, errors.New("a list with no end")
+		}
+		if b[0] == 'l' {
+			return values, at + 1, nil
+		}
+		if len(values)%2 != 0 {
+			return nil, 0, errors.New("a dictionary with a key and no value")
+		}
+		dictionary := map[string]any{}
+		for i := 0; i < len(values); i += 2 {
+			key, ok := values[i].(string)//comma-ok on a type assertion: ok says whether the value really is a string
+			if !ok {
+				return nil, 0, errors.New("a dictionary key that isn't a string")
+			}
+			dictionary[key] = values[i+1]
+		}
+		return dictionary, at + 1, nil
+	}
+	return nil, 0, errors.New("not bencode")
+}
+
+//compactAddress reads an address and port the way the DHT packs them, 4 bytes of IPv4 or 16 of IPv6 and then 2 of port, most significant first, into text like 203.0.113.9:56789, or answers "" for any other length
+func compactAddress(b string) string {
+	if len(b) != 6 && len(b) != 18 {
+		return ""
+	}
+	address := net.IP(b[:len(b)-2])//an IP is a byte slice, 4 bytes or 16
+	port := binary.BigEndian.Uint16([]byte(b[len(b)-2:]))
+	return net.JoinHostPort(address.String(), strconv.Itoa(int(port)))
+}
+
+//utpTypes names uTP's five packet types by the number in the high four bits of a packet's first byte, BEP 29
+var utpTypes = [...]string{"DATA", "FIN", "STATE", "RESET", "SYN"}//[...] makes an array exactly as long as its list
 
 //main builds the router, adds a handler for each endpoint, and serves until the process stops
 func main() {
@@ -172,7 +251,7 @@ func main() {
 	mux.HandleFunc("GET /poke", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the token is spent before the request is even read, so a flood of bad requests costs its sender too
-			http.Error(w, "too many pokes and dials from this address; ten a minute", http.StatusTooManyRequests)
+			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
 			return
 		}
 		port, ok := portParam(w, r)
@@ -223,7 +302,7 @@ func main() {
 	mux.HandleFunc("GET /dial", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the poke's bucket too, so ten a minute between them
-			http.Error(w, "too many pokes and dials from this address; ten a minute", http.StatusTooManyRequests)
+			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
 			return
 		}
 		port, ok := portParam(w, r)
@@ -281,6 +360,144 @@ func main() {
 			report["handshake"] = map[string]any{"infohash": hex.EncodeToString(answer[28:48]), "peer_id": fmt.Sprintf("%q", answer[48:68])}//its info-hash is bytes 28 through 47 and its peer id 48 through 67, since a slice's end is one past its last byte; %q quotes the peer id and escapes any byte that isn't printable
 		} else if len(answer) > 0 {
 			report["received_hex"] = hex.EncodeToString(answer)//anything else that came back, whole
+		}
+		writeJSON(w, report)
+	})
+
+	//the ping: one UDP packet a BitTorrent client answers, to the caller's address at the port they named, and the answer. kind=dht sends a DHT ping, a query any node on the DHT answers with a pong carrying its node id and, by BEP 42, the address and port it saw the ping come from. kind=utp sends a uTP connection request, a SYN, uTP being BitTorrent's own transport over UDP, which a client answers with a STATE to accept it or a FIN or RESET to turn it away, and moon resets one it accepted so nothing is left half open. Any answer proves a packet from a stranger reached the port and the reply found its way back out. The socket is connected to the caller, so only their answer is read, and an ICMP port unreachable comes back as a refusal rather than silence. The packet goes again after half a second and then a second, as STUN's does, until an answer comes or pingTimeout passes
+	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+		ip := clientIP(r)
+		if !limits.allow(ip) {//the poke's and the dial's bucket too
+			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
+			return
+		}
+		port, ok := portParam(w, r)
+		if !ok {
+			return
+		}
+		kind := r.URL.Query().Get("kind")
+		if kind != "dht" && kind != "utp" {
+			http.Error(w, "kind must be dht or utp", http.StatusBadRequest)
+			return
+		}
+		to := &net.UDPAddr{IP: net.ParseIP(ip), Port: port}
+		if to.IP == nil {
+			http.Error(w, "the request's address isn't an IP address", http.StatusBadRequest)
+			return
+		}
+		network := "udp4"
+		if to.IP.To4() == nil {
+			network = "udp6"
+		}
+		report := map[string]any{"to": to.String(), "kind": kind, "sent": 0, "answered": false}
+		socket, err := net.DialUDP(network, nil, to)//a UDP socket connected to the caller: nil lets the system pick moon's address and a free port, sends go to the caller alone, and only packets from their address and port are read
+		if err != nil {
+			report["error"] = err.Error()
+			writeJSON(w, report)
+			return
+		}
+		defer socket.Close()
+		report["from_port"] = socket.LocalAddr().(*net.UDPAddr).Port
+
+		//the one packet, and what an answer has to carry back to count as one: the DHT's transaction id, or uTP's connection id
+		var request, mark []byte
+		if kind == "dht" {
+			mark = randomBytes(2)
+			request = fmt.Appendf(nil, "d1:ad2:id20:%se1:q4:ping1:t2:%s1:y1:qe", randomBytes(20), mark)//a ping in bencode: arguments with a node id of 20 random bytes, the query's name, the transaction id the pong repeats, and y for a query; %s writes a byte slice's bytes as they are
+		} else {
+			mark = randomBytes(2)
+			request = make([]byte, 20)//a uTP header and nothing after it
+			request[0] = 4<<4 | 1//the type in the high four bits, 4 for SYN, and the version in the low four, 1
+			copy(request[2:4], mark)//the connection id, which the answer carries back
+			binary.BigEndian.PutUint32(request[4:8], uint32(time.Now().UnixMicro()))//the send time in microseconds, which uTP measures delay by; bytes 8 to 11, the delay seen so far, stay zero
+			binary.BigEndian.PutUint32(request[12:16], 1<<20)//the window, how many bytes moon could take in flight, a megabyte
+			binary.BigEndian.PutUint16(request[16:18], 1)//this packet's sequence number, the first; bytes 18 and 19, the last one acknowledged, stay zero
+		}
+
+		//send, and read until a matching answer, the next send, or the end; then send again
+		start := time.Now()
+		deadline := start.Add(pingTimeout)
+		wait := 500 * time.Millisecond
+		buffer := make([]byte, 1500)//more than any answer to these, which fits in one packet
+		var answer []byte//nil until an answer arrives
+		sent := 0
+	asking://a label, which lets the break below leave both loops at once
+		for answer == nil && time.Now().Before(deadline) {
+			if _, err := socket.Write(request); err != nil {
+				report["error"] = err.Error()
+				break
+			}
+			sent++
+			next := time.Now().Add(wait)
+			if next.After(deadline) {
+				next = deadline
+			}
+			wait *= 2
+			socket.SetReadDeadline(next)//a read past this moment fails with a timeout
+			for {
+				n, err := socket.Read(buffer)
+				if errors.Is(err, os.ErrDeadlineExceeded) {
+					break//the moment for the next send, or the end
+				}
+				if errors.Is(err, syscall.ECONNREFUSED) {
+					report["refused"] = true//the caller's machine answered that nothing listens on the port, which a NAT or firewall that drops would never say
+					break asking
+				}
+				if err != nil {
+					report["error"] = err.Error()
+					break asking
+				}
+				got := buffer[:n]
+				if kind == "dht" {
+					message, _, err := bdecode(got)
+					if dictionary, ok := message.(map[string]any); err == nil && ok && dictionary["t"] == string(mark) {//this ping's transaction id; comparing a value of type any to a string is true only when it holds that same string
+						answer = append([]byte(nil), got...)//a copy, since the buffer is read into again
+					}
+				} else if n >= 20 && bytes.Equal(got[2:4], mark) {//this request's connection id
+					answer = append([]byte(nil), got...)
+				}
+				if answer != nil {
+					break
+				}
+			}
+		}
+		report["sent"] = sent
+		report["milliseconds"] = time.Since(start).Milliseconds()
+		if answer == nil {
+			writeJSON(w, report)
+			return
+		}
+		report["answered"] = true
+		report["bytes"] = len(answer)
+		report["received_hex"] = hex.EncodeToString(answer)
+		if kind == "dht" {
+			message, _, _ := bdecode(answer)
+			dictionary := message.(map[string]any)//the match above made sure it's a dictionary
+			pong := map[string]any{"y": dictionary["y"]}//r for an answer, e for an error, either one an answer
+			if reply, ok := dictionary["r"].(map[string]any); ok {
+				if id, ok := reply["id"].(string); ok {
+					pong["id"] = hex.EncodeToString([]byte(id))//the answering node's id
+				}
+			}
+			if seen, ok := dictionary["ip"].(string); ok {
+				pong["saw"] = compactAddress(seen)//where the node saw the ping come from, moon's address and port as it arrived
+			}
+			report["dht"] = pong
+		} else {
+			kindOf := answer[0] >> 4//the type, from the high four bits
+			name := "unknown"
+			if int(kindOf) < len(utpTypes) {
+				name = utpTypes[kindOf]
+			}
+			report["utp"] = name
+			if name == "STATE" {//accepted: reset the connection, so the client isn't left waiting for data that never comes
+				reset := make([]byte, 20)
+				reset[0] = 3<<4 | 1//RESET, version 1
+				binary.BigEndian.PutUint16(reset[2:4], binary.BigEndian.Uint16(mark)+1)//after the SYN, the side that asked sends with the connection id one higher, by BEP 29
+				binary.BigEndian.PutUint16(reset[16:18], 2)
+				copy(reset[18:20], answer[16:18])//acknowledging the answer's sequence number
+				socket.Write(reset)
+			}
 		}
 		writeJSON(w, report)
 	})
