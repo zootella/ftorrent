@@ -40,6 +40,8 @@ A check that asks once and waits for one answer gets checkSeconds to hear back. 
 A run asks its first wave of checks at once and waits for the last, so that wave takes as long as its slowest check, at most checkSeconds. Then, for each STUN server whose name led somewhere, it asks the system which of the machine's addresses it would send from toward that server, which takes no packet, and over IPv6 can be a different one of the machine's addresses for each. That is the system's word and not a measurement: a Mac has sent HTTPS and STUN from a deprecated temporary address while saying, a moment later, that it would send from the current one, so the box gives both, and the address the server saw is on the line above. The box lists the checks in the same order every time, whatever order they finish in, so two runs line up line for line, and a family's one STUN call shows as a line for each server it asked, with everything net_stun saw of that server on the lines under it: where the request went, the address the system says it would send from, where the answer came from, the answer in hex, and each attribute in it by name with a few words on what it carries. An error is an answer like any other: the box shows its text, since a user on this tab is under the hood. The box keeps every run since the app started, oldest first, each starting with a line that says when it ran, which build, and on which platform, so a box pasted into a message or an issue says where its lines came from, and ends with every interface and every address on it, each with a few words on what it is.
 
 And the engine's session, which runs for as long as the user lets it rather than for four seconds. Start opens libtorrent's session at a random port from the dynamic range, the range Transmission picks its random port from, listening on every address in both families and joining the DHT through our bootstrap node and two others, with port mapping and local service discovery off. libtorrent reads every address as each address the machine has, loopback and link-local included, and opens a TCP socket and a UDP one on each; from each one that reaches beyond the machine it runs a DHT node with its own routing table, announces to the trackers, and learns the address peers see. With a torrent file opened, it also joins that swarm in upload mode, announcing and taking connections but downloading nothing, so strangers who find it through the trackers and the DHT dial in. While it runs, the page asks the engine once a second for the alerts libtorrent has posted and for its counters. A session in a busy swarm posts a hundred alerts a second, most of them peers tried and dropped and DHT lookups, so the box shows each kind of alert once, the first to arrive, timed from Start by when the page heard it, up to a second after it happened; the table counts every alert by kind, and the box gets the counts when the session stops. A connection in is the exception, and gets a line every time, saying whether the session had sent to that address first, through a DHT lookup or a connection it tried, or whether it's unsolicited. The DHT's routine messages, its bootstrap queries and pings, post no alert, so unsolicited means as far as the alerts show. The table keeps the readings too: which sockets opened, how many nodes the routing tables hold, in all by libtorrent's counter and in each by asking each DHT node, with the address it runs from and its node ID, since libtorrent's own DHT stats describe only one table, the addresses peers say they see, and how many strangers connected in over each family and how many of those were unsolicited, counted by alert, and by libtorrent's own counter. Behind a home router with no port mapping, strangers still reach the session, over both families and over uTP, which shares the session's UDP port with the DHT: each DHT message the session sends opens the router for that node's replies, and a node also in the swarm connects in through the opening. Whether the router lets in a stranger who was never sent anything is its filtering, which these alerts can't settle and Good7 measures. The session lives in the engine, not the tab, so it keeps running while the user looks elsewhere, which is why the box, the last run, and the session's readings are kept here rather than in the page. For the same reason the whole panel as Copy takes it, the table and then the box, is stuck to stick.txt beside the log as it changes, at most once a second, so it can be read from outside ftorrent while a session runs, whichever tab is showing.
+
+And port mapping, which Map and Unmap turn on and off in the running session: libtorrent's two mappers, which the session that downloads leaves off, since ftorrent maps its port with its own code, worked here by hand so a Check before Map and one after show what libtorrent's own mapping gets. The UPnP mapper searches for the router and asks its WAN connection service to forward the session's port, TCP and UDP, over IPv4 alone. The NAT-PMP mapper sends PCP's MAP to the gateway from every socket with a global address in either family, and falls back to NAT-PMP over IPv4 when the router answers that the version is unsupported, so over IPv6 its request is for a pinhole in the router's firewall, since nothing translates there. On macOS it finds no IPv6 gateway, since its reading of the routing table drops every IPv6 route there, so each IPv6 mapper closes without sending, and its row says why. Each lease is a minute, renewed at three quarters of that, and each mapper deletes what it mapped when it's turned off or the session stops. Every alert the mappers post gets a line in the box, the mappings, the failures, and the mappers' own log, since a router that never answers posts nothing else: the NAT-PMP mapper sends nine times over about eleven seconds and then waits two hours. The table reads each mapper on each local address from those lines: which protocol it spoke, which only the log says, since the alerts call PCP natpmp too; whether UPnP found the router; what the router mapped, and to which external port; whether the router took only a mapping with no lease, which libtorrent asks for when UPnP's answer is error 725, and which stays in the router until it's deleted; how many requests went and answers came; and why a mapper stopped, when its log says it did. A Check while the session runs probes its port as it always does, and says whether mapping was on.
 */
 
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
@@ -347,12 +349,13 @@ export async function connectionRun() {
 	results.push(...(await filtering).flat())//and last the filtering, IPv4's two tests and then IPv6's
 	results.push(...(await punching).flat())//and the punches, the cone's steps and then the symmetric's
 	let inbound = false//whether the inbound proof ran, which takes a session listening
+	let probed = probing ? {port: session.port, mapping: session.mapping} : null//and the session it probed, at the moment the probes went out: its port, and whether its port mappers were on
 	if (probing) {
 		results.push(...(await probing).flat())//and the inbound proof, IPv4's three probes and then IPv6's
 		await new Promise(resolve => setTimeout(resolve, pollEvery + Time.second/4))//one more poll of the engine, so the alerts the probes caused are in before they're counted
 		inbound = true
 	}
-	return {moment, version, results, machine, inbound, arrivals: arrivals.filter(a => a.moment >= moment), firewall: _firewall(results, paths, engine)}//the connections in since the run began, which the inbound proof looks for moon's among
+	return {moment, version, results, machine, inbound, probed, arrivals: arrivals.filter(a => a.moment >= moment), firewall: _firewall(results, paths, engine)}//the connections in since the run began, which the inbound proof looks for moon's among
 }
 
 //the address the system would send from toward a server's address and port, like [2606:4700:49::]:3478, as {success, value or outcome}
@@ -599,8 +602,8 @@ function _readPunched(nat, steps) {
 	return {said: `${head}, and packets from that peer reached this machine, the first in ${first.milliseconds} ms${from}, but none said this machine's had reached it.`}
 }
 
-//a few words when a firewall on this machine may be what held a packet back from one of this copy's two programs, which is ftorrent, whose socket the filtering test listens on, or engine, whose port the inbound proof probes: a Mac's when it's on and blocks all, or doesn't list the program as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks the program coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read
-function _sayHolding(f, which) {
+//a few words when a firewall on this machine may be what held a packet back from one of this copy's two programs, which is ftorrent, whose socket the filtering test listens on, or engine, whose port the inbound proof probes: a Mac's when it's on and blocks all, or doesn't list the program as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks the program coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read. What it held back is them, the packets, unless the caller names something else
+function _sayHolding(f, which, what = 'them') {
 	if (!f.known) return ''
 	let program = f[which]
 	let name = which == 'engine' ? program.path.split(/[\\/]/).pop() : brandName//the engine by its file name, as the firewall lists it
@@ -610,15 +613,15 @@ function _sayHolding(f, which) {
 		let names = current.map(p => p.name)
 		let ruled = (action, protocol) => program.rules.some(r => r.enabled && r.action == action && r.direction == 'in' && [protocol, 'any'].includes(r.protocol) && r.profiles.some(profile => names.includes(profile)))//whether a rule of this action covers this protocol coming in on the current profile
 		let protocols = which == 'engine' ? ['UDP', 'TCP'] : ['UDP']//the filtering test listens over UDP alone, and the inbound proof reaches the engine over both
-		if (current.some(p => p.block_all)) return `the Windows firewall may be what held them back, since it blocks all incoming on ${names.join(' and ')}`
-		if (protocols.some(protocol => ruled('block', protocol))) return `the Windows firewall may be what held them back, since a rule blocks ${name} coming in on ${names.join(' and ')}`
+		if (current.some(p => p.block_all)) return `the Windows firewall may be what held ${what} back, since it blocks all incoming on ${names.join(' and ')}`
+		if (protocols.some(protocol => ruled('block', protocol))) return `the Windows firewall may be what held ${what} back, since a rule blocks ${name} coming in on ${names.join(' and ')}`
 		let unallowed = protocols.filter(protocol => !ruled('allow', protocol))
-		if (unallowed.length) return `the Windows firewall may be what held them back, since no rule lets ${name} in over ${unallowed.join(' or ')} on ${names.join(' and ')}`
+		if (unallowed.length) return `the Windows firewall may be what held ${what} back, since no rule lets ${name} in over ${unallowed.join(' or ')} on ${names.join(' and ')}`
 		return ''
 	}
 	if (f.on != 'on') return ''
-	if (f.blockAll == 'on') return 'the Mac firewall may be what held them back, since it blocks all incoming connections'
-	if (!program.listed?.allowed) return `the Mac firewall may be what held them back, since ${name} isn't allowed on its list`
+	if (f.blockAll == 'on') return `the Mac firewall may be what held ${what} back, since it blocks all incoming connections`
+	if (!program.listed?.allowed) return `the Mac firewall may be what held ${what} back, since ${name} isn't allowed on its list`
 	return ''
 }
 
@@ -639,7 +642,7 @@ function _sayInbound(run, family) {
 	else said = 'not reachable: nothing came back to either ping, and the dial opened no connection'
 	let moon = run.results.filter(r => r.kind == 'stun' && r.binding?.server == moonStun && r.binding.from).map(r => _addressOf(r.binding.from))//moon's own addresses, where its STUN answers came from, which its probes leave from too
 	let fromMoon = run.arrivals.filter(a => moon.some(address => _same(address, a.address)) && a.address.includes(':') == (family == 6))
-	let notes = [`the engine counted ${fromMoon.length} connection${fromMoon.length == 1 ? '' : 's'} in from moon${fromMoon.length ? `, over ${[...new Set(fromMoon.map(a => a.socket))].join(' and ')}` : ''}`]
+	let notes = [`the engine counted ${fromMoon.length} connection${fromMoon.length == 1 ? '' : 's'} in from moon${fromMoon.length ? `, over ${[...new Set(fromMoon.map(a => a.socket))].join(' and ')}` : ''}`, `port mapping ${run.probed.mapping ? 'on' : 'off'}`]
 	let holding = _sayHolding(run.firewall, 'engine')
 	if (!reached.length && holding) notes.push(holding)
 	return [said, ...notes].join('; ')
@@ -696,7 +699,9 @@ function _sayEndpoint(address, port) {
 //the box's lines for one run: when, which build, and which platform, then a line per check with what it asked, how long it took, and what came back, then the firewall and the interfaces
 export function sayRun(run) {
 	let width = Math.max(...run.results.map(r => r.asked.length))//the asked column as wide as its longest entry, so the times line up under each other
-	let lines = [`${sayMoment(run.moment)}, ${brandName} ${run.version} on ${platformName}`]
+	let header = `${sayMoment(run.moment)}, ${brandName} ${run.version} on ${platformName}`
+	if (run.probed) header += `, session on port ${run.probed.port} with port mapping ${run.probed.mapping ? 'on' : 'off'}`//a run that probed a session names it, and whether its port was mapped
+	let lines = [header]
 	for (let r of run.results) {
 		lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
 		if (r.binding) lines.push(..._sayBinding(r))
@@ -1273,6 +1278,8 @@ export const session = reactive({
 	external: [],//each address peers and the DHT say they see, by libtorrent's vote, which it holds for each address it listens on
 	incoming: {ipv4: 0, ipv6: 0},//connections strangers opened to the session, counted by alert, by family
 	unsolicited: {ipv4: 0, ipv6: 0},//and those from an address no earlier alert shows the session sending to
+	mapping: false,//whether libtorrent's two port mappers are on, as the engine last said
+	mappers: {},//each mapper on each local address it maps from, keyed by both, as _mapper reads them; each Map starts them again
 	hasIncoming: null,//libtorrent's own counter, net.has_incoming_connections, 1 once any has arrived from beyond the local network; it's set before libtorrent decides whether to keep the connection, and the alert comes only once it has, so a session with no torrent, which turns every connection away, can read yes with none by alert
 	kinds: {},//how many of each kind of alert the session has posted, by type
 })
@@ -1306,7 +1313,7 @@ export async function sessionOpen() {
 export function sessionStart() {
 	_listen()
 	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, RFC 6335, a new one each Start; a setting may later let a person choose one, with random staying the default
-	Object.assign(session, {running: true, port, started: Date.now(), sockets: [], bootstrapped: false, allNodes: null, tables: [], external: [], incoming: {ipv4: 0, ipv6: 0}, unsolicited: {ipv4: 0, ipv6: 0}, hasIncoming: null, kinds: {}})
+	Object.assign(session, {running: true, port, started: Date.now(), sockets: [], bootstrapped: false, allNodes: null, tables: [], external: [], mapping: false, mappers: {}, incoming: {ipv4: 0, ipv6: 0}, unsolicited: {ipv4: 0, ipv6: 0}, hasIncoming: null, kinds: {}})
 	contacted = new Set()
 	arrivals = []
 	boxAdd(`${sayMoment(session.started)}, session on port ${port}`, 'session')
@@ -1315,12 +1322,18 @@ export function sessionStart() {
 	poller = setInterval(() => { _send({command: 'stats'}); _send({command: 'tables'}); _send({command: 'poll'}) }, pollEvery)
 }
 
+//turn libtorrent's two port mappers on or off in the running session, which Map and Unmap do; the engine says when it has, and the alerts that follow say what the router did
+export function sessionMapping(on) {
+	_send({command: 'mapping', on})
+}
+
 //stop asking for news, take what's waiting, and stop the session
 export function sessionStop() {
 	clearInterval(poller)
 	_send({command: 'poll'})//the engine handles lines in order, so this takes the last alerts before the session goes
 	_send({command: 'stop'})
 	session.running = false
+	session.mapping = false//a session going closes its mappers, which send their deletes on the way out
 }
 
 //one event from the engine, read into the session's readings and the box
@@ -1332,10 +1345,14 @@ function _heard(event) {
 		boxAdd(`${_since()}  joined the swarm of ${event.name} in upload mode`, 'session')
 	} else if (event.event == 'tables') {
 		session.tables = event.tables.map(t => ({...t, nodes: session.tables.find(known => known.id == t.id)?.nodes ?? null}))//each table keeps its last count until this round's arrives on a later poll
+	} else if (event.event == 'mapping') {
+		session.mapping = event.on
+		if (event.on) session.mappers = {}//each Map reads the mappers from nothing, so the table shows this round
+		boxAdd(`${_since()}  port mapping ${event.on ? 'on, with leases of a minute' : 'off, each mapper deleting what it mapped'}`, 'session')
 	} else if (event.event == 'stopped') {
 		let kinds = _sayKinds()
 		boxAdd(`${_since()}  session stopped${kinds ? `; alerts by kind, ${kinds}` : ''}`, 'session')
-	} else if (event.event == 'error' && ['read', 'add', 'session'].includes(event.command)) {
+	} else if (event.event == 'error' && ['read', 'add', 'session', 'mapping'].includes(event.command)) {
 		if (event.command == 'read') session.torrent = {path: event.path, error: event.message}
 		boxAdd(`engine: ${event.message}`, 'session')
 	} else if (event.event == 'alert') {
@@ -1356,7 +1373,11 @@ const alertWords = {
 	peer_connect:        'connected to a peer',
 	peer_disconnected:   'a peer connection ended',
 	alerts_dropped:      'libtorrent dropped alerts nobody took in time',
+	portmap:             'the router mapped the port',
+	portmap_error:       "a mapping didn't happen",
 }
+
+const everyLine = ['incoming_connection', 'portmap', 'portmap_error', 'portmap_log']//the kinds of alert that get a line every time rather than only the first: a connection in, since who came in is what the tab is here to show, and the port mappers, since each line is one request or answer between the session and the router, and the router's exact answer is the finding
 
 //one alert: the counters and the DHT's table go into the readings, since the page asks for them every second; every other alert is counted by kind, and the first of each kind also gets a line in the box
 function _alert(a) {
@@ -1368,10 +1389,11 @@ function _alert(a) {
 	if (a.type == 'dht_bootstrap') session.bootstrapped = true
 	if (a.type == 'external_ip' && !session.external.includes(a.address)) session.external.push(a.address)
 	if ((a.type == 'peer_connect' && a.outgoing) || a.type == 'dht_outgoing_get_peers') contacted.add(a.address)
+	if (a.type.startsWith('portmap') && a.transport) _mapper(a)
 	let note = a.type == 'incoming_connection' ? _incoming(a) : ''
 	session.kinds[a.type] = (session.kinds[a.type] || 0) + 1
-	if (session.kinds[a.type] > 1 && a.type != 'incoming_connection') return//a kind already in the box is counted, and only the table shows the count; a connection in gets a line every time, since who came in is what the tab is here to show
-	let line = `${_since()}  ${a.type}  ${a.message}`
+	if (session.kinds[a.type] > 1 && !everyLine.includes(a.type)) return//a kind already in the box is counted, and only the table shows the count
+	let line = `${_since()}  ${a.type}  ${a.message.replace(/\r\n?/g, '\n').trimEnd().replace(/\n/g, '\n' + ' '.repeat(10))}`//a UPnP mapper's log line can carry a whole HTTP request or answer, whose lines are indented under the first
 	if (alertWords[a.type]) line += `; ${alertWords[a.type]}`
 	if (note) line += `; ${note}`
 	if (a.fault) line += `; the engine couldn't read its fields, ${a.fault}`
@@ -1388,6 +1410,31 @@ function _incoming(a) {
 	if (contacted.has(a.address)) return 'the session had sent to this address first'
 	session.unsolicited[family]++
 	return 'unsolicited, no earlier alert shows the session sending to this address'
+}
+
+//one port mapper's alert, read into its readings: the requests it sent and the answers that came back, counted from its log, since a router that never answers posts no other alert; which protocol the NAT-PMP mapper spoke, PCP or NAT-PMP, which only its log says, since the alerts call both natpmp; whether UPnP's search found the router; what the router mapped, or why a mapping didn't happen; and why the mapper itself stopped, which only its log says too
+function _mapper(a) {
+	let key = `${a.transport} ${a.local}`
+	if (!session.mappers[key]) session.mappers[key] = {transport: a.transport, local: a.local, sent: 0, answered: 0, deletes: 0, version: '', found: false, permanent: false, mapped: {}, error: '', stopped: ''}
+	let m = session.mappers[key]
+	let log = a.type == 'portmap_log' ? a.message : ''
+	if (a.transport == 'natpmp') {
+		let version = log.match(/transport: (\S+)/)?.[1]//PCP or NAT-PMP, on each request and each answer
+		if (version) m.version = version
+		if (/==> port map .*action: add/.test(log)) m.sent++
+		if (/==> port map .*action: delete/.test(log)) m.deletes++
+		if (/<== port map/.test(log)) m.answered++
+	} else {
+		if (/found rootdevice/.test(log)) m.found = true
+		if (/adding port map/.test(log)) m.sent++
+		if (/deleting port map/.test(log)) m.deletes++
+		if (/map response/.test(log)) m.answered++
+		if (/code: 725/.test(log)) m.permanent = true//the router takes only mappings with no lease, so libtorrent asks again for one that lasts until it's deleted
+	}
+	let failed = log.match(/\]: (failed to .*)/)?.[1]//a mapper that can't start says so in its log and closes, like failed to find default route for "en1" and the address, which the row already names
+	if (failed) m.stopped = failed.replace(` ${a.local}`, '')
+	if (a.type == 'portmap') { m.mapped[a.protocol] = a.port; m.error = '' }
+	if (a.type == 'portmap_error') m.error = a.error
 }
 
 //how long since Start, as the box's lines begin
@@ -1407,6 +1454,8 @@ export function sessionFacts() {
 		['DHT',                  ran ? `${session.allNodes ?? 0} nodes in all, ${session.bootstrapped ? 'started' : 'starting'}` : ''],
 		...session.tables.map(t => ['DHT table', _sayTable(t)]),
 		['External address',     session.external.join(', ') || (session.running ? 'none yet' : '')],
+		['Port mapping',         _sayPortMapping()],
+		...Object.values(session.mappers).map(m => ['Port mapper', _sayMapper(m)]),
 		['Incoming connections', ran ? _sayIncoming() : ''],
 		['Alerts',               _sayKinds()],
 	]
@@ -1418,6 +1467,30 @@ function _sayTable(t) {
 	let kinds = found ? `, ${found.a.kinds.join(', ')}` : ''
 	let nodes = t.nodes == null ? 'counting' : `${t.nodes} nodes`
 	return `ID ${t.id}, ${nodes}, ${t.address}${kinds}`
+}
+
+//whether libtorrent's port mappers are on in the session, blank before one has run
+function _sayPortMapping() {
+	if (session.started == 0) return ''
+	return session.mapping ? 'on, leases of a minute' : 'off'
+}
+
+//one port mapper on one local address: which protocol it spoke, whether UPnP found the router, what the router mapped and to which external port, whether the mapping is permanent, why one didn't happen, why the mapper stopped, and how many requests it sent and answers came back, with the firewall named when UPnP's search may have been held back by it
+function _sayMapper(m) {
+	let plural = (n, word) => `${n} ${word}${n == 1 ? '' : 's'}`
+	let said = []
+	if (m.transport == 'natpmp' && m.version) said.push(`speaking ${m.version}`)
+	if (m.transport == 'upnp') said.push(m.found ? 'found the router' : 'no router found yet')
+	let mapped = Object.entries(m.mapped).map(([protocol, port]) => `${protocol.toUpperCase()} to external port ${port}`)
+	if (mapped.length) said.push(`mapped ${mapped.join(' and ')}`)
+	if (m.permanent) said.push('permanent, since the router takes no lease')
+	if (m.error) said.push(`not mapped, ${m.error}`)
+	if (m.stopped) said.push(`stopped, ${m.stopped}`)
+	said.push(`${plural(m.sent, 'request')} and ${plural(m.answered, 'answer')}`)
+	if (m.deletes > 0) said.push(`${plural(m.deletes, 'delete')} sent`)
+	let holding = m.transport == 'upnp' && !m.found && lastRun.value ? _sayHolding(lastRun.value.firewall, 'engine', "the router's answer") : ''
+	if (holding) said.push(holding)
+	return `${m.transport == 'upnp' ? 'UPnP' : 'NAT-PMP'} mapper from ${m.local}: ${said.join(', ')}`
 }
 
 //each socket the session opened, by kind and address, and any that failed with why

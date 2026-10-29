@@ -2,7 +2,7 @@
 import {ref, computed, watch, nextTick, onMounted} from 'vue'
 import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import KeyValues from '../components/KeyValues.vue'
-import {connectionRun, connectionFacts, connectionText, sayRun, lastRun, box, boxAdd, session, sessionFacts, sessionOpen, sessionStart, sessionStop} from '../connection.js'
+import {connectionRun, connectionFacts, connectionText, sayRun, lastRun, box, boxAdd, session, sessionFacts, sessionOpen, sessionStart, sessionMapping, sessionStop} from '../connection.js'
 
 let facts = computed(() => [...connectionFacts(lastRun.value), ...sessionFacts()])
 let running = ref(false)//so Check waits while a run is out
@@ -45,6 +45,8 @@ async function copy() {
 			<button type="button" :disabled="running" @click="check">Check</button>
 			<button type="button" @click="sessionOpen">Open…</button>
 			<button type="button" :disabled="session.running" @click="sessionStart">Start</button>
+			<button type="button" :disabled="!session.running || session.mapping" @click="sessionMapping(true)">Map</button>
+			<button type="button" :disabled="!session.running || !session.mapping" @click="sessionMapping(false)">Unmap</button>
 			<button type="button" :disabled="!session.running" @click="sessionStop">Stop</button>
 		</div>
 		<KeyValues :rows="facts" />

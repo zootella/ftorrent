@@ -1,5 +1,6 @@
 import sys
 import json
+import re
 import ipaddress
 import platform
 import tempfile
@@ -56,7 +57,7 @@ def session_settings():#the settings the engine will hand libtorrent when it cre
 		'peer_fingerprint': fingerprint(),#the client code and version at the front of the peer id, which clients reading only the peer id look up in a table; the DHT is separate, where libtorrent writes its own LT and version into every message from no setting at all
 	}
 
-alert_mask = lt.alert_category.error | lt.alert_category.status | lt.alert_category.port_mapping | lt.alert_category.dht | lt.alert_category.peer | lt.alert_category.connect | lt.alert_category.tracker#the kinds of alert the session posts: errors, status changes, port mapping, the DHT, peers, connections, and trackers, and none of libtorrent's logs, which would be many lines a second
+alert_mask = lt.alert_category.error | lt.alert_category.status | lt.alert_category.port_mapping | lt.alert_category.port_mapping_log | lt.alert_category.dht | lt.alert_category.peer | lt.alert_category.connect | lt.alert_category.tracker#the kinds of alert the session posts: errors, status changes, port mapping, the DHT, peers, connections, and trackers, and of libtorrent's logs only the port mappers', a few lines for each request a mapper sends, since a router that never answers posts no other alert; the rest would be many lines a second
 
 session = None#the one libtorrent session, once the page asks for one, and None again once it's stopped
 
@@ -103,14 +104,23 @@ def command_session(message):#start the session, listening on every address in b
 	settings.update({
 		'listen_interfaces': f'0.0.0.0:{port},[::]:{port}',#every address of each family at one port, each with a TCP socket and a UDP one, the UDP one carrying uTP, the DHT, and UDP trackers
 		'enable_dht': True,
-		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two wait until the page can show what a mapping changes
+		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two stay off until the page asks for mapping, so it sees what the network does before and after
 		'enable_natpmp': False,
-		'enable_lsd': False,#local service discovery, which multicasts each torrent's info-hash to find peers on the same network, off while the only session is the Connection tab's, which measures whether strangers on the internet get in; with a socket on every address the session hears its own announcements and dials itself. All three go back on for the session that downloads
-		'optimistic_disk_retry': 2**31 - 1,#how many seconds before libtorrent takes an auto-managed torrent out of upload mode, in case the disk error it assumes put it there has cleared, ten minutes by default; then it downloads, and a session left running fetched a whole torrent and seeded it. This is sixty-eight years, so the torrent stays in upload mode, while keeping libtorrent's usual start, in which auto-management resumes the torrent and its DHT lookups begin within seconds; adding it unmanaged and unpaused instead left it without a DHT lookup for thirteen minutes. It goes back to ten minutes for the session that downloads, with the three above
+		'upnp_lease_duration': 60,#and when it does, each mapping lasts a minute and is renewed at three quarters of that, so a mapping this session leaves behind, if the engine dies holding one, is gone from the router a minute later; libtorrent's own is an hour
+		'natpmp_lease_duration': 60,#the same for the NAT-PMP mapper, which speaks PCP too
+		'enable_lsd': False,#local service discovery, which multicasts each torrent's info-hash to find peers on the same network, off while the only session is the Connection tab's, which measures whether strangers on the internet get in; with a socket on every address the session hears its own announcements and dials itself. It goes back on for the session that downloads, where the two mappers stay off, since ftorrent maps the port with its own code
+		'optimistic_disk_retry': 2**31 - 1,#how many seconds before libtorrent takes an auto-managed torrent out of upload mode, in case the disk error it assumes put it there has cleared, ten minutes by default; then it downloads, and a session left running fetched a whole torrent and seeded it. This is sixty-eight years, so the torrent stays in upload mode, while keeping libtorrent's usual start, in which auto-management resumes the torrent and its DHT lookups begin within seconds; adding it unmanaged and unpaused instead left it without a DHT lookup for thirteen minutes. It goes back to ten minutes for the session that downloads, with local service discovery
 		'alert_mask': alert_mask,
 	})
 	session = lt.session(settings)
 	emit({'event': 'session', 'port': port})
+
+def command_mapping(message):#turn libtorrent's two port mappers on or off in the running session, both together; on, each asks the router to forward the session's port, and off, each deletes what it mapped
+	if session is None:
+		emit({'event': 'error', 'message': 'no session to map the port of', 'command': 'mapping'}); return
+	on = message.get('on') is True
+	session.apply_settings({'enable_upnp': on, 'enable_natpmp': on})#libtorrent starts or stops the mappers on every socket it listens on, and a mapper stopped sends its deletes on the way out
+	emit({'event': 'mapping', 'on': on})
 
 def command_poll(message):#every alert that has arrived since the last poll, each as a line, oldest first; with no session there's nothing to say, which is the answer to a poll that crossed a stop on the road
 	if session is None: return
@@ -191,6 +201,10 @@ def alert_event(alert):#one alert as a line for the page: its type, libtorrent's
 		event['peers'] = alert.num_peers
 	elif kind == 'dht_live_nodes_alert':
 		event.update({'id': str(alert.node_id), 'nodes': alert.num_nodes})#which DHT node, by the ID the tables command named it by, and how many live nodes its routing table holds
+	elif kind in ('portmap_alert', 'portmap_error_alert', 'portmap_log_alert'):
+		event.update({'mapping': int(getattr(alert, 'mapping', -1)), 'transport': alert.map_transport.name, 'local': portmap_local(event['message'])})#which mapping, by libtorrent's index, which mapper, natpmp or upnp, and the local address it mapped from
+		if kind == 'portmap_alert': event.update({'protocol': alert.map_protocol.name, 'port': alert.external_port})#tcp or udp, and the external port the router gave
+		if kind == 'portmap_error_alert': event['error'] = alert.error.message()#the router's refusal, in PCP's result-code words for either protocol, or UPnP's own
 	elif kind == 'session_stats_alert':
 		event['values'] = dict(alert.values)#every counter by name, three hundred of them
 		del event['message']#which would be the same numbers again, as one long sentence
@@ -200,10 +214,15 @@ def alert_event(alert):#one alert as a line for the page: its type, libtorrent's
 		event['dropped'] = sum(1 for dropped in alert.dropped_alerts if dropped)
 	return event
 
+def portmap_local(message):#the local address a port mapper's alert is about, which the binding leaves out of all three and libtorrent's own sentence names, as local: 192.0.2.7 in a mapping and in brackets in an error or a log line
+	found = re.search(r'local: (\S+) external|\[([^\]]*)\]', message)
+	return (found.group(1) or found.group(2)) if found else ''
+
 commands = {#every command the engine understands, and the function that carries it out; quit is handled in the loop below, since it ends the loop
 	'init': command_init,
 	'folders': command_folders,
 	'session': command_session,
+	'mapping': command_mapping,
 	'poll': command_poll,
 	'stats': command_stats,
 	'tables': command_tables,
