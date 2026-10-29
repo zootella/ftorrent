@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Installs moon's host firewall: installs iptables-persistent, which loads /etc/iptables/rules.v4 and rules.v6 at every boot, copies the two files there, loads them now, turns on IPv4 forwarding for the network namespaces those rules translate, and installs the hourly read of the STUN counters, stuncount.py under a systemd timer. The package asks at install whether to save the live tables into those files; the script answers no, so the files stay the source. A rule that shut out ssh would be hard to undo from here, so before loading, the script starts a timer on the box that reopens INPUT after three minutes; a fresh ssh connection after the load proves the rules admit ssh, and stops the timer. ssh reads ssh.conf beside this script, as deploy.py does.
+# Installs moon's host firewall: installs iptables-persistent, which loads /etc/iptables/rules.v4 and rules.v6 at every boot, copies the two files there, loads them now, turns on forwarding for the network namespaces those rules govern, and installs the hourly read of the STUN counters, stuncount.py under a systemd timer. The package asks at install whether to save the live tables into those files; the script answers no, so the files stay the source. A rule that shut out ssh would be hard to undo from here, so before loading, the script starts a timer on the box that reopens INPUT after three minutes; a fresh ssh connection after the load proves the rules admit ssh, and stops the timer. ssh reads ssh.conf beside this script, as deploy.py does.
 import os#the folder this script is in
 import subprocess#running ssh and rsync
 import sys#exiting with a failed command's code
@@ -29,7 +29,7 @@ run('rsync', '-t', '-e', ' '.join(ssh), 'rules.v4', 'rules.v6', 'moon:/etc/iptab
 
 moon('iptables-restore < /etc/iptables/rules.v4; ip6tables-restore < /etc/iptables/rules.v6')#each table in each family's file replaced whole, at once: filter in both, and nat in IPv4's
 
-#IPv4 forwarding, once the rules that govern it are loaded: the drop-in where systemd-sysctl reads it at every boot, and read now
+#forwarding in both families, once the rules that govern it are loaded: the drop-in where systemd-sysctl reads it at every boot, and read now
 run('rsync', '-t', '-e', ' '.join(ssh), 'forwarding.conf', 'moon:/etc/sysctl.d/60-forwarding.conf')
 moon('sysctl -q -p /etc/sysctl.d/60-forwarding.conf')#-p reads settings from the file named, and -q keeps it from echoing them
 
@@ -38,7 +38,7 @@ run('rsync', '-tp', '-e', ' '.join(ssh), 'stuncount.py', 'moon:/usr/local/bin/st
 run('rsync', '-t', '-e', ' '.join(ssh), 'stuncount.service', 'stuncount.timer', 'moon:/etc/systemd/system/')
 moon('systemctl daemon-reload; systemctl enable --quiet --now stuncount.timer')#enable the timer at every boot, and --now start it this moment too
 
-#a fresh connection proves ssh still passes the new rules; it stops the timer and shows INPUT as loaded
-code = subprocess.run([*ssh, '-o', 'ConnectTimeout=15', 'moon', 'systemctl stop firewall-revert.timer; iptables -S INPUT; iptables -S FORWARD; iptables -t nat -S POSTROUTING; ip6tables -S INPUT; sysctl net.ipv4.ip_forward; systemctl list-timers stuncount.timer --no-pager']).returncode#a new ssh connection, given fifteen seconds to open, which only gets through if the rules admit it; -S prints a chain's rules as the commands that would make them
+#a fresh connection proves ssh still passes the new rules; it stops the timer and shows the chains as loaded
+code = subprocess.run([*ssh, '-o', 'ConnectTimeout=15', 'moon', 'systemctl stop firewall-revert.timer; iptables -S INPUT; iptables -S FORWARD; iptables -t nat -S POSTROUTING; ip6tables -S INPUT; ip6tables -S FORWARD; sysctl net.ipv4.ip_forward net.ipv6.conf.all.forwarding; systemctl list-timers stuncount.timer --no-pager']).returncode#a new ssh connection, given fifteen seconds to open, which only gets through if the rules admit it; -S prints a chain's rules as the commands that would make them
 if code != 0:
 	sys.exit('ssh did not connect; the timer reopens INPUT in three minutes')#sys.exit with text prints it and exits with code 1

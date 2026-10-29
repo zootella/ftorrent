@@ -1,5 +1,5 @@
 /*
-A peer behind one of moon's NATs. systemd runs a copy inside each of moon's two network namespaces, cone and symmetric, where the masquerade rules in rules.v4 translate everything it sends, and moon's Go service, ftorrent-moon, reaches it across the namespace's veth pair at its private address, 10.88.1.2 or 10.88.2.2, on port 8200. Nothing on the internet can reach that address, since the namespace's one way out is the masquerade, which lets answers back in and nothing else.
+A peer behind one of moon's NATs, or its IPv6 firewall. systemd runs a copy inside each of moon's three network namespaces: cone and symmetric, where the masquerade rules in rules.v4 translate everything it sends, and firewall, where the peer has a public IPv6 address of its own, which nothing translates and rules.v6 filters statefully. The peer behind firewall punches over IPv6, and the other two over IPv4. moon's Go service, ftorrent-moon, reaches each across its namespace's veth pair at a private IPv4 address, 10.88.1.2, 10.88.2.2, or 10.88.3.2, on port 8200, which nothing on the internet can reach, since a namespace's one way out lets answers back in and nothing else.
 
 	GET /punch?to=A:P&token=T  -> a new UDP socket's public address and port, from STUN, as JSON, and then a punch from that socket to A:P
 	POST /offer?caller=A       -> the same punch over WebRTC, for a page: an offer in and an answer out, which offer.go explains
@@ -41,13 +41,19 @@ const (
 //running holds a value for each punch under way, by hand or over WebRTC: a channel with room for atOnce values, which a punch puts one into as it starts and takes back out as it ends, so a full channel means atOnce are running
 var running = make(chan struct{}, atOnce)//struct{} is a type with no fields, which takes no memory, so the channel counts and carries nothing
 
-//nat is the name of the NAT this copy runs behind, cone or symmetric, which its unit passes as the one argument, for the reports
+//nat is the name of the namespace this copy runs in, cone, symmetric, or firewall, which its unit passes as the one argument, for the reports
 var nat string
+
+//udp is the family this copy punches in, as Go names a UDP socket's: udp6 behind firewall, whose IPv6 address is public, and udp4 behind the two NATs, which translate IPv4 alone
+var udp = "udp4"
 
 //main serves the punch and the offer on port 8200 of every address in the namespace, which is the veth pair's inside end and the loopback, until the process stops
 func main() {
 	if len(os.Args) > 1 {//os.Args is the command line, the program's own path first
 		nat = os.Args[1]
+	}
+	if nat == "firewall" {
+		udp = "udp6"
 	}
 	api = webrtcAPI()
 	mux := http.NewServeMux()
@@ -70,8 +76,8 @@ func main() {
 //punch answers GET /punch: it opens a socket, asks STUN its public address and port, answers them with the rest of the report, and then sends the punch on a goroutine of its own, which outlives the request
 func punch(w http.ResponseWriter, r *http.Request) {
 	to, err := netip.ParseAddrPort(r.URL.Query().Get("to"))//an address and a port as text, like 203.0.113.42:52814; ParseAddrPort takes only a literal address, never a name to look up
-	if err != nil || !to.Addr().Is4() || to.Port() == 0 {//IPv4 alone, since the namespace translates IPv4 alone
-		http.Error(w, "to must be an IPv4 address and a port", http.StatusBadRequest)
+	if err != nil || to.Addr().Is4() != (udp == "udp4") || to.Port() == 0 {//in this peer's family alone
+		http.Error(w, "to must be an address in this peer's family, and a port", http.StatusBadRequest)
 		return
 	}
 	token := r.URL.Query().Get("token")
@@ -85,7 +91,7 @@ func punch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "too many punches at once", http.StatusServiceUnavailable)
 		return
 	}
-	socket, err := net.ListenUDP("udp4", &net.UDPAddr{})//no address of its own and port 0, so the system picks a free port, which the cone namespace's NAT then keeps
+	socket, err := net.ListenUDP(udp, &net.UDPAddr{})//no address of its own and port 0, so the system picks a free port, which the cone namespace's NAT then keeps and nothing behind firewall changes
 	if err != nil {
 		<-running//take back the place this punch held, since it won't run
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -133,7 +139,7 @@ func send(socket *net.UDPConn, to *net.UDPAddr, token string) {
 
 //askStun sends a STUN binding request from socket to the main server, again after half a second and then a second, and answers the public address and port in the first answer to it, or an error when none comes within stunTimeout. The request is twenty bytes built by hand: the type, a binding request, 0x0001; the length of the attributes after the header, none; the magic cookie; and a random twelve-byte transaction id, which the answer repeats
 func askStun(socket *net.UDPConn) (*net.UDPAddr, error) {
-	server, err := net.ResolveUDPAddr("udp4", stunServer)//the name to an IPv4 address, through the resolvers the unit binds in
+	server, err := net.ResolveUDPAddr(udp, stunServer)//the name to an address in this peer's family, through the resolvers the unit binds in
 	if err != nil {
 		return nil, err
 	}
@@ -169,24 +175,28 @@ func askStun(socket *net.UDPConn) (*net.UDPAddr, error) {
 			if mapped := xorMapped(buffer[:n]); mapped != nil {
 				return mapped, nil
 			}
-			return nil, errors.New("an answer with no IPv4 XOR-MAPPED-ADDRESS")
+			return nil, errors.New("an answer with no XOR-MAPPED-ADDRESS")
 		}
 	}
 	return nil, errors.New("no answer in 3 seconds")
 }
 
-//xorMapped reads the XOR-MAPPED-ADDRESS from a STUN answer, or answers nil when it holds no IPv4 one. Attributes follow the twenty-byte header one after another, each a type, a length, and a value padded out to four bytes. This one's value is a reserved byte, the family, 1 for IPv4, the port masked with the cookie's top two bytes, and the address masked with the whole cookie, a mask that keeps a NAT rewriting addresses it finds in a packet from rewriting this one
+//xorMapped reads the XOR-MAPPED-ADDRESS from a STUN answer, or answers nil when it holds none. Attributes follow the twenty-byte header one after another, each a type, a length, and a value padded out to four bytes. This one's value is a reserved byte, the family, 1 for IPv4 and 2 for IPv6, the port masked with the cookie's top two bytes, and the address masked with the cookie, and for IPv6's sixteen bytes the transaction id after it, a mask that keeps a NAT rewriting addresses it finds in a packet from rewriting this one
 func xorMapped(answer []byte) *net.UDPAddr {
-	cookie := answer[4:8]
+	mask := answer[4:20]//the cookie, then the transaction id
 	for at := 20; at+4 <= len(answer); {
 		kind := binary.BigEndian.Uint16(answer[at : at+2])
 		size := int(binary.BigEndian.Uint16(answer[at+2 : at+4]))
 		value := answer[at+4 : min(at+4+size, len(answer))]
-		if kind == 0x0020 && len(value) >= 8 && value[1] == 1 {
-			port := binary.BigEndian.Uint16(value[2:4]) ^ binary.BigEndian.Uint16(cookie[0:2])
-			ip := make(net.IP, 4)
-			for i := range 4 {//range over a number counts from 0 up to it, since Go 1.22
-				ip[i] = value[4+i] ^ cookie[i]
+		length := 0//the address's length by its family, 4 for IPv4 and 16 for IPv6, and 0 for a value too short to say or a family STUN doesn't define
+		if len(value) >= 2 {
+			length = map[byte]int{1: 4, 2: 16}[value[1]]//a key that isn't there answers the zero value, 0
+		}
+		if kind == 0x0020 && length > 0 && len(value) >= 4+length {
+			port := binary.BigEndian.Uint16(value[2:4]) ^ binary.BigEndian.Uint16(mask[0:2])
+			ip := make(net.IP, length)
+			for i := range length {//range over a number counts from 0 up to it, since Go 1.22
+				ip[i] = value[4+i] ^ mask[i]
 			}
 			return &net.UDPAddr{IP: ip, Port: int(port)}
 		}

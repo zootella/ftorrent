@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Deploys moon's services from the files beside this script, each step the same the second time, so running it again after an edit is how a change goes up. coturn: Debian's package, our stun-only configuration at /etc/turnserver.conf, the hardening drop-in beside its unit, then a restart. The two network namespaces the peers run in, from the oneshot unit that makes them at boot. The Go service: Debian's Go, the source copied to the box and built there into /usr/local/bin/ftorrent-moon, its unit, then a restart. The peer: built the same way into /usr/local/bin/ftorrent-peer, and started inside each namespace under its template unit. The page in site/, which Caddy serves at the root of moon.ftorrent.com, to /var/www/moon. And last the Caddyfile to /etc/caddy and a Caddy reload, which keeps its running config if the new one doesn't parse, so Caddy proxies to a service already up. ssh reads a Host block named moon from ssh.conf beside this script.
+# Deploys moon's services from the files beside this script, each step the same the second time, so running it again after an edit is how a change goes up. coturn: Debian's package, our stun-only configuration at /etc/turnserver.conf, the hardening drop-in beside its unit, then a restart. The three network namespaces the peers run in, from namespaces.py under the oneshot unit that runs it at boot. The Go service: Debian's Go, the source copied to the box and built there into /usr/local/bin/ftorrent-moon, its unit, then a restart. The peer: built the same way into /usr/local/bin/ftorrent-peer, and started inside each namespace under its template unit. The page in site/, which Caddy serves at the root of moon.ftorrent.com, to /var/www/moon. And last the Caddyfile to /etc/caddy and a Caddy reload, which keeps its running config if the new one doesn't parse, so Caddy proxies to a service already up. ssh reads a Host block named moon from ssh.conf beside this script.
 import os#the folder this script is in
 import subprocess#running ssh and rsync
 import sys#exiting with a failed command's code
@@ -21,7 +21,8 @@ run('rsync', '-t', '-e', ' '.join(ssh), 'turnserver.conf', 'moon:/etc/turnserver
 run('rsync', '-t', '-e', ' '.join(ssh), 'coturn.service.d/hardening.conf', 'moon:/etc/systemd/system/coturn.service.d/hardening.conf')
 moon('chmod 644 /etc/turnserver.conf; systemctl daemon-reload; systemctl restart coturn; systemctl is-active coturn')#the mode first: rsync writes a new root-owned file carrying the mode of the package's own, which only the turnserver group could read, so the turnserver user the unit runs as couldn't open it; the configuration holds no secret, and not every rsync takes --chmod, so the box sets it. daemon-reload makes systemd read the drop-in, and is-active prints active once coturn is up
 
-#the two network namespaces the peers run in, made by a oneshot unit at every boot from here on; a restart deletes them and makes them again
+#the three network namespaces the peers run in, made by namespaces.py under a oneshot unit at every boot from here on; a restart deletes them and makes them again
+run('rsync', '-tp', '-e', ' '.join(ssh), 'namespaces.py', 'moon:/usr/local/bin/namespaces.py')#-p keeps it executable
 run('rsync', '-t', '-e', ' '.join(ssh), 'namespaces.service', 'moon:/etc/systemd/system/namespaces.service')
 moon('systemctl daemon-reload; systemctl enable --quiet namespaces; systemctl restart namespaces; ip netns list')#ip netns list prints the two names once they're made
 
@@ -37,7 +38,7 @@ moon('mkdir -p /usr/local/src/ftorrent-peer')
 run('rsync', '-rlt', '--delete', '--exclude=.DS_Store', '--delete-excluded', '-e', ' '.join(ssh), 'go-peer/', 'moon:/usr/local/src/ftorrent-peer/')
 moon("cd /usr/local/src/ftorrent-peer && go build -trimpath -ldflags='-s -w' -o /usr/local/bin/ftorrent-peer .")
 run('rsync', '-t', '-e', ' '.join(ssh), 'ftorrent-peer@.service', 'moon:/etc/systemd/system/ftorrent-peer@.service')
-moon('systemctl daemon-reload; systemctl enable --quiet ftorrent-peer@cone ftorrent-peer@symmetric; systemctl restart ftorrent-peer@cone ftorrent-peer@symmetric; systemctl is-active ftorrent-peer@cone ftorrent-peer@symmetric')
+moon('systemctl daemon-reload; systemctl enable --quiet ftorrent-peer@cone ftorrent-peer@symmetric ftorrent-peer@firewall; systemctl restart ftorrent-peer@cone ftorrent-peer@symmetric ftorrent-peer@firewall; systemctl is-active ftorrent-peer@cone ftorrent-peer@symmetric ftorrent-peer@firewall')
 
 #the page moon.ftorrent.com answers at its root, which Caddy serves itself
 moon('mkdir -p /var/www/moon')

@@ -9,7 +9,7 @@ And STUN, over UDP, which is what a peer connection travels on. A page has no so
 
 The page makes four peer connections at once. The first names our server alone, and its reflexive candidates are this browser's public address and port over UDP, which should match what the reflector saw over HTTPS; when it doesn't, something sends the two out apart: over IPv4, a carrier's translator with more than one public address of its own, or in either family a VPN, a proxy, or a relay such as iCloud Private Relay carrying one path and not the other. The second names moon's alone and the third Cloudflare's alone, which shows each answers from here. The fourth names all three, and the browser asks all three from the same sockets. A router keys the mapping it makes on the inside address and port, so when every server sees the same public port the candidates are the same, and the browser, which drops a reflexive candidate that repeats one it already has, hands back one. The page can't see how many sockets the browser gathered from, but asking one server, each socket answers one candidate, so the first connection's count in a family is the number of sockets. When the fourth's count is the same, every socket kept one public port for every server, endpoint-independent mapping, the kind a hole punch works through; when it's one for each server that answered alone, three times the sockets with all three answering, each socket got a new port for each server, endpoint-dependent, the symmetric case, where it fails. The desktop client asks from one socket it chose itself, so it has no counting to do.
 
-And the hole punch, the whole of ICE rather than its first step: whether this browser and a peer behind a NAT of its own can reach each other directly. moon runs two such peers, each in a network namespace behind a NAT moon makes with Linux's own translation: the cone, which keeps a socket's port for every destination, and the symmetric, which picks a fresh port for each. For each, the page makes a peer connection with a data channel, gathers every candidate through our STUN server, and posts the offer to moon over HTTPS; moon hands it to the peer, which gathers through the same server and answers, and moon passes the answer back. That one exchange is all the signaling, the shape WHIP standardized, since the peer is always there to answer. Then both sides run ICE: each sends STUN binding requests from its candidates to the other's, a NAT lets them in only once its socket has sent toward where they come from, and the first pair answered both ways carries DTLS and the data channel over it. When the channel opens, the peer sends one message naming the pair it chose, and the page reads its own side of the pair from getStats. moon keeps the offer's public IPv4 candidates, this browser's addresses as STUN saw them, wherever they are, since a phone's carrier can send its TCP and its UDP out from different addresses, and says what it dropped; ICE's checks are STUN requests signed with the browser's own ICE password, which nothing but that browser's WebRTC answers, and the peer gives up after eight seconds. The punch is IPv4 alone, since moon's NATs translate IPv4 alone. Through the cone and not the symmetric is the common case, the hole punch demonstrated rather than inferred from STUN; through neither is a NAT here that changes the port for each destination, or a network or extension that holds WebRTC back; and through both is a NAT here that lets in a packet from an address it has sent to at any port.
+And the hole punch, the whole of ICE rather than its first step: whether this browser and a peer behind a NAT of its own can reach each other directly. moon runs three such peers, each in a network namespace of its own. Two sit behind NATs moon makes with Linux's own translation: the cone, which keeps a socket's port for every destination, and the symmetric, which picks a fresh port for each. The third has a public IPv6 address behind a stateful firewall that translates nothing, the shape of a home router's IPv6 side. For each, the page makes a peer connection with a data channel, gathers every candidate through our STUN server, and posts the offer to moon over HTTPS; moon hands it to the peer, which gathers through the same server and answers, and moon passes the answer back. That one exchange is all the signaling, the shape WHIP standardized, since the peer is always there to answer. Then both sides run ICE: each sends STUN binding requests from its candidates to the other's, a NAT or a firewall lets them in only once its socket has sent toward where they come from, and the first pair answered both ways carries DTLS and the data channel over it. When the channel opens, the peer sends one message naming the pair it chose, and the page reads its own side of the pair from getStats. moon keeps the offer's public candidates in the peer's family, this browser's addresses as STUN saw them, wherever they are, since a phone's carrier can send its TCP and its UDP out from different addresses, and says what it dropped; ICE's checks are STUN requests signed with the browser's own ICE password, which nothing but that browser's WebRTC answers, and the peer gives up after eight seconds. The page punches the two NATs over IPv4 and the firewall over IPv6, all three at once. Through the cone and not the symmetric is the common case, the hole punch demonstrated rather than inferred from STUN; through neither is a NAT here that changes the port for each destination, or a network or extension that holds WebRTC back; and through both is a NAT here that lets in a packet from an address it has sent to at any port.
 
 The box keeps more than the verdicts need: every candidate line the browser wrote, every error a STUN server's silence raised, and the browser's own record of each local candidate, from getStats. What one browser writes and another leaves out is itself a finding at this stage, and it all fits in one paste.
 
@@ -34,7 +34,8 @@ const gatherings = [//the four peer connections, by what each asks
 	{which: 'all',        servers: [stunOurs, stunMoon, stunCloudflare]},
 ]
 const statsSkip = ['id', 'timestamp', 'type', 'transportId', 'isRemote']//the bookkeeping on every getStats record, the same on each, which the box leaves out
-const punchNats = ['cone', 'symmetric']//moon's two NATs, each with a peer behind it, by the names moon's offer takes
+const punches = [['cone', 4], ['symmetric', 4], ['firewall', 6]]//moon's three namespaces, each with a peer in it, by the names moon's offer takes, and the family each punches in: its two NATs translate IPv4, and its firewall filters IPv6 and translates nothing
+const punchNames = {cone: `moon's cone NAT`, symmetric: `moon's symmetric NAT`, firewall: `moon's IPv6 firewall`}//each namespace in the row's words
 const offerSeconds = checkSeconds + 3//moon's peer gathers for up to three seconds before it answers, on top of the request's own time
 const punchSeconds = 6//after the answer, how long ICE, DTLS, and the data channel have to open and the peer's message to arrive, which on a link with a long round trip is six round trips or so
 
@@ -50,7 +51,7 @@ export async function connectionRun() {
 	let [reflected, found, punched] = await Promise.all([//all at once; Promise.all keeps the order it was given, whatever order they finish in
 		Promise.all(reflectors.map(_reflect)),
 		Promise.all(gatherings.map(g => _gather(g.servers))),
-		Promise.all(punchNats.map(_punch)),
+		Promise.all(punches.map(_punch)),
 	])
 	let results = [...reflected]
 	gatherings.forEach((g, i) => results.push(_reflexive(found[i], 4, g), _reflexive(found[i], 6, g)))
@@ -59,11 +60,11 @@ export async function connectionRun() {
 }
 
 //one hole punch over WebRTC, to the peer behind one of moon's NATs: a peer connection with a data channel, every candidate gathered through our STUN server, the offer posted to moon, the peer's answer set, and then ICE between the two until the peer's message arrives over the channel or punchSeconds pass. Answers a result for the box, its value what the punch saw: this browser's reflexive candidates, what moon kept and dropped, the peer's candidates, its message, the pair this browser says carried the channel, and ICE's state at the end
-async function _punch(nat) {
+async function _punch([nat, family]) {
 	let start = performance.now()
 	let since = () => Math.round(performance.now() - start)
-	let url = `https://ip4.moon.ftorrent.com/offer?nat=${nat}`
-	let r = {kind: 'punch', family: 4, nat, asked: `WebRTC to moon's ${nat} peer`}
+	let url = `https://ip${family}.moon.ftorrent.com/offer?nat=${nat}`
+	let r = {kind: 'punch', family, nat, asked: `WebRTC to moon's ${nat} peer`}
 	let v = {mine: [], kept: [], dropped: 0, peer: [], peerKept: null, message: null, opened: 0, pair: '', state: ''}
 	let connection
 	try {
@@ -73,7 +74,7 @@ async function _punch(nat) {
 		let gathered = new Promise(resolve => { connection.onicecandidate = event => { if (!event.candidate || !event.candidate.candidate) resolve() } })//null, or a blank candidate, means gathering is complete
 		await connection.setLocalDescription(await connection.createOffer())//which starts gathering
 		await Promise.race([gathered, _wait(checkSeconds)])
-		v.mine = _candidates(connection.localDescription.sdp).filter(c => c.type == 'srflx' && _family(c.address) == 4).map(c => _sayEndpoint(c.address, c.port))
+		v.mine = _candidates(connection.localDescription.sdp).filter(c => c.type == 'srflx' && _family(c.address) == family).map(c => _sayEndpoint(c.address, c.port))
 		let response = await fetch(url, {method: 'POST', body: connection.localDescription.sdp, headers: {'Content-Type': 'text/plain'}, signal: AbortSignal.timeout(offerSeconds*Time.second)})//text/plain, which a browser sends across origins without a preflight request first
 		if (!response.ok) throw new Error(`moon answered ${response.status}, ${(await response.text()).trim()}`)
 		let a = await response.json()
@@ -108,7 +109,12 @@ async function _selectedPair(connection) {
 	let transport = all.find(s => s.type == 'transport' && s.selectedCandidatePairId)
 	let pair = transport ? stats.get(transport.selectedCandidatePairId) : all.find(s => s.type == 'candidate-pair' && s.selected)
 	if (!pair) return ''
-	let end = id => { let c = stats.get(id); return c ? `${c.candidateType} ${_sayEndpoint(c.address || c.ip, c.port)}` : '' }//address in the standard, ip in browsers from before it
+	let end = id => {
+		let c = stats.get(id)
+		if (!c) return ''
+		let address = c.address || c.ip//address in the standard, ip in browsers from before it
+		return address ? `${c.candidateType} ${_sayEndpoint(address, c.port)}` : `${c.candidateType} port ${c.port}, its address hidden by the browser`//a browser can leave a host candidate's address out of its stats, its own so a page can't learn it, and in Safari the far end's too
+	}
 	return `${end(pair.localCandidateId)} to ${end(pair.remoteCandidateId)}`
 }
 
@@ -208,7 +214,7 @@ function _family(address) {
 	return 4
 }
 
-//the table's rows for a run, three for each family and the hole punch for IPv4, blank before the first run
+//the table's rows for a run, four for each family, blank before the first run
 export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
@@ -219,23 +225,23 @@ export function connectionFacts(run) {
 			[`Public IPv${family} over UDP`, run ? _sayUdp(ours, reflect)    : ''],
 			[`IPv${family} mapping`,         run ? _sayMapping(stuns)        : ''],
 		)
-		if (family == 4) rows.push(['IPv4 hole punch', run ? _sayPunch(run) : ''])//moon's NATs translate IPv4 alone
+		rows.push([`IPv${family} hole punch`, run ? _sayPunch(run, family) : ''])
 	}
 	return rows
 }
 
-//the hole punch as the page saw it, _readPunched's sentence for each of moon's two NATs; what the pair means is in the essay at the top, not the row
-function _sayPunch(run) {
-	return punchNats.map(nat => _readPunched(run.results.find(r => r.kind == 'punch' && r.nat == nat)).said).join(' ')
+//one family's hole punch as the page saw it, _readPunched's sentence for each of moon's namespaces in that family; what the punches mean is in the essay at the top, not the row
+function _sayPunch(run, family) {
+	return punches.filter(([nat, f]) => f == family).map(([nat]) => _readPunched(run.results.find(r => r.kind == 'punch' && r.nat == nat)).said).join(' ')
 }
 
-//one punch as a sentence: moon's NAT, with whether it kept the port of moon's peer behind it, the port the peer's answer says it bound against the one STUN saw; then whether the data channel opened, and how soon. Or why the punch couldn't run, as when the offer held no IPv4 candidate for moon to keep
+//one punch as a sentence: moon's NAT or firewall, with whether it kept the port of moon's peer behind it, the port the peer's answer says it bound against the one STUN saw; then whether the data channel opened, and how soon. Or why the punch couldn't run, as when the offer held no candidate in that family for moon to keep
 function _readPunched(r) {
 	let v = r.value
-	let couldnt = why => ({said: `The punch to moon's peer behind its ${r.nat} NAT couldn't run: ${why}.`})
+	let couldnt = why => ({said: `The punch to moon's peer behind ${punchNames[r.nat]} couldn't run: ${why}.`})
 	if (!r.success) return couldnt(r.outcome)
-	if (!v.kept.length) return couldnt(`this browser's offer held no public IPv4 candidate, the family moon's NATs translate`)
-	let head = v.peerKept == null ? `moon's peer sits behind its ${r.nat} NAT` : `moon's ${r.nat} NAT ${v.peerKept ? 'kept' : 'changed'} the port of moon's peer behind it`//moon's peer named as moon's every time, so it can't be read as this browser
+	if (!v.kept.length) return couldnt(`this browser's offer held no public IPv${r.family} candidate`)
+	let head = v.peerKept == null ? `moon's peer sits behind ${punchNames[r.nat]}` : `${punchNames[r.nat]} ${v.peerKept ? 'kept' : 'changed'} the port of moon's peer behind it`//moon's peer named as moon's every time, so it can't be read as this browser
 	if (v.message) return {said: `${head}, and a data channel opened between that peer and this browser in ${v.opened} ms.`}
 	return {said: `${head}, and no data channel opened between that peer and this browser in ${punchSeconds} seconds.`}
 }

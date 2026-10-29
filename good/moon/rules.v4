@@ -1,4 +1,4 @@
-# moon's IPv4 host firewall, and the translation for its two network namespaces. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT decides what reaches them; FORWARD carries what the peers inside the namespaces send out to the internet and the answers back in; and the nat table at the end translates it.
+# moon's IPv4 host firewall, and the translation for its three network namespaces. netfilter-persistent loads this file from /etc/iptables/rules.v4 at boot, and firewall.py loads it now. Every service on moon runs on the box itself, so INPUT decides what reaches them; FORWARD carries what the peers inside the namespaces send out to the internet and the answers back in; and the nat table at the end translates it.
 # The file is in the form iptables-restore reads, which replaces a whole table at once. A comment has to be a line of its own, since a # after a rule would be read as part of the rule, so each comment here sits on the line above what it describes. Rules in a chain are checked in order, and the first whose target decides a packet's fate ends the check; a rule with no target only counts, and the packet moves on to the next.
 #the filter table, the one that decides whether a packet is accepted or dropped; the other tables, for translating addresses and marking packets, go unused here
 *filter
@@ -29,9 +29,10 @@
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
-#the two network namespaces namespaces.service makes, cone behind veth-cone and symmetric behind veth-symmetric: whatever they send leaves to the internet through ens2, the provider's interface
+#the three network namespaces namespaces.py makes, each behind a veth pair named for it: whatever they send leaves to the internet through ens2, the provider's interface
 -A FORWARD -i veth-cone -o ens2 -j ACCEPT
 -A FORWARD -i veth-symmetric -o ens2 -j ACCEPT
+-A FORWARD -i veth-firewall -o ens2 -j ACCEPT
 #and an answer comes back in. conntrack matches an arriving packet to a connection a peer started only when it comes from the exact address and port the peer sent to, and translates it back to the peer's private address, which brings it here; veth-+ is any interface whose name starts veth-. A packet conntrack can't match stays addressed to moon itself and meets INPUT above, which drops it, and that is the filtering both namespaces share: by address and port
 -A FORWARD -i ens2 -o veth-+ -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 #the third STUN counter: coturn's answers, leaving from its port, --sport 3478
@@ -48,4 +49,6 @@ COMMIT
 -A POSTROUTING -s 10.88.1.0/24 -o ens2 -j MASQUERADE
 #symmetric: the same rule with --random-fully, which gives every new connection a port picked at random, so a socket shows each destination a different public port: endpoint-dependent mapping, the symmetric case, which a hole punch can't get through
 -A POSTROUTING -s 10.88.2.0/24 -o ens2 -j MASQUERADE --random-fully
+#firewall: the plain rule, for its IPv4 alone, which carries its peer's name lookups; its punches go over IPv6, which rules.v6 filters and nothing translates
+-A POSTROUTING -s 10.88.3.0/24 -o ens2 -j MASQUERADE
 COMMIT

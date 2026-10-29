@@ -21,9 +21,9 @@ For each family, IPv4 and IPv6, a run asks three things. The system says which o
 
 And STUN, over UDP, which is what a peer connection travels on: our server, moon's, and Cloudflare's, three places on the internet, asked at once from one local port, the way Tailscale's netcheck asks its servers, each answering the address and port it saw the request arrive from. A router keys the mapping it makes on the inside address and port, so when every server sees the same public port, it keeps one mapping for every destination, endpoint-independent mapping, which hole punching needs; a new port for each server is endpoint-dependent, the symmetric case, where hole punching fails. The address STUN saw should be the one the reflector saw, and when it isn't, something carries one path and not the other, a VPN, a proxy, or a relay. On IPv6 these comparisons are of the /64, the network, since a machine can send from more than one of its temporary addresses, and a Mac sometimes from one it has already deprecated.
 
-And filtering, the other half of whether a hole punch can work: which outside addresses the router lets reach a port it has mapped. RFC 4787 names three kinds. Endpoint-independent filtering lets in anyone once the socket has sent anything; address-dependent lets in only an address the socket has sent to, from any port there; and address-and-port-dependent only the exact address and port. Telling them apart takes a socket that stays open across several steps, and a server that sends from somewhere the socket hasn't, which is moon. Each of two tests opens a socket of its own through udp_open, asks one STUN server from it which public address and port it has, then asks moon over HTTPS to poke that port, three small UDP packets carrying a token the panel makes up, while it receives on the socket. The first test's socket asks our STUN server alone, so moon's poke comes from an address it has never sent to, and arriving is endpoint-independent filtering. The second's asks moon's STUN server, so moon's poke comes from the address it just sent to, at another port: arriving there and not in the first test is address-dependent, and held back there too is address-and-port-dependent. moon pokes only the address the request for a poke came from, so nobody can aim it at anyone else, and that isn't always where the socket is: over IPv6 the request can leave from another of the machine's temporary addresses, and on cellular from another of the carrier's public IPv4 addresses. The poke's answer names where it went, and the reading sets that beside where STUN saw the socket, so a poke sent elsewhere reads as that and never as filtering. A firewall on this machine filters too, and the reading names it when it may be what held a poke back. The two tests need nothing from each other, so they run side by side, each family's beside the other's and beside every other check from the start of the run, and a receive that hears nothing waits its whole four seconds, so the run waits on the filtering last.
+And filtering, the other half of whether a hole punch can work: which outside addresses the router lets reach a port it has mapped. RFC 4787 names three kinds. Endpoint-independent filtering lets in anyone once the socket has sent anything; address-dependent lets in only an address the socket has sent to, from any port there; and address-and-port-dependent only the exact address and port. Telling them apart takes a socket that stays open across several steps, and a server that sends from somewhere the socket hasn't, which is moon. Each of two tests opens a socket of its own through udp_open, asks one STUN server from it which public address and port it has, then asks moon over HTTPS to poke that port, three small UDP packets carrying a token the panel makes up, while it receives on the socket. The first test's socket asks our STUN server alone, so moon's poke comes from an address it has never sent to, and arriving is endpoint-independent filtering. The second's asks moon's STUN server, so moon's poke comes from the address it just sent to, at another port: arriving there and not in the first test is address-dependent, and held back there too is address-and-port-dependent. The panel names the public address STUN saw, and moon pokes there, since that isn't always where the request for a poke comes from: over IPv6 the request can leave from another of the machine's temporary addresses, and on cellular from another of the carrier's public IPv4 addresses. moon pokes only a public address, and the poke's answer names where it went, which the reading sets beside where STUN saw the socket. A firewall on this machine filters too, and the reading names it when it may be what held a poke back. The two tests need nothing from each other, so they run side by side, each family's beside the other's and beside every other check from the start of the run, and a receive that hears nothing waits its whole four seconds, so the run waits on the filtering last.
 
-And the hole punch, which mapping and filtering decide between them: whether this machine and a peer behind a NAT of its own can reach each other directly, each sending to the other at once. moon runs two such peers, each in a network namespace behind a NAT moon makes with Linux's own translation: the cone, which keeps a socket's port for every destination, and the symmetric, which picks a fresh port for each. For each, a socket opened for it alone asks our STUN server its public address and port, then asks moon over HTTPS to punch that port; the peer behind the NAT named learns its own public address and port from the same STUN server, moon answers them, and the peer starts sending to the address the request came from, a small packet every fifth of a second for five seconds. The panel sends to the peer at the same pace while it listens, in rounds of a second, since udp_receive waits in whole seconds. A router lets a packet in only once its socket has sent toward where the packet comes from, so the packets get through only when both sides send, and only when each NAT shows the other side the port STUN saw. Each packet says whether the other side's have arrived, so this socket hears both directions: a packet of the peer's at all is the peer getting through, and one saying heard yes is this side getting through. When the peer's packets come from another port than the one moon answered, as the symmetric NAT sends them, the panel sends there too, as ICE does, which is how a router that lets in anything from an address it has sent to gets through even the symmetric NAT. The punch is IPv4 alone, since moon's NATs translate IPv4 alone, and it runs beside every other check from the start of the run.
+And the hole punch, which mapping and filtering decide between them: whether this machine and a peer behind a NAT of its own can reach each other directly, each sending to the other at once. moon runs three such peers, each in a network namespace of its own. Two sit behind NATs moon makes with Linux's own translation: the cone, which keeps a socket's port for every destination, and the symmetric, which picks a fresh port for each. For each, a socket opened for it alone asks our STUN server its public address and port, then asks moon over HTTPS to punch that address and port; the peer in the namespace named learns its own public address and port from the same STUN server, moon answers them, and the peer starts sending to the address and port the panel named, a small packet every fifth of a second for five seconds. The panel sends to the peer at the same pace while it listens, in rounds of a second, since udp_receive waits in whole seconds. A router lets a packet in only once its socket has sent toward where the packet comes from, so the packets get through only when both sides send, and only when each NAT shows the other side the port STUN saw. Each packet says whether the other side's have arrived, so this socket hears both directions: a packet of the peer's at all is the peer getting through, and one saying heard yes is this side getting through. When the peer's packets come from another port than the one moon answered, as the symmetric NAT sends them, the panel sends there too, as ICE does, which is how a router that lets in anything from an address it has sent to gets through even the symmetric NAT. Over IPv4 the panel punches through moon's two NATs, and over IPv6 through a third namespace, where the peer has a public address of its own behind a stateful firewall that translates nothing, the shape of a home router's IPv6 side; all three run beside every other check from the start of the run.
 
 And, while a session listens, the inbound proof: whether a stranger can reach the engine at all, unasked, which is the question every number above leads to. moon probes the session's port in each family three ways at once, all to the address the request came from. A DHT ping, which the engine's DHT node answers with a pong that says where it saw moon; a uTP connection request, uTP being BitTorrent's transport over UDP, which the engine accepts with a torrent loaded and turns away without one, either way an answer; and a TCP dial with a BitTorrent handshake carrying the chosen torrent's info-hash, which the engine answers with its own handshake, or closes without a torrent, which still proves the connection opened. A plain UDP poke would prove nothing here, since libtorrent drops a packet it can't read without an alert or a reply. moon hears each answer itself and says so, and the engine posts an incoming connection for the dial and, with a torrent, for the uTP request, so the run waits one more poll of the engine and counts the connections in from moon's address. Nothing back from all three, with nothing refused, is a translator or a firewall dropping a stranger's packets, the measurement Transmission's port test has offered for years, here over both families and both transports.
 
@@ -52,7 +52,8 @@ const pokePackets = 3//how many packets moon sends in a poke, as its Go service 
 const reportLimit = 8*Size.kb//bytes; moon's account of a poke, a ping, or a dial is one small JSON object, a ping's whole answer in hex among it
 const pingSeconds = checkSeconds + 3//moon waits three seconds for a ping's answer, on top of the request's own time
 const dialSeconds = checkSeconds + 6//and up to three to connect a dial and three more to hear back
-const punchNats = ['cone', 'symmetric']//moon's two NATs, each with a peer behind it, by the names moon's punch takes
+const punches = [['cone', 4], ['symmetric', 4], ['firewall', 6]]//moon's three namespaces, each with a peer in it, by the names moon's punch takes, and the family each punches in: its two NATs translate IPv4, and its firewall filters IPv6 and translates nothing
+const punchNames = {cone: `moon's cone NAT`, symmetric: `moon's symmetric NAT`, firewall: `moon's IPv6 firewall`}//each namespace in the row's words
 const punchCallSeconds = checkSeconds + 3//moon's peer waits up to three seconds for its own STUN answer before moon answers, on top of the request's own time
 const punchSeconds = 5//how long the panel sends and listens, the length of the peer's sending, which starts just before moon answers
 const punchGap = Time.second/5//between the panel's packets, as between the peer's
@@ -147,7 +148,7 @@ async function _filterTest(family, test, server) {
 		return [{kind: 'filter-open', family, test, asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
 	}
 	let stun = await _ask({kind: 'filter-stun', family, test, asked: `STUN ${server} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [server], checkSeconds), read: _readBinding})
-	let url = stun.success ? `https://ip${family}.moon.${urlHome}/poke?port=${stun.value.port}&token=${Data({random: 4}).base16()}` : ''//the public port STUN saw, and a token of our own, so a packet that arrives says which poke it came from
+	let url = stun.success ? `https://ip${family}.moon.${urlHome}/poke?port=${stun.value.port}&address=${stun.value.address}&token=${Data({random: 4}).base16()}` : ''//the public address and port STUN saw, which moon pokes even when the request leaves from another address, written as it is, since a global address is digits, hex, dots, and colons, all of which a query takes as they are; and a token of our own, so a packet that arrives says which poke it came from
 	let [poke, receive] = await Promise.all([//at once, so the socket is already listening when the poke's packets arrive
 		_ask({kind: 'poke', family, test, asked: `GET ${url || `https://ip${family}.moon.${urlHome}/poke`}`, ask: () => url ? netGet(url, reportLimit, checkSeconds) : Promise.reject('no public port from STUN to poke'), read: _readPoke}),
 		_ask({kind: 'receive', family, test, asked: `receive on port ${port}`, ask: () => url ? udpReceive(opened.socket, pokePackets, checkSeconds) : Promise.reject('no poke to wait for'), read: list => ({success: true, value: list})}),
@@ -171,19 +172,19 @@ function _readPoke(text) {
 }
 
 //one hole punch, against the peer behind one of moon's two NATs, on a socket opened for it alone and kept open across its steps: ask our STUN server from it which public address and port it has; ask moon to punch that port, which hands it to the peer, and the peer answers its own public address and port and starts sending; then send to the peer while listening. Each step is a result for the box, and _sayPunch reads them
-async function _punch(nat) {
+async function _punch([nat, family]) {
 	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, a new one each run, as the STUN check's
 	let opened
 	try {
-		opened = await udpOpen(4, port)
+		opened = await udpOpen(family, port)
 	} catch (error) {//the bottom gate, as in _ask
-		return [{kind: 'punch-open', family: 4, nat, asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
+		return [{kind: 'punch-open', family, nat, asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
 	}
-	let stun = await _ask({kind: 'punch-stun', family: 4, nat, asked: `STUN ${stunServers[0]} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [stunServers[0]], checkSeconds), read: _readBinding})//our server rather than moon's, so the socket hasn't sent to moon's address before the punch, as a peer meeting a stranger wouldn't have
+	let stun = await _ask({kind: 'punch-stun', family, nat, asked: `STUN ${stunServers[0]} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [stunServers[0]], checkSeconds), read: _readBinding})//our server rather than moon's, so the socket hasn't sent to moon's address before the punch, as a peer meeting a stranger wouldn't have
 	let token = Data({random: 4}).base16()//carried by both sides' packets, so one that arrives says which punch it belongs to
-	let url = stun.success ? `https://ip4.moon.${urlHome}/punch?nat=${nat}&port=${stun.value.port}&token=${token}` : ''
-	let call = await _ask({kind: 'punch', family: 4, nat, asked: `GET ${url || `https://ip4.moon.${urlHome}/punch?nat=${nat}`}`, ask: () => url ? netGet(url, reportLimit, punchCallSeconds) : Promise.reject('no public port from STUN to punch from'), read: _readPunch, seconds: punchCallSeconds})
-	let exchange = await _ask({kind: 'punch-exchange', family: 4, nat, asked: `punch ${call.success ? call.value.mapped : `moon's ${nat} peer`} from port ${port}`, ask: () => call.success ? _exchange(opened.socket, call.value.mapped, token) : Promise.reject('no peer to punch'), read: v => ({success: true, value: v}), seconds: punchSeconds + 1})
+	let url = stun.success ? `https://ip${family}.moon.${urlHome}/punch?nat=${nat}&port=${stun.value.port}&address=${stun.value.address}&token=${token}` : ''//the public address and port STUN saw, where the peer sends even when the request leaves from another address
+	let call = await _ask({kind: 'punch', family, nat, asked: `GET ${url || `https://ip${family}.moon.${urlHome}/punch?nat=${nat}`}`, ask: () => url ? netGet(url, reportLimit, punchCallSeconds) : Promise.reject('no public port from STUN to punch from'), read: _readPunch, seconds: punchCallSeconds})
+	let exchange = await _ask({kind: 'punch-exchange', family, nat, asked: `punch ${call.success ? call.value.mapped : `moon's ${nat} peer`} from port ${port}`, ask: () => call.success ? _exchange(opened.socket, call.value.mapped, token) : Promise.reject('no peer to punch'), read: v => ({success: true, value: v}), seconds: punchSeconds + 1})
 	udpClose(opened.socket)
 	return [stun, call, exchange]
 }
@@ -333,7 +334,7 @@ function _readAddress(family, text) {
 export async function connectionRun() {
 	let moment = Date.now()
 	let filtering = Promise.all([4, 6].map(_filtering))//each family's two tests, on sockets of their own, beside every other check from the start, since a poke that never arrives waits its whole four seconds
-	let punching = Promise.all(punchNats.map(_punch))//and the two punches, which take five seconds of sending after moon answers
+	let punching = Promise.all(punches.map(_punch))//and the three punches, which take five seconds of sending after moon answers
 	let probing = session.running ? Promise.all([4, 6].map(family => _inbound(family, session.port, session.torrent?.v1))) : null//and with a session listening, moon's probes of its port, also from the start
 	let [version, paths, engine] = await Promise.all([getVersion(), pathsStatus(), engineStatus()])//this copy's version, and where this copy and its engine are, which the firewall lists programs by
 	let results = (await Promise.all(_checks(paths, engine).map(_ask))).flatMap(_perServer)//all at once; Promise.all keeps the order it was given, whatever order they finish in
@@ -399,7 +400,7 @@ function _late(seconds) { return new Promise(resolve => setTimeout(() => resolve
 //no answer in some seconds, the words noAnswer is for checkSeconds
 function _sayNoAnswer(seconds) { return `no answer in ${seconds} seconds` }
 
-//the table's rows for a run, seven for each family and the hole punch for IPv4, five about the machine, and five about the router, blank before the first run
+//the table's rows for a run, eight for each family, five about the machine, and five about the router, blank before the first run
 export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
@@ -412,7 +413,7 @@ export function connectionFacts(run) {
 			[`IPv${family} mapping`,         run ? _sayMapping(stuns)               : ''],
 			[`IPv${family} filtering`,       run ? _sayFiltering(run, family)       : ''],
 		)
-		if (family == 4) rows.push(['IPv4 hole punch', run ? _sayPunch(run) : ''])//moon's NATs translate IPv4 alone
+		rows.push([`IPv${family} hole punch`, run ? _sayPunch(run, family) : ''])
 		rows.push(
 			[`IPv${family} inbound`,         run ? _sayInbound(run, family)         : ''],
 			[`IPv${family} gateway`,         run ? _sayGateway(family, run.machine) : ''],
@@ -563,33 +564,33 @@ function _readPoked(steps) {
 	if (!stun.success) return {why: `STUN from the socket ${stun.outcome}`}
 	if (!poke.success) return {why: `the poke ${poke.outcome}`}
 	let to = _addressOf(poke.value.to)
-	if (!_same(to, stun.value.address)) return {why: `moon poked ${to}, where the request for the poke came from, but STUN saw the socket at ${stun.value.address}`}
+	if (!_same(to, stun.value.address)) return {why: `moon poked ${to}, but STUN saw the socket at ${stun.value.address}`}//moon pokes the address the panel names, so this is a guard on what moon reports
 	if (!receive.success) return {why: `the receive ${receive.outcome}`}
 	return {arrived: receive.value.some(d => _datagramText(d).startsWith(`poke ${poke.value.token} `))}//a packet of this poke's, by its token, rather than one left over from the first poke or a STUN answer that came late
 }
 
-//the hole punch as the panel saw it, _readPunched's sentence for each of moon's two NATs, and the firewall here named when nothing got through either and it may be what held the packets back; what the pair means is in the essay at the top, not the row
-function _sayPunch(run) {
-	let punched = punchNats.map(nat => _readPunched(nat, run.results.filter(r => r.nat == nat)))
+//one family's hole punch as the panel saw it, _readPunched's sentence for each of moon's namespaces in that family, and the firewall here named when nothing got through any and it may be what held the packets back; what the punches mean is in the essay at the top, not the row
+function _sayPunch(run, family) {
+	let punched = punches.filter(([nat, f]) => f == family).map(([nat]) => _readPunched(nat, run.results.filter(r => r.nat == nat)))
 	let said = punched.map(p => p.said)
 	let holding = _sayHolding(run.firewall, 'ftorrent')
-	if (punched.every(p => p.none) && holding) said.push(`${holding[0].toUpperCase()}${holding.slice(1)}.`)//the firewall here, when nothing got through either NAT and it may be what held the packets back
+	if (punched.every(p => p.none) && holding) said.push(`${holding[0].toUpperCase()}${holding.slice(1)}.`)//the firewall here, when nothing got through any and it may be what held the packets back
 	return said.join(' ')
 }
 
-//one punch's steps as a sentence: moon's NAT, with whether it kept the port of moon's peer behind it, the port the peer bound against the one STUN saw; then which way packets got through, when the first of the peer's arrived, and where from when that wasn't where STUN saw it. Both ways is a packet of the peer's saying it had heard this machine's, and nothing from the peer can't say whether this machine's reached it. Answers {said}, with {none} when nothing arrived; or the reason the punch couldn't run
+//one punch's steps as a sentence: moon's NAT or firewall, with whether it kept the port of moon's peer behind it, the port the peer bound against the one STUN saw; then which way packets got through, when the first of the peer's arrived, and where from when that wasn't where STUN saw it. Both ways is a packet of the peer's saying it had heard this machine's, and nothing from the peer can't say whether this machine's reached it. Answers {said}, with {none} when nothing arrived; or the reason the punch couldn't run
 function _readPunched(nat, steps) {
-	let couldnt = why => ({said: `The punch to moon's peer behind its ${nat} NAT couldn't run: ${why}.`})
+	let couldnt = why => ({said: `The punch to moon's peer behind ${punchNames[nat]} couldn't run: ${why}.`})
 	if (steps[0].kind == 'punch-open') return couldnt(`the socket ${steps[0].outcome}`)
 	let [stun, call, exchange] = steps
 	if (!stun.success) return couldnt(`STUN from the socket ${stun.outcome}`)
 	if (!call.success) return couldnt(`the punch ${call.outcome}`)
 	let to = _addressOf(call.value.to)
-	if (!_same(to, stun.value.address)) return couldnt(`moon's peer punched ${to}, where the request came from, but STUN saw this machine's socket at ${stun.value.address}`)
+	if (!_same(to, stun.value.address)) return couldnt(`moon's peer punched ${to}, but STUN saw this machine's socket at ${stun.value.address}`)//a guard on what moon reports, as the poke's
 	if (!exchange.success) return couldnt(exchange.outcome)
 	let v = call.value
 	let kept = Number(v.mapped.split(':').pop()) == v.local_port
-	let head = `moon's ${nat} NAT ${kept ? 'kept' : 'changed'} the port of moon's peer behind it`//moon's peer named as moon's every time, so it can't be read as this machine
+	let head = `${punchNames[nat]} ${kept ? 'kept' : 'changed'} the port of moon's peer behind it`//moon's peer named as moon's every time, so it can't be read as this machine
 	let ours = exchange.value.arrived.filter(d => _datagramText(d).startsWith(`punch ${v.token} `))
 	if (!ours.length) return {said: `${head}, and nothing from that peer reached this machine.`, none: true}
 	let first = ours[0]

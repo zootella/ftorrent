@@ -5,7 +5,7 @@ The WebRTC half of the peer: the same hole punch as main.go's, done by a browser
 
 The page makes a peer connection with a data channel, gathers its candidates through our STUN server, and sends the offer, candidates and all, through ftorrent-moon, which adds the caller's address. The peer makes a peer connection of its own, gathers through the same STUN server, and answers with its candidates. Both sides then run ICE, Interactive Connectivity Establishment: each sends STUN binding requests from its candidates to the other's, and the first pair to get an answer both ways carries the connection, which DTLS encrypts and SCTP carries the data channel over. That is one HTTPS exchange, every candidate gathered before it, the shape WHIP standardized for signaling over HTTP, and it needs no room to meet in, since the peer is always here.
 
-Two edits to the descriptions keep the punch to the point. The offer keeps its public IPv4 candidates, at most keepLimit of them: a browser's host candidates are made-up .local names or private addresses, and an IPv6 one has no path to a peer behind an IPv4 NAT. Those candidates are the browser's public addresses as STUN saw them, which need not be the address its HTTPS came from, since a phone's carrier can send its TCP and its UDP out from different addresses, and the peer checks them all. ICE's checks are STUN requests signed with the browser's own ICE password, so nothing but that browser's WebRTC answers them, and the peer gives up after eight seconds. And the answer drops the peer's host candidate, its private address inside the namespace, which a browser would otherwise try on its own local network.
+Two edits to the descriptions keep the punch to the point. The offer keeps its public candidates in this peer's family, IPv4 behind the two NATs and IPv6 behind firewall, at most keepLimit of them: a browser's host candidates are made-up .local names or private addresses, and a candidate in the other family has no path to this peer. Those candidates are the browser's public addresses as STUN saw them, which need not be the address its HTTPS came from, since a phone's carrier can send its TCP and its UDP out from different addresses, and the peer checks them all. ICE's checks are STUN requests signed with the browser's own ICE password, so nothing but that browser's WebRTC answers them, and the peer gives up after eight seconds. And the answer drops the peer's candidates at a private address, its host candidate behind the two NATs, which a browser would otherwise try on its own local network; behind firewall the host candidate is the peer's public IPv6 address and stays.
 
 When the data channel opens, the peer sends one message over it, JSON naming its NAT and the candidate pair ICE chose, and the page reads it. Every peer connection is closed sessionLength after the answer, connected or not.
 */
@@ -15,8 +15,10 @@ import (
 	"encoding/json"//the answer, and the message over the data channel
 	"fmt"//a candidate as text
 	"io"//reading the offer
+	"net"//an address and a port written together
 	"net/http"
-	"net/netip"//the caller's address, and telling an IPv4 candidate from the rest
+	"net/netip"//the caller's address, and telling a public candidate in this peer's family from the rest
+	"strconv"//a port as text
 	"strings"//going through a description line by line
 	"sync"//sync.Once, so a session gives its place back once
 	"time"
@@ -28,30 +30,34 @@ import (
 
 const (
 	offerLimit    = 16 * 1024//bytes; a browser's offer is a few kilobytes
-	keepLimit     = 16//IPv4 candidates kept from an offer, more than a browser gathers in one family, so ICE checks a bounded number of addresses
+	keepLimit     = 16//candidates kept from an offer, more than a browser gathers in one family, so ICE checks a bounded number of addresses
 	sessionLength = 20 * time.Second//how long a peer connection lives after the answer, which ICE's own timeouts below settle well inside
 )
 
 //api makes every peer connection, with the settings main gives it
 var api *webrtc.API
 
-//webrtcAPI builds the settings every peer connection shares: ICE over UDP and IPv4 alone, since the namespace translates nothing else; no multicast DNS, the way browsers hide a host address behind a .local name, since the offer's .local candidates are dropped and the peer's own host candidate never leaves; timeouts short enough that a pair that can't connect is given up in seconds; and no logging, since pion's errors can name a caller's address and moon logs none
+//webrtcAPI builds the settings every peer connection shares: ICE over UDP in this peer's family alone; no multicast DNS, the way browsers hide a host address behind a .local name, since the offer's .local candidates are dropped and the peer's own host candidate never leaves; timeouts short enough that a pair that can't connect is given up in seconds; and no logging, since pion's errors can name a caller's address and moon logs none
 func webrtcAPI() *webrtc.API {
 	settings := webrtc.SettingEngine{}
 	quiet := logging.NewDefaultLoggerFactory()
 	quiet.DefaultLogLevel = logging.LogLevelDisabled
 	settings.LoggerFactory = quiet
-	settings.SetNetworkTypes([]webrtc.NetworkType{webrtc.NetworkTypeUDP4})
+	family := webrtc.NetworkTypeUDP4
+	if udp == "udp6" {
+		family = webrtc.NetworkTypeUDP6
+	}
+	settings.SetNetworkTypes([]webrtc.NetworkType{family})
 	settings.SetICEMulticastDNSMode(ice.MulticastDNSModeDisabled)
 	settings.SetICETimeouts(4*time.Second, 8*time.Second, 2*time.Second)//disconnected after four seconds without an answer, failed after eight, and a keepalive every two
 	return webrtc.NewAPI(webrtc.WithSettingEngine(settings))
 }
 
-//offer answers POST /offer: the page's offer, kept to its IPv4 candidates, then a peer connection answering it, and the answer once the peer's candidates are gathered; the caller's address, where ftorrent-moon saw the request come from, goes in the report beside what was kept
+//offer answers POST /offer: the page's offer, kept to its public candidates in this peer's family, then a peer connection answering it, and the answer once the peer's candidates are gathered; the caller's address, where ftorrent-moon saw the request come from, goes in the report beside what was kept
 func offer(w http.ResponseWriter, r *http.Request) {
 	caller, err := netip.ParseAddr(r.URL.Query().Get("caller"))
-	if err != nil || !caller.Is4() {
-		http.Error(w, "caller must be an IPv4 address", http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, "caller must be an IP address", http.StatusBadRequest)
 		return
 	}
 	body, err := io.ReadAll(io.LimitReader(r.Body, offerLimit+1))//one byte past the limit, so an offer that's too long shows as one
@@ -113,22 +119,22 @@ func offer(w http.ResponseWriter, r *http.Request) {
 	case <-gathered:
 	case <-time.After(stunTimeout)://STUN has three seconds to answer, here as in the punch
 	}
-	writeJSON(w, map[string]any{"nat": nat, "caller": caller.String(), "kept": candidateLines(trimmed), "dropped": dropped, "answer": dropHost(connection.LocalDescription().SDP)})
+	writeJSON(w, map[string]any{"nat": nat, "caller": caller.String(), "kept": candidateLines(trimmed), "dropped": dropped, "answer": dropPrivate(connection.LocalDescription().SDP)})
 }
 
-//keepCandidates answers the offer with only its public IPv4 candidates, the first keepLimit of them, and how many it dropped. A candidate line reads a=candidate:, then the foundation, the component, the transport, the priority, the address, the port, typ, and the type, so the address is the fifth field, and a .local name or an IPv6 address doesn't parse as IPv4
+//keepCandidates answers the offer with only its public candidates in this peer's family, the first keepLimit of them, and how many it dropped. A candidate line reads a=candidate:, then the foundation, the component, the transport, the priority, the address, the port, typ, and the type, so the address is the fifth field, and a .local name doesn't parse as an address at all
 func keepCandidates(sdp string) (string, int) {
 	var lines []string
 	kept, dropped := 0, 0
 	for _, line := range strings.SplitAfter(sdp, "\n") {//SplitAfter keeps each line's ending, \r\n in SDP, so the lines join back as they were
 		if strings.HasPrefix(line, "a=candidate:") {
 			fields := strings.Fields(line)
-			ipv4 := false
+			public := false
 			if len(fields) >= 5 {
 				address, err := netip.ParseAddr(fields[4])
-				ipv4 = err == nil && address.Is4() && address.IsGlobalUnicast() && !address.IsPrivate()//a public address, since a private one, like a host address a browser shows unmasked, is nowhere moon can reach
+				public = err == nil && address.Is4() == (udp == "udp4") && address.IsGlobalUnicast() && !address.IsPrivate()//in this peer's family, and public, since a private address, like a host address a browser shows unmasked, is nowhere moon can reach; IsPrivate covers IPv6's unique local fc00::/7 too
 			}
-			if !ipv4 || kept == keepLimit {
+			if !public || kept == keepLimit {
 				dropped++
 				continue
 			}
@@ -139,12 +145,19 @@ func keepCandidates(sdp string) (string, int) {
 	return strings.Join(lines, ""), dropped
 }
 
-//dropHost answers the peer's own description without its host candidates, which name its private address inside the namespace
-func dropHost(sdp string) string {
+//dropPrivate answers the peer's own description without its candidates at a private address, which is its host candidate behind the two NATs, its address inside the namespace; behind firewall the host candidate is the peer's public IPv6 address, the one a browser has to send to, and stays
+func dropPrivate(sdp string) string {
 	var lines []string
 	for _, line := range strings.SplitAfter(sdp, "\n") {
-		if strings.HasPrefix(line, "a=candidate:") && strings.Contains(line, " typ host") {
-			continue
+		if strings.HasPrefix(line, "a=candidate:") {
+			fields := strings.Fields(line)
+			if len(fields) < 5 {
+				continue
+			}
+			address, err := netip.ParseAddr(fields[4])
+			if err != nil || !address.IsGlobalUnicast() || address.IsPrivate() {
+				continue
+			}
 		}
 		lines = append(lines, line)
 	}
@@ -162,7 +175,7 @@ func candidateLines(sdp string) []string {
 	return candidates
 }
 
-//sayCandidate writes a candidate as its type and its address and port, like srflx 203.0.113.42:52814
+//sayCandidate writes a candidate as its type and its address and port, like srflx 203.0.113.42:52814, or host [2001:db8::6]:40528 with brackets around an IPv6 address so its colons don't run into the port's
 func sayCandidate(c *webrtc.ICECandidate) string {
-	return fmt.Sprintf("%s %s:%d", c.Typ, c.Address, c.Port)
+	return fmt.Sprintf("%s %s", c.Typ, net.JoinHostPort(c.Address, strconv.Itoa(int(c.Port))))
 }

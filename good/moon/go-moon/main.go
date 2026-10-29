@@ -3,14 +3,14 @@ The Go service on moon, the second vantage of good.ftorrent.com, answering behin
 
 	GET /                                   -> the caller's IP, as text, at ip4.moon and ip6.moon
 	GET /?format=json                       -> {"ip":"..."}
-	GET /poke?port=N[&token=T]              -> three small UDP packets carrying T to the caller's address at port N, and a JSON account of them
+	GET /poke?port=N[&address=A][&token=T]  -> three small UDP packets carrying T to address A, or the caller's, at port N, and a JSON account of them
 	GET /dial?port=N[&infohash=H]           -> a TCP connection to the caller's address at port N with a BitTorrent handshake, and a JSON account of what came back
 	GET /ping?port=N&kind=K                 -> one UDP packet a BitTorrent client answers, a DHT ping for kind=dht or a uTP connection request for kind=utp, to the caller's address at port N, and a JSON account of the answer
-	GET /punch?port=N&nat=K[&token=T]       -> a hole punch to the caller's IPv4 address at port N from the peer behind the NAT named, cone or symmetric, and the peer's public address and port as JSON
-	POST /offer?nat=K                       -> a WebRTC offer in, the peer behind the NAT named answering it, and its answer out as JSON, for a page on any origin
+	GET /punch?port=N&nat=K[&address=A]     -> a hole punch to address A, or the caller's, at port N from the peer in the namespace named, cone or symmetric over IPv4 and firewall over IPv6, and the peer's public address and port as JSON
+	POST /offer?nat=K                       -> a WebRTC offer in, the peer in the namespace named answering it, and its answer out as JSON, for a page on any origin
 	GET /health                             -> ok
 
-One rule governs the poke, the dial, the ping, and the punch: moon sends only to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. The offer is the one exception, by design: its peer runs ICE with the browser's public IPv4 candidates wherever they are, since a phone's carrier can send its TCP and its UDP out from different addresses, and ICE's checks are STUN requests signed with the browser's own ICE password, which nothing but that browser's WebRTC answers, and the peer gives up after eight seconds. Each is rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
+Where each call sends follows what it could do aimed at someone else. The dial and the ping send only to the address a request came from, never to one it names: the caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. The poke and the punch send a few small packets, and they go to the address the request names, where the caller's STUN saw its socket, since a machine's UDP can leave from another address than its HTTPS, on a carrier that sends the two out apart or over IPv6 from another of its temporary addresses; a named address has to be public, and with none named they go to the address the request came from. The offer's peer runs ICE with the browser's public candidates in the peer's family wherever they are, and ICE's checks are STUN requests signed with the browser's own ICE password, which nothing but that browser's WebRTC answers, and the peer gives up after eight seconds. Each is rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
 
 The reflector is the same contract as ip.ftorrent.com on the main server, and DNS does the same work here: ip4.moon.ftorrent.com carries only an A record and ip6.moon.ftorrent.com only a AAAA, so a request to one of them travels over that family alone, and moon.ftorrent.com carries both. The same names choose the family of the poke, the dial, and the ping, since moon sends to the address the request arrived from. The service runs as a systemd unit on the box itself, listening on the loopback address alone; Caddy terminates TLS for the three names and proxies to it. Nothing here logs a request or an address.
 
@@ -48,15 +48,15 @@ const (
 	pokeGap     = 50 * time.Millisecond//the pause between them, so they don't leave in one burst; a Duration, which counts nanoseconds, so this is 50,000,000 of them
 	dialTimeout = 3 * time.Second//to connect, and then to hear back; a peer that answers at all answers within this
 	pingTimeout = 3 * time.Second//to hear an answer to a ping, across every send of it
-	limitBurst  = 20//calls that send one source may make at once, which is two of the panel's Checks back to back, each making up to seven in a family
-	limitRate   = 10.0 / 60//and may make steadily, in tokens a second: ten a minute; written 10.0 so Go keeps the fraction, since 10 / 60 between two whole numbers is 0
+	limitBurst  = 200//calls that send one source address may make at once: a carrier's translator puts many phones and computers behind one address, the panel's Check makes up to seven of these calls in a family, and the page two
+	limitRate   = 2.0//and may make steadily, in tokens a second: two a second, a hundred and twenty a minute; written 2.0 so Go keeps it a float, as the bucket's arithmetic is
 	handshake   = "\x13BitTorrent protocol"//the first twenty bytes of every BitTorrent connection: a length byte, hex 13 for 19, then the protocol's 19-character name
 	peerPrefix  = "-FF0000-"//the eight characters at the front of the peer id moon dials with: FF is ftorrent's client code, and 0000 a version no client has, since this is a prober
-	tooMany     = "too many calls that send from this address; twenty at once, then ten a minute"//the answer to a source whose bucket is empty, for any of the calls that send
+	tooMany     = "too many calls that send from this address; two hundred at once, then two a second"//the answer to a source whose bucket is empty, for any of the calls that send
 )
 
-//peers holds where each peer behind one of moon's NATs listens: the inside end of its namespace's veth pair, which namespaces.service makes, at the port the peer serves on, ftorrent-peer in go-peer/
-var peers = map[string]string{"cone": "10.88.1.2:8200", "symmetric": "10.88.2.2:8200"}
+//peers holds where each peer listens, behind moon's two NATs and its IPv6 firewall: the inside end of its namespace's veth pair, which namespaces.py makes, at the port the peer serves on, ftorrent-peer in go-peer/
+var peers = map[string]string{"cone": "10.88.1.2:8200", "symmetric": "10.88.2.2:8200", "firewall": "10.88.3.2:8200"}
 
 //peerClient asks a peer, giving it five seconds, past its three to hear from STUN
 var peerClient = &http.Client{Timeout: 5 * time.Second}
@@ -111,6 +111,27 @@ func (l *limiter) allow(source string) bool {//a method: the (l *limiter) before
 	b.tokens--
 	return true
 }
+
+//sendTo answers where the poke or the punch sends: the address the request names, which is where the caller's STUN saw its socket and can differ from where its HTTPS came from, as on a carrier that sends a machine's TCP and UDP out from different addresses, or over IPv6 from another of its temporary addresses; or, with none named, the address the request came from. A named address has to be public, so nothing can aim moon at a private network, its own namespaces, or its loopback
+func sendTo(r *http.Request) (netip.Addr, error) {
+	named := r.URL.Query().Get("address")
+	if named == "" {
+		address, err := netip.ParseAddr(clientIP(r))
+		return address.Unmap(), err//Unmap turns an IPv4 address written in IPv6's form, like ::ffff:203.0.113.42, back into plain IPv4
+	}
+	address, err := netip.ParseAddr(named)//a literal address only, never a name to look up
+	if err != nil {
+		return netip.Addr{}, errors.New("address must be an IP address")
+	}
+	address = address.Unmap()
+	if !address.IsGlobalUnicast() || address.IsPrivate() || sharedSpace.Contains(address) {//IsPrivate covers 10/8, 172.16/12, 192.168/16, and IPv6's fc00::/7
+		return netip.Addr{}, errors.New("address must be a public address")
+	}
+	return address, nil
+}
+
+//sharedSpace is the range carriers number their customers from behind their translators, RFC 6598, which no packet from moon can reach and which netip doesn't count as private
+var sharedSpace = netip.MustParsePrefix("100.64.0.0/10")
 
 //portParam reads the port the caller named, 1 through 65535, or answers 400 itself and returns false, so the handler returns at once
 func portParam(w http.ResponseWriter, r *http.Request) (int, bool) {//two return values, the port and whether it was good; w is where the answer to the caller is written
@@ -258,7 +279,7 @@ func main() {
 		}
 	})
 
-	//the poke: a UDP socket on a port the system picks, in the caller's family, bound to no address, so the kernel sends from the address it would use toward the caller, moon's own; then pokePackets packets to the caller's address at the port they named, each "poke <token> <n>/3", 17 bytes with an eight-character token and 41 with the longest. The caller, listening on that port, reports whether they arrived; the answer here says what left and from which port, which is the port a filtering test needs
+	//the poke: a UDP socket on a port the system picks, in the family of the address it sends to, bound to no address, so the kernel sends from the address it would use toward the caller, moon's own; then pokePackets packets to the address sendTo answers, at the port the caller named, each "poke <token> <n>/3", 17 bytes with an eight-character token and 41 with the longest. The caller, listening on that port, reports whether they arrived; the answer here says what left and from which port, which is the port a filtering test needs
 	mux.HandleFunc("GET /poke", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the token is spent before the request is even read, so a flood of bad requests costs its sender too
@@ -276,11 +297,12 @@ func main() {
 			http.Error(w, "token must be up to 32 letters and digits", http.StatusBadRequest)
 			return
 		}
-		to := &net.UDPAddr{IP: net.ParseIP(ip), Port: port}//where the packets go: the caller's own address, at the port they named
-		if to.IP == nil {//ParseIP answers nil for text that isn't an address, which only a malformed header could give it
-			http.Error(w, "the request's address isn't an IP address", http.StatusBadRequest)
+		address, err := sendTo(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		to := net.UDPAddrFromAddrPort(netip.AddrPortFrom(address, uint16(port)))//where the packets go: the address the request named or came from, at the port it named
 		network := "udp4"
 		if to.IP.To4() == nil {//To4 answers the address as four bytes, or nil when it's IPv6, which is how Go tells the two families apart
 			network = "udp6"
@@ -513,7 +535,7 @@ func main() {
 		writeJSON(w, report)
 	})
 
-	//the punch: the caller's address and the port they name, handed to the peer behind the NAT they name, across that namespace's veth pair, and the peer's answer passed back with the NAT's name. The peer opens a socket, learns its public address and port from the main server's STUN, answers them, and then sends to the caller for five seconds while the caller sends to it, so the caller reads from its own socket which way got through. IPv4 alone, since the namespaces translate IPv4 alone
+	//the punch: the address sendTo answers and the port the caller names, handed to the peer in the namespace they name, across that namespace's veth pair, and the peer's answer passed back with the namespace's name. The peer opens a socket, learns its public address and port from the main server's STUN, answers them, and then sends to the caller for five seconds while the caller sends to it, so the caller reads from its own socket which way got through. Over IPv4 through cone and symmetric, and over IPv6 through firewall
 	mux.HandleFunc("GET /punch", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the same bucket as the poke, the dial, and the ping, and the offer below
@@ -527,7 +549,7 @@ func main() {
 		nat := r.URL.Query().Get("nat")
 		peer, known := peers[nat]//comma-ok: known says whether the name is one of the two
 		if !known {
-			http.Error(w, "nat must be cone or symmetric", http.StatusBadRequest)
+			http.Error(w, "nat must be cone, symmetric, or firewall", http.StatusBadRequest)
 			return
 		}
 		token := r.URL.Query().Get("token")
@@ -537,12 +559,16 @@ func main() {
 			http.Error(w, "token must be up to 32 letters and digits", http.StatusBadRequest)
 			return
 		}
-		address, err := netip.ParseAddr(ip)
-		if err != nil || !address.Unmap().Is4() {//Unmap turns an IPv4 address written in IPv6's form, like ::ffff:203.0.113.42, back into plain IPv4
-			http.Error(w, "the punch is IPv4 alone; ask at ip4.moon.ftorrent.com", http.StatusBadRequest)
+		address, err := sendTo(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		to := netip.AddrPortFrom(address.Unmap(), uint16(port))
+		if address.Is4() != (nat != "firewall") {//cone and symmetric translate IPv4, and firewall's peer has a public IPv6 address
+			http.Error(w, "the punch through cone or symmetric is IPv4, and through firewall IPv6; ask at ip4.moon.ftorrent.com or ip6.moon.ftorrent.com, or name an address in that family", http.StatusBadRequest)
+			return
+		}
+		to := netip.AddrPortFrom(address, uint16(port))
 		report := map[string]any{"nat": nat, "to": to.String(), "token": token}
 		answer, err := peerClient.Get("http://" + peer + "/punch?" + url.Values{"to": {to.String()}, "token": {token}}.Encode())//Encode writes the query with each value escaped
 		if err != nil {
@@ -558,7 +584,7 @@ func main() {
 		writeJSON(w, report)
 	})
 
-	//the offer: a page's WebRTC offer, its SDP description as the request's body, handed with the caller's address to the peer behind the NAT named, and the peer's answer passed back as it came. The peer keeps the offer's public IPv4 candidates, the browser's addresses as STUN saw them, which on a phone's carrier can differ from the address the HTTPS came from. CORS is open so a page on any origin, good.ftorrent.com's among them, can read the answer, and the page posts its offer as text/plain, which a browser sends without first asking leave in a preflight request. IPv4 alone, as the punch is
+	//the offer: a page's WebRTC offer, its SDP description as the request's body, handed with the caller's address to the peer in the namespace named, and the peer's answer passed back as it came. The peer keeps the offer's public candidates in its own family, the browser's addresses as STUN saw them, which on a phone's carrier can differ from the address the HTTPS came from. CORS is open so a page on any origin, good.ftorrent.com's among them, can read the answer, and the page posts its offer as text/plain, which a browser sends without first asking leave in a preflight request. The caller's address can be in either family, since it goes to the peer only for its report
 	mux.HandleFunc("POST /offer", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")//set first, so every answer below carries it, a refusal included, and the page can read why
 		ip := clientIP(r)
@@ -569,12 +595,12 @@ func main() {
 		nat := r.URL.Query().Get("nat")
 		peer, known := peers[nat]
 		if !known {
-			http.Error(w, "nat must be cone or symmetric", http.StatusBadRequest)
+			http.Error(w, "nat must be cone, symmetric, or firewall", http.StatusBadRequest)
 			return
 		}
 		address, err := netip.ParseAddr(ip)
-		if err != nil || !address.Unmap().Is4() {
-			http.Error(w, "the offer is IPv4 alone; post it to ip4.moon.ftorrent.com", http.StatusBadRequest)
+		if err != nil {
+			http.Error(w, "the request's address isn't an IP address", http.StatusBadRequest)
 			return
 		}
 		answer, err := peerClient.Post("http://"+peer+"/offer?"+url.Values{"caller": {address.Unmap().String()}}.Encode(), "application/sdp", io.LimitReader(r.Body, 16*1024+1))//the offer passed on as it streams in, cut one byte past the peer's limit, so the peer sees an offer too long as one

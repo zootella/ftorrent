@@ -1,7 +1,7 @@
-# moon's IPv6 host firewall, the IPv4 file's twin less the network namespaces, which translate IPv4 alone: loaded from /etc/iptables/rules.v6 at boot and by firewall.py, in the form ip6tables-restore reads. rules.v4 explains that form and says what each STUN counter counts; the comments here say what each rule is for, and where IPv6 differs.
+# moon's IPv6 host firewall, the IPv4 file's twin, with the stateful filter for the firewall namespace's IPv6 and no translation, since that namespace's peer has a public address of its own: loaded from /etc/iptables/rules.v6 at boot and by firewall.py, in the form ip6tables-restore reads. rules.v4 explains that form and says what each STUN counter counts; the comments here say what each rule is for, and where IPv6 differs.
 #the filter table, the one that decides whether a packet is accepted or dropped
 *filter
-#dropped coming in unless a rule below accepts it, nothing forwarded, everything sent let out
+#dropped coming in unless a rule below accepts it, forwarded only as the FORWARD rules below admit, everything sent let out
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
@@ -20,6 +20,9 @@
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 -A INPUT -p udp --dport 443 -j ACCEPT
+#the firewall namespace's peer: whatever it sends leaves through ens2, and an answer comes back in only when conntrack matches it to a connection the peer started, from the exact address and port it sent to. A packet from anywhere else, to the peer's address, matches nothing, reaches no rule here, and meets FORWARD's drop: the filtering of a home router's IPv6 side, by address and port, with nothing translated
+-A FORWARD -i veth-firewall -o ens2 -j ACCEPT
+-A FORWARD -i ens2 -o veth-firewall -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 #the answers coturn sends, counted
 -A OUTPUT -p udp --sport 3478 -m comment --comment stun6-out
 COMMIT

@@ -1,35 +1,16 @@
-# The two network namespaces the peers run in, made at boot. A network namespace is a network stack of its own, with its own interfaces, addresses, routes, and sockets, so a program inside one sees only what's there. Each is joined to the host by a veth pair, two virtual Ethernet interfaces wired to each other, one end on the host and the other inside, named eth0 there. The host end is the namespace's router, at .1 of its /24, and the namespace's default route points at it, so everything a peer sends crosses to the host, where the masquerade rules in rules.v4 translate it on its way out. cone, at 10.88.1.0/24, gets the plain rule, and symmetric, at 10.88.2.0/24, the one with --random-fully. ip netns add names a namespace by a file in /run/netns, which is what a peer's unit points NetworkNamespacePath= at. deploy.py installs this unit and enables it; it runs as root with no hardening, since making interfaces and namespaces is exactly what the hardening elsewhere takes away. A comment here is a line of its own, starting with #.
+# The three network namespaces moon's peers run in, made at boot by namespaces.py, which says what each one is. deploy.py installs the script at /usr/local/bin/namespaces.py and this unit, and enables it; it runs as root with no hardening, since making interfaces and namespaces is exactly what the hardening elsewhere takes away. A comment here is a line of its own, starting with #.
 [Unit]
-Description=the two network namespaces moon's peers punch through, cone and symmetric
+Description=the three network namespaces moon's peers punch through, cone, symmetric, and firewall
+#after the network is up, since the firewall namespace's address comes from moon's /64
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-#the commands run once, in order, and the unit counts as active from then on, so the namespaces stay until it's stopped
+#the script runs once, and the unit counts as active from then on, so the namespaces stay until it's stopped
 Type=oneshot
 RemainAfterExit=yes
-#a namespace an earlier start left behind, deleted first; the - lets the command fail when there's none
-ExecStartPre=-ip netns delete cone
-ExecStartPre=-ip netns delete symmetric
-#cone: the namespace; the veth pair, with its far end made straight inside it; the host end's address and link up; the inside end's address and link up, ip -n running a command in the named namespace; the namespace's loopback, which a new namespace keeps down; and its default route, through the host end
-ExecStart=ip netns add cone
-ExecStart=ip link add veth-cone type veth peer name eth0 netns cone
-ExecStart=ip address add 10.88.1.1/24 dev veth-cone
-ExecStart=ip link set veth-cone up
-ExecStart=ip -n cone address add 10.88.1.2/24 dev eth0
-ExecStart=ip -n cone link set eth0 up
-ExecStart=ip -n cone link set lo up
-ExecStart=ip -n cone route add default via 10.88.1.1
-#symmetric, the same at 10.88.2.0/24
-ExecStart=ip netns add symmetric
-ExecStart=ip link add veth-symmetric type veth peer name eth0 netns symmetric
-ExecStart=ip address add 10.88.2.1/24 dev veth-symmetric
-ExecStart=ip link set veth-symmetric up
-ExecStart=ip -n symmetric address add 10.88.2.2/24 dev eth0
-ExecStart=ip -n symmetric link set eth0 up
-ExecStart=ip -n symmetric link set lo up
-ExecStart=ip -n symmetric route add default via 10.88.2.1
-#stopping deletes both; a namespace goes once nothing runs in it, and a veth pair goes with either end
-ExecStop=ip netns delete cone
-ExecStop=ip netns delete symmetric
+ExecStart=/usr/local/bin/namespaces.py up
+ExecStop=/usr/local/bin/namespaces.py down
 
 [Install]
 #made at every boot, with the rest of the services that run at startup

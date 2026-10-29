@@ -25,7 +25,7 @@ write_files: #files cloud-init writes early in the first boot, before the packag
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
       Dpkg::Options:: "--force-confdef";
       Dpkg::Options:: "--force-confold";
-  #moon's IPv6 address is the first in its /64. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64, and the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one
+  #moon's IPv6 address is the first in its /64, and accept-ra says outright to take the router's advertisements, which networkd would otherwise stop taking once the box forwards IPv6 for the namespace firewall.py and deploy.py set up. A SLAAC address is the /64 the router advertises plus an interface identifier the box chooses, and the provider's suggested identifier is formed from the MAC, so it changes with every new instance. A token of ::1 makes networkd form <the /64>::1 instead, with no address written here, so the AAAA records survive a rebuild that keeps the /64, and the provider's address stays on the interface beside it. ens2 is the interface in the provider's own netplan file, and this drop-in has to name the same one
   - path: /etc/netplan/60-moon.yaml #netplan merges every file in /etc/netplan in name order, so this adds the token to the provider's 50-cloud-init.yaml
     permissions: '0600' #readable by root alone, which netplan asks of its files
     content: |
@@ -34,6 +34,7 @@ write_files: #files cloud-init writes early in the first boot, before the packag
         ethernets:
           ens2:
             ipv6-address-token: "::1"
+            accept-ra: true
 
 #the drop-in above lands after the network is up, so apply it now rather than at the next reboot
 runcmd: #commands run once, at the end of the first boot
