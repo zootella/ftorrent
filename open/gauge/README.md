@@ -103,7 +103,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 	"uptimePercent": 97.76041140690909,
 	"downtimeDay": 1,
 	"downtimeDays": "0,0,0,3,1440,1440,0,0,...,0,0",
-	"dht": { "nodes4": 401, "nodes6": 341, "status": "connected", "uptimeMinutes": 1234 }
+	"dht": { "nodes4": 401, "nodes6": 341, "uptimeMinutes": 1234 }
 }
 ```
 
@@ -120,7 +120,7 @@ Five asterisks (`* * * * *`) means "every minute of every hour of every day." Th
 - **uptimePercent** — the share of the last 90 days' minutes that were up, today counting only the minutes so far; the frontend derives the same figure from `downtimeDays`
 - **downtimeDay** — minutes in the last 24 hours where the gauge didn't run or the server couldn't reach the internet
 - **downtimeDays** — comma-separated downtime-minute values, one per UTC day, most-recent last. Always 90 entries, the 90-day window the dashboard shows. `0` means a fully up day (zero downtime minutes), `1440` means fully down (the entire day). The last entry is today and is the only partial value — it grows through the day as `minute` advances. The frontend draws this as the uptime bar chart.
-- **dht** — the DHT bootstrap node's health, read from its health port in one GET (`ftorrent-open-dht-1:8080/`): `nodes4` and `nodes6` (the live nodes in its IPv4 and IPv6 routing tables, each table counted toward the family of the address it runs from), `status` (the gauge's own word: `connected` when the node answered with nodes in its tables, `disconnected` otherwise), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred nodes on each family, holding roughly steady, with IPv6 the thinner. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
+- **dht** — the DHT bootstrap node's health, read from its health port in one GET (`ftorrent-open-dht-1:8080/`): `nodes4` and `nodes6` (the live nodes in its IPv4 and IPv6 routing tables, each table counted toward the family of the address it runs from), and `uptimeMinutes` (a true count of accumulated uninterrupted minutes the node has been observed in the DHT — held in memory, so it resets if the node drops out or the gauge restarts). A bounded health gauge, not a cumulative counter — expect a few hundred nodes on each family, holding roughly steady, with IPv6 the thinner. It sits last in the file, after the tracker data, since it's a separate service. See the [DHT node guide](../dht/README.md).
 
 All fields are always present. All numeric values are 0 or positive integers, except `uptimePercent`, which is a float between 0 and 100.
 

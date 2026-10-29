@@ -1,0 +1,48 @@
+# The peer, ftorrent-peer, built on the box from go-peer/ by deploy.py and installed at /usr/local/bin/ftorrent-peer. This is a template: the name after the @ is the instance, which systemd writes wherever %i appears, so ftorrent-peer@cone runs a copy inside the cone namespace and ftorrent-peer@symmetric one inside symmetric. The hardening is ftorrent-moon.service's, plus the two lines that place the peer in its namespace and give it a resolver there, the netlink socket pion lists the namespace's interfaces through, and room for its sessions; that file has a comment on each directive, and the lines that differ have one here. A comment here is a line of its own, starting with #.
+[Unit]
+Description=the peer behind moon's %i NAT
+#the namespace has to exist first, and stopping or restarting it stops or restarts the peer with it
+Requires=namespaces.service
+After=namespaces.service
+PartOf=namespaces.service
+
+[Service]
+#the program, given its NAT's name to put in its reports
+ExecStart=/usr/local/bin/ftorrent-peer %i
+Restart=on-failure
+#the network namespace ip netns made, by the file it's named by in /run/netns, so every socket the peer opens is inside it
+NetworkNamespacePath=/run/netns/%i
+#the provider's resolvers, which systemd-resolved writes to this file from DHCP, laid over /etc/resolv.conf for this service alone, since the box's own resolver listens at 127.0.0.53 on a loopback the namespace doesn't share
+BindReadOnlyPaths=/run/systemd/resolve/resolv.conf:/etc/resolv.conf
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectProc=invisible
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+#the two internet families, and netlink, the kernel's socket for listing interfaces, which pion asks before gathering candidates
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+#twice the Go service's memory, for up to 32 WebRTC sessions at once
+MemoryMax=128M
+CPUQuota=25%
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

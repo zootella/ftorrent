@@ -1,14 +1,16 @@
 /*
-The Go service on moon, the second vantage of good.ftorrent.com, answering behind Caddy at moon.ftorrent.com, ip4.moon.ftorrent.com, and ip6.moon.ftorrent.com: the reflector, the UDP poke, and the TCP dial, and later the signaling room for peers behind NATs of our own, each an endpoint on this one small server. The root of moon.ftorrent.com is the one path that never reaches it: Caddy answers there itself, with a page linking to moon's guide.
+The Go service on moon, the second vantage of good.ftorrent.com, answering behind Caddy at moon.ftorrent.com, ip4.moon.ftorrent.com, and ip6.moon.ftorrent.com: the reflector, the UDP poke, the TCP dial, the ping, and the punch and the offer, which it hands to a peer behind one of moon's two NATs, each an endpoint on this one small server. The root of moon.ftorrent.com is the one path that never reaches it: Caddy answers there itself, with a page linking to moon's guide.
 
-	GET /                          -> the caller's IP, as text, at ip4.moon and ip6.moon
-	GET /?format=json              -> {"ip":"..."}
-	GET /poke?port=N[&token=T]     -> three small UDP packets carrying T to the caller's address at port N, and a JSON account of them
-	GET /dial?port=N[&infohash=H]  -> a TCP connection to the caller's address at port N with a BitTorrent handshake, and a JSON account of what came back
-	GET /ping?port=N&kind=K        -> one UDP packet a BitTorrent client answers, a DHT ping for kind=dht or a uTP connection request for kind=utp, to the caller's address at port N, and a JSON account of the answer
-	GET /health                    -> ok
+	GET /                                   -> the caller's IP, as text, at ip4.moon and ip6.moon
+	GET /?format=json                       -> {"ip":"..."}
+	GET /poke?port=N[&token=T]              -> three small UDP packets carrying T to the caller's address at port N, and a JSON account of them
+	GET /dial?port=N[&infohash=H]           -> a TCP connection to the caller's address at port N with a BitTorrent handshake, and a JSON account of what came back
+	GET /ping?port=N&kind=K                 -> one UDP packet a BitTorrent client answers, a DHT ping for kind=dht or a uTP connection request for kind=utp, to the caller's address at port N, and a JSON account of the answer
+	GET /punch?port=N&nat=K[&token=T]       -> a hole punch to the caller's IPv4 address at port N from the peer behind the NAT named, cone or symmetric, and the peer's public address and port as JSON
+	POST /offer?nat=K                       -> a WebRTC offer in, the peer behind the NAT named answering it, and its answer out as JSON, for a page on any origin
+	GET /health                             -> ok
 
-One rule governs the poke, the dial, and the ping: moon sends only to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. All three are rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
+One rule governs the poke, the dial, the ping, and the punch: moon sends only to the address a request came from, never to an address the request names, so it can never be pointed at anyone else. The caller names a port and nothing more, and the HTTPS request that asks is a TCP connection, whose source can't be forged the way a UDP packet's can. The offer is the one exception, by design: its peer runs ICE with the browser's public IPv4 candidates wherever they are, since a phone's carrier can send its TCP and its UDP out from different addresses, and ICE's checks are STUN requests signed with the browser's own ICE password, which nothing but that browser's WebRTC answers, and the peer gives up after eight seconds. Each is rate-limited per source address, and the reflector, which sends nothing anywhere, is not.
 
 The reflector is the same contract as ip.ftorrent.com on the main server, and DNS does the same work here: ip4.moon.ftorrent.com carries only an A record and ip6.moon.ftorrent.com only a AAAA, so a request to one of them travels over that family alone, and moon.ftorrent.com carries both. The same names choose the family of the poke, the dial, and the ping, since moon sends to the address the request arrived from. The service runs as a systemd unit on the box itself, listening on the loopback address alone; Caddy terminates TLS for the three names and proxies to it. Nothing here logs a request or an address.
 
@@ -25,12 +27,14 @@ import (
 	"crypto/rand"//random bytes from the operating system, for a token, an info-hash, a node id, or a transaction id
 	"encoding/binary"//numbers written into a uTP header, most significant byte first
 	"encoding/hex"//bytes to and from hex text
-	"encoding/json"//values to JSON, for the poke's and the dial's reports
+	"encoding/json"//values to and from JSON, for the reports, and to read a peer's
 	"errors"//errors.Is, to tell which error a read ended with
 	"fmt"//formatted text, written to the answer or into bytes
-	"io"//io.EOF, the error a read gives when the other side has closed
+	"io"//io.EOF, the error a read gives when the other side has closed, and reading a peer's answer whole
 	"net"//sockets: UDP for the poke, TCP for the dial, and parsing addresses
-	"net/http"//the web server, its router, and the request and answer types
+	"net/http"//the web server, its router, and the request and answer types, and the client that asks a peer
+	"net/netip"//an address as a value, to check the punch's caller is IPv4
+	"net/url"//writing the query a peer is asked with
 	"os"//the environment and the exit code
 	"strconv"//numbers to and from text
 	"strings"//splitting and trimming text
@@ -44,11 +48,18 @@ const (
 	pokeGap     = 50 * time.Millisecond//the pause between them, so they don't leave in one burst; a Duration, which counts nanoseconds, so this is 50,000,000 of them
 	dialTimeout = 3 * time.Second//to connect, and then to hear back; a peer that answers at all answers within this
 	pingTimeout = 3 * time.Second//to hear an answer to a ping, across every send of it
-	limitBurst  = 10//pokes, dials, and pings one source may make at once
+	limitBurst  = 20//calls that send one source may make at once, which is two of the panel's Checks back to back, each making up to seven in a family
 	limitRate   = 10.0 / 60//and may make steadily, in tokens a second: ten a minute; written 10.0 so Go keeps the fraction, since 10 / 60 between two whole numbers is 0
 	handshake   = "\x13BitTorrent protocol"//the first twenty bytes of every BitTorrent connection: a length byte, hex 13 for 19, then the protocol's 19-character name
 	peerPrefix  = "-FF0000-"//the eight characters at the front of the peer id moon dials with: FF is ftorrent's client code, and 0000 a version no client has, since this is a prober
+	tooMany     = "too many calls that send from this address; twenty at once, then ten a minute"//the answer to a source whose bucket is empty, for any of the calls that send
 )
+
+//peers holds where each peer behind one of moon's NATs listens: the inside end of its namespace's veth pair, which namespaces.service makes, at the port the peer serves on, ftorrent-peer in go-peer/
+var peers = map[string]string{"cone": "10.88.1.2:8200", "symmetric": "10.88.2.2:8200"}
+
+//peerClient asks a peer, giving it five seconds, past its three to hear from STUN
+var peerClient = &http.Client{Timeout: 5 * time.Second}
 
 //clientIP answers the address the request came from, as text without a port. Caddy, the only thing that reaches this server, sets X-Forwarded-For to the address it accepted the connection from and ignores any X-Forwarded-For the client sent, so the last entry is the client and an earlier one could only be Caddy's own. With no header at all the request came straight to the socket, which only happens in development, and the socket's peer is the answer
 func clientIP(r *http.Request) string {//r points at the request net/http parsed; the * is a pointer, so the function reads the one request rather than a copy
@@ -63,7 +74,7 @@ func clientIP(r *http.Request) string {//r points at the request net/http parsed
 	return host
 }
 
-//limiter holds a token bucket for each source address: each poke, dial, or ping spends a token, the bucket refills at limitRate up to limitBurst, and a source with an empty bucket is answered 429 and sent nothing. The map is pruned of full buckets when it grows large, so a day of distinct sources doesn't hold memory
+//limiter holds a token bucket for each source address: each poke, dial, ping, punch, or offer spends a token, the bucket refills at limitRate up to limitBurst, and a source with an empty bucket is answered 429 and sent nothing. The map is pruned of full buckets when it grows large, so a day of distinct sources doesn't hold memory
 type limiter struct {
 	mu      sync.Mutex//the lock allow takes before touching buckets, since two requests can be in allow at once on two goroutines
 	buckets map[string]*bucket//each source's bucket, by its address as text; a map is Go's dictionary, and *bucket a pointer, so changing a bucket changes the one in the map
@@ -71,7 +82,7 @@ type limiter struct {
 
 //bucket is one source's tokens and when they were last brought up to date
 type bucket struct {
-	tokens float64//how many pokes and dials the source may make right now, a fraction while it refills
+	tokens float64//how many calls the source may make right now, a fraction while it refills
 	last   time.Time//the moment tokens was last counted
 }
 
@@ -226,7 +237,7 @@ func main() {
 	if port == "" {
 		port = "8100"
 	}
-	limits := &limiter{buckets: map[string]*bucket{}}//one limiter for the whole process, shared by the poke and the dial; the map has to be made, since writing to a nil map crashes
+	limits := &limiter{buckets: map[string]*bucket{}}//one limiter for the whole process, shared by every call that sends; the map has to be made, since writing to a nil map crashes
 	mux := http.NewServeMux()//the router: it matches each request's method and path to one of the handlers below
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {//a pattern of a method and a path, which Go's router reads since 1.22, then the handler, a function written in place
@@ -251,7 +262,7 @@ func main() {
 	mux.HandleFunc("GET /poke", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the token is spent before the request is even read, so a flood of bad requests costs its sender too
-			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
+			http.Error(w, tooMany, http.StatusTooManyRequests)
 			return
 		}
 		port, ok := portParam(w, r)
@@ -301,8 +312,8 @@ func main() {
 	//the dial: a TCP connection to the caller's address at the port they named, then a BitTorrent handshake, 68 bytes, with the info-hash the caller gave or a random one, and whatever comes back within the timeout. A BitTorrent client that holds the torrent answers with its own handshake, which names it; one that doesn't closes the connection without a word, which still proves the connection opened; and a port nobody listens on refuses or stays silent, which the error says
 	mux.HandleFunc("GET /dial", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
-		if !limits.allow(ip) {//the poke's bucket too, so ten a minute between them
-			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
+		if !limits.allow(ip) {//the poke's bucket too, shared between them
+			http.Error(w, tooMany, http.StatusTooManyRequests)
 			return
 		}
 		port, ok := portParam(w, r)
@@ -368,7 +379,7 @@ func main() {
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		ip := clientIP(r)
 		if !limits.allow(ip) {//the poke's and the dial's bucket too
-			http.Error(w, "too many pokes, dials, and pings from this address; ten a minute", http.StatusTooManyRequests)
+			http.Error(w, tooMany, http.StatusTooManyRequests)
 			return
 		}
 		port, ok := portParam(w, r)
@@ -500,6 +511,81 @@ func main() {
 			}
 		}
 		writeJSON(w, report)
+	})
+
+	//the punch: the caller's address and the port they name, handed to the peer behind the NAT they name, across that namespace's veth pair, and the peer's answer passed back with the NAT's name. The peer opens a socket, learns its public address and port from the main server's STUN, answers them, and then sends to the caller for five seconds while the caller sends to it, so the caller reads from its own socket which way got through. IPv4 alone, since the namespaces translate IPv4 alone
+	mux.HandleFunc("GET /punch", func(w http.ResponseWriter, r *http.Request) {
+		ip := clientIP(r)
+		if !limits.allow(ip) {//the same bucket as the poke, the dial, and the ping, and the offer below
+			http.Error(w, tooMany, http.StatusTooManyRequests)
+			return
+		}
+		port, ok := portParam(w, r)
+		if !ok {
+			return
+		}
+		nat := r.URL.Query().Get("nat")
+		peer, known := peers[nat]//comma-ok: known says whether the name is one of the two
+		if !known {
+			http.Error(w, "nat must be cone or symmetric", http.StatusBadRequest)
+			return
+		}
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			token = randomHex(8)
+		} else if !isToken(token) {
+			http.Error(w, "token must be up to 32 letters and digits", http.StatusBadRequest)
+			return
+		}
+		address, err := netip.ParseAddr(ip)
+		if err != nil || !address.Unmap().Is4() {//Unmap turns an IPv4 address written in IPv6's form, like ::ffff:203.0.113.42, back into plain IPv4
+			http.Error(w, "the punch is IPv4 alone; ask at ip4.moon.ftorrent.com", http.StatusBadRequest)
+			return
+		}
+		to := netip.AddrPortFrom(address.Unmap(), uint16(port))
+		report := map[string]any{"nat": nat, "to": to.String(), "token": token}
+		answer, err := peerClient.Get("http://" + peer + "/punch?" + url.Values{"to": {to.String()}, "token": {token}}.Encode())//Encode writes the query with each value escaped
+		if err != nil {
+			report["error"] = err.Error()
+			writeJSON(w, report)
+			return
+		}
+		defer answer.Body.Close()
+		body, _ := io.ReadAll(io.LimitReader(answer.Body, 4096))//the whole answer, a few hundred bytes, read no further than 4 KB
+		if answer.StatusCode != http.StatusOK || json.Unmarshal(body, &report) != nil {//Unmarshal into a map that already holds values adds the peer's fields to them
+			report["error"] = fmt.Sprintf("the peer answered %s: %s", answer.Status, strings.TrimSpace(string(body)))
+		}
+		writeJSON(w, report)
+	})
+
+	//the offer: a page's WebRTC offer, its SDP description as the request's body, handed with the caller's address to the peer behind the NAT named, and the peer's answer passed back as it came. The peer keeps the offer's public IPv4 candidates, the browser's addresses as STUN saw them, which on a phone's carrier can differ from the address the HTTPS came from. CORS is open so a page on any origin, good.ftorrent.com's among them, can read the answer, and the page posts its offer as text/plain, which a browser sends without first asking leave in a preflight request. IPv4 alone, as the punch is
+	mux.HandleFunc("POST /offer", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")//set first, so every answer below carries it, a refusal included, and the page can read why
+		ip := clientIP(r)
+		if !limits.allow(ip) {
+			http.Error(w, tooMany, http.StatusTooManyRequests)
+			return
+		}
+		nat := r.URL.Query().Get("nat")
+		peer, known := peers[nat]
+		if !known {
+			http.Error(w, "nat must be cone or symmetric", http.StatusBadRequest)
+			return
+		}
+		address, err := netip.ParseAddr(ip)
+		if err != nil || !address.Unmap().Is4() {
+			http.Error(w, "the offer is IPv4 alone; post it to ip4.moon.ftorrent.com", http.StatusBadRequest)
+			return
+		}
+		answer, err := peerClient.Post("http://"+peer+"/offer?"+url.Values{"caller": {address.Unmap().String()}}.Encode(), "application/sdp", io.LimitReader(r.Body, 16*1024+1))//the offer passed on as it streams in, cut one byte past the peer's limit, so the peer sees an offer too long as one
+		if err != nil {
+			http.Error(w, "the peer: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		defer answer.Body.Close()
+		w.Header().Set("Content-Type", answer.Header.Get("Content-Type"))
+		w.WriteHeader(answer.StatusCode)//the peer's status, an answer or a refusal, as the peer gave it
+		io.Copy(w, io.LimitReader(answer.Body, 64*1024))//and its body, a few kilobytes, read no further than 64
 	})
 
 	//each request gets a few seconds and each idle connection a minute, so a stalled client holds nothing for long. Caddy in front has limits of its own, and these are the service's

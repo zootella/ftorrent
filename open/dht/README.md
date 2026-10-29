@@ -181,7 +181,7 @@ The simplest check is the dashboard, which proves the whole path at once (node â
 
 ```bash
 curl https://open.ftorrent.com/page.json
-# the "dht" block: { "nodes4": ..., "nodes6": ..., "status": "connected", "uptimeMinutes": ... }
+# the "dht" block: { "nodes4": ..., "nodes6": ..., "uptimeMinutes": ... }
 ```
 
 To read the node directly, go through the gauge â€” like every image here it's `-slim` with no `curl`, so use its Python:

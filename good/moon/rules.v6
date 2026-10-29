@@ -1,4 +1,4 @@
-# moon's IPv6 host firewall, the IPv4 file's twin: loaded from /etc/iptables/rules.v6 at boot and by firewall.py, in the form ip6tables-restore reads. rules.v4 explains that form and says what each STUN counter counts; the comments here say what each rule is for, and where IPv6 differs.
+# moon's IPv6 host firewall, the IPv4 file's twin less the network namespaces, which translate IPv4 alone: loaded from /etc/iptables/rules.v6 at boot and by firewall.py, in the form ip6tables-restore reads. rules.v4 explains that form and says what each STUN counter counts; the comments here say what each rule is for, and where IPv6 differs.
 #the filter table, the one that decides whether a packet is accepted or dropped
 *filter
 #dropped coming in unless a rule below accepts it, nothing forwarded, everything sent let out

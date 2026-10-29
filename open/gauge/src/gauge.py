@@ -516,7 +516,6 @@ def tick():
 		"dht": {
 			"nodes4": dht_nodes4,
 			"nodes6": dht_nodes6,
-			"status": "connected" if dht_nodes4 + dht_nodes6 > 0 else "disconnected",  # the gauge's own word: connected when the node answered with nodes in its tables
 			"uptimeMinutes": dht_uptime_minutes,
 		},
 	}

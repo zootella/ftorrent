@@ -5,7 +5,7 @@ import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netPcpAnnounce, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall} from './net.js'
-import {udpOpen, udpStun, udpReceive, udpClose} from './udp.js'
+import {udpOpen, udpStun, udpSend, udpReceive, udpClose} from './udp.js'
 import {processOutput} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
@@ -23,6 +23,8 @@ And STUN, over UDP, which is what a peer connection travels on: our server, moon
 
 And filtering, the other half of whether a hole punch can work: which outside addresses the router lets reach a port it has mapped. RFC 4787 names three kinds. Endpoint-independent filtering lets in anyone once the socket has sent anything; address-dependent lets in only an address the socket has sent to, from any port there; and address-and-port-dependent only the exact address and port. Telling them apart takes a socket that stays open across several steps, and a server that sends from somewhere the socket hasn't, which is moon. Each of two tests opens a socket of its own through udp_open, asks one STUN server from it which public address and port it has, then asks moon over HTTPS to poke that port, three small UDP packets carrying a token the panel makes up, while it receives on the socket. The first test's socket asks our STUN server alone, so moon's poke comes from an address it has never sent to, and arriving is endpoint-independent filtering. The second's asks moon's STUN server, so moon's poke comes from the address it just sent to, at another port: arriving there and not in the first test is address-dependent, and held back there too is address-and-port-dependent. moon pokes only the address the request for a poke came from, so nobody can aim it at anyone else, and that isn't always where the socket is: over IPv6 the request can leave from another of the machine's temporary addresses, and on cellular from another of the carrier's public IPv4 addresses. The poke's answer names where it went, and the reading sets that beside where STUN saw the socket, so a poke sent elsewhere reads as that and never as filtering. A firewall on this machine filters too, and the reading names it when it may be what held a poke back. The two tests need nothing from each other, so they run side by side, each family's beside the other's and beside every other check from the start of the run, and a receive that hears nothing waits its whole four seconds, so the run waits on the filtering last.
 
+And the hole punch, which mapping and filtering decide between them: whether this machine and a peer behind a NAT of its own can reach each other directly, each sending to the other at once. moon runs two such peers, each in a network namespace behind a NAT moon makes with Linux's own translation: the cone, which keeps a socket's port for every destination, and the symmetric, which picks a fresh port for each. For each, a socket opened for it alone asks our STUN server its public address and port, then asks moon over HTTPS to punch that port; the peer behind the NAT named learns its own public address and port from the same STUN server, moon answers them, and the peer starts sending to the address the request came from, a small packet every fifth of a second for five seconds. The panel sends to the peer at the same pace while it listens, in rounds of a second, since udp_receive waits in whole seconds. A router lets a packet in only once its socket has sent toward where the packet comes from, so the packets get through only when both sides send, and only when each NAT shows the other side the port STUN saw. Each packet says whether the other side's have arrived, so this socket hears both directions: a packet of the peer's at all is the peer getting through, and one saying heard yes is this side getting through. When the peer's packets come from another port than the one moon answered, as the symmetric NAT sends them, the panel sends there too, as ICE does, which is how a router that lets in anything from an address it has sent to gets through even the symmetric NAT. The punch is IPv4 alone, since moon's NATs translate IPv4 alone, and it runs beside every other check from the start of the run.
+
 And, while a session listens, the inbound proof: whether a stranger can reach the engine at all, unasked, which is the question every number above leads to. moon probes the session's port in each family three ways at once, all to the address the request came from. A DHT ping, which the engine's DHT node answers with a pong that says where it saw moon; a uTP connection request, uTP being BitTorrent's transport over UDP, which the engine accepts with a torrent loaded and turns away without one, either way an answer; and a TCP dial with a BitTorrent handshake carrying the chosen torrent's info-hash, which the engine answers with its own handshake, or closes without a torrent, which still proves the connection opened. A plain UDP poke would prove nothing here, since libtorrent drops a packet it can't read without an alert or a reply. moon hears each answer itself and says so, and the engine posts an incoming connection for the dial and, with a torrent, for the uTP request, so the run waits one more poll of the engine and counts the connections in from moon's address. Nothing back from all three, with nothing refused, is a translator or a firewall dropping a stranger's packets, the measurement Transmission's port test has offered for years, here over both families and both transports.
 
 And the machine itself, which takes no packet beyond a name lookup. net_interfaces lists every interface with every address on it, the ones a person finds in Settings and wonders about along with the rest, and each address gets a few words from the ranges the standards set aside: private, link-local, global, and the others. That one call says less than a person needs, so on a Mac and Linux the panel also runs the tools the system ships: ifconfig and ip for what kind each IPv6 address is, temporary, stable, from DHCPv6, or deprecated, and how long it lasts; route and ip route for the gateway in each family; and on a Mac networksetup for the name Settings gives each interface, like Wi-Fi. Windows says all of it through net_interfaces itself, which is just as well, since its tools print in the system's language. The interface carrying the default route is the one holding the address the system says it sends from, and the address the reflector saw over IPv6 is usually one of the machine's own, a temporary one.
@@ -31,7 +33,7 @@ The resolver answers three names. ipv4only.arpa has only IPv4 addresses by defin
 
 And the machine's firewall, which stands between a connection that reaches the machine and the engine listening for it. On a Mac the panel runs socketfilterfw five times, one read each, all answered without sudo: whether the firewall is on; block all, which when on refuses every incoming connection whatever the list says; stealth mode, which leaves probes to closed ports unanswered; the allowance for signed software, built-in and downloaded; and the list of programs the firewall has been asked about, each by its path and allowed or blocked. ftorrent is signed ad hoc rather than with an Apple-issued identity, so the allowance for signed software doesn't cover it or its engine, and whether each is admitted comes from the list. The panel looks there for this copy's executable, or the bundle holding it, since the list writes some programs as the .app, and for the engine's path, which the firewall asks about and lists on its own, so a development build's engine and an installed copy's are two entries. The firewall ships off on a Mac, and off is not a problem. On Windows the panel reads the firewall through its COM interface, INetFwPolicy2, without elevation and in numbers, where netsh prints in the system's language: each of the three profiles, Domain, Private, and Public, whether the current network is in it, whether the firewall is on for it, block all, and what it does to an incoming connection no rule names; and every rule naming this copy's executable or the engine's by path, the block rules the security alert writes before anyone answers included, since a block rule overrides an allow. The current network's profile gets its own words, since Windows starts every new network as Public unless someone says otherwise, a home network included, and most people have never seen which theirs is. The box puts the firewall's standing after the checks and before the interfaces, with the whole list under it on a Mac and the rules naming ftorrent and its engine on Windows. On Linux the panel reads the firewall as unknown, since ufw and nftables need root to read.
 
-And the router, asked once the first wave of checks has named the gateway, since the question goes to that address. NAT-PMP, Apple's protocol from 2005, RFC 6886, is two bytes to the gateway's port 5351 asking for its external address, answered with the address and the seconds since the router's mapping table started. PCP, the IETF's successor from 2013, RFC 6887, listens on the same port, and its ANNOUNCE is a 24-byte header that asks for nothing: a router that speaks PCP answers it with a result code and its epoch, and a router that speaks only NAT-PMP answers, in NAT-PMP's own form, that the version is unsupported, which says what the router speaks as surely as a success would. A router that speaks neither refuses the port, and the refusal comes back on both, where the machine's firewall lets it: Windows' admits only one kind of ICMP unreachable by default, not the port-unreachable a refusal is, so there a refused port reads as no answer, after the full four seconds. UPnP is the third way and the oldest, from 2001, with the widest support: its Internet Gateway Device profile describes a router, and a search multicast to 239.255.255.250 on port 1900 finds one, its device description gives the control address of its WAN connection service, and SOAP calls there read its external address and walk its port mappings by index until the router says the list has ended. The service type names the version, WANIPConnection:1 from 2001 or 2 from 2010, which added IPv6 firewall control as a service of its own, whose status read says whether the router's IPv6 firewall is on and admits pinholes; the panel reads that when the router offers the service and says when it doesn't. igd-next does all the talking in Rust and answers the gateway it found as plain data the page hands back for each read, so the search runs once and the page owns what follows. The description the search read those paths from also names the router, its friendly name, maker, and model, which igd-next keeps none of, so net_upnp_description fetches it again, over plain http on the local network as UPnP serves it, and the page reads the root device's fields into the UPnP row, in parentheses after the router's address. The three protocols are asked at once, once the gateway is known, and the four UPnP reads follow the search. Two readings sit on those facts. Which protocols the router speaks comes straight from what answered, with the firewall named when it may have held the search's answer back. And whether a carrier translates above the router rests on the external address the router reports, the one check a carrier's translator can't dodge: when it differs from the address the reflector saw, something between the router and the internet translates again, and when that address is in the shared address space, 100.64.0.0/10, it's a carrier's; a private one is more likely a second router, like a provider's modem. The shared address space on the default route and an endpoint-dependent mapping go in as reasons beside it. One case slips past all of them: address-plus-port sharing, where the carrier gives the router a public address and a slice of its ports, and the reading says so whenever it reads unlikely.
+And the router, asked once the first wave of checks has named the gateway, since the question goes to that address. NAT-PMP, Apple's protocol from 2005, RFC 6886, is two bytes to the gateway's port 5351 asking for its external address, answered with the address and the seconds since the router's mapping table started. PCP, the IETF's successor from 2013, RFC 6887, listens on the same port, and its ANNOUNCE is a 24-byte header that asks for nothing: a router that speaks PCP answers it with a result code and its epoch, and a router that speaks only NAT-PMP answers, in NAT-PMP's own form, that the version is unsupported, which says what the router speaks as surely as a success would. A router that speaks neither refuses the port, and the refusal comes back on both, where the machine's firewall lets it: Windows' admits only one kind of ICMP unreachable by default, not the port-unreachable a refusal is, so there a refused port reads as no answer, after the full four seconds. UPnP is the third way and the oldest, from 2001, with the widest support: its Internet Gateway Device profile describes a router, and a search multicast to 239.255.255.250 on port 1900 finds one, its device description gives the control address of its WAN connection service, and SOAP calls there read its external address and walk its port mappings by index until the router says the list has ended. The service type names the version, WANIPConnection:1 from 2001 or 2 from 2010, which added IPv6 firewall control as a service of its own, whose status read says whether the router's IPv6 firewall is on and admits pinholes; the panel reads that when the router offers the service and says when it doesn't. igd-next does all the talking in Rust and answers the gateway it found as plain data the page hands back for each read, so the search runs once and the page owns what follows. The description the search read those paths from also names the router, its friendly name, maker, and model, which igd-next keeps none of, so net_upnp_description fetches it again, over plain http on the local network as UPnP serves it, and the page reads the root device's fields into the UPnP row, in parentheses after the router's address. The three protocols are asked at once, once the gateway is known, and the four UPnP reads follow the search. Two readings sit on those facts. Which protocols the router speaks comes straight from what answered, with the firewall named when it may have held the search's answer back. And whether a carrier translates above the router rests on the external address the router reports, the one check a carrier's translator can't dodge: when it differs from the address the reflector saw, something between the router and the internet translates again, and when that address is in the shared address space, 100.64.0.0/10, it's a carrier's; a private one is more likely a second router, like a provider's modem. The shared address space on the default route and an endpoint-dependent mapping go in as reasons beside it. One case slips past the address check: address-plus-port sharing, where the carrier gives several customers one public address and each one's router a slice of its ports, so the router's own external address is the public one.
 
 A check that asks once and waits for one answer gets checkSeconds to hear back. One round trip is tens of milliseconds, and a fetch over https is four, the name, the connection, the encryption, and the request, so around 200 milliseconds on a typical connection and around 600 across an ocean. The slowest ordinary connection, a satellite in geostationary orbit, has a round trip of 600 milliseconds, which puts a fetch near two and a half seconds, and a lost packet is sent again after a second. Four seconds covers all of those, and only a path that silently drops what it's sent waits that long, since no route, or a name with no address, fails at once whatever the limit. A check that waits longer by design gets its own time when it arrives. So a check ends one of three ways: an answer, in milliseconds; a failure that came back with its reason, like no route; or no answer in checkSeconds.
 
@@ -50,6 +52,10 @@ const pokePackets = 3//how many packets moon sends in a poke, as its Go service 
 const reportLimit = 8*Size.kb//bytes; moon's account of a poke, a ping, or a dial is one small JSON object, a ping's whole answer in hex among it
 const pingSeconds = checkSeconds + 3//moon waits three seconds for a ping's answer, on top of the request's own time
 const dialSeconds = checkSeconds + 6//and up to three to connect a dial and three more to hear back
+const punchNats = ['cone', 'symmetric']//moon's two NATs, each with a peer behind it, by the names moon's punch takes
+const punchCallSeconds = checkSeconds + 3//moon's peer waits up to three seconds for its own STUN answer before moon answers, on top of the request's own time
+const punchSeconds = 5//how long the panel sends and listens, the length of the peer's sending, which starts just before moon answers
+const punchGap = Time.second/5//between the panel's packets, as between the peer's
 
 //192.0.2.1 and 2001:db8::1 are addresses set aside for documentation, by RFC 5737 and RFC 3849, so they name no one, and any address beyond the local network gets the same answer, the default route's
 const beyond = {4: '192.0.2.1', 6: '2001:db8::1'}
@@ -164,6 +170,64 @@ function _readPoke(text) {
 	return {success: true, value: a}
 }
 
+//one hole punch, against the peer behind one of moon's two NATs, on a socket opened for it alone and kept open across its steps: ask our STUN server from it which public address and port it has; ask moon to punch that port, which hands it to the peer, and the peer answers its own public address and port and starts sending; then send to the peer while listening. Each step is a result for the box, and _sayPunch reads them
+async function _punch(nat) {
+	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, a new one each run, as the STUN check's
+	let opened
+	try {
+		opened = await udpOpen(4, port)
+	} catch (error) {//the bottom gate, as in _ask
+		return [{kind: 'punch-open', family: 4, nat, asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
+	}
+	let stun = await _ask({kind: 'punch-stun', family: 4, nat, asked: `STUN ${stunServers[0]} from port ${port}, kept open`, ask: () => udpStun(opened.socket, [stunServers[0]], checkSeconds), read: _readBinding})//our server rather than moon's, so the socket hasn't sent to moon's address before the punch, as a peer meeting a stranger wouldn't have
+	let token = Data({random: 4}).base16()//carried by both sides' packets, so one that arrives says which punch it belongs to
+	let url = stun.success ? `https://ip4.moon.${urlHome}/punch?nat=${nat}&port=${stun.value.port}&token=${token}` : ''
+	let call = await _ask({kind: 'punch', family: 4, nat, asked: `GET ${url || `https://ip4.moon.${urlHome}/punch?nat=${nat}`}`, ask: () => url ? netGet(url, reportLimit, punchCallSeconds) : Promise.reject('no public port from STUN to punch from'), read: _readPunch, seconds: punchCallSeconds})
+	let exchange = await _ask({kind: 'punch-exchange', family: 4, nat, asked: `punch ${call.success ? call.value.mapped : `moon's ${nat} peer`} from port ${port}`, ask: () => call.success ? _exchange(opened.socket, call.value.mapped, token) : Promise.reject('no peer to punch'), read: v => ({success: true, value: v}), seconds: punchSeconds + 1})
+	udpClose(opened.socket)
+	return [stun, call, exchange]
+}
+
+//moon's account of a punch, one JSON object, {nat, to, token, local_port, mapped, stun_milliseconds, packets, gap_milliseconds, error}: the NAT, where its peer sends, the token its packets carry, the port the peer bound inside its namespace and the public address and port our STUN server saw it at, and how many packets it sends how far apart; a peer that learned no public address sends nothing, and fails with moon's reason
+function _readPunch(text) {
+	let a = JSON.parse(text)
+	if (!a.mapped) return {success: false, outcome: `moon's ${a.nat} peer sent nothing, ${a.error}`}
+	return {success: true, value: a}
+}
+
+//the punch's two halves at once, for punchSeconds: send to the peer every punchGap, "punch <token> <n> heard <yes or no>", while listening in rounds of a second. A packet carrying the token is the peer's, which every packet after says was heard, and when it comes from somewhere other than where the panel is sending, that address joins the ones sent to. Answers how many packets went, to where, and every datagram that arrived, timed from the start, and a send's error when one failed
+async function _exchange(socket, peer, token) {
+	let start = performance.now()
+	let targets = [peer]//where to send, the peer's public address and port first
+	let heard = 'no'//whether a packet of the peer's has arrived, which every packet after says
+	let sent = 0, failed = '', arrived = []
+	let sending = true
+	let sender = (async () => {//the sending half, on its own loop, so the receives below don't wait on it
+		while (sending) {
+			for (let to of targets) {
+				sent++
+				try { await udpSend(socket, to, Data({text: `punch ${token} ${sent} heard ${heard}`}).base16()) } catch (error) { failed = String(error) }//a send that fails is lost like any packet, and its error is kept for the box
+			}
+			await new Promise(resolve => setTimeout(resolve, punchGap))
+		}
+	})()
+	try {
+		for (let round = 0; round < punchSeconds; round++) {
+			let began = performance.now() - start
+			for (let d of await udpReceive(socket, 1000, 1)) {//a second of whatever arrives, past any count the peer could send
+				arrived.push({...d, milliseconds: Math.round(began + d.milliseconds)})//timed from the punch's start rather than the round's
+				if (!_datagramText(d).startsWith(`punch ${token} `)) continue//a STUN answer that came late, or anything else
+				heard = 'yes'
+				if (!targets.includes(d.from)) targets.push(d.from)
+			}
+		}
+	} finally {//a receive that fails stops the sending too, rather than leaving it running for the life of the app
+		sending = false
+		await sender
+	}
+	return {sent, targets, arrived, failed}
+}
+
 //the inbound proof for one family, while a session listens: moon pings the engine's port with a DHT ping and with a uTP connection request, and dials it over TCP with a BitTorrent handshake carrying the chosen torrent's info-hash, or a random one with no torrent, all three at once, each a result for the box; _sayInbound reads them
 function _inbound(family, port, infohash) {
 	let base = `https://ip${family}.moon.${urlHome}`
@@ -269,6 +333,7 @@ function _readAddress(family, text) {
 export async function connectionRun() {
 	let moment = Date.now()
 	let filtering = Promise.all([4, 6].map(_filtering))//each family's two tests, on sockets of their own, beside every other check from the start, since a poke that never arrives waits its whole four seconds
+	let punching = Promise.all(punchNats.map(_punch))//and the two punches, which take five seconds of sending after moon answers
 	let probing = session.running ? Promise.all([4, 6].map(family => _inbound(family, session.port, session.torrent?.v1))) : null//and with a session listening, moon's probes of its port, also from the start
 	let [version, paths, engine] = await Promise.all([getVersion(), pathsStatus(), engineStatus()])//this copy's version, and where this copy and its engine are, which the firewall lists programs by
 	let results = (await Promise.all(_checks(paths, engine).map(_ask))).flatMap(_perServer)//all at once; Promise.all keeps the order it was given, whatever order they finish in
@@ -279,6 +344,7 @@ export async function connectionRun() {
 	let found = results.find(r => r.kind == 'upnp')
 	results.push(...await Promise.all(_upnpReads(found.success ? found.value : null).map(_ask)))//then the reads of the gateway the search found
 	results.push(...(await filtering).flat())//and last the filtering, IPv4's two tests and then IPv6's
+	results.push(...(await punching).flat())//and the punches, the cone's steps and then the symmetric's
 	let inbound = false//whether the inbound proof ran, which takes a session listening
 	if (probing) {
 		results.push(...(await probing).flat())//and the inbound proof, IPv4's three probes and then IPv6's
@@ -333,7 +399,7 @@ function _late(seconds) { return new Promise(resolve => setTimeout(() => resolve
 //no answer in some seconds, the words noAnswer is for checkSeconds
 function _sayNoAnswer(seconds) { return `no answer in ${seconds} seconds` }
 
-//the table's rows for a run, seven for each family, five about the machine, and five about the router, blank before the first run
+//the table's rows for a run, seven for each family and the hole punch for IPv4, five about the machine, and five about the router, blank before the first run
 export function connectionFacts(run) {
 	let rows = []
 	for (let family of [4, 6]) {
@@ -345,6 +411,9 @@ export function connectionFacts(run) {
 			[`Public IPv${family} over UDP`, run ? _sayUdp(stuns, reflect)          : ''],
 			[`IPv${family} mapping`,         run ? _sayMapping(stuns)               : ''],
 			[`IPv${family} filtering`,       run ? _sayFiltering(run, family)       : ''],
+		)
+		if (family == 4) rows.push(['IPv4 hole punch', run ? _sayPunch(run) : ''])//moon's NATs translate IPv4 alone
+		rows.push(
 			[`IPv${family} inbound`,         run ? _sayInbound(run, family)         : ''],
 			[`IPv${family} gateway`,         run ? _sayGateway(family, run.machine) : ''],
 		)
@@ -381,7 +450,7 @@ function _saySpeaks(run) {
 	return said.join('; ')
 }
 
-//whether a carrier translates above the router, as a likelihood with its reasons: the router's external address against the one the internet sees, and what kind of address it is; the shared address space on the default route; and the mapping verdict; with the one case that passes every check named when the reading is unlikely
+//whether a carrier translates above the router, as a likelihood with its reasons: the router's external address against the one the internet sees, and what kind of address it is; the shared address space on the default route; and the mapping verdict
 function _sayCarrier(run) {
 	let result = (kind, family) => run.results.find(r => r.kind == kind && (!family || r.family == family))
 	let reflect = result('reflect', 4), natpmp = result('natpmp'), external = result('upnp-external')
@@ -400,9 +469,7 @@ function _sayCarrier(run) {
 	}
 	if (run.machine.some(i => i.routes.includes(4) && i.addresses.some(a => a.shared))) { likely = 'likely'; reasons.push('an address on the default route is in the shared address space') }
 	if (_sayMapping(run.results.filter(r => r.kind == 'stun' && r.family == 4)).startsWith('endpoint-dependent')) reasons.push(`the IPv4 mapping is endpoint-dependent, which fits a carrier's translator, though some home routers do the same`)
-	let said = `${likely || 'unknown'}: ${reasons.join('; ')}`
-	if (likely == 'unlikely') said += `; address-plus-port sharing, where the carrier gives the router a public address and a slice of its ports, would pass every check here`
-	return said
+	return `${likely || 'unknown'}: ${reasons.join('; ')}`
 }
 
 //what the router said to UPnP, for the table: the service and its version at the gateway's address, with the router's maker and model from its description in parentheses, the way an interface's name follows an address; then its external address, how many mappings it holds, and its IPv6 firewall, or why the search found nothing
@@ -499,6 +566,36 @@ function _readPoked(steps) {
 	if (!_same(to, stun.value.address)) return {why: `moon poked ${to}, where the request for the poke came from, but STUN saw the socket at ${stun.value.address}`}
 	if (!receive.success) return {why: `the receive ${receive.outcome}`}
 	return {arrived: receive.value.some(d => _datagramText(d).startsWith(`poke ${poke.value.token} `))}//a packet of this poke's, by its token, rather than one left over from the first poke or a STUN answer that came late
+}
+
+//the hole punch as the panel saw it, _readPunched's sentence for each of moon's two NATs, and the firewall here named when nothing got through either and it may be what held the packets back; what the pair means is in the essay at the top, not the row
+function _sayPunch(run) {
+	let punched = punchNats.map(nat => _readPunched(nat, run.results.filter(r => r.nat == nat)))
+	let said = punched.map(p => p.said)
+	let holding = _sayHolding(run.firewall, 'ftorrent')
+	if (punched.every(p => p.none) && holding) said.push(`${holding[0].toUpperCase()}${holding.slice(1)}.`)//the firewall here, when nothing got through either NAT and it may be what held the packets back
+	return said.join(' ')
+}
+
+//one punch's steps as a sentence: moon's NAT, with whether it kept the port of moon's peer behind it, the port the peer bound against the one STUN saw; then which way packets got through, when the first of the peer's arrived, and where from when that wasn't where STUN saw it. Both ways is a packet of the peer's saying it had heard this machine's, and nothing from the peer can't say whether this machine's reached it. Answers {said}, with {none} when nothing arrived; or the reason the punch couldn't run
+function _readPunched(nat, steps) {
+	let couldnt = why => ({said: `The punch to moon's peer behind its ${nat} NAT couldn't run: ${why}.`})
+	if (steps[0].kind == 'punch-open') return couldnt(`the socket ${steps[0].outcome}`)
+	let [stun, call, exchange] = steps
+	if (!stun.success) return couldnt(`STUN from the socket ${stun.outcome}`)
+	if (!call.success) return couldnt(`the punch ${call.outcome}`)
+	let to = _addressOf(call.value.to)
+	if (!_same(to, stun.value.address)) return couldnt(`moon's peer punched ${to}, where the request came from, but STUN saw this machine's socket at ${stun.value.address}`)
+	if (!exchange.success) return couldnt(exchange.outcome)
+	let v = call.value
+	let kept = Number(v.mapped.split(':').pop()) == v.local_port
+	let head = `moon's ${nat} NAT ${kept ? 'kept' : 'changed'} the port of moon's peer behind it`//moon's peer named as moon's every time, so it can't be read as this machine
+	let ours = exchange.value.arrived.filter(d => _datagramText(d).startsWith(`punch ${v.token} `))
+	if (!ours.length) return {said: `${head}, and nothing from that peer reached this machine.`, none: true}
+	let first = ours[0]
+	let from = first.from == v.mapped ? '' : `, from ${first.from} rather than the ${v.mapped} STUN saw`
+	if (ours.some(d => _datagramText(d).endsWith(' heard yes'))) return {said: `${head}, and packets between that peer and this machine got through both ways, the first in ${first.milliseconds} ms${from}.`}
+	return {said: `${head}, and packets from that peer reached this machine, the first in ${first.milliseconds} ms${from}, but none said this machine's had reached it.`}
 }
 
 //a few words when a firewall on this machine may be what held a packet back from one of this copy's two programs, which is ftorrent, whose socket the filtering test listens on, or engine, whose port the inbound proof probes: a Mac's when it's on and blocks all, or doesn't list the program as allowed; Windows' when the current network's profile is on and blocks all, or a rule blocks the program coming in over UDP there, or none allows it; blank otherwise, and when the firewall can't be read
@@ -603,6 +700,7 @@ export function sayRun(run) {
 		lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
 		if (r.binding) lines.push(..._sayBinding(r))
 		if (r.kind == 'receive' && r.success) lines.push(..._sayReceived(r))
+		if (r.kind == 'punch-exchange' && r.success) lines.push(..._sayReceived({value: r.value.arrived}))
 		if (r.success && ['upnp', 'upnp-mappings'].includes(r.kind)) lines.push(..._sayUpnpLines(r))
 	}
 	lines.push(..._sayFirewallLines(run.firewall), ..._sayMachine(run.machine))
@@ -695,13 +793,15 @@ function _sayHex(hex) {
 //what came back, in the box's words: the address, the error's text, for STUN what the server saw and the answer's size, how many interfaces and lines a list or a tool gave, or a name's addresses with a few words on them
 function _sayAnswer(r) {
 	if (!r.success) return r.outcome
-	if (r.kind == 'stun' || r.kind == 'filter-stun') {
+	if (r.kind == 'stun' || r.kind == 'filter-stun' || r.kind == 'punch-stun') {
 		let b = r.value//the binding net_stun or udp_stun answered
 		let said = `${_sayEndpoint(b.address, b.port)}, ${saySize4(b.bytes)}`
 		if (b.sends > 1) said += `, sent ${b.sends} times`
 		return said
 	}
 	if (r.kind == 'poke') return `${r.value.sent} of ${r.value.packets} packets to ${r.value.to} from port ${r.value.from_port}, carrying ${r.value.token}${r.value.error ? `, then ${r.value.error}` : ''}`
+	if (r.kind == 'punch') return `moon's ${r.value.nat} peer bound port ${r.value.local_port} inside its namespace, and STUN saw it at ${r.value.mapped} in ${r.value.stun_milliseconds} ms; ${r.value.packets} packets ${r.value.gap_milliseconds} ms apart to ${r.value.to}, carrying ${r.value.token}`
+	if (r.kind == 'punch-exchange') return `${r.value.sent} packets sent to ${r.value.targets.join(' and ')}, ${r.value.arrived.length} datagram${r.value.arrived.length == 1 ? '' : 's'} arrived${r.value.failed ? `; a send failed, ${r.value.failed}` : ''}`
 	if (r.kind == 'ping-dht' || r.kind == 'ping-utp') return _sayPing(r.value)
 	if (r.kind == 'dial') return _sayDial(r.value)
 	if (r.kind == 'receive') return r.value.length > 0 ? `${r.value.length} datagram${r.value.length == 1 ? '' : 's'}` : `nothing in ${checkSeconds} seconds`

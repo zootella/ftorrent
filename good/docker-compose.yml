@@ -57,29 +57,6 @@ services:
           pids: 64
     restart: unless-stopped
 
-  # pion — the WebRTC ICE peer (a full-feature piece, not part of the MVP). The slot is defined here so its network addressing stays fixed, but the peer is deferred: ./pion holds only a Dockerfile until the Go source lands, so it is never brought up — start the live services by name: docker compose up -d go-ip coturn. Its inbound port 49152/udp and its egress door arrive with it.
-  pion:
-    build: ./pion
-    container_name: ftorrent-good-pion-1
-    networks:
-      default:
-        ipv4_address: 172.30.3.4
-        ipv6_address: fd00:cafe:5::4
-    ports:
-      - "49152:49152/udp"
-    user: "65534:65534"
-    read_only: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 128m
-          pids: 32
-    restart: unless-stopped
-
 # The stack's own dual-stack network; each service holds a fixed address on both families.
 networks:
   default:
