@@ -5,7 +5,7 @@ use tauri::{command, AppHandle, Manager, State};
 /*
 Where everything is: facts about the machine and about this copy, worked out once in setup, before instance.rs takes the lock, before the engine starts, and before the page exists. Everything that reads or writes a file of the app's own takes its path from here, and the page gets all of it through paths_status.
 
-The facts. The program's location, the folder the program sits in: beside the executable on Windows and Linux, and the folder holding the .app on macOS, not a folder inside the bundle. The executable itself. The signed-in user's home folder. On Windows, the folder the per-user installer puts the program in, %LOCALAPPDATA% joined with the product name, which the page compares with the location to know it's running from an installed copy. And the data folder, with the paths of the settings file and the state file inside it. The page turns settings into real paths against these, like a download folder written as ./downloads or ~/Downloads/ftorrent; paths.js has how.
+The facts. The program's location, the folder the program sits in: beside the executable on Windows and Linux, and the folder holding the .app on macOS, not a folder inside the bundle. The executable itself. The signed-in user's home folder. On Windows, the folder the per-user installer puts the program in, %LOCALAPPDATA% joined with the product name, which the page compares with the location to know it's running from an installed copy. On Windows, the folder holding the system's own programs, System32. And the data folder, with the paths of the settings file and the state file inside it. The page turns settings into real paths against these, like a download folder written as ./downloads or ~/Downloads/ftorrent; paths.js has how.
 
 One decision is made here, because it has to be made before the page exists: which data folder is this copy's. If a folder named portable with a settings file inside sits at the program's location, the copy is portable, and that folder is its data folder, so everything it keeps travels with it. Otherwise it's installed, and the data folder is the one the platform gives the signed-in user: local application data on Windows, where the web view's profile already lives, and Application Support on macOS, and never Roaming. Anything that isn't portable is installed, whatever the reason: a development build, a copy on the Desktop, or a Mac app that macOS has translocated, running it from a random read-only folder because it still carries a download's quarantine mark. That last one is usually someone who opened the app inside its disk image without dragging it to Applications, and the installed data folder is exactly what they want, since it doesn't depend on where the app is; a translocated portable copy can't see its portable folder, so it acts installed too, and works.
 
@@ -23,6 +23,7 @@ pub struct Paths {
 	pub executable: String,//the program file itself, which is what a registered command runs
 	pub installer: String,//the folder an install puts the program in: on windows the per-user installer's, %LOCALAPPDATA% and the product name, and on macOS /Applications, where the disk image says to drag it; blank on linux, where no installer places a program the page needs to recognize
 	pub home: String,//the signed-in user's home folder, the anchor for ~
+	pub system: String,//the folder holding the system's own programs: on windows System32 under %SystemRoot%, and blank elsewhere
 	pub data: String,//the data folder
 	pub settings: String,//ftorrent.toml in the data folder
 	pub state: String,//the libtorrent state file in the data folder
@@ -34,6 +35,7 @@ pub fn locate(app: &AppHandle) -> Paths {
 		home: app.path().home_dir().map(|home| display(&home)).unwrap_or_default(),//blank on a platform that can't say, and then ~ resolves to nothing rather than to the wrong place
 		executable: std::env::current_exe().map(|exe| display(&exe)).unwrap_or_default(),
 		installer: installer_folder(app),
+		system: system_folder(),
 		..Default::default()//the rest filled in below, as each is found
 	};
 
@@ -82,6 +84,12 @@ fn installer_folder(app: &AppHandle) -> String {
 	if cfg!(target_os = "macos") { return "/Applications".to_string() }//the folder the disk image's window shows beside the app, for the user to drag it onto
 	if !cfg!(target_os = "windows") { return String::new() }
 	std::env::var_os("LOCALAPPDATA").map(|local| display(&PathBuf::from(local).join(&app.package_info().name))).unwrap_or_default()//brandName, the product name, which is how windows names an install folder
+}
+
+/// Where the system's own programs are: on windows System32 under %SystemRoot%, the folder Windows is installed in, which is C:\Windows on most machines and not on all, so it's read from the environment rather than assumed
+fn system_folder() -> String {
+	if !cfg!(target_os = "windows") { return String::new() }
+	std::env::var_os("SystemRoot").map(|root| display(&PathBuf::from(root).join("System32"))).unwrap_or_default()
 }
 
 /// A path as text, for the page and the engine, in the plain form: on windows a path that has been canonicalized carries the \\?\ prefix, which the firewall's rules, the registry, and a person never write, and dunce takes it off wherever the path reads the same without it

@@ -57,6 +57,70 @@ pub async fn process_start(program: String, args: Vec<String>) -> Result<(), Str
 	}).await
 }
 
+/// Run the program at this path, with these arguments and an administrator's rights, which the system asks the user to approve first, and wait for it to finish, answering its exit code, or an error when the user declines. On windows this is ShellExecuteEx with the runas verb, the way a program asks for elevation, so Windows puts up its UAC prompt, and the program runs with its window hidden, since a console flashing up says nothing; ShellExecuteEx takes the arguments as one string, so each is quoted the way a program splits its command line back apart. On a Mac and Linux nothing here asks for an administrator yet, and it answers an error
+#[cfg(windows)]
+#[command]
+pub async fn process_elevate(program: String, args: Vec<String>) -> Result<i32, String> {
+	run_blocking(move || {
+		use windows::core::{w, HSTRING, PCWSTR};
+		use windows::Win32::Foundation::{CloseHandle, ERROR_CANCELLED};
+		use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED, COINIT_DISABLE_OLE1DDE};
+		use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
+		use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
+		use windows::Win32::UI::WindowsAndMessaging::SW_HIDE;
+		let file = HSTRING::from(program.as_str());
+		let parameters = HSTRING::from(args.iter().map(|arg| quote(arg)).collect::<Vec<_>>().join(" "));
+		let mut info = SHELLEXECUTEINFOW {
+			cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
+			fMask: SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC,//hand back the process, to wait on, and finish starting it before returning, since this thread is gone once the command answers
+			lpVerb: w!("runas"),
+			lpFile: PCWSTR(file.as_ptr()),
+			lpParameters: PCWSTR(parameters.as_ptr()),
+			nShow: SW_HIDE.0,
+			..Default::default()
+		};
+		let initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };//Microsoft asks for COM before ShellExecuteEx, which can reach shell extensions through it; firewall.rs has the long version of an apartment on a pool thread
+		let started = unsafe { ShellExecuteExW(&mut info) };
+		if initialized.is_ok() { unsafe { CoUninitialize() } }
+		if let Err(e) = started {
+			if e.code() == ERROR_CANCELLED.to_hresult() { return Err("the user declined the prompt".into()) }//No on the UAC prompt, or closing it
+			return Err(format!("could not run {program}: {}", e.message()));
+		}
+		if info.hProcess.is_invalid() { return Err(format!("{program} started, with no process to wait on")) }
+		unsafe { WaitForSingleObject(info.hProcess, INFINITE) };
+		let mut code = 0u32;
+		let read = unsafe { GetExitCodeProcess(info.hProcess, &mut code) };
+		unsafe { let _ = CloseHandle(info.hProcess); }
+		read.map_err(|e| format!("could not read how {program} ended: {}", e.message()))?;
+		Ok(code as i32)
+	}).await
+}
+
+#[cfg(not(windows))]
+#[command]
+pub async fn process_elevate(program: String, args: Vec<String>) -> Result<i32, String> {
+	let _ = (program, args);
+	Err("running a program with an administrator's rights isn't built for this platform".into())
+}
+
+/// One argument as a Windows program splits its command line back apart: as it is when it has no space, tab, or quote, and otherwise in quotes, with each quote in it escaped by a backslash, and the backslashes before a quote, or before the closing one, doubled, since only there do backslashes mean anything
+#[cfg(windows)]
+fn quote(arg: &str) -> String {
+	if !arg.is_empty() && !arg.contains([' ', '\t', '\n', '"']) { return arg.to_string() }
+	let mut quoted = String::from('"');
+	let mut backslashes = 0;
+	for c in arg.chars() {
+		if c == '\\' { backslashes += 1; continue }
+		let doubled = if c == '"' { backslashes*2 + 1 } else { backslashes };//a quote takes its own escape on top of the doubled run
+		quoted.extend(std::iter::repeat_n('\\', doubled));
+		quoted.push(c);
+		backslashes = 0;
+	}
+	quoted.extend(std::iter::repeat_n('\\', backslashes*2));//before the closing quote
+	quoted.push('"');
+	quoted
+}
+
 /// Open this file, folder, or address with the program the system has for it, the way a double-click in the file manager would, and let that program go: a .txt file opens in the text editor, an https address in the browser, an ms-settings address in Windows Settings; through ShellExecuteEx on windows, /usr/bin/open and launch services on a mac, and xdg-open on linux, each the system's own table of what opens what. Answered once the system has taken it, with no wait on the program, and on the blocking pool because taking it can mean starting a browser
 #[command]
 pub async fn process_open(target: String) -> Result<(), String> {

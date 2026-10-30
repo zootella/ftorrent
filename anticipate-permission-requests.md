@@ -17,12 +17,22 @@ The engine raises its own. When a session starts it listens on every address, an
 The things ftorrent does that the operating system may stop to ask about, as far as we've seen or can tell from the platforms' documentation. Each is a place to apply the cadence below.
 
 - **Listening, on a Mac.** The application firewall, when it's on, asks the first time a program accepts an unsolicited incoming packet: ftorrent on the UPnP search's reply, the engine on its first connection in after Start. The answer follows the program's path and its signature, so a development build, an installed copy, and the engine inside each are separate questions, and a rebuild that changes the engine asks again. Off by default, so most Macs never see it.
-- **Listening, on Windows.** Defender Firewall asks the first time a program binds a socket that could take connections: ftorrent at Check's STUN bind, the engine at Start. On by default, so every Windows copy sees both, once per program path.
+- **Listening, on Windows.** Defender Firewall asks the first time a program binds a socket that could take connections: ftorrent at Check's STUN bind, the engine at Start. The engine is asked once more at its next Start, when libtorrent asks for Teredo, and `windows-block.md` has why. On by default, so every Windows copy sees all three, per program path.
 - **The local network, on a Mac.** Local Network privacy asks the first time an app sends to a local address or a multicast address, except the network's DNS server, which on most home networks is the router itself. The UPnP search is the first such send; NAT-PMP and PCP to the gateway are exempt where the gateway is the resolver and may ask where it isn't; the engine's local service discovery, off today, would ask when it's on; a peer on the same network reached through the DHT may ask too. Whether an ad-hoc signed app is asked at all is the open question above.
 - **Folders, on a Mac.** macOS asks the first time an app reads or writes inside Desktop, Documents, or Downloads, and ftorrent's factory download folder is inside Downloads, so the engine's first write there will ask about ftorrent-engine, and the panel's torrent-file open box may ask about ftorrent. Not yet seen, since nothing downloads yet.
 - **Settings pages the app can only point at.** Starting at login, the firewall's allow list, and the local network switch have no box of their own: the app registers or asks, and the person confirms or changes it in System Settings or Windows Settings. The settings page already links to the two login pages; the firewall and local network pages join them in Good9.
 
 What never asks, and shouldn't: Location, which a BitTorrent client has no reason to want, even though macOS and recent Windows keep the Wi-Fi network's name behind it.
+
+## Three ways to meet the firewall
+
+ftorrent can meet a firewall at three levels, from least involved to most.
+
+- **Let the system ask.** ftorrent listens, and the firewall puts up its box. Every copy meets this on every platform, so it's the one to plan around, with the cadence below. The system asks only while it has no answer. After Deny on a Mac or Cancel on Windows it stops asking on that kind of network, and listening again changes nothing. On Windows, Allow access needs an administrator, and Cancel doesn't.
+- **Take the person there.** ftorrent opens the settings page where the exception is made, rather than describing the way. On a Mac that's System Settings' Network pane, one row above Firewall. Windows has three surfaces, and they aren't the same: Windows Security's Firewall & network protection page; Control Panel's Allow an app through Windows Firewall, which sets each program's allowance per kind of network and can add a program at any path; and Windows Defender Firewall with Advanced Security, the full rule editor. Deep links are where versions drift: macOS 27 opens Network but doesn't go on to the Firewall anchor it lists.
+- **Change it ourselves.** ftorrent writes the rule. Reading needs no rights on either platform, through the COM interface on Windows and socketfilterfw on a Mac. Writing needs an administrator on both. On Windows it's one UAC prompt over netsh, which can allow every kind of network at once, remove the alert's block rules first, and defer edge traversal to the program, with ftorrent's own words before the prompt. On a Mac, socketfilterfw's --add and --unblockapp need root, and Apple offers no interface for an app to do it.
+
+The strategy this suggests is the simplest one that never leaves a person stuck. Report the firewall's standing exactly, from the system's own reads. Let the system's box do the changing, at a moment the person expects. And when the report shows a block or a missing allowance, take the person to the page that fixes it and say what to change there. On Windows, letting the system ask and changing it ourselves need the same rights, so writing the rule ourselves buys coverage and better words, not access. Every Windows piece in play, the alert, netsh's advfirewall context, and the firewall's COM interface, has been in Windows since Vista. Good9e built the third level on Windows, and it does what it says: one prompt, every kind of network, the alert's block rules gone, and no second dialog for the engine. So the choice between the levels is a product choice now, not a technical one.
 
 ## The cadence
 
@@ -35,3 +45,7 @@ The same cadence serves the facts the system can change behind ftorrent's back w
 ## What's open
 
 Whether the engine's firewall box on a Mac can be brought forward from its minute of delay, or whether its delay is the firewall's own and the panel should just say the box may come late.
+
+Whether the two timers after a Check should read the firewall again too. Today only the window coming forward does, so a box answered while another window is in front leaves the table as it was until the next Check. On Windows the read can't race the box, since Allow access writes the rules before the window gets focus back.
+
+Which level ftorrent ships on Windows: the box alone, with the report and a way to Control Panel's Allow an app page for a refusal, or Firewall…'s own rule beside them.

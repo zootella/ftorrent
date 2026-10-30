@@ -61,7 +61,7 @@ Both misreadings land on the same clicks, Public checked and Private unchecked, 
 - A **block rule**: inbound is turned away, the dialog doesn't ask again on that kind of network, and the block overrides any allow rule added later, since in Windows Firewall a block rule wins over an allow rule.
 - **No rule**: inbound is still turned away by the default, but the dialog asks again the next time, and an allow rule added later works.
 
-**The answers, on a computer whose current network is Public.** A checked box turns the waiting Block rules into Allow rules, and an unchecked box for another category writes nothing, leaving that category with no rule, so the dialog asks again there. Cancel isn't quite "no to both": it leaves the Block rules already written and nothing for Private.
+**The answers, on a computer whose current network is Public.** A checked box turns the waiting Block rules into Allow rules, and an unchecked box for another category writes nothing, leaving that category with no rule, so the dialog asks again there. Cancel isn't quite "no to both": it leaves the Block rules already written and nothing for Private. Allow access finishes writing the rules before the dialog closes, so the program's window gets focus back after the rules have changed, a little under a second later.
 
 | Answer | Public, the current network | Private |
 |---|---|---|
@@ -77,6 +77,12 @@ Both misreadings land on the same clicks, Public checked and Private unchecked, 
 **The engine is asked twice.** Edge traversal is unrequested traffic arriving through Teredo, the tunnel that carries IPv6 inside IPv4. The rules Allow access writes defer it to the user, so Windows asks again when a program asks for it. libtorrent asks on Windows: in `session_impl::setup_listener` it sets an unrestricted protection level on each IPv6 TCP listen socket, under the comment "enable Teredo on windows." So the engine's next Start brings the dialog back, and Allow access this time defers edge traversal to the program, whose socket has already said yes. After that the engine isn't asked again, whether it stops and starts, starts in a new process, or is replaced at the same path by an update. ftorrent's own sockets never ask for Teredo, so ftorrent itself is asked once.
 
 **What it doesn't touch.** Outbound traffic is allowed by default, and a reply comes back in to the socket that sent the request whatever the inbound rules say, so Check's results are the same however the dialog is answered. Without an allow rule, though, Windows should admit a packet only from an address and port the socket has sent to, which is port-restricted filtering, the same behavior the panel will look for in the router; Good7's filtering check is where that gets measured.
+
+## ftorrent's own rule
+
+Firewall…, on the Connection tab of an installed copy, writes the rule this note argues for. One UAC prompt approves a run of netsh that deletes every inbound rule naming ftorrent.exe or the engine, the dialog's Block rules among them, and adds an allow for each over TCP and UDP on every kind of network, with edge traversal deferred to the program, so the engine's second dialog never comes.
+
+The prompt names Windows PowerShell, with Microsoft Windows as its verified publisher, rather than ftorrent, so the Connection tab says what's about to happen before the prompt appears. Its details show the netsh commands as written. The prompt asks a standard user for an administrator's credentials, as Allow access does. So ftorrent's rule takes the same rights the dialog does, and what it buys is every kind of network at once and ftorrent's own words before the prompt.
 
 ## Why most Windows home networks are probably Public
 

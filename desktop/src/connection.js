@@ -7,11 +7,11 @@ import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netNatpmpMap, netPcpAnnounce, netPcpMap, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall, netUpnpAddPort, netUpnpRemovePort, netUpnpAddPinhole, netUpnpRemovePinhole} from './net.js'
 import {udpOpen, udpStun, udpSend, udpReceive, udpClose} from './udp.js'
-import {processOutput, processOpen} from './process.js'
+import {processOutput, processOpen, processElevate} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
 import {dialogOpen} from './dialog.js'
-import {downloadsFolder, pathsStatus} from './paths.js'
+import {downloadsFolder, pathsStatus, isInstalled} from './paths.js'
 import {useIncomingStore} from './stores/incoming.js'
 import {stick} from './log.js'
 
@@ -33,6 +33,8 @@ And the machine itself, which takes no packet beyond a name lookup. net_interfac
 The resolver answers three names. ipv4only.arpa has only IPv4 addresses by definition, RFC 7050, so an IPv6 answer for it means the network makes up IPv6 addresses for names that have none, DNS64, so an IPv6-only network can reach them through a translator, NAT64; where the IPv4 address sits inside the answer names the translator's prefix. ip4.ftorrent.com and ip6.ftorrent.com show the single-family records the reflector checks rest on. And an IPv4 address in the shared address space, 100.64.0.0/10, RFC 6598, on the interface carrying the default route says a carrier translates above the router; on any other interface it's a mesh VPN's, like Tailscale's, which borrows the range.
 
 And the machine's firewall, which stands between a connection that reaches the machine and the engine listening for it. On a Mac the panel runs socketfilterfw five times, one read each, all answered without sudo: whether the firewall is on; block all, which when on refuses every incoming connection whatever the list says; stealth mode, which leaves probes to closed ports unanswered; the allowance for signed software, built-in and downloaded; and the list of programs the firewall has been asked about, each by its path and allowed or blocked. ftorrent is signed ad hoc rather than with an Apple-issued identity, so the allowance for signed software doesn't cover it or its engine, and whether each is admitted comes from the list. The panel looks there for this copy's executable, or the bundle holding it, since the list writes some programs as the .app, and for the engine's path, which the firewall asks about and lists on its own, so a development build's engine and an installed copy's are two entries. The firewall ships off on a Mac, and off is not a problem. On Windows the panel reads the firewall through its COM interface, INetFwPolicy2, without elevation and in numbers, where netsh prints in the system's language: each of the three profiles, Domain, Private, and Public, whether the current network is in it, whether the firewall is on for it, block all, and what it does to an incoming connection no rule names; and every rule naming this copy's executable or the engine's by path, the block rules the security alert writes before anyone answers included, since a block rule overrides an allow. The current network's profile gets its own words, since Windows starts every new network as Public unless someone says otherwise, a home network included, and most people have never seen which theirs is. The box puts the firewall's standing after the checks and before the interfaces, with the whole list under it on a Mac and the rules naming ftorrent and its engine on Windows. On Linux the panel reads the firewall as unknown, since ufw and nftables need root to read.
+
+And Firewall…, the one button that changes the firewall rather than reading it, shown where it can do something. On a Mac a program can't add itself to the firewall, so it opens System Settings at the Network pane, one row above Firewall, where the person lets ftorrent in. On Windows, for an installed copy, it writes the rules itself in one run of netsh with an administrator's rights, which Windows asks the person to approve. netsh deletes every inbound rule naming this copy or its engine, the security alert's block rules among them, since a block wins over an allow. Then it adds an allow for each over TCP and UDP in every profile, with edge traversal left to the program, so libtorrent's request for Teredo doesn't raise the alert a second time. The box says what's about to happen before Windows asks, and reads the firewall again once netsh is done, which is the proof, since netsh's exit code reads 1 whenever a delete finds nothing to delete. netsh goes through PowerShell, so the paths travel in a command line, which is Unicode the whole way, rather than in a script file netsh would have to decode right, and as plain text, so the UAC prompt's details show exactly the commands the box lists. A Windows copy anywhere else doesn't get the button, since a rule names a path, and a portable copy or a build in the repository may move or vanish.
 
 And the router, asked once the first wave of checks has named the gateway, since the question goes to that address. NAT-PMP, Apple's protocol from 2005, RFC 6886, is two bytes to the gateway's port 5351 asking for its external address, answered with the address and the seconds since the router's mapping table started. PCP, the IETF's successor from 2013, RFC 6887, listens on the same port, and its ANNOUNCE is a 24-byte header that asks for nothing: a router that speaks PCP answers it with a result code and its epoch, and a router that speaks only NAT-PMP answers, in NAT-PMP's own form, that the version is unsupported, which says what the router speaks as surely as a success would. A router that speaks neither refuses the port, and the refusal comes back on both, where the machine's firewall lets it: Windows' admits only one kind of ICMP unreachable by default, not the port-unreachable a refusal is, so there a refused port reads as no answer, after the full four seconds. UPnP is the third way and the oldest, from 2001, with the widest support: its Internet Gateway Device profile describes a router, and a search multicast to 239.255.255.250 on port 1900 finds one, its device description gives the control address of its WAN connection service, and SOAP calls there read its external address and walk its port mappings by index until the router says the list has ended. The service type names the version, WANIPConnection:1 from 2001 or 2 from 2010, which added IPv6 firewall control as a service of its own, whose status read says whether the router's IPv6 firewall is on and admits pinholes; the panel reads that when the router offers the service and says when it doesn't. igd-next does all the talking in Rust and answers the gateway it found as plain data the page hands back for each read, so the search runs once and the page owns what follows. The description the search read those paths from also names the router, its friendly name, maker, and model, which igd-next keeps none of, so net_upnp_description fetches it again, over plain http on the local network as UPnP serves it, and the page reads the root device's fields into the UPnP row, in parentheses after the router's address. The three protocols are asked at once, once the gateway is known, and the four UPnP reads follow the search. Two readings sit on those facts. Which protocols the router speaks comes straight from what answered, with the firewall named when it may have held the search's answer back. And whether a carrier translates above the router rests on the external address the router reports, the one check a carrier's translator can't dodge: when it differs from the address the reflector saw, something between the router and the internet translates again, and when that address is in the shared address space, 100.64.0.0/10, it's a carrier's; a private one is more likely a second router, like a provider's modem. The shared address space on the default route and an endpoint-dependent mapping go in as reasons beside it. One case slips past the address check: address-plus-port sharing, where the carrier gives several customers one public address and each one's router a slice of its ports, so the router's own external address is the public one.
 
@@ -489,7 +491,7 @@ async function _watchFocus() {
 	if (watchingFocus) return
 	watchingFocus = true
 	await getCurrentWindow().onFocusChanged(async ({payload: focused}) => {
-		if (!focused) return
+		if (!focused || firewallChanging) return//the UAC prompt gives focus back as netsh starts, so a read then could catch the rules half changed; Firewall… reads them itself once netsh is done
 		if (retryNext) await retryNext('when the window came forward')
 		await _rereadFirewall()
 	})
@@ -1423,7 +1425,7 @@ function _firewall(results, paths, engine) {
 	if (profiles) {//Windows
 		if (!profiles.success) return {known: false}
 		let ours = (which, path) => { let r = results.find(r => r.kind == 'firewall-rules' && r.which == which); return {path, rules: r.success ? r.value : [], failed: r.success ? '' : r.outcome} }
-		return {known: true, profiles: profiles.value, ftorrent: ours('ftorrent', paths.executable), engine: ours('engine', engine.path)}
+		return {known: true, profiles: profiles.value, ftorrent: ours('ftorrent', paths.executable), engine: ours('engine', engine.path), installed: isInstalled(paths)}//and whether Firewall… can write this copy's rules
 	}
 	let printed = tool => results.find(r => r.kind == 'tool' && r.tool == tool && r.success)?.value || ''//what a read printed, blank when it failed or this platform has none
 	if (!printed('firewall')) return {known: false}
@@ -1484,7 +1486,11 @@ function _sayFirewall(f) {
 function _sayFirewallList(f) {
 	if (!f.known) return 'unknown'//the row above says why
 	let engineName = f.engine.path.split(/[\\/]/).pop()
-	if (f.profiles) return `${brandName} ${_sayRules(f.ftorrent)}, ${engineName} ${_sayRules(f.engine)}`
+	if (f.profiles) {
+		let said = `${brandName} ${_sayRules(f.ftorrent)}, ${engineName} ${_sayRules(f.engine)}`
+		if (f.installed && ![f.ftorrent, f.engine].every(program => _letsIn(program, f.profiles))) return `${said}; Firewall… removes any block rules and allows both on every network, with an administrator's approval`
+		return said
+	}
 	let said = `${brandName} ${_sayListed(f.ftorrent)}, ${engineName} ${_sayListed(f.engine)}`
 	if (f.on != 'on') return said//off, which lets everything in whatever the list says
 	if (f.blockAll == 'on') return `${said}; block all refuses every program whatever the list says, and System Settings turns it off under Network, Firewall, Options`
@@ -1492,9 +1498,62 @@ function _sayFirewallList(f) {
 	return said
 }
 
-//open the Mac firewall's pane in System Settings, where the person turns the firewall on or off and, under Options…, lets a program in; the next Check reads what changed
-export function firewallSettings() {
-	return processOpen(firewallPane)
+//whether Firewall… is shown: on a Mac always, since it opens System Settings, and on Windows for an installed copy, whose rules it writes; the essay above has why no other Windows copy gets it
+export const firewallButton = ref(platformName == 'macOS')
+if (platformName == 'Windows') pathsStatus().then(paths => { firewallButton.value = isInstalled(paths) }, () => {})
+
+//what Firewall… does: on a Mac, open the firewall's pane in System Settings, where the person turns the firewall on or off and, under Options…, lets a program in, and the next Check reads what changed; on Windows, write this copy's rules
+export function firewall() {
+	return platformName == 'Windows' ? _firewallAllow() : processOpen(firewallPane)
+}
+
+let firewallChanging = false//while Firewall…'s run of netsh is out, so the window coming forward doesn't read the rules half changed
+
+//Firewall… on Windows: say in the box what's about to happen, have netsh replace every inbound rule naming this copy or its engine with allow rules, behind one UAC prompt, and read the firewall again after, into the box and the table
+async function _firewallAllow() {
+	let [paths, engine] = await Promise.all([pathsStatus(), engineStatus()])
+	let commands = [[brandName, paths.executable], [`${brandName} engine`, engine.path]].flatMap(([name, path]) => [
+		['advfirewall', 'firewall', 'delete', 'rule', 'name=all', 'dir=in', `program=${path}`],//every inbound rule naming the program, whatever it's called, the alert's two among them
+		...['TCP', 'UDP'].map(protocol => ['advfirewall', 'firewall', 'add', 'rule', `name=${name}`, 'dir=in', 'action=allow', `program=${path}`, `protocol=${protocol}`, 'profile=any', 'edge=deferapp']),//every profile, and edge traversal left to the program's own socket
+	])
+	let netsh = `${paths.system}\\netsh.exe`//by its full path, from the folder Windows keeps its own programs in, rather than found by a search
+	let script = commands.map(words => `& ${_quotePowerShell(netsh)} ${words.map(_quotePowerShell).join(' ')}`).join('; ')//one line, since the whole script travels as one argument
+	boxAdd([`${sayMoment(Date.now())}, Firewall…: asking Windows for an administrator's approval to run netsh, which replaces every inbound rule naming this copy of ${brandName} or its engine with allow rules over TCP and UDP on every network`, ...commands.map(words => `  netsh ${words.map(_sayWord).join(' ')}`)].join('\n'), 'run')
+	firewallChanging = true
+	let outcome
+	try {
+		let code = await processElevate(`${paths.system}\\WindowsPowerShell\\v1.0\\powershell.exe`, ['-NoProfile', '-NonInteractive', '-Command', script])//the script as plain text, which the UAC prompt's details show as it is
+		outcome = `netsh ran, and PowerShell exited with code ${code}`
+	} catch (error) {//the user declined the prompt, or the run couldn't start
+		outcome = String(error)
+	}
+	let results = await Promise.all([_firewallProfiles(), _firewallRules('ftorrent', paths.executable), _firewallRules('engine', engine.path)].map(_ask))
+	firewallChanging = false
+	let run = lastRun.value
+	if (run) {//fold the new reads into the last Check, so the table shows the firewall as it is now
+		let fresh = run.results.map(r => r.kind.startsWith('firewall-') ? results.find(n => n.kind == r.kind && n.which == r.which) ?? r : r)
+		lastRun.value = {...run, results: fresh, firewall: _firewall(fresh, run.paths, run.engine)}
+	}
+	boxAdd([`${sayMoment(Date.now())}, Firewall…: ${outcome}; the firewall read again:`, ..._sayFirewallLines(_firewall(results, paths, engine)).slice(1)].join('\n'), 'run')//without the blank line the lines start with in a Check
+}
+
+//a word as PowerShell will pass it on exactly: as it is when it's only letters, digits, and the few marks a path or a netsh setting uses, and otherwise in single quotes, where nothing is expanded and a quote is written twice. Never in double quotes, so the script can travel inside the one pair the command line puts around it
+function _quotePowerShell(word) {
+	if (/^[\w=.:\\-]+$/.test(word)) return word
+	return `'${word.replace(/'/g, "''")}'`
+}
+
+//a word of a netsh command as the box shows it, in double quotes when it has a space, as a person would type it
+function _sayWord(word) {
+	return word.includes(' ') ? `"${word}"` : word
+}
+
+//whether a program's Windows firewall rules let a connection in over TCP and UDP on the current network: no inbound block rule that's on, since a block wins over an allow, and an inbound allow rule that's on for each protocol in every profile the machine's networks are in now; rules that couldn't be read let nothing in as far as the panel knows
+function _letsIn(program, profiles) {
+	let current = profiles.filter(p => p.current).map(p => p.name)
+	let inbound = program.rules.filter(r => r.direction == 'in' && r.enabled)
+	if (program.failed || inbound.some(r => r.action == 'block')) return false
+	return ['TCP', 'UDP'].every(protocol => inbound.some(r => r.action == 'allow' && (r.protocol == protocol || r.protocol == 'any') && current.every(name => r.profiles.includes(name))))
 }
 
 //a program's Windows firewall rules in a few words each, like allow in TCP on Public, or no rules, or why they couldn't be read
