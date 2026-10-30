@@ -1,12 +1,13 @@
 import {reactive, ref, shallowRef, watch} from 'vue'
 import {getVersion} from '@tauri-apps/api/app'
+import {getCurrentWindow} from '@tauri-apps/api/window'
 import {Data, Size, Time, sayDuration, saySize4} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import {brandName, urlHome} from './brand.js'
 import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
-import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netPcpAnnounce, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall} from './net.js'
+import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netNatpmpMap, netPcpAnnounce, netPcpMap, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall, netUpnpAddPort, netUpnpRemovePort, netUpnpAddPinhole, netUpnpRemovePinhole} from './net.js'
 import {udpOpen, udpStun, udpSend, udpReceive, udpClose} from './udp.js'
-import {processOutput} from './process.js'
+import {processOutput, processOpen} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
 import {dialogOpen} from './dialog.js'
@@ -42,6 +43,10 @@ A run asks its first wave of checks at once and waits for the last, so that wave
 And the engine's session, which runs for as long as the user lets it rather than for four seconds. Start opens libtorrent's session at a random port from the dynamic range, the range Transmission picks its random port from, listening on every address in both families and joining the DHT through our bootstrap node and two others, with port mapping and local service discovery off. libtorrent reads every address as each address the machine has, loopback and link-local included, and opens a TCP socket and a UDP one on each; from each one that reaches beyond the machine it runs a DHT node with its own routing table, announces to the trackers, and learns the address peers see. With a torrent file opened, it also joins that swarm in upload mode, announcing and taking connections but downloading nothing, so strangers who find it through the trackers and the DHT dial in. While it runs, the page asks the engine once a second for the alerts libtorrent has posted and for its counters. A session in a busy swarm posts a hundred alerts a second, most of them peers tried and dropped and DHT lookups, so the box shows each kind of alert once, the first to arrive, timed from Start by when the page heard it, up to a second after it happened; the table counts every alert by kind, and the box gets the counts when the session stops. A connection in is the exception, and gets a line every time, saying whether the session had sent to that address first, through a DHT lookup or a connection it tried, or whether it's unsolicited. The DHT's routine messages, its bootstrap queries and pings, post no alert, so unsolicited means as far as the alerts show. The table keeps the readings too: which sockets opened, how many nodes the routing tables hold, in all by libtorrent's counter and in each by asking each DHT node, with the address it runs from and its node ID, since libtorrent's own DHT stats describe only one table, the addresses peers say they see, and how many strangers connected in over each family and how many of those were unsolicited, counted by alert, and by libtorrent's own counter. Behind a home router with no port mapping, strangers still reach the session, over both families and over uTP, which shares the session's UDP port with the DHT: each DHT message the session sends opens the router for that node's replies, and a node also in the swarm connects in through the opening. Whether the router lets in a stranger who was never sent anything is its filtering, which these alerts can't settle and Good7 measures. The session lives in the engine, not the tab, so it keeps running while the user looks elsewhere, which is why the box, the last run, and the session's readings are kept here rather than in the page. For the same reason the whole panel as Copy takes it, the table and then the box, is stuck to stick.txt beside the log as it changes, at most once a second, so it can be read from outside ftorrent while a session runs, whichever tab is showing.
 
 And port mapping, which Map and Unmap turn on and off in the running session: libtorrent's two mappers, which the session that downloads leaves off, since ftorrent maps its port with its own code, worked here by hand so a Check before Map and one after show what libtorrent's own mapping gets. The UPnP mapper searches for the router and asks its WAN connection service to forward the session's port, TCP and UDP, over IPv4 alone. The NAT-PMP mapper sends PCP's MAP to the gateway from every socket with a global address in either family, and falls back to NAT-PMP over IPv4 when the router answers that the version is unsupported, so over IPv6 its request is for a pinhole in the router's firewall, since nothing translates there. On macOS it finds no IPv6 gateway, since its reading of the routing table drops every IPv6 route there, so each IPv6 mapper closes without sending, and its row says why. Each lease is a minute, renewed at three quarters of that, and each mapper deletes what it mapped when it's turned off or the session stops. Every alert the mappers post gets a line in the box, the mappings, the failures, and the mappers' own log, since a router that never answers posts nothing else: the NAT-PMP mapper sends nine times over about eleven seconds and then waits two hours. The table reads each mapper on each local address from those lines: which protocol it spoke, which only the log says, since the alerts call PCP natpmp too; whether UPnP found the router; what the router mapped, and to which external port; whether the router took only a mapping with no lease, which libtorrent asks for when UPnP's answer is error 725, and which stays in the router until it's deleted; how many requests went and answers came; and why a mapper stopped, when its log says it did. A Check while the session runs probes its port as it always does, and says whether mapping was on.
+
+And the mapping run, which Try mapping starts: the panel's own requests to the router, apart from libtorrent's, so the panel measures what the router allows on its own, whatever libtorrent can or can't ask. For each of the five combinations of protocol and family, UPnP, NAT-PMP, and PCP over IPv4, and UPnP and PCP over IPv6, since NAT-PMP has none, a trial opens a UDP socket and keeps it open throughout, and the five run side by side. moon pokes the address and port a mapping would forward before anything is asked; the trial asks the router to forward the socket's port, with a lease of a minute; moon pokes the port the router granted; the trial deletes the grant; and moon pokes a last time. Over IPv4 the pokes go to the router's external address, as UPnP's GetExternalIPAddress, NAT-PMP's address request, or PCP's MAP answer names it, or failing those the address the reflector saw, and over IPv6 to this machine's own address, the one the system sends from, which the pinhole names, since nothing translates there. PCP's ANNOUNCE goes to the IPv6 gateway first, so the run knows whether the router's IPv6 side speaks PCP at all, and every PCP answer goes in the box whole, as the router wrote it. So each combination answers four questions: whether the router speaks it, what it granted, whether a packet from outside arrives through the grant and was held back before it, and whether the delete closes it again. A router that takes UPnP mappings only with no lease answers error 725, and the trial asks again with none, which only its delete removes. The run changes the router, so it never runs on a Check, only when the person asks, and it goes in the box beside the Checks.
+
+And what the system can change behind ftorrent's back, or hold up with a box of its own. A system box, the firewall asking about ftorrent or Local Network privacy asking to reach the router, takes focus, and a check running while it stands fails on the clock: the UPnP search, held back by the Mac firewall until the person answers, reads no answer in four seconds. So after a Check, the panel asks again the checks that stand alone and ended in no answer, on their own, when the window comes forward, since answering a box gives focus back, and on timers ten and twenty seconds on in case it doesn't, at most twice, as a run of their own in the box; what they answer folds into the Check's table, and a UPnP search that finds the router has its four reads follow. The steps of the filtering, the punches, and the inbound proof each belong to a sequence on one socket, so the panel never asks one alone. And whenever the window comes forward after a Check, the panel reads the firewall again, since the person may have just changed it in System Settings or Windows Settings, and says in the box when its standing or what it admits has changed. The panel never runs Try mapping again on its own, since it changes the router.
 */
 
 const checkSeconds = 4//how long a check that asks once has to hear back, the essay above says why
@@ -51,6 +56,8 @@ const descriptionLimit = 64*Size.kb//a router's UPnP device description is a few
 const moonStun = `moon.${urlHome}:3478`//moon's, our second STUN server, at another place on the internet
 const stunServers = [`stun.${urlHome}:3478`, moonStun, 'stun.cloudflare.com:3478']//ours, moon's, and Cloudflare's: three places on the internet, two of them ours
 const pokePackets = 3//how many packets moon sends in a poke, as its Go service sets it, so a receive can stop once they're all in
+const mappingLease = 60//seconds, how long each mapping the mapping run asks for lasts, so one a run leaves behind, if it stops partway, is gone from the router a minute later
+const mappingDescription = `${brandName} mapping test`//the words a UPnP mapping carries, which a router's settings page shows beside it
 const reportLimit = 8*Size.kb//bytes; moon's account of a poke, a ping, or a dial is one small JSON object, a ping's whole answer in hex among it
 const pingSeconds = checkSeconds + 3//moon waits three seconds for a ping's answer, on top of the request's own time
 const dialSeconds = checkSeconds + 6//and up to three to connect a dial and three more to hear back
@@ -91,6 +98,8 @@ const tools = {
 	],
 	Windows: [],
 }[platformName]
+const firewallPane = 'x-apple.systempreferences:com.apple.Network-Settings.extension?Firewall'//System Settings' Network pane on a Mac, with Firewall, the anchor System Settings itself lists for that pane when AppleScript asks for its anchors. macOS 27 accepts the anchor and opens Network without going on to it, whether from this link or from AppleScript's reveal, so the person lands one row above Firewall, whose Options… button holds block all, stealth mode, and the list of programs; a version that honors the anchor lands on Firewall itself
+const firewallTools = ['firewall', 'blockall', 'stealth', 'signed', 'programs']//the Mac's five firewall reads among the tools, which the window coming forward asks again
 const firewallUnknown = {macOS: 'unknown', Linux: 'unknown, ufw and nftables need root to read', Windows: 'unknown'}[platformName]//the table's words for a firewall the panel can't read: a Mac's when socketfilterfw failed, Windows' when its COM interface did, and Linux's always
 
 const firewallListName = platformName == 'Windows' ? 'Firewall rules' : 'Firewall list'//the table's name for the row about this copy and its engine: the firewall's list of programs on a Mac, and the rules naming them on Windows
@@ -261,10 +270,10 @@ function _natpmp(gateway) {
 }
 
 //a check of what the router answers PCP's ANNOUNCE, asked of the gateway beside NAT-PMP
-function _pcp(gateway) {
-	let asked = gateway ? `PCP ANNOUNCE to ${gateway}:5351` : 'PCP ANNOUNCE to the gateway'
-	let ask = () => gateway ? netPcpAnnounce(gateway, checkSeconds) : Promise.reject('no IPv4 gateway to ask')
-	return {kind: 'pcp', asked, ask, read: answer => ({success: true, value: answer})}//net_pcp_announce answers {version, result, epoch, sends, bytes, answer} for any answer, PCP's or NAT-PMP's, or rejects with why
+function _pcp(gateway, family = 4, scope = 0, name = '') {
+	let asked = gateway ? `PCP ANNOUNCE to ${_sayGatewayPort(gateway, family, name)}` : 'PCP ANNOUNCE to the gateway'
+	let ask = () => gateway ? netPcpAnnounce(gateway, scope, checkSeconds) : Promise.reject(`no IPv${family} gateway to ask`)
+	return {kind: 'pcp', family, asked, ask, read: answer => ({success: true, value: answer})}//net_pcp_announce answers {version, result, epoch, sends, bytes, answer} for any answer, PCP's or NAT-PMP's, or rejects with why
 }
 
 const upnpSearch = '239.255.255.250:1900'//the SSDP multicast address and port, where every UPnP device on the local network listens for a search
@@ -355,7 +364,7 @@ export async function connectionRun() {
 		await new Promise(resolve => setTimeout(resolve, pollEvery + Time.second/4))//one more poll of the engine, so the alerts the probes caused are in before they're counted
 		inbound = true
 	}
-	return {moment, version, results, machine, inbound, probed, arrivals: arrivals.filter(a => a.moment >= moment), firewall: _firewall(results, paths, engine)}//the connections in since the run began, which the inbound proof looks for moon's among
+	return {moment, version, paths, engine, results, machine, inbound, probed, arrivals: arrivals.filter(a => a.moment >= moment), firewall: _firewall(results, paths, engine)}//the connections in since the run began, which the inbound proof looks for moon's among
 }
 
 //the address the system would send from toward a server's address and port, like [2606:4700:49::]:3478, as {success, value or outcome}
@@ -381,7 +390,7 @@ async function _ask(check) {
 	}
 	let milliseconds = Math.round(performance.now() - start)
 	if (!v.success && milliseconds >= seconds*Time.second) v.outcome = _sayNoAnswer(seconds)//rust gave up at its seconds, whatever words it chose for it; the clock here started first, so it reads at least as long
-	return {...about, ...v, milliseconds}
+	return {...about, ...v, milliseconds, again: () => _ask(check)}//the same check asked once more, which a check that stands on its own can be
 }
 
 //a STUN result as a result for each server, since one call asks them all, with each server's own time from net_stun, which is the network's; any other result as it is
@@ -402,6 +411,255 @@ function _late(seconds) { return new Promise(resolve => setTimeout(() => resolve
 
 //no answer in some seconds, the words noAnswer is for checkSeconds
 function _sayNoAnswer(seconds) { return `no answer in ${seconds} seconds` }
+
+//the kinds of check a Check can ask again on their own, since each stands alone: the ones its first wave asks, and the router's, which wait for the gateway the first wave names. A step of the filtering, the punches, or the inbound proof belongs to a sequence on one socket, and asking one again alone would mean nothing
+const standalone = ['route', 'reflect', 'stun', 'interfaces', 'tool', 'resolve', 'firewall-profiles', 'firewall-rules', 'natpmp', 'pcp', 'upnp']
+const retryAt = [10*Time.second, 20*Time.second]//after a Check, when to ask again what heard nothing, if the window hasn't come forward first, and then no more
+let retryNext = null//the latest Check's next retry, which the window coming forward takes first
+let retryTimers = []
+
+//after a Check whose standalone checks heard nothing, arm the cadence that waits out a system box: ask them again when the window comes forward, since answering a box gives focus back, and on timers ten and twenty seconds on, at most twice in all, and stop once nothing is left unheard
+export function connectionRetries() {
+	_watchFocus()
+	retryTimers.forEach(clearTimeout)
+	retryTimers = []
+	retryNext = null
+	let moment = lastRun.value?.moment
+	if (!moment || !_unheard(lastRun.value).length) return
+	let left = retryAt.length
+	let go = async when => {
+		if (left == 0 || lastRun.value?.moment != moment) return//spent, or a newer Check has replaced this one
+		left--
+		retryNext = left > 0 ? go : null
+		await _retry(when)
+		if (!_unheard(lastRun.value).length) { retryTimers.forEach(clearTimeout); retryNext = null }//everything answered, so the rest are needless
+	}
+	retryNext = go
+	retryTimers = retryAt.map(after => setTimeout(() => go(`${after/Time.second} seconds after the Check`), after))
+}
+
+//the latest Check's standalone checks that ended in no answer, each with where it sits in the run
+function _unheard(run) {
+	return run.results.map((r, i) => [r, i]).filter(([r]) => standalone.includes(r.kind) && r.outcome == noAnswer && r.again)
+}
+
+//ask the unheard checks again, as a run of its own in the box, and fold what they answer into the latest Check, so the table shows it; a UPnP search that finds the router now has its four reads follow, since they waited on it
+async function _retry(when) {
+	let run = lastRun.value
+	let unheard = _unheard(run)
+	if (!unheard.length) return
+	let moment = Date.now()
+	let again = await Promise.all(unheard.map(([r]) => r.again()))
+	let results = [...run.results]
+	unheard.forEach(([r, i], n) => { results[i] = again[n] })
+	let search = again.find(r => r.kind == 'upnp')
+	let reads = []
+	if (search?.success) {
+		reads = await Promise.all(_upnpReads(search.value).map(_ask))
+		for (let read of reads) { let i = results.findIndex(r => r.kind == read.kind); if (i >= 0) results[i] = read }
+	}
+	if (lastRun.value?.moment != run.moment) return//a newer Check replaced this one meanwhile, and its answers stand
+	lastRun.value = {...run, results, machine: _machine(results), firewall: _firewall(results, run.paths, run.engine)}
+	let lines = [`${sayMoment(moment)}, asking again ${when} what heard nothing in the Check of ${sayMoment(run.moment)}`]
+	let width = Math.max(...[...again, ...reads].map(r => r.asked.length))
+	for (let r of [...again, ...reads]) lines.push(..._sayResult(r, width))
+	boxAdd(lines.join('\n'), 'run')
+}
+
+//read the firewall again whenever the window comes forward, since the person may have changed it in System Settings or Windows Settings while it was away, and say so in the box when its standing or what it admits has changed
+async function _rereadFirewall() {
+	let run = lastRun.value
+	if (!run) return
+	let reads = run.results.map((r, i) => [r, i]).filter(([r]) => r.again && (r.kind.startsWith('firewall-') || (r.kind == 'tool' && firewallTools.includes(r.tool))))
+	if (!reads.length) return
+	let again = await Promise.all(reads.map(([r]) => r.again()))
+	if (lastRun.value?.moment != run.moment) return//a newer Check read it meanwhile
+	let results = [...lastRun.value.results]
+	reads.forEach(([r, i], n) => { results[i] = again[n] })
+	let firewall = _firewall(results, run.paths, run.engine)
+	let before = `${_sayFirewall(lastRun.value.firewall)}; ${_sayFirewallList(lastRun.value.firewall)}`
+	let after = `${_sayFirewall(firewall)}; ${_sayFirewallList(firewall)}`
+	lastRun.value = {...lastRun.value, results, firewall}
+	if (after != before) boxAdd(`${sayMoment(Date.now())}, the firewall changed while the window was away: ${after}`, 'session')
+}
+
+//hear the window coming forward, once: the unheard checks' next retry goes first, then the panel reads the firewall again
+let watchingFocus = false
+async function _watchFocus() {
+	if (watchingFocus) return
+	watchingFocus = true
+	await getCurrentWindow().onFocusChanged(async ({payload: focused}) => {
+		if (!focused) return
+		if (retryNext) await retryNext('when the window came forward')
+		await _rereadFirewall()
+	})
+}
+
+//the mapping run, which Try mapping starts: this machine's address and gateway in each family, the public IPv4 address a reflector sees, and the router by UPnP's search; then the router's external address by UPnP and by NAT-PMP, and PCP's ANNOUNCE to the IPv6 gateway; then a trial for each of the five combinations of protocol and family, all side by side. Each trial changes the router for a minute and undoes it, which is why the run waits for the person to ask
+export async function mappingRun() {
+	let moment = Date.now()
+	let version = await getVersion()
+	let first = await Promise.all([_route(4), _route(6), _reflect(4), _interfaces(), ...tools.filter(t => t.tool.startsWith('gateway')).map(_tool), _upnpSearch()].map(_ask))//the address the system sends from in each family, which a mapping names inside; the interfaces and the tools that name each family's gateway, which a Check reads the same way; and the router by UPnP
+	let [route4, route6] = [4, 6].map(family => first.find(r => r.kind == 'route' && r.family == family))
+	let reflect4 = first.find(r => r.kind == 'reflect'), search = first.find(r => r.kind == 'upnp')
+	let machine = _machine(first)
+	let gateway4 = _gateway(4, machine), gateway6 = _gateway(6, machine)
+	let link = machine.find(i => i.routes.includes(6))//the interface carrying IPv6's default route, which the link-local gateway is on
+	let scope = link?.index ?? 0, name = link?.name ?? ''
+	let gateway = search.success ? search.value : null
+	let second = await Promise.all([
+		{kind: 'upnp-external', asked: `UPnP GetExternalIPAddress${gateway ? ` at ${gateway.address}` : ''}`, ask: () => gateway ? netUpnpExternal(gateway) : Promise.reject('no UPnP gateway to ask'), read: address => _readAddress(4, address)},
+		_natpmp(gateway4),
+		_pcp(gateway6, 6, scope, name),
+	].map(_ask))//the router's external address by UPnP and by NAT-PMP, where moon reaches a mapping over IPv4, and whether the router's IPv6 side speaks PCP before the run asks it for anything
+	let [external, natpmp] = second
+	let public4 = reflect4.success ? reflect4.value : ''//where moon pokes over IPv4 when a protocol doesn't say, which is the address the internet sees
+	let own6 = route6.success ? route6.value : ''//and over IPv6, this machine's own address, the one a pinhole opens to
+	let trials = await Promise.all([
+		_trial({combination: 'upnp4',   family: 4, address: external.success ? external.value : public4,       ..._upnpPort(gateway, route4)}),
+		_trial({combination: 'natpmp4', family: 4, address: natpmp.success ? natpmp.value.address : public4,   ..._natpmpPort(gateway4, natpmp)}),
+		_trial({combination: 'pcp4',    family: 4, address: public4,                                           ..._pcpMap(gateway4, 4, 0, '', '0.0.0.0', '0.0.0.0')}),
+		_trial({combination: 'upnp6',   family: 6, address: own6,                                              ..._upnpPinhole(gateway, route6)}),
+		_trial({combination: 'pcp6',    family: 6, address: own6,                                              ..._pcpMap(gateway6, 6, scope, name, own6, '::')}),
+	])
+	return {moment, version, results: [...first, ...second, ...trials.flat()]}
+}
+
+//UPnP's mapping over IPv4, as a trial takes it: AddPortMapping of the socket's port at the same port outside, to this machine's address, and DeletePortMapping. A router that takes only mappings with no lease answers error 725, which igd-next words as permanent tests for, and the trial asks again with no lease, which only the delete removes
+function _upnpPort(gateway, route) {
+	let internal = port => route.success ? `${route.value}:${port}` : ''
+	return {
+		add: (port, lease) => ({kind: 'map-add', asked: `UPnP AddPortMapping UDP ${port} to ${internal(port) || 'this machine'} ${lease > 0 ? `for ${lease} seconds` : 'with no lease'}`, ask: () => {
+			if (!gateway) return Promise.reject('no UPnP gateway to ask')
+			if (!route.success) return Promise.reject('no IPv4 address of this machine to map to')
+			return netUpnpAddPort(gateway, 'UDP', port, internal(port), lease, mappingDescription).then(() => ({internal: port, port, lease}))
+		}, read: v => ({success: true, value: v})}),
+		permanent: outcome => /only supports permanent leases/.test(outcome),
+		remove: grant => ({kind: 'map-remove', asked: `UPnP DeletePortMapping UDP ${grant?.port ?? ''}`.trimEnd(), ask: () => grant ? netUpnpRemovePort(gateway, 'UDP', grant.port) : Promise.reject('nothing granted to delete'), read: () => ({success: true, value: 'deleted'})}),
+	}
+}
+
+//UPnP's pinhole over IPv6, as a trial takes it: AddPinhole to this machine's address and the socket's port, from any remote host and port, and DeletePinhole by the number the router gave it; igd-next refuses before sending anything when the router offers no IPv6 firewall control service
+function _upnpPinhole(gateway, route) {
+	let internal = port => route.success ? `[${route.value}]:${port}` : ''
+	return {
+		add: (port, lease) => ({kind: 'pinhole-add', asked: `UPnP AddPinhole UDP ${internal(port) || 'to this machine'} for ${lease} seconds`, ask: () => {
+			if (!gateway) return Promise.reject('no UPnP gateway to ask')
+			if (!route.success) return Promise.reject('no IPv6 address of this machine to open a pinhole to')
+			return netUpnpAddPinhole(gateway, 'UDP', internal(port), lease).then(id => ({internal: port, port, lease, id}))
+		}, read: v => ({success: true, value: v})}),
+		remove: grant => ({kind: 'pinhole-remove', asked: `UPnP DeletePinhole ${grant?.id ?? ''}`.trimEnd(), ask: () => grant ? netUpnpRemovePinhole(gateway, grant.id) : Promise.reject('nothing granted to delete'), read: () => ({success: true, value: 'deleted'})}),
+	}
+}
+
+//NAT-PMP's mapping over IPv4, as a trial takes it: the natpmp crate's mapping request for the socket's port, suggesting the same port outside, and the same request with a lifetime and external port of nothing, which deletes it. Its answer names no address, so the grant takes the one NAT-PMP's address request answered
+function _natpmpPort(gateway, natpmp) {
+	let at = gateway ? ` at ${gateway}:5351` : ''
+	return {
+		add: (port, lease) => ({kind: 'natpmp-add', asked: `NAT-PMP map UDP ${port} for ${lease} seconds${at}`, ask: () => gateway ? netNatpmpMap(gateway, 'UDP', port, port, lease, checkSeconds) : Promise.reject('no IPv4 gateway to ask'), read: m => ({success: true, value: {internal: m.internal, port: m.external, lease: m.lifetime, epoch: m.epoch, address: natpmp.success ? natpmp.value.address : ''}})}),
+		remove: grant => ({kind: 'natpmp-remove', asked: grant ? `NAT-PMP map UDP ${grant.internal} for 0 seconds${at}, the delete` : 'NAT-PMP delete', ask: () => grant ? netNatpmpMap(gateway, 'UDP', grant.internal, 0, 0, checkSeconds) : Promise.reject('nothing granted to delete'), read: () => ({success: true, value: 'deleted'})}),
+	}
+}
+
+//PCP's MAP, as a trial takes it, over either family: a request for the socket's port from this machine's address from, suggesting the same port outside and suggested, zeros for no preference, carrying a nonce made for the trial, and the same request with a lifetime of nothing, which deletes it. Over IPv6 it goes to the link-local gateway on the interface scope numbers, from the machine's own global address, since the request's source is the address the pinhole opens to
+function _pcpMap(gateway, family, scope, name, from, suggested) {
+	let nonce = Data({random: 12}).base16()//the router keys the mapping on it, so the delete carries the same one
+	let to = gateway ? _sayGatewayPort(gateway, family, name) : 'the gateway'
+	let why = ''
+	if (!gateway) why = `no IPv${family} gateway to ask`
+	else if (!from) why = `no IPv${family} address of this machine to map to`
+	return {
+		add: (port, lease) => ({kind: 'pcp-add', asked: `PCP MAP UDP ${port} for ${lease} seconds to ${to}`, ask: () => why ? Promise.reject(why) : netPcpMap(gateway, scope, from, 'UDP', port, port, suggested, lease, nonce, checkSeconds), read: _readPcpMap}),
+		remove: grant => ({kind: 'pcp-remove', asked: grant ? `PCP MAP UDP ${grant.internal} for 0 seconds to ${to}, the delete` : 'PCP delete', ask: () => grant ? netPcpMap(gateway, scope, from, 'UDP', grant.internal, 0, suggested, 0, nonce, checkSeconds) : Promise.reject('nothing granted to delete'), read: m => { let v = _readPcpMap(m); return v.success ? {success: true, value: 'deleted'} : v }}),
+	}
+}
+
+//what a router answered PCP's MAP, as a grant: success with what it assigned, or a refusal in PCP's words with the whole answer, or NAT-PMP's answer that it speaks only NAT-PMP
+function _readPcpMap(m) {
+	if (m.version != 2) return {success: false, outcome: `NAT-PMP answered, result ${m.result}${m.result == 1 ? ', unsupported version, so the router speaks NAT-PMP only' : ''}`}
+	if (m.result != 0) return {success: false, outcome: `refused, result ${_sayPcpResult(m.result)}; ${saySize4(m.bytes)}: ${_sayHex(m.answer)}`}
+	return {success: true, value: {internal: m.internal, port: m.external, lease: m.lifetime, epoch: m.epoch, address: m.address, bytes: m.bytes, answer: m.answer}}
+}
+
+//one trial of one combination, on a socket opened for it alone and kept open throughout: moon pokes the address and port a mapping would forward before the trial asks for anything, the request goes to the router, moon pokes the port it granted, the delete goes, and moon pokes a last time, so the three pokes are the before, the during, and the after. Each step is a result for the box, and _sayTrial reads them
+async function _trial(t) {
+	let port = 49152 + Math.floor(Math.random()*16384)//from the dynamic range, a new one each run, as the STUN check's
+	let about = {combination: t.combination, family: t.family, port}
+	let opened
+	try {
+		opened = await udpOpen(t.family, port)
+	} catch (error) {//the bottom gate, as in _ask
+		return [{...about, kind: 'trial-open', asked: `open UDP port ${port}`, success: false, outcome: String(error), milliseconds: 0}]
+	}
+	let steps = await _trialPoke(about, 'before', opened.socket, t.address, port, 'no address to poke')
+	let adds = [await _ask({...about, step: 'add', ...t.add(port, mappingLease)})]
+	if (!adds[0].success && t.permanent?.(adds[0].outcome)) adds.push(await _ask({...about, step: 'add', ...t.add(port, 0)}))//a router that takes only mappings with no lease, asked again with none, so the trial still proves the mapping and deletes it
+	let grant = adds.at(-1).success ? adds.at(-1).value : null
+	let target = grant?.address && !['0.0.0.0', '::'].includes(grant.address) ? grant.address : t.address//the external address the grant names, where a protocol's answer names one, and otherwise the one the trial was given
+	steps.push(...adds, ...await _trialPoke(about, 'granted', opened.socket, target, grant?.port, 'nothing granted to poke through'))
+	steps.push(await _ask({...about, step: 'remove', ...t.remove(grant)}), ...await _trialPoke(about, 'released', opened.socket, target, grant?.port, 'nothing granted to poke through'))
+	udpClose(opened.socket)
+	return steps
+}
+
+//moon's poke at one address and port at one stage of a trial, while the trial's socket listens, both results for the box; with no address or no port to poke, both fail with why, so the box has the same lines whatever happened
+async function _trialPoke(about, stage, socket, address, port, why) {
+	let token = Data({random: 4}).base16()//so a packet that arrives says which poke it came from
+	let url = address && port ? `https://ip${about.family}.moon.${urlHome}/poke?port=${port}&address=${address}&token=${token}` : ''
+	return Promise.all([//at once, so the socket is already listening when the poke's packets arrive
+		_ask({...about, stage, token, kind: 'poke', asked: `GET ${url || `https://ip${about.family}.moon.${urlHome}/poke`}`, ask: () => url ? netGet(url, reportLimit, checkSeconds) : Promise.reject(why), read: _readPoke}),
+		_ask({...about, stage, token, kind: 'receive', asked: `receive on port ${about.port}`, ask: () => url ? udpReceive(socket, pokePackets, checkSeconds) : Promise.reject(why), read: list => ({success: true, value: list})}),
+	])
+}
+
+//the table's rows for the mapping run, one for each combination, blank before the first run
+export function mappingFacts(run) {
+	return [
+		['UPnP over IPv4',    run ? _sayTrial(run, 'upnp4')   : ''],
+		['NAT-PMP over IPv4', run ? _sayTrial(run, 'natpmp4') : ''],
+		['PCP over IPv4',     run ? _sayTrial(run, 'pcp4')    : ''],
+		['UPnP over IPv6',    run ? _sayTrial(run, 'upnp6')   : ''],
+		['PCP over IPv6',     run ? _sayTrial(run, 'pcp6')    : ''],
+	]
+}
+
+//what one trial found, in the four answers each combination takes: whether the router answered the request, what it granted, whether moon's poke arrived through the grant and was held back before it, and whether the delete took it away, which the last poke being held back again shows
+function _sayTrial(run, combination) {
+	let steps = run.results.filter(r => r.combination == combination)
+	let open = steps.find(r => r.kind == 'trial-open')
+	if (open) return `unknown, ${open.outcome}`
+	let at = (kind, stage) => steps.find(r => r.kind == kind && r.stage == stage)
+	let arrived = stage => { let r = at('receive', stage); return r.success && r.value.some(d => _datagramText(d).startsWith(`poke ${r.token}`)) }//moon's packets, by the token this poke carried
+	let before = `not sent with nothing asked, ${at('poke', 'before').outcome}`
+	if (at('poke', 'before').success) before = arrived('before') ? 'arrived with nothing asked' : 'held back with nothing asked'
+	let adds = steps.filter(r => r.step == 'add')
+	let add = adds.at(-1)
+	if (!add.success) return `not granted, ${add.outcome}; moon's poke ${before}`
+	let g = add.value
+	let granted = `granted UDP ${g.internal}`
+	if (g.port != g.internal) granted += ` at external port ${g.port}`//a router may assign another port than the one suggested
+	granted += g.lease > 0 ? ` for ${g.lease} seconds` : ' with no lease'
+	if (adds.length > 1) granted += `, after the router refused a lease of ${mappingLease} seconds`
+	let said = [granted]
+	let during = at('poke', 'granted')
+	if (!during.success) said.push(`unknown whether it forwards, ${during.outcome}`)
+	else said.push(arrived('granted') ? `moon's poke arrived through it, and was ${before}` : `moon's poke didn't arrive through it, and was ${before}`)
+	let remove = steps.find(r => r.step == 'remove')
+	if (!remove.success) said.push(`the delete failed, ${remove.outcome}`)
+	else if (at('poke', 'released').success) said.push(arrived('released') ? 'deleted, and moon\'s poke still arrives' : 'deleted, and moon\'s poke is held back again')
+	else said.push('deleted')
+	return said.join('; ')
+}
+
+//the box's lines for one mapping run: when, which build, and which platform, then a line per step as a Check's run has them
+export function sayMappingRun(run) {
+	let width = Math.max(...run.results.map(r => r.asked.length))
+	let lines = [`${sayMoment(run.moment)}, ${brandName} ${run.version} on ${platformName}, asking the router for mappings`]
+	for (let r of run.results) lines.push(..._sayResult(r, width))
+	return lines.join('\n')
+}
+
+export const lastMappingRun = shallowRef(null)//the latest mapping run, kept here like the last Check, null until the first
 
 //the table's rows for a run, eight for each family, five about the machine, and five about the router, blank before the first run
 export function connectionFacts(run) {
@@ -504,6 +762,12 @@ function _sayPcp(results) {
 }
 
 //a PCP result code with its name and a few words, like 0 SUCCESS, the router speaks PCP
+//a gateway's port 5351 as the box writes it, an IPv6 one in brackets with the interface it's on, like [fe80::1%en1]:5351
+function _sayGatewayPort(gateway, family, name) {
+	if (family == 6) return `[${gateway}${name ? `%${name}` : ''}]:5351`
+	return `${gateway}:5351`
+}
+
 function _sayPcpResult(code) {
 	let [name, note] = pcpResults[code] || ['unknown', 'not a code this panel knows']
 	return `${code} ${name}, ${note}`
@@ -702,15 +966,19 @@ export function sayRun(run) {
 	let header = `${sayMoment(run.moment)}, ${brandName} ${run.version} on ${platformName}`
 	if (run.probed) header += `, session on port ${run.probed.port} with port mapping ${run.probed.mapping ? 'on' : 'off'}`//a run that probed a session names it, and whether its port was mapped
 	let lines = [header]
-	for (let r of run.results) {
-		lines.push(`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`)//the answer last, since an error's text can run long
-		if (r.binding) lines.push(..._sayBinding(r))
-		if (r.kind == 'receive' && r.success) lines.push(..._sayReceived(r))
-		if (r.kind == 'punch-exchange' && r.success) lines.push(..._sayReceived({value: r.value.arrived}))
-		if (r.success && ['upnp', 'upnp-mappings'].includes(r.kind)) lines.push(..._sayUpnpLines(r))
-	}
+	for (let r of run.results) lines.push(..._sayResult(r, width))
 	lines.push(..._sayFirewallLines(run.firewall), ..._sayMachine(run.machine))
 	return lines.join('\n')
+}
+
+//one result's lines in the box: what it asked, padded to width, how long it took, and what came back, then whatever it carries that takes lines of its own under it
+function _sayResult(r, width) {
+	let lines = [`${r.asked.padEnd(width)}  ${`${r.milliseconds} ms`.padStart(7)}  ${_sayAnswer(r)}`]//the answer last, since an error's text can run long
+	if (r.binding) lines.push(..._sayBinding(r))
+	if (r.kind == 'receive' && r.success) lines.push(..._sayReceived(r))
+	if (r.kind == 'punch-exchange' && r.success) lines.push(..._sayReceived({value: r.value.arrived}))
+	if (r.success && ['upnp', 'upnp-mappings'].includes(r.kind)) lines.push(..._sayUpnpLines(r))
+	return lines
 }
 
 //moon's report of a ping, in the box's words: where it went and from which of moon's ports, then the answer, a pong with the node's id and where the node saw moon, or a uTP packet's type; a refusal; an error; or how many sends went unanswered
@@ -831,6 +1099,10 @@ function _sayAnswer(r) {
 	if (r.kind == 'upnp-description') return _sayDevice(r.value, true)
 	if (r.kind == 'upnp-mappings') return `${r.value.mappings.length} mappings; ${r.value.ended}`
 	if (r.kind == 'upnp-firewall') return `IPv6 firewall ${r.value.enabled ? 'on' : 'off'}, inbound pinholes ${r.value.pinholes ? 'allowed' : 'not allowed'}`
+	if (r.kind == 'map-add') return r.value.lease > 0 ? `granted for ${r.value.lease} seconds` : 'granted with no lease'
+	if (r.kind == 'pinhole-add') return `granted for ${r.value.lease} seconds, pinhole ${r.value.id}`
+	if (r.kind == 'natpmp-add') return `granted external port ${r.value.port} for ${r.value.lease} seconds, epoch ${r.value.epoch} seconds`
+	if (r.kind == 'pcp-add') return `granted ${r.value.address}, external port ${r.value.port}, for ${r.value.lease} seconds, epoch ${r.value.epoch} seconds; ${saySize4(r.value.bytes)}: ${_sayHex(r.value.answer)}`
 	return r.value
 }
 
@@ -876,7 +1148,7 @@ function _machine(results) {
 			return {address: a.address, family, prefix: a.prefix, shared, kinds: [kind, ...flags].map(note => note.split(',')[0]), notes}
 		})
 		let named = gateways.filter(g => g.interface == i.name).map(g => g.gateway)
-		return {name: i.name, port: ports[i.name] || i.description, flags: [...i.flags, found.status].filter(Boolean), routes, gateways: [...i.gateways, ...named], addresses}
+		return {name: i.name, index: i.index, port: ports[i.name] || i.description, flags: [...i.flags, found.status].filter(Boolean), routes, gateways: [...i.gateways, ...named], addresses}
 	})
 }
 
@@ -1213,7 +1485,16 @@ function _sayFirewallList(f) {
 	if (!f.known) return 'unknown'//the row above says why
 	let engineName = f.engine.path.split(/[\\/]/).pop()
 	if (f.profiles) return `${brandName} ${_sayRules(f.ftorrent)}, ${engineName} ${_sayRules(f.engine)}`
-	return `${brandName} ${_sayListed(f.ftorrent)}, ${engineName} ${_sayListed(f.engine)}`
+	let said = `${brandName} ${_sayListed(f.ftorrent)}, ${engineName} ${_sayListed(f.engine)}`
+	if (f.on != 'on') return said//off, which lets everything in whatever the list says
+	if (f.blockAll == 'on') return `${said}; block all refuses every program whatever the list says, and System Settings turns it off under Network, Firewall, Options`
+	if (!f.ftorrent.listed?.allowed || !f.engine.listed?.allowed) return `${said}; System Settings sets a program to allow under Network, Firewall, Options, and Firewall… opens Network there; the firewall lists ${engineName} once it has asked about it`//the Mac has no way for a program to add itself, so the person makes the exception, and a Check after reads it
+	return said
+}
+
+//open the Mac firewall's pane in System Settings, where the person turns the firewall on or off and, under Options…, lets a program in; the next Check reads what changed
+export function firewallSettings() {
+	return processOpen(firewallPane)
 }
 
 //a program's Windows firewall rules in a few words each, like allow in TCP on Public, or no rules, or why they couldn't be read
@@ -1415,7 +1696,7 @@ function _incoming(a) {
 //one port mapper's alert, read into its readings: the requests it sent and the answers that came back, counted from its log, since a router that never answers posts no other alert; which protocol the NAT-PMP mapper spoke, PCP or NAT-PMP, which only its log says, since the alerts call both natpmp; whether UPnP's search found the router; what the router mapped, or why a mapping didn't happen; and why the mapper itself stopped, which only its log says too
 function _mapper(a) {
 	let key = `${a.transport} ${a.local}`
-	if (!session.mappers[key]) session.mappers[key] = {transport: a.transport, local: a.local, sent: 0, answered: 0, deletes: 0, version: '', found: false, permanent: false, mapped: {}, error: '', stopped: ''}
+	if (!session.mappers[key]) session.mappers[key] = {transport: a.transport, local: a.local, sent: 0, answered: 0, deletes: 0, deleted: 0, version: '', found: false, permanent: false, mapped: {}, error: '', unmapped: '', stopped: ''}
 	let m = session.mappers[key]
 	let log = a.type == 'portmap_log' ? a.message : ''
 	if (a.transport == 'natpmp') {
@@ -1426,15 +1707,17 @@ function _mapper(a) {
 		if (/<== port map/.test(log)) m.answered++
 	} else {
 		if (/found rootdevice/.test(log)) m.found = true
-		if (/adding port map/.test(log)) m.sent++
-		if (/deleting port map/.test(log)) m.deletes++
-		if (/map response/.test(log)) m.answered++
+		if (/sending: .*#AddPortMapping"/s.test(log)) m.sent++//each request as it goes, the first and every renewal, by the action its SOAP header names
+		if (/sending: .*#DeletePortMapping"/s.test(log)) m.deletes++
+		if (/\]: map response/.test(log)) m.answered++
+		if (/\]: unmap response/.test(log)) m.deleted++
 		if (/code: 725/.test(log)) m.permanent = true//the router takes only mappings with no lease, so libtorrent asks again for one that lasts until it's deleted
 	}
 	let failed = log.match(/\]: (failed to .*)/)?.[1]//a mapper that can't start says so in its log and closes, like failed to find default route for "en1" and the address, which the row already names
 	if (failed) m.stopped = failed.replace(` ${a.local}`, '')
 	if (a.type == 'portmap') { m.mapped[a.protocol] = a.port; m.error = '' }
-	if (a.type == 'portmap_error') m.error = a.error
+	if (a.type == 'portmap_error' && session.mapping) m.error = a.error
+	if (a.type == 'portmap_error' && !session.mapping) m.unmapped = a.error//an error while the mappers close is about a delete: libtorrent reports every UPnP delete's answer with an error code, and a router's answer of success carries none, so libtorrent's stand-in for none, -1, comes through as unknown UPnP error (-1)
 }
 
 //how long since Start, as the box's lines begin
@@ -1487,7 +1770,8 @@ function _sayMapper(m) {
 	if (m.error) said.push(`not mapped, ${m.error}`)
 	if (m.stopped) said.push(`stopped, ${m.stopped}`)
 	said.push(`${plural(m.sent, 'request')} and ${plural(m.answered, 'answer')}`)
-	if (m.deletes > 0) said.push(`${plural(m.deletes, 'delete')} sent`)
+	if (m.deletes > 0) said.push(`${plural(m.deletes, 'delete')} sent${m.transport == 'upnp' ? ` and ${m.deleted} answered` : ''}`)
+	if (m.unmapped) said.push(`libtorrent then posted ${m.unmapped}, which it does for a delete the router answered without an error code`)
 	let holding = m.transport == 'upnp' && !m.found && lastRun.value ? _sayHolding(lastRun.value.firewall, 'engine', "the router's answer") : ''
 	if (holding) said.push(holding)
 	return `${m.transport == 'upnp' ? 'UPnP' : 'NAT-PMP'} mapper from ${m.local}: ${said.join(', ')}`
@@ -1513,7 +1797,7 @@ function _sayKinds() {
 
 //the whole panel as text, the table's rows and then the box, which Copy puts on the clipboard and stick puts on the disk
 export function connectionText() {
-	return [...[...connectionFacts(lastRun.value), ...sessionFacts()].map(([key, value]) => `${key}: ${value}`), '', box.value].join('\n')
+	return [...[...connectionFacts(lastRun.value), ...mappingFacts(lastMappingRun.value), ...sessionFacts()].map(([key, value]) => `${key}: ${value}`), '', box.value].join('\n')
 }
 
 //stick the panel as it starts, blank, and then a second after anything on it changes, so a busy second of alerts is one write, and the write carries all of it

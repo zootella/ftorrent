@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV6, ToSocketAddrs, UdpSocket};
 use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use tauri::command;
@@ -19,11 +19,11 @@ STUN is written out by hand, since a binding request is small enough to read who
 
 net_stun asks every server it's given at once, from one socket, which is how Tailscale's netcheck asks its servers too, and it's the one command here that takes a list. A router keys the mapping it makes on the inside address and port, so the question of whether it keeps one public port for every destination can only be asked from one socket, and asking every server from that socket at the same moment answers it in one wait rather than one wait per server. Each request carries a transaction id of its own, which is how an answer finds the server it came from, and the socket stays unconnected, since it speaks to more than one address. Each answer also comes back whole, in hex beside the address it arrived from, so the page can show every attribute in it and not only the mapped address read here. The asking itself is stun_ask, which net_stun runs on a socket it opens and closes, and udp_stun in udp.rs on a socket the page holds open.
 
-net_natpmp asks a router for its external address by NAT-PMP, RFC 6886, through the natpmp crate: a two-byte request to the gateway on port 5351, answered with the address and an epoch, the seconds since the router's mapping table started, which a program watches to learn that the router restarted and its mappings are gone. The crate binds a socket connected to the gateway, so a router refusing the port comes back as a refusal on the socket rather than as silence, and that refusal is itself a finding, since PCP listens on the same port. The crate's socket is nonblocking and its own, with nothing to wait on, so the command polls it every few milliseconds until the deadline, as the crate's own examples do.
+net_natpmp asks a router for its external address by NAT-PMP, RFC 6886, through the natpmp crate: a two-byte request to the gateway on port 5351, answered with the address and an epoch, the seconds since the router's mapping table started, which a program watches to learn that the router restarted and its mappings are gone. The crate binds a socket connected to the gateway, so a router refusing the port comes back as a refusal on the socket rather than as silence, and that refusal is itself a finding, since PCP listens on the same port. The crate's socket is nonblocking and its own, with nothing to wait on, so the command polls it every few milliseconds until the deadline, as the crate's own examples do. net_natpmp_map sends the crate's mapping request the same way: an internal port, a suggested external port, and a lifetime, answered with the external port and lifetime the router granted, and the same request with a lifetime and external port of nothing deletes it.
 
-net_pcp_announce speaks PCP, RFC 6887, the IETF's successor to NAT-PMP on the same port, and writes it by hand, since no crate sends the one message that asks for nothing. ANNOUNCE is the 24-byte header alone: the version, 2, the opcode, 0, a lifetime of nothing, and the client's own address, which a PCP server checks against the packet's source and refuses as a mismatch when they differ, so the socket is connected to the gateway first and the address the system picked for it is the one written. A router that speaks PCP answers with its result code and epoch. A router that speaks only NAT-PMP reads the version byte, 2 where it expects 0, and answers in its own eight-byte form that the version is unsupported, which is what RFC 6887 tells a client to expect and fall back on, so the command answers that as it is, version and all, and leaves the reading to the page. The request goes again at the intervals net_stun uses rather than PCP's own, whose first wait is three seconds, written for a client that will hold a mapping for hours, where this is one question with a few seconds to answer it.
+net_pcp_announce and net_pcp_map speak PCP, RFC 6887, the IETF's successor to NAT-PMP on the same port, and write it by hand, since no crate sends the one message that asks for nothing, and the crates that map over PCP keep their requests to themselves. Both run over either family: over IPv6 the gateway is usually the router's link-local address, which names a place only with the interface it's on, so the page hands down the interface's number with it. ANNOUNCE is the 24-byte header alone: the version, 2, the opcode, 0, a lifetime of nothing, and the client's own address, which a PCP server checks against the packet's source and refuses as a mismatch when they differ, so the socket is connected to the gateway first and the address the system picked for it is the one written. A router that speaks PCP answers with its result code and epoch. A router that speaks only NAT-PMP reads the version byte, 2 where it expects 0, and answers in its own eight-byte form that the version is unsupported, which is what RFC 6887 tells a client to expect and fall back on, so the command answers that as it is, version and all, and leaves the reading to the page. MAP is that header with opcode 1 and a lifetime, then 36 bytes more: a nonce of twelve random bytes, which the router keys the mapping on, the protocol by its IANA number, the internal port, and a suggested external port and address, zeros for no preference. Its answer repeats the nonce and says what the router assigned, the external port and address and the lifetime, any of which can differ from what was asked, and the same request with a lifetime of nothing deletes the mapping. The client's address the header carries is also the address the mapping is for, so net_pcp_map binds its socket to the address the page names: over IPv6, the global address a pinhole should open to, rather than the link-local one the system would pick to reach a link-local gateway. Either request goes again at the intervals net_stun uses rather than PCP's own, whose first wait is three seconds, written for a client that will hold a mapping for hours, where this is one question with a few seconds to answer it.
 
-The four net_upnp commands speak UPnP's Internet Gateway Device profile through igd-next, the crate iroh's port mapper and libp2p build their UPnP on. Finding a router is three exchanges: a search, a few lines of text multicast over UDP to 239.255.255.250 on port 1900, which a router answers from its own address with the location of its device description; that description, fetched over plain HTTP from the router, which names the control address of its WAN connection service and the service's type, whose last number is the version of the profile; and that service's own description, which lists the actions it answers. Then each question is a SOAP call to the control address: GetExternalIPAddress, GetGenericPortMappingEntry for one mapping by its index, until the router says the index is past the end, which is how UPnP lists mappings, and GetFirewallStatus on the IPv6 firewall control service, where a router has one. igd-next does the talking and the parsing, and net_upnp_search answers the gateway it found as plain data, every field igd-next needs to speak to it again, which the page hands back to each of the three reads, so the search happens once and the page owns what's asked after it and in what order. igd-next's SOAP calls carry a time limit of their own, ten seconds, which nothing here can shorten, so a read of a router that has stopped answering outlasts the page's clock, and the page says so first. What igd-next drops on the way, the SERVER line of the search's answer and the friendly name, maker, and model in the description, waits for another crate.
+The net_upnp commands speak UPnP's Internet Gateway Device profile through igd-next, the crate iroh's port mapper and libp2p build their UPnP on. Finding a router is three exchanges: a search, a few lines of text multicast over UDP to 239.255.255.250 on port 1900, which a router answers from its own address with the location of its device description; that description, fetched over plain HTTP from the router, which names the control address of its WAN connection service and the service's type, whose last number is the version of the profile; and that service's own description, which lists the actions it answers. Then each question is a SOAP call to the control address: GetExternalIPAddress, GetGenericPortMappingEntry for one mapping by its index, until the router says the index is past the end, which is how UPnP lists mappings, and GetFirewallStatus on the IPv6 firewall control service, where a router has one. Four more change the router, one request each: AddPortMapping forwards an external port over IPv4 to an address and port inside for the seconds asked, DeletePortMapping removes it, and on the IPv6 firewall control service, which only version 2 of the profile carries, AddPinhole opens the firewall to one of the machine's own addresses and a port, from any remote host and port, answering the pinhole's number, which DeletePinhole takes to close it. igd-next does the talking and the parsing, and net_upnp_search answers the gateway it found as plain data, every field igd-next needs to speak to it again, which the page hands back to each command after it, so the search happens once and the page owns what's asked after it and in what order. igd-next's SOAP calls carry a time limit of their own, ten seconds, which nothing here can shorten, so a read of a router that has stopped answering outlasts the page's clock, and the page says so first. What igd-next drops on the way, the SERVER line of the search's answer and the friendly name, maker, and model in the description, waits for another crate.
 */
 
 const STUN_COOKIE: u32 = 0x2112A442;//the magic cookie every STUN message since RFC 5389 carries in bytes 4 through 8
@@ -87,6 +87,30 @@ pub struct Announce {
 	pub sends:   u32,//how many times the request went out, 1 when nothing was lost
 	pub bytes:   usize,//the size of the answer, 24 for PCP's header and 8 for NAT-PMP's
 	pub answer:  String,//the whole answer in lowercase hex
+}
+
+/// What a router answered PCP's MAP, as net_pcp_map answers it: from a PCP router, its result code and what it assigned; from a NAT-PMP router, its answer that the version is unsupported, with the rest left at zero
+#[derive(Serialize)]
+pub struct PcpMapping {
+	pub version:  u8,//2 from a router that speaks PCP; 0 from one that speaks only NAT-PMP
+	pub result:   u16,//PCP's result code, 0 for success, or NAT-PMP's, 1 for unsupported version
+	pub lifetime: u32,//the seconds the router granted, which can be fewer than asked, and 0 for a deletion
+	pub epoch:    u32,//seconds since the router's mapping table started
+	pub internal: u16,//the port inside the mapping forwards to, as the router repeated it
+	pub external: u16,//the port outside the router assigned, which can differ from the one suggested
+	pub address:  String,//the external address the router assigned, like 203.0.113.42 over IPv4, and over IPv6, where nothing translates, the machine's own address
+	pub sends:    u32,//how many times the request went out, 1 when nothing was lost
+	pub bytes:    usize,//the size of the answer, 60 for PCP's and 8 for NAT-PMP's
+	pub answer:   String,//the whole answer in lowercase hex
+}
+
+/// What a router granted NAT-PMP's mapping request, as net_natpmp_map answers it
+#[derive(Serialize)]
+pub struct NatpmpMapping {
+	pub internal: u16,//the port inside the mapping forwards to
+	pub external: u16,//the port outside the router assigned, which can differ from the one suggested
+	pub lifetime: u32,//the seconds the router granted, which can be fewer than asked, and 0 for a deletion
+	pub epoch:    u32,//seconds since the router's mapping table started
 }
 
 /// A router found by net_upnp_search, as the page holds it between commands and hands it back to each read: everything igd-next needs to speak to it again
@@ -282,52 +306,139 @@ pub async fn net_natpmp(gateway: Ipv4Addr, seconds: u64) -> Result<PublicAddress
 	}).await
 }
 
-/// Send PCP's ANNOUNCE, a 24-byte header asking for nothing, to this gateway on port 5351 over IPv4, sending it again at the intervals net_stun uses until the router answers or seconds pass, and answer what came back whole: a PCP answer with its result code and epoch, or NAT-PMP's unsupported-version answer from a router that speaks only that; an error when the router refuses the port or doesn't answer in time
+/// Send PCP's ANNOUNCE, a 24-byte header asking for nothing, to the gateway at this address on port 5351, an IPv6 link-local one on the interface scope numbers, 0 for IPv4, sending it again at the intervals net_stun uses until the router answers or seconds pass, and answer what came back whole: a PCP answer with its result code and epoch, or NAT-PMP's unsupported-version answer from a router that speaks only that; an error when the router refuses the port or doesn't answer in time
 #[command]
-pub async fn net_pcp_announce(gateway: Ipv4Addr, seconds: u64) -> Result<Announce, String> {
+pub async fn net_pcp_announce(gateway: IpAddr, scope: u32, seconds: u64) -> Result<Announce, String> {
 	run_blocking(move || {
-		let socket = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0)).map_err(|e| e.to_string())?;
-		socket.connect((gateway, 5351)).map_err(|e| e.to_string())?;//connected, so the system settles the source address the request has to carry, and so the gateway refusing the port comes back on the socket
-		let IpAddr::V4(source) = socket.local_addr().map_err(|e| e.to_string())?.ip() else { return Err("the socket has no IPv4 address".into()) };
-		let mut request = [0u8; 24];
-		request[0] = 2;//PCP's version; byte 1 is ANNOUNCE, opcode 0 with the response bit clear, bytes 2 and 3 are reserved, and bytes 4 through 7 are the lifetime asked for, none
-		request[18..20].copy_from_slice(&[0xff, 0xff]);
-		request[20..24].copy_from_slice(&source.octets());//bytes 8 through 23 are the client's own address, an IPv4 one written as the IPv4-mapped IPv6 address ::ffff:a.b.c.d, which a PCP server checks against the packet's source
+		let from: IpAddr = if gateway.is_ipv6() { Ipv6Addr::UNSPECIFIED.into() } else { Ipv4Addr::UNSPECIFIED.into() };//any address of the gateway's family; ANNOUNCE asks for nothing, so which one the system picks doesn't matter
+		let (bytes, sends) = pcp_exchange(gateway, scope, from, 0, |source| pcp_header(0, 0, source).to_vec(), |_| true, seconds)?;
+		let (version, result, epoch) = match bytes[0] {
+			2 if bytes.len() >= 24 => (2, bytes[3] as u16, u32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]])),//PCP: a reserved byte, the result code, the lifetime, then the epoch
+			_ => (0, u16::from_be_bytes([bytes[2], bytes[3]]), u32::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]])),//NAT-PMP: a two-byte result code, then the epoch
+		};
+		Ok(Announce {version, result, epoch, sends, bytes: bytes.len(), answer: Data::from_array(&bytes).base16()})
+	}).await
+}
 
-		let start = Instant::now();
-		let deadline = start + Duration::from_secs(seconds);
-		let mut next = start;//when to send next, now for the first
-		let mut wait = Duration::from_millis(500);//STUN's interval after that send, doubled each time, the essay above says why not PCP's own
-		let mut sends = 0;
-		let mut answer = [0u8; 1500];
-		while Instant::now() < deadline {
-			let now = Instant::now();
-			if next <= now {
-				if let Err(e) = socket.send(&request) {
-					if matches!(e.kind(), std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::ConnectionReset) { return Err("the gateway refused port 5351".into()) }//a refusal the socket kept from the last send, handed back on this one
-					return Err(e.to_string())
-				}
-				sends += 1; next = now + wait; wait *= 2
-			}
-			let left = next.min(deadline).saturating_duration_since(Instant::now());//listen until the next send is due
-			if left.is_zero() { continue }
-			socket.set_read_timeout(Some(left)).map_err(|e| e.to_string())?;
-			let count = match socket.recv(&mut answer) {
-				Ok(count) => count,
-				Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => continue,//the read timed out, which unix says as would block and windows as timed out
-				Err(e) if matches!(e.kind(), std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::ConnectionReset) => return Err("the gateway refused port 5351".into()),//an icmp port unreachable from the gateway, which windows reports as a reset: neither PCP nor NAT-PMP, since both listen there
-				Err(e) => return Err(e.to_string()),
-			};
-			let bytes = &answer[..count];
-			if count < 8 || bytes[1] != 0x80 { continue }//not an answer to ANNOUNCE, which both protocols write as the response bit over opcode 0, 128
-			let (version, result, epoch) = match bytes[0] {
-				2 if count >= 24 => (2, bytes[3] as u16, u32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]])),//PCP: a reserved byte, the result code, the lifetime, then the epoch
-				0 => (0, u16::from_be_bytes([bytes[2], bytes[3]]), u32::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]])),//NAT-PMP: a two-byte result code, then the epoch
-				_ => continue,//some other version, which neither protocol has
-			};
-			return Ok(Announce {version, result, epoch, sends, bytes: count, answer: Data::from_array(bytes).base16()})
+/// Send PCP's MAP request to the gateway at this address, an IPv6 link-local one on the interface scope numbers, from the machine's own address from, which the mapping is for: forward the internal port for protocol, TCP or UDP, with a suggested external port and address, zeros for no preference, for lifetime seconds, carrying nonce, twelve bytes in lowercase hex, which the router keys the mapping on; the same request with a lifetime of 0 deletes it. Answers what came back, a PCP answer with what the router assigned, or a NAT-PMP router's answer that the version is unsupported; an error when the gateway refused the port, or nothing came in seconds
+#[command]
+pub async fn net_pcp_map(gateway: IpAddr, scope: u32, from: IpAddr, protocol: String, internal: u16, external: u16, address: IpAddr, lifetime: u32, nonce: String, seconds: u64) -> Result<PcpMapping, String> {
+	run_blocking(move || {
+		let nonce: [u8; 12] = Data::from_base16(&nonce).map_err(|e| e.to_string())?.array().try_into().map_err(|_| "a nonce is twelve bytes".to_string())?;
+		let number: u8 = match protocol.as_str() { "TCP" => 6, "UDP" => 17, _ => return Err(format!("not a protocol PCP maps: {protocol}")) };//IANA's protocol numbers, which PCP's MAP names a protocol by
+		let suggested = pcp_address(address);
+		let request = |source: IpAddr| {
+			let mut request = pcp_header(1, lifetime, source).to_vec();//opcode 1, MAP
+			request.extend_from_slice(&nonce);
+			request.extend_from_slice(&[number, 0, 0, 0]);//the protocol, then three reserved bytes
+			request.extend_from_slice(&internal.to_be_bytes());
+			request.extend_from_slice(&external.to_be_bytes());
+			request.extend_from_slice(&suggested);
+			request//60 bytes, the header and MAP's 36
+		};
+		let (bytes, sends) = pcp_exchange(gateway, scope, from, 1, request, |bytes| bytes[0] != 2 || bytes.len() < 60 || bytes[24..36] == nonce, seconds)?;//a PCP answer for this nonce; or one shorter than a MAP answer, the header alone, which a router refusing the request may send; or NAT-PMP's answer, which has no nonce to match
+		let mut mapping = PcpMapping {version: bytes[0], result: 0, lifetime: 0, epoch: 0, internal: 0, external: 0, address: String::new(), sends, bytes: bytes.len(), answer: Data::from_array(&bytes).base16()};
+		if bytes[0] == 2 {
+			mapping.result = bytes[3] as u16;
+			mapping.lifetime = u32::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);//the lifetime the router granted, which can be shorter than asked
+			mapping.epoch = u32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
+			if bytes.len() < 60 { return Ok(mapping) }//the header alone, with its result code, and nothing assigned
+			mapping.internal = u16::from_be_bytes([bytes[40], bytes[41]]);
+			mapping.external = u16::from_be_bytes([bytes[42], bytes[43]]);//the port the router assigned outside, which can differ from the one suggested
+			let assigned: [u8; 16] = bytes[44..60].try_into().unwrap_or([0; 16]);
+			let v6 = Ipv6Addr::from(assigned);
+			mapping.address = v6.to_ipv4_mapped().map(|v4| v4.to_string()).unwrap_or_else(|| v6.to_string());//an IPv4 address comes back IPv4-mapped, ::ffff:a.b.c.d
+		} else {
+			mapping.result = u16::from_be_bytes([bytes[2], bytes[3]]);
+			mapping.epoch = u32::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
 		}
-		Err(format!("no answer in {seconds} seconds"))
+		Ok(mapping)
+	}).await
+}
+
+/// PCP's 24-byte request header: version 2, the opcode with the response bit clear, two reserved bytes, the lifetime asked for, and the client's own address, which a PCP server checks against the packet's source and refuses as a mismatch when they differ
+fn pcp_header(opcode: u8, lifetime: u32, source: IpAddr) -> [u8; 24] {
+	let mut header = [0u8; 24];
+	header[0] = 2;
+	header[1] = opcode;
+	header[4..8].copy_from_slice(&lifetime.to_be_bytes());
+	header[8..24].copy_from_slice(&pcp_address(source));
+	header
+}
+
+/// An address as PCP writes every address, in sixteen bytes: an IPv6 one as it is, and an IPv4 one as the IPv4-mapped IPv6 address ::ffff:a.b.c.d, the unspecified 0.0.0.0 included
+fn pcp_address(address: IpAddr) -> [u8; 16] {
+	match address {
+		IpAddr::V4(v4) => v4.to_ipv6_mapped().octets(),
+		IpAddr::V6(v6) => v6.octets(),
+	}
+}
+
+/// One exchange with a PCP server: a socket bound to from and connected to the gateway's port 5351, on the interface scope numbers for a link-local gateway, so the system settles the source address the request has to carry and a refusal of the port comes back on the socket; the request built for that source, sent at STUN's intervals until an answer to opcode arrives that wanted accepts, or seconds pass. Answers the answer's bytes and how many times the request went
+fn pcp_exchange(gateway: IpAddr, scope: u32, from: IpAddr, opcode: u8, request: impl Fn(IpAddr) -> Vec<u8>, wanted: impl Fn(&[u8]) -> bool, seconds: u64) -> Result<(Vec<u8>, u32), String> {
+	let socket = UdpSocket::bind((from, 0)).map_err(|e| e.to_string())?;
+	let to: SocketAddr = match gateway {
+		IpAddr::V4(v4) => (v4, 5351).into(),
+		IpAddr::V6(v6) => SocketAddrV6::new(v6, 5351, 0, scope).into(),//a link-local address means nothing without the interface it's on
+	};
+	socket.connect(to).map_err(|e| e.to_string())?;
+	let source = socket.local_addr().map_err(|e| e.to_string())?.ip();
+	let request = request(source);
+
+	let start = Instant::now();
+	let deadline = start + Duration::from_secs(seconds);
+	let mut next = start;//when to send next, now for the first
+	let mut wait = Duration::from_millis(500);//STUN's interval after that send, doubled each time, the essay above says why not PCP's own
+	let mut sends = 0;
+	let mut answer = [0u8; 1500];
+	while Instant::now() < deadline {
+		let now = Instant::now();
+		if next <= now {
+			if let Err(e) = socket.send(&request) {
+				if matches!(e.kind(), std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::ConnectionReset) { return Err("the gateway refused port 5351".into()) }//a refusal the socket kept from the last send, handed back on this one
+				return Err(e.to_string())
+			}
+			sends += 1; next = now + wait; wait *= 2
+		}
+		let left = next.min(deadline).saturating_duration_since(Instant::now());//listen until the next send is due
+		if left.is_zero() { continue }
+		socket.set_read_timeout(Some(left)).map_err(|e| e.to_string())?;
+		let count = match socket.recv(&mut answer) {
+			Ok(count) => count,
+			Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => continue,//the read timed out, which unix says as would block and windows as timed out
+			Err(e) if matches!(e.kind(), std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::ConnectionReset) => return Err("the gateway refused port 5351".into()),//an icmp port unreachable from the gateway, which windows reports as a reset: neither PCP nor NAT-PMP, since both listen there
+			Err(e) => return Err(e.to_string()),
+		};
+		let bytes = &answer[..count];
+		if count < 8 || bytes[1] != 0x80 | opcode { continue }//not an answer to this opcode, which both protocols write as the response bit over the opcode
+		if bytes[0] != 2 && bytes[0] != 0 { continue }//some other version, which neither protocol has
+		if bytes[0] == 2 && count < 24 { continue }//too short for PCP's header
+		if !wanted(bytes) { continue }//an answer to some other request
+		return Ok((bytes.to_vec(), sends))
+	}
+	Err(format!("no answer in {seconds} seconds"))
+}
+
+/// Send NAT-PMP's mapping request to the gateway at this IPv4 address: forward the internal port for protocol, TCP or UDP, with a suggested external port, for lifetime seconds; a lifetime and external port of 0 delete it. Answers what the router granted, through the natpmp crate; the router's result code or a refusal of the port as the error
+#[command]
+pub async fn net_natpmp_map(gateway: Ipv4Addr, protocol: String, internal: u16, external: u16, lifetime: u32, seconds: u64) -> Result<NatpmpMapping, String> {
+	run_blocking(move || {
+		let protocol = match protocol.as_str() { "TCP" => natpmp::Protocol::TCP, "UDP" => natpmp::Protocol::UDP, _ => return Err(format!("not a protocol NAT-PMP maps: {protocol}")) };
+		let deadline = Instant::now() + Duration::from_secs(seconds);
+		let mut client = natpmp::Natpmp::new_with(gateway).map_err(|e| e.to_string())?;//connected to the gateway's port 5351, as net_natpmp's
+		client.send_port_mapping_request(protocol, internal, external, lifetime).map_err(|e| e.to_string())?;
+		loop {
+			match client.read_response_or_retry() {//what has arrived, or the request sent again at the crate's interval, as net_natpmp polls it
+				Ok(natpmp::Response::UDP(m)) | Ok(natpmp::Response::TCP(m)) => return Ok(NatpmpMapping {internal: m.private_port(), external: m.public_port(), lifetime: m.lifetime().as_secs() as u32, epoch: m.epoch()}),
+				Ok(other) => return Err(format!("the router answered its address rather than a mapping: {other:?}")),
+				Err(natpmp::Error::NATPMP_TRYAGAIN) => {
+					if Instant::now() >= deadline { return Err(format!("no answer in {seconds} seconds")) }
+					std::thread::sleep(Duration::from_millis(10));
+				}
+				Err(natpmp::Error::NATPMP_ERR_NOGATEWAYSUPPORT) => return Err("the gateway refused port 5351".into()),//as net_natpmp reads it
+				Err(e) => return Err(e.to_string()),//a result code the router answered, like not authorized, or trouble with the socket
+			}
+		}
 	}).await
 }
 
@@ -374,6 +485,39 @@ pub async fn net_upnp_firewall(gateway: UpnpGateway) -> Result<Firewall, String>
 		let status = gateway.gateway()?.get_firewall_status().map_err(|e| e.to_string())?;
 		Ok(Firewall {enabled: status.firewall_enabled, pinholes: status.inbound_pinhole_allowed})
 	}).await
+}
+
+/// A UPnP port mapping's protocol from the page's word for it, TCP or UDP
+fn upnp_protocol(protocol: &str) -> Result<igd_next::PortMappingProtocol, String> {
+	match protocol {
+		"TCP" => Ok(igd_next::PortMappingProtocol::TCP),
+		"UDP" => Ok(igd_next::PortMappingProtocol::UDP),
+		_ => Err(format!("not a protocol UPnP maps: {protocol}")),
+	}
+}
+
+/// Ask this gateway to forward external, a port on its outside over IPv4, to internal, an address and port inside the network, for protocol, TCP or UDP, for lease seconds, AddPortMapping, leaving description on the mapping; the router's refusal, like a conflict with another client's mapping or a lease it won't take, as the error
+#[command]
+pub async fn net_upnp_add_port(gateway: UpnpGateway, protocol: String, external: u16, internal: SocketAddr, lease: u32, description: String) -> Result<(), String> {
+	run_blocking(move || gateway.gateway()?.add_port(upnp_protocol(&protocol)?, external, internal, lease, &description).map_err(|e| e.to_string())).await
+}
+
+/// Ask this gateway to remove the mapping of external for protocol, DeletePortMapping
+#[command]
+pub async fn net_upnp_remove_port(gateway: UpnpGateway, protocol: String, external: u16) -> Result<(), String> {
+	run_blocking(move || gateway.gateway()?.remove_port(upnp_protocol(&protocol)?, external).map_err(|e| e.to_string())).await
+}
+
+/// Ask this gateway's IPv6 firewall control service to open a pinhole to internal, one of the machine's own IPv6 addresses and a port, for protocol, from any remote host and port, for lease seconds, 1 to 86400, AddPinhole; answers the pinhole's number, which net_upnp_remove_pinhole takes; an error from a gateway that offers no such service, before anything is sent, and the router's refusal otherwise
+#[command]
+pub async fn net_upnp_add_pinhole(gateway: UpnpGateway, protocol: String, internal: SocketAddrV6, lease: u32) -> Result<u16, String> {
+	run_blocking(move || gateway.gateway()?.add_pinhole(upnp_protocol(&protocol)?, internal, lease).map_err(|e| e.to_string())).await
+}
+
+/// Ask this gateway's IPv6 firewall control service to close the pinhole with this number, DeletePinhole
+#[command]
+pub async fn net_upnp_remove_pinhole(gateway: UpnpGateway, id: u16) -> Result<(), String> {
+	run_blocking(move || gateway.gateway()?.remove_pinhole(id).map_err(|e| e.to_string())).await
 }
 
 /// This gateway's device description, the XML the search read its control paths from, fetched again and answered as text, since igd-next keeps none of what else it says: the router's friendly name, maker, model, and the address of its settings page. Over plain http, which net_get refuses: UPnP serves the description that way alone, on the local network, at the address the search's answer came from. A rejection past seconds or limit bytes

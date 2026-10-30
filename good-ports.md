@@ -53,13 +53,17 @@ Each request changes the router, so none of them runs on an ordinary Check. They
 
 From the dual-stack connection we test from, on 2026-10-29, with libtorrent's mappers on and leases of a minute:
 
-- The router answered UPnP's search as an Internet Gateway Device of version 1, and granted AddPortMapping for TCP and for UDP with the sixty-second lease asked, at the same external port as the listen port. It didn't answer error 725, so it takes leases, and libtorrent's fallback to a permanent mapping never ran. Whether the mapping forwards is the check moon's dial and pings make next.
+- The router answered UPnP's search as an Internet Gateway Device of version 1, and granted AddPortMapping for TCP and for UDP with the sixty-second lease asked, at the same external port as the listen port. It didn't answer error 725, so it takes leases, and libtorrent's fallback to a permanent mapping never ran.
 - The search also found other devices on the network answering UPnP, which offered no port mapping; libtorrent read each one's description and moved on.
 - Over IPv4 the router refuses port 5351, so it speaks neither NAT-PMP nor PCP there. The NAT-PMP mapper sent PCP's MAP nine times for TCP with no answer, since its socket never hears the refusal, then the same for UDP.
 - The router offers no UPnP IPv6 firewall service, which version 1 of the profile doesn't carry.
 - Over IPv6 the NAT-PMP mapper sent nothing, for the macOS reason above, so whether the router's IPv6 side speaks PCP waits for good's own ANNOUNCE to ask it.
 
-So on this connection, software on the machine can open IPv4 ports on the router through UPnP, if moon's check finds the mapping forwards, and has no software way into IPv6 except possibly PCP, still to be asked. That's one connection's answer. The point of the five combinations is that good gives every person their own.
+The panel's own mapping run, the same day, answered all four questions for UPnP over IPv4. The router answered the search in 56 milliseconds and granted AddPortMapping of a UDP port for the sixty seconds asked. moon's poke at the router's external address and that port was held back before the request, arrived three packets of three within half a second after the grant, and was held back again after DeletePortMapping. Over IPv6, igd-next declined to send AddPinhole, since the router offers no IPv6 firewall control service, and moon's poke at the machine's own IPv6 address was held back, the router's IPv6 firewall dropping a stranger.
+
+The run with all five combinations, later that day, repeated UPnP's result over IPv4, and the router refused port 5351 to NAT-PMP's mapping request and to PCP's MAP over IPv4 in a few milliseconds. Over IPv6, PCP's ANNOUNCE and its MAP to the router's link-local gateway on its interface both went unanswered for four seconds. That silence is the router's habit over IPv6 rather than anything about PCP: a UDP packet to its link-local address at any closed port, 5351, 9, or 33434, comes back with nothing, where over IPv4 the same packets come back refused. So over IPv6 good can't tell a router without PCP from one dropping the request, and infers the first, since a router that spoke PCP would answer ANNOUNCE.
+
+So on this connection, software on the machine can open IPv4 ports on the router through UPnP, proven by a packet from outside, and very likely has no software way into IPv6 at all. That's one connection's answer. The point of the five combinations is that good gives every person their own.
 
 ## ftorrent's own mapping, and libtorrent
 

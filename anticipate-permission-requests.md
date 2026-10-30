@@ -34,4 +34,4 @@ The same cadence serves the facts the system can change behind ftorrent's back w
 
 ## What's open
 
-Whether Tauri's focus event fires reliably on a Mac when a system box is dismissed, which decides whether the timers are the fallback or the only signal. Whether the engine's firewall box on a Mac can be brought forward from its minute of delay, or whether its delay is the firewall's own and the panel should just say the box may come late. And where, in the panel's code, the re-run lives: beside connectionRun in `desktop/src/connection.js`, as a second entry point that takes the checks that ended in no answer and runs them alone.
+Whether the engine's firewall box on a Mac can be brought forward from its minute of delay, or whether its delay is the firewall's own and the panel should just say the box may come late.

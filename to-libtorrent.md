@@ -69,6 +69,15 @@ How upstream would rather shape the second and third is the maintainer's call. P
 
 The Connection tab picks the fix up only once the maintainers ship wheels with it. Until then, the Mac panel can measure the IPv6 side itself, which is a choice for the good roadmap.
 
+## A smaller one: a UPnP delete that worked posts an error
+
+- When the UPnP mapper deletes a mapping, at `enable_upnp` turned off or the session closing, `on_upnp_unmap_response` in `src/upnp.cpp` reads the router's answer for a UPnP error code and reports it through `on_port_mapping`.
+- A router's `DeletePortMappingResponse` that means success carries no `errorCode` element, so the code stays at the parser's stand-in for none, -1. That isn't zero, and the session posts `portmap_error_alert`, "could not map port using UPnP: unknown UPnP error (-1)," for a mapping the router deleted as asked.
+- The handler for a mapping's answer, `on_upnp_map_response`, treats -1 as success and reports `error_code()`, so the two handlers disagree.
+- Seen on 2026-10-29, the same session as above, on Unmap: the router answered HTTP 200 with an empty `DeletePortMappingResponse`, and the error alert followed.
+
+The fix is the map handler's rule in the unmap handler: report `error_code()` when the parsed code is -1.
+
 ## The reproducer
 
 The program that printed the dumps above. It reads the routing table the way libtorrent does, and prints each default route with what its message carries. Change `sizeof(long)` to `sizeof(uint32_t)` in `ROUNDUP` for the four-byte reading.
