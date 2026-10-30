@@ -63,7 +63,7 @@ How upstream would rather shape the second and third is the maintainer's call. P
 ## Taking it upstream
 
 - Confirm it again from a fresh session: the log lines, the dump, and the same results from libtorrent's own `test_enum_net` if it covers routes.
-- Check whether the IPv6 mappers find a gateway on Windows and Linux, which read routes through `GetIpForwardTable2` and netlink, so the issue can say how far it reaches.
+- Check whether the IPv6 mappers find a gateway on Linux, which reads routes through netlink, so the issue can say how far it reaches. On Windows they do: libtorrent reads routes there through `GetIpForwardTable2`, and each IPv6 mapper logs the router's link-local address with its interface number, like `found gateway at: fe80::1%7`, then sends PCP's MAP.
 - Open an issue on arvidn/libtorrent, from zootella, with the measurement and the cause, offering a patch and leaving the design to the maintainer.
 - If a patch is welcome, write it, build and test it on a Mac, and open the pull request.
 
