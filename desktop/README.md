@@ -31,7 +31,7 @@ This workspace holds the ftorrent desktop client — a cross-platform BitTorrent
 - Tauri's own [prerequisites](https://tauri.app/start/prerequisites/) for the platform.
 - **On the Mac that publishes, the signing certificate.** `pnpm certificate` says whether the login keychain holds the identity `tauri.conf.json` names, and `pnpm certificate import <backup.p12>` brings the original onto a new Mac; the signing essay in `scripts.js` says why there's only ever one. `pnpm installer` signs with it, while `pnpm local` and `pnpm compile` don't sign and don't need it.
 
-Then `pnpm install` at the repository root, and `pnpm engine` once before any Rust build. The engine's freeze is a prerequisite, not an option: tauri-build copies resources at compile time and refuses a resource path that matches nothing, so until the freeze exists even `cargo check` stops with `glob pattern ../engine/dist/ftorrent-engine path not found`. That message is the build asking for `pnpm engine`. Run it again whenever `engine.py` or the engine's lockfile changes.
+Then `pnpm install` at the repository root, and `pnpm engine` once before any Rust build. The engine's freeze is a prerequisite, not an option: tauri-build copies resources at compile time and refuses a resource path that matches nothing, so until the freeze exists even `cargo check` stops with `glob pattern ../engine/dist/ftorrent-engine path not found`. That message is the build asking for `pnpm engine`. `pnpm compile` and `pnpm installer` freeze it again on their own, every time, so a release never carries an engine older than its source. `pnpm local` and `cargo check` use whatever freeze is there, so after a change to `engine.py` or the engine's lockfile, run `pnpm engine` before those.
 
 ## The commands
 
@@ -40,8 +40,8 @@ The commands in package.json are named so each says where it stops:
 ```
 pnpm local        run the app here, in development mode with hot reload
 pnpm engine       freeze the engine, described below
-pnpm compile      build the release binary, and stop there
-pnpm installer    build the installer, all the way through the app to the dmg on a Mac or the exe on Windows
+pnpm compile      freeze the engine, build the release binary, and stop there
+pnpm installer    freeze the engine and build the installer, all the way through the app to the dmg on a Mac or the exe on Windows
 pnpm reveal       open the file manager on that installer, to install it as a person would
 pnpm hash         stage what is built under its published name and write its sidecar, building nothing
 pnpm upload       check what is staged against its sidecar, then send the package and its sidecar to ftorrent.com

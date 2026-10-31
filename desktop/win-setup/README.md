@@ -97,7 +97,7 @@ The `Uninstall\ftorrent` key is the entry Settings and Add or Remove Programs re
 
 ### Building the installer
 
-The developer runs `pnpm installer` in `./desktop` on Windows. It runs three programs in turn: `tauri build`, then `node dmg.js`, which returns at once since this isn't a Mac, then `node win-setup/win-setup.js`.
+The developer runs `pnpm installer` in `./desktop` on Windows. It runs four programs in turn: `pnpm engine`, which freezes the engine from its current source, then `tauri build`, then `node dmg.js`, which returns at once since this isn't a Mac, then `node win-setup/win-setup.js`.
 
 1. **`tauri build` builds the application,** `target/release/ftorrent.exe`. Vite bundles the page and Cargo compiles the Rust core. Tauri bundles nothing on Windows, since `bundle.targets` names only the Mac's `app` and Linux's `deb`, and Tauri skips a target that doesn't apply to the machine it's on.
 

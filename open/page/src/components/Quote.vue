@@ -340,22 +340,22 @@ Acts 2:44-45
 Freedom is something that dies unless it's used.
 Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
-Ancient Gonzo Wisdom: Interviews with Hunter S. Thompson, 2009
+Salon interview, 2003
 
 Buy the ticket, take the ride.
 Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
 Fear and Loathing in Las Vegas, 1971
 
-There was a fantastic universal sense that whatever we were doing was right, that we were winning. And that, I think, was the handle--that sense of inevitable victory over the forces of Old and Evil. Not in any mean or military sense; we didn't need that. Our energy would simply prevail.
+There was a fantastic universal sense that whatever we were doing was right, that we were winning.... And that, I think, was the handle--that sense of inevitable victory over the forces of Old and Evil. Not in any mean or military sense; we didn't need that. Our energy would simply prevail.
 Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
 Fear and Loathing in Las Vegas, 1971
 
-I have a theory that the truth is never told during the nine-to-five hours.
+I have a theory that the truth is never told across a desk. Or during the nine-to-five hours.
 Hunter S. Thompson
 https://en.wikipedia.org/wiki/Hunter_S._Thompson
-Conversations with Hunter S. Thompson, 2008
+Rolling Stone interview, 1987
 
 New knowledge is the most valuable commodity on earth. The more truth we have to work with, the richer we become.
 Kurt Vonnegut
@@ -597,7 +597,7 @@ Richard Stallman
 https://en.wikipedia.org/wiki/Richard_Stallman
 Attributed, c. 2000s
 
-"Free software" is a matter of liberty, not price. To understand the concept, you should think of "free" as in "free speech", not as in "free beer."
+"Free software" is a matter of liberty, not price. To understand the concept, you should think of "free" as in "free speech," not as in "free beer."
 Richard Stallman
 https://en.wikipedia.org/wiki/Richard_Stallman
 Free Software, Free Society, 2002
@@ -780,7 +780,7 @@ Pedagogy of Hope, 1992
 A person is a person through other persons.
 Ubuntu philosophy
 https://en.wikipedia.org/wiki/Ubuntu_philosophy
-Nguni Bantu proverb (umntu ngumtu ngabantu)
+Nguni Bantu proverb (umntu ngumntu ngabantu)
 
 It is not, "I think therefore I am." It says rather: "I am human because I belong. I participate. I share."
 Desmond Tutu
@@ -1225,12 +1225,12 @@ Journals, 1978
 The only way art lives is through the experience of the observer. The reality of art begins in the eyes of the beholder and gains power through imagination, invention, and confrontation.
 Keith Haring
 https://en.wikipedia.org/wiki/Keith_Haring
-Art in Transit, The Keith Haring Foundation
+Art in Transit, 1984
 
 Whatever you do, the only secret is to believe in it and satisfy yourself. Don't do it for anyone else.
 Keith Haring
 https://en.wikipedia.org/wiki/Keith_Haring
-Letter to Michael
+Letter to Michael, c. 1987
 
 Art is one of the last areas that is totally within the realm of the human individual and can't be copied or done better by a machine.
 Keith Haring
@@ -1252,7 +1252,7 @@ function typeset(s, open, close) {
 /*
 The opener set in typeset, the start of the string, whitespace, an em dash, a Unicode ellipsis, and ( [ {, is what flags a " or ' as an opening quote rather than a closing one. When adding quotes, eyeball the render: two close-style glyphs where an open and close pair belongs mean the character before the quote isn't in the opener set. The likely offenders are a three-period ellipsis with no trailing space, as in ...'yes', a colon or semicolon with no space, as in said:"yes", and a quotation nested three deep, since there are only two levels of glyphs. The easiest fix is a space in the source. Adding a period to the opener set would mishandle a closing quote after a period in ordinary dialogue, as in "Wait." she said.
 
-Write an ellipsis as three ASCII periods in the source, not the Unicode glyph. The monospaced font needs three separate periods for the right wide look on screen, and a Unicode ellipsis that slips in becomes three periods at the end of typeset.
+Write an ellipsis as three ASCII periods in the source, not the Unicode glyph. The monospaced font needs three separate periods for the right wide look on screen, and a Unicode ellipsis that slips in becomes three periods at the end of typeset. An ellipsis the writer wrote sits against the word before it, as in Sendall's note; one marking words left out stands alone, with a space on each side, as in Clarke's lines.
 */
 const quoteList = quoteBlock
 	.trim()

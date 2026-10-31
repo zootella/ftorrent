@@ -80,9 +80,11 @@ Both misreadings land on the same clicks, Public checked and Private unchecked, 
 
 ## ftorrent's own rule
 
-Firewall…, on the Connection tab of an installed copy, writes the rule this note argues for. One UAC prompt approves a run of netsh that deletes every inbound rule naming ftorrent.exe or the engine, the dialog's Block rules among them, and adds an allow for each over TCP and UDP on every kind of network, with edge traversal deferred to the program, so the engine's second dialog never comes.
+Write firewall rules…, on the Connection tab of an installed copy, writes the rule this note argues for. One UAC prompt approves a run of netsh that deletes every inbound rule naming ftorrent.exe or the engine, the dialog's Block rules among them, and adds an allow for each over TCP and UDP on every kind of network, with edge traversal deferred to the program, so the engine's second dialog never comes.
 
 The prompt names Windows PowerShell, with Microsoft Windows as its verified publisher, rather than ftorrent, so the Connection tab says what's about to happen before the prompt appears. Its details show the netsh commands as written. The prompt asks a standard user for an administrator's credentials, as Allow access does. So ftorrent's rule takes the same rights the dialog does, and what it buys is every kind of network at once and ftorrent's own words before the prompt.
+
+Firewall settings…, beside it, opens Control Panel's Allow an app through Windows Firewall. That page lists rules by name, the TCP and UDP rules of one name as a single row, with a box for Private and one for Public, so the alert's rules show as ftorrent.exe and ftorrent-engine.exe, and ours as ftorrent and ftorrent engine.
 
 ## Why most Windows home networks are probably Public
 

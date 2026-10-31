@@ -20,6 +20,7 @@ exe = EXE(
 	[],
 	exclude_binaries=True,#the binaries go in the folder, collected below, rather than inside the executable
 	name='ftorrent-engine',#the process name a user sees in Activity Monitor or Task Manager, so it says whose it is
+	#and no icon, on purpose: the Windows firewall's dialog shows PyInstaller's own beside that name, the Python on a floppy disk, which suits the engine, and the name says what it is
 	debug=False,
 	bootloader_ignore_signals=False,
 	strip=False,

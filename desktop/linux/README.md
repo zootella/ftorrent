@@ -126,8 +126,7 @@ You can clone this repository on Ubuntu or Raspberry Pi OS and build the client 
 ```bash
 pnpm install
 cd desktop
-pnpm engine
 pnpm installer
 ```
 
-`pnpm engine` has to come first, for the reason the desktop guide gives: the Rust build carries the frozen engine as a resource and refuses to start without it.
+`pnpm installer` freezes the engine before anything else, for the reason the desktop guide gives: the Rust build carries the frozen engine as a resource and refuses to start without it.
