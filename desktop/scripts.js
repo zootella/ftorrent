@@ -7,9 +7,9 @@ import {parse as parseToml} from 'smol-toml'
 import {Data, saySize4, sha256, tickToIso} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 
 /*
-The publishing pipeline for the desktop client, in one file, reached by a verb: reveal, hash, upload, icons-collect, certificate. Everything the package.json scripts do beyond calling tauri or docker is here.
+The publishing pipeline for the desktop client, in one file, reached by a verb: reveal, hash, upload, icons-collect, certificate. Everything the package.json scripts do to publish is here.
 
-**This file publishes; it does not build.** The desktop workspace builds with tauri and, for the Mac's dmg, its own dmg.js; the nested linux workspace builds in containers; and both then call in here to stage, hash, and send, which is why hashing and uploading exist once rather than once per workspace. linux/build.js is the other half of that split and knows nothing about publishing.
+**This file publishes; it does not build.** The desktop workspace builds with build.js, which runs tauri, and dmg.js, which makes the Mac's disk image; the nested linux workspace builds in containers; and both then call in here to stage, hash, and send, which is why hashing and uploading exist once rather than once per workspace. linux/build.js is the other half of that split and knows nothing about publishing.
 
 Two machines publish ftorrent. Windows sends the exe. The Mac sends the dmg it built natively and the four Linux packages it built in Docker. So a command means the same thing everywhere while doing different work underneath: pnpm hash is one package in desktop on Windows and four in linux on the Mac, and nobody has to remember which computer they are sitting at. What differs is passed as --source by the workspace that asked.
 
