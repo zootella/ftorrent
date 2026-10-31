@@ -29,7 +29,12 @@ export const systemFace = {Windows: {face: 'Segoe UI', maker: 'Microsoft'}, macO
 export const settingsName = onWindows ? 'Options' : 'Settings'
 
 //the words for starting at login, which say startup, the word people use for it, though the system starts ftorrent as each user logs in; and when the system differs from the answer, the link to its own page for it, by the name each platform gives that page
-export const loginWords = {question: `Run ${brandName} at startup`, confirm: onWindows ? 'Confirm in Startup Apps' : 'Confirm in Login Items & Extensions'}
+export const loginWords = {
+	Windows: {question: `Run ${brandName} at startup`, confirm: 'Confirm in Startup Apps'},
+	macOS:   {question: `Run ${brandName} at startup`, confirm: 'Confirm in Login Items & Extensions'},
+}[platformName]//undefined on linux, where ftorrent doesn't start at login, so the settings page doesn't ask
+//the words for the link to the page where a person lets ftorrent through the firewall, which name where the link goes rather than an action, since following it changes nothing: System Settings at the Network pane on a Mac, a row above Firewall, and Windows Firewall's page of allowed apps in Control Panel
+export const firewallWords = {Windows: 'Windows Firewall', macOS: 'System Firewall Settings'}[platformName]//undefined on linux, which has no one page for it, so the settings page shows no link there
 //the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered on windows and the mac, which both install it with the system, and not on linux, where it's only there if someone added it
 export const fontsOffered = platformName == 'Linux' ? ['system', 'inter'] : ['system', 'inter', 'verdana']
 

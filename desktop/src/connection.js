@@ -7,7 +7,7 @@ import {platformName} from './settings.js'
 import {sayMoment} from './time.js'
 import {netGet, netLocal, netStun, netResolve, netInterfaces, netNatpmp, netNatpmpMap, netPcpAnnounce, netPcpMap, netUpnpSearch, netUpnpDescription, netUpnpExternal, netUpnpMappings, netUpnpFirewall, netUpnpAddPort, netUpnpRemovePort, netUpnpAddPinhole, netUpnpRemovePinhole} from './net.js'
 import {udpOpen, udpStun, udpSend, udpReceive, udpClose} from './udp.js'
-import {processOutput, processOpen, processStart, processElevate} from './process.js'
+import {processOutput, processElevate} from './process.js'
 import {firewallProfiles, firewallRules} from './firewall.js'
 import {engineStatus} from './engine.js'
 import {dialogOpen} from './dialog.js'
@@ -100,7 +100,6 @@ const tools = {
 	],
 	Windows: [],
 }[platformName]
-const firewallPane = 'x-apple.systempreferences:com.apple.Network-Settings.extension?Firewall'//System Settings' Network pane on a Mac, with Firewall, the anchor System Settings itself lists for that pane when AppleScript asks for its anchors. macOS 27 accepts the anchor and opens Network without going on to it, whether from this link or from AppleScript's reveal, so the person lands one row above Firewall, whose Options… button holds block all, stealth mode, and the list of programs; a version that honors the anchor lands on Firewall itself
 const firewallTools = ['firewall', 'blockall', 'stealth', 'signed', 'programs']//the Mac's five firewall reads among the tools, which the window coming forward asks again
 const firewallUnknown = {macOS: 'unknown', Linux: 'unknown, ufw and nftables need root to read', Windows: 'unknown'}[platformName]//the table's words for a firewall the panel can't read: a Mac's when socketfilterfw failed, Windows' when its COM interface did, and Linux's always
 
@@ -1127,7 +1126,7 @@ function _machine(results) {
 	let listed = results.find(r => r.kind == 'interfaces')
 	if (!listed.success) return []
 	let printed = tool => results.find(r => r.kind == 'tool' && r.tool == tool && r.success)?.value || ''//what a tool printed, blank when it failed or this platform runs none
-	let more = (platformName == 'Linux' ? _readIp : _readIfconfig)(printed('addresses'))
+	let more = {macOS: _readIfconfig, Linux: _readIp}[platformName]?.(printed('addresses')) ?? {}//windows runs no tool for this, since net_interfaces reads it all from the system
 	let ports = _readPorts(printed('ports'))
 	let gateways = [_readGateway(printed('gateway4')), _readGateway(printed('gateway6'))]
 	let answer = (kind, family) => results.find(r => r.kind == kind && r.family == family && r.success)?.value
@@ -1501,13 +1500,6 @@ function _sayFirewallList(f) {
 //which of the two firewall buttons are shown: Firewall settings… on a Mac and Windows, which have a page for it, and Write firewall rules… on Windows for an installed copy alone; the essay above has why no other Windows copy gets that one
 export const firewallButtons = reactive({settings: platformName == 'macOS' || platformName == 'Windows', write: false})
 if (platformName == 'Windows') pathsStatus().then(paths => { firewallButtons.write = isInstalled(paths) }, () => {})
-
-//Firewall settings…: open the page where the person makes the exception, and the next Check reads what changed. On a Mac the firewall's pane in System Settings, where the person turns the firewall on or off and, under Options…, lets a program in; on Windows Control Panel's Allow an app through Windows Firewall, by control.exe from the folder Windows keeps its own programs in, since the page has no address of its own to open
-export async function firewallSettings() {
-	if (platformName != 'Windows') return processOpen(firewallPane)
-	let paths = await pathsStatus()
-	return processStart(`${paths.system}\\control.exe`, ['/name', 'Microsoft.WindowsFirewall', '/page', 'pageConfigureApps'])
-}
 
 let firewallChanging = false//while Write firewall rules…'s run of netsh is out, so the window coming forward doesn't read the rules half changed
 

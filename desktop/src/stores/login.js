@@ -73,7 +73,7 @@ export const useLoginStore = defineStore('login', () => {
 	async function openSettings() {//the system's own page for it: Login Items & Extensions on the mac, Startup Apps on windows
 		try {
 			if (platformName == 'macOS') await loginSettings()
-			else await processOpen('ms-settings:startupapps')
+			if (platformName == 'Windows') await processOpen('ms-settings:startupapps')
 		} catch (error) {
 			log(`login: could not open the system's settings, ${error}`)
 		}

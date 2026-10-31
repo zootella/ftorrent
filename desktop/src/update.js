@@ -9,7 +9,7 @@ import {brandStem} from './brand.js'
 import {platformName} from './settings.js'
 import {log} from './log.js'
 
-export const updateFile = `${brandStem}.${platformName == 'macOS' ? 'app.zip' : 'exe'}`//the published name of what this platform updates from, beside its sidecar on ftorrent.com
+export const updateFile = {macOS: `${brandStem}.app.zip`, Windows: `${brandStem}.exe`}[platformName]//the published name of what this platform updates from, beside its sidecar on ftorrent.com; undefined on linux, which doesn't update itself
 export const updateLimit = 50*Size.mb//a comfortable ceiling on the update's download, where a real one is about 22 MB, so a download can't go on without end; the hash, not the size, is what says the file is the right one
 const updateSeconds = 10*Time.minute/Time.second//a 22 MB update in ten minutes is about 300 kilobits a second, slower than any connection a torrent client is useful on
 const updateSpace = 1*Size.gb//free space on the data folder's volume, at the least, to start an update; the update needs about 140 MB at its peak on a mac, and on windows only the 15 MB download, since setup writes over the old files, and the rest is room for torrents that arrive while it runs, since a machine under a gigabyte free is in trouble already and an update shouldn't be what fills it
@@ -63,7 +63,7 @@ The temporary folder stays after a successful update on purpose, since it holds 
 
 export async function updateInstallable(paths) {//whether this copy can be replaced in place, decided once at startup: an installed copy, and on a mac, in a bundle and a folder this user can write, with the data folder on the same volume; the answer says why not
 	if (!isInstalled(paths)) return {success: false, outcome: 'not the installed copy'}
-	if (platformName != 'macOS') return {success: true}//on windows the installed copy is enough: setup writes the user's own folder, and renames nothing, so there's no permission to test and no volume to compare
+	if (platformName == 'Windows') return {success: true}//on windows the installed copy is enough: setup writes the user's own folder, and renames nothing, so there's no permission to test and no volume to compare
 	let place = _place(paths)
 	let folder = place.bundle.slice(0, place.bundle.lastIndexOf(place.separator))//the folder holding the bundle, /Applications
 	for (let path of [place.bundle, folder]) {

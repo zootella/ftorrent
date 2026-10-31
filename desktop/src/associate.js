@@ -107,9 +107,11 @@ export async function whoOpens() {//what the system would open each of the four 
 	let found = {}
 	for (let name of typeNames) {
 		try {
-			if (platformName != 'macOS') { found[name] = await registryOpens(name); continue }
-			let app = await launchOpens(name)//on the mac, the path of the .app, which stands in for both what windows calls the program and the executable it runs
-			found[name] = app ? {program: app.split('/').pop(), executable: app} : null
+			if (platformName == 'Windows') found[name] = await registryOpens(name)
+			if (platformName == 'macOS') {
+				let app = await launchOpens(name)//on the mac, the path of the .app, which stands in for both what windows calls the program and the executable it runs
+				found[name] = app ? {program: app.split('/').pop(), executable: app} : null
+			}
 		} catch (error) {//a lookup the system couldn't answer counts as nothing opening that type, so one odd answer leaves the other three read and the bar still decided on all four; the log says which lookup failed, so it isn't mistaken for nothing opening it
 			found[name] = null
 			log(`associations: could not ask what opens ${name}, ${error}`)

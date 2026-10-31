@@ -2,7 +2,8 @@
 import {ref, computed, watch, nextTick, onMounted} from 'vue'
 import {Time} from '@zootella/ergo'//small helpers from the ergo project, the same in javascript, python, rust, and go
 import KeyValues from '../components/KeyValues.vue'
-import {connectionRun, connectionRetries, connectionFacts, connectionText, sayRun, lastRun, firewallButtons, firewallSettings, firewallWrite, mappingRun, mappingFacts, sayMappingRun, lastMappingRun, box, boxAdd, session, sessionFacts, sessionOpen, sessionStart, sessionMapping, sessionStop} from '../connection.js'
+import {connectionRun, connectionRetries, connectionFacts, connectionText, sayRun, lastRun, firewallButtons, firewallWrite, mappingRun, mappingFacts, sayMappingRun, lastMappingRun, box, boxAdd, session, sessionFacts, sessionOpen, sessionStart, sessionMapping, sessionStop} from '../connection.js'
+import {firewallSettings} from '../firewall.js'
 
 let facts = computed(() => [...connectionFacts(lastRun.value), ...mappingFacts(lastMappingRun.value), ...sessionFacts()])
 let running = ref(false)//so Check, Try mapping, and Write firewall rules… wait while any one's run is out
@@ -65,7 +66,7 @@ async function copy() {
 			<button type="button" :disabled="!session.running || session.mapping" @click="sessionMapping(true)">Map</button>
 			<button type="button" :disabled="!session.running || !session.mapping" @click="sessionMapping(false)">Unmap</button>
 			<button type="button" :disabled="!session.running" @click="sessionStop">Stop</button>
-			<button v-if="firewallButtons.settings" type="button" @click="firewallSettings">Firewall settings…</button><!-- the page where the person makes the exception by hand: on a Mac System Settings' Network pane, with Firewall a row below, and firewallPane in connection.js says why it stops at Network; on Windows Control Panel's Allow an app through Windows Firewall -->
+			<button v-if="firewallButtons.settings" type="button" @click="firewallSettings">Firewall settings…</button><!-- the page where the person makes the exception by hand: on a Mac System Settings' Network pane, with Firewall a row below, and firewallPane in firewall.js says why it stops at Network; on Windows Control Panel's Allow an app through Windows Firewall -->
 			<button v-if="firewallButtons.write" type="button" :disabled="running" @click="writeFirewallRules">Write firewall rules…</button><!-- on Windows, for an installed copy, netsh replacing the rules naming this copy and its engine with allow rules, behind one UAC prompt -->
 		</div>
 		<KeyValues :rows="facts" />

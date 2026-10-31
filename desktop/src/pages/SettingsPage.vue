@@ -8,7 +8,8 @@ import {processOpen} from '../process.js'
 import {brandName, urlHome} from '../brand.js'
 import {themeWindow, fontWindow} from '../window.js'
 import RadioGroup from '../components/RadioGroup.vue'
-import {fontsOffered, settingsName, systemFace, loginWords, platformName} from '../settings.js'
+import {fontsOffered, settingsName, systemFace, loginWords, firewallWords} from '../settings.js'
+import {firewallSettings} from '../firewall.js'
 import {readTick, sayAgo, sayDay} from '../time.js'
 
 let store = useSettingsStore()
@@ -72,10 +73,12 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This page only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
 		</div>
 
-		<div v-if="platformName != 'Linux'"><!-- starting at login is a Windows and Mac feature, so linux doesn't show the question at all -->
+		<div v-if="loginWords"><!-- starting at login is a Windows and Mac feature, so linux, with no words for it, doesn't show the question at all -->
 			<RadioGroup :choices="loginChoices" :chosen="login.wanted ? 'yes' : 'no'" :disabled="!login.installed" @choose="value => login.choose(value == 'yes')">{{ loginWords.question }}</RadioGroup><!-- the user's answer, which only a click here changes, and which sets the system to match; off at the factory, asked about nowhere else, and grayed for any copy the installer didn't place -->
 			<p v-if="login.differs"><a href="#" @click.prevent="login.openSettings">{{ loginWords.confirm }}</a></p><!-- the system says otherwise than the answer, whichever way, as when the user changed it in the system's own page; the link opens that page, Login Items & Extensions on a Mac and Startup Apps on Windows, and goes away once the two agree. Why they differ is in the log -->
 		</div>
+
+		<p v-if="firewallWords"><a href="#" @click.prevent="firewallSettings">{{ firewallWords }}</a></p><!-- the page where a person lets ftorrent and its engine through the firewall, or undoes a refusal: System Settings' Network pane on a Mac, a row above Firewall, and Allow an app through Windows Firewall on Windows; shown always, since reading whether the firewall holds ftorrent back is the Connection tab's for now, and on linux not at all, where firewallWords has no words -->
 
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="block w-fit"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /> Check automatically</label></p><!-- a row of text with the box inline in it; clickable on the box and its words only, like RadioGroup's answers -->
