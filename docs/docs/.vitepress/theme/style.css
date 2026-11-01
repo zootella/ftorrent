@@ -318,6 +318,15 @@ Inside the quote, the third rule puts half a line above everything but the first
 	margin: 0;
 }
 
+/* Superscripts, for the exponents in a power of two, at three quarters of the text's size and raised half an em, without stretching the line they sit on. A browser's own sup lifts the text with vertical-align, which makes its line taller than its neighbors; line height 0 and a relative position raise the figure without moving the line. */
+.vp-doc sup {
+	font-size: 0.75em;
+	line-height: 0;
+	position: relative;
+	vertical-align: baseline;
+	top: -0.5em;
+}
+
 /* A code block that needs a few characters picked out, like the bit diagrams in a research article, is written as HTML, because a fenced block can't color part of a line. The page writes the same div, pre, and code VitePress generates for a fence, with the class language-text, so VitePress's own code-block rules give it the background, padding, and monospace face, and spans of this class turn their characters the brand orange. */
 .vp-doc .bits-home {
 	color: var(--vp-c-brand-1);
