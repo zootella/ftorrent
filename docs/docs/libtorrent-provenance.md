@@ -46,7 +46,7 @@ The wheels stop at Python 3.13, which is why the engine does not run on a newer 
 
 ### PyInstaller, from PyPI
 
-[PyInstaller](https://pyinstaller.org/) 6.22.3, released 2026-09-12, freezes the engine. Its wheel matters more than a build tool's usually does, because it carries the bootloader, a small precompiled program that becomes the engine's executable and runs on every user's machine. The lockfile pins its wheel per platform along with the handful of pure-Python helpers it depends on, which are build-time only and ship nothing.
+[PyInstaller](https://pyinstaller.org/) 6.22.3, released 2026 September 12, freezes the engine. Its wheel matters more than a build tool's usually does, because it carries the bootloader, a small precompiled program that becomes the engine's executable and runs on every user's machine. The lockfile pins its wheel per platform along with the handful of pure-Python helpers it depends on, which are build-time only and ship nothing.
 
 ### uv, the tool that reads the lock
 
@@ -56,7 +56,7 @@ The wheels stop at Python 3.13, which is why the engine does not run on a newer 
 
 These are the artifacts a build machine fetches, in the form `sha256sum` reads. They are also in `uv.lock`, which is the copy that is enforced; this copy is the one a person can read.
 
-The libtorrent wheels, one per platform we ship, all uploaded 2026-08-10:
+The libtorrent wheels, one per platform we ship, all uploaded 2026 August 10:
 
 ```
 bae8a30fa1b4988881124c76867f8e61f9887a42e55638693d7a1b0038bdebe8  libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
@@ -74,7 +74,7 @@ faae10a9faa9bec06da009ac69326cc1d9691dc138fec6a1b69159dff1781f35  cpython-3.13.1
 1dfc9565c26f8892a33202b5966bdf9ff45c56a57b06e8fa65fecf05030afe5b  cpython-3.13.15+20260807-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz
 ```
 
-PyInstaller, uploaded 2026-09-12; the macOS wheel is one universal file:
+PyInstaller, uploaded 2026 September 12; the macOS wheel is one universal file:
 
 ```
 052f4a1cd4f81092ccb7a18fe8ebc9ecf832a5917317e39fb3775af4e959b253  pyinstaller-6.22.3-py3-none-macosx_10_13_universal2.whl

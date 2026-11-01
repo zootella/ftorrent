@@ -512,6 +512,11 @@ Vint Cerf
 https://en.wikipedia.org/wiki/Vint_Cerf
 Attributed, c. 2010s
 
+However, this white paper treats each home in the world as an end-node of a world-wide Internet. We believe that each home in the world will in fact be a network of the world-wide Internet.
+Craig Partridge & Frank Kastenholz
+https://www.rfc-editor.org/rfc/rfc1726.html
+Technical Criteria for Choosing IP The Next Generation (IPng), RFC 1726, December 1994
+
 The hope is that in not too many years, human brains and computing machines will be coupled together very tightly, and that the resulting partnership will think as no human brain has ever thought and process data in a way not approached by the information-handling machines we know today.
 J.C.R. Licklider
 https://en.wikipedia.org/wiki/J._C._R._Licklider

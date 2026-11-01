@@ -324,7 +324,7 @@ The data is used under its sources' terms: Cloudflare Radar's API data under [CC
 4. APNIC Labs. *IPv6 measurement: world series and data format.* https://stats.labs.apnic.net/ipv6 and https://data1.labs.apnic.net/ipv6-data-format.html
 5. StatCounter Global Stats. *Platform and operating system market share, worldwide, monthly.* https://gs.statcounter.com/
 6. Wikimedia Foundation. *Pageviews API, Analytics Query Service.* https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
-7. Miller, M. *New User Trends on Wikipedia.* Wikimedia Foundation Diff, 17 October 2025. https://diff.wikimedia.org/2025/10/17/new-user-trends-on-wikipedia/
+7. Miller, M. *New User Trends on Wikipedia.* Wikimedia Foundation Diff, 2025 October 17. https://diff.wikimedia.org/2025/10/17/new-user-trends-on-wikipedia/
 8. Schinazi, D., and Pauly, T. *Happy Eyeballs Version 2: Better Connectivity Using Concurrency.* RFC 8305, December 2017. https://www.rfc-editor.org/rfc/rfc8305
 9. Woodyatt, J., ed. *Recommended Simple Security Capabilities in Customer Premises Equipment (CPE) for Providing Residential IPv6 Internet Service.* RFC 6092, January 2011. https://www.rfc-editor.org/rfc/rfc6092
 10. Richter, P., Wohlfart, F., Vallina-Rodriguez, N., Allman, M., Bush, R., Feldmann, A., Kreibich, C., Weaver, N., and Paxson, V. *A Multi-perspective Analysis of Carrier-Grade NAT Deployment.* ACM Internet Measurement Conference, 2016. https://arxiv.org/abs/1605.05606

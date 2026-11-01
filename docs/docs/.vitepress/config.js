@@ -122,7 +122,8 @@ export default defineConfig({
 				text: 'Research',
 				items: [
 					{ text: 'Open Address, Closed Device', link: '/open-address-closed-device' },
-					{ text: 'Waiting for IPv6', link: '/waiting-for-ipv6' }
+					{ text: 'Waiting for IPv6', link: '/waiting-for-ipv6' },
+					{ text: 'The IPv6 Squeeze', link: '/ipv6-squeeze' }
 				]
 			},
 			{
