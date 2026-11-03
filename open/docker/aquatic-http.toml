@@ -3,7 +3,10 @@
 #
 # Generated from aquatic_http v0.9.0 defaults with modifications noted below.
 
-socket_workers = 1
+# Changed from default 1 to 2. A socket worker accepts connections, parses each announce, and writes the answer. It is one thread, and a thread runs on one core at a time, however idle the rest of the machine is. One worker's core fills at about the HTTPS rate where the gauge's breakers trip, and past that point the served rate levels off at what one core can do, so the breaker may never trip, and requests slow and time out at the proxy instead. Two workers put that limit well beyond the breakers. Each opens its own socket on the same port (SO_REUSEPORT), and the kernel spreads connections across them. With a proxy that opens a fresh connection for each request, as HAProxy does with option http-server-close, that spreads announces evenly; a proxy that holds a few backend connections open for many requests can split them unevenly. Raise this together with the HTTPS ceilings in the gauge's SERVICE_BREAKERS.
+socket_workers = 2
+
+# The swarm worker holds the table of torrents and peers. It does a small share of each announce and stays far from filling its core.
 swarm_workers = 1
 
 log_level = "warn"

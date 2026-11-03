@@ -245,6 +245,9 @@ use_backend aquatic_ws   if is_open is_websocket
 default_backend caddy
 
 backend aquatic_http
+    # A fresh connection to the tracker for each request, so the kernel
+    # spreads announces evenly across aquatic_http's socket workers.
+    option http-server-close
     option h1-case-adjust-bogus-server
     http-request set-header X-Forwarded-For %[src]
     http-request set-header X-Real-IP %[src]
@@ -266,7 +269,7 @@ backend caddy
     server caddy /run/caddy/caddy.sock
 ```
 
-One address note: the `aquatic_ws6` dial matches the [Aquatic guide](../README.md)'s example compose, which pins only the ws container and deliberately picks a high address (`fd00:cafe:2::82`) that Docker's dynamic allocator — handing out low addresses first — can't collide with. If you followed the guide, the block above works as written. The deployed open.ftorrent.com server does it differently: it pins *every* container in the compose project low in the subnet (`::2` udp, `::3` ws, `::4` http, and so on, with matching IPv4 fourth octets) because its firewall rules target containers by address, so its real dial is `[fd00:cafe:2::3]:8082` — the one value in these excerpts adapted from the live config. Either way, dial whatever your ws container's pinned address actually is.
+One address note: the `aquatic_ws6` dial matches the [Aquatic guide](../README.md)'s example compose, which pins only the ws container and deliberately picks a high address (`fd00:cafe:2::82`) that Docker's dynamic allocator — handing out low addresses first — can't collide with. If you followed the guide, the block above works as written. The deployed open.ftorrent.com server does it differently: it pins *every* container in the compose project low in the subnet (`::2` udp, `::3` ws, `::4` http, and so on, with matching IPv4 fourth octets) because its firewall rules target containers by address, so its real dial is `[fd00:cafe:2::3]:8082`, one of two places these excerpts differ from the live config. The other is `option http-server-close`, which the live config sets once in `defaults` for every backend, and the excerpt shows in the one backend it matters to. Either way, dial whatever your ws container's pinned address actually is.
 
 The `h1-case-adjust-bogus-server` directive activates three header-case mappings declared in `global`, restoring the original casing on outgoing forwarding headers:
 
@@ -464,4 +467,4 @@ The next gauge tick preserves the timestamp (the gauge never bumps an existing `
 
 The trip thresholds live in the gauge, not the breaker: one measured announces-per-day ceiling per service, in the `SERVICE_BREAKERS` dict in [`open/gauge/src/gauge.py`](../gauge/src/gauge.py), with a comment above it that explains how the values were chosen. The reasoning, in short: the per-protocol costs are wildly asymmetric — a UDP announce is cheap, while an HTTPS announce is dominated by the TLS handshake, the resource that actually limits scale on modest hardware (see "Two example implementations" above), and WebSocket rides that same TLS budget, so all four TCP cells share one ceiling. The values are sized to leave real CPU headroom even in the worst case where every protocol sits at its ceiling at once. And within each protocol, v4 and v6 carry the same value on purpose: v6 is a small fraction of the traffic, so under real load a v4 cell trips first while its v6 sibling keeps serving — the tracker's answer to congestion becomes a nudge toward IPv6.
 
-Read the actual numbers in the code — they live only there, so they can be retuned without any prose to keep in sync — and tune them to your own hardware once you've watched a few real trips and have a sense of your own ceilings. The cool-down duration, how long a tripped service stays paused, is another constant in the same file (`COOL_DURATION`, 24 hours). Changes to either take effect when the gauge container is rebuilt and restarted.
+Read the actual numbers in the code — they live only there, so they can be retuned without any prose to keep in sync — and tune them to your own hardware once you've watched a few real trips and have a sense of your own ceilings. The cool-down duration, how long a tripped service stays paused, is another constant in the same file (`COOL_DURATION`, 24 hours). Changes to either take effect when the gauge container is rebuilt and restarted. One limit sits outside the gauge: each of Aquatic's socket workers is one thread and can use at most one core, so when raising the HTTPS ceilings, raise `socket_workers` in `aquatic-http.toml` too, or the workers fill before the breaker can trip.

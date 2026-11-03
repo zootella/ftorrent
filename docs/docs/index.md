@@ -19,7 +19,7 @@ features:
     details: A rear-view-mirror roadmap — the road behind ftorrent, as a growing record of epics already completed.
     link: /roadmap-in-reverse
   - title: Tracker Load
-    details: Notes on tracker load.
+    details: What a public tracker costs, measured — 173 million requests in a day on three busy cores and 40 watts — and what UDP and HTTPS each cost.
     link: /tracker-load
   - title: Software Selections
     details: The software we run and ship, and how we chose it — fitness, provenance, and governance.

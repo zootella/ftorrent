@@ -7,7 +7,7 @@ _Five guides cover this deployment: [dockerizing Aquatic and configuring the Lin
 
 > Prepared by [Claude Code](https://claude.ai/code) using Opus 5.5
 > <br>Created: 2026-Apr
-> <br>Last reviewed: 2026-Oct
+> <br>Last reviewed: 2026-Nov
 > <br>Python: 3.12
 
 ## What this is and where it fits
@@ -26,11 +26,16 @@ The gauge is a Python script that runs in its own Docker container alongside the
 
 ## The ring buffer
 
-The gauge maintains a private file `ring.json` with 1,440 slots — one per minute of the day. Each slot records the day number and the current cumulative Prometheus counter values at that moment. This ring is the gauge's memory: it knows what the counters were at any minute in the last 24 hours.
+The gauge maintains a private file `ring.json` with 1,440 slots — one per minute of the UTC day. Each tick writes the counters exactly as it read them into its own minute's slot, with the day number, and computes nothing there; the slot's index and its day together name the minute it was read. This ring is the gauge's memory: it knows what the counters were at any minute in the last 24 hours, and the code that writes it is simple enough to audit at a glance.
 
-To compute "served in the last 24 hours," the gauge walks backward from the current slot `N`, extending a candidate oldest slot `P` back one minute at a time as long as counters stay monotonic (each older slot's counters are no larger than the current `P`'s). It then reports `N − P` per metric. In the common case — no container restart in the window — `P` ends up at the slot from ~24 hours ago and the math is a full-day delta. Gaps in the ring (the gauge was down for some minutes) don't affect the math; the walk skips over them.
+Each counter is a running total. Aquatic's Prometheus counters climb for as long as a container runs, and start again from zero when it restarts. To compute "served in the last 24 hours," the gauge lines up the readings from the last 1,440 minutes in time order, puts this minute's reading at the end, and adds up how much each counter grew from one reading to the next. It adds them up before writing the current minute's slot, while the ring still holds the reading from exactly one day ago, so the total covers a full day. The same rule carries the total through whatever interrupts the readings:
 
-When a tracker container restarts, its Prometheus counter resets to zero. On the next walk, that shows up as the *reset signature*: an older slot with a counter higher than a newer slot. The walk stops at the reset boundary, keeping `P` inside the same era as `N`. The gauge then reports served counts since the restart — smaller than a full 24-hour total, but accurate for that span. And because the walk is joint — a single oldest slot `P` serves all six counters — a restart of any one tracker container re-bases the whole six-cell window: every service's 24-hour total reaccumulates from the restart moment, not just the restarted tracker's. That's conservative in the right direction for the circuit breaker, which briefly sees less than a true 24-hour count, never more. On the very first tick after a restart there's no older post-restart slot yet, so `P` equals `N` and the report is `0` for that minute; by the next tick it shows a one-minute delta, growing as the ring repopulates. Every reported number is the proven growth between two different ring slots.
+- **A container restart.** A reading lower than the one before it means the counter started over, so the growth is the new reading itself. The restarted service loses only what it served between its last reading and the restart, normally under a minute, and each service adds up on its own, so the other five don't notice.
+- **A gap.** When the gauge or the server is down for some minutes, the readings on either side span the gap, and the counters carry its traffic across. When the older of the two slides out of the window, the gap's traffic leaves with it, up to the gap's length early.
+- **A tracker that doesn't answer.** When a tracker's endpoint can't be read in a minute, its two keys are left out of that minute's slot, rather than written as zero, which would read as a restart. Its totals span the minute like a gap, while the other trackers' readings, and the minute's uptime, are untouched.
+- **A long outage.** After a day or more with no readings, nothing in the ring is from the last day, so every total is zero, and they refill over the next day. A reading days old says nothing about how much of the climb happened in the last day.
+
+Every number added up is traffic served between two readings that both lie inside the last day, and a restart can only make one smaller, so the total never exceeds what was really served. That's the direction the circuit breaker needs: a total that runs short at times, never long, so no service trips early. A restart inside a long gap can also come out short: when the new count has already passed the old one by the time the gauge looks, the restart doesn't show, and that one span is low. `servedMinute` follows the same rule: each counter's growth from the reading one minute ago to this one, or zero when either minute has no reading of it.
 
 Downtime is counted by walking the ring and checking each slot against two conditions: the slot must exist with the expected day number (today for slots at or before the current minute, yesterday for slots after), and the internet reachability probe must have been fresh when the slot was written. A minute is only "up" if both conditions were met — the gauge ran and the server could reach the internet. See the probe section below.
 

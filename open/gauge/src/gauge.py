@@ -84,20 +84,22 @@ COOL_DURATION = 24 * Time.HOUR
 
 # ring.json is an object with a "minutes" array of 1,440 slots. Each slot is either None (the gauge didn't run that minute) or a dict with:
 #   day     — day number (now_ms // Time.DAY)
-#   served  — cumulative counter snapshot: {udp4, udp6, http4, http6, ws4, ws6}
+#   served  — cumulative counter snapshot: {udp4, udp6, http4, http6, ws4, ws6}, with a tracker's two keys left out the minute its endpoint didn't answer
 #
 # Slot 0 is 00:00 UTC, slot 1439 is 23:59 UTC.
 #
 # To count downtime: slots at or before the current minute should have today's day number. Slots after the current minute should have yesterday's day number. Anything else (None or older) is a missed minute.
 #
-# To get 24-hour served totals: walk backward from the current slot N, extending a candidate oldest slot P back one step at a time as long as each older slot's counters are all <= the current P's counters. A counter that's higher at an older slot than at the current P is the reset signature of a container restart between them — stop there, so P stays in the same era as N. Report N - P per metric. If no older slot qualified (first tick after a restart, or a freshly wiped ring), P stays equal to N and N - P is zero. Every reported number is proven growth between two different ring slots.
+# Writing is simple on purpose: each tick puts the counters exactly as read into its own minute's slot, with the day number, and computes nothing there. A slot's day times 1,440 plus its index is the minute it was read, counted from 1970.
+#
+# To get 24-hour served totals: take the readings from the last 1,440 minutes in time order, add this minute's reading at the end, and add up how much each counter grew from one reading to the next. Aquatic's counters only climb while a container runs and start again from zero when it restarts, so a reading lower than the one before it means a restart, and the growth is the new reading itself. Each counter adds up from the slots that hold it, so a minute the gauge missed, or a minute a tracker didn't answer, is spanned by the readings on either side of it, and the counters carry its traffic across. Every number added is traffic served between two readings that both lie inside the last day, and a restart only makes one smaller, so the total can never exceed what was really served.
 
 MINUTES_PER_DAY = Time.DAY // Time.MINUTE  # 1,440, the ring's length
 
-# The six counter keys stored in each ring slot. Each of the six services (three protocols x two IP versions) is metered independently against the breaker, so one face of the tracker can cool while its sibling keeps serving — nudging clients toward IPv6 and toward UDP under load.
+# The six counter keys a ring slot holds. Each of the six services (three protocols x two IP versions) is metered independently against the breaker, so one face of the tracker can cool while its sibling keeps serving — nudging clients toward IPv6 and toward UDP under load.
 SERVED_KEYS = ["udp4", "udp6", "http4", "http6", "ws4", "ws6"]
 
-# Per-service breaker thresholds, in announces per day, measured rather than estimated. The per-announce costs are wildly asymmetric: a UDP announce is cheap — a little kernel work and an in-process reply — while an HTTPS announce is dominated by the TLS handshake, the resource that actually limits scale on modest hardware. WS rides that same TLS budget, so all four TCP cells share one ceiling. The values below were sized against a measured reference server so that if every protocol ran at its ceiling at once, the machine would sit at roughly half its CPU, with bandwidth, connection tracking, and connection churn all comfortably below that: headroom by design, not a cliff. Within each protocol v4 and v6 carry the same value on purpose — v6 is a small fraction of the traffic, so under real load the v4 cell trips first while its v6 sibling keeps serving, a gentle nudge toward IPv6. Tune to your own hardware once you've watched a few real trips. The numbers live in this dict and nowhere else — no derivation is copied into prose, here or in the guide — so retuning is a one-line change with nothing to keep in sync.
+# Per-service breaker thresholds, in announces per day, measured rather than estimated. The per-announce costs are wildly asymmetric: a UDP announce is cheap — a little kernel work and an in-process reply — while an HTTPS announce is dominated by the TLS handshake, the resource that actually limits scale on modest hardware. WS rides that same TLS budget, so all four TCP cells share one ceiling. The values below were sized against a measured reference server so that if every protocol ran at its ceiling at once, the machine would sit at roughly half its CPU, with bandwidth, connection tracking, and connection churn all comfortably below that: headroom by design, not a cliff. Within each protocol v4 and v6 carry the same value on purpose — v6 is a small fraction of the traffic, so under real load the v4 cell trips first while its v6 sibling keeps serving, a gentle nudge toward IPv6. Tune to your own hardware once you've watched a few real trips. The numbers live in this dict and nowhere else — no derivation is copied into prose, here or in the guide — so retuning them is a one-line change. One limit sits outside this dict: each of aquatic_http's socket workers is one thread, and a thread uses at most one core, so when raising the HTTPS values, raise socket_workers in aquatic-http.toml too.
 SERVICE_BREAKERS = {
 	"udp4": 600_000_000,
 	"udp6": 600_000_000,
@@ -137,9 +139,9 @@ def load_ring():
 	return data
 
 
-# A real ring slot is a dict carrying 'day' and a 'served' dict; an empty slot is None. The gauge only ever writes those two shapes, so this guard matters only against a corrupt or tampered ring.json: a malformed entry is then treated as a missed minute (down) instead of crashing the tick.
+# A real ring slot is a dict carrying an integer 'day' and a 'served' dict; an empty slot is None. The gauge only ever writes those two shapes, so this guard matters only against a corrupt or tampered ring.json: a malformed entry is then treated as a missed minute (down) instead of crashing the tick. The day must be an integer because the totals do arithmetic with it.
 def _is_slot(slot):
-	return isinstance(slot, dict) and "day" in slot and isinstance(slot.get("served"), dict)
+	return isinstance(slot, dict) and isinstance(slot.get("day"), int) and isinstance(slot.get("served"), dict)
 
 
 def count_downtime(minutes, day, minute):
@@ -205,46 +207,44 @@ def compute_uptime(history_values, minute):
 	return ((total_minutes - total_down) / total_minutes) * 100
 
 
-# Diff the immediately prior ring slot against the current scrape to get per-minute served counts. Returns zeros when the prior slot is missing, stale (wrong day for its index — e.g. server was down through that minute), or shows a reset signature (any key higher in the prior slot than now, meaning Aquatic restarted between them). Same conservative stance as compute_served_24h: never report more than a real same-era diff.
-def compute_served_1m(current_served, minutes, day, minute):
-	result = {key: 0 for key in SERVED_KEYS}
-
-	i = (minute - 1 + MINUTES_PER_DAY) % MINUTES_PER_DAY
-	slot = minutes[i]
-	if not _is_slot(slot):
-		return result
-	expected_day = day if i <= minute else day - 1
-	if slot["day"] != expected_day:
-		return result
-
-	is_reset = any(slot["served"].get(k, 0) > current_served.get(k, 0) for k in SERVED_KEYS)
-	if is_reset:
-		return result
-
-	for key in SERVED_KEYS:
-		result[key] = current_served.get(key, 0) - slot["served"].get(key, 0)
-	return result
+# How much one counter grew from an older reading to a newer one. A newer reading lower than the older means the container restarted between them and has counted up from zero since, so the newer reading is all that's known to have been served. What the container served between the older reading and its restart is lost, which can only leave the result short of the truth, never over it.
+def growth(older, newer):
+	return newer - older if newer >= older else newer
 
 
-# Walk backward from the current minute, extending a candidate oldest slot P back one step at a time as long as each older slot's counters are all <= the current P's counters. A counter higher at an older slot than at the current P is the reset signature of a container restart between them — we stop there, keeping P in the same era as the current scrape. A slot is only considered if its stored day number matches what we'd expect at that index: slots at or before the current minute should hold today, slots after should hold yesterday; anything else is stale.
-def compute_served_24h(current_served, minutes, day, minute):
-	# P starts with the current scrape so the loop can uniformly compare older slots against it. If no older slot extends P, the final subtraction yields zero for every key.
-	p = {"served": current_served}
-	for offset in range(1, MINUTES_PER_DAY):
-		i = (minute - offset + MINUTES_PER_DAY) % MINUTES_PER_DAY
-		slot = minutes[i]
+# The served readings in the ring from the 1,440 minutes before this one, oldest first. tick() calls this before writing the current minute's slot, so the ring still holds the reading from exactly one day ago, where a full day's growth begins. Slots older than that, left behind while the gauge wasn't running, are skipped.
+def readings_before(minutes, day, minute):
+	now = day * MINUTES_PER_DAY + minute
+	found = []
+	for i, slot in enumerate(minutes):
 		if not _is_slot(slot):
 			continue
-		expected_day = day if i <= minute else day - 1
-		if slot["day"] != expected_day:
-			continue
+		at = slot["day"] * MINUTES_PER_DAY + i  # the minute this slot was read, counted from 1970
+		if now - MINUTES_PER_DAY <= at < now:
+			found.append((at, slot["served"]))
+	found.sort(key=lambda reading: reading[0])
+	return [served for _, served in found]
 
-		is_reset = any(slot["served"].get(k, 0) > p["served"].get(k, 0) for k in SERVED_KEYS)
-		if is_reset:
-			break
-		p = slot
 
-	return {key: current_served.get(key, 0) - p["served"].get(key, 0) for key in SERVED_KEYS}
+# Served in the last minute: each counter's growth from the reading one minute ago to this one. Zero for a counter when either minute has no reading of it, because the gauge didn't run or the tracker didn't answer.
+def compute_served_1m(current_served, minutes, day, minute):
+	i = (minute - 1) % MINUTES_PER_DAY
+	slot = minutes[i]
+	if not _is_slot(slot) or slot["day"] * MINUTES_PER_DAY + i != day * MINUTES_PER_DAY + minute - 1:
+		return {key: 0 for key in SERVED_KEYS}
+	before = slot["served"]
+	return {key: growth(before[key], current_served[key]) if key in before and key in current_served else 0 for key in SERVED_KEYS}
+
+
+# Served in the last 24 hours: for each counter on its own, the readings of it from the day before this minute, oldest first, then this minute's if there is one, and its growth from one reading to the next, added up. A slot without the counter, from a minute its tracker didn't answer, is passed over like a minute the gauge missed. Because each service adds up on its own, a restart in one container leaves the other services' totals whole. With fewer than two readings of a counter in the last day there's nothing to grow from, and its total is zero.
+def compute_served_24h(current_served, minutes, day, minute):
+	readings = readings_before(minutes, day, minute) + [current_served]
+	result = {key: 0 for key in SERVED_KEYS}
+	for key in SERVED_KEYS:
+		values = [reading[key] for reading in readings if key in reading]
+		for older, newer in zip(values, values[1:]):
+			result[key] += growth(older, newer)
+	return result
 
 
 # ---------------------------------------------------------------------------
@@ -317,7 +317,7 @@ def parse_prometheus(text):
 	return metrics
 
 
-# Extract counts by ip_version for a given response type. Returns (v4, v6), always both present. The counters are integer-valued; we cast to int so the JSON output stays integers (page.json's documented contract).
+# Extract counts by ip_version for a given response type. Returns (v4, v6), always both present. Aquatic exports one series per socket worker (labelled worker_index), so we sum across them: with socket_workers above 1, taking any single series would undercount, and the breakers would trip late. The counters are integer-valued; we cast to int so the JSON output stays integers (page.json's documented contract).
 def extract_by_type(metrics, response_type):
 	v4 = v6 = 0
 	for key, value in metrics.items():
@@ -326,20 +326,20 @@ def extract_by_type(metrics, response_type):
 		if f'type="{response_type}"' not in key:
 			continue
 		if 'ip_version="4"' in key:
-			v4 = int(value)
+			v4 += int(value)
 		if 'ip_version="6"' in key:
-			v6 = int(value)
+			v6 += int(value)
 	return v4, v6
 
 
-# Scrape all three Prometheus endpoints. Returns cumulative counters as a flat dict: {udp4, udp6, http4, http6, ws4, ws6}, all six keys always present, defaulting to 0.
+# Scrape all three Prometheus endpoints. Returns cumulative counters as a flat dict, {udp4, udp6, http4, http6, ws4, ws6}, holding a tracker's two keys only when its endpoint answered. A tracker that didn't answer has no reading this minute, so its keys are left out rather than set to 0, which the totals would read as a restart.
 #
 # MAX_SCRAPE_BYTES caps how much we read from any scrape response: these endpoints return a few KB of metrics or a small JSON blob, so reading unbounded would only ever help a broken or hostile peer balloon the gauge's memory. 4 MiB is generous headroom that still bounds the read.
 MAX_SCRAPE_BYTES = 4 * Size.MB
 
 
 def scrape_prometheus():
-	result = {key: 0 for key in SERVED_KEYS}
+	result = {}
 
 	for key, url, response_type in PROMETHEUS_ENDPOINTS:
 		try:
@@ -348,7 +348,7 @@ def scrape_prometheus():
 			with urllib.request.urlopen(req, timeout=5) as response:
 				text = response.read(MAX_SCRAPE_BYTES).decode("utf-8")
 		except (urllib.error.URLError, OSError):
-			# Endpoint unreachable (local development or container down)
+			# Endpoint unreachable (local development, or the container down or too slow to answer): no reading, so its two keys stay out
 			continue
 		metrics = parse_prometheus(text)
 		v4, v6 = extract_by_type(metrics, response_type)
@@ -478,17 +478,19 @@ def tick():
 	breaker = load_breaker()
 	finalize_completed_days(ring["minutes"], day, days)
 
-	# Update the ring with current cumulative counters
+	# Add up the served totals before writing this minute's slot, while the ring still holds the reading from exactly one day ago, where the full day's growth begins.
+	served_24h = compute_served_24h(served, ring["minutes"], day, minute)
+	served_1m = compute_served_1m(served, ring["minutes"], day, minute)
+
+	# Write the counters as read into this minute's slot, and nothing more
 	ring["minutes"][minute] = {"day": day, "served": served}
 	write_atomic(RING_PATH, json.dumps(ring, separators=(",", ":")) + "\n")
 
-	# Build page.json — all fields always present
+	# Build page.json — all fields always present. Downtime and history count this minute's slot as up, so they read the ring after the write.
 	downtime = count_downtime(ring["minutes"], day, minute)
 	history_values = build_history(ring["minutes"], day, minute, days)
 	history = ",".join(str(v) for v in history_values)
 	uptime = compute_uptime(history_values, minute)
-	served_24h = compute_served_24h(served, ring["minutes"], day, minute)
-	served_1m = compute_served_1m(served, ring["minutes"], day, minute)
 
 	# Trip any service whose 24-hour served has crossed its breaker, then write breaker.json (whether or not its content changed — the host's path unit relies on the per-minute heartbeat). Build the per-service coolDown booleans for page.json from the same in-memory state.
 	tick_breaker(breaker["startOn"], served_24h, now)
