@@ -134,9 +134,10 @@ export default defineConfig({
 				]
 			},
 			{
-				text: 'Drafts',
+				text: 'How the Internet Works',
 				items: [
-					{ text: 'Port Control', link: '/port-control' }
+					{ text: 'Reading IP Addresses', link: '/ip-addresses' },
+					{ text: 'Glossary', link: '/glossary' }
 				]
 			},
 			{
