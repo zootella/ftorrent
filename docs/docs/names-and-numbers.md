@@ -5,10 +5,17 @@ description: Every name and number built into the ftorrent desktop client, the s
 
 # Names and Numbers
 
-The desktop client is peer-to-peer, and it still carries a short list of fixed names: the servers it contacts, the trackers it writes into new torrents, the product's own names, and the way it introduces itself to trackers and peers. This page lists each one, the file it's set in, and what uses it.
+ftorrent is a peer-to-peer project. Ordinary computers send each other the pieces of a file directly, with no server in the middle holding it, and ftorrent builds that way wherever it can. Complete decentralization isn't always possible, or practical, or how the network has grown up, so a decentralized system still keeps a few fixed points, and this one does too. A client that has just started knows no other node on the DHT, so it joins through a few bootstrap nodes named in its code. To learn the public address its connections appear from, it asks a STUN server. A torrent it creates needs trackers written into it, so the first people to open it can find each other. And to learn whether a newer version exists, it asks ftorrent.com. Each of those is a name or a number someone chose and wrote into the code ahead of time.
+
+Those fixed points work because the protocols behind them are open and simple. A tracker answers one question, who else has this torrent, in a format every BitTorrent client speaks. A STUN server sends back the address and port a request arrived from. A bootstrap node answers with other DHT nodes to try. Any server that speaks the protocol can stand in for any other. Anyone can run one, and independent operators do: software projects, companies, and volunteers in places around the world, each adding a server to a commons every client shares. A client can name several side by side, and each of this client's lists puts ftorrent's server first, beside others in wide use. The open protocol is what makes decentralization possible; the many separate operators running it are what make it actually happen.
+
+The trouble with fixed points is finding them. In any codebase they end up scattered: a server's name in one file, a client code in another, the product's name spelled out by hand in a build script. Even when each file sets its own at the top, where they're easy to see, the desktop client alone spans Rust, JavaScript, Python, and build scripts for three operating systems, and it's one project among several in its repository. A newcomer would have to read all of it to be sure of finding every one. So this page gathers them in one place, above the code: every name and number built into the desktop client — the servers it contacts, the trackers it writes into new torrents, the product's own names, and the way it introduces itself to trackers and peers — with the file each one is set in and what uses it.
+
+The page discloses, and stops there. It doesn't score how decentralized the client is, and it doesn't argue for each operator one by one. That judgment belongs to the reader, who brings their own values to it: one weighs who governs an operator, another where it's based, another how long it has kept answering. A complete list lets each reader audit the client by their own measure. How we weigh governance when choosing the software we depend on is the subject of [Software Selections](/software-selections).
 
 - Renaming a fork? Start with the product's names: two files hold them, and the list under them names every file that spells one out by hand.
 - Checking what the client contacts? Read the servers.
+- Weighing who runs them? The engine's table names the operator beside each entry.
 
 ## The product's names
 
