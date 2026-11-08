@@ -8,7 +8,7 @@ description: Every name and number built into the ftorrent desktop client, the s
 The desktop client is peer-to-peer, and it still carries a short list of fixed names: the servers it contacts, the trackers it writes into new torrents, the product's own names, and the way it introduces itself to trackers and peers. This page lists each one, the file it's set in, and what uses it.
 
 - Renaming a fork? Start with the product's names: two files hold them, and the list under them names every file that spells one out by hand.
-- Checking what the client contacts? Read the servers. Today the update check and the Connection tab are the two in use, and the tab's Start runs the engine's only libtorrent session so far.
+- Checking what the client contacts? Read the servers.
 
 ## The product's names
 
@@ -76,9 +76,9 @@ Accept-Encoding: gzip
 
 ### The engine's table
 
-The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands them to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The Connection tab's session contacts the bootstrap nodes at every Start, and the STUN server for a torrent with a WebSocket tracker; the trackers wait for the client to create torrents.
+The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands the STUN and DHT lists to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The Connection tab's session contacts the bootstrap nodes at every Start, and the STUN server for a torrent with a WebSocket tracker.
 
-**STUN.** WebTorrent uses STUN to learn the public address its WebRTC connections appear from. libtorrent takes one server, in `webtorrent_stun_server`, and the engine gives it the first. The engine doesn't fall back to the other two yet.
+**STUN.** WebTorrent uses STUN to learn the public address its WebRTC connections appear from. libtorrent takes one server, in `webtorrent_stun_server`, and the engine gives it the first.
 
 | Server | Run by |
 |---|---|
@@ -86,7 +86,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `stun.cloudflare.com:3478` | Cloudflare |
 | `stun.l.google.com:19302` | Google; libtorrent's own default |
 
-**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these, and every session starts empty today, since the engine doesn't save its routing table yet. libtorrent takes all three, in `dht_bootstrap_nodes`, in place of its own default, which is `dht.libtorrent.org:25401` alone. On 2026 October 27 all three answered a DHT query over IPv4, and ftorrent's and libtorrent's over IPv6 as well; the Transmission project's IPv6 address didn't answer. The list serves the DHT bootstrap node at `dht.ftorrent.com` too, which starts from the same nodes less its own entry, set in `open/dht/dht.py`, so a change to one is a change to both.
+**DHT bootstrap.** A DHT routing table that starts empty learns its first nodes from these. libtorrent takes all three, in `dht_bootstrap_nodes`, in place of its own default, which is `dht.libtorrent.org:25401` alone. On 2026 October 27 all three answered a DHT query over IPv4, and ftorrent's and libtorrent's over IPv6 as well; the Transmission project's IPv6 address didn't answer. The list serves the DHT bootstrap node at `dht.ftorrent.com` too, which starts from the same nodes less its own entry, set in `open/dht/dht.py`, so a change to one is a change to both.
 
 | Node | Run by |
 |---|---|
@@ -94,7 +94,7 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `dht.libtorrent.org:25401` | libtorrent's author; libtorrent's own default |
 | `dht.transmissionbt.com:6881` | the Transmission project |
 
-**Trackers.** These are written into a torrent ftorrent creates. The client creates no torrents yet.
+**Trackers.** The client writes these into each torrent it creates.
 
 | Tracker | Run by |
 |---|---|
@@ -127,7 +127,7 @@ No other address is written in the client, apart from the unspecified `0.0.0.0` 
 
 The engine reports its table, its client name, and its peer id prefix in its `ready` line, so the app and anyone running the engine by hand see the same values this page lists.
 
-The tables of client codes, where `FF` isn't listed yet:
+The tables of client codes:
 
 - [BEP 20](https://www.bittorrent.org/beps/bep_0020.html), the convention, with the original list
 - [the community wiki's peer_id section](https://wiki.theory.org/BitTorrentSpecification#peer_id)
