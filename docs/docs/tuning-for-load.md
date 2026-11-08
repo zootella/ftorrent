@@ -44,6 +44,8 @@ net.netfilter.nf_conntrack_udp_timeout_stream = 180
 
 The aggressive tightening the tracker's own ports want is done surgically instead, so it never touches co-resident UDP like DNS or NTP. Linux lets you give specific flows a different conntrack timeout than the global one: define a named timeout policy with `nfct` (from `conntrack-tools`), then attach it to matching traffic with a rule in the `raw` table's `PREROUTING` chain — which runs _before_ conntrack creates the entry, so the policy is stamped on the flow as it's born.
 
+<div class="breakout">
+
 ```
 # a policy: 1s for an unanswered flow, 2s once it's two-way
 nfct add timeout udp4 inet udp unreplied 1 replied 2
@@ -51,6 +53,8 @@ nfct add timeout udp4 inet udp unreplied 1 replied 2
 # stamp it on the tracker's UDP port, on the public interface
 iptables -t raw -I PREROUTING -i eth0 -p udp --dport 443 -j CT --timeout udp4
 ```
+
+</div>
 
 Now an announce to that port gets a 1–2 second residency — far tighter than any global value would be safe — while everything else on the box keeps the conservative 30/180 default. (`eth0` is whatever your public interface is; for IPv6 you repeat this with `ip6tables` and a _separate_ policy name, since one `nfct` policy can't be referenced from both.) The technique is port-agnostic — point it at whatever ports carry your short-lived flood. These are runtime objects, not config files, so making them survive a reboot is its own small piece of boot-time wiring.
 
@@ -141,9 +145,13 @@ RxBufferSize=4096
 
 Match on the permanent MAC — `ethtool -P` prints it — so the file follows the physical port rather than a name that might change. And before trusting a boot to it, one command proves both halves with no reboot: `ID_NET_LINK_FILE` must name your custom file (it matched), and `ID_NET_NAME` must show the predictable name (the name policy survived). Both right, or stop and fix:
 
+<div class="breakout">
+
 ```bash
 udevadm test-builtin net_setup_link /sys/class/net/enp1s0 2>&1 | grep -E "ID_NET_LINK_FILE=|ID_NET_NAME="
 ```
+
+</div>
 
 ## The softirq budget, and the counter that cries wolf
 

@@ -182,6 +182,22 @@ Neutral grays in light mode. VitePress tints its grays slightly blue, a few step
 	--docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
 
+/* Layout */
+
+/*
+The page fills a wide window. VitePress lays the page out in a box 1440px wide, and in a wider window it gives half the extra width to the sidebar, stretching its gray panel toward the screen's left edge, and leaves the other half blank on the right, so the article's region never grows. From 1440px, a value of 100% keeps the sidebar at its 272px on the left edge and gives everything to its right to the article's region, where VitePress centers the prose column and the outline. The prose stays 688px, the measure for long paragraphs, and the new room goes to breakouts, below.
+
+VitePress puts this value into its sums for the sidebar, the content's padding, and the top bar, each written for a window at least as wide as the value, and a percentage in each resolves against that element's own box. So 100% is the value that holds at every width past 1440px; a larger fixed width, like 1920px, would break the sidebar's sums in windows narrower than it. Below 1440px the default stays, because the top bar also caps its inner box at the value at every width, and 100% there would narrow it on phones. The second rule is for the home page, the one page without a sidebar, whose top bar would otherwise sit 32px further in than on every other page; it gives that box the full width, as VitePress already does on pages with a sidebar.
+*/
+@media (min-width: 1440px) {
+	:root {
+		--vp-layout-max-width: 100%;
+	}
+	.VPNavBar:not(.has-sidebar) .container {
+		max-width: 100%;
+	}
+}
+
 /* Typography overrides */
 
 /*
@@ -362,6 +378,27 @@ Inside the quote, the third rule puts half a line above everything but the first
 }
 .vp-doc figure > figcaption:last-child {
 	margin-top: 12px;
+}
+
+/*
+A breakout, an element that breaks out of the prose column: a table with more columns than the column holds, or a code block whose lines run longer. Mark a table's figure class="breakout", or wrap a code fence or a plain markdown table in a div of that class, with a blank line inside each end so the markdown inside still renders.
+
+From 1280px, VitePress gives the outline a column of its own to the right of the prose, and a breakout may grow rightward across it and on to the edge of the article's region: --breakout-reach is how far that edge reaches past the prose, measured in breakout.js. A table inside takes only the width its columns need, and a code block scrolls sideways only if its longest line needs more still. A figure's caption keeps the prose column's width, so its words line up with the paragraphs above. While a breakout is on screen, breakout.js puts breakout-in-view on the page and the outline fades, so the two never overlap. Below 1280px there's no outline column, --breakout-reach is 0, and a breakout is an ordinary block that scrolls sideways when it must, as any table or code block does.
+*/
+@media (min-width: 1280px) {
+	.vp-doc .breakout {
+		width: calc(100% + var(--breakout-reach, 0px));
+	}
+	.vp-doc .breakout > figcaption {
+		width: calc(100% - var(--breakout-reach, 0px));
+	}
+}
+.VPDoc .aside {
+	transition: opacity 0.2s, visibility 0.2s;
+}
+.breakout-in-view .VPDoc .aside {
+	opacity: 0;
+	visibility: hidden;/* once the fade finishes, out of reach of the pointer and the keyboard both; visibility switches at the end of a fade out and the start of a fade in, so the fade itself still shows */
 }
 
 /* A references list at the same 14px as the header and the captions, since the two ends of a research article are apparatus rather than prose. The selector is the ordered list directly under a heading named References, by the id VitePress gives that heading, so the markdown stays a plain list. The ink stays the body's: a reference is read and followed, not glanced at. */

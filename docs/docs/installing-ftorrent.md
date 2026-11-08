@@ -91,6 +91,8 @@ Instead of downloading through your browser and then working through the prompts
 
 **Windows:** Click **Start**, type **PowerShell**, and press **Enter**. Paste the command below, and press **Enter**.
 
+<div class="breakout">
+
 <DownloadCommand file="ftorrent.exe">
 
 ```powershell
@@ -101,7 +103,11 @@ if ((Get-FileHash ftorrent_setup.exe).Hash -eq '00000000000000000000000000000000
 
 </DownloadCommand>
 
+</div>
+
 **macOS:** Click search in the upper right, and type **Terminal**. Paste the command below, and press **Return**.
+
+<div class="breakout">
 
 <DownloadCommand file="ftorrent.dmg">
 
@@ -113,6 +119,8 @@ open ftorrent_setup.dmg
 ```
 
 </DownloadCommand>
+
+</div>
 
 Both commands do the same three things:
 

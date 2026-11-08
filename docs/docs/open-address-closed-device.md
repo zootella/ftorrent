@@ -117,7 +117,7 @@ On the left, the striped orange cell rises more slowly, as fixed-line providers 
 
 Start with the striped orange cell. Only 13.7% of requests were made on an open device *and* came from an IPv6 address: a person, a device that runs what its owner chooses, and an address others can reach. The 32.9% below it are the same devices without a reachable address. The 53.4% beside it are people on devices where the vendor decides, nearly half of them with a reachable address, on a device whose owner does not decide what listens on it. Hovering any cell, here and on every figure that follows, gives a sentence saying what it is.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 1. All traffic, September 2026, automated requests included. The six cells are built from the operating system shares as Section 4 describes, and the bottom row is Cloudflare's direct figure, which the cells reproduce within a quarter of a point. Source: Cloudflare Radar.</figcaption>
 
 | | share of all traffic | from a v4 address | from a v6 address | v6 share of the row |
@@ -165,7 +165,7 @@ The automated column is counted and set aside, but its numbers explain one gap. 
 
 Figure 2 takes every 100 requests in a month and draws three lines, in the styles every figure in this report uses: orange for v6 addresses, dashed for open devices, and dashed orange for requests on open devices from v6 addresses, which runs lowest. The two complements are not drawn, since each is 100 minus its partner, and Table 3 carries them as the mirror rows. The dashed orange line divided by the open-device line is the share of open-device requests with v6 addresses, which Figure 3 draws directly. Table 3 reads the first and last months off the chart, rounded to whole percents, with the report's reading of each change, and the rest of this section uses the same two months and the same rounding.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 3. The three lines of Figure 2 and their two complements at the first and last month. Source: Cloudflare Radar.</figcaption>
 
 | Of every 100 requests | May 2023 | September 2026 | Change | What happened |

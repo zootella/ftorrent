@@ -58,6 +58,8 @@ These are the artifacts a build machine fetches, in the form `sha256sum` reads. 
 
 The libtorrent wheels, one per platform we ship, all uploaded 2026 August 10:
 
+<div class="breakout">
+
 ```
 bae8a30fa1b4988881124c76867f8e61f9887a42e55638693d7a1b0038bdebe8  libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 fa11aa801d5b9184f067f559c465d3074a4e878d9c671b00dd4930d6dfce2b46  libtorrent-2.1.1-cp313-cp313-win_amd64.whl
@@ -65,7 +67,11 @@ c81d768e04915c1627ac108a6abfa64c740bdd1a1634d5fffcdc56ed6e6d915f  libtorrent-2.1
 d456d5c772e64267211eca995f5a61cfa9e476de9494b300b42fd6fdf71675ca  libtorrent-2.1.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 ```
 
+</div>
+
 The interpreters, from python-build-standalone release 20260807:
+
+<div class="breakout">
 
 ```
 dbadb0ffe46f8bace50daaf8a0c5fc6903c003690776da9eb5269e33c856bb53  cpython-3.13.15+20260807-aarch64-apple-darwin-install_only_stripped.tar.gz
@@ -74,7 +80,11 @@ faae10a9faa9bec06da009ac69326cc1d9691dc138fec6a1b69159dff1781f35  cpython-3.13.1
 1dfc9565c26f8892a33202b5966bdf9ff45c56a57b06e8fa65fecf05030afe5b  cpython-3.13.15+20260807-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz
 ```
 
+</div>
+
 PyInstaller, uploaded 2026 September 12; the macOS wheel is one universal file:
+
+<div class="breakout">
 
 ```
 052f4a1cd4f81092ccb7a18fe8ebc9ecf832a5917317e39fb3775af4e959b253  pyinstaller-6.22.3-py3-none-macosx_10_13_universal2.whl
@@ -82,6 +92,8 @@ PyInstaller, uploaded 2026 September 12; the macOS wheel is one universal file:
 451a4ae14b719365bf1a2f0a99dae7b3463060061c3a394c70d5264cfb439528  pyinstaller-6.22.3-py3-none-manylinux2014_x86_64.whl
 312da84b4b31ab9750066a823734c11b7c68757fdd67c9f038bf19c330a954e4  pyinstaller-6.22.3-py3-none-manylinux2014_aarch64.whl
 ```
+
+</div>
 
 The macOS wheel is tagged for macOS 15, which is the floor the client already sets; a wheel for macOS 14 exists on PyPI and is not the one a build on macOS 15 selects.
 
@@ -148,18 +160,26 @@ Checked 2026-Oct-27 for the DHT bootstrap node, in Docker Desktop on an Apple Si
 
 The lockfile is the record and uv is the check, so a fresh clone verifies everything above by installing it:
 
+<div class="breakout">
+
 ```
 cd desktop/engine
 uv sync --frozen
 uv run --frozen python -c "import libtorrent as lt; s = lt.default_settings(); print(lt.version, 'webtorrent' if 'webtorrent_stun_server' in s else 'no webtorrent')"
 ```
 
+</div>
+
 To compare a wheel against this page by hand, fetch it by the URL `uv.lock` records for it and hash the file. The macOS wheel, for example:
+
+<div class="breakout">
 
 ```
 curl -LO https://files.pythonhosted.org/packages/56/e7/8c92ca04c63f6e909f768dceae64559b9e73ed615a084bc04ca53a3ef60d/libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 shasum -a 256 libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 ```
+
+</div>
 
 ## Log
 

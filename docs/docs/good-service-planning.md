@@ -74,6 +74,8 @@ The panel, the Rust commands, and the engine have no name of their own. They run
 - From the engine: announces to a torrent's trackers, `open.ftorrent.com` among them when the torrent lists it, and to the DHT; listening sockets on both families that moon and strangers dial.
 - From moon, toward the user only: UDP pokes, TCP dials, DHT and uTP pings, and the peers' punches, to the address a request came from.
 
+<div class="breakout">
+
 ```
 the user                                              our main server, under ftorrent.com
   the page, in a browser tab ──────── HTTPS ─────────► good.          the page's files
@@ -89,6 +91,8 @@ the user                                              our main server, under fto
                                                                         with a peer behind it
 elsewhere: stun.cloudflare.com, the DHT and the swarm, ipv4only.arpa, Let's Encrypt, the provider
 ```
+
+</div>
 
 **What comes out.** The page's verdicts, the panel's facts and its box, and at the end of every run one self-describing document, each entry carrying its value, its method, and its vantage, labeled proven, inferred, or unknown (Good10).
 
@@ -132,6 +136,8 @@ The panel times each check, and we give each four seconds. A fetch over HTTPS is
 
 Beneath the table, the box keeps every run since the tab opened. Each run starts with when it ran, the client's version, and the platform, then a line per check with what it asked, how long it took, and what came back. Copy takes the table and the box together, so a whole report pastes into a message or an issue:
 
+<div class="breakout">
+
 ```
 2026-10-17T16:00:00Z, ftorrent 0.1.0 on macOS
 route to 192.0.2.1                5 ms  192.168.1.23
@@ -139,6 +145,8 @@ GET https://ip4.ftorrent.com/   245 ms  203.0.113.42
 route to 2001:db8::1              5 ms  2001:db8:4a2c:100:8d3e:22f1:9b07:5c1e
 GET https://ip6.ftorrent.com/   254 ms  2001:db8:4a2c:100:8d3e:22f1:9b07:5c1e
 ```
+
+</div>
 
 What these checks prove is that each family reaches a web server over TCP from this machine, and at which address the world sees it. They say nothing about UDP, which peer connections travel on, nothing about ports, and nothing about whether anyone outside can reach the machine; those are the questions the milestones after this one answer.
 

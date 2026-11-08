@@ -19,6 +19,8 @@ The page discloses, and stops there. It doesn't score how decentralized the clie
 
 ## The product's names
 
+<div class="breakout">
+
 | Name | Value | Set in | Used for |
 |---|---|---|---|
 | `brandName` | `ftorrent` | `productName` in `desktop/src-tauri/tauri.conf.json` | what people read: the window title, the tray, the menus, the installer, the Start menu shortcut, the Windows ProgIDs, the install folder, the default downloads folder |
@@ -26,6 +28,8 @@ The page discloses, and stops there. It doesn't score how decentralized the clie
 | identifier | `com.ftorrent.ftorrent` | `identifier` in `desktop/src-tauri/tauri.conf.json` | the data folder, the Mac bundle, the Windows AppUserModelID, the Flatpak |
 | `urlHome` | `ftorrent.com` | `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` | the About and Settings links, the update check's addresses |
 | `urlHelp` | `docs.ftorrent.com/help` | `desktop/src/brand.js`, from `urlHome` | the Help menu |
+
+</div>
 
 The page reads the two source files when Vite builds it, in `desktop/src/brand.js`, and every other page file imports the names from there. The Rust core reads them from its package info, which Tauri fills from the same two files, and the engine receives `brandName` in the first message the app sends it. The build scripts read the two files themselves: `desktop/scripts.js` for the published names, `desktop/dmg.js` for the `.app` and the dmg, `desktop/win-setup/win-setup.js`, which compiles both names into the setup program, and `desktop/win-setup/registry.js` for the uninstall list.
 

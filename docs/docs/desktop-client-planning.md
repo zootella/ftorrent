@@ -29,6 +29,8 @@ Design also favors observability before control: before ftorrent offers to chang
 
 ## Epics
 
+<div class="breakout">
+
 ```
 notes
 
@@ -40,6 +42,8 @@ second is portable ftorrent, talk about that, novel in first cross platform port
 
 and a third upcoming epic for the roadmap is dht.ftorrent.com
 ```
+
+</div>
 
 
 ## User Stories
@@ -193,6 +197,9 @@ On Windows, the entire installation is per-user — binary, settings, and downlo
 One setting in `tauri.conf.json` is written down rather than left to Tauri's default: the bundle targets are narrowed to two, `app` for the Mac and `deb` for a Linux checkout, where Tauri's default of `"all"` builds everything each platform can produce, which adds an `.AppImage` on Linux and an `.msi` and an NSIS installer on Windows. Windows names no target, because its installer is not Tauri's: `desktop/win-setup` makes it from the executable `tauri build` leaves, and the per-user install that is load-bearing for everything else in this document is the program's own fixed behavior rather than a setting. The Linux pipeline asks its own containers for the `.deb` and `.rpm` as an argument, and wraps the Flatpak from the `.deb`, so the list in the config file never has to name them. It is a one-line change in the config file. The `.dmg` is made from the `.app` by [dmgbuild](https://github.com/dmgbuild/dmgbuild), not by Tauri, as §Icons and graphics describes. Everything else in the distribution and filesystem layout follows Tauri's out-of-box defaults.
 
 **Build output.** In the `ftorrent` monorepo's `desktop` workspace, the build produces installer artifacts for Windows, macOS, and Linux as follows: Tauri writes the `.exe`, `dmg.js` writes the `.dmg` beside it, and the containers write the Linux ones into the nested `linux` workspace's release folder:
+
+<div class="breakout">
+
 ```
 ftorrent/desktop/src-tauri/target/release/bundle/win-setup/ftorrent_0.1.0_x64-setup.exe
 ftorrent/desktop/src-tauri/target/release/bundle/dmg/ftorrent_0.1.0_aarch64.dmg
@@ -201,6 +208,9 @@ ftorrent/desktop/linux/release/ftorrent_0.1.0_arm64.deb
 ftorrent/desktop/linux/release/ftorrent-0.1.0-1.x86_64.rpm
 ftorrent/desktop/linux/release/ftorrent_0.1.0_x86_64.flatpak
 ```
+
+</div>
+
 The `.dmg` contains `ftorrent.app` for the user to drag into Applications. The `.exe` is the setup program, not the application binary itself — it extracts and installs the app into the program files location described below. These are renamed to `ftorrent.dmg`, `ftorrent.exe`, `ftorrent.amd64.deb`, `ftorrent.arm64.deb`, `ftorrent.x86_64.rpm`, and `ftorrent.x86_64.flatpak` for distribution on the website.
 
 ### Paths §2: Installed and running
@@ -215,21 +225,29 @@ On macOS, the `.dmg` presents `ftorrent.app` for the user to drag into `/Applica
 
 **Application settings.** ftorrent's own settings file, keyed by the Tauri bundle identifier:
 
+<div class="breakout">
+
 ```
 C:\Users\username\AppData\Local\com.ftorrent.ftorrent\ftorrent.toml      # Windows
 ~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.toml        # macOS
 ~/.local/share/com.ftorrent.ftorrent/ftorrent.toml                       # Linux
 ```
 
+</div>
+
 `ftorrent.toml` contains user-facing configuration: the ordered list of download folders, the window's place, UI preferences, and any other settings the user knows about and can change. It's TOML because it's meant to be opened in a text editor, and JSON can't carry comments: every setting is written out under a comment explaining it, so the file documents every knob ftorrent has. The page owns it, reading it at startup and writing it whole when a setting changes. On Windows everything ftorrent keeps is in Local rather than Roaming, because it belongs to this machine: Tauri already keeps WebView2's profile in Local, and the DHT routing table in `state` is this machine's view of the network. The same folder holds `ftorrent.lock` and, on Windows, WebView2's profile in `EBWebView`. The Windows registry is avoided except where a feature absolutely requires it, like file type associations for `.torrent` files. On Linux, the base path follows the XDG Base Directory Specification — `$XDG_DATA_HOME` defaults to `~/.local/share/` on Ubuntu Desktop, and virtually no one changes it.
 
 **Global libtorrent state.** Separate from user settings, libtorrent maintains session-wide state that persists across restarts:
+
+<div class="breakout">
 
 ```
 C:\Users\username\AppData\Local\com.ftorrent.ftorrent\state              # Windows
 ~/Library/Application Support/com.ftorrent.ftorrent/state                # macOS
 ~/.local/share/com.ftorrent.ftorrent/state                               # Linux
 ```
+
+</div>
 
 This file holds the DHT routing table and session-wide settings — global state that belongs to the running instance, not to any individual torrent. It is serialized via libtorrent's `write_session_params()` on shutdown and restored with `read_session_params()` on startup. Without it, every launch would bootstrap DHT from scratch. Per-torrent state — resume data, piece completion, tracker lists — lives alongside downloads in `.ftorrent` directories, described below.
 
@@ -307,6 +325,8 @@ A setting a newer ftorrent adds is filled in with its factory value and written 
 
 **What ftorrent.zip contains.** The portable distribution unpacks to a self-contained directory for Windows and macOS:
 
+<div class="breakout">
+
 ```
 ftorrent/
 ftorrent/ftorrent.exe                                               # Windows binary
@@ -317,6 +337,8 @@ ftorrent/ftorrent.app/Contents/Resources/ftorrent-engine/           # macOS engi
 ftorrent/portable/
 ftorrent/portable/ftorrent.toml                                     # triggers portable mode
 ```
+
+</div>
 
 Linux isn't in the zip. A bare Tauri binary on Linux depends on the system's WebKitGTK, which not every distribution installs, Linux ships on two architectures, and it sits outside the active test matrix, so Linux keeps its four packages. Leaving Linux out also keeps each engine folder where its app looks for it: beside `ftorrent.exe` on Windows, as in an installed copy, and inside the bundle on macOS. The portable Mac bundle has its own identifier, `com.ftorrent.portable`, and declares no document types or URL schemes, so Launch Services never sends a clicked magnet to a portable copy that happens to be running.
 
@@ -392,6 +414,8 @@ Her list of download folders grows over time as she adds locations on different 
 
 **Bill (Windows)**
 
+<div class="breakout">
+
 ```
 # installer downloaded and double-clicked
 C:\Users\Bill\Downloads\ftorrent.exe
@@ -419,7 +443,11 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\resume
 C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 ```
 
+</div>
+
 **Steve (macOS)**
+
+<div class="breakout">
 
 ```
 # installer downloaded and double-clicked
@@ -449,7 +477,11 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /Users/Steve/Downloads/ftorrent/.ftorrent/v1.a88fda59...dad3/metadata.torrent
 ```
 
+</div>
+
 **Linus (Ubuntu Desktop)**
+
+<div class="breakout">
 
 ```
 # installer downloaded and double-clicked (or sudo dpkg -i)
@@ -477,6 +509,8 @@ C:\Users\Bill\Downloads\ftorrent\.ftorrent\v1.a88fda59...dad3\metadata.torrent
 /home/linus/Downloads/ftorrent/.ftorrent/v1.a88fda59...dad3/resume
 /home/linus/Downloads/ftorrent/.ftorrent/v1.a88fda59...dad3/metadata.torrent
 ```
+
+</div>
 
 All three users' `ftorrent.toml` lists the same download folder:
 
@@ -536,11 +570,15 @@ ftorrent does not have a logging system. During development, diagnostic output i
 
 If the sidecar exits with a non-zero exit code, the Rust core writes the buffer contents to `crash.log` in the application data directory (or `portable/` in portable mode):
 
+<div class="breakout">
+
 ```
 C:\Users\username\AppData\Local\com.ftorrent.ftorrent\crash.log          # Windows
 ~/Library/Application Support/com.ftorrent.ftorrent/crash.log             # macOS
 ~/.local/share/com.ftorrent.ftorrent/crash.log                            # Linux
 ```
+
+</div>
 
 The file is overwritten on each crash, not appended. It contains only what the sidecar printed to stderr in its final moments — Python tracebacks, libtorrent alert messages, or native library segfault output. A user reporting a crash can attach this file to a GitHub issue. Without it, every crash report is "it broke."
 
@@ -668,11 +706,15 @@ ftorrent needs a small set of source assets: the application icon, a document ic
 
 **Tray and menu bar icons.** Separate from the application icon, a small icon appears in the system tray (Windows), menu bar (macOS), or status notifier area (Linux) for as long as ftorrent is running, window or no. All tray icons should be simple and legible at tiny sizes — the main app icon scaled down will be an unreadable blob. ftorrent's is the mark as a glyph, the pill as a stencil with the nodes cut out of it, monochrome on every platform, so it reads beside the system's own icons rather than as a full-color icon among them. On macOS it is a "template image" — a shape on a transparent background, with the color in the file ignored, which the system paints in the menu bar's own color for light mode, dark mode, and the translucent bar, and inverts while its menu is open. On Windows the notification area paints an icon's pixels as given, so the program carries the glyph in white for a dark taskbar and in black for a light one, chooses by the taskbar's own theme value in the registry, separate from the apps' theme the window follows, and swaps the icon live when that value changes. The icon studio renders all of them from one stencil drawing, the Windows pair by its PowerShell scripts and the Mac's by its one Node script, run on the Mac:
 
+<div class="breakout">
+
 ```
 ftorrent/desktop/src-tauri/icons/tray-template.png       # 36×36, black on transparent, macOS: 18 points at Retina, the height the status item draws every image at
 ftorrent/desktop/src-tauri/icons/tray-white.ico          # seven layers, 16 to 64 pixels, the taskbar's scale ladder, Windows on a dark taskbar
 ftorrent/desktop/src-tauri/icons/tray-black.ico          # the same seven in black, Windows on a light taskbar
 ```
+
+</div>
 
 The tray is built in code, with Tauri's `TrayIconBuilder`, on macOS taking the template image with `icon_as_template(true)` and on Windows handing the shell the layer drawn for the system's scaling, so nothing is resized on the way to the screen. As built on macOS and Windows; Linux has no tray yet, so closing there still quits.
 

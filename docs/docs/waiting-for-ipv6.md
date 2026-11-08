@@ -94,7 +94,7 @@ Then the measuring began. Google's chart starts on 2008 September 4 at 0.14% of 
 
 Here is what the dates became. The right-hand column is what a measurement found when the deadline arrived, or the nearest one available.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 1. IPv6 deadlines set by governments, and what was measured when they arrived. Sources are linked in the text and listed in the references.</figcaption>
 
 | Who | Set | Required | By | What was measured |

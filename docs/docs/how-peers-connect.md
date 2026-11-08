@@ -188,6 +188,8 @@ The `m=` line says what's being negotiated — here, a data channel. The three b
 
 The second kind of object is the **ICE candidate**, one per address the page might be reachable at, emitted as the browser's ICE discovers them:
 
+<div class="breakout">
+
 ```
 {
   candidate: "candidate:842163049 1 udp 1677729535 203.0.113.7 54321 typ srflx raddr 0.0.0.0 rport 0",
@@ -195,9 +197,13 @@ The second kind of object is the **ICE candidate**, one per address the page mig
 }
 ```
 
+</div>
+
 Reading the string: transport `udp`, then `203.0.113.7 54321`, the address and port a peer should try, then `typ srflx` — server-reflexive, the public mapping a STUN server reported. The `raddr`/`rport` pair once carried the private address and port behind that mapping and now reads `0.0.0.0 0`: beginning in 2019, every mainstream browser hides a page's local addresses, publishing `host` candidates as mDNS names ending in `.local` and zeroing the related address on reflexive ones, so a page can no longer learn its own private address through WebRTC, or its peer's. One page usually emits several: a `host` candidate for its local interface, under its `.local` name, an `srflx` for the STUN-seen public one, a `relay` if it has TURN.
 
 On the wire the whole conversation is short, and then it's spent:
+
+<div class="breakout">
 
 ```
 page A                 rendezvous server               page B
@@ -209,7 +215,11 @@ page A                 rendezvous server               page B
   │◄═══════════ direct, DTLS-encrypted data channel ═════►│
 ```
 
+</div>
+
 Each page's half is the shape every WebRTC guide teaches:
+
+<div class="breakout">
 
 ```javascript
 const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.ftorrent.com:3478' }] })
@@ -229,7 +239,11 @@ await pc.setLocalDescription(await pc.createOffer())
 signaling.send({ sdp: pc.localDescription })
 ```
 
+</div>
+
 And the rendezvous server that `signaling` talks to — the entire "system" the specifications leave out — copies each message to the other peers in the same room and reads none of it:
+
+<div class="breakout">
 
 ```javascript
 const rooms = new Map()
@@ -241,6 +255,8 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => peers.delete(ws))
 })
 ```
+
+</div>
 
 Ten lines. The rendezvous server never parses an SDP or knows the first thing about WebRTC. It is a pipe keyed by a room name.
 

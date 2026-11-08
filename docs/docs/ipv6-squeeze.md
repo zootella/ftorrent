@@ -99,7 +99,7 @@ A prefix is the leading part of an address that names a network, and the number 
 
 In IPv4, `192.0.2.0/24` is a block whose first 24 bits are fixed, leaving 8 bits, 256 addresses, inside; a `/16` holds 65,536 addresses and a `/8`, the size of the old Class A blocks, holds 16.7 million. In IPv6 the same arithmetic runs at a scale where the interesting unit is no longer the address but the `/64`, the standard size of a single network, which the next section explains. Table 1 gives the sizes this article uses.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 1. Common IPv6 prefix sizes, what each usually is, and how many <code>/64</code> networks it holds. Sizes from <a href="https://www.rfc-editor.org/rfc/rfc4291">RFC 4291</a>, <a href="https://www.rfc-editor.org/rfc/rfc3177">RFC 3177</a>, <a href="https://www.rfc-editor.org/rfc/rfc6177">RFC 6177</a>, and <a href="https://www.ripe.net/publications/docs/ripe-690/">RIPE-690</a>; counts derived.</figcaption>
 
 | Prefix | Usually | `/64` networks inside |
@@ -132,7 +132,7 @@ Some addresses never leave the device, the cable, or the building, and every dev
 
 Everything else that a device uses to reach the internet comes from one block: `2000::/3`, every address whose first digit is 2 or 3. It is one eighth of the whole space, and IANA, which hands out the top level, allocates from nothing else; the registry still carries the 2003 instruction that the other seven eighths, "approximately 85% of the IPv6 address space," is "reserved for future definition and use." IANA's grants go to the five regional internet registries, which allocate to providers and large organizations in their parts of the world, which in turn assign to customers. The first grants, on 1999 July 1, were small blocks inside `2001::/16` for Asia-Pacific, North America, and Europe. On 2006 October 3 each registry received a `/12` of its own, and those blocks give real addresses their recognizable first digits:
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 2. The regional registries' blocks from IANA, and the first digits they give an address. Source: IANA IPv6 Global Unicast Address Space registry.</figcaption>
 
 | Registry | Region | Blocks | Addresses start |
@@ -343,7 +343,7 @@ No source counts this by subscriber, so this picture draws on several that count
 
 Table 3 names names. It mixes the providers' own statements with regulators' tables, measurements, and, where nothing better exists, reports from customers on operators' mailing lists and forums, and says which is which.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 3. What a selection of home and mobile providers delegate, by the best source available. Sources are listed in the references.</figcaption>
 
 | Provider | Where | Delegates | Source |
@@ -402,7 +402,7 @@ The largest clouds show the pattern most clearly, because they build everything 
 
 The smaller hosts split into two camps. In October 2026 we read the published IPv6 documentation of twelve hosting companies that sell small virtual servers in Europe and North America, and on October 13 and 14 we created one small server at three of them and looked at what arrived. Table 4 gives what one ordinary server receives at each, with the clouds above them for comparison.
 
-<figure>
+<figure class="breakout">
 <figcaption>Table 4. What one ordinary rented server receives, by each provider's own documentation, fetched October 2026, and our own tests where noted. Sources are listed in the references.</figcaption>
 
 | Provider | One ordinary server receives | More |

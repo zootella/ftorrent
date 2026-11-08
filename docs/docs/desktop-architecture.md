@@ -109,6 +109,8 @@ The app finds the folder the same way, from an anchor rather than a setting. It 
 
 On macOS, installed, everything is inside the `.app`, which is a folder the Finder shows as one item:
 
+<div class="breakout">
+
 ```
 /Applications/ftorrent.app/Contents/MacOS/ftorrent                                the app
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/ftorrent-engine     the launcher
@@ -119,7 +121,11 @@ On macOS, installed, everything is inside the `.app`, which is a folder the Find
 /Applications/ftorrent.app/Contents/Resources/ftorrent-engine/_internal/libcrypto.3.dylib
 ```
 
+</div>
+
 On Linux, installed from the `.deb` or the `.rpm`, the app goes where programs go and the engine where a program's private files go:
+
+<div class="breakout">
 
 ```
 /usr/bin/ftorrent                                                      the app
@@ -131,7 +137,11 @@ On Linux, installed from the `.deb` or the `.rpm`, the app goes where programs g
 /usr/lib/ftorrent/ftorrent-engine/_internal/libtorrent/__init__.cpython-313-x86_64-linux-gnu.so
 ```
 
+</div>
+
 The Flatpak carries the same layout under `/app` instead of `/usr`, and the same rule finds it: the app looks for `lib/ftorrent` beside its own `bin`, wherever that is. There are no OpenSSL files on Linux because the Linux build of libtorrent compiles OpenSSL into the module. On Windows, installed, everything sits under the user's own profile, the engine folder beside the app's executable, measured from an install on Windows 10 in September 2026:
+
+<div class="breakout">
 
 ```
 C:\Users\username\AppData\Local\ftorrent\ftorrent.exe                                the app
@@ -142,6 +152,8 @@ C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\libcrypto-3-x
 C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\base_library.zip
 C:\Users\username\AppData\Local\ftorrent\ftorrent-engine\_internal\libtorrent\__init__.cp313-win_amd64.pyd
 ```
+
+</div>
 
 The Windows build of libtorrent compiles OpenSSL in as well, so the `libcrypto` library there is not libtorrent's. It belongs to the interpreter, which needs it for the standard library's hashlib module, and PyInstaller collects it for that reason. The rest of `_internal` on Windows is the interpreter's extension modules, the C++ runtime, and some forty small Windows API forwarding libraries the interpreter ships, which together bring the folder to 33 MB, the smallest of the three platforms because the module is 13 MB there.
 
@@ -154,6 +166,8 @@ The Windows build of libtorrent compiles OpenSSL in as well, so the `libcrypto` 
 
 The data folder of an installed copy is named by the app's identifier rather than its product name, and on Windows it's under Local rather than Roaming, so nothing the client keeps follows a user between machines on a domain:
 
+<div class="breakout">
+
 ```
 ~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.toml                     the settings
 ~/Library/Application Support/com.ftorrent.ftorrent/ftorrent.lock                     held while this copy runs
@@ -162,6 +176,8 @@ C:\Users\username\AppData\Local\com.ftorrent.ftorrent\ftorrent.toml
 C:\Users\username\AppData\Local\com.ftorrent.ftorrent\ftorrent.lock
 C:\Users\username\AppData\Local\com.ftorrent.ftorrent\EBWebView\                    WebView2's profile
 ```
+
+</div>
 
 A portable copy keeps the same files in `portable/` beside the program, and on Windows the app points WebView2's profile there too. `ftorrent.toml` is the settings, a TOML file the page reads at startup and writes whole when a setting changes, every setting under a comment explaining it. `ftorrent.lock` is how a copy knows it is the one running: the app takes an exclusive lock on it at startup, and the operating system releases the lock however the process ends. The state file, where libtorrent will save its session and the DHT's routing table, is named there too, `state`, and appears once the engine has a session to save.
 

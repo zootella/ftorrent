@@ -54,11 +54,15 @@ No single core became a bottleneck. The eight performance cores' primary threads
 
 Where the processor time went:
 
+<div class="breakout">
+
 | | Per announce | Announces a second | Cores |
 |---|---:|---:|---:|
 | UDP, in aquatic_udp | 0.089 core-ms | 1,465 | 0.13 |
 | HTTPS, in HAProxy and aquatic_http | 4.73 core-ms | 531 | 2.51 |
 | The kernel and the rest, in no process | | | 0.35 |
+
+</div>
 
 HTTPS's 4.73 core-ms splits into 4.31 at HAProxy and 0.42 at aquatic_http. HAProxy also handles the WebSocket tracker, the dashboard and websites, and the cleartext announces it drops on port 80, so its figure is an upper bound for HTTPS. The 0.35 cores that belong to no process are the kernel's address rewriting, connection tracking, and packet handling, plus Docker and collectd. Most of UDP's path runs there, so UDP's in-process figure understates its full cost.
 
