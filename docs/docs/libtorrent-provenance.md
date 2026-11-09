@@ -1,11 +1,11 @@
 ---
 title: libtorrent Provenance
-description: Where the BitTorrent engine inside the ftorrent desktop client and the DHT bootstrap node comes from, who built it, how we fetch and verify it, and the hashes we pin.
+description: Where the BitTorrent engine inside the ftorrent desktop client, the DHT bootstrap node, and the tracker checker comes from, who built it, how we fetch and verify it, and the hashes we pin.
 ---
 
 # libtorrent Provenance
 
-The ftorrent desktop client does its BitTorrent and WebTorrent work through [libtorrent](https://www.libtorrent.org/), and this document is the engineering record of that dependency: which libtorrent, built by whom and how, the path it takes onto a build machine, what we checked when it arrived, and the hashes we hold it to. A dependency we bundle into a client is a supply chain we vouch for on behalf of everyone who installs it, so we keep this record in public and update it as the engine changes. The log at the end says when. The DHT bootstrap node at dht.ftorrent.com runs the same libtorrent from the same wheels, and this record covers it too.
+The ftorrent desktop client does its BitTorrent and WebTorrent work through [libtorrent](https://www.libtorrent.org/), and this document is the engineering record of that dependency: which libtorrent, built by whom and how, the path it takes onto a build machine, what we checked when it arrived, and the hashes we hold it to. A dependency we bundle into a client is a supply chain we vouch for on behalf of everyone who installs it, so we keep this record in public and update it as the engine changes. The log at the end says when. The DHT bootstrap node at dht.ftorrent.com and the tracker checker at list.ftorrent.com run the same libtorrent from the same wheels, and this record covers them too.
 
 ## The engine in one paragraph
 
@@ -112,7 +112,11 @@ Four wheels, six packages. Each package carries one frozen engine, and the engin
 
 ### The DHT bootstrap node
 
-The bootstrap node at dht.ftorrent.com runs libtorrent's DHT through a short Python program of its own, in `open/dht/`, rather than a frozen engine. Its lockfile, `open/dht/uv.lock`, records the same hashes for the same wheels, and its image installs the Linux wheel that matches the machine that builds it, with uv 0.12.3 doing the fetch and the check, as in the Linux packages. Two things differ from the client: the interpreter is the official `python:3.13-slim-trixie` image's rather than python-build-standalone's, and nothing is frozen, since the wheel is installed into the image as published. Moving libtorrent's pin means moving it in both lockfiles.
+The bootstrap node at dht.ftorrent.com runs libtorrent's DHT through a short Python program of its own, in `open/dht/`, rather than a frozen engine. Its lockfile, `open/dht/uv.lock`, records the same hashes for the same wheels, and its image installs the Linux wheel that matches the machine that builds it, with uv 0.12.3 doing the fetch and the check, as in the Linux packages. Two things differ from the client: the interpreter is the official `python:3.13-slim-trixie` image's rather than python-build-standalone's, and nothing is frozen, since the wheel is installed into the image as published. Moving libtorrent's pin means moving it in every lockfile that names it.
+
+### The tracker checker
+
+The tracker checker at list.ftorrent.com announces to public trackers through a Python program of its own, in `list/libtorrent-list/`, set up the way the DHT node is: its lockfile, `list/libtorrent-list/uv.lock`, records the same hashes for the same wheels, its image installs the Linux wheel for the machine that builds it, with uv 0.12.3 doing the fetch and the check, and the interpreter is the official `python:3.13-slim-trixie` image's.
 
 ## What is inside the wheel
 
@@ -189,3 +193,4 @@ shasum -a 256 libtorrent-2.1.1-cp313-cp313-macosx_15_0_arm64.whl
 - **2026-Sep-22, later the same day.** The Linux pipeline grew an rpm and a Flatpak. Neither adds a wheel: both carry the x86_64 engine the amd64 deb carries. Six packages, four wheels.
 - **2026-Oct-27.** The record now says that uv's version picks which build of the interpreter a machine fetches, that the Linux image pins uv at 0.12.3, and that the Mac and Windows take whatever version their installers bring. No engine changed.
 - **2026-Oct-27, later the same day.** The DHT bootstrap node at dht.ftorrent.com moves from qBittorrent onto libtorrent directly, through `open/dht/dht.py`, on the same two Linux wheels by the same hashes. Checked in Docker Desktop.
+- **2026-Nov-09.** The tracker checker at list.ftorrent.com runs libtorrent through `list/libtorrent-list/list.py`, on the same two Linux wheels by the same hashes. Checked in Docker Desktop.

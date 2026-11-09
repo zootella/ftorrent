@@ -16,6 +16,8 @@ Workspaces and folders:
   - `./open/page` (Vue+Vite) Frontend dashboard
   - `./open/dht` (Python, [libtorrent](https://www.libtorrent.org/)) Mainline DHT bootstrap node _dht.ftorrent.com_
 - ䷼ `./good` (Node, Docker) IPv4/IPv6 connectivity diagnostic tool _[good.ftorrent.com](https://good.ftorrent.com/)_
+- ䷓ `./list` (Python, [libtorrent](https://www.libtorrent.org/), Docker) Hourly check of the public BitTorrent and WebTorrent trackers, publishing which ones work _list.ftorrent.com_
+  - `./list/libtorrent-list` (Python, [libtorrent](https://www.libtorrent.org/)) Announces to each tracker hourly over IPv4 and IPv6, writes trackers.txt and trackers.json
 - ䷫ `./tube` ([WebTorrent](https://webtorrent.io/), Docker) Encrypted large file transfer with just a browser, no account — like [WeTransfer](https://wetransfer.com/), [instant.io](https://instant.io/), [Wormhole](https://wormhole.app/), and others _tube.ftorrent.com_
 - ䷺ `./desktop` ([Tauri](https://tauri.app/), [libtorrent-rasterbar](https://www.libtorrent.org/)) Desktop BitTorrent client
 - ䷣ `./classic` ([Win32](https://learn.microsoft.com/en-us/windows/win32/api/)) Rasterbar libtorrent in a Petzold-style Windows native EXE

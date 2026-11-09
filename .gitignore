@@ -1,6 +1,6 @@
 # ============================================================================
 # .gitignore for pnpm monorepo
-# Workspaces: site, docs, open, good, tube, desktop, and classic, on Node, Python, Rust, Go, and Docker
+# Workspaces: site, docs, open, good, list, tube, desktop, and classic, on Node, Python, Rust, Go, and Docker
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -279,6 +279,9 @@ open/gauge/data/ring.json
 open/gauge/data/days.json
 open/gauge/data/breaker.json
 open/gauge/data/probe
+
+# list's working state, the database and the report a local run writes
+list/data/
 
 # Deployment platforms
 .vercel/

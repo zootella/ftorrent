@@ -151,6 +151,7 @@ export default defineConfig({
 					{ text: 'Tracker Circuit Breaker', link: 'https://github.com/zootella/ftorrent/blob/master/open/breaker/README.md' },
 					{ text: 'DHT Bootstrap Node', link: 'https://github.com/zootella/ftorrent/blob/master/open/dht/README.md' },
 					{ text: 'Connection Checker', link: 'https://github.com/zootella/ftorrent/blob/master/good/README.md' },
+					{ text: 'Tracker Checker', link: 'https://github.com/zootella/ftorrent/blob/master/list/README.md' },
 					{ text: 'Home Page', link: 'https://github.com/zootella/ftorrent/blob/master/site/README.md' },
 					{ text: 'Desktop Client', link: 'https://github.com/zootella/ftorrent/blob/master/desktop/README.md' },
 					{ text: 'Desktop Client on Linux', link: 'https://github.com/zootella/ftorrent/blob/master/desktop/linux/README.md' },

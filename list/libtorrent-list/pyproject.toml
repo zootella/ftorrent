@@ -1,0 +1,11 @@
+# list's manifest: the Python it runs on and the one package it needs. uv.lock beside this file pins the wheel for each platform by hash, and the Dockerfile's uv sync --frozen refuses anything the lock does not name.
+
+[project]
+name = "ftorrent-list"
+version = "0.1.0"
+description = "The tracker checker at list.ftorrent.com: each public tracker announced to every hour, over IPv4 and IPv6, from a libtorrent session in each"
+requires-python = "==3.13.*"
+dependencies = [
+	"libtorrent==2.1.1", # the maintainers' own wheel, the same one the DHT bootstrap node and the desktop client's engine run; libtorrent-provenance on docs.ftorrent.com is the record of where it comes from and how we checked
+	"zootella-ergo==0.1.2", # ergo's Python edition, for its size and time units, the same release the gauge pins; 0.1.3 and later bring in a compiled BLAKE3 this has no use for
+]

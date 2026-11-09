@@ -1,0 +1,94 @@
+# Compose file for the tracker checker at list.ftorrent.com: two containers built from libtorrent-list/, one on a network with IPv4 only and one on a network with IPv6 only, so each checks every tracker in its own family and libtorrent has no choice of family to make.
+#
+# Both run list.py, which sleeps to the top of each hour, checks, and records into one SQLite file in the data folder they share. The IPv4 one also publishes: before checking, it writes the hour that just ended to data/public/trackers.txt and data/public/trackers.json, which the web server serves at list.ftorrent.com.
+#
+# Nothing comes in: no ports are published. Each container needs outbound UDP and TCP to any address and port, since trackers listen wherever they like, so the host's firewall needs an exception for the two pinned addresses below, each in its own family. Docker translates both networks' private addresses to the server's public ones on the way out, IPv6 included.
+#
+# The data folder beside this file must be writable by UID 65534:
+#   sudo mkdir -p /opt/list.ftorrent.com/data
+#   sudo chown -R 65534:65534 /opt/list.ftorrent.com/data
+#
+# Start, from the folder this file is in:
+#   docker compose up -d --build
+
+name: ftorrent-list
+
+services:
+
+  libtorrent-list4:
+    build: ./libtorrent-list
+    container_name: ftorrent-list4-1
+    networks:
+      list4:
+        ipv4_address: 172.30.6.2
+    environment:
+      - LIST_FAMILY=4
+      - LIST_REPORT=1   # this one also publishes the report
+      - LIST_DIR=/list
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp   # libtorrent's scratch, and Python's temporary folder
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./data:/list
+    ulimits:
+      # every announce in flight holds a socket, and a socket counts as an open file; a pass of 288 trackers peaked at 109 on Docker Desktop, and 10000 in place of Docker's default 1024 leaves the lists room to grow
+      nofile:
+        soft: 10000
+        hard: 10000
+    deploy:
+      resources:
+        limits:
+          memory: 256m   # a pass of 287 trackers peaked at 52 MiB on Docker Desktop
+          pids: 64        # and 16 processes and threads
+    restart: unless-stopped
+
+  libtorrent-list6:
+    build: ./libtorrent-list   # the same build as the IPv4 service, so the second comes from cache
+    container_name: ftorrent-list6-1
+    networks:
+      list6:
+        ipv6_address: fd00:cafe:8::2
+    environment:
+      - LIST_FAMILY=6
+      - LIST_DIR=/list
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./data:/list
+    ulimits:
+      nofile:
+        soft: 10000
+        hard: 10000
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          pids: 64
+    restart: unless-stopped
+
+networks:
+
+  list4:
+    name: ftorrent-list4
+    ipam:
+      config:
+        - subnet: 172.30.6.0/24
+
+  list6:
+    name: ftorrent-list6
+    enable_ipv4: false   # a network with IPv6 only, which Docker Engine 28 and later can make
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd00:cafe:8::/64
