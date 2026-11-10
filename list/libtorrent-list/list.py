@@ -20,62 +20,97 @@ from zootella.ergo import Size, Time, has_tick, tick_to_iso, tick_to_text#ergo's
 #
 # The candidates come from public lists other people keep, fetched every hour: ngosang's list of all trackers and its list of WebSocket ones, and newTrackon's full list, plus ftorrent's own three. A list that can't be fetched keeps its last good copy, so one site down for an hour doesn't empty the candidates.
 #
-# Each tracker gets a torrent of its own, a fresh random info hash that names no real torrent, in one libtorrent session listening on the container's one address. libtorrent announces to them all at once, metering its HTTP announces fifty at a time the way it does in any client, and each tracker's outcome for the hour is how far it got: its name resolved to an address in this family, something answered, an HTTPS or WebSocket tracker's certificate held, and the answer was a tracker's reply. A UDP or HTTP reply that lists other peers for a hash no one else has is still good, and flagged: what that means isn't known, so it's recorded and published, and decides nothing. The session sends announces and nothing else: it never connects to the peers a reply lists, runs no DHT, and maps no ports.
+# Each tracker gets a torrent of its own, a fresh random info hash that names no real torrent, in one libtorrent session listening on the container's one address. libtorrent announces to them all at once, metering its HTTP announces fifty at a time the way it does in any client, and the pass listens until every tracker has answered or failed. Each tracker's outcome for the hour is how far it got: its name resolved to an address in this family, something answered, an HTTPS or WebSocket tracker's certificate held, and the answer was a tracker's reply. A UDP or HTTP reply that lists other peers for a hash no one else has is still up, and the tracker is flagged: what that means isn't known, so it's recorded and published, and decides nothing. The session sends announces and nothing else: it never connects to the peers a reply lists, runs no DHT, and maps no ports.
 #
 # A UDP tracker paired with the page.json of the gauge beside it, as ftorrent's own is, gets no announce. Its outcome comes from that page instead: the count of UDP announces the tracker served over this container's family in the gauge's last minute, which are peers reaching it from the internet, the same claim every other outcome makes.
 #
-# Everything lives in one SQLite file in the data folder the two containers share: every check, every tracker ever named, and each list's latest copy. SQLite lets one writer in at a time, which keeps the containers' writes apart on the rare hour they land together.
+# Everything lives in one SQLite file in the data folder the two containers share: every check, every tracker ever named, each upstream list's latest copy, and a tally of each day that has ended, which the report's longer horizons are summed from instead of every hour again. SQLite lets one writer in at a time, which keeps the containers' writes apart on the rare hour they land together.
 #
-# The container with LIST_REPORT set also publishes. At the top of each hour, before checking, it writes the hour that just ended: trackers.txt, the trackers that have been dependable for the last month, and trackers.json, every tracker's outcome that hour and its history by day. The files always describe one whole hour, about an hour behind, and never a mix of two. They're a record of uptime; a check of right now is the desktop client's job.
+# The container with LIST_REPORT set also publishes. At the top of each hour, before checking, it writes the hour that just ended: trackers.txt, the trackers up in at least 95% of the hours they were checked over the last month, and trackers.json, every tracker's hours over six horizons, from the last hour to the last year. The files always describe one whole hour, about an hour behind, and never a mix of two. They're a record of uptime; a check of right now is the desktop client's job.
 
-listing_window = 30*Time.DAY#trackers.txt lists a tracker that's been a candidate for this whole stretch,
-listing_share = 0.95#and was good for at least this share of the hours it was checked in it, in at least one family
-history = 18*Time.MONTH#how far back trackers.json gives each tracker's days
+horizons = {#the stretches of time trackers.json totals each tracker's hours over, each ending with the hour it reports; every hour in one, for each tracker in each family, is exactly one outcome, so a horizon's hours always add up to its length
+	'hour': Time.HOUR,
+	'day': Time.DAY,
+	'week': Time.WEEK,
+	'month': 30*Time.DAY,#a fixed 30 days, where ergo's Time.MONTH is a twelfth of a year
+	'quarter': 90*Time.DAY,
+	'year': 365*Time.DAY,
+}
+criterion_horizon = 'month'#trackers.txt lists a tracker whose uptime over this horizon,
+criterion_uptime = 0.95#is at least this, in at least one family: its up hours as a share of the hours it wasn't asleep, however few those are so far, so the list fills from the first hour and steadies as a month of records grows
 
-letters = {'good': 'g', 'dns': 'd', 'no_address': 'n', 'timeout': 't', 'refused': 'r', 'cert': 'c', 'bad_reply': 'b', 'void': 'v'}#each outcome as one letter in trackers.json, which carries hundreds of trackers and months of days; the README's glossary spells each one out, and x counts the hours a good reply listed extra peers
+letters = {'up': 'u', 'dns': 'd', 'no_address': 'n', 'timeout': 't', 'refused': 'r', 'cert': 'c', 'bad_reply': 'b', 'asleep': 'z'}#each outcome as one letter in trackers.json, in the order it lists them; asleep is an hour with no result, when list's own monitor wasn't watching or every tracker in a family failed at once, and the README's glossary spells out each one
 
 family = 6 if os.environ.get('LIST_FAMILY') == '6' else 4#which family this container checks, set in the compose file
 reporting = os.environ.get('LIST_REPORT') == '1'#whether this container also publishes, which the IPv4 one does
 folder = os.environ.get('LIST_DIR', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data'))#the data folder both containers share, a volume; when run by hand, the data folder beside this program's folder, where the compose file's ./data is
 database_path = os.path.join(folder, 'list.sqlite')
 public = os.path.join(folder, 'public')#what the web server serves at list.ftorrent.com
-wait = 45*Time.SECOND#how long a pass listens for replies, comfortably longer than libtorrent's 30 seconds to give up on a tracker
+listen_shortest = 45*Time.SECOND#a pass listens at least this long, past libtorrent's 30 seconds to give up on a tracker, so its retries can show how far a failing tracker gets
+listen_longest = 15*Time.MINUTE#and past that, until every tracker has answered or failed, since a tracker queued behind dead ones gets its turn late, and cutting it off would record it as silent; this is only the stop for a pass that can't finish, well inside the hour
 fetch_limit = 30*Time.SECOND#how long fetching one list may take
 user_agent = f'ftorrent-list/0.1.0 libtorrent/{lt.version}'#how list introduces itself to trackers and to the lists it fetches, so an operator who sees it can find this project
 
-lists = {#where the candidates come from, by the name trackers.json gives each; Tracking the Trackers on docs.ftorrent.com says who keeps them and how each one checks
-	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt': 'ngosang',
-	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all_ws.txt': 'ngosang',
-	'https://newtrackon.com/api/all': 'newtrackon',
-}
-ours = [#ftorrent's own trackers, checked every hour whatever the lists say
+site = 'https://list.ftorrent.com'#where the report is published, which trackers.json names so a copy of it says where the live one is
+
+upstream = [#where the candidates come from, which trackers.json repeats at its top so a reader sees what was checked: each source's name, the page it lives at, its code, and the lists fetched from it every hour. Tracking the Trackers on docs.ftorrent.com says who keeps them and how each one checks
+	{
+		'name': 'ngosang',
+		'home': 'https://github.com/ngosang/trackerslist',
+		'code': 'https://github.com/ngosang/trackerslist',#the list is its own repository, so its page and its code are the same
+		'lists': [
+			'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt',
+			'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all_ws.txt',
+		],
+	},
+	{
+		'name': 'newtrackon',
+		'home': 'https://newtrackon.com',
+		'code': 'https://github.com/CorralPeltzer/newTrackon',
+		'lists': [
+			'https://newtrackon.com/api/all',
+		],
+	},
+]
+named_by = {list_url: source['name'] for source in upstream for list_url in source['lists']}#each list's URL to the name of its source
+downstream = [f'{site}/trackers.txt', f'{site}/trackers.json']#what this publishes from them
+
+ours = [#ftorrent's own trackers, checked every hour whatever the lists upstream say
 	'udp://open.ftorrent.com:443/announce',
 	'https://open.ftorrent.com/announce',
 	'wss://open.ftorrent.com',
 ]
-gauges = {#a UDP tracker whose outcome comes from its gauge's page.json rather than an announce: good when the tracker served UDP announces over this container's family in the gauge's last minute, a timeout when it served none; pair your own tracker with your own gauge's page the same way
+gauges = {#a UDP tracker whose outcome comes from its gauge's page.json rather than an announce: up when the tracker served UDP announces over this container's family in the gauge's last minute, a timeout when it served none; pair your own tracker with your own gauge's page the same way
 	'udp://open.ftorrent.com:443/announce': 'https://open.ftorrent.com/page.json',
 }
 
 schema = '''
 create table if not exists trackers (
 	id integer primary key,
-	address text unique not null,      -- the announce address, in the one spelling normalize() gives it
-	first_seen integer not null        -- the tick of the hour it first became a candidate
+	url text unique not null,          -- the announce URL, in the one spelling normalize() gives it
+	since integer not null             -- the tick of the first hour it was a candidate
 );
-create table if not exists listings (
-	list text not null,                -- the address of the list that named it
-	address text not null,
-	primary key (list, address)
+create table if not exists upstream (
+	list_url text not null,            -- the URL of the list that names it
+	url text not null,
+	primary key (list_url, url)
 );
 create table if not exists checks (
 	hour integer not null,             -- the tick at the top of the hour the check belongs to
 	family integer not null,           -- 4 or 6
 	tracker integer not null references trackers (id),
-	outcome text not null,             -- good, or how far it got: dns, no_address, timeout, refused, cert, or bad_reply
-	message text not null,             -- libtorrent's words for what went wrong, blank when good
-	extra_peers integer not null,      -- peers a good UDP or HTTP reply listed beyond the one it may, for a hash no one else has
+	outcome text not null,             -- up, or how far it got: dns, no_address, timeout, refused, cert, or bad_reply
+	message text not null,             -- libtorrent's words for what went wrong, blank when up
+	extra_peers integer not null,      -- peers a UDP or HTTP reply listed beyond the one it may, for a hash no one else has
 	primary key (hour, family, tracker)
+);
+create table if not exists daily (
+	day integer not null,              -- the tick at the start of the UTC day
+	family integer not null,
+	tracker integer not null references trackers (id),
+	outcome text not null,             -- an outcome, or asleep for the hours every tracker in the family failed
+	hours integer not null,            -- how many of the day's hours had this outcome
+	primary key (tracker, family, day, outcome)
 );
 '''
 
@@ -91,12 +126,9 @@ def clock():#a reading of the monotonic clock, in milliseconds, for timing a pas
 def top(t):#the tick at the top of the hour a tick falls in
 	return t - t % Time.HOUR
 
-def day(t):#the date of the day a tick falls in, in UTC, like 2026-11-09
-	return tick_to_iso(t)[:10]#the date part of ergo's ISO form, like 2026-11-09T07:00:00.000Z
-
 # candidates
 
-def normalize(text):#one spelling for each announce address, so a tracker two lists name differently is one candidate: lowercase, without the port its scheme implies; None for anything that isn't an address of a kind we check
+def normalize(text):#one spelling for each announce URL, so a tracker two lists name differently is one candidate: lowercase, without the port its scheme implies; None for anything that isn't an address of a kind we check
 	try:
 		parts = urllib.parse.urlsplit(text.strip())
 		port = parts.port#reading it checks it, and an impossible port raises
@@ -109,7 +141,7 @@ def normalize(text):#one spelling for each announce address, so a tracker two li
 	query = f'?{parts.query}' if parts.query else ''
 	return f'{scheme}://{host}{parts.path}{query}'
 
-def fetch(url):#one list's addresses, or None when it can't be had this hour. A site that's down, slow, or garbled is an ordinary answer here, so this is where those exceptions stop
+def fetch(url):#the tracker URLs one source names, or None when it can't be had this hour. A site that's down, slow, or garbled is an ordinary answer here, so this is where those exceptions stop
 	request = urllib.request.Request(url, headers={'User-Agent': user_agent})
 	try:
 		with urllib.request.urlopen(request, timeout=fetch_limit/Time.SECOND) as response:#urllib counts in seconds
@@ -117,18 +149,18 @@ def fetch(url):#one list's addresses, or None when it can't be had this hour. A 
 	except (OSError, ValueError, http.client.HTTPException) as e:
 		say(f'kept the last copy of {url}, since fetching it said: {e}')
 		return None
-	return [address for address in (normalize(line) for line in text.splitlines()) if address]
+	return [tracker for tracker in (normalize(line) for line in text.splitlines()) if tracker]
 
 def gather(database, stamp):#this hour's candidates: each list fetched replaces its last copy, a list that couldn't be fetched keeps its last one, and ftorrent's own trackers are always in
-	for url in lists:
-		found = fetch(url)
+	for list_url in named_by:
+		found = fetch(list_url)
 		if found is None: continue
 		with database:#one transaction, so the other container never reads a list half replaced
-			database.execute('delete from listings where list = ?', (url,))
-			database.executemany('insert or ignore into listings (list, address) values (?, ?)', [(url, address) for address in found])
-	candidates = {row[0] for row in database.execute('select address from listings')} | set(ours)
+			database.execute('delete from upstream where list_url = ?', (list_url,))
+			database.executemany('insert or ignore into upstream (list_url, url) values (?, ?)', [(list_url, tracker) for tracker in found])
+	candidates = {row[0] for row in database.execute('select url from upstream')} | set(ours)
 	with database:
-		database.executemany('insert or ignore into trackers (address, first_seen) values (?, ?)', [(address, stamp) for address in candidates])
+		database.executemany('insert or ignore into trackers (url, since) values (?, ?)', [(tracker, stamp) for tracker in candidates])
 	return sorted(candidates)
 
 # checks
@@ -162,16 +194,16 @@ def classify(alert):#how far a failed announce got, and the words to keep for it
 	if category == 'system' or (category == 'libtorrent' and value == 36): return ('timeout', message)#nothing there to answer: timed out, or no route to it
 	return ('bad_reply', message)#something answered, and what it said wasn't a tracker's reply
 
-def judge(address, peers, failures):#one tracker's outcome for the hour, as (outcome, message, extra peers): good when it replied, or else the furthest of its failures; peers is how many its reply listed, and None when it never replied
+def judge(url, peers, failures):#one tracker's outcome for the hour, as (outcome, message, extra peers): up when it replied, or else the furthest of its failures; peers is how many its reply listed, and None when it never replied
 	if peers is not None:#None rather than falsy, since a reply that lists no one, zero peers, is the honest one
 		extra = 0
-		if peers > 1 and not address.startswith('wss://'): extra = peers - 1#one peer is allowed, since some trackers list the announcer itself; a WebSocket tracker relays offers rather than listing peers, so only UDP and HTTP replies carry a count to read
-		return ('good', '', extra)
+		if peers > 1 and not url.startswith('wss://'): extra = peers - 1#one peer is allowed, since some trackers list the announcer itself; a WebSocket tracker relays offers rather than listing peers, so only UDP and HTTP replies carry a count to read
+		return ('up', '', extra)
 	if not failures: return ('timeout', 'no answer', 0)#silent for the whole pass, with not even an error to report
 	outcome, message = max(failures, key=lambda failure: depth[failure[0]])#max keeps the first of equals, so this is the earliest of the furthest
 	return (outcome, message, 0)
 
-def check(candidates, local):#announce once to every candidate from local, this container's own address, and judge what came back, as {tracker address: (outcome, message, extra peers)}
+def check(candidates, local):#announce once to every candidate from local, this container's own address, and judge what came back, as {tracker URL: (outcome, message, extra peers)}
 	host = f'[{local}]' if ':' in local else local
 	session = lt.session({
 		'listen_interfaces': f'{host}:{49152 + secrets.randbelow(16384)}',#the one address, at a port picked fresh each pass from the range IANA sets aside for this, 49152 through 65535; announces carry the port, and nothing ever connects to it, since nothing comes into the container
@@ -185,6 +217,7 @@ def check(candidates, local):#announce once to every candidate from local, this 
 		'webtorrent_stun_server': '',#a WebSocket announce carries WebRTC offers, which would otherwise ask a STUN server for this container's public address; the check only needs the tracker's reply
 		'user_agent': user_agent,
 		'alert_mask': lt.alert_category.tracker | lt.alert_category.error,
+		'alert_queue_size': 100000,#libtorrent tells the pass everything through a queue the loop below empties every half second, and drops what arrives once it's full, so a reply it dropped would read as a tracker that never answered; a pass's busiest moment, its opening burst, is about one alert per tracker, and the 2000 libtorrent starts with would fill at seven times today's lists, while 100000 costs nothing until it's used
 	})
 	tracker_of = {}#each torrent's info hash, in the hex libtorrent prints, to its tracker
 	replied = set()#the trackers that sent a reply
@@ -202,9 +235,11 @@ def check(candidates, local):#announce once to every candidate from local, this 
 			params.flags &= ~lt.torrent_flags.paused
 			handles.append(session.add_torrent(params))
 			tracker_of[str(info_hash)] = tracker
-		while clock() < started + wait:
+		while clock() < started + listen_longest:
+			if clock() > started + listen_shortest and len(replied | failures.keys()) == len(candidates): break#every tracker has answered or failed
 			session.wait_for_alert(Time.SECOND//2)#libtorrent takes milliseconds here, and returns early as soon as an alert arrives
 			for alert in session.pop_alerts():
+				if isinstance(alert, lt.alerts_dropped_alert): say('libtorrent dropped alerts it had no room to queue, so some trackers this hour may read as silent')
 				if not isinstance(alert, (lt.tracker_reply_alert, lt.tracker_error_alert)): continue
 				tracker = tracker_of.get(str(alert.handle.info_hashes().v1))
 				if tracker is None: continue#an alert about something other than our torrents
@@ -212,6 +247,8 @@ def check(candidates, local):#announce once to every candidate from local, this 
 					replied.add(tracker)
 				else:
 					failures.setdefault(tracker, []).append(classify(alert))#libtorrent retries on its own, so a tracker can fail more than one way in a pass
+		unheard = len(candidates) - len(replied | failures.keys())
+		if unheard > 0: say(f'stopped listening after {listen_longest//Time.MINUTE} minutes, with {unheard} trackers still unheard')
 		peers = {tracker_of[str(handle.info_hashes().v1)]: handle.status().list_peers for handle in handles}#the peers libtorrent kept from each reply, which leaves out an address of nothing or a port of zero that some trackers pad a reply with; the reply's own count, num_peers, includes those
 		for handle in handles: session.remove_torrent(handle)#which tells each tracker that answered that the announcer is leaving, so the random hashes don't linger in its memory
 		end = clock() + 3*Time.SECOND#a moment for those goodbyes to go out before the session closes
@@ -241,7 +278,7 @@ def read_gauge(url):#a paired UDP tracker's outcome for the hour from its gauge'
 	if silent:#every count zero is a gauge with nothing to count from, as in the minute after it starts, which says nothing about the tracker
 		say(f'no outcome from {url}, since it counted nothing at all')
 		return None
-	if count > 0: return ('good', '', 0)
+	if count > 0: return ('up', '', 0)
 	return ('timeout', f'page.json counted no UDP announces over IPv{family} in its last minute', 0)#what a client sees of a UDP tracker that's down, or one the circuit breaker has paused
 
 def run(database, stamp):#one pass: gather the candidates, check them all, and record what came back under this hour
@@ -253,49 +290,68 @@ def run(database, stamp):#one pass: gather the candidates, check them all, and r
 	paired = {tracker: read_gauge(gauges[tracker]) for tracker in candidates if tracker in gauges}#read first, near the top of the hour, ahead of the pass
 	results = check([tracker for tracker in candidates if tracker not in gauges], local)
 	results.update({tracker: outcome for tracker, outcome in paired.items() if outcome})#a page that couldn't speak records nothing for its tracker, which counts against no one
-	ids = dict(database.execute('select address, id from trackers'))
+	ids = dict(database.execute('select url, id from trackers'))
 	with database:
 		database.executemany('insert or replace into checks (hour, family, tracker, outcome, message, extra_peers) values (?, ?, ?, ?, ?, ?)', [(stamp, family, ids[tracker], outcome, message, extra) for tracker, (outcome, message, extra) in results.items()])
-	good = sum(1 for outcome, _, _ in results.values() if outcome == 'good')
-	say(f'checked {len(results)} trackers, and {good} were good')
+	up = sum(1 for outcome, _, _ in results.values() if outcome == 'up')
+	say(f'checked {len(results)} trackers, and {up} were up')
 
 # report
 
 void_hours = '''
-	with void as (select hour, family from checks where hour > ? and hour <= ? group by hour, family having sum(outcome = 'good') = 0)
-'''#an hour in which every tracker in a family failed is void for that family, since the trouble was at this end; the queries below leave it out of every share and show it as void in the days
+	with void as (select hour, family from checks where hour between ? and ? group by hour, family having sum(outcome = 'up') = 0)
+'''#an hour in which every tracker in a family failed, so the trouble was at this end and list's monitor was as good as asleep; the queries below count it as asleep for every tracker in that family. Each passes its first and last hour, which this reads in the order of the checks' key, hour first, so it sorts nothing
 
-def shares(database, stamp):#for each tracker and family, the share of hours it was good among the hours it was checked over the listing window, void hours left out
-	rows = database.execute(void_hours + '''
-		select tracker, family, sum(outcome = 'good'), count(*) from checks
-		where hour > ? and hour <= ? and (hour, family) not in (select hour, family from void)
-		group by tracker, family''', (stamp - listing_window, stamp)*2)#the window twice: once for the void hours, once for the shares
-	return {(tracker, f): good/checked for tracker, f, good, checked in rows}
+def tally(database, stamp):#fold each day that ended before the stamp's day into daily, once. Totaling a year of hours every hour would sort millions of rows; a tally is one row per tracker, family, day, and outcome, and a finished day never changes
+	today = stamp - stamp % Time.DAY
+	last = database.execute('select max(day) from daily').fetchone()[0]
+	if last is None:#nothing tallied yet, so start from the first hour ever checked
+		first = database.execute('select min(hour) from checks').fetchone()[0]
+		if first is None: return
+		d = first - first % Time.DAY
+	else:
+		d = last + Time.DAY
+	while d < today:
+		with database:#a day at a time, each its own transaction
+			database.execute(void_hours + '''
+				insert into daily (day, family, tracker, outcome, hours)
+				select ?, family, tracker, case when (hour, family) in (select hour, family from void) then 'asleep' else outcome end, count(*)
+				from checks where hour between ? and ?
+				group by family, tracker, 4''', (d, d + Time.DAY - Time.HOUR, d, d, d + Time.DAY - Time.HOUR))#the day's first and last hours for the void hours, the day itself, and its hours again for the checks
+		d += Time.DAY
 
-def days(database, stamp):#for each tracker and family, its history over the stretch trackers.json covers: runs of days, each as [first date, how many days, {outcome: hours}], with identical days run together and outcomes with no hours left out
-	rows = database.execute(void_hours + '''
-		select tracker, family, hour - hour % ?,
-			case when (hour, family) in (select hour, family from void) then 'void' else outcome end,
-			count(*), sum(extra_peers > 0)
-		from checks where hour > ? and hour <= ?
-		group by 1, 2, 3, 4 order by 1, 2, 3''', (stamp - history, stamp, Time.DAY, stamp - history, stamp))#the stretch for the void hours, the length of a day to find each hour's, and the stretch again for the checks
-	counts = {}#(tracker, family) to {day tick: {outcome: hours}}
-	for tracker, f, d, outcome, hours, flagged in rows:
-		hours_of = counts.setdefault((tracker, f), {}).setdefault(d, {})
-		hours_of[letters[outcome]] = hours
-		if flagged > 0: hours_of['x'] = hours_of.get('x', 0) + flagged#hours whose good reply listed peers that shouldn't exist, beside the outcomes rather than among them, since those hours were good
-	runs = {}
-	for key, by_day in counts.items():
-		run_list = []
-		previous = None
-		for d in sorted(by_day):
-			if run_list and run_list[-1][2] == by_day[d] and d == previous + Time.DAY:#the same counts as the day before, so the run grows
-				run_list[-1][1] += 1
-			else:
-				run_list.append([day(d), 1, by_day[d]])
-			previous = d
-		runs[key] = run_list
-	return runs
+def totals(database, stamp):#for each tracker and family, its hours of each outcome over every horizon, as {(tracker, family): {horizon: {outcome: hours}}}, leaving out the hours it has no record of, which publish counts as asleep. A horizon's whole days come from the tally, and its two partial ones, its first day and today, from the checks
+	today = stamp - stamp % Time.DAY
+	result = {}
+	def add(key, horizon, outcome, hours):
+		counts = result.setdefault(key, {}).setdefault(horizon, {})
+		counts[outcome] = counts.get(outcome, 0) + hours
+	def add_checks(horizon, first, last):#each tracker's hours from first through last, from the checks themselves, with void hours as asleep
+		for tracker, f, outcome, hours in database.execute(void_hours + '''
+			select tracker, family, case when (hour, family) in (select hour, family from void) then 'asleep' else outcome end, count(*)
+			from checks where hour between ? and ?
+			group by 1, 2, 3''', (first, last)*2):#the two hours twice: once for the void hours, once for the checks
+			add((tracker, f), horizon, outcome, hours)
+
+	whole = {}#each horizon longer than a day, to the first and last of the whole days it takes from the tally
+	for horizon, length in horizons.items():
+		first = stamp - length + Time.HOUR#the horizon's first hour
+		if length <= Time.DAY:
+			add_checks(horizon, first, stamp)
+			continue
+		start = first - first % Time.DAY#the day that first hour falls in
+		add_checks(horizon, first, start + Time.DAY - Time.HOUR)#the rest of that first day
+		add_checks(horizon, today, stamp)#and today so far
+		whole[horizon] = (start + Time.DAY, today - Time.DAY)
+	earliest = min((begin for begin, _ in whole.values()), default=today)#with no horizon longer than a day, the tally isn't needed
+	for tracker, f, d, outcome, hours in database.execute('select tracker, family, day, outcome, hours from daily where day between ? and ?', (earliest, today - Time.DAY)):
+		for horizon, (begin, end) in whole.items():
+			if begin <= d <= end: add((tracker, f), horizon, outcome, hours)
+	return result
+
+def uptime(hours):#a horizon's up hours as a share of the hours that weren't asleep, from its {letter: hours}, or 0 when every hour was asleep
+	awake = sum(hours.values()) - hours.get('z', 0)
+	return hours.get('u', 0)/awake if awake > 0 else 0
 
 def write(name, text):#one public file, written beside its place and renamed over it, so a reader always gets a whole file, this hour's or the last
 	temporary = os.path.join(folder, f'{name}.tmp')
@@ -304,42 +360,57 @@ def write(name, text):#one public file, written beside its place and renamed ove
 	os.replace(temporary, os.path.join(public, name))
 
 def publish(database, stamp):#write the given hour's report from what both containers recorded; an hour with nothing recorded writes nothing, leaving the last report in place
-	rows = database.execute('select trackers.id, trackers.address, trackers.first_seen, checks.family, checks.outcome, checks.message, checks.extra_peers from checks join trackers on trackers.id = checks.tracker where checks.hour = ?', (stamp,)).fetchall()
+	rows = database.execute('select trackers.id, trackers.url, trackers.since, checks.family, checks.outcome from checks join trackers on trackers.id = checks.tracker where checks.hour = ?', (stamp,)).fetchall()
 	if not rows:
 		say(f'nothing was recorded in the hour {tick_to_text(stamp)}, so the last report stays')
 		return
-	share = shares(database, stamp)
-	history_of = days(database, stamp)
-	named = {}#tracker address to the names of the lists that name it now
-	for url, address in database.execute('select list, address from listings'):
-		named.setdefault(address, set()).add(lists.get(url, url))
-	families = {}
-	for f in (4, 6):
-		outcomes = [row[4] for row in rows if row[3] == f]
-		families[f'ipv{f}'] = 'missing' if not outcomes else 'void' if 'good' not in outcomes else 'checked'#missing when that container recorded nothing, void when every tracker failed
+	tally(database, stamp)
+	totals_of = totals(database, stamp)
+	named = {}#tracker URL to the names of the sources upstream that name it now
+	for list_url, url in database.execute('select list_url, url from upstream'):
+		named.setdefault(url, set()).add(named_by.get(list_url, list_url))
+	extra = {row[0] for row in database.execute('select distinct tracker from checks where hour between ? and ? and extra_peers > 0', (stamp - horizons['month'] + Time.HOUR, stamp))}#the trackers whose reply, at least once in the last 30 days, listed peers for a hash no one else has
+	checked = {f'ipv{f}': any(row[4] == 'up' for row in rows if row[3] == f) for f in (4, 6)}#whether this hour's results in each family mean anything: true when that family's container recorded the hour and at least one tracker answered, false when it recorded nothing or every tracker failed
+
+	def column(key):#one tracker's hours in one family over every horizon, in letters, with the hours it has no record of counted as asleep, so each horizon adds up to its length
+		hours_of = {}
+		for horizon, length in horizons.items():
+			counts = dict(totals_of.get(key, {}).get(horizon, {}))
+			counts['asleep'] = counts.get('asleep', 0) + length//Time.HOUR - sum(counts.values())
+			hours_of[horizon] = {letter: counts[outcome] for outcome, letter in letters.items() if counts.get(outcome, 0) > 0}
+		return hours_of
 
 	trackers = {}#tracker id to its entry in the report
-	for tracker, address, first_seen, f, outcome, message, extra in rows:
-		entry = trackers.setdefault(tracker, {'address': address, 'since': first_seen, 'lists': sorted(named.get(address, set()) | ({'ftorrent'} if address in ours else set())), 'listed': False, 'stack': 'neither', 'ipv4': None, 'ipv6': None})
-		column = {'outcome': letters[outcome]}
-		if message: column['message'] = message
-		if extra > 0: column['extra_peers'] = extra
-		column['share'] = round(share.get((tracker, f), 0), 4)
-		column['days'] = history_of.get((tracker, f), [])
-		entry[f'ipv{f}'] = column
-		if first_seen <= stamp - listing_window + Time.HOUR and share.get((tracker, f), 0) >= listing_share: entry['listed'] = True#a candidate since the window's first hour, and good often enough across it
+	for tracker, url, since, f, outcome in rows:
+		if tracker in trackers: continue#a row for each family, and the entry covers both
+		columns = {f'ipv{f}': column((tracker, f)) for f in (4, 6)}
+		trackers[tracker] = {
+			'url': url,
+			'since': since,
+			'upstream': sorted(named.get(url, set())),
+			'listed': any(uptime(hours_of[criterion_horizon]) >= criterion_uptime for hours_of in columns.values()),#up often enough across the hours it was checked, however few, in at least one family
+			'extra_peers': tracker in extra,
+			**columns,
+		}
 
-	for entry in trackers.values():#which families the tracker's name had an address in this hour, whether or not anything answered there
-		addressed = [f for f in (4, 6) if entry[f'ipv{f}'] and entry[f'ipv{f}']['outcome'] not in ('d', 'n')]
-		entry['stack'] = 'dual' if len(addressed) == 2 else f'ipv{addressed[0]}' if addressed else 'neither'
-
-	def standing(entry):#how a tracker ranks: its better family's share, then its address, so the most dependable come first
-		return (-max((entry[key]['share'] for key in ('ipv4', 'ipv6') if entry[key]), default=0), entry['address'])
+	def standing(entry):#how a tracker ranks: its better family's uptime over the criterion's horizon, then its URL, so the most dependable come first
+		return (-max(uptime(entry[key][criterion_horizon]) for key in ('ipv4', 'ipv6')), entry['url'])
 	ordered = sorted(trackers.values(), key=standing)
-	listed = [entry['address'] for entry in ordered if entry['listed']]
+	listed = [entry['url'] for entry in ordered if entry['listed']]
 
-	write('trackers.txt', ''.join(f'{address}\n\n' for address in listed))#one address per line with a blank line between, the format ngosang's lists are in and the tools that read them expect
-	write('trackers.json', json.dumps({'hour': stamp, 'families': families, 'listing': {'window': listing_window, 'share': listing_share}, 'trackers': ordered}, separators=(',', ':')) + '\n')#compact, since its days make it the large file
+	write('trackers.txt', ''.join(f'{url}\n\n' for url in listed))#one URL per line with a blank line between, the format ngosang's lists are in and the tools that read them expect
+	report = {
+		'title': 'list.ftorrent.com uptime record of the public BitTorrent and WebTorrent trackers, fresh each hour',#for anyone reading the file by hand, the way open.ftorrent.com's page.json begins
+		'about': site,#the page this file is the data behind
+		'hour': stamp,
+		'when': tick_to_iso(stamp),#the same hour, readable, like 2026-11-09T18:00:00.000Z
+		'upstream': upstream,
+		'downstream': downstream,
+		'checked': checked,
+		'criterion': {'horizon': criterion_horizon, 'uptime': criterion_uptime},#the one test a tracker passes to be listed in trackers.txt
+		'trackers': ordered,
+	}
+	write('trackers.json', json.dumps(report, separators=(',', ':')) + '\n')#compact, since it carries hundreds of trackers
 	say(f'published the hour {tick_to_text(stamp)}: {len(listed)} of {len(ordered)} trackers listed')
 
 # main
