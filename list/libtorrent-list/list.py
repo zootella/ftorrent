@@ -8,6 +8,7 @@ import secrets
 import sqlite3
 import tempfile
 import traceback
+import concurrent.futures
 import http.client
 import urllib.parse
 import urllib.request
@@ -20,7 +21,7 @@ from zootella.ergo import Size, Time, has_tick, tick_to_iso, tick_to_text#ergo's
 #
 # The candidates come from public lists other people keep, fetched every hour: ngosang's list of all trackers and its list of WebSocket ones, and newTrackon's full list, plus ftorrent's own three. A list that can't be fetched keeps its last good copy, so one site down for an hour doesn't empty the candidates.
 #
-# Each tracker gets a torrent of its own, a fresh random info hash that names no real torrent, in one libtorrent session listening on the container's one address. libtorrent announces to them all at once, metering its HTTP announces fifty at a time the way it does in any client, and the pass listens until every tracker has answered or failed. Each tracker's outcome for the hour is how far it got: its name resolved to an address in this family, something answered, an HTTPS or WebSocket tracker's certificate held, and the answer was a tracker's reply. A UDP or HTTP reply that lists other peers for a hash no one else has is still up, and the tracker is flagged: what that means isn't known, so it's recorded and published, and decides nothing. The session sends announces and nothing else: it never connects to the peers a reply lists, runs no DHT, and maps no ports.
+# Each tracker gets a torrent of its own, a fresh random info hash that names no real torrent, in one libtorrent session listening on the container's one address. Before announcing, the pass looks up every tracker's name itself, all at once: a name that doesn't resolve, or has no address in this family, is decided right there, and only the rest are announced to, one a second, each listened to on a window of its own. Each tracker's outcome for the hour is how far it got: its name resolved to an address in this family, something answered, an HTTPS or WebSocket tracker's certificate held, and the answer was a tracker's reply. A UDP or HTTP reply that lists other peers for a hash no one else has is still up, and the tracker is flagged: what that means isn't known, so it's recorded and published, and decides nothing. The session sends announces and nothing else: it never connects to the peers a reply lists, runs no DHT, and maps no ports.
 #
 # A UDP tracker paired with the page.json of the gauge beside it, as ftorrent's own is, gets no announce. Its outcome comes from that page instead: the count of UDP announces the tracker served over this container's family in the gauge's last minute, which are peers reaching it from the internet, the same claim every other outcome makes.
 #
@@ -46,8 +47,11 @@ reporting = os.environ.get('LIST_REPORT') == '1'#whether this container also pub
 folder = os.environ.get('LIST_DIR', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data'))#the data folder both containers share, a volume; when run by hand, the data folder beside this program's folder, where the compose file's ./data is
 database_path = os.path.join(folder, 'list.sqlite')
 public = os.path.join(folder, 'public')#what the web server serves at list.ftorrent.com
-listen_shortest = 45*Time.SECOND#a pass listens at least this long, past libtorrent's 30 seconds to give up on a tracker, so its retries can show how far a failing tracker gets
-listen_longest = 15*Time.MINUTE#and past that, until every tracker has answered or failed, since a tracker queued behind dead ones gets its turn late, and cutting it off would record it as silent; this is only the stop for a pass that can't finish, well inside the hour
+lookup_threads = 32#how many names the pass looks up at once before announcing, so a slow name delays only itself
+lookup_limit = 30*Time.SECOND#how long a name may take before it counts as not resolving, the same 30 seconds libtorrent gives a tracker
+start_every = 1*Time.SECOND#the pass starts one tracker's announce each second, so each is checked on its own, the way a client announces a torrent to its few trackers, rather than behind hundreds of others
+listen_shortest = 45*Time.SECOND#each tracker is listened to at least this long after its own announce, past libtorrent's 30 seconds to give up on one, so its retries can show how far a failing tracker gets,
+listen_longest = 2*Time.MINUTE#and past that until it has answered or failed, but no longer than this, the stop for one libtorrent never reports on. A pass takes a second for each tracker it announces to, plus this at most, which stays inside the hour up to about 3400 trackers
 fetch_limit = 30*Time.SECOND#how long fetching one list may take
 user_agent = f'ftorrent-list/0.1.0 libtorrent/{lt.version}'#how list introduces itself to trackers and to the lists it fetches, so an operator who sees it can find this project
 
@@ -103,6 +107,13 @@ create table if not exists checks (
 	message text not null,             -- libtorrent's words for what went wrong, blank when up
 	extra_peers integer not null,      -- peers a UDP or HTTP reply listed beyond the one it may, for a hash no one else has
 	primary key (hour, family, tracker)
+);
+create table if not exists passes (
+	hour integer not null,             -- the tick at the top of the hour the pass belongs to
+	family integer not null,
+	began integer not null,            -- the tick the pass began
+	ended integer not null,            -- and the tick it ended
+	primary key (hour, family)
 );
 create table if not exists daily (
 	day integer not null,              -- the tick at the start of the UTC day
@@ -174,6 +185,29 @@ def local_address():#the address this container sends from in its family: connec
 	except OSError:#a container whose network has no route in this family
 		return None
 
+def lookup(candidates):#look up every candidate's name in Python, all at once on a pool of threads, and decide the trackers that can't be announced to from this family, as {tracker URL: (outcome, message, extra peers)} for each name that doesn't resolve or has no address in this family. libtorrent looks names up one at a time, on a single thread, so a tracker left to it can wait in that line past its 30 seconds and read as a timeout; looked up here, one slow name delays only itself, and the server's DNS cache is warm for the names libtorrent asks again
+	want = socket.AF_INET6 if family == 6 else socket.AF_INET
+	name_of = {tracker: urllib.parse.urlsplit(tracker).hostname for tracker in candidates}
+	def families(name):#the address families a name has, from both kinds of record, whatever this container can reach
+		return {entry[0] for entry in socket.getaddrinfo(name, None)}
+	pool = concurrent.futures.ThreadPoolExecutor(lookup_threads)
+	asked = {name: pool.submit(families, name) for name in set(name_of.values())}
+	concurrent.futures.wait(asked.values(), timeout=lookup_limit/Time.SECOND)#concurrent.futures counts in seconds
+	pool.shutdown(wait=False, cancel_futures=True)#a name still out stays out, and its thread finishes on its own
+	decided = {}
+	for tracker, name in name_of.items():
+		answer = asked[name]
+		if answer.cancelled() or not answer.done():
+			decided[tracker] = ('dns', f'no answer from DNS in {lookup_limit//Time.SECOND} seconds', 0)
+			continue
+		try:
+			found = answer.result()
+		except (OSError, UnicodeError) as e:#a name that doesn't resolve, or can't be written as one; an ordinary answer here, so this is where those exceptions stop
+			decided[tracker] = ('dns', str(e), 0)
+			continue
+		if want not in found: decided[tracker] = ('no_address', f'no IPv{family} address', 0)
+	return decided
+
 depth = {'dns': 0, 'no_address': 0, 'timeout': 1, 'refused': 2, 'cert': 3, 'bad_reply': 4}#how far each failure shows a tracker got; when a tracker fails more than one way in a pass, the furthest is the one recorded, so a server that resets a connection and then fails its certificate is recorded as a certificate problem, since something did answer
 hangups = {errno.ECONNREFUSED, errno.ECONNRESET, errno.EPIPE}#the system's errors that mean something at the address answered and turned us away, by the numbers this system gives them
 
@@ -203,7 +237,7 @@ def judge(url, peers, failures):#one tracker's outcome for the hour, as (outcome
 	outcome, message = max(failures, key=lambda failure: depth[failure[0]])#max keeps the first of equals, so this is the earliest of the furthest
 	return (outcome, message, 0)
 
-def check(candidates, local):#announce once to every candidate from local, this container's own address, and judge what came back, as {tracker URL: (outcome, message, extra peers)}
+def check(candidates, local):#announce to each candidate from local, this container's own address, one a second, and judge each when its own window ends, as {tracker URL: (outcome, message, extra peers)}
 	host = f'[{local}]' if ':' in local else local
 	session = lt.session({
 		'listen_interfaces': f'{host}:{49152 + secrets.randbelow(16384)}',#the one address, at a port picked fresh each pass from the range IANA sets aside for this, 49152 through 65535; announces carry the port, and nothing ever connects to it, since nothing comes into the container
@@ -217,27 +251,30 @@ def check(candidates, local):#announce once to every candidate from local, this 
 		'webtorrent_stun_server': '',#a WebSocket announce carries WebRTC offers, which would otherwise ask a STUN server for this container's public address; the check only needs the tracker's reply
 		'user_agent': user_agent,
 		'alert_mask': lt.alert_category.tracker | lt.alert_category.error,
-		'alert_queue_size': 100000,#libtorrent tells the pass everything through a queue the loop below empties every half second, and drops what arrives once it's full, so a reply it dropped would read as a tracker that never answered; a pass's busiest moment, its opening burst, is about one alert per tracker, and the 2000 libtorrent starts with would fill at seven times today's lists, while 100000 costs nothing until it's used
+		'alert_queue_size': 100000,#libtorrent tells the pass everything through a queue the loop below empties four times a second, and drops what arrives once it's full, so a reply it dropped would read as a tracker that never answered; with announces a second apart the queue holds a few dozen at most, and 100000 costs nothing until it's used
 	})
 	tracker_of = {}#each torrent's info hash, in the hex libtorrent prints, to its tracker
 	replied = set()#the trackers that sent a reply
-	failures = {}#tracker to every (outcome, message) its errors showed this pass
+	failures = {}#tracker to every (outcome, message) its errors showed
+	results = {}
 	with tempfile.TemporaryDirectory() as scratch:#libtorrent wants somewhere to save a torrent's files, and these torrents never have any
-		started = clock()
-		handles = []
-		for tracker in candidates:
-			info_hash = lt.sha1_hash(secrets.token_bytes(20))#a hash no real torrent has, so no one else announces it
-			params = lt.add_torrent_params()
-			params.info_hashes = lt.info_hash_t(info_hash)
-			params.trackers = [tracker]
-			params.save_path = scratch
-			params.flags &= ~lt.torrent_flags.auto_managed#every torrent active at once, rather than libtorrent's queue starting a few at a time
-			params.flags &= ~lt.torrent_flags.paused
-			handles.append(session.add_torrent(params))
-			tracker_of[str(info_hash)] = tracker
-		while clock() < started + listen_longest:
-			if clock() > started + listen_shortest and len(replied | failures.keys()) == len(candidates): break#every tracker has answered or failed
-			session.wait_for_alert(Time.SECOND//2)#libtorrent takes milliseconds here, and returns early as soon as an alert arrives
+		waiting = list(candidates)#the trackers not yet announced to, in the order they start
+		live = {}#tracker to its torrent and when its announce started
+		next_start = clock()
+		while waiting or live:
+			while waiting and clock() >= next_start:#start the next announce when its second comes
+				tracker = waiting.pop(0)
+				info_hash = lt.sha1_hash(secrets.token_bytes(20))#a hash no real torrent has, so no one else announces it
+				params = lt.add_torrent_params()
+				params.info_hashes = lt.info_hash_t(info_hash)
+				params.trackers = [tracker]
+				params.save_path = scratch
+				params.flags &= ~lt.torrent_flags.auto_managed#active the moment it's added, rather than waiting on libtorrent's queue
+				params.flags &= ~lt.torrent_flags.paused
+				tracker_of[str(info_hash)] = tracker
+				live[tracker] = (session.add_torrent(params), clock())
+				next_start += start_every
+			session.wait_for_alert(Time.SECOND//4)#libtorrent takes milliseconds here, and returns early as soon as an alert arrives
 			for alert in session.pop_alerts():
 				if isinstance(alert, lt.alerts_dropped_alert): say('libtorrent dropped alerts it had no room to queue, so some trackers this hour may read as silent')
 				if not isinstance(alert, (lt.tracker_reply_alert, lt.tracker_error_alert)): continue
@@ -246,16 +283,22 @@ def check(candidates, local):#announce once to every candidate from local, this 
 				if isinstance(alert, lt.tracker_reply_alert):
 					replied.add(tracker)
 				else:
-					failures.setdefault(tracker, []).append(classify(alert))#libtorrent retries on its own, so a tracker can fail more than one way in a pass
-		unheard = len(candidates) - len(replied | failures.keys())
-		if unheard > 0: say(f'stopped listening after {listen_longest//Time.MINUTE} minutes, with {unheard} trackers still unheard')
-		peers = {tracker_of[str(handle.info_hashes().v1)]: handle.status().list_peers for handle in handles}#the peers libtorrent kept from each reply, which leaves out an address of nothing or a port of zero that some trackers pad a reply with; the reply's own count, num_peers, includes those
-		for handle in handles: session.remove_torrent(handle)#which tells each tracker that answered that the announcer is leaving, so the random hashes don't linger in its memory
-		end = clock() + 3*Time.SECOND#a moment for those goodbyes to go out before the session closes
+					failures.setdefault(tracker, []).append(classify(alert))#libtorrent retries on its own, so a tracker can fail more than one way in its window
+			for tracker, (handle, began) in list(live.items()):#judge each tracker whose own window has ended
+				waited = clock() - began
+				heard = tracker in replied or tracker in failures
+				if (waited > listen_shortest and heard) or waited > listen_longest:
+					peers = handle.status().list_peers if tracker in replied else None#the peers libtorrent kept from its reply, which leaves out an address of nothing or a port of zero that some trackers pad a reply with; the reply's own count, num_peers, includes those
+					results[tracker] = judge(tracker, peers, failures.get(tracker))
+					session.remove_torrent(handle)#which tells a tracker that answered that the announcer is leaving, so the random hash doesn't linger in its memory
+					del live[tracker]
+		end = clock() + 3*Time.SECOND#a moment for the last goodbyes to go out before the session closes
 		while clock() < end:
 			session.wait_for_alert(Time.SECOND//2)
 			session.pop_alerts()
-	return {tracker: judge(tracker, peers[tracker] if tracker in replied else None, failures.get(tracker)) for tracker in candidates}
+	silent = sum(1 for _, message, _ in results.values() if message == 'no answer')
+	if silent > 0: say(f'{silent} trackers went {listen_longest//Time.MINUTE} minutes with no word from libtorrent')
+	return results
 
 def read_gauge(url):#a paired UDP tracker's outcome for the hour from its gauge's page.json, as (outcome, message, extra peers), or None when the page can't speak for this hour. A page that can't be fetched or read is an ordinary answer here, so this is where those exceptions stop
 	request = urllib.request.Request(url, headers={'User-Agent': user_agent})
@@ -281,20 +324,24 @@ def read_gauge(url):#a paired UDP tracker's outcome for the hour from its gauge'
 	if count > 0: return ('up', '', 0)
 	return ('timeout', f'page.json counted no UDP announces over IPv{family} in its last minute', 0)#what a client sees of a UDP tracker that's down, or one the circuit breaker has paused
 
-def run(database, stamp):#one pass: gather the candidates, check them all, and record what came back under this hour
+def run(database, stamp):#one pass: gather the candidates, check them all, and record what came back under this hour, and how long the pass took
+	began = tick()
 	local = local_address()
 	if local is None:
 		say('no route in this family, so nothing was checked this hour')
 		return
 	candidates = gather(database, stamp)
 	paired = {tracker: read_gauge(gauges[tracker]) for tracker in candidates if tracker in gauges}#read first, near the top of the hour, ahead of the pass
-	results = check([tracker for tracker in candidates if tracker not in gauges], local)
+	announced = [tracker for tracker in candidates if tracker not in gauges]
+	results = lookup(announced)#the trackers this family can't reach, decided before announcing
+	results.update(check([tracker for tracker in announced if tracker not in results], local))
 	results.update({tracker: outcome for tracker, outcome in paired.items() if outcome})#a page that couldn't speak records nothing for its tracker, which counts against no one
 	ids = dict(database.execute('select url, id from trackers'))
 	with database:
 		database.executemany('insert or replace into checks (hour, family, tracker, outcome, message, extra_peers) values (?, ?, ?, ?, ?, ?)', [(stamp, family, ids[tracker], outcome, message, extra) for tracker, (outcome, message, extra) in results.items()])
+		database.execute('insert or replace into passes (hour, family, began, ended) values (?, ?, ?, ?)', (stamp, family, began, tick()))
 	up = sum(1 for outcome, _, _ in results.values() if outcome == 'up')
-	say(f'checked {len(results)} trackers, and {up} were up')
+	say(f'checked {len(results)} trackers in {(tick() - began)//Time.SECOND} seconds, and {up} were up')
 
 # report
 
@@ -370,7 +417,17 @@ def publish(database, stamp):#write the given hour's report from what both conta
 	for list_url, url in database.execute('select list_url, url from upstream'):
 		named.setdefault(url, set()).add(named_by.get(list_url, list_url))
 	extra = {row[0] for row in database.execute('select distinct tracker from checks where hour between ? and ? and extra_peers > 0', (stamp - horizons['month'] + Time.HOUR, stamp))}#the trackers whose reply, at least once in the last 30 days, listed peers for a hash no one else has
-	checked = {f'ipv{f}': any(row[4] == 'up' for row in rows if row[3] == f) for f in (4, 6)}#whether this hour's results in each family mean anything: true when that family's container recorded the hour and at least one tracker answered, false when it recorded nothing or every tracker failed
+	passes = {}#how each family's pass went, a few numbers repeated at the top for a quick look at the hour
+	for f in (4, 6):
+		outcomes = [row[4] for row in rows if row[3] == f]
+		up = outcomes.count('up')
+		timing = database.execute('select began, ended from passes where hour = ? and family = ?', (stamp, f)).fetchone()
+		passes[f'ipv{f}'] = {
+			'checked': up > 0,#whether the hour's results in this family mean anything: false when its container recorded nothing or every tracker failed, and either way the hour counts against no tracker
+			'trackers': len(outcomes),
+			'up': up,
+			'seconds': (timing[1] - timing[0])//Time.SECOND if timing else 0,#how long the pass took, or 0 when its container recorded nothing
+		}
 
 	def column(key):#one tracker's hours in one family over every horizon, in letters, with the hours it has no record of counted as asleep, so each horizon adds up to its length
 		hours_of = {}
@@ -406,8 +463,8 @@ def publish(database, stamp):#write the given hour's report from what both conta
 		'when': tick_to_iso(stamp),#the same hour, readable, like 2026-11-09T18:00:00.000Z
 		'upstream': upstream,
 		'downstream': downstream,
-		'checked': checked,
-		'criterion': {'horizon': criterion_horizon, 'uptime': criterion_uptime},#the one test a tracker passes to be listed in trackers.txt
+		'passes': passes,
+		'criterion': {'horizon': criterion_horizon, 'uptime': criterion_uptime, 'listed': len(listed)},#the one test a tracker passes to be listed in trackers.txt, and how many passed it
 		'trackers': ordered,
 	}
 	write('trackers.json', json.dumps(report, separators=(',', ':')) + '\n')#compact, since it carries hundreds of trackers

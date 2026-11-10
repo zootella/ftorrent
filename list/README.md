@@ -32,6 +32,8 @@ Each tracker gets a torrent of its own: a random info hash, made fresh every hou
 
 A tracker that gets all the way is up for the hour. Using libtorrent rather than code of our own means a tracker is judged by the same implementation real clients run, with the same handling of redirects, compression, and protocol quirks.
 
+The first step happens before libtorrent. list.ftorrent.com looks up every tracker's name itself, all at once: a name that doesn't resolve is `d`, and one with addresses but none in this family is `n`. Only the rest are announced to, one each second, and each is listened to for at least 45 seconds after its own announce and at most two minutes. libtorrent looks names up one at a time, so a tracker waiting in that line past libtorrent's 30 seconds would read as a timeout; looked up first, and announced to one at a time, each tracker is checked on its own, the way a client announces a torrent to its few trackers.
+
 One more thing gets recorded. A UDP or HTTP reply lists the peers announcing the same hash, and since no one else knows this one, the honest answer lists no one, or only the announcer itself, which some trackers include. A reply that lists others is still up, and the tracker is flagged as listing extra peers. What a tracker gains from naming peers for a hash it has just heard of isn't known, so the flag is published and decides nothing. Each tracker gets its announce and nothing more: libtorrent never connects to the peers a reply lists, runs no DHT, and maps no ports.
 
 One kind of tracker is judged without an announce. A UDP tracker paired with the page.json of the [gauge](../open/gauge/README.md) beside it, as ftorrent's own is, takes its outcome from that page: up when the tracker served UDP announces over this family in the gauge's last minute, a timeout when it served none. Those announces are peers reaching it from the internet, the claim every other outcome makes. A page more than three minutes old, or one that counted nothing at all, gives no outcome for the hour, and an hour with no outcome counts against no one. The pairs are `gauges`, at the top of `list.py`.
@@ -74,8 +76,11 @@ The two settings are `criterion_horizon` and `criterion_uptime`, at the top of `
 		{"name": "newtrackon", "home": "https://newtrackon.com", "code": "https://github.com/CorralPeltzer/newTrackon", "lists": ["https://newtrackon.com/api/all"]}
 	],
 	"downstream": ["https://list.ftorrent.com/trackers.txt", "https://list.ftorrent.com/trackers.json"],
-	"checked": {"ipv4": true, "ipv6": true},
-	"criterion": {"horizon": "month", "uptime": 0.95},
+	"passes": {
+		"ipv4": {"checked": true, "trackers": 289, "up": 101, "seconds": 258},
+		"ipv6": {"checked": true, "trackers": 289, "up": 54, "seconds": 151}
+	},
+	"criterion": {"horizon": "month", "uptime": 0.95, "listed": 107},
 	"trackers": [
 		{
 			"url": "udp://tracker.example.com:6969/announce",
@@ -108,8 +113,8 @@ The two settings are `criterion_horizon` and `criterion_uptime`, at the top of `
 - `hour` is the hour the report describes, as milliseconds since 1970, and `when` the same hour, readable. A tracker's `since` is the first hour list.ftorrent.com checked it, which is when a list first named it, in milliseconds as well.
 - `upstream` is where the candidates come from: each source's `name`, its `home` page and its `code`, and the `lists` fetched from it every hour. ftorrent's own three trackers are checked every hour too, whatever the lists say.
 - `downstream` is what list.ftorrent.com publishes from them: `trackers.txt` and this file, so a copy says where the live one is.
-- `checked` says whether this hour's results in each family mean anything: `true` when that family's container ran its pass and at least one tracker answered, and `false` when it recorded nothing or every tracker failed, which means the trouble was at this end, so the hour counts against no tracker.
-- `criterion` is the test for `trackers.txt`: an uptime of at least `uptime` over the `horizon`, in at least one family.
+- `passes` says how each family's pass went, a few numbers repeated here for a quick look at the hour: how many trackers it recorded, how many were up, and how many seconds it took. `checked` says whether the hour's results in that family mean anything: `true` when its container ran its pass and at least one tracker answered, and `false` when it recorded nothing or every tracker failed, which means the trouble was at this end, so the hour counts against no tracker.
+- `criterion` is the test for `trackers.txt`, an uptime of at least `uptime` over the `horizon` in at least one family, and `listed` how many trackers passed it this hour.
 - `url` is the tracker's announce URL, and `upstream` names the sources that carry it now, from the top of the file.
 - `listed` says whether it's in `trackers.txt`, and `extra_peers` whether, at least once in the last 30 days, a reply from it listed peers for a hash no one else has.
 - Each family's column, `ipv4` and `ipv6`, gives the tracker's hours over six horizons, each ending with the report's hour: `hour`, `day`, `week`, `month`, `quarter`, and `year`, the last 1, 24, and 168 hours and the last 30, 90, and 365 days. Each holds the hours of each outcome by letter, leaving out letters with none. Every hour is exactly one letter, so a horizon's hours add up to its length, and its uptime is its `u` hours as a share of the hours that weren't `z`.
@@ -121,11 +126,11 @@ The file stays about the same size however long the record grows: 113 KB for 300
 
 Two containers run `list.py`, built from `libtorrent-list/`: `ftorrent-list4-1` on a Docker network with IPv4 only, and `ftorrent-list6-1` on one with IPv6 only, so libtorrent has no choice of family to make for any tracker. Each container listens on its one address and nothing connects to it; it only announces outward.
 
-Both sleep to the top of every hour. The IPv4 container, with `LIST_REPORT` set, first publishes the hour that just ended; then both fetch the lists, check every tracker, listening until each one has answered or failed, at least 45 seconds and at most 15 minutes, and record the results. The report is always one whole hour, about an hour behind, which suits a record of uptime. A check of right now belongs to the desktop client.
+Both sleep to the top of every hour. The IPv4 container, with `LIST_REPORT` set, first publishes the hour that just ended; then both fetch the lists, look up every name, announce to the trackers left one a second, and record the results. The report is always one whole hour, about an hour behind, which suits a record of uptime. A check of right now belongs to the desktop client.
 
 Everything is kept in one SQLite file in the data folder the two containers share: every check of every hour, every tracker ever named, each list's latest copy, and a tally of each day that has ended, which the longer horizons are summed from, so a report takes as long to publish in its second year as on its first day. The published files are built from it; the file itself is never published. 18 months of hourly checks for 300 trackers came to 424 MB. A list that can't be fetched keeps its last good copy, so a site that's down for an hour doesn't empty the candidates.
 
-A pass of today's 288 trackers takes about a minute, and publishing a report about a second. On Docker Desktop, a pass peaked at 52 MiB of memory, 109 open files, which are the sockets of the announces in flight, and 16 threads, eight of them libdatachannel's: the WebRTC library libtorrent runs for WebSocket trackers starts one for each CPU the machine has and keeps them. Publishing from 18 months of history for 300 trackers peaked at 17 MiB. The compose file's limits sit far above all of that and far below what a server notices, each with its reason beside it: 500 MiB of memory, 4 CPUs, 4096 open files, and 4096 processes and threads.
+A pass takes about four minutes over IPv4 and two over IPv6, a second for each tracker announced to plus the last one's window, and publishing a report about a second. Announcing to every tracker at once, a pass on Docker Desktop peaked at 52 MiB of memory, 109 open files, which are the sockets of the announces in flight, and 16 threads, eight of them libdatachannel's: the WebRTC library libtorrent runs for WebSocket trackers starts one for each CPU the machine has and keeps them. One a second, a pass holds fewer sockets, and looking up the names takes up to 32 threads more for a few seconds. Publishing from 18 months of history for 300 trackers peaked at 17 MiB. The compose file's limits sit far above all of that and far below what a server notices, each with its reason beside it: 500 MiB of memory, 4 CPUs, 4096 open files, and 4096 processes and threads.
 
 ## Where the candidates come from
 
@@ -176,7 +181,7 @@ Then two things on the host, in your own setup's terms:
 - **Outbound only, from the two containers.** Trackers listen on whatever port they like, so each container needs outbound UDP and TCP to any address and port, from its pinned address. Nothing comes in. Docker translates both networks' private addresses to the server's public ones on the way out, IPv6 included.
 - **The files.** Serve `/trackers.txt` and `/trackers.json` at your domain from `/opt/list.ftorrent.com/data/public/`, with `Access-Control-Allow-Origin: *` so other pages and tools can fetch them, and `Cache-Control: no-cache` so a browser checks for the new hour every time and an unchanged file costs a 304. Name the two files rather than serving the folder, so nothing else the containers write is ever reachable. Anything else at the domain, like a page, comes from a folder of its own, such as `/opt/list.ftorrent.com/static/`, so replacing it never touches the reports.
 
-The first report appears at the top of the hour after the first checks. To see one sooner, run a pass by hand inside each running container, IPv6 first, so the IPv4 run publishes both families, and not in the minutes around the top of an hour, when the hourly pass runs:
+The first report appears at the top of the hour after the first checks. To see one sooner, run a pass by hand inside each running container, which takes a few minutes each, IPv6 first, so the IPv4 run publishes both families, and not in the minutes around the top of an hour, when the hourly pass runs:
 
 ```
 docker exec ftorrent-list6-1 /app/.venv/bin/python /app/list.py now

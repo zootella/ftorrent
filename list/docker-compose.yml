@@ -36,7 +36,7 @@ services:
     volumes:
       - ./data:/list
     ulimits:
-      # every socket counts as an open file. A pass holds at most libtorrent's fifty HTTP announces at a time, a socket for each WebSocket tracker, and one UDP socket all the UDP trackers share: 109 open files at its peak on Docker Desktop, growing slowly with the lists. 4096 is more than 30 times that, against the kernel's own ceiling of a million for each process
+      # every socket counts as an open file. A pass announces to one tracker a second and listens to each for up to two minutes, so it holds a few dozen sockets at once; announcing to every tracker at once, it peaked at 109 open files on Docker Desktop. 4096 is more than 30 times that, against the kernel's own ceiling of a million for each process
       nofile:
         soft: 4096
         hard: 4096
@@ -45,8 +45,8 @@ services:
         # each limit below sits in the middle of a wide margin: far above what the container needs, so normal running never comes near one and nothing inside breaks against it, and far below what the server can give without noticing, so a runaway stops here instead of reaching the machine and everything else it runs
         limits:
           memory: 500m   # a pass peaked at 55 MiB, and publishing from 18 months of history for 300 trackers at 17 MiB; the server sets nothing aside for a ceiling until it's used, and it's 500 rather than 512, the DHT node's, which is how the gauge tells that container apart
-          cpus: '4'      # a pass takes 1.25 seconds of CPU over its minute, in bursts near 0.6 of one CPU; a runaway loop gets four CPUs' time while the rest of the machine keeps its own, and a CPU limit only slows a process, so a burst past it would cost a pass a moment, never an outcome
-          # libdatachannel, the WebRTC library libtorrent runs for WebSocket trackers, starts a worker thread for each CPU the machine has and keeps them for the life of the process, and nothing in libtorrent's settings caps that. A pass holds the CPU count plus eight threads, so on a server with dozens of CPUs the hourly process and a pass by hand beside it come to around a hundred; 4096 is many times that on any machine, and each thread's kernel memory counts against the memory limit above, so a runaway's threads can't reach past it either
+          cpus: '4'      # a pass that announced to every tracker at once took 1.25 seconds of CPU, in bursts near 0.6 of one CPU, and one a second spreads that thinner; a runaway loop gets four CPUs' time while the rest of the machine keeps its own, and a CPU limit only slows a process, so a burst past it would cost a pass a moment, never an outcome
+          # libdatachannel, the WebRTC library libtorrent runs for WebSocket trackers, starts a worker thread for each CPU the machine has and keeps them for the life of the process, and nothing in libtorrent's settings caps that. A pass holds the CPU count plus eight threads, and up to 32 more for the few seconds it spends looking up names, so on a server with dozens of CPUs the hourly process and a pass by hand beside it come to a hundred or two; 4096 is many times that on any machine, and each thread's kernel memory counts against the memory limit above, so a runaway's threads can't reach past it either
           pids: 4096
     restart: unless-stopped
 
