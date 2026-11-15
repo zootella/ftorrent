@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Monaspace Radon, the handwritten monospace open.ftorrent.com shows its URLs in, here for the list of trackers to copy; fonts/monaspace-license.txt beside it is the SIL Open Font License it comes under */
+@font-face {
+	font-family: 'Monaspace Radon';
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap; /* the list shows at once in a fallback, and takes Radon when it arrives */
+	src: url('/fonts/monaspace-radon.woff2') format('woff2');
+}
+
+@theme {
+	--font-radon: 'Monaspace Radon', ui-monospace, monospace; /* Tailwind's font-radon */
+}
+
+:root {
+	color-scheme: light dark; /* the browser's own parts, like scrollbars and the filter box, follow the system's light or dark with the page */
+}
+
+body {
+	@apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+}

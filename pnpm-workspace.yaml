@@ -19,6 +19,7 @@ packages:
   - good/page    # the page's workspace: a placeholder that uploads good/static/index.html until Good2a builds the page here
 
   # list.ftorrent.com — hourly check of the public BitTorrent and WebTorrent trackers
+  - list/page    # Vue+Vite page, a view of trackers.json, built on Mac and rsynced to the server
   # list/libtorrent-list is pure Python in Docker (no package.json) — per the rule above, just a folder, not a workspace
 
   # Desktop BitTorrent and WebTorrent client (Tauri) for Mac, Windows, and Linux

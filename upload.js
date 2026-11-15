@@ -4,7 +4,7 @@ import {join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 
 /*
-Ships a static site: the build output of one workspace, mirrored into its directory on the server over rsync. Four workspaces use it, site, docs, open's page and good's page, which is why it is one file at the repository root rather than a line in each; each workspace's pnpm upload builds and then calls in here with its name. desktop/scripts.js is the other publisher, for the installers, and says why it is a file of its own: a different account, a different protocol, and one product.
+Ships a static site: the build output of one workspace, mirrored into its directory on the server over rsync. Five workspaces use it, site, docs, and the pages of open, good, and list, which is why it is one file at the repository root rather than a line in each; each workspace's pnpm upload builds and then calls in here with its name. desktop/scripts.js is the other publisher, for the installers, and says why it is a file of its own: a different account, a different protocol, and one product.
 
 rsync mirrors with --delete, so a file dropped from a build leaves the server too, and goes as the account that administers the server. The server's side is unchanged by any of this: the same files arrive in the same directories over the same port as before.
 
@@ -19,6 +19,7 @@ The destination comes from .env at the repository root, which is gitignored, so 
 	DEPLOY_DOCS_PATH=/var/www/docs.example.com/
 	DEPLOY_OPEN_PATH=/var/www/open.example.com/
 	DEPLOY_GOOD_PATH=/var/www/good.example.com/
+	DEPLOY_LIST_PATH=/var/www/list.example.com/
 
 Keep the trailing slashes. The same file carries the installer values desktop/scripts.js reads, named DEPLOY_FILES_*, so one file names the server once.
 
@@ -32,6 +33,7 @@ const sites = {//each static workspace: what its build writes, and the env value
 	docs: {built: 'docs/docs/.vitepress/dist', path: 'DEPLOY_DOCS_PATH'},
 	open: {built: 'open/page/dist',            path: 'DEPLOY_OPEN_PATH'},
 	good: {built: 'good/page/dist',            path: 'DEPLOY_GOOD_PATH'},
+	list: {built: 'list/page/dist',            path: 'DEPLOY_LIST_PATH'},
 }
 
 function say(line) { console.log(line) }

@@ -28,7 +28,7 @@ FROM python:3.13-slim-trixie
 COPY --from=builder /app/.venv /app/.venv
 COPY list.py /app/list.py
 
-# Run as nobody (UID 65534), matching the tracker containers' hardening
+# Run as nobody (UID 65534), matching the hardening of open.ftorrent.com's containers
 USER 65534:65534
 
 ENTRYPOINT ["/app/.venv/bin/python", "/app/list.py"]
