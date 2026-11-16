@@ -13,12 +13,12 @@ Two halves do that. The lock says whether this copy is already running. It's an 
 
 The handoff carries the request across. On Windows every launch is a new process, so the copy that holds the lock serves a named pipe, and a launch that finds the lock held writes its command-line arguments into the pipe as one line of JSON and exits. The pipe's name comes from the lock file's path, so each copy only hears from launches of itself. It's created right after the lock and before anything slow, and a launch that finds the lock held but the pipe not there yet keeps trying for a few seconds, because that gap is exactly when a second click during a cold start lands. On macOS, Launch Services brings a running app forward instead of starting a second process, and delivers files and links to it as Apple Events, which Tauri hands over as its Opened event, at a cold start and while running alike, so the lock there is a backstop for a launch that goes around Launch Services, and a second process simply leaves.
 
-What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and the page takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before the page is up, and a handoff arrives on the pipe's thread rather than in the page; what it doesn't do is keep a history or know what a magnet is. That's the page's, which is where adding a torrent will live. One request never reaches the page: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, whether a person ran setup or this copy's own one-click update did, so an upgrade closes the running copy cleanly rather than ending its process. And one argument never does: --login, which a Windows login registration adds so login.rs knows the system started this copy, is taken out of this copy's own command line, and a handoff carrying only it is dropped, leaving the window as it was. --update, which install.rs puts on the command line of the copy it opens once an update is in place, is taken out too, after it has changed one thing: a launch carrying it that finds the lock held waits for it, since the holder is the installer letting go, rather than handing over to it and leaving.
+What arrives, this copy's own command line, a second launch's, or a Mac's open, goes on a drained queue, each marked with where it came from, and JavaScript takes it and decides what it means. Rust has to hold it, since a magnet can land during a cold start before any JavaScript runs, and a handoff arrives on the pipe's thread rather than in the web view; what it doesn't do is keep a history or know what a magnet is. That's Plastic's, which is where adding a torrent will live. One request never reaches JavaScript: a handoff whose only argument is --exit quits this copy the way File, Exit does. The setup program sends it before replacing the files, whether a person ran setup or this copy's own one-click update did, so an upgrade closes the running copy cleanly rather than ending its process. And one argument never does: --login, which a Windows login registration adds so login.rs knows the system started this copy, is taken out of this copy's own command line, and a handoff carrying only it is dropped, leaving the window as it was. --update, which install.rs puts on the command line of the copy it opens once an update is in place, is taken out too, after it has changed one thing: a launch carrying it that finds the lock held waits for it, since the holder is the installer letting go, rather than handing over to it and leaving.
 */
 
 pub const UPDATE_ARGUMENT: &str = "--update";//on the command line of the copy install.rs opens once an update is in place: the lock is held by the installer, which lets go of it by exiting a moment later, so wait
 const UPDATE_WAITS: u32 = 150;//tenths of a second a copy started by an update waits for the lock: fifteen seconds, where the installer holds it for milliseconds past open
-const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst of launches
+const ARRIVALS_WAITING: usize = 100;//how many arrivals wait for stores/incoming.js to take them before the oldest are dropped and counted; it takes several times a second, so this is room for a burst of launches
 
 /// One launch's arguments, as they reached this copy
 #[derive(Serialize, Clone)]
@@ -31,7 +31,7 @@ pub struct Request {
 #[derive(Default)]
 pub struct Instance {
 	lock: Mutex<Option<File>>,
-	arrivals: Mutex<Queue<Request, ARRIVALS_WAITING>>,//what has reached this copy that the page hasn't taken yet
+	arrivals: Mutex<Queue<Request, ARRIVALS_WAITING>>,//what has reached this copy that JavaScript hasn't taken yet
 }
 
 /// How startup should go on
@@ -48,7 +48,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 		crate::log::log("no data folder, so no lock");//the platform gave no data folder, and paths.rs has already said so
 		return Start::Run;
 	}
-	let brand_stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js in the page says which name goes where
+	let brand_stem = app.package_info().crate_name.to_string();//brandStem, the crate's name, which names the lock file and the pipe; brand.js says which name goes where
 	let lock_path = lock_path(app, paths);
 
 	let mut taken = take(&lock_path);
@@ -67,7 +67,7 @@ pub fn start(app: &AppHandle, paths: &Paths) -> Start {
 			crate::log::log(&format!("took the lock, {}", lock_path.display()));
 		}
 		Err(Taken::Busy) => {
-			crate::log::log(&format!("another process holds the lock, {}, so this one hands over and leaves", lock_path.display()));//waits in memory, and goes nowhere, since this process never has a page to start the log
+			crate::log::log(&format!("another process holds the lock, {}, so this one hands over and leaves", lock_path.display()));//waits in memory, and goes nowhere, since this process never runs the JavaScript that starts the log
 			handoff::send(&brand_stem, &lock_path, &args);//deliver, or give up trying after a few seconds; either way this launch is done
 			return Start::Leave;
 		}
@@ -113,17 +113,17 @@ pub fn opened(app: &AppHandle, urls: Vec<tauri::Url>) {
 		Ok(path) if url.scheme() == "file" => path.to_string_lossy().into_owned(),
 		_ => url.to_string(),//magnet:, ftorrent:, or anything else a link might be
 	}).collect();
-	arrive(app, "open", args, true)//the user reached for ftorrent, so the window comes forward, hidden or not; at a cold start bring_forward waits, since the page is about to show it
+	arrive(app, "open", args, true)//the user reached for ftorrent, so the window comes forward, hidden or not; at a cold start bring_forward waits, since window.js is about to show it
 }
 
-/// Something reached this copy: queue it for the page, and bring the window forward if a second launch sent it
+/// Something reached this copy: queue it for JavaScript, and bring the window forward if a second launch sent it
 fn arrive(app: &AppHandle, from: &str, args: Vec<String>, forward: bool) {
 	crate::log::log(&format!("arrived by {from}: {}", args.join(" ")));
 	app.state::<Instance>().arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push(Request { from: from.to_string(), args });
 	if forward { crate::lifecycle::bring_forward(app) }//closing the window hides it, so it may be hidden, minimized, or behind something else
 }
 
-/// Everything that has reached this copy since the last take, oldest first, and how many were dropped because the page fell behind
+/// Everything that has reached this copy since the last take, oldest first, and how many were dropped because JavaScript fell behind
 #[command]
 pub fn instance_take(instance: State<'_, Instance>) -> Drained<Request> {
 	instance.arrivals.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take()
@@ -180,7 +180,7 @@ mod handoff {
 					if connected.take(MOST).read_to_end(&mut bytes).await.is_err() { return }//the launch writes one line and closes, which ends the read
 					let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else { return };
 					let args: Vec<String> = value.get("args").and_then(|a| a.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
-					if args.len() == 1 && args[0] == "--exit" { crate::log::log("asked to exit by handoff"); app.exit(0); return }//the one request that isn't for the page: the setup program sends it before it replaces the files, and it reaches the same Exit run event as File, Exit, so the engine stops and the session is saved
+					if args.len() == 1 && args[0] == "--exit" { crate::log::log("asked to exit by handoff"); app.exit(0); return }//the one request that isn't for JavaScript: the setup program sends it before it replaces the files, and it reaches the same Exit run event as File, Exit, so the engine stops and the session is saved
 					if args.len() == 1 && args[0] == crate::login::ARGUMENT { crate::log::log("a login launch handed over, and changes nothing"); return }//windows started ftorrent at sign-in while this copy already runs, which is no request: the window stays as it is
 					super::arrive(&app, "handoff", args, true);
 				});

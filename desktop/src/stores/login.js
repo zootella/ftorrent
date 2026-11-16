@@ -9,9 +9,9 @@ import {platformName} from '../settings.js'
 import {log} from '../log.js'
 
 /*
-Whether ftorrent starts at login: the user's answer, in the login.start setting, beside what the system says, for the settings page to show; login.js is how each platform reads and writes, and why the two are kept apart. Off at the factory, asked about nowhere but the settings page, and only for an installed copy on Windows or the Mac, by isInstalled in paths.js, since the system would start whatever path the entry names.
+Whether ftorrent starts at login: the user's answer, in the login.start setting, beside what the system says, for the Settings panel to show; login.js is how each platform reads and writes, and why the two are kept apart. Off at the factory, asked about nowhere but the Settings panel, and only for an installed copy on Windows or the Mac, by isInstalled in paths.js, since the system would start whatever path the entry names.
 
-The answer changes only when the user clicks it, so the page's buttons always show what the user chose. A click saves the answer, reads the system, puts the entry there for a yes only if there's none, or takes it away for a no only if there is one, and reads again after. A read also runs at startup and whenever the window comes back into focus, as when the user returns from the system's settings. When the system differs from the answer, whichever way, the page shows a link to the system's own page for it, and the link goes away once they agree.
+The answer changes only when the user clicks it, so the panel's buttons always show what the user chose. A click saves the answer, reads the system, puts the entry there for a yes only if there's none, or takes it away for a no only if there is one, and reads again after. A read also runs at startup and whenever the window comes back into focus, as when the user returns from the system's settings. When the system differs from the answer, whichever way, the panel shows a link to the system's own page for it, and the link goes away once they agree.
 */
 
 export const useLoginStore = defineStore('login', () => {
@@ -23,7 +23,7 @@ export const useLoginStore = defineStore('login', () => {
 	let writing = ref(0)//clicks whose write and the read after it are still under way, while the answer has moved and the system hasn't been asked again yet; a count, so a second quick click keeps the link held back until both are done
 
 	let wanted = computed(() => settings.settings.login.start)//what the user answered
-	let differs = computed(() => installed.value && writing.value == 0 && system.value != '' && wanted.value != (system.value == 'on'))//the page's cue for the link, held back during a click, so it never flashes up in the moment between the answer changing and the system being read
+	let differs = computed(() => installed.value && writing.value == 0 && system.value != '' && wanted.value != (system.value == 'on'))//the panel's cue for the link, held back during a click, so it never flashes up in the moment between the answer changing and the system being read
 
 	let running = Promise.resolve()//the last read or write queued, so the next one waits for it
 	function queue(work) { running = running.then(work).catch(error => log(`login: trouble, ${error}`)); return running }//caught here, so one that fails can't stop every one queued after it
@@ -50,7 +50,7 @@ export const useLoginStore = defineStore('login', () => {
 		await getCurrentWindow().onFocusChanged(({payload: focused}) => { if (focused) refresh() })//back from the system's settings, perhaps having changed it there
 	}
 
-	function choose(value) {//the user's answer from the settings page, true or false: saved, then the one time ftorrent writes to the system
+	function choose(value) {//the user's answer from the Settings panel, true or false: saved, then the one time ftorrent writes to the system
 		if (!installed.value) return
 		settings.settings.login.start = value
 		writing.value++

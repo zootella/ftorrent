@@ -7,22 +7,22 @@ use zootella_ergo::{has_tick, say_tick, tick_to_iso};
 use crate::run_blocking;
 
 /*
-A log: lines of text from anywhere in the program, each stamped with the time, this process's id, and the side that wrote it, appended to a file as they happen. Two functions write a line, log here for Rust, called from anywhere as a plain function, and log in log.js for the page, which hands its lines down through log_line; the stamp is put on here for both, so every line in every file has one shape:
+A log: lines of text from anywhere in the program, each stamped with the time, this process's id, and the side that wrote it, appended to a file as they happen. Two functions write a line, log here for Rust, called from anywhere as a plain function, and log in log.js for JavaScript, which hands its lines down through log_line; the stamp is put on here for both, so every line in every file has one shape:
 
 	01:14:05.123 32554 rust  took the lock
 	01:14:05.871 32554 page  opens .torrent with Transmission.app
 
-The time is UTC, to the millisecond, and the file's name carries the date. The process id tells copies apart, so the files of several processes, an installed copy and a portable one side by side, say, can sit in one folder and sort into a single timeline, every line already saying who wrote it. The side says which layer spoke, since a line from Rust and one from the page can land a few milliseconds out of order, and that tells whether two lines could have raced.
+The time is UTC, to the millisecond, and the file's name carries the date. The process id tells copies apart, so the files of several processes, an installed copy and a portable one side by side, say, can sit in one folder and sort into a single timeline, every line already saying who wrote it. The side says which layer spoke, since a line from Rust and one from JavaScript can land a few milliseconds out of order, and that tells whether two lines could have raced.
 
 Lines are written as they arrive, not saved for the end, so a crash keeps everything up to the crash, and the file can be read while the program runs. Each process writes a file of its own, named for when it started and its process id, so two processes never append to one file. A file stops at a ceiling of lines, saying so, so a log left on can't fill a disk.
 
-Whether to log, and where, is the page's to decide, since it's a setting, and the page reads settings. Rust starts logging before any page exists, so until the page says, its lines wait in memory: log_start with a folder writes them to the new file and keeps going, and log_start with a blank folder drops them and every line after. A process that leaves before it has a page, a second launch handing over what it carried, never logs.
+Whether to log, and where, is Plastic's to decide, since it's a setting, and JavaScript reads the settings. Rust starts logging before any JavaScript runs, so until main.js says, its lines wait in memory: log_start with a folder writes them to the new file and keeps going, and log_start with a blank folder drops them and every line after. A process that leaves before any JavaScript runs, a second launch handing over what it carried, never logs.
 
 Beside the log, a stick: stick.txt in the log folder, which holds one piece of text and is replaced whole each time, where a log only grows. A log answers what happened, in order; a stick answers how things stand right now, a panel's readings as a session runs, say, so someone outside the program can read the current state at any moment without scrolling a log for it. stick here and stick in log.js write it, each replacing whatever was there, with a first line stamped like a log's but with the date, since the file's name has none, saying when, which process, and which side. It's written as a finished copy renamed over the old one, the way disk_write does, so a reader never meets half of one. Every process sticks to the one file, so with several running it shows whichever wrote last, and the stamp says which. Something outside the program can watch it too, noticing each replacement as it lands and looking when it chooses, the way a person glances at a screen; printing every version as it comes would turn the stick back into a log.
 
 Both are scaffolding for the section of ftorrent being built: code calls log and stick while we work on it, and what ships to people calls neither. While they're called, they work the same in every build, development or release, installed or portable, because some things behave differently in just one of those, file associations in an installed copy, say, and these are the only way to see them there. So a stick has no setting, unlike the log: it's always on, and the way to turn it off is to stop calling it. Setup tells it where the log folder is, and a stick before then waits, only the latest, since one replaced before anyone could read it was never worth keeping.
 
-Panics land here too. log_panics installs a hook that writes every panic's location and message as a line before rust unwinds, from whichever thread it's on, so a panic that goes on to abort the process, or to reach the page as an error without its location, has already said where it was.
+Panics land here too. log_panics installs a hook that writes every panic's location and message as a line before rust unwinds, from whichever thread it's on, so a panic that goes on to abort the process, or to reach JavaScript as an error without its location, has already said where it was.
 
 The state is a static rather than tauri's managed state, so that log(text) needs no handle to call. A Mutex, because log_start runs on the blocking pool, log_line on the window's thread, and Rust logs from threads of its own.
 */
@@ -30,7 +30,7 @@ The state is a static rather than tauri's managed state, so that log(text) needs
 const CEILING: usize = 100_000;//lines in one file, after which it says it has stopped and takes no more
 
 enum Log {
-	Waiting(Vec<String>),//lines from before the page has said whether to log
+	Waiting(Vec<String>),//lines from before main.js has said whether to log
 	On(File, usize),//the open file, and how many lines it holds
 	Off,//not logging, and never will in this process
 }
@@ -50,7 +50,7 @@ pub async fn log_start(folder: String) -> Result<String, String> {//on the block
 	run_blocking(move || start(&folder)).await
 }
 
-/// The same as a plain function, for install.rs, which has no page to ask and takes the folder from its command line. The log's mutex is held across making the folder and opening the file, so a line from any thread in that moment waits for them, microseconds on the local disk the page names
+/// The same as a plain function, for install.rs, which has no JavaScript to ask and takes the folder from its command line. The log's mutex is held across making the folder and opening the file, so a line from any thread in that moment waits for them, microseconds on the local disk JavaScript names
 pub fn start(folder: &str) -> Result<String, String> {
 	let mut log = LOG.lock().unwrap_or_else(|poisoned| poisoned.into_inner());//take the log even if a previous holder panicked; losing every line for that would be worse
 	let Log::Waiting(waiting) = &mut *log else { return Err("log: already started".to_string()) };
@@ -64,19 +64,19 @@ pub fn start(folder: &str) -> Result<String, String> {
 	Ok(path.to_string_lossy().into_owned())
 }
 
-/// One line from the page; plain on purpose, though it touches the disk: it's one append to a local file, and lines sent through the pool could land out of order
+/// One line from JavaScript; plain on purpose, though it touches the disk: it's one append to a local file, and lines sent through the pool could land out of order
 #[command]
 pub fn log_line(text: String) {
 	write("page", &text);
 }
 
-/// The page's stick, replacing stick.txt; plain like log_line, for the same reasons: it's one small write to a local file, and sticks sent through the pool could land out of order, leaving an older one as the last word
+/// JavaScript's stick, replacing stick.txt; plain like log_line, for the same reasons: it's one small write to a local file, and sticks sent through the pool could land out of order, leaving an older one as the last word
 #[command]
 pub fn log_stick(text: String) {
 	write_stick("page", &text);
 }
 
-/// Write every panic to the log, with where it happened, before rust unwinds; called once from run, before anything else. A panic in a plain command goes on to abort the process, since it unwinds into the web view's callback, and a panic in a body on the blocking pool reaches the page as an error without its location, so this line is what says where either was
+/// Write every panic to the log, with where it happened, before rust unwinds; called once from run, before anything else. A panic in a plain command goes on to abort the process, since it unwinds into the web view's callback, and a panic in a body on the blocking pool reaches JavaScript as an error without its location, so this line is what says where either was
 pub fn log_panics() {
 	let default_hook = std::panic::take_hook();//what rust does on its own, printing to stderr, which a development build still shows
 	std::panic::set_hook(Box::new(move |info| {
@@ -115,7 +115,7 @@ pub fn stick_at(home: &str, stem: &str) {
 }
 
 /// Replace the stick with this text, from Rust; callable from anywhere
-#[allow(dead_code)]//ready for Rust's first caller, the way log is; the page is the only one so far
+#[allow(dead_code)]//ready for Rust's first caller, the way log is; JavaScript is the only one so far
 pub fn stick(text: &str) {
 	write_stick("rust", text);
 }

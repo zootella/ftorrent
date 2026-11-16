@@ -25,7 +25,7 @@ onMounted(async () => {
 	pid.value = await processId()
 	tauri.value = await getTauriVersion()
 	webview.value = await windowWebviewVersion().catch(error => `could not tell, ${error}`)//the platform may not say, and that's an answer worth showing
-	let engine = await engineStatus()//asked once, as the page opens, like the versions; the log is where the engine's starts and stops are kept
+	let engine = await engineStatus()//asked once, as the panel opens, like the versions; the log is where the engine's starts and stops are kept
 	if (engine.running) enginePid.value = engine.pid
 })
 let parts = computed(() => {
@@ -51,8 +51,8 @@ function withPid(version, id) { return version && id > 0 ? `${version}, pid ${id
 	<!-- where ftorrent lives on the web, and the parts it's built from, each with its version -->
 	<main class="flex flex-col items-start gap-line">
 		<KeyValues :rows="parts" />
-		<a :href="homeLink" @click.prevent="processOpen(homeLink)" class="block w-fit">{{ homeLink }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the page's column like every other part -->
-		<h1 class="font-brand text-brand font-semibold text-title">{{ brandName }}</h1><!-- the name and the mark close the page, below the facts -->
+		<a :href="homeLink" @click.prevent="processOpen(homeLink)" class="block w-fit">{{ homeLink }}</a><!-- the system's browser opens it, rather than the web view navigating away from ftorrent; a block as wide as its words, so it sits in the panel's column like every other part -->
+		<h1 class="font-brand text-brand font-semibold text-title">{{ brandName }}</h1><!-- the name and the mark close the panel, below the facts -->
 		<img :src="brandIcon" alt="" class="w-mark" /><!-- as wide as the theme says and half as tall, the pill and nothing around it -->
 	</main>
 </template>

@@ -15,7 +15,7 @@ const dots = [[4.5, 0.5], [2.5, 2.5], [4.5, 2.5], [0.5, 4.5], [2.5, 4.5], [4.5, 
 
 let shown = ref(false)//whether the window is normal, neither maximized nor full screen, so a corner to drag exists
 let unlisten = null//stops hearing the window's resizes
-let gone = false//this grip left the page, perhaps before its listening had started
+let gone = false//this grip was unmounted, perhaps before its listening had started
 
 //look again at whether the window is normal; a maximize, a restore, and going full screen each resize the window, so the resize event brings each one here
 async function look() {
@@ -26,7 +26,7 @@ async function look() {
 onMounted(async () => {
 	if (platformName != 'Windows') return//the grip is Windows' alone, so elsewhere there's nothing to watch for
 	let stop = await getCurrentWindow().onResized(look)
-	if (gone) stop()//the page moved on while the listening was starting
+	if (gone) stop()//the grip was unmounted while the listening was starting
 	else unlisten = stop
 	look()
 })
@@ -40,7 +40,7 @@ function press(event) {
 
 <template>
 	<!-- ./src/components/SizeGrip.vue -->
-	<!-- fixed to the window rather than the page, so the page area's padding and scrolling leave it in the corner; size-grip is one line of the system's text, on both sides; select-none so a press here never starts selecting the page's text -->
+	<!-- fixed to the window rather than the panel, so the panel area's padding and scrolling leave it in the corner; size-grip is one line of the system's text, on both sides; select-none so a press here never starts selecting the panel's text -->
 	<div v-if="platformName == 'Windows' && shown" class="fixed right-0 bottom-0 size-grip cursor-nwse-resize select-none" @pointerdown="press">
 		<svg viewBox="0 0 6 6" class="size-full fill-grip"><circle v-for="[x, y] in dots" :key="`${x},${y}`" :cx="x" :cy="y" r="0.5" /></svg><!-- the whole square takes the press, and the dots only show where it is -->
 	</div>

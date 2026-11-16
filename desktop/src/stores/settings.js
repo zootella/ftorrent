@@ -19,7 +19,7 @@ A file that can't be read is never written. A missing file is ordinary and gets 
 
 export const useSettingsStore = defineStore('settings', () => {
 	let settings = reactive(settingsFactory())//the live settings the rest of ftorrent reads, filled in by load and never replaced
-	let paths = ref(null)//where everything is, as paths.rs worked it out; load takes it, and the page and the folder resolution below read it from here
+	let paths = ref(null)//where everything is, as paths.rs worked it out; load takes it, and the rest of the JavaScript and the folder resolution below read it from here
 	let folderStates = ref({})//how each resolved download folder stands, by path, as folderLock last answered: held, busy, missing, or trouble with the reason after a colon
 	let fileText = ''//what ftorrent last read from or wrote to the file, to tell when a write would change nothing
 	let heldText = ''//what rust is holding to write at exit, to tell when handing it down again would change nothing
@@ -58,7 +58,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		await useIncomingStore().send({command: 'folders', folders: heldFolders.value})
 	}
 
-	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the Home page's button until then
+	async function prepareFolder(path) {//get one folder ready for a torrent: make it if it isn't there, lock it, and tell the engine; what starting a torrent will call, and the Home panel's button until then
 		let state = await folderLock(path)
 		if (state == 'missing') {
 			try {
@@ -101,7 +101,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		else hold(rendered)//the file already says this; rust just needs the text to write again on the way out
 	}
 
-	async function save() {//write the settings as they are now; call after changing a value by a user's action, like picking an answer on the Settings page
+	async function save() {//write the settings as they are now; call after changing a value by a user's action, like picking an answer on the Settings panel
 		if (!paths.value || unreadable) return//nothing to write to, or a file we've promised to leave alone
 		let rendered = settingsRender(settings)
 		if (rendered == fileText) return//nothing changed on disk terms, so nothing to write

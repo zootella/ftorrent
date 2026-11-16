@@ -1,13 +1,13 @@
 use tauri::command;
 
 /*
-The Windows registry, offered to the page the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is the page's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open. Two more functions, number and watch, serve the core itself rather than the page, in the same general terms: the tray in lifecycle.rs reads the taskbar's theme through one and follows it through the other.
+The Windows registry, offered to JavaScript the way disk.rs offers the disk: general commands that any Windows application could use as they are, knowing nothing about what's read or written or why. Which keys, which values, and in what order is Plastic's; associate.js is the one that uses these today, to register the file types and link schemes an installed copy can open. Two more functions, number and watch, serve the core itself rather than JavaScript, in the same general terms: the tray in lifecycle.rs reads the taskbar's theme through one and follows it through the other.
 
 registry_get reads a string value through one of two roots: classes, which is HKEY_CLASSES_ROOT, the merged view Windows itself uses to decide what opens what, laying the user's classes over the machine's; or user, which is HKEY_CURRENT_USER. It answers nothing when the key or the value isn't there. registry_get_binary reads a binary value the same way, as its bytes, for the few flags Windows keeps that way. registry_set writes a string value, and only ever under HKEY_CURRENT_USER, creating the key if it's missing; it reads first, writes only when the value would change, and answers whether it did, so a caller that runs on every launch can tell the shell only when something moved. registry_delete removes one value, and registry_delete_key removes a key with everything under it, both only under HKEY_CURRENT_USER, and both answer whether there was anything there, so taking something back counts as a change the same way writing it does. registry_notify tells the shell that file associations changed, so Explorer's menus and icons catch up without a sign-out.
 
 registry_opens asks Windows which program it would open a file type or a link scheme with right now, and answers the ProgID it would use and the executable that ProgID runs. It's the shell's own lookup, AssocQueryString, rather than a reading of keys, because Windows keeps the answer at two levels: the sealed registry association first, the user's pick held with a hash only the system's own screens can write, and the legacy registry association under Software\Classes beneath it, which any program may write; and a sealed association may name a shared class like magnet whose command belongs to whichever program wrote it last. Asking the shell gets the answer Explorer and Settings would give, from whichever level it came.
 
-A blank value name means the key's own default value, which is how the registry spells "the value of this key itself". The commands take any key under their root and hold no guard, on purpose, the same as disk.rs: the page runs only ftorrent's own code, and it alone knows what a key means. The one exception is a blank key handed to registry_delete_key, which it refuses, since that would name the whole of the user's hive. They never write the machine-wide hive. On macOS and Linux there's no registry, and each command answers so.
+A blank value name means the key's own default value, which is how the registry spells "the value of this key itself". The commands take any key under their root and hold no guard, on purpose, the same as disk.rs: the web view runs only ftorrent's own code, and Plastic alone knows what a key means. The one exception is a blank key handed to registry_delete_key, which it refuses, since that would name the whole of the user's hive. They never write the machine-wide hive. On macOS and Linux there's no registry, and each command answers so.
 */
 
 /// Read a string value; root is classes or user, and a blank name is the key's default value. Answers nothing when the key or the value isn't there
@@ -59,7 +59,7 @@ pub fn registry_opens(name: String) -> Result<Option<Opener>, String> {
 	platform::opens(&name)
 }
 
-/// A number value under the current user, read for the core itself rather than for the page; nothing when the key or the value isn't there, or isn't a number
+/// A number value under the current user, read for the core itself rather than for JavaScript; nothing when the key or the value isn't there, or isn't a number
 #[cfg(target_os = "windows")]
 pub fn number(key: &str, name: &str) -> Option<u32> {
 	platform::number(key, name)

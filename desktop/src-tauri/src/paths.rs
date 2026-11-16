@@ -3,25 +3,25 @@ use serde::Serialize;
 use tauri::{command, AppHandle, Manager, State};
 
 /*
-Where everything is: facts about the machine and about this copy, worked out once in setup, before instance.rs takes the lock, before the engine starts, and before the page exists. Everything that reads or writes a file of the app's own takes its path from here, and the page gets all of it through paths_status.
+Where everything is: facts about the machine and about this copy, worked out once in setup, before instance.rs takes the lock, before the engine starts, and before any JavaScript runs. Everything that reads or writes a file of the app's own takes its path from here, and JavaScript gets all of it through paths_status.
 
-The facts. The program's location, the folder the program sits in: beside the executable on Windows and Linux, and the folder holding the .app on macOS, not a folder inside the bundle. The executable itself. The signed-in user's home folder. On Windows, the folder the per-user installer puts the program in, %LOCALAPPDATA% joined with the product name, which the page compares with the location to know it's running from an installed copy. On Windows, the folder holding the system's own programs, System32. And the data folder, with the paths of the settings file and the state file inside it. The page turns settings into real paths against these, like a download folder written as ./downloads or ~/Downloads/ftorrent; paths.js has how.
+The facts. The program's location, the folder the program sits in: beside the executable on Windows and Linux, and the folder holding the .app on macOS, not a folder inside the bundle. The executable itself. The signed-in user's home folder. On Windows, the folder the per-user installer puts the program in, %LOCALAPPDATA% joined with the product name, which JavaScript compares with the location to know it's running from an installed copy. On Windows, the folder holding the system's own programs, System32. And the data folder, with the paths of the settings file and the state file inside it. stores/settings.js turns settings into real paths against these, like a download folder written as ./downloads or ~/Downloads/ftorrent; paths.js has how.
 
-One decision is made here, because it has to be made before the page exists: which data folder is this copy's. If a folder named portable with a settings file inside sits at the program's location, the copy is portable, and that folder is its data folder, so everything it keeps travels with it. Otherwise it's installed, and the data folder is the one the platform gives the signed-in user: local application data on Windows, where the web view's profile already lives, and Application Support on macOS, and never Roaming. Anything that isn't portable is installed, whatever the reason: a development build, a copy on the Desktop, or a Mac app that macOS has translocated, running it from a random read-only folder because it still carries a download's quarantine mark. That last one is usually someone who opened the app inside its disk image without dragging it to Applications, and the installed data folder is exactly what they want, since it doesn't depend on where the app is; a translocated portable copy can't see its portable folder, so it acts installed too, and works.
+One decision is made here, because it has to be made before any JavaScript runs: which data folder is this copy's. If a folder named portable with a settings file inside sits at the program's location, the copy is portable, and that folder is its data folder, so everything it keeps travels with it. Otherwise it's installed, and the data folder is the one the platform gives the signed-in user: local application data on Windows, where the web view's profile already lives, and Application Support on macOS, and never Roaming. Anything that isn't portable is installed, whatever the reason: a development build, a copy on the Desktop, or a Mac app that macOS has translocated, running it from a random read-only folder because it still carries a download's quarantine mark. That last one is usually someone who opened the app inside its disk image without dragging it to Applications, and the installed data folder is exactly what they want, since it doesn't depend on where the app is; a translocated portable copy can't see its portable folder, so it acts installed too, and works.
 
-This module never opens the settings file. It names it, because the portable decision looks for it, and the page reads it, writes it, and knows what's in it.
+This module never opens the settings file. It names it, because the portable decision looks for it, and stores/settings.js reads it, writes it, and knows what's in it.
 */
 
 const PORTABLE_NAME: &str = "portable";//the folder whose ftorrent.toml makes a copy portable
 const STATE_NAME: &str = "state";//libtorrent's session state, the DHT routing table among it
 
-/// Everything startup worked out about where things are, which the page resolves settings against, and the engine is told
+/// Everything startup worked out about where things are, which stores/settings.js resolves settings against, and the engine is told
 #[derive(Serialize, Clone, Default)]
 pub struct Paths {
 	pub mode: String,//installed or portable
 	pub location: String,//the program's location, the anchor for ./
 	pub executable: String,//the program file itself, which is what a registered command runs
-	pub installer: String,//the folder an install puts the program in: on windows the per-user installer's, %LOCALAPPDATA% and the product name, and on macOS /Applications, where the disk image says to drag it; blank on linux, where no installer places a program the page needs to recognize
+	pub installer: String,//the folder an install puts the program in: on windows the per-user installer's, %LOCALAPPDATA% and the product name, and on macOS /Applications, where the disk image says to drag it; blank on linux, where no installer places a program JavaScript needs to recognize
 	pub home: String,//the signed-in user's home folder, the anchor for ~
 	pub system: String,//the folder holding the system's own programs: on windows System32 under %SystemRoot%, and blank elsewhere
 	pub data: String,//the data folder
@@ -46,7 +46,7 @@ pub fn locate(app: &AppHandle) -> Paths {
 	paths.location = display(&location);
 
 	let portable = location.join(PORTABLE_NAME);
-	let settings_name = format!("{}.toml", app.package_info().crate_name);//the settings file, named brandStem, the crate's name as brand.js in the page calls it, in the data folder; the page reads and writes it
+	let settings_name = format!("{}.toml", app.package_info().crate_name);//the settings file, named brandStem, the crate's name as brand.js calls it, in the data folder; stores/settings.js reads and writes it
 	let data = if portable.join(&settings_name).is_file() {
 		paths.mode = "portable".to_string();
 		portable
@@ -79,7 +79,7 @@ fn program_location() -> Result<PathBuf, String> {
 	Ok(folder.to_path_buf())
 }
 
-/// Where an install puts the program: on windows the per-user installer's folder, %LOCALAPPDATA% joined with the product name from tauri.conf.json, and on macOS /Applications; a fact the page compares with the program's location to know it's running from an installed copy
+/// Where an install puts the program: on windows the per-user installer's folder, %LOCALAPPDATA% joined with the product name from tauri.conf.json, and on macOS /Applications; a fact JavaScript compares with the program's location to know it's running from an installed copy
 fn installer_folder(app: &AppHandle) -> String {
 	if cfg!(target_os = "macos") { return "/Applications".to_string() }//the folder the disk image's window shows beside the app, for the user to drag it onto
 	if !cfg!(target_os = "windows") { return String::new() }
@@ -92,12 +92,12 @@ fn system_folder() -> String {
 	std::env::var_os("SystemRoot").map(|root| display(&PathBuf::from(root).join("System32"))).unwrap_or_default()
 }
 
-/// A path as text, for the page and the engine, in the plain form: on windows a path that has been canonicalized carries the \\?\ prefix, which the firewall's rules, the registry, and a person never write, and dunce takes it off wherever the path reads the same without it
+/// A path as text, for JavaScript and the engine, in the plain form: on windows a path that has been canonicalized carries the \\?\ prefix, which the firewall's rules, the registry, and a person never write, and dunce takes it off wherever the path reads the same without it
 pub(crate) fn display(path: &Path) -> String {
 	dunce::simplified(path).to_string_lossy().into_owned()
 }
 
-/// Where everything is, as startup worked it out; the page asks once, since none of it changes while the app runs
+/// Where everything is, as startup worked it out; JavaScript asks once, since none of it changes while the app runs
 #[command]
 pub fn paths_status(paths: State<'_, Paths>) -> Paths {
 	paths.inner().clone()

@@ -11,15 +11,15 @@ use crate::paths::Paths;
 use crate::queue::{Drained, Queue};
 
 /*
-The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches this process, and no shell plugin is registered: the engine starts here, from a path this file computes, and any other program starts through process.rs, by a path the page names.
+The engine is a second process: a Python program, frozen with its interpreter and libtorrent into a folder the app carries as a resource, that will hold the torrent session. This module starts it, talks to it, and stops it. Nothing else in the app touches this process, and no shell plugin is registered: the engine starts here, from a path this file computes, and any other program starts through process.rs, by a path JavaScript names.
 
-The conversation is the one road between the page and libtorrent, and this module is the wire in the middle of it. In a plain Python program, libtorrent is one process and function calls: calls on the session and on a torrent's handle post requests to libtorrent's own network thread and return at once, and libtorrent reports everything back as alerts, which the program collects in batches. ftorrent puts a process boundary between the app and the engine, and that boundary is the only wire protocol ftorrent owns: newline-delimited JSON on the engine's own pipes. Pipes rather than a local socket, because a pipe between a parent and its child is reachable by no other process on the machine.
+The conversation is the one road between JavaScript and libtorrent, and this module is the wire in the middle of it. In a plain Python program, libtorrent is one process and function calls: calls on the session and on a torrent's handle post requests to libtorrent's own network thread and return at once, and libtorrent reports everything back as alerts, which the program collects in batches. ftorrent puts a process boundary between the app and the engine, and that boundary is the only wire protocol ftorrent owns: newline-delimited JSON on the engine's own pipes. Pipes rather than a local socket, because a pipe between a parent and its child is reachable by no other process on the machine.
 
-One road down, one road up, and Rust reads neither. Going down, the page builds a command as a line of JSON and hands it to engine_send, which passes it on to the engine's stdin; the only thing checked is that it's one line, since a newline would make it two. Coming up, every line the engine writes to stdout goes on a drained queue as text, and engine_take hands the page everything waiting. The engine is where JSON meets libtorrent, with one entry in its dispatch table per command, and the page is where the answers mean something. So using a libtorrent call ftorrent hasn't used before is two edits, the page that sends the command and the engine's entry that makes the call, and nothing here changes. Take pausing a torrent. With a Rust command per engine message it would be six edits across four layers: a JavaScript wrapper, a Rust command, its registration in lib.rs, the engine's branch, a Rust status field for the answer, and the page. On this road it's two: the page sends {"command":"pause",…}, and one entry in engine.py calls handle.pause(); libtorrent's answer comes back as an alert the engine already turns into a line. That's on purpose: a Rust command per engine message would rebuild libtorrent's whole surface at every layer, one feature at a time.
+One road down, one road up, and Rust reads neither. Going down, JavaScript builds a command as a line of JSON and hands it to engine_send, which passes it on to the engine's stdin; the only thing checked is that it's one line, since a newline would make it two. Coming up, every line the engine writes to stdout goes on a drained queue as text, and engine_take hands JavaScript everything waiting. The engine is where JSON meets libtorrent, with one entry in its dispatch table per command, and Plastic is where the answers mean something. So using a libtorrent call ftorrent hasn't used before is two edits, the JavaScript that sends the line and the engine's entry that makes the call, and nothing here changes. Take pausing a torrent. With a Rust command per engine message it would be six edits across four layers: a JavaScript wrapper, a Rust command, its registration in lib.rs, the engine's branch, a Rust status field for the answer, and the panel. On this road it's two: JavaScript sends {"command":"pause",…}, and one entry in engine.py calls handle.pause(); libtorrent's answer comes back as an alert the engine already turns into a line. That's on purpose: a Rust command per engine message would rebuild libtorrent's whole surface at every layer, one feature at a time.
 
-Down the road there's a thread of its own. engine_send puts the line on a channel and returns at once, and a writer thread that owns the engine's stdin does the writing. The reason is a cycle. The engine handles one message at a time, and blocks writing its answer until someone reads it; so a command that wrote into a full stdin pipe while holding the lock the stdout reader needs would stop all three for good, the command waiting on the engine, the engine on the reader, the reader on the lock. And a command that isn't async runs on Tauri's main thread, so even a write that only waited a while would freeze the window. With the writing on its own thread, the page is never held up by a pipe, and the lock below is only ever held for a moment, never across a read or a write.
+Down the road there's a thread of its own. engine_send puts the line on a channel and returns at once, and a writer thread that owns the engine's stdin does the writing. The reason is a cycle. The engine handles one message at a time, and blocks writing its answer until someone reads it; so a command that wrote into a full stdin pipe while holding the lock the stdout reader needs would stop all three for good, the command waiting on the engine, the engine on the reader, the reader on the lock. And a command that isn't async runs on Tauri's main thread, so even a write that only waited a while would freeze the window. With the writing on its own thread, JavaScript is never held up by a pipe, and the lock below is only ever held for a moment, never across a read or a write.
 
-Two things stay special here, because they're about the process rather than the conversation. init goes down the moment the engine starts, before the page exists, carrying the app's version, which is how the engine learns the one number it can't read for itself, and the data folder and state file startup worked out; its answer, ready, comes up the road like any other line. And the engine's stderr is kept in a ring of the last hundred lines, uninterpreted, so that a failure to start or a crash has something to show.
+Two things stay special here, because they're about the process rather than the conversation. init goes down the moment the engine starts, before any JavaScript runs, carrying the app's version, which is how the engine learns the one number it can't read for itself, and the data folder and state file startup worked out; its answer, ready, comes up the road like any other line. And the engine's stderr is kept in a ring of the last hundred lines, uninterpreted, so that a failure to start or a crash has something to show.
 
 Stopping is the part that has to be right. A torrent client that leaves an engine running after its window closes is broken, so engine_stop runs from the two run events every quit path reaches. It puts a quit on the road down and lets go of the channel, so the writer sends what's queued, the quit last, and closes the engine's stdin; then it gives the engine a moment, and kills it if it is still there. Closing stdin is a second, independent signal: the engine exits when its input ends, so even an engine that never sees the quit line goes when the app does.
 
@@ -27,10 +27,10 @@ Where the engine lives is the one platform question, and Tauri's resource direct
 */
 
 const STDERR_LINES: usize = 100;//how many of the engine's stderr lines to keep; the last ones are the ones that explain a crash
-const STDOUT_LINES: usize = 1000;//how many stdout lines wait for the page to take them before the oldest are dropped and counted; the page takes several times a second, so this is room for a burst, not a history
+const STDOUT_LINES: usize = 1000;//how many stdout lines wait for stores/incoming.js to take them before the oldest are dropped and counted; it takes several times a second, so this is room for a burst, not a history
 const STOP_WAIT: Duration = Duration::from_secs(2);//how long a quit gets before a kill
 
-/// What the page sees when it asks how the engine is doing
+/// What JavaScript sees when it asks how the engine is doing
 #[derive(Serialize, Clone, Default)]
 pub struct EngineStatus {
 	pub path: String,//where the app looked for the engine
@@ -47,7 +47,7 @@ struct EngineInner {
 	down: Option<Sender<String>>,//the channel to the writer thread, which owns the engine's stdin; dropped to close it. Unbounded, so sending never waits, and what it holds is only the lines the writer hasn't written yet
 	status: EngineStatus,
 	stderr: VecDeque<String>,//the ring behind status.stderr
-	lines: Queue<String, STDOUT_LINES>,//what the engine has written to stdout that the page hasn't taken yet
+	lines: Queue<String, STDOUT_LINES>,//what the engine has written to stdout that JavaScript hasn't taken yet
 }
 
 //managed by lib.rs; the Mutex because commands arrive on tauri's main thread and the reader threads below run on their own. The writer thread never takes it
@@ -66,7 +66,7 @@ fn engine_path(app: &AppHandle) -> Result<PathBuf, String> {
 	Ok(path)
 }
 
-/// Start the engine and send it init; called once from setup, before the page exists. Trouble goes to the log and the status rather than being returned, since there's nothing yet to return it to
+/// Start the engine and send it init; called once from setup, before any JavaScript runs. Trouble goes to the log and the status rather than being returned, since there's nothing yet to return it to
 pub fn engine_start(app: &AppHandle) {
 	let engine = app.state::<Engine>();
 	let paths = app.state::<Paths>().inner().clone();
@@ -75,7 +75,7 @@ pub fn engine_start(app: &AppHandle) {
 		Ok(path) => path,
 		Err(trouble) => return fail(trouble),
 	};
-	lock(&engine).status.path = crate::paths::display(&path);//written the way paths.rs writes every path, without the \\?\ prefix tauri's resource directory carries, since the page hands this path to the firewall, which stores plain ones
+	lock(&engine).status.path = crate::paths::display(&path);//written the way paths.rs writes every path, without the \\?\ prefix tauri's resource directory carries, since JavaScript hands this path to the firewall, which stores plain ones
 	if !path.is_file() { return fail("the engine is not built; run pnpm engine in the desktop workspace".to_string()) }
 
 	let mut command = Command::new(&path);
@@ -98,7 +98,7 @@ pub fn engine_start(app: &AppHandle) {
 		"command": "init",
 		"name": app.package_info().name,//brandName, the product name, which the engine puts at the front of the client name peers and trackers see
 		"version": app.package_info().version.to_string(),//the app's version, read from tauri.conf.json at compile time, so the engine can name the client on the wire without a second place the number is written
-		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so the page sends them down the road once it has read the settings file
+		"paths": {//where the engine will keep what it keeps, as paths.rs resolved it; the engine never works these out for itself. The download folders are not here: they're a setting, so JavaScript sends them down the road once it has read the settings file
 			"data": paths.data,
 			"state": paths.state,
 		},
@@ -123,7 +123,7 @@ pub fn engine_start(app: &AppHandle) {
 		}
 	});//stdin drops here, closing the pipe, which the engine reads as the end of its input
 
-	//stdout: every line onto the queue for the page, unread. The end of the stream is the end of the engine, so this thread is also what notices a crash
+	//stdout: every line onto the queue for JavaScript, unread. The end of the stream is the end of the engine, so this thread is also what notices a crash
 	let app_out = app.clone();
 	std::thread::spawn(move || {
 		for line in BufReader::new(stdout).split(b'\n').map_while(Result::ok) {//raw bytes up to each newline; only a failed read ends the loop, and that means the pipe is gone, because a reader that stopped while the engine kept writing would leave the engine blocked on a full pipe
@@ -176,7 +176,7 @@ pub fn engine_stop(app: &AppHandle) {
 	inner.status.exit = exit;
 }
 
-/// Send the engine one line, a command the page built; it isn't read here, only checked to be a single line
+/// Send the engine one line, a command JavaScript built; it isn't read here, only checked to be a single line
 #[command]
 pub fn engine_send(engine: State<'_, Engine>, line: String) -> Result<(), String> {
 	if line.contains('\n') || line.contains('\r') { return Err("a line for the engine can't contain a line break".to_string()) }//it would arrive as two messages, the second a fragment
@@ -185,13 +185,13 @@ pub fn engine_send(engine: State<'_, Engine>, line: String) -> Result<(), String
 	down.send(line + "\n").map_err(|_| "the engine is not running".to_string())//onto the road down and back at once, without waiting on the pipe; this fails only once the writer thread has stopped, because the engine's pipe broke
 }
 
-/// Everything the engine has written to stdout since the last take, oldest first, and how many lines were dropped because the page fell behind
+/// Everything the engine has written to stdout since the last take, oldest first, and how many lines were dropped because JavaScript fell behind
 #[command]
 pub fn engine_take(engine: State<'_, Engine>) -> Drained<String> {
 	lock(&engine).lines.take()
 }
 
-/// How the engine is doing right now; the page asks, rather than being told, so nothing here has to know whether a page exists
+/// How the engine is doing right now; JavaScript asks, rather than being told, so nothing here has to know whether any JavaScript is running
 #[command]
 pub fn engine_status(engine: State<'_, Engine>) -> EngineStatus {
 	let inner = lock(&engine);

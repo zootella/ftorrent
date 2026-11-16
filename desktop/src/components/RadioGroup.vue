@@ -16,8 +16,8 @@ let name = useId()//one name shared by this group's buttons, which is what makes
 	<!-- a question and every one of its answers in view at once, the way ftorrent asks for a choice, rather than with a dropdown that hides them. fieldset and legend name the group, so a screen reader says the question before the answers; the slot is the question -->
 	<fieldset :disabled="disabled">
 		<legend><slot /></legend>
-		<label v-for="[value, words] in choices" :key="value" class="block w-fit"><!-- a row of text with the button inline in it, the space between them a space; the words inside the label, so clicking them picks the answer too, and the label only as wide as they are, since a block would otherwise stretch across the page, and a click in the empty space beside an answer, with nothing there to show it, would pick it -->
-			<input type="radio" :name="name" :value="value" :checked="value == chosen" @change="$emit('choose', value)" /> <slot name="answer" :words="words">{{ words }}</slot><!-- the words as they are, unless the page draws its answers its own way, as the font question does to set each face's name in italics -->
+		<label v-for="[value, words] in choices" :key="value" class="block w-fit"><!-- a row of text with the button inline in it, the space between them a space; the words inside the label, so clicking them picks the answer too, and the label only as wide as they are, since a block would otherwise stretch across the panel, and a click in the empty space beside an answer, with nothing there to show it, would pick it -->
+			<input type="radio" :name="name" :value="value" :checked="value == chosen" @change="$emit('choose', value)" /> <slot name="answer" :words="words">{{ words }}</slot><!-- the words as they are, unless the panel draws its answers its own way, as the font question does to set each face's name in italics -->
 		</label>
 	</fieldset>
 </template>

@@ -1,6 +1,6 @@
 import {invoke} from '@tauri-apps/api/core'
 
-//the windows registry, read and written for the page; registry.rs is the long version, and on macOS and linux each of these answers that there's no registry
+//the windows registry, read and written; registry.rs is the long version, and on macOS and linux each of these answers that there's no registry
 
 export function registryGet(root, key, name)  { return invoke('registry_get',        {root, key, name})  }//read a string value through classes or user; a blank name is the key's default value, and nothing comes back when it isn't there
 export function registryGetBinary(root, key, name) { return invoke('registry_get_binary', {root, key, name}) }//read a binary value through classes or user, as an array of its bytes; nothing comes back when it isn't there

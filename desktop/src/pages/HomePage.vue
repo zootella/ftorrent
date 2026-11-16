@@ -7,7 +7,7 @@ import SizeGrip from '../components/SizeGrip.vue'
 import {brandName} from '../brand.js'
 import {log} from '../log.js'
 
-let store = useSettingsStore()//main.js loaded it before this page mounted, or is about to; the object is the same either way
+let store = useSettingsStore()//main.js loaded it before this panel mounted, or is about to; the object is the same either way
 
 //get the default download folder ready, the way starting a torrent will; a stand-in for the add-torrent flow until there are torrents, so ftorrent never makes a folder at startup
 let prepared = ref(false)//true for a moment after the button, so it can say so
@@ -26,7 +26,7 @@ async function prepareFolder() {
 
 <template>
 	<!-- ./src/pages/HomePage.vue -->
-	<!-- the page the window opens on -->
+	<!-- the panel the window opens on -->
 	<main class="flex flex-col items-start gap-line">
 		<h1 class="text-heading font-semibold">{{ brandName }}</h1>
 

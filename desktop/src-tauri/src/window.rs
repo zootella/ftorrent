@@ -6,12 +6,12 @@ use crate::paths::Paths;
 /*
 ftorrent's one window, made here in code rather than declared in tauri.conf.json, for two reasons. A window declared in the config is built, with its web view inside, before setup runs, and setup is where a second launch finds the lock held and leaves; two launches a few tens of milliseconds apart once both built a WebView2 on the same profile, and the one that left took the shared browser process down with it, leaving the winner with no window it could ever show. Made from the Ready event, a launch that leaves never has a window at all. And the builder is the only place a web view's data folder can be named, which is how a portable copy keeps WebView2's profile in its portable folder rather than on the host.
 
-The window is made hidden, at any size. Where it goes and how big it is are the page's to decide: window.js reads the place the settings file remembers, or picks a fresh one, moves and sizes the hidden window there, and shows it. Then it says so, through window_revealed, and that one flag is the only state here; a launch the system made at login is placed and left hidden, and says so all the same. It's for bring_forward in lifecycle.rs: a second launch, the tray, or the Dock can ask for the window in the first moment of startup, before the page has placed it, and showing it then would put it on screen at the builder's size and spot for an instant before the page moved it. Until the page has revealed it, bringing it forward waits, since the page is about to show it anyway.
+The window is made hidden, at any size. Where it goes and how big it is are Plastic's to decide: window.js reads the place the settings file remembers, or picks a fresh one, moves and sizes the hidden window there, and shows it. Then it says so, through window_revealed, and that one flag is the only state here; a launch the system made at login is placed and left hidden, and says so all the same. It's for bring_forward in lifecycle.rs: a second launch, the tray, or the Dock can ask for the window in the first moment of startup, before window.js has placed it, and showing it then would put it on screen at the builder's size and spot for an instant before window.js moved it. Until window.js has revealed it, bringing it forward waits, since window.js is about to show it anyway.
 
-And the web view inside is a browser's, and on Windows it takes the keyboard for itself. While the page has focus, WebView2 gets each keystroke before the window's message loop, where Tauri checks every key against the menu, and it raises an event of its own for each key that isn't typing, a function key or a key with Ctrl or Alt held, which neither wry nor Tauri answers. So the menu's shortcuts never reach it: F1, View Help's, Ctrl+O, Open's, and Alt with a letter, the chord that opens a menu by its underlined letter, Alt+F for File; tapping Alt alone gets through. And the browser keeps a browser's keys: F5 and Ctrl+R reload the page, Ctrl+P prints it, Ctrl+F opens a find bar, and Alt+Left goes back. None of that belongs in a desktop application, and a reload would run the page's startup again beside an engine that never stopped. So as the window is made, a handler goes on that event. In every build it hands the menu back its keys: F1 sends View Help's own event, Ctrl+O sends Open's, and Alt with a letter posts the window the message Windows itself sends to open a menu by its letter. In a release build it also tells the browser to skip every other key it might take for its own, and which keys those are stays Microsoft's list rather than one of ours, while the page still receives every key. WebView2 also has a single setting that turns the browser's keys off, and it would be simpler, but it takes effect only at the next navigation: by the time Tauri hands the web view over, the first page is already loading, and ftorrent never navigates again. A development build keeps the browser's keys, for reloading and the developer tools. On macOS the menu hears its keys before the web view does, and the web views on macOS and Linux have no browser keys. The right-click menu is a browser's on every platform, and the page turns it away, in main.js, with the same code everywhere.
+And the web view inside is a browser's, and on Windows it takes the keyboard for itself. While the web view has focus, WebView2 gets each keystroke before the window's message loop, where Tauri checks every key against the menu, and it raises an event of its own for each key that isn't typing, a function key or a key with Ctrl or Alt held, which neither wry nor Tauri answers. So the menu's shortcuts never reach it: F1, View Help's, Ctrl+O, Open's, and Alt with a letter, the chord that opens a menu by its underlined letter, Alt+F for File; tapping Alt alone gets through. And the browser keeps a browser's keys: F5 and Ctrl+R reload the web view, Ctrl+P prints it, Ctrl+F opens a find bar, and Alt+Left goes back. None of that belongs in a desktop application, and a reload would run main.js's startup again beside an engine that never stopped. So as the window is made, a handler goes on that event. In every build it hands the menu back its keys: F1 sends View Help's own event, Ctrl+O sends Open's, and Alt with a letter posts the window the message Windows itself sends to open a menu by its letter. In a release build it also tells the browser to skip every other key it might take for its own, and which keys those are stays Microsoft's list rather than one of ours, while JavaScript still receives every key. WebView2 also has a single setting that turns the browser's keys off, and it would be simpler, but it takes effect only at the next navigation: by the time Tauri hands the web view over, the JavaScript is already loading, and ftorrent never navigates again. A development build keeps the browser's keys, for reloading and the developer tools. On macOS the menu hears its keys before the web view does, and the web views on macOS and Linux have no browser keys. The right-click menu is a browser's on every platform, and main.js turns it away with the same code everywhere.
 */
 
-/// Whether the page has placed the window yet, and shown it unless a login started this copy; managed by lib.rs
+/// Whether window.js has placed the window yet, and shown it unless a login started this copy; managed by lib.rs
 #[derive(Default)]
 pub struct Revealed(pub AtomicBool);
 
@@ -67,8 +67,8 @@ fn _keys(window: &WebviewWindow) {
 				if !repeat { let _ = PostMessageW(Some(HWND(hwnd as _)), WM_SYSCOMMAND, WPARAM(SC_KEYMENU as usize), LPARAM(key as isize + 0x20)); }//the message Windows itself sends a window for alt and a letter, with the letter in lowercase as it sends it: the menu with that underlined letter opens, F for File, and with none there's the system's beep
 				return Ok(())
 			}
-			if !cfg!(debug_assertions) {//a development build keeps the browser's keys, for reloading the page and opening the developer tools
-				if let Ok(args) = args.cast::<ICoreWebView2AcceleratorKeyPressedEventArgs2>() { args.SetIsBrowserAcceleratorKeyEnabled(false)?; }//skip the browser's handling of this key; the page still gets it, and editing keys like ctrl+c were never the browser's. The newer interface arrived in webview2 1.0.2210, and on a runtime older than that the cast fails and the key stays the browser's
+			if !cfg!(debug_assertions) {//a development build keeps the browser's keys, for reloading the web view and opening the developer tools
+				if let Ok(args) = args.cast::<ICoreWebView2AcceleratorKeyPressedEventArgs2>() { args.SetIsBrowserAcceleratorKeyEnabled(false)?; }//skip the browser's handling of this key; JavaScript still gets it, and editing keys like ctrl+c were never the browser's. The newer interface arrived in webview2 1.0.2210, and on a runtime older than that the cast fails and the key stays the browser's
 			}
 			Ok(())
 		}));
@@ -80,7 +80,7 @@ fn _keys(window: &WebviewWindow) {
 #[cfg(not(target_os = "windows"))]
 fn _keys(_window: &WebviewWindow) {}//on macOS the menu hears its keys before the web view does, and the web views on macOS and Linux have no browser keys to turn off
 
-/// The page has placed the window, and shown it unless a login started this copy, so bringing it forward is safe from here on
+/// window.js has placed the window, and shown it unless a login started this copy, so bringing it forward is safe from here on
 #[command]
 pub fn window_revealed(revealed: State<'_, Revealed>) {
 	revealed.0.store(true, Ordering::SeqCst);
@@ -94,7 +94,7 @@ pub fn window_resize_drag(window: WebviewWindow, edge: String) -> Result<bool, S
 
 #[cfg(not(target_os = "macos"))]
 fn resize_drag(window: &WebviewWindow, edge: &str) -> Result<bool, String> {
-	let direction = serde_json::from_value(serde_json::Value::String(edge.to_string())).map_err(|_| format!("no edge named {edge}"))?;//tauri's ResizeDirection, which tauri takes but doesn't export, read from its name the way tauri's own startResizeDragging sends it from a page
+	let direction = serde_json::from_value(serde_json::Value::String(edge.to_string())).map_err(|_| format!("no edge named {edge}"))?;//tauri's ResizeDirection, which tauri takes but doesn't export, read from its name the way tauri's own startResizeDragging sends it from JavaScript
 	window.as_ref().window().start_resize_dragging(direction).map_err(|e| e.to_string())?;
 	Ok(true)
 }
@@ -104,7 +104,7 @@ fn resize_drag(_window: &WebviewWindow, _edge: &str) -> Result<bool, String> {
 	Ok(false)//tao answers not supported here
 }
 
-/// The version of the web view the page runs in, as the platform reports it: WebView2's on Windows, and WebKit's on macOS and Linux
+/// The version of the web view, as the platform reports it: WebView2's on Windows, and WebKit's on macOS and Linux
 #[command]
 pub fn window_webview_version() -> Result<String, String> {
 	tauri::webview_version().map_err(|e| e.to_string())

@@ -6,17 +6,17 @@ import platform
 import tempfile
 import libtorrent as lt
 
-# The engine is the process that holds libtorrent, and this file is its whole program. It starts, answers lines of newline-delimited JSON on its pipes, and exits when told to or when its pipe closes. It opens no sockets until the page asks for a session, which the desktop client's Connection tab does today, to see what the network does to a client that listens, joins the DHT, and sits in a swarm; the torrent work arrives later on top of exactly this loop.
+# The engine is the process that holds libtorrent, and this file is its whole program. It starts, answers lines of newline-delimited JSON on its pipes, and exits when told to or when its pipe closes. It opens no sockets until it's asked for a session, which the desktop client's Connection tab does today, to see what the network does to a client that listens, joins the DHT, and sits in a swarm; the torrent work arrives later on top of exactly this loop.
 #
-# The loop has no threads, so the engine does work only when a line arrives, and the page sets the pace. libtorrent works on its own threads whether or not anyone asks, and reports what happens as alerts that wait in a queue inside the session; the page sends poll on an interval, and the engine answers with every alert waiting, each as a line. The queue holds 2,000 alerts by default and drops the rest, so a session nobody polls loses news, which is why the page keeps polling for as long as a session runs.
+# The loop has no threads, so the engine does work only when a line arrives, and JavaScript sets the pace. libtorrent works on its own threads whether or not anyone asks, and reports what happens as alerts that wait in a queue inside the session; JavaScript sends poll on an interval, and the engine answers with every alert waiting, each as a line. The queue holds 2,000 alerts by default and drops the rest, so a session nobody polls loses news, which is why JavaScript keeps polling for as long as a session runs.
 #
-# The engine is the far end of the one road between the page and libtorrent. The page builds each command as a line of JSON, the app's Rust passes it down the engine's stdin without reading it, and every line the engine writes to stdout goes back up the same way, unread, until the page takes it. So this file is where JSON meets libtorrent: the dispatch table at the bottom has one entry per command, each entry translates what it's given into libtorrent's own terms and back, and the table is also the list of everything the page can ask the engine to do, on purpose, rather than a way to call any libtorrent method by name. Using a libtorrent call ftorrent hasn't used before means one new entry here and the page that sends it, and nothing in between.
+# The engine is the far end of the one road between JavaScript and libtorrent. JavaScript builds each command as a line of JSON, the app's Rust passes it down the engine's stdin without reading it, and every line the engine writes to stdout goes back up the same way, unread, until JavaScript takes it. So this file is where JSON meets libtorrent: the dispatch table at the bottom has one entry per command, each entry translates what it's given into libtorrent's own terms and back, and the table is also the list of everything JavaScript can ask the engine to do, on purpose, rather than a way to call any libtorrent method by name. Using a libtorrent call ftorrent hasn't used before means one new entry here and the JavaScript that sends it, and nothing in between.
 #
 # Two rules about the pipes, both because the other end is Rust reading lines. Every message is one line of JSON ending in a newline and flushed at once, so nothing sits in a buffer while the app waits. And a line that is not JSON, or JSON that is not a command the engine knows, gets an error line back rather than a crash, so a mistake on one side never takes the other side down.
 
 # The centralized servers the engine reaches on its own, and the one place they are written. Three lists, each in the same order: ours first, then the well-known providers or the servers universal to BitTorrent. The Names and Numbers document on docs.ftorrent.com lists every entry and who runs it; a change here is a change there.
 centralized_servers = {
-	'stun': [#the STUN server WebTorrent uses to learn its own public address for WebRTC; libtorrent takes exactly one, so the first entry is the one used, and the rest are the order to fall back through once the engine can test them, and the choices a settings page will offer
+	'stun': [#the STUN server WebTorrent uses to learn its own public address for WebRTC; libtorrent takes exactly one, so the first entry is the one used, and the rest are the order to fall back through once the engine can test them, and the choices a settings panel will offer
 		'stun.ftorrent.com:3478',#ours
 		'stun.cloudflare.com:3478',#Cloudflare's public STUN
 		'stun.l.google.com:19302',#Google's public STUN, libtorrent's own default
@@ -39,7 +39,7 @@ centralized_servers = {
 name = ''#the product's name, and
 version = ''#the app's version, both of which arrive in the init line because the engine cannot read tauri.conf.json, the one place they're written
 paths = {}#where the engine will keep what it keeps: the data folder and the state file, which also arrive in init because the app works them out and the engine never does
-folders = []#the download folders, as absolute paths; these arrive later, in a folders line, because they are a setting and the page reads the settings after the engine has started
+folders = []#the download folders, as absolute paths; these arrive later, in a folders line, because they are a setting and JavaScript reads the settings after the engine has started
 
 def client_name():#how the client names itself on the wire: brand first, then lineage, the way a browser's user agent reads, so a narrow column shows the brand and a wide one shows the whole truth
 	return f'{name}/{version} libtorrent/{lt.version}'
@@ -59,7 +59,7 @@ def session_settings():#the settings the engine will hand libtorrent when it cre
 
 alert_mask = lt.alert_category.error | lt.alert_category.status | lt.alert_category.port_mapping | lt.alert_category.port_mapping_log | lt.alert_category.dht | lt.alert_category.peer | lt.alert_category.connect | lt.alert_category.tracker#the kinds of alert the session posts: errors, status changes, port mapping, the DHT, peers, connections, and trackers, and of libtorrent's logs only the port mappers', a few lines for each request a mapper sends, since a router that never answers posts no other alert; the rest would be many lines a second
 
-session = None#the one libtorrent session, once the page asks for one, and None again once it's stopped
+session = None#the one libtorrent session, once JavaScript asks for one, and None again once it's stopped
 
 def ready():#what the engine reports about itself once it is up, and the first thing the app asks for
 	return {
@@ -87,14 +87,14 @@ def command_init(message):#the app says which version it is and where the engine
 	paths = message.get('paths', {}) if isinstance(message.get('paths'), dict) else {}
 	emit(ready())
 
-def command_folders(message):#the download folders the page holds the locks for, as absolute paths
+def command_folders(message):#the download folders JavaScript holds the locks for, as absolute paths
 	global folders
 	listed = message.get('folders')
 	if not isinstance(listed, list): listed = []#anything but a list names no folders, rather than stopping the engine
 	folders = [f for f in listed if isinstance(f, str)]#and an entry that isn't text is passed over the same way
-	emit({'event': 'folders', 'folders': folders})#sent back as kept, so the page can see they arrived and notice if one was passed over; the engine will use them once its session downloads
+	emit({'event': 'folders', 'folders': folders})#sent back as kept, so JavaScript can see they arrived and notice if one was passed over; the engine will use them once its session downloads
 
-def command_session(message):#start the session, listening on every address in both families at the port the page chose, with the DHT on and the router left alone; a session already running is replaced
+def command_session(message):#start the session, listening on every address in both families at the port JavaScript chose, with the DHT on and the router left alone; a session already running is replaced
 	global session
 	port = message.get('port')
 	if not isinstance(port, int) or not 0 < port < 65536:
@@ -104,7 +104,7 @@ def command_session(message):#start the session, listening on every address in b
 	settings.update({
 		'listen_interfaces': f'0.0.0.0:{port},[::]:{port}',#every address of each family at one port, each with a TCP socket and a UDP one, the UDP one carrying uTP, the DHT, and UDP trackers
 		'enable_dht': True,
-		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two stay off until the page asks for mapping, so it sees what the network does before and after
+		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two stay off until JavaScript asks for mapping, so it sees what the network does before and after
 		'enable_natpmp': False,
 		'upnp_lease_duration': 60,#and when it does, each mapping lasts a minute and is renewed at three quarters of that, so a mapping this session leaves behind, if the engine dies holding one, is gone from the router a minute later; libtorrent's own is an hour
 		'natpmp_lease_duration': 60,#the same for the NAT-PMP mapper, which speaks PCP too
@@ -144,7 +144,7 @@ def command_tables(message):#each DHT node the session runs, one for each addres
 		session.dht_live_nodes(lt.sha1_hash(entry[:20]))
 	emit({'event': 'tables', 'tables': tables})
 
-def command_read(message):#the torrent file at path, read without joining its swarm: its name, info-hashes, size, and files, so the page can show what was chosen
+def command_read(message):#the torrent file at path, read without joining its swarm: its name, info-hashes, size, and files, so the panel can show what was chosen
 	path = message.get('path')
 	try:
 		info = lt.torrent_info(path)
@@ -173,7 +173,7 @@ def command_stop(message):#tear the session down, its torrents, its sockets, and
 	session = None
 	emit({'event': 'stopped'})
 
-def describe(info):#what the page shows about a torrent: its name, its info-hashes, blank for a version the torrent doesn't have, and its size and files
+def describe(info):#what the panels show about a torrent: its name, its info-hashes, blank for a version the torrent doesn't have, and its size and files
 	hashes = info.info_hashes()
 	return {
 		'name': info.name(),
@@ -183,7 +183,7 @@ def describe(info):#what the page shows about a torrent: its name, its info-hash
 		'files': info.num_files(),
 	}
 
-def alert_event(alert):#one alert as a line for the page: its type, libtorrent's own sentence about it, and the fields the page reads, as plain values
+def alert_event(alert):#one alert as a line for JavaScript: its type, libtorrent's own sentence about it, and the fields JavaScript reads, as plain values
 	event = {'event': 'alert', 'type': alert.what(), 'message': alert.message()}
 	kind = type(alert).__name__
 	if kind in ('listen_succeeded_alert', 'listen_failed_alert'):

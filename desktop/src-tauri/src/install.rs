@@ -4,9 +4,9 @@ use crate::paths::Paths;
 use std::time::Duration;
 
 /*
-The newer copy putting itself in place of the old one, on a Mac. The page in the running copy downloads the update, checks it, unzips it into a folder of its own, starts the executable inside that newer bundle with --replace and the path of the bundle to replace, and quits; the essay in update.js has the whole sequence and every path. What runs here is that newer process, from setup, before it has a lock, an engine, or a window, and it never gets any of them: it waits for the old copy to finish quitting, exchanges the two bundles in one step, touches the new one, opens it, and exits. The old copy's bundle stays untouched until the old copy has gone, so every privacy grant it holds works through its last writes; the exchange is a single step the user never sees half of; and the copy that opens afterward is launched by Launch Services from its path, as its own process in the system's eyes for privacy prompts, rather than as a child of this one.
+The newer copy putting itself in place of the old one, on a Mac. update.js in the running copy downloads the update, checks it, unzips it into a folder of its own, starts the executable inside that newer bundle with --replace and the path of the bundle to replace, and quits; the essay in update.js has the whole sequence and every path. What runs here is that newer process, from setup, before it has a lock, an engine, or a window, and it never gets any of them: it waits for the old copy to finish quitting, exchanges the two bundles in one step, touches the new one, opens it, and exits. The old copy's bundle stays untouched until the old copy has gone, so every privacy grant it holds works through its last writes; the exchange is a single step the user never sees half of; and the copy that opens afterward is launched by Launch Services from its path, as its own process in the system's eyes for privacy prompts, rather than as a child of this one.
 
-How this fits the rule in lib.rs: the page can't be here, since this process has no page yet and the old copy's page is quitting, and the rule gives the moment of startup to Rust for exactly that. What the page decided arrives on the command line, the bundle to replace and the folder to log into, and the facts this process reads are only its own: where its bundle is, and the lock file every copy of this app shares. Nothing here knows what ftorrent is, beyond the crate's name on the lock, and the same code would carry any app that updates itself this way.
+How this fits the rule in lib.rs: Plastic can't be here, since this process never opens a web view and the old copy's is closing, and the rule gives the moment of startup to Rust for exactly that. What update.js decided arrives on the command line, the bundle to replace and the folder to log into, and the facts this process reads are only its own: where its bundle is, and the lock file every copy of this app shares. Nothing here knows what ftorrent is, beyond the crate's name on the lock, and the same code would carry any app that updates itself this way.
 
 The lock is the signal that the old copy has gone. It's the data folder's lock from instance.rs, which the kernel releases only when the process holding it ends, after its exit event has written the settings and stopped the engine, so taking it here means the old copy is finished, however long its quit took. This process holds it through the exchange, so a launch from the Dock in that moment finds it held and leaves rather than starting the old bundle, and lets it go by exiting, which is when the copy it opened, started with --update, takes it in turn.
 
@@ -14,9 +14,9 @@ Whatever goes wrong here, something comes back. renamex_np with RENAME_SWAP eith
 */
 
 #[cfg(target_os = "macos")]
-pub const ARGUMENT: &str = "--replace";//on this process's command line, from the page's update.js, followed by the path of the bundle to replace
+pub const ARGUMENT: &str = "--replace";//on this process's command line, from update.js, followed by the path of the bundle to replace
 #[cfg(target_os = "macos")]
-pub const LOG_ARGUMENT: &str = "--log";//followed by the folder to log into, there only when the user has logging on; the page decides that, and this process has no page to ask
+pub const LOG_ARGUMENT: &str = "--log";//followed by the folder to log into, there only when the user has logging on; the settings decide that, and this process has no JavaScript to ask
 #[cfg(target_os = "macos")]
 const WAIT_EVERY: Duration = Duration::from_millis(50);//how often to try the lock while the old copy quits; a normal quit takes a few hundred milliseconds, and this is the most the wait adds past it
 #[cfg(target_os = "macos")]
@@ -27,7 +27,7 @@ const WAIT_CEILING: Duration = Duration::from_mins(10);//far past any quit, afte
 pub fn start(app: &AppHandle, paths: &Paths) -> bool {
 	let args: Vec<String> = std::env::args().skip(1).collect();
 	let Some(target) = argument(&args, ARGUMENT) else { return false };
-	if let Some(folder) = argument(&args, LOG_ARGUMENT) { let _ = crate::log::start(&folder); }//the lines so far and every line below go to the folder the page logs into, so the install's story sits beside the old copy's and the new one's
+	if let Some(folder) = argument(&args, LOG_ARGUMENT) { let _ = crate::log::start(&folder); }//the lines so far and every line below go to the folder the running copy logs into, so the install's story sits beside the old copy's and the new one's
 	replace(app, paths, std::path::Path::new(&target));
 	true
 }

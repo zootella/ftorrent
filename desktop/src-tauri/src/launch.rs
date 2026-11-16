@@ -2,13 +2,13 @@ use tauri::command;
 use crate::run_blocking;
 
 /*
-Launch Services, the part of macOS that decides which app opens a file or a link, offered to the page the way registry.rs offers the Windows registry: general commands that any Mac application could use as they are, knowing nothing about what's asked or why. Which types, which app, and when is the page's; associate.js is the one that uses these today.
+Launch Services, the part of macOS that decides which app opens a file or a link, offered to JavaScript the way registry.rs offers the Windows registry: general commands that any Mac application could use as they are, knowing nothing about what's asked or why. Which types, which app, and when is Plastic's; associate.js is the one that uses these today.
 
-A type is named the way the page names it on every platform: a file extension with its dot, like .torrent, or a link scheme without its colon, like magnet. On the Mac a file type is really a type identifier, and an extension names one, so launch_opens and launch_claim look up the identifier the system knows for that extension and use it; a link is just its scheme.
+A type is named the way associate.js names it on every platform: a file extension with its dot, like .torrent, or a link scheme without its colon, like magnet. On the Mac a file type is really a type identifier, and an extension names one, so launch_opens and launch_claim look up the identifier the system knows for that extension and use it; a link is just its scheme.
 
 launch_opens asks which app the system would open that type with right now, and answers the app's path, or nothing when no app would. It's the same lookup Finder makes, through NSWorkspace, so it reflects the user's own choice wherever they made it: Finder's Get Info, another app's button, or this one.
 
-launch_claim makes an app the default for that type. It takes the app by its path, but what macOS records is the app's bundle identifier, so where several copies share one, as an installed copy, a build in a repository, and a mounted disk image do, macOS chooses which of them opens, and launch_opens answers with the one it would choose. macOS asks the user nothing for a file type or for a link scheme other than the web's, and answers once the change is made, which is when this answers too, or after CLAIM_WAIT if the answer never comes, so the page's promise always settles. There's no command to give a type back: a default on the Mac always names some app, and macOS has no way to unset one. On Windows and Linux each command answers that there's no Launch Services.
+launch_claim makes an app the default for that type. It takes the app by its path, but what macOS records is the app's bundle identifier, so where several copies share one, as an installed copy, a build in a repository, and a mounted disk image do, macOS chooses which of them opens, and launch_opens answers with the one it would choose. macOS asks the user nothing for a file type or for a link scheme other than the web's, and answers once the change is made, which is when this answers too, or after CLAIM_WAIT if the answer never comes, so JavaScript's promise always settles. There's no command to give a type back: a default on the Mac always names some app, and macOS has no way to unset one. On Windows and Linux each command answers that there's no Launch Services.
 
 Both commands wait on another program, the Launch Services daemon, and neither waits on the thread that runs the window. launch_opens runs its body through run_blocking in lib.rs, since the lookup blocks until the daemon answers. launch_claim is async in its own right: its body asks and returns at once, and macOS's answer arrives on a channel, so the wait holds no thread at all.
 */
@@ -34,7 +34,7 @@ mod platform {
 	use objc2_foundation::{NSError, NSString, NSURL};
 	use objc2_uniform_type_identifiers::UTType;
 
-	const CLAIM_WAIT: Duration = Duration::from_secs(10);//how long launch_claim waits for macOS's answer; it comes at once in practice, so this only keeps a lost answer from leaving the page's promise unsettled for good
+	const CLAIM_WAIT: Duration = Duration::from_secs(10);//how long launch_claim waits for macOS's answer; it comes at once in practice, so this only keeps a lost answer from leaving JavaScript's promise unsettled for good
 
 	enum Kind {
 		File(Retained<UTType>),//a file type, by the identifier its extension names

@@ -17,7 +17,7 @@ let associations = useAssociationsStore()//the answer to whether ftorrent opens 
 let login = useLoginStore()//whether the user wants ftorrent to start at login, and whether the system agrees
 let update = useUpdateStore()//the section that checks for a newer version
 
-//the answers to each question on this page, as [value, words], in the order shown; the values are the ones settings.js checks
+//the answers to each question on this panel, as [value, words], in the order shown; the values are the ones settings.js checks
 let associationChoices = [['yes', 'Yes'], ['no', 'No'], ['ask', 'Ask']]
 let loginChoices       = [['yes', 'Yes'], ['no', 'No']]//the setting is true or false, and the group speaks in strings
 let appearanceChoices  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]//the same three words on every platform
@@ -48,14 +48,14 @@ async function chooseAutomatic(automatic) {
 let homeLink = `https://${urlHome}`//where the ftorrent.com link below goes, with the bare address as its words
 let updateReady = computed(() => update.newer && update.installable)
 let updateElsewhere = computed(() => update.newer && !update.installable)//a newer version is out, and this copy can't put it in place of itself: on a mac, a standard user's, or one with its home folder on another drive
-let checkedHere = ref(false)//a check clicked since the page opened, which keeps the button gray until it opens again, so impatient clicks don't each ask the server
+let checkedHere = ref(false)//a check clicked since the panel opened, which keeps the button gray until it opens again, so impatient clicks don't each ask the server
 let updateGray = computed(() => update.checking || update.installing || (checkedHere.value && !updateReady.value))
 async function updateClick() {
 	if (updateReady.value) return update.install()
 	await update.check()
 	checkedHere.value = true
 }
-let updateStatus = computed(() => {//the newest release this session has heard of, and what's happening to it, or else when the last check was, worked out when the page opens or a check lands, and not counting up while it stays open
+let updateStatus = computed(() => {//the newest release this session has heard of, and what's happening to it, or else when the last check was, worked out when the panel opens or a check lands, and not counting up while it stays open
 	if (update.found) return `${brandName} ${update.found.version} released ${sayDay(update.found.tick)}${update.installing ? ', Downloading...' : ''}`
 	let last = readTick(store.settings.update.last)
 	return last === false ? '' : `Last checked ${sayAgo(Date.now() - last)}`//false for a blank last, before any check has heard back
@@ -70,7 +70,7 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 		<h1 class="text-heading font-semibold">{{ settingsName }}</h1><!-- options on windows, settings elsewhere; settings.js says why -->
 
 		<div>
-			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This page only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
+			<RadioGroup :choices="associationChoices" :chosen="store.settings.associations.default" :disabled="!associations.installed" @choose="associations.choose">Open <em>.torrent</em> files and <em>magnet:</em> links with {{ brandName }}</RadioGroup><!-- the two people know; the answer covers ftorrent's own two as well, which the settings file names. A copy the installer didn't place never registers anything, and its choice is simply grayed. This panel only records the answer: the bar is where ftorrent asks, and a yes there opens windows' own Settings when windows doesn't agree -->
 		</div>
 
 		<div v-if="loginWords"><!-- starting at login is a Windows and Mac feature, so linux, with no words for it, doesn't show the question at all -->
@@ -83,7 +83,7 @@ let updateStatus = computed(() => {//the newest release this session has heard o
 		<div v-if="update.shown"><!-- an installed copy, on a Mac or Windows -->
 			<p><label class="block w-fit"><input type="checkbox" :checked="store.settings.update.automatic" @change="chooseAutomatic($event.target.checked)" /> Check automatically</label></p><!-- a row of text with the box inline in it; clickable on the box and its words only, like RadioGroup's answers -->
 			<p><button :disabled="updateGray" @click="updateClick">{{ updateReady ? `Update ${brandName}` : 'Check for Update' }}</button></p>
-			<p v-if="updateElsewhere">Get the new version at <a :href="homeLink" @click.prevent="processOpen(homeLink)">{{ urlHome }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About page's link does -->
+			<p v-if="updateElsewhere">Get the new version at <a :href="homeLink" @click.prevent="processOpen(homeLink)">{{ urlHome }}</a></p><!-- the system's browser opens the home page, where the download buttons are, as the About panel's link does -->
 			<p v-else-if="updateStatus">{{ updateStatus }}</p>
 		</div>
 

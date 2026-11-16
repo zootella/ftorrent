@@ -10,18 +10,18 @@ use crate::net::{stun_ask, Bindings};
 use crate::run_blocking;
 
 /*
-UDP sockets held open for the page between commands. udp_open binds one and answers a number for it; udp_stun asks STUN servers from it, the way net_stun does from a socket of its own; udp_send sends bytes from it to an address; udp_receive waits on it for whatever arrives; and udp_close lets it go. What to send, where, and what an arrival means, is the page's.
+UDP sockets held open for JavaScript between commands. udp_open binds one and answers a number for it; udp_stun asks STUN servers from it, the way net_stun does from a socket of its own; udp_send sends bytes from it to an address; udp_receive waits on it for whatever arrives; and udp_close lets it go. What to send, where, and what an arrival means, is Plastic's.
 
 Some questions about a network take a socket that outlasts one command. A router keys what it does on the socket: the public port it maps the socket to, and which outside addresses it lets reach that port, which turns on where the socket has already sent. So a question like whether a packet from a new address can reach a socket that has spoken to one server is several steps on the same socket, with something else between them, such as a request over HTTPS asking another machine to send to it. net_stun opens a socket, asks, and closes it, which suits a question that is one step.
 
-The sockets are kept here by number, as locks.rs keeps its files, until udp_close or the end of the process, so a socket the page never closes stays open until then. No lock stands around a socket, since one sends and receives at the same moment without trouble, and a hole punch needs both at once. Two reads at once are the page's to avoid: udp_stun and udp_receive on the same socket would split its arrivals between them and reset each other's time limit. udp_stun reads only answers to its own requests and passes over anything else that arrives while it asks, so the page receives before it or after it, not during.
+The sockets are kept here by number, as locks.rs keeps its files, until udp_close or the end of the process, so a socket JavaScript never closes stays open until then. No lock stands around a socket, since one sends and receives at the same moment without trouble, and a hole punch needs both at once. Two reads at once are the caller's to avoid: udp_stun and udp_receive on the same socket would split its arrivals between them and reset each other's time limit. udp_stun reads only answers to its own requests and passes over anything else that arrives while it asks, so the caller receives before it or after it, not during.
 
 A socket is bound to no address in particular, in the family asked for, as net_stun's is, so the system picks the source of each packet by its route, and a packet arriving at that port on any of the machine's addresses in that family reaches it. On Windows the firewall's alert can come up at the bind, as it does at net_stun's.
 
 Every command but udp_close waits on the network, so each runs its body through run_blocking in lib.rs and takes the app handle rather than the sockets themselves, as locks.rs does; udp_close only takes a socket out of the map, which answers from memory, and stays plain.
 */
 
-/// The UDP sockets this process holds open for the page, by the number udp_open answered for each, and the last number given out
+/// The UDP sockets this process holds open for JavaScript, by the number udp_open answered for each, and the last number given out
 #[derive(Default)]
 pub struct Sockets {
 	open: Mutex<HashMap<u32, Arc<UdpSocket>>>,//each socket shared, so a command can hold it while udp_close takes it out of the map

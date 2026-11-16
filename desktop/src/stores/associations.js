@@ -9,7 +9,7 @@ import {platformName} from '../settings.js'
 import {log} from '../log.js'
 
 /*
-Whether ftorrent opens its four types, .torrent and .ftorrent files and magnet: and ftorrent: links, where three facts meet: what the user answered, in the associations.default setting; what the system would open each with right now, asked of the Windows shell or of Launch Services on the Mac; and whether the banner that asks is up. associate.js is the policy, what gets written and what gets given back, and its essay says why; this store is the flow around it, which the banner in App.vue and the choice on the Settings page both read.
+Whether ftorrent opens its four types, .torrent and .ftorrent files and magnet: and ftorrent: links, where three facts meet: what the user answered, in the associations.default setting; what the system would open each with right now, asked of the Windows shell or of Launch Services on the Mac; and whether the banner that asks is up. associate.js is the policy, what gets written and what gets given back, and its essay says why; this store is the flow around it, which the banner in App.vue and the choice on the Settings panel both read.
 
 ftorrent writes only when the user answers. A yes claims all four, and a no gives back what ftorrent can, each once, at that moment, and never again on its own; ask writes nothing. Every other time, at startup and whenever the window comes back into focus, a pass only reads: it renews the offer, which takes nothing from anyone, and asks the system what it would open each type with. A pass never claims on its own, because a type another app holds now may be there by the user's own doing; associate.js has the rest of why. The one pass that writes is the first after a yes given again on Windows sent the user to Settings, which carries that yes back with it, as below. Passes queue behind each other rather than overlapping, since a focus can arrive while an answer is still writing.
 
@@ -62,7 +62,7 @@ export const useAssociationsStore = defineStore('associations', () => {
 		})
 	}
 
-	async function choose(value) {//the user's answer, yes, no, or ask, from the banner or the Settings page
+	async function choose(value) {//the user's answer, yes, no, or ask, from the banner or the Settings panel
 		if (!installed.value) return
 		let again = platformName == 'Windows' && value == 'yes' && answer.value == 'yes' && !allOurs.value//a yes given again on windows, because ftorrent has lost a type since the last one; the essay says why that writes ftorrent's own two now, and the contested two only after a trip to Settings, if one is still lost
 		log(`associations: the user chose ${value}${again ? ' again' : ''}`)

@@ -2,14 +2,14 @@ use std::collections::VecDeque;
 use serde::Serialize;
 
 /*
-A drained queue: things land here on a thread of their own, and the page takes them all at once. The engine's lines and the requests that reach this copy both arrive this way, before the page is up or between its looks, and the page needs every one of them, in order.
+A drained queue: things land here on a thread of their own, and stores/incoming.js takes them all at once. The engine's lines and the requests that reach this copy both arrive this way, before any JavaScript runs or between its looks, and it needs every one of them, in order.
 
-Push appends. Take hands over everything waiting and leaves the queue empty, so the page reads each item exactly once and keeps its own history of what it cares about. The queue has a cap, CAP, so a page that stops taking, say a hidden web view whose timers the system has slowed, can't make memory grow without end: a push that would pass the cap drops the oldest item and counts it, and the next take reports the count, so the page can say something was lost rather than lose it silently.
+Push appends. Take hands over everything waiting and leaves the queue empty, so JavaScript reads each item exactly once and keeps its own history of what it cares about. The queue has a cap, CAP, so JavaScript that stops taking, say in a hidden web view whose timers the system has slowed, can't make memory grow without end: a push that would pass the cap drops the oldest item and counts it, and the next take reports the count, so JavaScript can say something was lost rather than lose it silently.
 
 It knows nothing about what it holds.
 */
 
-/// What a take hands the page: everything waiting, oldest first, and how many were dropped since the last take because the queue was full
+/// What a take hands JavaScript: everything waiting, oldest first, and how many were dropped since the last take because the queue was full
 #[derive(Serialize)]
 pub struct Drained<T> {
 	pub items: Vec<T>,

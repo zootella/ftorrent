@@ -13,16 +13,16 @@ let associations = useAssociationsStore()//the banner's question and answers; th
 let router = useRouter()
 listen('menu', event => {//the menus' choices, here in the shell, which lives as long as the app
 	if (event.payload == 'help') processOpen(`https://${urlHelp}`)//Help, which opens the documentation site in the system's browser
-	else if (event.payload == 'open') { router.push({name: 'home'}); spikeRun('File, Open…', spikeBoxes[0].box) }//File, Open…, the box for torrent files, answered for now on the home page's spike, since nothing adds a torrent yet
+	else if (event.payload == 'open') { router.push({name: 'home'}); spikeRun('File, Open…', spikeBoxes[0].box) }//File, Open…, the box for torrent files, answered for now on the Home panel's spike, since nothing adds a torrent yet
 	else router.push({name: event.payload})//Options, Settings, and About, which rust passes up as the name of the route to open
 })
 
-if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the system's own, Cut, Copy, Paste and the rest, answered by the web view: they start gray, and the page lights each one while something on it can answer, the way a mac app's Edit menu reads. The page decides rather than AppKit because the menu library turns off AppKit's own asking, and because a torrent list will one day light Paste for a magnet link and Select All for its rows, which only the page can know
+if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the system's own, Cut, Copy, Paste and the rest, answered by the web view: they start gray, and the code here lights each one while something on it can answer, the way a mac app's Edit menu reads. Plastic decides rather than AppKit because the menu library turns off AppKit's own asking, and because a torrent list will one day light Paste for a magnet link and Select All for its rows, which only Plastic can know
 	let lit = {Undo: false, Redo: false, Cut: false, Copy: false, Paste: false, 'Select All': false}//as the menu starts, from lifecycle.rs
 	function editMenu() {
 		let field = document.activeElement
 		let typing = !!field && field.matches('input:not([type=radio]):not([type=checkbox]), textarea, [contenteditable]')//a field that takes typing has focus
-		let selected = (document.getSelection()?.toString() ?? '') != ''//text is selected, in a field or on the page
+		let selected = (document.getSelection()?.toString() ?? '') != ''//text is selected, in a field or anywhere in the window
 		let want = {Undo: typing, Redo: typing, Cut: typing && selected, Copy: selected, Paste: typing, 'Select All': typing}
 		for (let [item, enabled] of Object.entries(want)) if (lit[item] != enabled) { lit[item] = enabled; menuEnable('Edit', item, enabled).catch(error => log(`menu: ${item}, ${error}`)) }//only what changed, since each call crosses to rust
 	}
@@ -32,7 +32,7 @@ if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the sys
 
 <template>
 	<!-- ./src/App.vue -->
-	<!-- the shell every page sits inside: a column exactly as tall as the window, with the banner when there's a question to ask and the navigation across the top, each as tall as its contents, and the page the router shows filling the rest -->
+	<!-- the shell every panel sits inside: a column exactly as tall as the window, with the banner when there's a question to ask and the navigation across the top, each as tall as its contents, and the panel the router shows filling the rest -->
 	<div class="h-screen flex flex-col">
 		<!-- the question names the two types people know, .torrent and magnet:, while the answer covers all four and the bar is up if any of the four opens with another app; the same stance for the whole group, on purpose, as associate.js says -->
 		<div v-if="associations.bannerUp" class="flex items-center gap-line px-line bg-line/40 border-b border-line">
@@ -44,10 +44,11 @@ if (platformName == 'macOS') {//the mac's Edit menu, whose six items are the sys
 		<nav class="flex gap-line px-line pt-line">
 			<router-link to="/" active-class="font-bold">Home</router-link>
 			<router-link to="/connection" active-class="font-bold">Connection</router-link>
+			<router-link to="/trackers" active-class="font-bold">Trackers</router-link>
 			<router-link to="/settings" active-class="font-bold">{{ settingsName }}</router-link>
 			<router-link to="/about" active-class="font-bold">About</router-link>
 		</nav>
-		<div class="flex-1 min-h-0 overflow-auto p-line"><!-- the page area, with the window's margin around the page. A box in a flex column won't shrink below its contents unless it's told to, and min-h-0 tells it, so a page can be h-full and fill exactly the space below the navigation. overflow-auto is only a safety net: a page that ever scrolls here has failed, as style.css says -->
+		<div class="flex-1 min-h-0 overflow-auto p-line"><!-- the panel area, with the window's margin around the panel. A box in a flex column won't shrink below its contents unless it's told to, and min-h-0 tells it, so a panel can be h-full and fill exactly the space below the navigation. overflow-auto is only a safety net: a panel that ever scrolls here has failed, as style.css says -->
 			<router-view />
 		</div>
 	</div>

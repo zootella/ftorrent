@@ -16,18 +16,18 @@ const sidecarLimit = 12*Size.kb//a real sidecar is about 200 bytes, and this lea
 const sidecarSeconds = 10
 
 /*
-Checking for a newer version, and installing it on the user's click. A check reads the sidecar pnpm hash publishes beside the file this platform updates from, ftorrent.app.zip.json on a Mac and ftorrent.exe.json on Windows, where the installer itself is the update, and the settings page shows its version and the day it was hashed. Only an installed copy checks, on a Mac or Windows, since that's the copy an update would write over.
+Checking for a newer version, and installing it on the user's click. A check reads the sidecar pnpm hash publishes beside the file this platform updates from, ftorrent.app.zip.json on a Mac and ftorrent.exe.json on Windows, where the installer itself is the update, and the Settings panel shows its version and the day it was hashed. Only an installed copy checks, on a Mac or Windows, since that's the copy an update would write over.
 
 The user's button checks at once. With update.automatic on, the clock checks whenever update.next has passed, looking at startup and every checkEvery after. A check that hears back writes update.last and a fresh random update.next to the file, so a restart doesn't pick again and a laptop waking after days checks on the next look; one that fails changes neither, and the clock tries again an hour later. Both are in ergo's short form of a tick, like 2026oct22.1830, which a person reads as a date and can cut short, so 2026dec or 2027 for next holds off a check until then.
 
-When the version found is newer than this one, the page offers it, but only in a copy that can replace itself, which update.js decides at startup, and nothing downloads until the user clicks; update.js has the steps from there, with every path, and why they go in that order.
+When the version found is newer than this one, the Settings panel offers it, but only in a copy that can replace itself, which update.js decides at startup, and nothing downloads until the user clicks; update.js has the steps from there, with every path, and why they go in that order.
 
 The sidecar is treated as coming from anywhere, though it comes from our own server: net.rs caps its size and time, and only version, tick, size, and sha256 are read from it, each in exactly the shape pnpm hash writes, or the check fails. The tick is the moment pnpm hash ran, read as the number it is, so no text is ever parsed for a date, and the date beside it, the same moment as iso text, is there for a person opening the file. Nothing in it becomes an action or an address: the update's address is the sidecar's own without .json, its hash only decides whether the file that arrived is the one expected, and its size only has to fit under updateLimit.
 */
 
 export const useUpdateStore = defineStore('update', () => {
 	let settings = useSettingsStore()
-	let shown = ref(false)//this copy checks, and the settings page shows the section
+	let shown = ref(false)//this copy checks, and the Settings panel shows the section
 	let checking = ref(false)//so the button waits, and the clock doesn't start a second check
 	let found = ref(null)//{version, tick, size, sha256} from this session's latest check
 	let running = ref('')//this copy's version, to compare with what a check finds
@@ -78,7 +78,7 @@ export const useUpdateStore = defineStore('update', () => {
 	async function install() {//the user's click: read the sidecar again, then update.js downloads, checks, and hands over to the newer copy; on success this copy quits on the way
 		if (!newer.value || !installable.value || installing.value || checking.value) return
 		installing.value = true
-		let fresh = await _sidecarRead()//again, since the page may have sat open through a newer release, and the hash has to be the one beside the file downloaded now
+		let fresh = await _sidecarRead()//again, since the panel may have sat open through a newer release, and the hash has to be the one beside the file downloaded now
 		if (fresh.success) found.value = {version: fresh.version, tick: fresh.tick, size: fresh.size, sha256: fresh.sha256}
 		if (!fresh.success || !newer.value) {
 			installing.value = false

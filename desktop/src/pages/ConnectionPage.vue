@@ -45,7 +45,7 @@ onMounted(async () => {
 	if (boxElement.value) boxElement.value.scrollTop = boxElement.value.scrollHeight//back on the tab, at the newest line
 })
 
-//the whole page as text, the facts and then the box, since what's on it is most useful pasted into a message or an issue
+//the whole panel as text, the facts and then the box, since what's on it is most useful pasted into a message or an issue
 let copied = ref(false)//true for a moment after the button is pressed, so it can say so
 async function copy() {
 	await navigator.clipboard.writeText(connectionText())
@@ -70,7 +70,7 @@ async function copy() {
 			<button v-if="firewallButtons.write" type="button" :disabled="running" @click="writeFirewallRules">Write firewall rules…</button><!-- on Windows, for an installed copy, netsh replacing the rules naming this copy and its engine with allow rules, behind one UAC prompt -->
 		</div>
 		<KeyValues :rows="facts" />
-		<textarea ref="boxElement" readonly :value="box" class="flex-1 min-h-0 resize-none font-mono wrap-anywhere"></textarea><!-- min-h-0 lets the box be shorter than its text, so the text scrolls inside it rather than stretching the page; wrap-anywhere because a path is one long word, and should wrap rather than scroll sideways -->
+		<textarea ref="boxElement" readonly :value="box" class="flex-1 min-h-0 resize-none font-mono wrap-anywhere"></textarea><!-- min-h-0 lets the box be shorter than its text, so the text scrolls inside it rather than stretching the panel; wrap-anywhere because a path is one long word, and should wrap rather than scroll sideways -->
 		<button type="button" class="self-start" @click="copy">{{ copied ? 'Copied' : 'Copy' }}</button>
 	</main>
 </template>

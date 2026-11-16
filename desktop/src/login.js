@@ -4,7 +4,7 @@ import {brandName} from './brand.js'
 import {platformName} from './settings.js'
 
 /*
-Starting at login, on Windows and the Mac, where two things are kept apart: what the user wants, the login.start setting, which only the user's answer on the settings page changes; and what the system will do at the next login, which ftorrent reads. Each system has its own screen where a user can change it too, so the two can differ, and when they do ftorrent says so beside the answer, with a link to that screen, rather than changing either one on its own. This file is how each platform writes ftorrent's entry, takes it away, and reads where things stand; stores/login.js is when.
+Starting at login, on Windows and the Mac, where two things are kept apart: what the user wants, the login.start setting, which only the user's answer on the Settings panel changes; and what the system will do at the next login, which ftorrent reads. Each system has its own screen where a user can change it too, so the two can differ, and when they do ftorrent says so beside the answer, with a link to that screen, rather than changing either one on its own. This file is how each platform writes ftorrent's entry, takes it away, and reads where things stand; stores/login.js is when.
 
 ftorrent writes to the system only when the user answers. A yes puts the entry there and a no takes it away, and a read follows each, and every other time ftorrent only reads. That matters because no read can tell why an entry is missing: the user removing it in System Settings and the entry never having been made look exactly alike, so an app that put back what it found missing would undo the user's own choice, often within a second, as we measured on the Mac.
 

@@ -3,7 +3,7 @@ import {brandName, brandStem, urlHome} from './brand.js'
 import {readTick} from './time.js'
 
 /*
-The settings file, ftorrent.toml, and the only place a setting is defined. Everything about the file is here: the schema below, which names every setting with its factory value and the comment that explains it; parsing, which turns the file's text into a settings object and a list of anything it had to turn away; and rendering, which turns a settings object back into the complete text of the file. The store in stores/settings.js does the reading and writing around these, and the rest of the app reads settings from the store. Rust never learns what a setting is: it hands the page the file's path, writes bytes when asked, and holds the text to write once more when ftorrent exits. The window's size, place, and maximized flag are settings like the rest, and window.js reads them from the store to place the window before showing it.
+The settings file, ftorrent.toml, and the only place a setting is defined. Everything about the file is here: the schema below, which names every setting with its factory value and the comment that explains it; parsing, which turns the file's text into a settings object and a list of anything it had to turn away; and rendering, which turns a settings object back into the complete text of the file. The store in stores/settings.js does the reading and writing around these, and the rest of the app reads settings from the store. Rust never learns what a setting is: it hands JavaScript the file's path, writes bytes when asked, and holds the text to write once more when ftorrent exits. The window's size, place, and maximized flag are settings like the rest, and window.js reads them from the store to place the window before showing it.
 
 The file is TOML rather than JSON for the person who opens it in Notepad. Every setting is written out, always, under a comment saying what it does, with its factory value at the end of the line, so the file is the documentation of every knob ftorrent has; JSON has no comments, so a JSON settings file can never explain itself. And TOML forgives what JSON punishes: no trailing-comma trap, no whole-file failure over one quote. We stay in the plain dialect, sections with simple keys, strings, numbers, booleans, and flat arrays, which is all a settings file needs and all a Notepad user should meet.
 
@@ -19,22 +19,22 @@ const settingsHeader = `# ${brandStem}.toml — ${brandName} reads this file whe
 export const platformName = navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Macintosh') ? 'macOS' : 'Linux'
 const onWindows = platformName == 'Windows'
 
-//the web view the page runs in, for the about page: the engine, whose version tauri reports, and the system component that carries it. One per platform, since tauri has one web view on each: chromium through microsoft edge webview2 on windows, whose version is the runtime's own, in edge's numbering like 141.0.3537.57, with chromium's major in front; webkit through apple's wkwebview on a mac, whose version is the framework's build number like 20621.3.11.11.3; and webkit through webkitgtk on linux, whose version is that port's release like 2.46.3
+//the web view, for the About panel: the engine, whose version tauri reports, and the system component that carries it. One per platform, since tauri has one web view on each: chromium through microsoft edge webview2 on windows, whose version is the runtime's own, in edge's numbering like 141.0.3537.57, with chromium's major in front; webkit through apple's wkwebview on a mac, whose version is the framework's build number like 20621.3.11.11.3; and webkit through webkitgtk on linux, whose version is that port's release like 2.46.3
 export const webviewWords = {Windows: {engine: 'Chromium', host: 'Microsoft Edge WebView2'}, macOS: {engine: 'WebKit', host: 'Apple WKWebView'}, Linux: {engine: 'WebKit', host: 'WebKitGTK'}}[platformName]
 
-//the face the System Font choice draws in, and who made it, for its answer on the settings page; undefined on linux, where it's whatever the desktop is set to
+//the face the System Font choice draws in, and who made it, for its answer on the Settings panel; undefined on linux, where it's whatever the desktop is set to
 export const systemFace = {Windows: {face: 'Segoe UI', maker: 'Microsoft'}, macOS: {face: 'San Francisco', maker: 'Apple'}}[platformName]
 
-//what ftorrent calls its settings, in the menu and at the top of their page: options on windows, where a program's classic menu is tools, options, as it is in qbittorrent, and settings everywhere else, the word macos has used since ventura
+//what ftorrent calls its settings, in the menu and at the top of their panel: options on windows, where a program's classic menu is tools, options, as it is in qbittorrent, and settings everywhere else, the word macos has used since ventura
 export const settingsName = onWindows ? 'Options' : 'Settings'
 
 //the words for starting at login, which say startup, the word people use for it, though the system starts ftorrent as each user logs in; and when the system differs from the answer, the link to its own page for it, by the name each platform gives that page
 export const loginWords = {
 	Windows: {question: `Run ${brandName} at startup`, confirm: 'Confirm in Startup Apps'},
 	macOS:   {question: `Run ${brandName} at startup`, confirm: 'Confirm in Login Items & Extensions'},
-}[platformName]//undefined on linux, where ftorrent doesn't start at login, so the settings page doesn't ask
+}[platformName]//undefined on linux, where ftorrent doesn't start at login, so the Settings panel doesn't ask
 //the words for the link to the page where a person lets ftorrent through the firewall, which name where the link goes rather than an action, since following it changes nothing: System Settings at the Network pane on a Mac, a row above Firewall, and Windows Firewall's page of allowed apps in Control Panel
-export const firewallWords = {Windows: 'Windows Firewall', macOS: 'System Firewall Settings'}[platformName]//undefined on linux, which has no one page for it, so the settings page shows no link there
+export const firewallWords = {Windows: 'Windows Firewall', macOS: 'System Firewall Settings'}[platformName]//undefined on linux, which has no one page for it, so the Settings panel shows no link there
 //the typefaces this copy offers: verdana is a throwback to windows programs around 2000, standing in for the tahoma they were set in, and style.css says why; offered on windows and the mac, which both install it with the system, and not on linux, where it's only there if someone added it
 export const fontsOffered = platformName == 'Linux' ? ['system', 'inter'] : ['system', 'inter', 'verdana']
 
@@ -56,7 +56,7 @@ export const settingsSchema = [
 		section: 'login',
 		key: 'start',
 		factory: false,
-		comment: `whether ${brandName} runs at startup, starting hidden as you log in, with only its icon near the clock: true or false, on a Mac or Windows. Choosing on the settings page also sets it in the system's own settings, Login Items & Extensions on a Mac and Startup Apps on Windows; and when the two differ, as when it's changed there or here in the file, the settings page offers a link to confirm it there`,
+		comment: `whether ${brandName} runs at startup, starting hidden as you log in, with only its icon near the clock: true or false, on a Mac or Windows. Choosing it in ${settingsName} also sets it in the system's own settings, Login Items & Extensions on a Mac and Startup Apps on Windows; and when the two differ, as when it's changed there or here in the file, ${settingsName} offers a link to confirm it there`,
 		check: value => typeof value == 'boolean',
 	}, {
 		section: 'log',

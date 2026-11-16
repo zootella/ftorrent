@@ -7,11 +7,11 @@ use crate::instance::{take, Taken};
 use crate::run_blocking;
 
 /*
-Exclusive locks on files, for the page to take and release as it sees fit. lock_take opens the file at a path, creating it empty if it isn't there, and takes an exclusive lock on it without waiting; lock_release lets go. The lock is the one instance.rs takes for itself, File::try_lock through instance::take, flock on macOS and Linux and LockFileEx on Windows, so it has the same guarantees: it belongs to an open file, it holds against every other process whatever account it runs under, and the operating system releases it however the process ends, so a crash never leaves a file locked. On a network share the release waits for the file server to notice the dead connection, which takes its own timeout.
+Exclusive locks on files, for JavaScript to take and release as it sees fit. lock_take opens the file at a path, creating it empty if it isn't there, and takes an exclusive lock on it without waiting; lock_release lets go. The lock is the one instance.rs takes for itself, File::try_lock through instance::take, flock on macOS and Linux and LockFileEx on Windows, so it has the same guarantees: it belongs to an open file, it holds against every other process whatever account it runs under, and the operating system releases it however the process ends, so a crash never leaves a file locked. On a network share the release waits for the file server to notice the dead connection, which takes its own timeout.
 
 The locks this process holds are kept here, their files open, until released or until the process ends. One thing is decided here rather than by the caller, because it's a fact of the file system: whether two paths name the same file. A path is reduced to its one true name before anything else, so asking twice for the same file under two spellings answers held both times, rather than the second request finding this process's own lock and answering busy.
 
-lock_take never makes the folder the file goes in; a missing folder is trouble, like any other reason the file can't be opened. What a lock is for, and which files to lock when, is the page's.
+lock_take never makes the folder the file goes in; a missing folder is trouble, like any other reason the file can't be opened. What a lock is for, and which files to lock when, is Plastic's.
 
 Both commands wait on the disk, and the files they're asked about sit in the download folders, which may be a drive that's asleep or a share that's gone, so each runs its body through run_blocking in lib.rs, and takes the app handle rather than the locks themselves, since a borrow of managed state can't go to the pool; the essay above disk_readdir in disk.rs has the whole case.
 */
