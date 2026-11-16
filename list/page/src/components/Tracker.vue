@@ -162,6 +162,6 @@ let daysLeft = computed(() => certificate.value?.expires ? Math.floor((dayTick(c
 
 	<div v-else class="space-y-4">
 		<RouterLink :to="close" class="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">Close</RouterLink>
-		<p>This hour's report doesn't name <code class="break-all font-radon font-light [font-variant-ligatures:none]">{{ url }}</code>. A tracker leaves the report when no list names it anymore.</p>
+		<p>This hour's report doesn't include <code class="break-all font-radon font-light [font-variant-ligatures:none]">{{ url }}</code>. list.ftorrent.com checks every tracker the public lists have ever named.</p>
 	</div>
 </template>

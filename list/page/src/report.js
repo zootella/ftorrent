@@ -180,7 +180,7 @@ export function trackerUrl(scheme, rest) {
 	return `${scheme}://${rest}`
 }
 
-//a tracker's entry in the report, and whether it's listed in trackers.txt or was cut; false when this hour's report doesn't name it, as for an old link
+//a tracker's entry in the report, and whether it's listed in trackers.txt or was cut; false when this hour's report doesn't include it, as for a URL no list has named
 export function findTracker(report, url) {
 	let entry = report.trackers.find(e => e.url == url)
 	if (entry) return {entry, listed: true}

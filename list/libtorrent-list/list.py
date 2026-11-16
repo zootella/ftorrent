@@ -20,7 +20,7 @@ from zootella.ergo import Size, Time, has_tick, tick_to_iso, tick_to_text#ergo's
 #
 # Every hour it announces once to each public BitTorrent and WebTorrent tracker it knows of, and records what came back. Two containers run it, built from this folder, one on a network with only IPv4 and one on a network with only IPv6, so libtorrent has no choice of family for any tracker, WebSocket ones included, and each container's results are its family's. LIST_FAMILY tells the program which family it's in.
 #
-# The candidates come from public lists other people keep, ngosang's and newTrackon's, fetched every hour, plus a list of our own below: ftorrent's trackers and every public WebSocket tracker we could find, working or long gone. A list that can't be fetched keeps its last good copy, so one site down for an hour doesn't empty the candidates.
+# The candidates come from public lists other people keep, ngosang's and newTrackon's, fetched every hour, plus a list of our own below: ftorrent's trackers and every public WebSocket tracker we could find, working or long gone. Once any of them names a tracker, it's checked every hour from then on, whether a source still names it or not: the lists are built to carry the trackers that work today, so a tracker that stops answering can drop off one and return later, and checked only while a list names it, it would come back with the hours it was gone blank rather than down. A list that can't be fetched keeps its last good copy, so the sources the report names for each tracker hold steady.
 #
 # Before announcing, the pass looks up every tracker's name itself, all at once, and decides right there each name that doesn't resolve or has no address in this family. The rest each get a torrent of their own, a fresh random info hash that names no real torrent, added one a second to a libtorrent session the container keeps for its life, and each is judged when its own window ends. A tracker's outcome for the hour is how far it got: its name resolved to an address in this family, something answered, an HTTPS or WebSocket tracker's certificate held, and the answer was a tracker's reply. Beside the outcome, a check keeps how many tries the answer took, how long the tracker asked clients to wait before announcing again, and any warning it sent, and once a day each HTTPS and WebSocket tracker's certificate is read for its dates and its issuer. The session sends announces and nothing else: it never connects to the peers a reply lists, runs no DHT, and maps no ports.
 #
@@ -47,6 +47,7 @@ criterion_extra_peers = 0#and whose replies listed extra peers in no more than t
 letters = {'up': 'U', 'dns': 'D', 'no_address': 'N', 'timeout': 'T', 'refused': 'R', 'cert': 'C', 'bad_reply': 'B', 'no_reading': 'Z'}#each outcome as one capital letter in trackers.json, in the order it lists them, capitals so they never look like the lowercase horizons they sit inside; no reading is an hour with no result, when list's own monitor wasn't watching or every tracker in a family failed at once, which says nothing about the tracker, and the README's table of outcomes spells out each one
 
 family = 6 if os.environ.get('LIST_FAMILY') == '6' else 4#which family this container checks, set in the compose file
+socket_family = socket.AF_INET6 if family == 6 else socket.AF_INET#the same family, as the socket module names it
 reporting = os.environ.get('LIST_REPORT') == '1'#whether this container also publishes, which the IPv4 one does
 folder = os.environ.get('LIST_DIR', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data'))#the data folder both containers share, a volume; when run by hand, the data folder beside this program's folder, where the compose file's ./data is
 database_path = os.path.join(folder, 'list.sqlite')
@@ -133,7 +134,7 @@ upstream = [#where the candidates come from, which trackers.json repeats at its 
 	},
 ]
 named_by = {list_url: source['name'] for source in upstream for list_url in source.get('lists', [])}#each fetched list's URL to the name of its source
-curated = [tracker for source in upstream for tracker in source.get('trackers', [])]#the trackers a source names directly, checked every hour whatever the fetched lists say
+curated = [tracker for source in upstream for tracker in source.get('trackers', [])]#the trackers a source names directly, written here rather than fetched
 downstream = [f'{site}/trackers.txt', f'{site}/trackers.json']#what this publishes from them
 
 gauges = {#a UDP tracker whose outcome comes from its gauge's page.json rather than an announce: up when the tracker served UDP announces over this container's family in the gauge's last minute, a timeout when it served none; pair your own tracker with your own gauge's page the same way
@@ -245,19 +246,23 @@ def fetch(url):#the tracker URLs one source names, or None when it can't be had 
 	except (OSError, ValueError, http.client.HTTPException) as e:
 		say(f'kept the last copy of {url}, since fetching it said: {e}')
 		return None
-	return [tracker for tracker in (normalize(line) for line in text.splitlines()) if tracker]
+	found = [tracker for tracker in (normalize(line) for line in text.splitlines()) if tracker]
+	if not found:#a list that names no trackers at all is far likelier a page gone wrong, like an error served as a success, than a source with nothing left to list, so it keeps its last copy too
+		say(f'kept the last copy of {url}, since it named no trackers')
+		return None
+	return found
 
-def gather(database, stamp):#this hour's candidates: each list fetched replaces its last copy, a list that couldn't be fetched keeps its last one, and the trackers named here are always in
+def gather(database, stamp):#this hour's candidates, every tracker any source has ever named: each list fetched replaces its last copy, a list that couldn't be fetched keeps its last one, the trackers named here are always in, and a tracker no source names anymore stays a candidate, so the hours it's down are recorded as down, and one that comes back is noticed
 	for list_url in named_by:
 		found = fetch(list_url)
 		if found is None: continue
 		with database:#one transaction, so the other container never reads a list half replaced
 			database.execute('delete from upstream where list_url = ?', (list_url,))
 			database.executemany('insert or ignore into upstream (list_url, url) values (?, ?)', [(list_url, tracker) for tracker in found])
-	candidates = {row[0] for row in database.execute('select url from upstream')} | set(curated)
+	named = {row[0] for row in database.execute('select url from upstream')} | set(curated)
 	with database:
-		database.executemany('insert or ignore into trackers (url, since) values (?, ?)', [(tracker, stamp) for tracker in candidates])
-	return sorted(candidates)
+		database.executemany('insert or ignore into trackers (url, since) values (?, ?)', [(tracker, stamp) for tracker in named])
+	return sorted(row[0] for row in database.execute('select url from trackers'))
 
 # checks
 
@@ -267,14 +272,13 @@ def result(outcome, message='', extra_peers=0, tries=0, interval=None, warning='
 def local_address():#the address this container sends from in its family: connecting a UDP socket sends nothing, and the system picks the route, the way the desktop client's net_local asks; None when the family has no route
 	probe = '2001:db8::1' if family == 6 else '192.0.2.1'#addresses set aside for documentation, which name no one
 	try:
-		with socket.socket(socket.AF_INET6 if family == 6 else socket.AF_INET, socket.SOCK_DGRAM) as s:
+		with socket.socket(socket_family, socket.SOCK_DGRAM) as s:
 			s.connect((probe, 9))
 			return s.getsockname()[0]
 	except OSError:#a container whose network has no route in this family
 		return None
 
 def lookup(candidates):#look up every candidate's name in Python, all at once, and decide the trackers that can't be announced to from this family, as {tracker URL: result} for each name that doesn't resolve or has no address in this family. libtorrent looks names up one at a time, on a single thread, so a tracker left to it can wait in that line past its 30 seconds and read as a timeout; looked up here, one slow name delays only itself, and the server's DNS cache is warm for the names libtorrent asks again
-	want = socket.AF_INET6 if family == 6 else socket.AF_INET
 	name_of = {tracker: urllib.parse.urlsplit(tracker).hostname for tracker in candidates}
 	def families(name):#the address families a name has, from both kinds of record, whatever this container can reach
 		return {entry[0] for entry in socket.getaddrinfo(name, None)}
@@ -290,7 +294,7 @@ def lookup(candidates):#look up every candidate's name in Python, all at once, a
 		except (OSError, UnicodeError) as e:#a name that doesn't resolve, or can't be written as one; an ordinary answer here, so this is where those exceptions stop
 			decided[tracker] = result('dns', str(e))
 			continue
-		if want not in found: decided[tracker] = result('no_address', f'no IPv{family} address')
+		if socket_family not in found: decided[tracker] = result('no_address', f'no IPv{family} address')
 	return decided
 
 depth = {'dns': 0, 'no_address': 0, 'timeout': 1, 'refused': 2, 'cert': 3, 'bad_reply': 4}#how far each failure shows a tracker got; when a tracker fails more than one way in a pass, the furthest is the one recorded, so a server that resets a connection and then fails its certificate is recorded as a certificate problem, since something did answer
@@ -434,9 +438,21 @@ def read_certificates(database, stamp, reachable):#once a day, the certificate o
 	done = {row[0] for row in database.execute('select tracker from certificates where day = ? and family = ?', (today, family))}
 	secure = [tracker for tracker in reachable if tracker.startswith(('https://', 'wss://')) and ids[tracker] not in done]
 	if not secure: return
+	def connect(name, port):#a connection to the name over this family alone, trying each of its addresses in this family in turn; socket.create_connection would try the other family's too, and when all fail it keeps the last error, often that one's, which says only that this container has no route there
+		error = OSError(f'no IPv{family} address')
+		for _, _, _, _, address in socket.getaddrinfo(name, port, socket_family, socket.SOCK_STREAM):
+			connection = socket.socket(socket_family, socket.SOCK_STREAM)
+			connection.settimeout(certificate_limit/Time.SECOND)#socket counts in seconds, and gives each step this long, connecting and then the handshake
+			try:
+				connection.connect(address)
+				return connection
+			except OSError as e:
+				connection.close()
+				error = e
+		raise error
 	def read(tracker):
 		parts = urllib.parse.urlsplit(tracker)
-		with socket.create_connection((parts.hostname, parts.port or 443), timeout=certificate_limit/Time.SECOND) as connection:#socket counts in seconds, and gives each step this long
+		with connect(parts.hostname, parts.port or 443) as connection:
 			with ssl.create_default_context().wrap_socket(connection, server_hostname=parts.hostname) as secured:
 				certificate = secured.getpeercert()
 		issuer = dict(pair[0] for pair in certificate['issuer'])#like {'organizationName': "Let's Encrypt", 'commonName': 'R11'}
@@ -587,7 +603,7 @@ def publish(database, stamp):#write the given hour's report from what both conta
 	intervals = {(tracker, f): value for tracker, f, value, _ in database.execute('select tracker, family, interval, max(hour) from checks where hour between ? and ? and interval is not null group by 1, 2', span)}#the latest interval each tracker asked for in each family, since SQLite gives the other columns from the row with the max()
 	warnings = {(tracker, f): value for tracker, f, value, _ in database.execute("select tracker, family, warning, max(hour) from checks where hour between ? and ? and warning != '' group by 1, 2", span)}#and its latest warning
 	certificates = {}#tracker id to its certificate as last read in the last week, in either family
-	for tracker, issued, expires, issuer, error, _ in database.execute('select tracker, issued, expires, issuer, error, max(day) from certificates where day >= ? group by tracker', (stamp - Time.WEEK,)):
+	for tracker, issued, expires, issuer, error in database.execute("select tracker, issued, expires, issuer, error from certificates where day >= ? order by day, error = ''", (stamp - Time.WEEK,)):#oldest first, and within a day an error before a good read, so each tracker ends on its latest day, and on a good read when either family made one that day
 		if error: certificates[tracker] = {'error': error}
 		else: certificates[tracker] = {'issued': tick_to_iso(issued)[:10], 'expires': tick_to_iso(expires)[:10], 'issuer': issuer}#UTC dates, like 2026-11-12
 
@@ -700,8 +716,12 @@ def main():
 	while True:
 		stamp = top(tick()) + Time.HOUR#the next hour
 		time.sleep(max(0, (stamp - tick())/Time.SECOND))#sleep counts in seconds
+		if reporting:
+			try:
+				publish(database, stamp - Time.HOUR)#the hour that just ended, which both containers finished recording about an hour ago
+			except Exception:#noqa: a gate of its own, so a bug in the report, which can be written again any time from what's recorded, never costs this hour's checks, which can't be taken again
+				say(f'publishing the hour before failed: {traceback.format_exc()}')
 		try:
-			if reporting: publish(database, stamp - Time.HOUR)#the hour that just ended, which both containers finished recording about an hour ago
 			run(database, stamp)
 		except Exception:#noqa: the top gate, where anything that escaped is a bug to report; the next hour runs regardless
 			say(f'this hour failed: {traceback.format_exc()}')
