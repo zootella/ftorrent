@@ -1,6 +1,6 @@
 import {ref, reactive, computed} from 'vue'
 import {defineStore} from 'pinia'
-import {settingsFactory, settingsParse, settingsRender} from '../settings.js'
+import {settingsFactory, settingsParse, settingsRender, settingsFactoryDrift} from '../settings.js'
 import {diskRead, diskWrite, diskMkdir, diskHide, diskStat} from '../disk.js'
 import {lockTake} from '../locks.js'
 import {useIncomingStore} from './incoming.js'
@@ -87,6 +87,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		}
 		fileText = text
 
+		if (settingsFactoryDrift) log('settings: desktop/src/ftorrent.toml is not exactly the text ftorrent writes for its factory values, padding included, so a first run writes the rendered text instead')//a mistake in the source, never in a user's file
 		let {settings: found, problems: complaints, parsed} = settingsParse(text)
 		for (let section of Object.keys(found)) for (let key of Object.keys(found[section])) settings[section][key] = found[section][key]//fill the live object rather than replacing it, so importers keep theirs
 		for (let complaint of complaints) log(`settings: ${complaint}`)

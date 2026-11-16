@@ -1,28 +1,32 @@
 # list
 
-list is ftorrent's tracker checker, and like good it lives in two places: list.ftorrent.com, which checks from the server and has a page in front of it, and the list tab in the desktop client. The two are separate code with a shared purpose and the same libtorrent, the maintainers' 2.1.1 wheel pinned by one hash. The research behind it is the article [Tracking the Trackers](https://docs.ftorrent.com/tracker-lists), and the server half is built and described in [list/README.md](list/README.md).
+list is ftorrent's tracker checker, and like good it lives in two places: list.ftorrent.com, which checks from the server and has a page in front of it, and the list panel, the Trackers tab in the desktop client. The two are separate code with a shared purpose and the same libtorrent, the maintainers' 2.1.1 wheel pinned by one hash. The research behind it is the article [Tracking the Trackers](https://docs.ftorrent.com/tracker-lists), and the server half is built and described in [list/README.md](list/README.md).
 
 ## The two places
 
 - list.ftorrent.com is a record of uptime: every public tracker, checked every hour over IPv4 and IPv6 separately, with every hour kept and a year of it summed up in the report.
-- The list tab is a check of right now: from the user's own machine and connection, when the user asks, so the trackers written into a new torrent are ones that answer this client today.
+- The list panel is a check of right now: from the user's own machine and connection, when the user asks, so the trackers written into a new torrent are ones that answer this client today.
 - Nothing a visitor does on list.ftorrent.com changes anything. There's no submission form; trackers arrive by appearing on the public lists list reads.
 - Each place reads the other's output as one source among several, never as the only one, so either keeps working when the other is gone.
 
-We split them on purpose. The server can afford memory, a schedule, and two networks to keep each family honest; the desktop can afford none of that, and doesn't need it, since its question is whether a tracker answers this machine now. What they share is the meaning of an outcome, so a tracker that's up on the page and up in the tab are the same claim.
+We split them on purpose. The server can afford memory, a schedule, and two networks to keep each family honest; the desktop can afford none of that, and doesn't need it, since its question is whether a tracker answers this machine now. What they share is the meaning of an outcome, so a tracker that's up on the page and up in the panel are the same claim.
 
-## The list tab in the desktop client
+## The list panel in the desktop client
 
-- Keep the engine a roadway: add one general libtorrent command, roughly announce this hash to these trackers and pass back each result as it comes, and no application logic.
-- The decisions live in the page: which lists, merging them, the outcomes, what to save. Rust fetches the lists through `net_get` and writes the file. Reread the essay in `lib.rs` on how the page and Rust divide the work before designing it.
-- It acts only when the user clicks: fetch every list, check every candidate once, and show each result as it arrives, so the list builds over several seconds.
-- Its list of lists holds `list.ftorrent.com/trackers.txt` beside ngosang's lists and newTrackon's, all in the same format, read by one parser. When none of them answers, it checks the trackers already saved.
-- libtorrent announces from every local address the machine has, loopback and link-local among them, so the tab reads a tracker's result per family from the addresses that reach the internet, and the rest are noise to set aside. The outcomes are the server's, where they apply: a WebSocket tracker that answers is up, and extra peers are read from libtorrent's own list of peers, which drops the filler some trackers pad a reply with.
-- The result is the user's tracker list: checked, saved, and theirs to edit before it goes into a new torrent.
+The panel is a check of right now, and its focus is the reverse of the page's: reply times in milliseconds, which tracker answered this machine first, where the page shows a calendar of hours. It reads and writes the `[trackers]` section of `ftorrent.toml`: `lists`, the lists it fetches; `always`, the trackers it checks beside them; `answered`, the last check's trackers, fastest first; and `checked`, when that check ran. The settings file's essay in `desktop/src/settings.js` covers the rest.
 
-The two lists become settings in `ftorrent.toml`: the list of lists, and the tracker list a new torrent starts from. The tracker list leaves the engine's table in `engine.py`, which keeps the STUN and DHT lists, the ones libtorrent itself is handed. Before adding them, rewrite the settings factory in `desktop/src/settings.js` as one template string that reads exactly as `ftorrent.toml` does, comments and all, with each setting's check beside it in code and lists written one item to a line. The first run writes that template and reads it back. Factory values reach a file only at its first run, so a later release's change to a factory list doesn't reach an existing user; the tab refreshes the tracker list anyway, and the list of lists is the one that could go stale.
-
-Add the list of lists to Names and Numbers, for the client and for list.ftorrent.com, with list.ftorrent.com as a server the client contacts only on that click, and move the tracker list from the engine's table to `settings.js` there too.
+- Keep the engine a roadway: add general libtorrent commands and no application logic. One starts a session that only announces, with no DHT, no peer connections, and no port mapping, since those are session-wide; one announces a fresh random hash to one tracker; one forgets it. Replies come up through the poll the engine already answers.
+- Put the decisions in `desktop/src/trackers.js`, with `TrackersPage.vue` thin, the way `connection.js` holds the Connection panel's: which lists, merging them, the outcomes, the order, what to save. Rust fetches the lists through `net_get` and looks up names through `net_resolve`.
+- Before a check, show `lists` and `always` for the user to edit. On the click, ask `net_local` whether this machine has a route in each family, say which families it can check, and show results only for those.
+- Look up every name at once through `net_resolve` before announcing, since libtorrent looks names up one at a time and a slow one would add its wait to every reply time behind it.
+- Keep up to 20 announces in flight, starting the next as each finishes. Judge each tracker on its first try: a tracker that needs two isn't one to put in a torrent. Show each result as it arrives, fastest first, so the list builds in seconds and the user can copy it before the slow ones finish.
+- libtorrent announces from every local address the machine has, loopback and link-local among them, so read a tracker's result per family from the addresses that reach the internet and set the rest aside. A WebSocket tracker gets one result, over whichever family the system picks. Extra peers are ignored here.
+- Offer Everything, Fastest 5, Fastest 10, Fastest 20, and Random 20, and Copy. Five suits a magnet, which grows about fifty characters with each tracker, and should include a WebSocket tracker for browser peers, which have no DHT; ten suits a torrent file.
+- Save `answered` and `checked` after each check. A check where nearly every tracker fails is the network's trouble, a captive portal or blocked UDP, so it saves nothing and says so.
+- Treat every tracker address from a list as data: shown through Vue's interpolation, handed to `net_resolve` and the engine as values, and never put into markup.
+- Closing a libtorrent session waits out every connection still open, which a dead WebSocket tracker can stretch to minutes, and the engine reads no other line meanwhile. Close the checking session after each check only if libtorrent's binding can close it without blocking; otherwise keep it open until ftorrent quits.
+- Build it rough first, the engine's commands and a panel that prints raw results, to learn whether reply alerts carry the local address, whether alerts carry their own timestamps, and whether a session can close without blocking. Check on Windows whether the checking session brings up the firewall prompt.
+- In Names and Numbers, add the lists as servers the client contacts only when the user checks.
 
 ## Open questions
 

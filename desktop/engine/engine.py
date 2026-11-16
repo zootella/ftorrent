@@ -14,7 +14,7 @@ import libtorrent as lt
 #
 # Two rules about the pipes, both because the other end is Rust reading lines. Every message is one line of JSON ending in a newline and flushed at once, so nothing sits in a buffer while the app waits. And a line that is not JSON, or JSON that is not a command the engine knows, gets an error line back rather than a crash, so a mistake on one side never takes the other side down.
 
-# The centralized servers the engine reaches on its own, and the one place they are written. Three lists, each in the same order: ours first, then the well-known providers or the servers universal to BitTorrent. The Names and Numbers document on docs.ftorrent.com lists every entry and who runs it; a change here is a change there.
+# The centralized servers the engine reaches on its own, and the one place they are written. Two lists, each in the same order: ours first, then the well-known providers or the servers universal to BitTorrent. The trackers a new torrent starts from are a setting instead, in desktop/src/ftorrent.toml. The Names and Numbers document on docs.ftorrent.com lists every entry and who runs it; a change here is a change there.
 centralized_servers = {
 	'stun': [#the STUN server WebTorrent uses to learn its own public address for WebRTC; libtorrent takes exactly one, so the first entry is the one used, and the rest are the order to fall back through once the engine can test them, and the choices a settings panel will offer
 		'stun.ftorrent.com:3478',#ours
@@ -25,14 +25,6 @@ centralized_servers = {
 		'dht.ftorrent.com:51420',#ours
 		'dht.libtorrent.org:25401',#run by libtorrent's author, and libtorrent's own default
 		'dht.transmissionbt.com:6881',#run by the Transmission project
-	],
-	'trackers': [#the trackers added to a torrent ftorrent creates, so a new torrent is reachable from the start; whether they are also added to torrents the user adds is decided in the add-torrent story
-		'udp://open.ftorrent.com:443/announce',#ours, on all three protocols
-		'https://open.ftorrent.com/announce',
-		'wss://open.ftorrent.com',
-		'wss://tracker.webtorrent.dev',#the WebTorrent project's, Aquatic like ours
-		'wss://tracker.openwebtorrent.com',#the longest-running WebTorrent tracker, the default in the browser clients
-		'udp://tracker.opentrackr.org:1337/announce',#the most widely used open tracker
 	],
 }
 

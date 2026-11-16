@@ -15,7 +15,7 @@ The page discloses, and stops there. It doesn't score how decentralized the clie
 
 - Renaming a fork? Start with the product's names: two files hold them, and the list under them names every file that spells one out by hand.
 - Checking what the client contacts? Read the servers.
-- Weighing who runs them? The engine's table names the operator beside each entry.
+- Weighing who runs them? The engine's table and the settings file name the operator beside each entry.
 
 ## The product's names
 
@@ -23,7 +23,7 @@ The page discloses, and stops there. It doesn't score how decentralized the clie
 
 | Name | Value | Set in | Used for |
 |---|---|---|---|
-| `brandName` | `ftorrent` | `productName` in `desktop/src-tauri/tauri.conf.json` | what people read: the window title, the tray, the menus, the installer, the Start menu shortcut, the Windows ProgIDs, the install folder, the default downloads folder |
+| `brandName` | `ftorrent` | `productName` in `desktop/src-tauri/tauri.conf.json` | what people read: the window title, the tray, the menus, the installer, the Start menu shortcut, the Windows ProgIDs, the install folder |
 | `brandStem` | `ftorrent` | `name` in `desktop/src-tauri/Cargo.toml` | what files carry: the executable, the engine `ftorrent-engine`, the settings file `ftorrent.toml`, the lock file, the log folder, the `.ftorrent` extension, the `ftorrent:` scheme, the published installers |
 | identifier | `com.ftorrent.ftorrent` | `identifier` in `desktop/src-tauri/tauri.conf.json` | the data folder, the Mac bundle, the Windows AppUserModelID, the Flatpak |
 | `urlHome` | `ftorrent.com` | `bundle.homepage` in `desktop/src-tauri/tauri.conf.json` | the About and Settings links, the update check's addresses |
@@ -43,6 +43,7 @@ These files spell a name out by hand, because nothing can read the sources there
 - `desktop/src-tauri/Cargo.toml`: the library `ftorrent_lib` under `[lib]`. Leave Tauri's `mainBinaryName` unset, so the crate's name stays the executable's.
 - `desktop/src-tauri/macos/Info.plist`: the type names `ftorrent File` and `ftorrent Link`, the type identifier `com.ftorrent.file`, the extension `ftorrent`, the scheme `ftorrent`, and the sentence macOS shows when the client first reaches the local network.
 - `desktop/engine/ftorrent-engine.spec`: `ftorrent-engine`, in the two `name=` lines and the `output` path. Rename the file with it, and the `engine` script in `desktop/package.json` that names it, and `name` in `desktop/engine/pyproject.toml`. `engine.rs` finds the engine by the crate's name and `-engine`, so a mismatch shows only when the engine fails to start.
+- `desktop/src/ftorrent.toml`: the settings file as it ships, whose comments name `ftorrent`, `.ftorrent`, `ftorrent:`, `ftorrent-logs`, and `ftorrent.com`, and whose factory downloads folder is `~/Downloads/ftorrent`. The settings file a copy writes is named by `brandStem`; this one is read by its path, so it keeps its name.
 - `desktop/engine/engine.py`: the client code `FF`, in `fingerprint()`. Pick two letters that are in none of the tables at the end of this page.
 - `desktop/icon-studio/Update-Icons.ps1`: `ftorrent.ico`, the studio's own copy of the application icon.
 - `desktop/linux/build.js`, `inside-check.sh`, `inside-check-rpm.sh`, `inside-tauri.py`, and `inside-flatpak.py`: the image tags, the package name patterns, the engine's path, and the Flatpak identifier `com.ftorrent.ftorrent`.
@@ -87,7 +88,7 @@ Accept-Encoding: gzip
 
 ### The engine's table
 
-The engine holds three lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands the STUN and DHT lists to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The Connection tab's session contacts the bootstrap nodes at every Start, and the STUN server for a torrent with a WebSocket tracker.
+The engine holds two lists in one table, `centralized_servers` in `desktop/engine/engine.py`, and hands both to libtorrent's settings when it creates its session. Each list puts ftorrent's own server first. The Connection tab's session contacts the bootstrap nodes at every Start, and the STUN server for a torrent with a WebSocket tracker.
 
 **STUN.** WebTorrent uses STUN to learn the public address its WebRTC connections appear from. libtorrent takes one server, in `webtorrent_stun_server`, and the engine gives it the first.
 
@@ -105,7 +106,20 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `dht.libtorrent.org:25401` | libtorrent's author; libtorrent's own default |
 | `dht.transmissionbt.com:6881` | the Transmission project |
 
-**Trackers.** The client writes these into each torrent it creates.
+### The settings file
+
+The settings file as it ships, `desktop/src/ftorrent.toml`, which a first run writes into the data folder, holds two lists under `[trackers]` for the Trackers tab. A person can edit both, like any setting, and each copy keeps what its own file says, so a later release's change to either list reaches only a copy that starts with no settings file.
+
+**Lists.** `lists`, the lists of trackers the tab reads, each a web address answering one tracker to a line.
+
+| List | Kept by |
+|---|---|
+| `https://list.ftorrent.com/trackers.txt` | ftorrent |
+| `https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt` | ngosang |
+| `https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all_ws.txt` | ngosang |
+| `https://newtrackon.com/api/stable` | newTrackon |
+
+**Trackers.** `always`, the trackers the tab checks every time, beside the ones the lists name. A new torrent starts from the trackers that answered the tab's last check, which the file keeps in `answered`, and from these until there has been one.
 
 | Tracker | Run by |
 |---|---|
@@ -114,6 +128,8 @@ The engine holds three lists in one table, `centralized_servers` in `desktop/eng
 | `wss://open.ftorrent.com` | ftorrent |
 | `wss://tracker.webtorrent.dev` | the WebTorrent project |
 | `wss://tracker.openwebtorrent.com` | OpenWebTorrent |
+| `wss://tracker.files.fm:7073/announce` | Files.fm |
+| `wss://tracker.novage.com.ua` | Novage, the makers of P2P Media Loader |
 | `udp://tracker.opentrackr.org:1337/announce` | not publicly named |
 
 ### The system's own
