@@ -116,14 +116,19 @@ export const useSettingsStore = defineStore('settings', () => {
 		hold(rendered)
 	}
 
+	let writing = Promise.resolve()//the last write handed to rust; each new one waits for it, so two saves close together, a check finishing as a setting changes, land in the order they were made rather than whichever rename finishes last
+
 	async function write(text) {//the file, whole, and the same text to rust for the exit write
 		hold(text)//first, so a quit that lands while the write below is still under way carries this text rather than the last; and if the write fails, rust tries again on the way out
-		try {
-			await diskWrite(paths.value.settings, Array.from(new TextEncoder().encode(text)))//disk.rs speaks bytes because it mirrors posix, so this is where text becomes bytes
-			fileText = text
-		} catch (error) {
-			log(`settings: writing ${paths.value.settings}: ${error}`)
-		}
+		writing = writing.then(async () => {
+			try {
+				await diskWrite(paths.value.settings, Array.from(new TextEncoder().encode(text)))//disk.rs speaks bytes because it mirrors posix, so this is where text becomes bytes
+				fileText = text
+			} catch (error) {
+				log(`settings: writing ${paths.value.settings}: ${error}`)
+			}
+		})
+		await writing
 	}
 
 	function hold(text) {//hand the whole file down to rust, which writes it when ftorrent exits

@@ -16,7 +16,7 @@ lists    = [
 	"https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all_ws.txt",
 	"https://newtrackon.com/api/stable",
 ]
-# trackers the Trackers tab checks every time, beside the ones the lists name, so a check still has trackers to try when no list can be fetched: ftorrent's own, other WebSocket trackers, which browser peers need since they have no DHT and find each other only through those, and opentrackr's
+# trackers the Trackers tab checks every time, beside the ones the lists name, so a check still has trackers to try when no list can be fetched; as it ships, ftorrent's own, the WebSocket trackers browser peers depend on, since they have no DHT and find each other only through those, and a widely used UDP tracker
 always   = [
 	"udp://open.ftorrent.com:443/announce",
 	"https://open.ftorrent.com/announce",
@@ -30,7 +30,9 @@ always   = [
 # the trackers that answered the last check, fastest first, which a new torrent starts from, or from always when there hasn't been a check
 answered = []
 # when that check ran, in UTC, like 2026nov16.1830; blank before the first
-checked  = "" # factory ""
+checked  = ""    # factory ""
+# whether ftorrent announces to every tracker a torrent lists at once, the way qBittorrent, Transmission, and µTorrent do, or only to the first that answers, with the rest as backups, the way libtorrent does on its own and Deluge with it: "all" or "first". With "first", a browser peer, which has no DHT and finds others only through a WebSocket tracker, never meets ftorrent unless that tracker is the one answering
+announce = "all" # factory "all"
 
 [associations]
 # whether ftorrent opens torrent files and links, .torrent and .ftorrent files and magnet: and ftorrent: links: "yes", "no", or "ask". Unless this is "no", a bar at the top of the window asks whenever the system opens any of them with another app, and answering yes there claims them; ftorrent never claims them on its own. The system keeps the final say, so on Windows yes may open its settings for you to confirm there. Whatever the answer, ftorrent stays in the system's Open with menu for all four

@@ -145,12 +145,15 @@ static WRITES: AtomicU64 = AtomicU64::new(0);//how many writes this process has 
 /// Replace the whole file at this path with these bytes, by writing them to a file beside it and renaming that over it, so the file is always whole, the old one or the new one, never a mix. Nothing is synced to the disk itself, so a power cut is not what this guards, and the new file carries the platform's default permissions and attributes rather than the old file's
 #[command]
 pub async fn disk_write(path: String, data: Vec<u8>) -> Result<(), String> {//data crosses the ipc as one json number per byte, which is fine for a settings file of a few kilobytes and would not be for a big one; disk_read has the same note in the other direction
-	run_blocking(move || {
-		let path = fs::canonicalize(&path).map(|real| real.to_string_lossy().into_owned()).unwrap_or(path);//the file itself where the path is a link to it, so the rename below replaces what the link points at rather than the link; a file not there yet keeps the path as given
-		let temporary = format!("{path}.{}-{}.tmp", std::process::id(), WRITES.fetch_add(1, Ordering::Relaxed));//beside the file, named for this process and this write, so two writes in flight at once never share one
-		if let Err(e) = fs::write(&temporary, data) { let _ = fs::remove_file(&temporary); return Err(e.to_string()) }//a disk that fills partway leaves a partial temporary file, taken back here, and the real file untouched
-		fs::rename(&temporary, &path).map_err(|e| { let _ = fs::remove_file(&temporary); e.to_string() })//the swap: one atomic step on NTFS, APFS, and ext4, and on a FAT stick on Windows a delete and a rename, a moment with no file but never a torn one. The second writer this guards against is the exit write in desktop.rs, which can land while this one is under way. A crash between the write and the rename leaves the temporary behind, the new text inside it, which is harmless
-	}).await
+	run_blocking(move || write_whole(&path, &data)).await
+}
+
+/// The body of disk_write, as a plain function for Rust's own callers, like the exit write in desktop.rs, so a file Rust writes is as whole as one JavaScript writes, whichever was writing when the process ended
+pub(crate) fn write_whole(path: &str, data: &[u8]) -> Result<(), String> {
+	let path = fs::canonicalize(path).map(|real| real.to_string_lossy().into_owned()).unwrap_or_else(|_| path.to_string());//the file itself where the path is a link to it, so the rename below replaces what the link points at rather than the link; a file not there yet keeps the path as given
+	let temporary = format!("{path}.{}-{}.tmp", std::process::id(), WRITES.fetch_add(1, Ordering::Relaxed));//beside the file, named for this process and this write, so two writes in flight at once never share one
+	if let Err(e) = fs::write(&temporary, data) { let _ = fs::remove_file(&temporary); return Err(e.to_string()) }//a disk that fills partway leaves a partial temporary file, taken back here, and the real file untouched
+	fs::rename(&temporary, &path).map_err(|e| { let _ = fs::remove_file(&temporary); e.to_string() })//the swap: one atomic step on NTFS, APFS, and ext4, and on a FAT stick on Windows a delete and a rename, a moment with no file but never a torn one. Writers can meet here, like a write from JavaScript landing during the exit write, and whichever renames last wins whole. A crash between the write and the rename leaves the temporary behind, the new text inside it, which is harmless
 }
 
 /// POSIX `mkdir(2)`, single level: the parent has to exist, and a folder already there is an error, just like mkdir without -p

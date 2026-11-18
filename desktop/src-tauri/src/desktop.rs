@@ -7,7 +7,7 @@ Text to write when the process exits. JavaScript hands down a path and the text 
 
 It exists for the one moment JavaScript can't reach. Exit is the event every way of quitting reaches, and it arrives on the main thread inside an operating system callback: a synchronous file write is fine there, but a round trip to JavaScript needs the run loop to turn again, and it won't. So JavaScript keeps what it wants written current here as it goes, an in-memory copy costing nothing, and Rust writes whatever is held when the process leaves. Today that's the settings file, whose window place changes too often to write on every move.
 
-A write that fails at exit has nowhere to report: JavaScript is unreachable, and a release build has no console. stores/settings.js writes the same file itself whenever it can report trouble, so this write is the backstop, not the witness. That write is a rename over the file, through disk_write, so one still landing as this one runs leaves the file whole either way.
+A write that fails at exit has nowhere to report: JavaScript is unreachable, and a release build has no console. stores/settings.js writes the same file itself whenever it can report trouble, so this write is the backstop, not the witness. Every write of the file goes through write_whole in disk.rs, a file beside the real one renamed over it, so writes that overlap, or a process ended partway through one, leave the file whole.
 */
 
 /// The text to write to each path when the application exits; a tuple struct reached as .0, behind a Mutex because tauri shares managed state by reference, and holding new text means changing it
@@ -26,6 +26,6 @@ pub fn desktop_exit_write(app: &AppHandle) {
 	let state = app.state::<ExitFiles>();
 	let mut files = state.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
 	for (path, text) in files.drain() {
-		if let Err(e) = std::fs::write(&path, text) { eprintln!("could not write {path} on the way out: {e}") }//JavaScript can't be told now; in a release build this line goes nowhere, and stores/settings.js's own write on each change is what gets witnessed
+		if let Err(e) = crate::disk::write_whole(&path, text.as_bytes()) { eprintln!("could not write {path} on the way out: {e}") }//whole or not at all, beside the file and renamed over it, so a process ended partway through, by the system at shutdown or by a user's force quit, leaves the last good file rather than half of this one; JavaScript can't be told now, in a release build this line goes nowhere, and stores/settings.js's own write on each change is what gets witnessed
 	}
 }

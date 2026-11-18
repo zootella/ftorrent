@@ -1,6 +1,9 @@
+import os
 import sys
 import json
 import re
+import errno
+import secrets
 import ipaddress
 import platform
 import tempfile
@@ -52,6 +55,8 @@ def session_settings():#the settings the engine will hand libtorrent when it cre
 alert_mask = lt.alert_category.error | lt.alert_category.status | lt.alert_category.port_mapping | lt.alert_category.port_mapping_log | lt.alert_category.dht | lt.alert_category.peer | lt.alert_category.connect | lt.alert_category.tracker#the kinds of alert the session posts: errors, status changes, port mapping, the DHT, peers, connections, and trackers, and of libtorrent's logs only the port mappers', a few lines for each request a mapper sends, since a router that never answers posts no other alert; the rest would be many lines a second
 
 session = None#the one libtorrent session, once JavaScript asks for one, and None again once it's stopped
+check_session = None#the session the Trackers tab checks trackers from, made at its first check and kept until the engine exits; closing a libtorrent session waits out every connection still open, minutes behind a dead WebSocket tracker, this loop reads no other line while it waits, and libtorrent's Python binding has no abort that would close one in the background
+check_listen = ''#the addresses and port the checking session listens on, as libtorrent's listen_interfaces says them
 
 def ready():#what the engine reports about itself once it is up, and the first thing the app asks for
 	return {
@@ -96,6 +101,7 @@ def command_session(message):#start the session, listening on every address in b
 	settings.update({
 		'listen_interfaces': f'0.0.0.0:{port},[::]:{port}',#every address of each family at one port, each with a TCP socket and a UDP one, the UDP one carrying uTP, the DHT, and UDP trackers
 		'enable_dht': True,
+		'announce_to_all_tiers': message.get('announce') != 'first',#announce to one tracker in each of a torrent's tiers at once, which with one tracker to a tier, the way lists are written, is every tracker, as qBittorrent, Transmission, and µTorrent do; libtorrent on its own announces only to the first tier that answers, keeping the rest as backups, the way BEP 12 describes. trackers.announce in the settings says which, and anything but first is all
 		'enable_upnp': False,#libtorrent asks the router to map the port by default, and these two stay off until JavaScript asks for mapping, so it sees what the network does before and after
 		'enable_natpmp': False,
 		'upnp_lease_duration': 60,#and when it does, each mapping lasts a minute and is renewed at three quarters of that, so a mapping this session leaves behind, if the engine dies holding one, is gone from the router a minute later; libtorrent's own is an hour
@@ -165,6 +171,85 @@ def command_stop(message):#tear the session down, its torrents, its sockets, and
 	session = None
 	emit({'event': 'stopped'})
 
+def command_check_session(message):#make the checking session, listening on these addresses at this port, or point the one already made at them, so a check announces from each family's own address and from no other, loopback and link-local among them; it only announces, with no DHT, no connections to peers, and no port mapping, which are all session-wide
+	global check_session, check_listen
+	addresses, port = message.get('addresses'), message.get('port')
+	if not isinstance(addresses, list) or not all(isinstance(a, str) and a for a in addresses) or not addresses or not isinstance(port, int) or not 0 < port < 65536:
+		emit({'event': 'error', 'message': 'a checking session needs addresses and a port from 1 to 65535', 'command': 'check_session'}); return
+	listen = ','.join(f'[{a}]:{port}' if ':' in a else f'{a}:{port}' for a in addresses)
+	if check_session is None:
+		settings = session_settings()
+		settings.update({
+			'listen_interfaces': listen,
+			'enable_dht': False,
+			'enable_lsd': False,
+			'enable_upnp': False,
+			'enable_natpmp': False,
+			'connection_speed': 0,#no connection attempts to the peers a reply lists; the reply decides the check, and the peers stay in each torrent's list unconnected
+			'torrent_connect_boost': 0,#and none of the burst libtorrent makes to a new torrent's first peers
+			'webtorrent_stun_server': '',#a WebSocket announce would otherwise ask a STUN server for this machine's public address, which the check doesn't need
+			'tracker_completion_timeout': 15,#seconds an HTTP announce may take, 30 by default; a UDP one gives up after tracker_receive_timeout's 10
+			'alert_mask': lt.alert_category.tracker | lt.alert_category.error,
+			'alert_queue_size': 10000,#a check announces to a few hundred trackers, each with a few alerts, and the panel polls ten times a second
+		})
+		check_session = lt.session(settings)
+	elif listen != check_listen:
+		check_session.apply_settings({'listen_interfaces': listen})#the network changed since the last check; libtorrent reopens its sockets in place, with no new session and so no wait
+	check_listen = listen
+	emit({'event': 'check_session', 'listen': listen})
+
+def command_check_add(message):#announce a fresh random hash to one tracker from the checking session, a hash no real torrent has, so no one else is announcing it; answers the hash, which every alert about it carries
+	tracker = message.get('tracker')
+	if check_session is None or not isinstance(tracker, str):
+		emit({'event': 'error', 'message': 'a check needs its session and a tracker', 'command': 'check_add'}); return
+	info_hash = lt.sha1_hash(secrets.token_bytes(20))
+	params = lt.add_torrent_params()
+	params.info_hashes = lt.info_hash_t(info_hash)
+	params.trackers = [tracker]
+	params.save_path = tempfile.gettempdir()#libtorrent wants a place for a torrent's files, and these torrents never have any
+	params.flags &= ~lt.torrent_flags.auto_managed#active the moment it's added, rather than waiting on libtorrent's queue
+	params.flags &= ~lt.torrent_flags.paused
+	check_session.add_torrent(params)
+	emit({'event': 'check_added', 'tracker': tracker, 'hash': str(info_hash)})
+
+def command_check_remove(message):#forget one checked torrent, by its hash, which tells a tracker that answered that the announcer is leaving
+	if check_session is None: return
+	handle = check_session.find_torrent(lt.sha1_hash(bytes.fromhex(message['hash'])))#a hash this engine answered with; anything else is a bug in the panel, which the loop below reports as an error line
+	if handle.is_valid(): check_session.remove_torrent(handle)
+
+def command_check_poll(message):#every tracker alert from the checking session since the last poll, each as a line, oldest first
+	if check_session is None: return
+	for alert in check_session.pop_alerts():
+		try:
+			event = check_event(alert)
+		except Exception as e:#an alert about a torrent already removed, or a field this build spells differently, sent up as what it is rather than lost
+			event = {'event': 'check_alert', 'kind': 'fault', 'message': alert.message(), 'fault': f'{type(e).__name__}: {e}'}
+		if event: emit(event)
+
+check_kinds = {'tracker_announce_alert': 'announce', 'tracker_reply_alert': 'reply', 'tracker_error_alert': 'error', 'tracker_warning_alert': 'warning'}#the tracker alerts a check reads, by libtorrent's name for each
+
+def check_event(alert):#one tracker alert as a line for JavaScript: the torrent's hash and its tracker, the family of the address it went from, libtorrent's own time for it to the microsecond, and what came back, as libtorrent gives it
+	kind = type(alert).__name__
+	if kind == 'alerts_dropped_alert': return {'event': 'check_alert', 'kind': 'dropped'}
+	if kind not in check_kinds: return None
+	address = str(alert.local_endpoint[0])
+	event = {'event': 'check_alert', 'kind': check_kinds[kind], 'hash': str(alert.handle.info_hashes().v1), 'tracker': alert.tracker_url(), 'family': 6 if ':' in address else 4, 'time': alert.timestamp().timestamp()*1000}#the timestamp as milliseconds since 1970, so a reply's time minus its announce's is how long the tracker took, however late the poll that carried them
+	if kind == 'tracker_reply_alert': event['peers'] = alert.num_peers
+	elif kind == 'tracker_warning_alert': event['message'] = alert.message().split('warning: ', 1)[-1]#the tracker's own words, after libtorrent's prefix naming the torrent and the tracker
+	elif kind == 'tracker_error_alert':
+		error = alert.error
+		category = error.category().name()
+		reason = alert.failure_reason()
+		event.update({
+			'category': category,#the kind of error, like system, asio.netdb, asio.ssl, or http
+			'value': error.value(),#and which one, a number that means something only beside its category
+			'name': errno.errorcode.get(error.value(), '') if category == 'system' else '',#a system error's name, like ECONNREFUSED, which this platform's own numbering would hide
+			'message': error.message(),
+			'reason': '' if reason == '<none>' else reason,#the tracker's own words for refusing, which libtorrent writes as <none> when there are none
+			'status': alert.status_code,#the HTTP status, for an HTTP error
+		})
+	return event
+
 def describe(info):#what the panels show about a torrent: its name, its info-hashes, blank for a version the torrent doesn't have, and its size and files
 	hashes = info.info_hashes()
 	return {
@@ -221,6 +306,10 @@ commands = {#every command the engine understands, and the function that carries
 	'read': command_read,
 	'add': command_add,
 	'stop': command_stop,
+	'check_session': command_check_session,
+	'check_add': command_check_add,
+	'check_remove': command_check_remove,
+	'check_poll': command_check_poll,
 }
 
 def main():
@@ -246,3 +335,4 @@ if __name__ == '__main__':
 		main()
 	except BrokenPipeError:
 		pass#the app went away mid-write; there is nobody left to tell, and exiting quietly is the right answer
+	os._exit(0)#leave now, at quit or when the pipe closes, rather than let Python tear down the sessions on the way out: destroying a libtorrent session waits out every connection still open, minutes behind a dead WebSocket tracker, while Rust waits on this process before the app can finish quitting. Nothing here is state to save: the system closes every socket with the process, and a port mapping a session leaves behind lapses with its one-minute lease. An engine that holds state to keep saves it on a command of its own before quit, and still leaves this way

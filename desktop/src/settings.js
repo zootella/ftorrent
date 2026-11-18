@@ -47,6 +47,7 @@ const settingsChecks = {
 	'trackers.always': isTrackers,
 	'trackers.answered': isTrackers,
 	'trackers.checked': isTick,
+	'trackers.announce': value => ['all', 'first'].includes(value),
 	'associations.default': value => ['ask', 'yes', 'no'].includes(value),
 	'update.last': isTick,
 	'update.next': isTick,
@@ -125,7 +126,7 @@ export function settingsRender(settings) {//the complete text of the file for th
 			lines.push(...entry.comment)//above the setting, not trailing it: these run long, and a soft wrapped comment beside a value would fold across the next line
 			let value = settings[section][entry.key]
 			if (!Array.isArray(entry.factory)) lines.push(`${entry.key.padEnd(keyWidth)} = ${sayValue(value).padEnd(valueWidth)} # factory ${sayValue(entry.factory)}`)
-			else if (!value.length) lines.push(`${entry.key.padEnd(keyWidth)} = []`)
+			else if (value.length == 0) lines.push(`${entry.key.padEnd(keyWidth)} = []`)
 			else lines.push(`${entry.key.padEnd(keyWidth)} = [`, ...value.map(item => `\t${sayValue(item)},`), ']')//one item to a line, indented with a tab, each with its comma, the last one too, which toml allows, so adding a line never means touching the one above; a list's factory value is the factory file's own, too long to repeat beside it
 		}
 	}

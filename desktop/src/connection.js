@@ -13,6 +13,7 @@ import {engineStatus} from './engine.js'
 import {dialogOpen} from './dialog.js'
 import {downloadsFolder, pathsStatus, isInstalled} from './paths.js'
 import {useIncomingStore} from './stores/incoming.js'
+import {useSettingsStore} from './stores/settings.js'
 import {stick} from './log.js'
 
 /*
@@ -1651,7 +1652,7 @@ export function sessionStart() {
 	contacted = new Set()
 	arrivals = []
 	boxAdd(`${sayMoment(session.started)}, session on port ${port}`, 'session')
-	_send({command: 'session', port})
+	_send({command: 'session', port, announce: useSettingsStore().settings.trackers.announce})//every tracker the chosen torrent lists, or only the first that answers, as the settings say
 	if (session.torrent?.v1 || session.torrent?.v2) _send({command: 'add', path: session.torrent.path})//only a file the engine has read as a torrent
 	poller = setInterval(() => { _send({command: 'stats'}); _send({command: 'tables'}); _send({command: 'poll'}) }, pollEvery)
 }
