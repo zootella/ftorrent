@@ -1,19 +1,8 @@
 # list
 
-list is ftorrent's tracker checker, and like good it lives in two places: list.ftorrent.com, which checks from the server and has a page in front of it, and the list panel, the Trackers tab in the desktop client. The two are separate code with a shared purpose and the same libtorrent, the maintainers' 2.1.1 wheel pinned by one hash. The research behind it is the article [Tracking the Trackers](https://docs.ftorrent.com/tracker-lists), and the server half is built and described in [list/README.md](list/README.md).
-
-## The two places
-
-- list.ftorrent.com is a record of uptime: every public tracker, checked every hour over IPv4 and IPv6 separately, with every hour kept and a year of it summed up in the report.
-- The list panel is a check of right now: from the user's own machine and connection, when the user asks, so the trackers written into a new torrent are ones that answer this client today.
-- Nothing a visitor does on list.ftorrent.com changes anything. There's no submission form; trackers arrive by appearing on the public lists list reads.
-- Each place reads the other's output as one source among several, never as the only one, so either keeps working when the other is gone.
-
-We split them on purpose. The server can afford memory, a schedule, and two networks to keep each family honest; the desktop can afford none of that, and doesn't need it, since its question is whether a tracker answers this machine now. What they share is the meaning of an outcome, so a tracker that's up on the page and up in the panel are the same claim.
+list is ftorrent's tracker checker, in two places: list.ftorrent.com, a record of every public tracker checked every hour from a server, and the list panel, the Trackers tab in the desktop client, a check of right now from the user's own machine. [Tracking the Trackers](https://docs.ftorrent.com/tracker-lists) tells why each works the way it does, [list/README.md](list/README.md) how the server half runs, and the essays in `desktop/src/trackers.js` and `desktop/src/settings.js` how the panel does. What's left is below.
 
 ## The list panel in the desktop client
-
-The panel is a check of right now, and its focus is the reverse of the page's: reply times in milliseconds, which tracker answered this machine first, where the page shows a calendar of hours. The essay in `desktop/src/trackers.js` describes how a check runs, and the one in `desktop/src/settings.js` the `[trackers]` settings it reads and writes. Still to do:
 
 - Check on Windows whether the checking session, which listens on a port while it announces, brings up the firewall prompt.
 - Start a new torrent's trackers from `answered`, fastest first, or from `always` when there has been no check, once there's a flow that creates torrents.

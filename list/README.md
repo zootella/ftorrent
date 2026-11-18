@@ -19,7 +19,7 @@ list.ftorrent.com checks the public BitTorrent and WebTorrent trackers every hou
 - [`list.ftorrent.com/trackers.txt`](https://list.ftorrent.com/trackers.txt), the trackers that answered in at least 95% of the hours they were checked over the last month, one URL per line, in the format other lists and clients already read. Point a client's "add trackers from a URL" setting at it.
 - [`list.ftorrent.com/trackers.json`](https://list.ftorrent.com/trackers.json), every tracker checked: its hours in each family over six horizons, from the last hour to the last year, its last 180 days, and the details of its replies and certificate.
 
-The public lists it starts from check their trackers by DNS lookups, TCP connections, or real announces over UDP and HTTP. list.ftorrent.com announces to every tracker over each family on its own, WebSocket trackers included, and keeps every hour.
+The public lists it starts from check their trackers by DNS lookups, TCP connections, or real announces over UDP and HTTP. list.ftorrent.com announces to every tracker over each family on its own, WebSocket trackers included, and keeps every hour. [Tracking the Trackers](https://docs.ftorrent.com/tracker-lists) tells how tracker lists came to be, how clients use them, and why list.ftorrent.com works the way it does; this guide is how it runs and how to run your own.
 
 ## Where the candidates come from
 
@@ -27,9 +27,7 @@ The public lists it starts from check their trackers by DNS lookups, TCP connect
 - [newTrackon](https://newtrackon.com/), its full list at `/api/all`
 - a list of list.ftorrent.com's own, written into `list.py`: ftorrent's trackers, `udp://open.ftorrent.com:443/announce`, `https://open.ftorrent.com/announce`, and `wss://open.ftorrent.com`, and every public WebSocket tracker we could find that is or was in use, from ngosang's WebSocket lists across their history since 2017, the defaults WebTorrent's create-torrent has shipped since its version 3, and P2P Media Loader's. A tracker long gone stays on it, so the record shows it, and one that comes back is noticed.
 
-[Tracking the Trackers](https://docs.ftorrent.com/tracker-lists) surveys these and the larger collections in circulation, which are built mostly from the first two.
-
-Once a source above names a tracker, list.ftorrent.com checks it every hour from then on, whether a source still names it or not. The lists are built to carry the trackers that work today, so a tracker that stops answering can drop off one and return later. Checked only while a list names it, a tracker would come back with the hours it was gone as no reading and a clean month; checked through them, those hours read as down. It costs each tracker one announce an hour.
+Once a source above names a tracker, list.ftorrent.com checks it every hour from then on, whether a source still names it or not, so a tracker that drops off a list and comes back has the hours it was gone recorded as down rather than blank.
 
 The lists are fetched every hour, and one that can't be fetched, or comes back naming no trackers, keeps its last good copy, so the sources the report names for each tracker hold steady through a site's bad hour. URLs are compared in one spelling, lowercase and without the port their scheme implies, for `udp`, `http`, `https`, `ws`, and `wss`, so a tracker two lists write differently is checked once.
 
@@ -42,7 +40,7 @@ Each tracker gets a torrent of its own: a random info hash, made fresh every hou
 - for HTTPS and WebSocket, the certificate is valid for the name and signed by a trusted authority;
 - the answer is a tracker's reply.
 
-A tracker that gets all the way is up for the hour. Using libtorrent rather than code of our own means a tracker is judged by the same implementation real clients run, with the same handling of redirects, compression, and protocol quirks. One announce decides it: a round trip between two announcers of our own, each looking for the other, would fail trackers that keep one peer per address, spread their swarms across servers, or enforce their announce interval, and catch nothing common that one announce misses.
+A tracker that gets all the way is up for the hour.
 
 The first step happens before libtorrent. list.ftorrent.com looks up every tracker's name itself, all at once, since libtorrent looks names up one at a time, and a tracker left waiting in that line past libtorrent's 30 seconds would read as a timeout. A name that doesn't resolve is `D`, and one with addresses but none in this family is `N`. The rest are announced to one a second, and each is listened to for at least 50 seconds after its own announce and at most two minutes, so each tracker is checked on its own, the way a client announces a torrent to its few trackers.
 
@@ -73,7 +71,7 @@ When an announce fails more than one way in an hour, as libtorrent retries, the 
 
 ## Extra peers
 
-A tracker's reply lists the peers announcing the same hash. For a hash made up a moment before, the honest reply lists no one, or only the announcer itself. A tracker whose reply lists others is handing out addresses that no swarm put there, and a client using it connects to them, telling them its own address and which torrent it wants. So list.ftorrent.com leaves a tracker that does this out of `trackers.txt`, whatever its uptime, until a month has passed without it. `trackers.json` names it under `extra_peers`, with how many hours it did it and the most peers it listed at once. In the first days of checking, one tracker did it every hour, listing the same two servers for every hash.
+A tracker's reply lists the peers announcing the same hash. For a hash made up a moment before, the honest reply lists no one, or only the announcer itself. A tracker whose reply lists others is handing out addresses that no swarm put there, and a client using it connects to them, telling them its own address and which torrent it wants. So list.ftorrent.com leaves a tracker that does this out of `trackers.txt`, whatever its uptime, until a month has passed without it. `trackers.json` names it under `extra_peers`, with how many hours it did it and the most peers it listed at once.
 
 ## What it publishes
 

@@ -123,8 +123,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Open Address, Closed Device', link: '/open-address-closed-device' },
 					{ text: 'Waiting for IPv6', link: '/waiting-for-ipv6' },
-					{ text: 'The IPv6 Squeeze', link: '/ipv6-squeeze' },
-					{ text: 'Tracking the Trackers', link: '/tracker-lists' }
+					{ text: 'The IPv6 Squeeze', link: '/ipv6-squeeze' }
 				]
 			},
 			{
@@ -139,6 +138,12 @@ export default defineConfig({
 				items: [
 					{ text: 'Reading IP Addresses', link: '/ip-addresses' },
 					{ text: 'Glossary', link: '/glossary' }
+				]
+			},
+			{
+				text: 'How BitTorrent Works',
+				items: [
+					{ text: 'Tracking the Trackers', link: '/tracker-lists' }
 				]
 			},
 			{
